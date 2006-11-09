@@ -1,0 +1,133 @@
+<?xml version="1.0"?>
+
+<objectModel>
+
+  <objects>
+    <objectClass name="HLAobjectRoot">
+      <attribute name="HLAprivilegeToDeleteObject"
+                 dimensions="NA"
+                 transportation="HLAreliable"
+                 order="TimeStamp"/>
+
+      <objectClass name="TestObject">
+        <attribute name="Attribute1"
+                   dimensions="Dimension1"
+                   transportation="HLAreliable"
+                   order="TimeStamp"/>
+        <attribute name="Attribute2"
+                   dimensions="Dimension2"
+                   transportation="HLAreliable"
+                   order="TimeStamp"/>
+        <attribute name="Attribute3"
+                   dimensions="Dimension1,Dimension2"
+                   transportation="HLAreliable"
+                   order="TimeStamp"/>
+        <attribute name="BestEffortReceiveAttribute"
+                   dimensions="NA"
+                   transportation="HLAbestEffort"
+                   order="Receive"/>
+        <attribute name="BestEffortTimeStampAttribute"
+                   dimensions="NA"
+                   transportation="HLAbestEffort"
+                   order="TimeStamp"/>
+        <attribute name="ReliableReceiveAttribute"
+                   dimensions="NA"
+                   transportation="HLAreliable"
+                   order="Receive"/>
+        <attribute name="ReliableTimeStampAttribute"
+                   dimensions="NA"
+                   transportation="HLAreliable"
+                   order="TimeStamp"/>
+
+        <objectClass name="TestObject2">
+          <attribute name="Attribute4"
+                     dimensions="Dimension1"
+                     transportation="HLAreliable"
+                     order="TimeStamp"/>
+          <attribute name="Attribute5"
+                     dimensions="Dimension2"
+                     transportation="HLAreliable"
+                     order="TimeStamp"/>
+          <attribute name="Attribute6"
+                     dimensions="Dimension1,Dimension2"
+                     transportation="HLAreliable"
+                     order="TimeStamp"/>
+        </objectClass>
+      </objectClass>
+    </objectClass>
+  </objects>
+
+  <interactions>
+    <interactionClass name="HLAinteractionRoot"
+                      dimensions="NA"
+                      transportation="HLAreliable"
+                      order="Receive">
+
+      <interactionClass name="TestInteraction"
+                        dimensions="Dimension3,Dimension4"
+                        transportation="HLAreliable"
+                        order="TimeStamp">
+        <parameter name="Parameter1"/>
+        <parameter name="Parameter2"/>
+        <parameter name="Parameter3"/>
+
+        <interactionClass name="TestInteraction2"
+                          dimensions="Dimension3,Dimension4"
+                          transportation="HLAreliable"
+                          order="TimeStamp">
+          <parameter name="Parameter4"/>
+          <parameter name="Parameter5"/>
+          <parameter name="Parameter6"/>
+        </interactionClass>
+      </interactionClass>
+
+      <interactionClass name="BestEffortReceiveInteraction"
+                        dimensions="Dimension3"
+                        transportation="HLAbestEffort"
+                        order="Receive">
+        <parameter name="Parameter1"/>
+        <parameter name="Parameter2"/>
+        <parameter name="Parameter3"/>
+      </interactionClass>
+
+      <interactionClass name="BestEffortTimeStampInteraction"
+                        dimensions="Dimension3"
+                        transportation="HLAbestEffort"
+                        order="TimeStamp">
+        <parameter name="Parameter1"/>
+        <parameter name="Parameter2"/>
+        <parameter name="Parameter3"/>
+      </interactionClass>
+
+      <interactionClass name="ReliableReceiveInteraction"
+                        dimensions="Dimension3"
+                        transportation="HLAreliable"
+                        order="Receive">
+        <parameter name="Parameter1"/>
+        <parameter name="Parameter2"/>
+        <parameter name="Parameter3"/>
+      </interactionClass>
+
+      <interactionClass name="ReliableTimeStampInteraction"
+                        dimensions="Dimension3"
+                        transportation="HLAreliable"
+                        order="TimeStamp">
+        <parameter name="Parameter1"/>
+        <parameter name="Parameter2"/>
+        <parameter name="Parameter3"/>
+      </interactionClass>
+    </interactionClass>
+  </interactions>
+
+  <dimensions>
+    <dimension name="Dimension1"
+               upperBound="100"/>
+    <dimension name="Dimension2"
+               upperBound="1000"/>
+    <dimension name="Dimension3"
+               upperBound="10000"/>
+    <dimension name="Dimension4"
+               upperBound="100000"/>
+  </dimensions>
+
+</objectModel>
