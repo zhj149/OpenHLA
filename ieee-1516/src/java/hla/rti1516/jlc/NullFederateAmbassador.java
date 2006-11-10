@@ -48,25 +48,23 @@ import hla.rti1516.UnknownName;
 public class NullFederateAmbassador
   implements FederateAmbassador
 {
-  public void synchronizationPointRegistrationSucceeded(
-    String synchronizationPointLabel)
+  public void synchronizationPointRegistrationSucceeded(String label)
     throws FederateInternalError
   {
   }
 
   public void synchronizationPointRegistrationFailed(
-    String synchronizationPointLabel, SynchronizationPointFailureReason reason)
+    String label, SynchronizationPointFailureReason reason)
     throws FederateInternalError
   {
   }
 
-  public void announceSynchronizationPoint(String synchronizationPointLabel,
-                                           byte[] tag)
+  public void announceSynchronizationPoint(String label, byte[] tag)
     throws FederateInternalError
   {
   }
 
-  public void federationSynchronized(String synchronizationPointLabel)
+  public void federationSynchronized(String label)
     throws FederateInternalError
   {
   }
