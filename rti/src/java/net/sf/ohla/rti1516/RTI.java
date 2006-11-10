@@ -57,6 +57,8 @@ public class RTI
     {
       SocketAcceptor acceptor = new SocketAcceptor();
 
+      acceptor.setReuseAddress(true);
+
       acceptor.setHandler(new RTIIoHandler());
 
       // TODO: selection of codec factory
@@ -84,6 +86,8 @@ public class RTI
       acceptor.setLocalAddress(socketAddress);
 
       acceptor.bind();
+
+      log.info("bound to {}", acceptor.getLocalAddress());
     }
     catch (NumberFormatException nfe)
     {
