@@ -113,24 +113,23 @@ public class Integer64Time
 
   public int compareTo(Integer64Time rhs)
   {
-    return (int) (time - rhs.time);
+    long diff = time - rhs.time;
+    return diff > 0l ? 1 : diff < 0l ? -1 : 0;
   }
 
+  @Override
   public boolean equals(Object rhs)
   {
-    return rhs instanceof Integer64Time && equals((Integer64Time) rhs);
+    return rhs instanceof Integer64Time && time == ((Integer64Time) rhs).time;
   }
 
-  public boolean equals(Integer64Time rhs)
-  {
-    return time == rhs.time;
-  }
-
+  @Override
   public int hashCode()
   {
     return (int) time;
   }
 
+  @Override
   public String toString()
   {
     return Long.toString(time);
