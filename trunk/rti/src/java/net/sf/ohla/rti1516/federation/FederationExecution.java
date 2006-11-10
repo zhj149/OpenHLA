@@ -520,7 +520,7 @@ public class FederationExecution
           federatesLock.lock();
           try
           {
-            if (federateHandles == null)
+            if (federateHandles == null || federateHandles.isEmpty())
             {
               // assign the currently joined federates
               //
