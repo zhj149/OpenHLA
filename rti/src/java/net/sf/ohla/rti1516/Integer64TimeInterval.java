@@ -89,25 +89,24 @@ public class Integer64TimeInterval
 
   public int compareTo(Integer64TimeInterval rhs)
   {
-    return (int) (interval - rhs.interval);
+    long diff = interval - rhs.interval;
+    return diff > 0l ? 1 : diff < 0l ? -1 : 0;
   }
 
+  @Override
   public boolean equals(Object rhs)
   {
     return rhs instanceof Integer64TimeInterval &&
-           equals((Integer64TimeInterval) rhs);
+           interval == ((Integer64TimeInterval) rhs).interval;
   }
 
-  public boolean equals(Integer64TimeInterval rhs)
-  {
-    return interval == rhs.interval;
-  }
-
+  @Override
   public int hashCode()
   {
     return (int) interval;
   }
 
+  @Override
   public String toString()
   {
     return Long.toString(interval);
