@@ -33,6 +33,6 @@ public class FederationSynchronized
   public void execute(Federate federate)
     throws FederateInternalError
   {
-    federate.getFederateAmbassador().federationSynchronized(label);
+    federate.federationSynchronized(label);
   }
 }

@@ -27,12 +27,13 @@ public class TimeKeeper
   {
     this.logicalTimeFactory = logicalTimeFactory;
 
+    time = logicalTimeFactory.makeInitial();
     minAdvanceRequest = logicalTimeFactory.makeFinal();
   }
 
   public synchronized void timeAdvanceRequest(LogicalTime time, TimeClient client)
   {
-    System.out.printf("%s requesting advance to %d\n", client, time);
+    System.out.printf("%s requesting advance to %s\n", client, time);
 
     if (this.time.compareTo(time) > 0)
     {
@@ -90,9 +91,14 @@ public class TimeKeeper
     TimeClient tc = new TimeClient(new Integer64TimeInterval(3000), false);
     TimeClient tc2 = new TimeClient(new Integer64TimeInterval(5000), true);
 //    TimeClient tc3 = new TimeClient(35000);
+
+    tc.timeAdvanceGrant(time);
+    tc2.timeAdvanceGrant(time);
+
     tc.start();
     tc2.start();
 //    tc3.start();
+
     new Thread()
     {
       public void run()
@@ -100,7 +106,7 @@ public class TimeKeeper
         int i = 0;
         while (true)
         {
-          System.out.printf("[%d] %d\n", i++, time);
+          System.out.printf("[%d] %s\n", i++, time);
           try
           {
             Thread.sleep(1000);
@@ -134,7 +140,7 @@ public class TimeKeeper
 
     public synchronized void timeAdvanceGrant(LogicalTime time)
     {
-      System.out.printf("%s advance granted to %d\n", this, time);
+      System.out.printf("%s advance granted to %s\n", this, time);
       this.time = time;
       advanceGranted = true;
       notifyAll();

@@ -27,11 +27,17 @@ public class FederateSynchronizationPoint
   protected FederateHandleSet federateHandles;
   protected State state = State.ATTEMPTING_TO_REGISTER_SYNCH_POINT;
 
-  public FederateSynchronizationPoint(String label, byte[] tag,
-                                      FederateHandleSet federateHandles)
+  public FederateSynchronizationPoint(String label, byte[] tag)
   {
     this.label = label;
     this.tag = tag;
+  }
+
+  public FederateSynchronizationPoint(String label, byte[] tag,
+                                      FederateHandleSet federateHandles)
+  {
+    this(label, tag);
+
     this.federateHandles = federateHandles;
   }
 
@@ -61,7 +67,7 @@ public class FederateSynchronizationPoint
     state = State.NO_ACTIVITY;
   }
 
-  public void announceSynchronizationPoint(String label, byte[] tag)
+  public void announceSynchronizationPoint()
   {
     state = State.MOVING_TO_SYNCH_POINT;
   }
@@ -75,6 +81,11 @@ public class FederateSynchronizationPoint
     }
 
     state = State.WAITING_FOR_REST_OF_FEDERATION_TO_SYNCHRONIZE;
+  }
+
+  public void federationSynchronized()
+  {
+    state = State.NO_ACTIVITY;
   }
 
   protected enum State
