@@ -4,14 +4,69 @@ import java.net.URL;
 
 public interface RTIambassador
 {
+  /**
+   * The Create Federation Execution service shall create a new federation
+   * execution and add it to the set of supported federation executions. Each
+   * federation execution created by this service shall be independent of all
+   * other federation executions, and there shall be no intercommunication
+   * within the RTI between federation executions. The FOM document designator
+   * argument shall identify the FOM that furnishes the FDD for the federation
+   * execution to be created.
+   *
+   * @param federationName the name of the federation execution
+   * @param fdd the FOM document designator (FDD)
+   * @throws FederationExecutionAlreadyExists thrown if the specified federation
+   *                                          name already exists
+   * @throws CouldNotOpenFDD thrown if the FDD could not be opened
+   * @throws ErrorReadingFDD thrown if the FDD could not be read
+   * @throws RTIinternalError thrown if an error occurred while creating the
+   *                          specified federation execution
+   */
   void createFederationExecution(String federationName, URL fdd)
     throws FederationExecutionAlreadyExists, CouldNotOpenFDD, ErrorReadingFDD,
            RTIinternalError;
 
+  /**
+   * The Destroy Federation Execution service shall remove a federation
+   * execution from the RTI set of supported federation executions. All
+   * federation activity shall have stopped, and there shall be no joined
+   * federates (all joined federates shall have resigned, either by explicit
+   * action or via MOM activity) before this service is invoked.
+   *
+   * @param federationName the name of the federation execution
+   * @throws FederatesCurrentlyJoined thrown if there are still federates joined
+   *                                  to the specified federation execution
+   * @throws FederationExecutionDoesNotExist thrown if the federation execution
+   *                                         specified does not exist
+   * @throws RTIinternalError thrown if an error occurred while destroying the
+   *                          specified federation execution
+   */
   void destroyFederationExecution(String federationName)
     throws FederatesCurrentlyJoined, FederationExecutionDoesNotExist,
            RTIinternalError;
 
+  /**
+   * The Join Federation Execution service shall affiliate the federate with a
+   * federation execution. Invocation of the Join Federation Execution service
+   * shall indicate the intention to participate in the specified federation.
+   * The federate-type argument shall distinguish federate categories for
+   * federation save-and-restore purposes. The returned joined federate
+   * designator shall be unique for the lifetime of the federation execution.
+   *
+   * @param federateType
+   * @param federationName the name of the federation execution to join
+   * @param federateAmbassador
+   * @param mobileFederateServices
+   * @return the unique federate handle representing this federate
+   * @throws FederateAlreadyExecutionMember thrown if the federate is already
+   *                                        joined to a federation execution
+   * @throws FederationExecutionDoesNotExist thrown if the federation execution
+   *                                         specified does not exist
+   * @throws SaveInProgress thrown if a federation save is in progress
+   * @throws RestoreInProgress thrown if a federation restore is in progress
+   * @throws RTIinternalError thrown if an error occurred joining the specified
+   *                          federation execution
+   */
   FederateHandle joinFederationExecution(
     String federateType, String federationName,
     FederateAmbassador federateAmbassador,
@@ -19,6 +74,43 @@ public interface RTIambassador
     throws FederateAlreadyExecutionMember, FederationExecutionDoesNotExist,
            SaveInProgress, RestoreInProgress, RTIinternalError;
 
+  /**
+   * The Resign Federation Execution service shall indicate the requested
+   * cessation of federation participation. Before resigning, ownership of
+   * instance attributes held by the joined federate should be resolved. The
+   * joined federate may transfer ownership of these instance attributes to
+   * other joined federates, unconditionally divest them for ownership
+   * acquisition at a later point, or delete the object instance of which they
+   * are a part (assuming the joined federate has the privilege to delete these
+   * object instances). As a convenience to the joined federate, the Resign
+   * Federation Execution service shall accept an action argument that directs
+   * the RTI to perform zero or more of the following actions:
+   * <p/>
+   * <ul>
+   * <li>Unconditionally divest all owned instance attributes for future
+   * ownership acquisition. This shall place the instance attributes into an
+   * unowned state (implying that their values are not being updated), which
+   * shall make them eligible for ownership by another joined federate.</li>
+   * <li>Delete all object instances for which the joined federate has that
+   * privilege (implied invocation of the Delete Object Instance service).</li>
+   * <li>Cancel all pending instance attribute ownership acquisitions. The use
+   * of this directive may interfere with the intended semantics of negotiated
+   * instance attribute ownership divestiture by allowing instance attributes
+   * divested in this way to be unowned (because the cancellation directive may
+   *  not succeed).</li>
+   * </ul>
+   *
+   * @param resignAction the action to take upon resigning from the federation
+   * @throws OwnershipAcquisitionPending thrown if the federate is currently
+   *                                     attempting to acquire ownership of
+   *                                     attributes
+   * @throws FederateOwnsAttributes thrown if the federate owns attributes and
+   *                                is resigning without releasing them
+   * @throws FederateNotExecutionMember thrown if the federate is not a member
+   *                                    of a federation execution
+   * @throws RTIinternalError thrown if an error occurred resigning from the
+   *                          specified federation execution
+   */
   void resignFederationExecution(ResignAction resignAction)
     throws OwnershipAcquisitionPending, FederateOwnsAttributes,
            FederateNotExecutionMember, RTIinternalError;
