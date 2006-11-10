@@ -226,6 +226,7 @@ import hla.rti1516.TimeQueryReturn;
 import hla.rti1516.TimeRegulationAlreadyEnabled;
 import hla.rti1516.TimeRegulationIsNotEnabled;
 import hla.rti1516.TransportationType;
+import hla.rti1516.FederateInternalError;
 
 public class Federate
 {
@@ -3377,6 +3378,72 @@ public class Federate
     finally
     {
       peersLock.unlock();
+    }
+  }
+
+  public void announceSynchronizationPoint(String label, byte[] tag)
+  {
+    FederateSynchronizationPoint federateSynchronizationPoint;
+
+    synchronizationPointLock.lock();
+    try
+    {
+      federateSynchronizationPoint = synchronizationPoints.get(label);
+      if (federateSynchronizationPoint == null)
+      {
+        federateSynchronizationPoint =
+          new FederateSynchronizationPoint(label, tag);
+        synchronizationPoints.put(label, federateSynchronizationPoint);
+      }
+    }
+    finally
+    {
+      synchronizationPointLock.unlock();
+    }
+
+    federateSynchronizationPoint.announceSynchronizationPoint();
+
+    try
+    {
+      federateAmbassador.announceSynchronizationPoint(label, tag);
+    }
+    catch (FederateInternalError fie)
+    {
+      log.warn(String.format(
+        "federate could not process announcement of synchronization point: %s",
+        label), fie);
+    }
+  }
+
+  public void federationSynchronized(String label)
+  {
+    FederateSynchronizationPoint federateSynchronizationPoint;
+
+    synchronizationPointLock.lock();
+    try
+    {
+      // remove the synchronization point
+      //
+      federateSynchronizationPoint = synchronizationPoints.remove(label);
+    }
+    finally
+    {
+      synchronizationPointLock.unlock();
+    }
+
+    assert federateSynchronizationPoint != null;
+
+    federateSynchronizationPoint.federationSynchronized();
+
+    try
+    {
+      federateAmbassador.federationSynchronized(label);
+    }
+    catch (FederateInternalError fie)
+    {
+      log.warn(String.format(
+        "federate could not process federation synchronization: %s",
+        label), fie);
     }
   }
 

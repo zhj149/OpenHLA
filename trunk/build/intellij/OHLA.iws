@@ -183,7 +183,91 @@
     <option name="myCurrentFavoritesList" value="OHLA" />
   </component>
   <component name="FileEditorManager">
-    <leaf />
+    <leaf>
+      <file leaf-file-name="Federate.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/Federate.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="3383" column="9" selection-start="98187" selection-end="98187" vertical-scroll-proportion="0.33248082">
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="ObjectManager.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/objects/ObjectManager.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="922" column="14" selection-start="27191" selection-end="27191" vertical-scroll-proportion="-0.3196931">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="FederationSynchronized.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/callbacks/FederationSynchronized.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="35" column="13" selection-start="1002" selection-end="1002" vertical-scroll-proportion="0.40526977">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="FederationManagementTestNG.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516/FederationManagementTestNG.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="71" column="32" selection-start="2190" selection-end="2190" vertical-scroll-proportion="0.76086956">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="ieee-1516-testng.xml" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/../../resources/testsuite/ieee-1516-testng.xml">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="47" column="0" selection-start="911" selection-end="1528" vertical-scroll-proportion="0.93601006">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="FederateAmbassador.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../ieee-1516/src/java/hla/rti1516/FederateAmbassador.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="27" column="7" selection-start="1154" selection-end="1154" vertical-scroll-proportion="0.33248082">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="AnnounceSynchronizationPoint.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/callbacks/AnnounceSynchronizationPoint.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="37" column="28" selection-start="1085" selection-end="1085" vertical-scroll-proportion="0.44792974">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="TestConstants.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516/TestConstants.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="41" column="72" selection-start="1500" selection-end="1500" vertical-scroll-proportion="0.5759097">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="FederateSynchronizationPoint.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/FederateSynchronizationPoint.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="87" column="30" selection-start="2220" selection-end="2220" vertical-scroll-proportion="0.93601006">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
   </component>
   <component name="FindManager">
     <FindUsagesManager>
@@ -301,6 +385,72 @@
         <option name="myItemId" value="OHLA.ipr" />
         <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
       </PATH_ELEMENT>
+      <PATH_ELEMENT>
+        <option name="myItemId" value="Testsuite" />
+        <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewModuleNode" />
+      </PATH_ELEMENT>
+    </PATH>
+    <PATH>
+      <PATH_ELEMENT>
+        <option name="myItemId" value="OHLA.ipr" />
+        <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+      </PATH_ELEMENT>
+      <PATH_ELEMENT>
+        <option name="myItemId" value="Testsuite" />
+        <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewModuleNode" />
+      </PATH_ELEMENT>
+      <PATH_ELEMENT>
+        <option name="myItemId" value="PsiDirectory:D:\projects\ohla-0.4\testsuite" />
+        <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+      </PATH_ELEMENT>
+      <PATH_ELEMENT>
+        <option name="myItemId" value="PsiDirectory:D:\projects\ohla-0.4\testsuite\src" />
+        <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+      </PATH_ELEMENT>
+      <PATH_ELEMENT>
+        <option name="myItemId" value="PsiDirectory:D:\projects\ohla-0.4\testsuite\src\java" />
+        <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+      </PATH_ELEMENT>
+      <PATH_ELEMENT>
+        <option name="myItemId" value="PsiDirectory:D:\projects\ohla-0.4\testsuite\src\java\net\sf\ohla" />
+        <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+      </PATH_ELEMENT>
+      <PATH_ELEMENT>
+        <option name="myItemId" value="PsiDirectory:D:\projects\ohla-0.4\testsuite\src\java\net\sf\ohla\rti1516" />
+        <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+      </PATH_ELEMENT>
+    </PATH>
+    <PATH>
+      <PATH_ELEMENT>
+        <option name="myItemId" value="OHLA.ipr" />
+        <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+      </PATH_ELEMENT>
+      <PATH_ELEMENT>
+        <option name="myItemId" value="Testsuite" />
+        <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewModuleNode" />
+      </PATH_ELEMENT>
+      <PATH_ELEMENT>
+        <option name="myItemId" value="PsiDirectory:D:\projects\ohla-0.4\testsuite" />
+        <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+      </PATH_ELEMENT>
+      <PATH_ELEMENT>
+        <option name="myItemId" value="PsiDirectory:D:\projects\ohla-0.4\testsuite\src" />
+        <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+      </PATH_ELEMENT>
+      <PATH_ELEMENT>
+        <option name="myItemId" value="PsiDirectory:D:\projects\ohla-0.4\testsuite\src\java" />
+        <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+      </PATH_ELEMENT>
+      <PATH_ELEMENT>
+        <option name="myItemId" value="PsiDirectory:D:\projects\ohla-0.4\testsuite\src\java\net\sf\ohla" />
+        <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+      </PATH_ELEMENT>
+    </PATH>
+    <PATH>
+      <PATH_ELEMENT>
+        <option name="myItemId" value="OHLA.ipr" />
+        <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+      </PATH_ELEMENT>
     </PATH>
   </component>
   <component name="ProjectReloadState">
@@ -322,13 +472,29 @@
   </component>
   <component name="PropertiesComponent">
     <property name="MemberChooser.copyJavadoc" value="false" />
-    <property name="GoToClass.includeLibraries" value="false" />
-    <property name="MemberChooser.showClasses" value="true" />
+    <property name="cvs_file_history_treeWidth0" value="299" />
+    <property name="cvs_file_history_flatWidth2" value="299" />
     <property name="MemberChooser.sorted" value="false" />
+    <property name="cvs_file_history_treeOrder1" value="1" />
     <property name="RunManagerConfig.compileBeforeRunning" value="true" />
+    <property name="cvs_file_history_flatOrder0" value="0" />
+    <property name="cvs_file_history_treeOrder3" value="3" />
     <property name="GoToFile.includeJavaFiles" value="false" />
+    <property name="cvs_file_history_flatOrder1" value="1" />
+    <property name="cvs_file_history_flatWidth1" value="299" />
+    <property name="cvs_file_history_treeWidth1" value="299" />
+    <property name="cvs_file_history_treeOrder2" value="2" />
+    <property name="cvs_file_history_treeWidth3" value="298" />
+    <property name="GoToClass.includeLibraries" value="false" />
+    <property name="cvs_file_history_flatOrder2" value="2" />
+    <property name="MemberChooser.showClasses" value="true" />
+    <property name="cvs_file_history_flatWidth0" value="299" />
+    <property name="cvs_file_history_flatWidth3" value="298" />
+    <property name="cvs_file_history_treeWidth2" value="299" />
+    <property name="cvs_file_history_flatOrder3" value="3" />
     <property name="GoToClass.toSaveIncludeLibraries" value="false" />
     <property name="RunManagerConfig.showSettingsBeforeRunnig" value="true" />
+    <property name="cvs_file_history_treeOrder0" value="0" />
   </component>
   <component name="ReadonlyStatusHandler">
     <option name="SHOW_DIALOG" value="true" />
@@ -345,34 +511,6 @@
   <component name="RestoreUpdateTree" />
   <component name="RunManager">
     <activeType name="Application" />
-    <configuration selected="false" default="true" type="JUnit" factoryName="JUnit">
-      <module name="" />
-      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" />
-      <option name="PACKAGE_NAME" />
-      <option name="MAIN_CLASS_NAME" />
-      <option name="METHOD_NAME" />
-      <option name="TEST_OBJECT" value="class" />
-      <option name="VM_PARAMETERS" />
-      <option name="PARAMETERS" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="ADDITIONAL_CLASS_PATH" />
-      <option name="TEST_SEARCH_SCOPE">
-        <value defaultName="wholeProject" />
-      </option>
-    </configuration>
-    <configuration selected="false" default="true" type="Applet" factoryName="Applet">
-      <module name="" />
-      <option name="MAIN_CLASS_NAME" />
-      <option name="HTML_FILE_NAME" />
-      <option name="HTML_USED" value="false" />
-      <option name="WIDTH" value="400" />
-      <option name="HEIGHT" value="300" />
-      <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
-      <option name="VM_PARAMETERS" />
-      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" />
-    </configuration>
     <configuration selected="false" default="true" type="TestNG" factoryName="TestNG">
       <module name="" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
@@ -400,6 +538,18 @@
       <option name="HOST" value="localhost" />
       <option name="PORT" value="5005" />
     </configuration>
+    <configuration selected="false" default="true" type="Applet" factoryName="Applet">
+      <module name="" />
+      <option name="MAIN_CLASS_NAME" />
+      <option name="HTML_FILE_NAME" />
+      <option name="HTML_USED" value="false" />
+      <option name="WIDTH" value="400" />
+      <option name="HEIGHT" value="300" />
+      <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
+      <option name="VM_PARAMETERS" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+    </configuration>
     <configuration selected="false" default="true" type="Application" factoryName="Application">
       <option name="MAIN_CLASS_NAME" />
       <option name="VM_PARAMETERS" />
@@ -408,6 +558,50 @@
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
       <option name="ALTERNATIVE_JRE_PATH" />
       <module name="" />
+    </configuration>
+    <configuration selected="false" default="true" type="JUnit" factoryName="JUnit">
+      <module name="" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="PACKAGE_NAME" />
+      <option name="MAIN_CLASS_NAME" />
+      <option name="METHOD_NAME" />
+      <option name="TEST_OBJECT" value="class" />
+      <option name="VM_PARAMETERS" />
+      <option name="PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="ADDITIONAL_CLASS_PATH" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="wholeProject" />
+      </option>
+    </configuration>
+    <configuration selected="false" default="false" name="RTI" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" value="net.sf.ohla.rti1516.RTI" />
+      <option name="VM_PARAMETERS" value="-Dohla.rti.host=localhost -Dohla.rti.port=5000 -ea -server" />
+      <option name="PROGRAM_PARAMETERS" value="" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" value="" />
+      <module name="RTI" />
+      <RunnerSettings RunnerId="Debug">
+        <option name="DEBUG_PORT" value="2738" />
+        <option name="TRANSPORT" value="0" />
+        <option name="LOCAL" value="true" />
+      </RunnerSettings>
+      <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper RunnerId="Debug" />
+      <ConfigurationWrapper RunnerId="Run" />
+    </configuration>
+    <configuration selected="true" default="false" name="TimeKeeper" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" value="net.sf.ohla.rti1516.federation.TimeKeeper" />
+      <option name="VM_PARAMETERS" value="" />
+      <option name="PROGRAM_PARAMETERS" value="" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" value="" />
+      <module name="RTI" />
+      <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper RunnerId="Run" />
     </configuration>
     <configuration selected="false" default="false" name="IEEE 1516 Testsuite" type="TestNG" factoryName="TestNG">
       <module name="Testsuite" />
@@ -428,14 +622,14 @@
       </option>
       <option name="PROPERTIES_FILE" value="" />
       <properties />
-      <RunnerSettings RunnerId="Run" />
       <RunnerSettings RunnerId="Debug">
         <option name="DEBUG_PORT" value="2019" />
         <option name="TRANSPORT" value="0" />
         <option name="LOCAL" value="true" />
       </RunnerSettings>
-      <ConfigurationWrapper RunnerId="Run" />
+      <RunnerSettings RunnerId="Run" />
       <ConfigurationWrapper RunnerId="Debug" />
+      <ConfigurationWrapper RunnerId="Run" />
     </configuration>
     <configuration selected="true" default="false" name="HLA 1.3 Testsuite" type="TestNG" factoryName="TestNG">
       <module name="RTI" />
@@ -456,23 +650,6 @@
       </option>
       <option name="PROPERTIES_FILE" value="" />
       <properties />
-    </configuration>
-    <configuration selected="true" default="false" name="RTI" type="Application" factoryName="Application">
-      <option name="MAIN_CLASS_NAME" value="net.sf.ohla.rti1516.RTI" />
-      <option name="VM_PARAMETERS" value="-Dohla.rti.host=localhost -Dohla.rti.port=5000 -ea -server" />
-      <option name="PROGRAM_PARAMETERS" value="" />
-      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
-      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" value="" />
-      <module name="RTI" />
-      <RunnerSettings RunnerId="Run" />
-      <RunnerSettings RunnerId="Debug">
-        <option name="DEBUG_PORT" value="2738" />
-        <option name="TRANSPORT" value="0" />
-        <option name="LOCAL" value="true" />
-      </RunnerSettings>
-      <ConfigurationWrapper RunnerId="Run" />
-      <ConfigurationWrapper RunnerId="Debug" />
     </configuration>
   </component>
   <component name="ScopeViewComponent">
@@ -527,6 +704,7 @@
     <option name="USER" value="" />
     <option name="PASSWORD" value="" />
     <option name="PROCESS_UNRESOLVED" value="false" />
+    <configuration useDefault="true">D:\Profiles\p57487\Application Data\Subversion</configuration>
   </component>
   <component name="TodoView" selected-index="0">
     <todo-panel id="selected-file">
@@ -548,7 +726,7 @@
     <layout>
       <window_info id="CVS" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="8" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.32791588" order="7" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="docked" type="docked" visible="true" weight="0.2524272" order="0" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="docked" type="docked" visible="true" weight="0.29773462" order="0" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.34367815" order="1" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.25" order="1" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.32413793" order="8" />
@@ -558,13 +736,13 @@
       <window_info id="Dependency Viewer" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.32988507" order="8" />
       <window_info id="Metrics" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="8" />
       <window_info id="Favorites" active="false" anchor="right" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.32928804" order="3" />
-      <window_info id="Ant Build" active="true" anchor="right" auto_hide="false" internal_type="docked" type="docked" visible="true" weight="0.17394821" order="1" />
+      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="docked" type="docked" visible="true" weight="0.10760518" order="1" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.27816093" order="2" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.25" order="2" />
       <window_info id="File View" active="false" anchor="right" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="3" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.40114942" order="4" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.3998378" order="0" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="8" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.32988507" order="8" />
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="3" />
       <window_info id="IDEtalk" active="false" anchor="right" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="3" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="0" />
@@ -601,7 +779,7 @@
     <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="PUT_FOCUS_INTO_COMMENT" value="false" />
     <option name="FORCE_NON_EMPTY_COMMENT" value="false" />
-    <option name="LAST_COMMIT_MESSAGE" />
+    <option name="LAST_COMMIT_MESSAGE" value="corrected some variable names" />
     <option name="SAVE_LAST_COMMIT_MESSAGE" value="true" />
     <option name="CHECKIN_DIALOG_SPLITTER_PROPORTION" value="0.8" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="false" />
@@ -611,10 +789,16 @@
     <option name="FILE_HISTORY_DIALOG_COMMENTS_SPLITTER_PROPORTION" value="0.8" />
     <option name="FILE_HISTORY_DIALOG_SPLITTER_PROPORTION" value="0.5" />
     <option name="ERROR_OCCURED" value="false" />
-    <option name="ACTIVE_VCS_NAME" />
+    <option name="ACTIVE_VCS_NAME" value="svn" />
     <option name="UPDATE_GROUP_BY_PACKAGES" value="false" />
     <option name="SHOW_FILE_HISTORY_AS_TREE" value="false" />
     <option name="FILE_HISTORY_SPLITTER_PROPORTION" value="0.6" />
+    <MESSAGE value="fixed incorrect compareTo methods and added @Override tags" />
+    <MESSAGE value="added target to create javadocs" />
+    <MESSAGE value="spec says that if no synchronization set is supplied OR it is empty, than all joined federates are part of the synchronization set" />
+    <MESSAGE value="adding documentation" />
+    <MESSAGE value="[ 1594262 ] Allow to restart RTI faster" />
+    <MESSAGE value="corrected some variable names" />
   </component>
   <component name="VssConfiguration">
     <option name="CLIENT_PATH" value="" />
@@ -695,109 +879,109 @@
     <option name="myLastEditedConfigurable" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/../../resources/testsuite/ieee-1516-testng.xml">
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/callbacks/DiscoverObjectInstance.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="48" column="0" selection-start="1537" selection-end="1537" vertical-scroll-proportion="1.4031311">
+        <state line="48" column="20" selection-start="1454" selection-end="1454" vertical-scroll-proportion="0.6612296">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516/ObjectManagementTestNG.java">
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/objects/ObjectManager.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="366" column="8" selection-start="13839" selection-end="13839" vertical-scroll-proportion="1.3307241">
+        <state line="922" column="14" selection-start="27191" selection-end="27191" vertical-scroll-proportion="-0.3196931">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../build.xml">
+    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516/DeclarationManagementTestNG.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="245" column="2" selection-start="8772" selection-end="8772" vertical-scroll-proportion="0.5088063">
+        <state line="31" column="13" selection-start="1121" selection-end="1121" vertical-scroll-proportion="-0.36956522">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../CHANGELOG.txt">
+    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516/TestConstants.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="9" column="8" selection-start="194" selection-end="194" vertical-scroll-proportion="0.2994129">
+        <state line="41" column="72" selection-start="1500" selection-end="1500" vertical-scroll-proportion="0.5759097">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../resources/testsuite/hla-1.3-testng.xml">
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/RTI.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="37" column="13" selection-start="1258" selection-end="1258" vertical-scroll-proportion="0.6487148">
+        <state line="59" column="35" selection-start="2126" selection-end="2126" vertical-scroll-proportion="0.13682865">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../TESTSUITE.txt">
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/callbacks/AnnounceSynchronizationPoint.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="2" column="8" selection-start="25" selection-end="25" vertical-scroll-proportion="0.04161567">
+        <state line="37" column="28" selection-start="1085" selection-end="1085" vertical-scroll-proportion="0.44792974">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/fdd/Attribute.java">
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/Federate.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="153" column="8" selection-start="3861" selection-end="3861" vertical-scroll-proportion="0.21419829">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../ieee-1516/src/java/hla/rti1516/RangeBounds.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="7" column="14" selection-start="125" selection-end="125" vertical-scroll-proportion="0.23287672">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/fdd/Dimension.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="65" column="0" selection-start="1738" selection-end="1738" vertical-scroll-proportion="0.52019584">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/fdd/FDD.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="71" column="32" selection-start="2454" selection-end="2454" vertical-scroll-proportion="0.20807834">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/RegionManager.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="326" column="0" selection-start="9238" selection-end="9238" vertical-scroll-proportion="0.14565483">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federation/TimeKeeper.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="102" column="0" selection-start="2899" selection-end="2899" vertical-scroll-proportion="0.39650872">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516/OwnershipManagementTestNG.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="399" column="0" selection-start="14640" selection-end="14640" vertical-scroll-proportion="0.20807834">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/OwnershipManagementTestNG.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="403" column="0" selection-start="14385" selection-end="14385" vertical-scroll-proportion="0.20807834">
+        <state line="3383" column="9" selection-start="98187" selection-end="98187" vertical-scroll-proportion="0.33248082">
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../LICENSE.txt">
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/FederateSynchronizationPoint.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
+        <state line="87" column="30" selection-start="2220" selection-end="2220" vertical-scroll-proportion="0.93601006">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../ieee-1516/src/java/hla/rti1516/FederateAmbassador.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="27" column="7" selection-start="1154" selection-end="1154" vertical-scroll-proportion="0.33248082">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../ieee-1516/src/java/hla/rti1516/jlc/NullFederateAmbassador.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="55" column="0" selection-start="2163" selection-end="2163" vertical-scroll-proportion="0.19565217">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/callbacks/FederationSynchronized.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="35" column="13" selection-start="1002" selection-end="1002" vertical-scroll-proportion="0.40526977">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516/BaseTestNG.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="32" column="22" selection-start="996" selection-end="996" vertical-scroll-proportion="0.14930992">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516/ObjectManagementTestNG.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="88" column="0" selection-start="3103" selection-end="3103" vertical-scroll-proportion="0.27728984">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516/FederationManagementTestNG.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="71" column="32" selection-start="2190" selection-end="2190" vertical-scroll-proportion="0.76086956">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../resources/testsuite/ieee-1516-testng.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="47" column="0" selection-start="911" selection-end="1528" vertical-scroll-proportion="0.93601006">
           <folding />
         </state>
       </provider>

@@ -35,6 +35,6 @@ public class AnnounceSynchronizationPoint
   public void execute(Federate federate)
     throws FederateInternalError
   {
-    federate.getFederateAmbassador().announceSynchronizationPoint(label, tag);
+    federate.announceSynchronizationPoint(label, tag);
   }
 }

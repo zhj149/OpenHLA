@@ -18,7 +18,15 @@ package net.sf.ohla.rti1516;
 
 import java.net.URL;
 
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
+
 import org.testng.annotations.Test;
+import org.testng.annotations.BeforeClass;
 
 import hla.rti1516.CouldNotOpenFDD;
 import hla.rti1516.ErrorReadingFDD;
@@ -26,6 +34,9 @@ import hla.rti1516.FederateAlreadyExecutionMember;
 import hla.rti1516.FederateNotExecutionMember;
 import hla.rti1516.FederationExecutionAlreadyExists;
 import hla.rti1516.FederationExecutionDoesNotExist;
+import hla.rti1516.RTIambassador;
+import hla.rti1516.FederateInternalError;
+import hla.rti1516.SynchronizationPointFailureReason;
 import static hla.rti1516.ResignAction.NO_ACTION;
 import hla.rti1516.jlc.NullFederateAmbassador;
 
@@ -33,6 +44,23 @@ import hla.rti1516.jlc.NullFederateAmbassador;
 public class FederationManagementTestNG
   extends BaseTestNG
 {
+  protected List<TestFederateAmbassador> federateAmbassadors =
+    new ArrayList<TestFederateAmbassador>(3);
+
+  public FederationManagementTestNG()
+  {
+    super(3);
+  }
+
+  @BeforeClass
+  public void setup()
+    throws Exception
+  {
+    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(0)));
+    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(1)));
+    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(2)));
+  }
+
   @Test
   public void testCreateFederationExecution()
     throws Exception
@@ -91,7 +119,7 @@ public class FederationManagementTestNG
     throws Exception
   {
     rtiAmbassadors.get(0).joinFederationExecution(
-      FEDERATE_TYPE, FEDERATION_NAME, new NullFederateAmbassador(), null);
+      FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(0), null);
   }
 
   @Test(dependsOnMethods = {"testJoinFederationExecution"},
@@ -103,7 +131,7 @@ public class FederationManagementTestNG
       FEDERATE_TYPE, FEDERATION_NAME, new NullFederateAmbassador(), null);
   }
 
-  @Test(dependsOnMethods = {"testJoinFederationExecutionAgain"})
+  @Test(dependsOnMethods = {"testRegisterFederationSynchronizationPoint"})
   public void testResignFederationExecution()
     throws Exception
   {
@@ -124,5 +152,133 @@ public class FederationManagementTestNG
     throws Exception
   {
     rtiAmbassadors.get(0).resignFederationExecution(NO_ACTION);
+  }
+
+  @Test(dependsOnMethods = {"testJoinFederationExecutionAgain"})
+  public void testRegisterFederationSynchronizationPoint()
+    throws Exception
+  {
+    rtiAmbassadors.get(1).joinFederationExecution(
+      FEDERATE_TYPE + "2", FEDERATION_NAME, federateAmbassadors.get(1), null);
+    rtiAmbassadors.get(2).joinFederationExecution(
+      FEDERATE_TYPE + "3", FEDERATION_NAME, federateAmbassadors.get(2), null);
+
+    rtiAmbassadors.get(0).registerFederationSynchronizationPoint(
+      SYNCHRONIZATION_POINT_1, null);
+
+    federateAmbassadors.get(0).checkSynchronizationPointRegistrationSucceeded(
+      SYNCHRONIZATION_POINT_1);
+
+    federateAmbassadors.get(0).checkAnnouncedSynchronizationPoint(
+      SYNCHRONIZATION_POINT_1);
+    federateAmbassadors.get(1).checkAnnouncedSynchronizationPoint(
+      SYNCHRONIZATION_POINT_1);
+    federateAmbassadors.get(2).checkAnnouncedSynchronizationPoint(
+      SYNCHRONIZATION_POINT_1);
+
+    rtiAmbassadors.get(0).synchronizationPointAchieved(SYNCHRONIZATION_POINT_1);
+    rtiAmbassadors.get(1).synchronizationPointAchieved(SYNCHRONIZATION_POINT_1);
+    rtiAmbassadors.get(2).synchronizationPointAchieved(SYNCHRONIZATION_POINT_1);
+
+    federateAmbassadors.get(0).checkFederationSynchronized(
+      SYNCHRONIZATION_POINT_1);
+    federateAmbassadors.get(1).checkFederationSynchronized(
+      SYNCHRONIZATION_POINT_1);
+    federateAmbassadors.get(2).checkFederationSynchronized(
+      SYNCHRONIZATION_POINT_1);
+  }
+
+  protected static class TestFederateAmbassador
+    extends NullFederateAmbassador
+  {
+    protected RTIambassador rtiAmbassador;
+
+    protected Set<String> successfullyRegisteredSynchronizationPoints =
+      new HashSet<String>();
+    protected Map<String, SynchronizationPointFailureReason> unsuccessfullyRegisteredSynchronizationPoints =
+      new HashMap<String, SynchronizationPointFailureReason>();
+    protected Set<String> announcedSynchronizationPoints =
+      new HashSet<String>();
+    protected Set<String> federationSynchronized = new HashSet<String>();
+
+    public TestFederateAmbassador(RTIambassador rtiAmbassador)
+    {
+      this.rtiAmbassador = rtiAmbassador;
+    }
+
+    public void checkSynchronizationPointRegistrationSucceeded(String label)
+      throws Exception
+    {
+      for (int i = 0;
+           i < 5 &&
+           !successfullyRegisteredSynchronizationPoints.contains(label); i++)
+      {
+        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+      }
+      assert successfullyRegisteredSynchronizationPoints.contains(label);
+    }
+
+    public void checkSynchronizationPointRegistrationFailed(
+      String label, SynchronizationPointFailureReason reason)
+      throws Exception
+    {
+      for (int i = 0;
+           i < 5 &&
+           !unsuccessfullyRegisteredSynchronizationPoints.containsKey(label);
+           i++)
+      {
+        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+      }
+      assert reason == unsuccessfullyRegisteredSynchronizationPoints.get(label);
+    }
+
+    public void checkAnnouncedSynchronizationPoint(String label)
+      throws Exception
+    {
+      for (int i = 0; i < 5 && !announcedSynchronizationPoints.contains(label); i++)
+      {
+        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+      }
+      assert announcedSynchronizationPoints.contains(label);
+    }
+
+    public void checkFederationSynchronized(String label)
+      throws Exception
+    {
+      for (int i = 0; i < 5 && !federationSynchronized.contains(label); i++)
+      {
+        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+      }
+      assert federationSynchronized.contains(label);
+    }
+
+    @Override
+    public void synchronizationPointRegistrationSucceeded(String label)
+      throws FederateInternalError
+    {
+      successfullyRegisteredSynchronizationPoints.add(label);
+    }
+
+    @Override
+    public void synchronizationPointRegistrationFailed(
+      String label, SynchronizationPointFailureReason reason)
+      throws FederateInternalError
+    {
+      unsuccessfullyRegisteredSynchronizationPoints.put(label, reason);
+    }
+
+    @Override
+    public void announceSynchronizationPoint(String label, byte[] tag)
+      throws FederateInternalError
+    {
+      announcedSynchronizationPoints.add(label);
+    }
+
+    @Override
+    public void federationSynchronized(String label)
+      throws FederateInternalError
+    {
+      federationSynchronized.add(label);
+    }
   }
 }

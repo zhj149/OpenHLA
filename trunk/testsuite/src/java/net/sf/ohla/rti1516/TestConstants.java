@@ -38,6 +38,9 @@ public interface TestConstants
 
   static final String FEDERATE_TYPE = "Test Federate";
 
+  static final String SYNCHRONIZATION_POINT_1 = "Synchronization Point 1";
+  static final String SYNCHRONIZATION_POINT_2 = "Synchronization Point 2";
+
   static final String TEST_OBJECT = "TestObject";
   static final String TEST_OBJECT2 = "TestObject.TestObject2";
 
