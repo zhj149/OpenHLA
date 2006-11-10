@@ -2,9 +2,29 @@ package hla.rti1516;
 
 public interface FederateAmbassador
 {
+  /**
+   * This service shall be invoked in response to a
+   * {@link RTIambassador#registerFederationSynchronizationPoint(String, byte[])} or
+   * {@link RTIambassador#registerFederationSynchronizationPoint(String, byte[], FederateHandleSet)}
+   * service invocation indicating the label has been successfully registered.
+   *
+   * @param label the synchronization point label
+   * @throws FederateInternalError thrown if the federate encountered an error
+   */
   void synchronizationPointRegistrationSucceeded(String label)
     throws FederateInternalError;
 
+  /**
+   * This service shall be invoked in response to a
+   * {@link RTIambassador#registerFederationSynchronizationPoint(String, byte[])} or
+   * {@link RTIambassador#registerFederationSynchronizationPoint(String, byte[], FederateHandleSet)}
+   * service invocation indicating the label has not been successfully
+   * registered.
+   *
+   * @param label the synchronization point label
+   * @param reason the reason the registration failed
+   * @throws FederateInternalError thrown if the federate encountered an error
+   */
   void synchronizationPointRegistrationFailed(
     String label, SynchronizationPointFailureReason reason)
     throws FederateInternalError;

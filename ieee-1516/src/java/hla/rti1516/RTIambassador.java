@@ -19,8 +19,7 @@ public interface RTIambassador
    *                                          name already exists
    * @throws CouldNotOpenFDD thrown if the FDD could not be opened
    * @throws ErrorReadingFDD thrown if the FDD could not be read
-   * @throws RTIinternalError thrown if an error occurred while creating the
-   *                          specified federation execution
+   * @throws RTIinternalError thrown if the RTI encountered an error
    */
   void createFederationExecution(String federationName, URL fdd)
     throws FederationExecutionAlreadyExists, CouldNotOpenFDD, ErrorReadingFDD,
@@ -38,8 +37,7 @@ public interface RTIambassador
    *                                  to the specified federation execution
    * @throws FederationExecutionDoesNotExist thrown if the federation execution
    *                                         specified does not exist
-   * @throws RTIinternalError thrown if an error occurred while destroying the
-   *                          specified federation execution
+   * @throws RTIinternalError thrown if the RTI encountered an error
    */
   void destroyFederationExecution(String federationName)
     throws FederatesCurrentlyJoined, FederationExecutionDoesNotExist,
@@ -64,8 +62,7 @@ public interface RTIambassador
    *                                         specified does not exist
    * @throws SaveInProgress thrown if a federation save is in progress
    * @throws RestoreInProgress thrown if a federation restore is in progress
-   * @throws RTIinternalError thrown if an error occurred joining the specified
-   *                          federation execution
+   * @throws RTIinternalError thrown if the RTI encountered an error
    */
   FederateHandle joinFederationExecution(
     String federateType, String federationName,
@@ -82,23 +79,7 @@ public interface RTIambassador
    * other joined federates, unconditionally divest them for ownership
    * acquisition at a later point, or delete the object instance of which they
    * are a part (assuming the joined federate has the privilege to delete these
-   * object instances). As a convenience to the joined federate, the Resign
-   * Federation Execution service shall accept an action argument that directs
-   * the RTI to perform zero or more of the following actions:
-   * <p/>
-   * <ul>
-   * <li>Unconditionally divest all owned instance attributes for future
-   * ownership acquisition. This shall place the instance attributes into an
-   * unowned state (implying that their values are not being updated), which
-   * shall make them eligible for ownership by another joined federate.</li>
-   * <li>Delete all object instances for which the joined federate has that
-   * privilege (implied invocation of the Delete Object Instance service).</li>
-   * <li>Cancel all pending instance attribute ownership acquisitions. The use
-   * of this directive may interfere with the intended semantics of negotiated
-   * instance attribute ownership divestiture by allowing instance attributes
-   * divested in this way to be unowned (because the cancellation directive may
-   *  not succeed).</li>
-   * </ul>
+   * object instances).
    *
    * @param resignAction the action to take upon resigning from the federation
    * @throws OwnershipAcquisitionPending thrown if the federate is currently
@@ -108,23 +89,95 @@ public interface RTIambassador
    *                                is resigning without releasing them
    * @throws FederateNotExecutionMember thrown if the federate is not a member
    *                                    of a federation execution
-   * @throws RTIinternalError thrown if an error occurred resigning from the
-   *                          specified federation execution
+   * @throws RTIinternalError thrown if the RTI encountered an error
    */
   void resignFederationExecution(ResignAction resignAction)
     throws OwnershipAcquisitionPending, FederateOwnsAttributes,
            FederateNotExecutionMember, RTIinternalError;
 
+  /**
+   * The Register Federation Synchronization Point service shall be used to
+   * initiate the registration of an upcoming synchronization point label. When
+   * a synchronization point label has been successfully registered (indicated
+   * through the
+   * {@link FederateAmbassador#synchronizationPointRegistrationSucceeded(String)}
+   * service), the RTI shall inform all joined federates of the label's
+   * existence by invoking the
+   * {@link FederateAmbassador#announceSynchronizationPoint(String, byte[])}
+   * service at those joined federates. The user-supplied tag shall provide a
+   * vehicle for information to be associated with the synchronization point and
+   * shall be announced along with the synchronization label. It is possible for
+   * multiple synchronization points registered by the same or different joined
+   * federates to be pending at the same point.
+   *
+   * @param label the synchronization point label
+   * @param tag data associated with the synchronization point
+   * @throws FederateNotExecutionMember thrown if the federate is not a member
+   *                                    of a federation execution
+   * @throws SaveInProgress thrown if a federation save is in progress
+   * @throws RestoreInProgress thrown if a federation restore is in progress
+   * @throws RTIinternalError thrown if the RTI encountered an error
+   */
   void registerFederationSynchronizationPoint(String label, byte[] tag)
     throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError;
 
+  /**
+   * The Register Federation Synchronization Point service shall be used to
+   * initiate the registration of an upcoming synchronization point label. When
+   * a synchronization point label has been successfully registered (indicated
+   * through the
+   * {@link FederateAmbassador#synchronizationPointRegistrationSucceeded(String)}
+   * service), the RTI shall inform some or all joined federates of the label's
+   * existence by invoking the
+   * {@link FederateAmbassador#announceSynchronizationPoint(String, byte[])}
+   * service at those joined federates. The optional set of joined federate
+   * designators shall be used by the joined federate to specify the joined
+   * federates in the federation execution that should be informed of the label
+   * existence. If the optional set of joined federate designators is empty or
+   * not supplied, all joined federates in the federation execution shall be
+   * informed of the label's existence. If the optional set of designators is
+   * not empty, all designated joined federates shall be federation execution
+   * members. The user-supplied tag shall provide a vehicle for information to
+   * be associated with the synchronization point and shall be announced along
+   * with the synchronization label. It is possible for multiple synchronization
+   * points registered by the same or different joined federates to be pending
+   * at the same point.
+   *
+   * @param label the synchronization point label
+   * @param tag data associated with the synchronization point
+   * @param synchronizationSet the federates to be included in the
+   *                           synchronization point
+   * @throws FederateNotExecutionMember thrown if the federate is not a member
+   *                                    of a federation execution
+   * @throws SaveInProgress thrown if a federation save is in progress
+   * @throws RestoreInProgress thrown if a federation restore is in progress
+   * @throws RTIinternalError thrown if the RTI encountered an error
+   */
   void registerFederationSynchronizationPoint(
     String label, byte[] tag, FederateHandleSet synchronizationSet)
     throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError;
 
-  void synchronizationPointAchieved(String synchronizationPointLabel)
+  /**
+   * The Synchronization Point Achieved service shall inform the RTI that the
+   * joined federate has reached the specified synchronization point. Once all
+   * joined federates in the synchronization set for a given point have invoked
+   * this service, the RTI shall not invoke the
+   * {@link FederateAmbassador#announceSynchronizationPoint(String, byte[])}
+   * on any newly joining federates.
+   *
+   * @param label the synchronization point label
+   * @throws SynchronizationPointLabelNotAnnounced thrown if the specified
+   *                                               synchronization point has not
+   *                                               been announced
+   * @throws FederateNotExecutionMember thrown if the federate is not a member
+   *                                    of a federation execution
+   * @throws SaveInProgress thrown if a federation save is in progress
+   * @throws RestoreInProgress thrown if a federation restore is in progress
+   * @throws RTIinternalError thrown if the RTI encountered an error
+   */
+  void synchronizationPointAchieved(String label)
     throws SynchronizationPointLabelNotAnnounced, FederateNotExecutionMember,
            SaveInProgress, RestoreInProgress, RTIinternalError;
 
