@@ -25,18 +25,10 @@ public interface TestConstants
   static final String FED = "TestObjectModel.fed";
   static final String BAD_FED = FED + ".bad";
 
-  static final String NULL_FED_FEDERATION_NAME =
-    FEDERATION_NAME + " - Null FED";
-
-  static final String UNFINDABLE_FED_FEDERATION_NAME =
-    FEDERATION_NAME + " - Unfindable FED";
-  static final String UNFINDABLE_FED =
-    "file:/no/such/directory/TestObjectModel.fed";
-
-  static final String BAD_FED_FEDERATION_NAME =
-    FEDERATION_NAME + " - Bad FED";
-
   static final String FEDERATE_TYPE = "Test Federate";
+
+  static final String SYNCHRONIZATION_POINT_1 = "Synchronization Point 1";
+  static final String SYNCHRONIZATION_POINT_2 = "Synchronization Point 2";
 
   static final String TEST_OBJECT = "TestObject";
   static final String TEST_OBJECT2 = "TestObject.TestObject2";
