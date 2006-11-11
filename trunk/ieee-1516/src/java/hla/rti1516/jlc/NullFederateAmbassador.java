@@ -74,7 +74,7 @@ public class NullFederateAmbassador
   {
   }
 
-  public void initiateFederateSave(String label, LogicalTime time)
+  public void initiateFederateSave(String label, LogicalTime saveTime)
     throws InvalidLogicalTime, UnableToPerformSave, FederateInternalError
   {
   }

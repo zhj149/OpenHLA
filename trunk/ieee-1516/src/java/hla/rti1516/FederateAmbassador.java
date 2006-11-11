@@ -38,7 +38,7 @@ public interface FederateAmbassador
   void initiateFederateSave(String label)
     throws UnableToPerformSave, FederateInternalError;
 
-  void initiateFederateSave(String label, LogicalTime time)
+  void initiateFederateSave(String label, LogicalTime saveTime)
     throws InvalidLogicalTime, UnableToPerformSave, FederateInternalError;
 
   void federationSaved()
