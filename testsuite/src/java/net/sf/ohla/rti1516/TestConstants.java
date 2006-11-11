@@ -25,17 +25,6 @@ public interface TestConstants
   static final String FDD = "TestObjectModel.xml";
   static final String BAD_FDD = FDD + ".bad";
 
-  static final String NULL_FDD_FEDERATION_NAME =
-    FEDERATION_NAME + " - Null FDD";
-
-  static final String UNFINDABLE_FDD_FEDERATION_NAME =
-    FEDERATION_NAME + " - Unfindable FDD";
-  static final String UNFINDABLE_FDD =
-    "file:/no/such/directory/TestObjectModel.xml";
-
-  static final String BAD_FDD_FEDERATION_NAME =
-    FEDERATION_NAME + " - Bad FDD";
-
   static final String FEDERATE_TYPE = "Test Federate";
 
   static final String SYNCHRONIZATION_POINT_1 = "Synchronization Point 1";
