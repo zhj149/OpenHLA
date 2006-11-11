@@ -16,8 +16,7 @@
 
 package net.sf.ohla.rti1516.federate.callbacks;
 
-import net.sf.ohla.rti1516.federate.Federate;
-
+import hla.rti1516.FederateAmbassador;
 import hla.rti1516.FederateInternalError;
 import hla.rti1516.InvalidLogicalTime;
 import hla.rti1516.LogicalTime;
@@ -33,10 +32,10 @@ public class TimeRegulationEnabled
     this.time = time;
   }
 
-  public void execute(Federate federate)
+  public void execute(FederateAmbassador federateAmbassador)
     throws InvalidLogicalTime, NoRequestToEnableTimeRegulationWasPending,
            FederateInternalError
   {
-    federate.getFederateAmbassador().timeRegulationEnabled(time);
+    federateAmbassador.timeRegulationEnabled(time);
   }
 }

@@ -16,8 +16,7 @@
 
 package net.sf.ohla.rti1516.federate.callbacks;
 
-import net.sf.ohla.rti1516.federate.Federate;
-
+import hla.rti1516.FederateAmbassador;
 import hla.rti1516.FederateInternalError;
 import hla.rti1516.ObjectClassHandle;
 import hla.rti1516.ObjectClassNotPublished;
@@ -32,10 +31,9 @@ public class StopRegistrationForObjectClass
     this.objectClassHandle = objectClassHandle;
   }
 
-  public void execute(Federate federate)
+  public void execute(FederateAmbassador federateAmbassador)
     throws ObjectClassNotPublished, FederateInternalError
   {
-    federate.getFederateAmbassador().stopRegistrationForObjectClass(
-      objectClassHandle);
+    federateAmbassador.stopRegistrationForObjectClass(objectClassHandle);
   }
 }

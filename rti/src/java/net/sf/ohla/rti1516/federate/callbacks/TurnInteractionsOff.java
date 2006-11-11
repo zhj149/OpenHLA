@@ -16,8 +16,7 @@
 
 package net.sf.ohla.rti1516.federate.callbacks;
 
-import net.sf.ohla.rti1516.federate.Federate;
-
+import hla.rti1516.FederateAmbassador;
 import hla.rti1516.FederateInternalError;
 import hla.rti1516.InteractionClassHandle;
 import hla.rti1516.InteractionClassNotPublished;
@@ -32,10 +31,9 @@ public class TurnInteractionsOff
     this.interactionClassHandle = interactionClassHandle;
   }
 
-  public void execute(Federate federate)
+  public void execute(FederateAmbassador federateAmbassador)
     throws InteractionClassNotPublished, FederateInternalError
   {
-    federate.getFederateAmbassador().turnInteractionsOff(
-      interactionClassHandle);
+    federateAmbassador.turnInteractionsOff(interactionClassHandle);
   }
 }

@@ -16,10 +16,9 @@
 
 package net.sf.ohla.rti1516.federate.callbacks;
 
-import net.sf.ohla.rti1516.federate.Federate;
-
 import hla.rti1516.AttributeHandle;
 import hla.rti1516.AttributeNotRecognized;
+import hla.rti1516.FederateAmbassador;
 import hla.rti1516.FederateHandle;
 import hla.rti1516.FederateInternalError;
 import hla.rti1516.ObjectInstanceHandle;
@@ -41,17 +40,17 @@ public class InformAttributeOwnership
     this.federateHandle = federateHandle;
   }
 
-  public void execute(Federate federate)
+  public void execute(FederateAmbassador federateAmbassador)
     throws ObjectInstanceNotKnown, AttributeNotRecognized, FederateInternalError
   {
-    federate.getFederateAmbassador().informAttributeOwnership(
+    federateAmbassador.informAttributeOwnership(
       objectInstanceHandle, attributeHandle, federateHandle);
   }
 
   @Override
   public String toString()
   {
-    return String.format("%s - %s - %s", objectInstanceHandle, attributeHandle,
-                         federateHandle);
+    return String.format("InformAttributeOwnership: %s - %s - %s",
+                         objectInstanceHandle, attributeHandle, federateHandle);
   }
 }

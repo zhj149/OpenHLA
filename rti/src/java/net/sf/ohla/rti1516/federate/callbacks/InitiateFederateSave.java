@@ -18,10 +18,12 @@ package net.sf.ohla.rti1516.federate.callbacks;
 
 import java.util.Set;
 
-import net.sf.ohla.rti1516.federate.Federate;
-
+import hla.rti1516.FederateAmbassador;
 import hla.rti1516.FederateHandle;
 import hla.rti1516.LogicalTime;
+import hla.rti1516.UnableToPerformSave;
+import hla.rti1516.FederateInternalError;
+import hla.rti1516.InvalidLogicalTime;
 
 public class InitiateFederateSave
   implements Callback
@@ -49,8 +51,16 @@ public class InitiateFederateSave
     return participants;
   }
 
-  public void execute(Federate federate)
+  public void execute(FederateAmbassador federateAmbassador)
+    throws UnableToPerformSave, InvalidLogicalTime, FederateInternalError
   {
-    federate.initiateFederateSave(label, saveTime, participants);
+    if (saveTime == null)
+    {
+      federateAmbassador.initiateFederateSave(label);
+    }
+    else
+    {
+      federateAmbassador.initiateFederateSave(label, saveTime);
+    }
   }
 }

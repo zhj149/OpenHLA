@@ -7,6 +7,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -72,6 +74,7 @@ import hla.rti1516.ResignAction;
 import hla.rti1516.RestoreInProgress;
 import hla.rti1516.SaveInProgress;
 import hla.rti1516.TransportationType;
+import hla.rti1516.FederateAmbassador;
 
 public class ObjectManager
 {
@@ -108,6 +111,9 @@ public class ObjectManager
     new HashMap<ObjectClassHandle, Set<ObjectInstanceHandle>>();
   protected Set<ObjectInstanceHandle> removedObjects =
     new HashSet<ObjectInstanceHandle>();
+
+  protected ConcurrentMap<ObjectInstanceHandle, ObjectClassHandle> reflectedObjectClassHandles =
+    new ConcurrentHashMap<ObjectInstanceHandle, ObjectClassHandle>();
 
   public ObjectManager(Federate federate)
   {
@@ -921,7 +927,9 @@ public class ObjectManager
   }
 
   public void discoverObjectInstance(ObjectInstanceHandle objectInstanceHandle,
-                                     ObjectClassHandle objectClassHandle)
+                                     ObjectClassHandle objectClassHandle,
+                                     String name,
+                                     FederateAmbassador federateAmbassador)
   {
     ObjectClass objectClass =
       federate.getFDD().getObjectClasses().get(objectClassHandle);
@@ -937,11 +945,6 @@ public class ObjectManager
         objectsLock.writeLock().lock();
         try
         {
-          String name =
-            reservedObjectInstanceNamesByHandle.get(objectInstanceHandle);
-          name = name != null ?
-            name : String.format("HLA-%s", objectInstanceHandle);
-
           ObjectInstance objectInstance =
             new ObjectInstance(objectInstanceHandle, objectClass, name);
           ObjectInstance oldObjectInstance =
@@ -961,7 +964,7 @@ public class ObjectManager
 
             objectInstance.discoverObjectInstance(
               objectInstanceHandle, objectClassHandle, name,
-              federate.getFederateAmbassador());
+              federateAmbassador);
           }
         }
         catch (Throwable t)
@@ -984,104 +987,106 @@ public class ObjectManager
 
   public void reflectAttributeValues(
     ObjectInstanceHandle objectInstanceHandle,
-    ObjectClassHandle objectClassHandle,
     AttributeHandleValueMap attributeValues, byte[] tag,
     OrderType sentOrderType, TransportationType transportationType,
     LogicalTime updateTime, OrderType receivedOrderType,
     MessageRetractionHandle messageRetractionHandle,
-    RegionHandleSet sentRegionHandles)
+    RegionHandleSet sentRegionHandles, FederateAmbassador federateAmbassador)
   {
-    ObjectClass objectClass =
-      federate.getFDD().getObjectClasses().get(objectClassHandle);
-    assert objectClass != null;
-
     subscriptionLock.readLock().lock();
     try
     {
-      ObjectClass subscribedObjectClass =
-        subscriptionManager.getSubscribedObjectClass(objectClass);
-      if (subscribedObjectClass != null)
+      ObjectClass objectClass = null;
+      ObjectClass subscribedObjectClass = null;
+
+      objectsLock.readLock().lock();
+      try
       {
-        objectClassHandle = subscribedObjectClass.getObjectClassHandle();
-
-        objectsLock.readLock().lock();
-        try
+        ObjectInstance objectInstance = objects.get(objectInstanceHandle);
+        if (objectInstance != null)
         {
-          ObjectInstance objectInstance = objects.get(objectInstanceHandle);
-          if (objectInstance == null)
-          {
-            // object might have been removed or just wasn't discovered yet
-
-            if (!removedObjects.contains(objectInstanceHandle))
-            {
-              // object has not been discovered yet
-
-              // upgrade to a write lock
-              //
-              objectsLock.readLock().unlock();
-              objectsLock.writeLock().lock();
-              try
-              {
-                // objects only get removed/added during callbacks and only one
-                // callback can occur at a time (this method is called in one)
-                //
-                assert !objects.containsKey(objectInstanceHandle);
-                assert !removedObjects.contains(objectInstanceHandle);
-
-                String name =
-                  reservedObjectInstanceNamesByHandle.get(
-                    objectInstanceHandle);
-                name = name != null ?
-                  name : String.format("HLA-%s", objectInstanceHandle);
-
-                objectInstance = new ObjectInstance(
-                  objectInstanceHandle, subscribedObjectClass, name);
-
-                objects.put(objectInstanceHandle, objectInstance);
-                objectsByName.put(name, objectInstance);
-                getObjectsByClassHandle(objectClassHandle).add(
-                  objectInstanceHandle);
-
-                // TODO: this means 2 callbacks are happening
-                //
-                objectInstance.discoverObjectInstance(
-                  objectInstanceHandle, objectClassHandle, name,
-                  federate.getFederateAmbassador());
-              }
-              finally
-              {
-                // downgrade to read lock
-                //
-                objectsLock.readLock().lock();
-                objectsLock.writeLock().unlock();
-              }
-            }
-          }
-
-          if (objectInstance != null)
-          {
-            if (!subscribedObjectClass.equals(objectClass))
-            {
-              subscriptionManager.trim(attributeValues, objectClassHandle);
-            }
-
-            objectInstance.reflectAttributeValues(
-              objectInstanceHandle, attributeValues, tag, sentOrderType,
-              transportationType, updateTime, receivedOrderType,
-              messageRetractionHandle, sentRegionHandles,
-              federate.getFederateAmbassador());
-          }
+          objectClass = objectInstance.getObjectClass();
+          subscribedObjectClass =
+            subscriptionManager.getSubscribedObjectClass(objectClass);
         }
-        catch (Throwable t)
+        else if (!removedObjects.contains(objectInstanceHandle))
         {
-          log.warn(String.format(
-            "federate could not reflect attributes: %s", objectInstanceHandle),
-                   t);
-        }
-        finally
-        {
+          // object has not been discovered yet
+
+          ObjectClassHandle objectClassHandle =
+            reflectedObjectClassHandles.get(objectInstanceHandle);
+
+          objectClass =
+            federate.getFDD().getObjectClasses().get(objectClassHandle);
+          assert objectClass != null;
+
+          subscribedObjectClass =
+            subscriptionManager.getSubscribedObjectClass(objectClass);
+
+          // upgrade to a write lock
+          //
           objectsLock.readLock().unlock();
+          objectsLock.writeLock().lock();
+          try
+          {
+            // objects only get removed/added during callbacks and only one
+            // callback can occur at a time (this method is called in one)
+            //
+            assert !objects.containsKey(objectInstanceHandle);
+            assert !removedObjects.contains(objectInstanceHandle);
+
+            String name =
+              reservedObjectInstanceNamesByHandle.get(
+                objectInstanceHandle);
+            name = name != null ?
+              name : String.format("HLA-%s", objectInstanceHandle);
+
+            objectInstance = new ObjectInstance(
+              objectInstanceHandle, subscribedObjectClass, name);
+
+            objects.put(objectInstanceHandle, objectInstance);
+            objectsByName.put(name, objectInstance);
+            getObjectsByClassHandle(objectClassHandle).add(
+              objectInstanceHandle);
+
+            // TODO: this means 2 callbacks are happening
+            //
+            objectInstance.discoverObjectInstance(
+              objectInstanceHandle, objectClassHandle, name,
+              federateAmbassador);
+          }
+          finally
+          {
+            // downgrade to read lock
+            //
+            objectsLock.readLock().lock();
+            objectsLock.writeLock().unlock();
+          }
         }
+
+        if (objectInstance != null && subscribedObjectClass != null)
+        {
+          if (!subscribedObjectClass.equals(objectClass))
+          {
+            subscriptionManager.trim(
+              attributeValues, subscribedObjectClass.getObjectClassHandle());
+          }
+
+          objectInstance.reflectAttributeValues(
+            objectInstanceHandle, attributeValues, tag, sentOrderType,
+            transportationType, updateTime, receivedOrderType,
+            messageRetractionHandle, sentRegionHandles, federateAmbassador);
+        }
+      }
+      catch (Throwable t)
+      {
+        log.warn(String.format(
+          "federate could not reflect attributes: %s", objectInstanceHandle),
+                 t);
+      }
+      finally
+      {
+        objectsLock.readLock().unlock();
       }
     }
     finally
@@ -1096,7 +1101,7 @@ public class ObjectManager
     OrderType sentOrderType, TransportationType transportationType,
     LogicalTime sendTime, OrderType receivedOrderType,
     MessageRetractionHandle messageRetractionHandle,
-    RegionHandleSet sentRegionHandles)
+    RegionHandleSet sentRegionHandles, FederateAmbassador federateAmbassador)
   {
     InteractionClass interactionClass =
       federate.getFDD().getInteractionClasses().get(interactionClassHandle);
@@ -1125,13 +1130,13 @@ public class ObjectManager
         {
           if (sentRegionHandles == null)
           {
-            federate.getFederateAmbassador().receiveInteraction(
+            federateAmbassador.receiveInteraction(
               interactionClassHandle, parameterValues, tag, sentOrderType,
               transportationType);
           }
           else
           {
-            federate.getFederateAmbassador().receiveInteraction(
+            federateAmbassador.receiveInteraction(
               interactionClassHandle, parameterValues, tag, sentOrderType,
               transportationType, sentRegionHandles);
           }
@@ -1140,13 +1145,13 @@ public class ObjectManager
         {
           if (sentRegionHandles == null)
           {
-            federate.getFederateAmbassador().receiveInteraction(
+            federateAmbassador.receiveInteraction(
               interactionClassHandle, parameterValues, tag, sentOrderType,
               transportationType, sendTime, receivedOrderType);
           }
           else
           {
-            federate.getFederateAmbassador().receiveInteraction(
+            federateAmbassador.receiveInteraction(
               interactionClassHandle, parameterValues, tag, sentOrderType,
               transportationType, sendTime, receivedOrderType,
               sentRegionHandles);
@@ -1154,14 +1159,14 @@ public class ObjectManager
         }
         else if (sentRegionHandles == null)
         {
-          federate.getFederateAmbassador().receiveInteraction(
+          federateAmbassador.receiveInteraction(
             interactionClassHandle, parameterValues, tag, sentOrderType,
             transportationType, sendTime, receivedOrderType,
             messageRetractionHandle);
         }
         else
         {
-          federate.getFederateAmbassador().receiveInteraction(
+          federateAmbassador.receiveInteraction(
             interactionClassHandle, parameterValues, tag, sentOrderType,
             transportationType, sendTime, receivedOrderType,
             messageRetractionHandle, sentRegionHandles);
@@ -1184,7 +1189,8 @@ public class ObjectManager
     ObjectInstanceHandle objectInstanceHandle, byte[] tag,
     OrderType sentOrderType, LogicalTime deleteTime,
     OrderType receivedOrderType,
-    MessageRetractionHandle messageRetractionHandle)
+    MessageRetractionHandle messageRetractionHandle,
+    FederateAmbassador federateAmbassador)
   {
     objectsLock.writeLock().lock();
     try
@@ -1196,8 +1202,7 @@ public class ObjectManager
 
         objectInstance.removeObjectInstance(
           objectInstanceHandle, tag, sentOrderType, deleteTime,
-          receivedOrderType, messageRetractionHandle,
-          federate.getFederateAmbassador());
+          receivedOrderType, messageRetractionHandle, federateAmbassador);
       }
     }
     finally
@@ -1208,7 +1213,8 @@ public class ObjectManager
 
   public void attributeOwnershipAcquisitionNotification(
     ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles, byte[] tag)
+    AttributeHandleSet attributeHandles, byte[] tag,
+    FederateAmbassador federateAmbassador)
   {
     objectsLock.readLock().lock();
     try
@@ -1217,7 +1223,7 @@ public class ObjectManager
       if (objectInstance != null)
       {
         objectInstance.attributeOwnershipAcquisitionNotification(
-          attributeHandles, tag, federate.getFederateAmbassador());
+          attributeHandles, tag, federateAmbassador);
       }
     }
     finally
@@ -1719,6 +1725,38 @@ public class ObjectManager
     {
       reservedObjectInstanceNamesLock.unlock();
     }
+  }
+
+  public String createObjectInstanceName(
+    ObjectInstanceHandle objectInstanceHandle,
+    ObjectClassHandle objectClassHandle)
+  {
+    String objectInstanceName;
+
+    objectsLock.readLock().lock();
+    try
+    {
+      objectInstanceName =
+        reservedObjectInstanceNamesByHandle.get(objectInstanceHandle);
+    }
+    finally
+    {
+      objectsLock.readLock().unlock();
+    }
+
+    if (objectInstanceName == null)
+    {
+      objectInstanceName = String.format("HLA-%s", objectInstanceHandle);
+    }
+
+    return objectInstanceName;
+  }
+
+  public void objectReflected(ObjectInstanceHandle objectInstanceHandle,
+                              ObjectClassHandle objectClassHandle)
+  {
+    reflectedObjectClassHandles.putIfAbsent(
+      objectInstanceHandle, objectClassHandle);
   }
 
   protected class ObjectManagerSubscriptionManager

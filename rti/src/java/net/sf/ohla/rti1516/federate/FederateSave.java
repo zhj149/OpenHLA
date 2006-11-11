@@ -25,14 +25,14 @@ public class FederateSave
   protected FederateHandle federateHandle;
   protected String federateType;
 
-  protected transient Set<FederateHandle> peersInstructedToSave;
+  protected transient Set<FederateHandle> participants;
 
   public FederateSave(FederateHandle federateHandle, String federateType,
-                      Set<FederateHandle> peersInstructedToSave)
+                      Set<FederateHandle> participants)
   {
     this.federateHandle = federateHandle;
     this.federateType = federateType;
-    this.peersInstructedToSave = peersInstructedToSave;
+    this.participants = participants;
   }
 
   public FederateHandle getFederateHandle()
@@ -45,21 +45,26 @@ public class FederateSave
     return federateType;
   }
 
+  public Set<FederateHandle> getParticipants()
+  {
+    return participants;
+  }
+
   public boolean federateSaveInitiated(FederateHandle peerFederateHandle)
   {
-    peersInstructedToSave.remove(federateHandle);
-    return peersInstructedToSave.isEmpty();
+    participants.remove(federateHandle);
+    return participants.isEmpty();
   }
 
   public boolean federateSaveInitiatedFailed(FederateHandle peerFederateHandle)
   {
-    peersInstructedToSave.remove(federateHandle);
-    return peersInstructedToSave.isEmpty();
+    participants.remove(federateHandle);
+    return participants.isEmpty();
   }
 
   public boolean federateResigned(FederateHandle federateHandle)
   {
-    peersInstructedToSave.remove(federateHandle);
-    return peersInstructedToSave.isEmpty();
+    participants.remove(federateHandle);
+    return participants.isEmpty();
   }
 }

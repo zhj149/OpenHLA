@@ -161,7 +161,7 @@ public class CallbackManager
     {
       try
       {
-        callback.execute(federate);
+        callback.execute(federate.getFederateAmbassador());
       }
       catch (Throwable t)
       {
@@ -195,7 +195,7 @@ public class CallbackManager
     {
       try
       {
-        callback.execute(federate);
+        callback.execute(federate.getFederateAmbassador());
       }
       catch (RTIexception rtie)
       {

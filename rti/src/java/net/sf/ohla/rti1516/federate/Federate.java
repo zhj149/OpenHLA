@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -53,6 +52,7 @@ import net.sf.ohla.rti1516.OHLARegionHandleSetFactory;
 import net.sf.ohla.rti1516.fdd.FDD;
 import net.sf.ohla.rti1516.federate.callbacks.Callback;
 import net.sf.ohla.rti1516.federate.callbacks.CallbackManager;
+import net.sf.ohla.rti1516.federate.callbacks.DiscoverObjectInstance;
 import net.sf.ohla.rti1516.federate.callbacks.InitiateFederateRestore;
 import net.sf.ohla.rti1516.federate.callbacks.InitiateFederateSave;
 import net.sf.ohla.rti1516.federate.callbacks.ObjectInstanceNameReservationFailed;
@@ -113,6 +113,7 @@ import org.slf4j.LoggerFactory;
 
 import hla.rti1516.AsynchronousDeliveryAlreadyDisabled;
 import hla.rti1516.AsynchronousDeliveryAlreadyEnabled;
+import hla.rti1516.AttributeAcquisitionWasNotCanceled;
 import hla.rti1516.AttributeAcquisitionWasNotRequested;
 import hla.rti1516.AttributeAlreadyBeingAcquired;
 import hla.rti1516.AttributeAlreadyBeingDivested;
@@ -127,6 +128,8 @@ import hla.rti1516.AttributeHandleValueMapFactory;
 import hla.rti1516.AttributeNotDefined;
 import hla.rti1516.AttributeNotOwned;
 import hla.rti1516.AttributeNotPublished;
+import hla.rti1516.AttributeNotRecognized;
+import hla.rti1516.AttributeNotSubscribed;
 import hla.rti1516.AttributeRegionAssociation;
 import hla.rti1516.AttributeRelevanceAdvisorySwitchIsOff;
 import hla.rti1516.AttributeRelevanceAdvisorySwitchIsOn;
@@ -134,6 +137,8 @@ import hla.rti1516.AttributeScopeAdvisorySwitchIsOff;
 import hla.rti1516.AttributeScopeAdvisorySwitchIsOn;
 import hla.rti1516.AttributeSetRegionSetPairList;
 import hla.rti1516.AttributeSetRegionSetPairListFactory;
+import hla.rti1516.CouldNotDiscover;
+import hla.rti1516.CouldNotInitiateRestore;
 import hla.rti1516.DeletePrivilegeNotHeld;
 import hla.rti1516.DimensionHandle;
 import hla.rti1516.DimensionHandleFactory;
@@ -143,9 +148,12 @@ import hla.rti1516.FederateAlreadyExecutionMember;
 import hla.rti1516.FederateAmbassador;
 import hla.rti1516.FederateHandle;
 import hla.rti1516.FederateHandleFactory;
+import hla.rti1516.FederateHandleRestoreStatusPair;
+import hla.rti1516.FederateHandleSaveStatusPair;
 import hla.rti1516.FederateHandleSet;
 import hla.rti1516.FederateHandleSetFactory;
 import hla.rti1516.FederateHasNotBegunSave;
+import hla.rti1516.FederateInternalError;
 import hla.rti1516.FederateOwnsAttributes;
 import hla.rti1516.FederateServiceInvocationsAreBeingReportedViaMOM;
 import hla.rti1516.FederateUnableToUseTime;
@@ -156,7 +164,10 @@ import hla.rti1516.InteractionClassHandle;
 import hla.rti1516.InteractionClassHandleFactory;
 import hla.rti1516.InteractionClassNotDefined;
 import hla.rti1516.InteractionClassNotPublished;
+import hla.rti1516.InteractionClassNotRecognized;
+import hla.rti1516.InteractionClassNotSubscribed;
 import hla.rti1516.InteractionParameterNotDefined;
+import hla.rti1516.InteractionParameterNotRecognized;
 import hla.rti1516.InteractionRelevanceAdvisorySwitchIsOff;
 import hla.rti1516.InteractionRelevanceAdvisorySwitchIsOn;
 import hla.rti1516.InvalidAttributeHandle;
@@ -175,6 +186,7 @@ import hla.rti1516.InvalidRegion;
 import hla.rti1516.InvalidRegionContext;
 import hla.rti1516.InvalidTransportationName;
 import hla.rti1516.InvalidTransportationType;
+import hla.rti1516.JoinedFederateIsNotInTimeAdvancingState;
 import hla.rti1516.LogicalTime;
 import hla.rti1516.LogicalTimeAlreadyPassed;
 import hla.rti1516.LogicalTimeInterval;
@@ -183,10 +195,13 @@ import hla.rti1516.MessageRetractionHandle;
 import hla.rti1516.MessageRetractionReturn;
 import hla.rti1516.MobileFederateServices;
 import hla.rti1516.NameNotFound;
+import hla.rti1516.NoRequestToEnableTimeConstrainedWasPending;
+import hla.rti1516.NoRequestToEnableTimeRegulationWasPending;
 import hla.rti1516.ObjectClassHandle;
 import hla.rti1516.ObjectClassHandleFactory;
 import hla.rti1516.ObjectClassNotDefined;
 import hla.rti1516.ObjectClassNotPublished;
+import hla.rti1516.ObjectClassNotRecognized;
 import hla.rti1516.ObjectClassRelevanceAdvisorySwitchIsOff;
 import hla.rti1516.ObjectClassRelevanceAdvisorySwitchIsOn;
 import hla.rti1516.ObjectInstanceHandle;
@@ -213,11 +228,14 @@ import hla.rti1516.RegionNotCreatedByThisFederate;
 import hla.rti1516.RequestForTimeConstrainedPending;
 import hla.rti1516.RequestForTimeRegulationPending;
 import hla.rti1516.ResignAction;
+import hla.rti1516.RestoreFailureReason;
 import hla.rti1516.RestoreInProgress;
 import hla.rti1516.RestoreNotRequested;
+import hla.rti1516.SaveFailureReason;
 import hla.rti1516.SaveInProgress;
 import hla.rti1516.SaveNotInitiated;
 import hla.rti1516.ServiceGroup;
+import hla.rti1516.SpecifiedSaveLabelDoesNotExist;
 import hla.rti1516.SynchronizationPointFailureReason;
 import hla.rti1516.SynchronizationPointLabelNotAnnounced;
 import hla.rti1516.TimeConstrainedAlreadyEnabled;
@@ -226,7 +244,9 @@ import hla.rti1516.TimeQueryReturn;
 import hla.rti1516.TimeRegulationAlreadyEnabled;
 import hla.rti1516.TimeRegulationIsNotEnabled;
 import hla.rti1516.TransportationType;
-import hla.rti1516.FederateInternalError;
+import hla.rti1516.UnableToPerformSave;
+import hla.rti1516.UnknownName;
+import hla.rti1516.jlc.NullFederateAmbassador;
 
 public class Federate
 {
@@ -244,6 +264,9 @@ public class Federate
   protected final String federationExecutionName;
   protected final FederateAmbassador federateAmbassador;
   protected final MobileFederateServices mobileFederateServices;
+
+  protected final FederateAmbassador federateAmbassadorInterceptor =
+    new FederateAmbassadorInterceptor();
 
   protected FederateHandle federateHandle;
 
@@ -475,7 +498,7 @@ public class Federate
 
   public FederateAmbassador getFederateAmbassador()
   {
-    return federateAmbassador;
+    return federateAmbassadorInterceptor;
   }
 
   public FDD getFDD()
@@ -523,7 +546,26 @@ public class Federate
     boolean processed = true;
     if (message instanceof Callback)
     {
-      if (message instanceof InitiateFederateSave)
+      if (message instanceof ReflectAttributeValues)
+      {
+        ReflectAttributeValues reflectAttributeValues =
+          (ReflectAttributeValues) message;
+
+        objectManager.objectReflected(
+          reflectAttributeValues.getObjectInstanceHandle(),
+          reflectAttributeValues.getObjectClassHandle());
+      }
+      else if (message instanceof DiscoverObjectInstance)
+      {
+        DiscoverObjectInstance discoverObjectInstance =
+          (DiscoverObjectInstance) message;
+
+        String name = objectManager.createObjectInstanceName(
+          discoverObjectInstance.getObjectInstanceHandle(),
+          discoverObjectInstance.getObjectClassHandle());
+        discoverObjectInstance.setName(name);
+      }
+      else if (message instanceof InitiateFederateSave)
       {
         InitiateFederateSave initiateFederateSave =
           (InitiateFederateSave) message;
@@ -3381,120 +3423,6 @@ public class Federate
     }
   }
 
-  public void announceSynchronizationPoint(String label, byte[] tag)
-  {
-    FederateSynchronizationPoint federateSynchronizationPoint;
-
-    synchronizationPointLock.lock();
-    try
-    {
-      federateSynchronizationPoint = synchronizationPoints.get(label);
-      if (federateSynchronizationPoint == null)
-      {
-        federateSynchronizationPoint =
-          new FederateSynchronizationPoint(label, tag);
-        synchronizationPoints.put(label, federateSynchronizationPoint);
-      }
-    }
-    finally
-    {
-      synchronizationPointLock.unlock();
-    }
-
-    federateSynchronizationPoint.announceSynchronizationPoint();
-
-    try
-    {
-      federateAmbassador.announceSynchronizationPoint(label, tag);
-    }
-    catch (FederateInternalError fie)
-    {
-      log.warn(String.format(
-        "federate could not process announcement of synchronization point: %s",
-        label), fie);
-    }
-  }
-
-  public void federationSynchronized(String label)
-  {
-    FederateSynchronizationPoint federateSynchronizationPoint;
-
-    synchronizationPointLock.lock();
-    try
-    {
-      // remove the synchronization point
-      //
-      federateSynchronizationPoint = synchronizationPoints.remove(label);
-    }
-    finally
-    {
-      synchronizationPointLock.unlock();
-    }
-
-    assert federateSynchronizationPoint != null;
-
-    federateSynchronizationPoint.federationSynchronized();
-
-    try
-    {
-      federateAmbassador.federationSynchronized(label);
-    }
-    catch (FederateInternalError fie)
-    {
-      log.warn(String.format(
-        "federate could not process federation synchronization: %s",
-        label), fie);
-    }
-  }
-
-  public void discoverObjectInstance(
-    ObjectInstanceHandle objectInstanceHandle,
-    ObjectClassHandle objectClassHandle)
-  {
-    objectManager.discoverObjectInstance(
-      objectInstanceHandle, objectClassHandle);
-  }
-
-  public void reflectAttributeValues(
-    ObjectInstanceHandle objectInstanceHandle,
-    ObjectClassHandle objectClassHandle,
-    AttributeHandleValueMap attributeValues, byte[] tag,
-    OrderType sentOrderType, TransportationType transportationType,
-    LogicalTime updateTime, OrderType receivedOrderType,
-    MessageRetractionHandle messageRetractionHandle,
-    RegionHandleSet sentRegionHandles)
-  {
-    objectManager.reflectAttributeValues(
-      objectInstanceHandle, objectClassHandle, attributeValues, tag,
-      sentOrderType, transportationType, updateTime, receivedOrderType,
-      messageRetractionHandle, sentRegionHandles);
-  }
-
-  public void receiveInteraction(
-    InteractionClassHandle interactionClassHandle,
-    ParameterHandleValueMap parameterValues, byte[] tag,
-    OrderType sentOrderType, TransportationType transportationType,
-    LogicalTime sendTime, OrderType receivedOrderType,
-    MessageRetractionHandle messageRetractionHandle,
-    RegionHandleSet sentRegionHandles)
-  {
-    objectManager.receiveInteraction(
-      interactionClassHandle, parameterValues, tag, sentOrderType,
-      transportationType, sendTime, receivedOrderType,
-      messageRetractionHandle, sentRegionHandles);
-  }
-
-  public void removeObjectInstance(
-    ObjectInstanceHandle objectInstanceHandle, byte[] tag,
-    OrderType sentOrderType, LogicalTime deleteTime,
-    OrderType receivedOrderType,
-    MessageRetractionHandle messageRetractionHandle)
-  {
-    objectManager.removeObjectInstance(
-      objectInstanceHandle, tag, sentOrderType, deleteTime,
-      receivedOrderType, messageRetractionHandle);
-  }
-
   protected void checkIfAlreadyExecutionMember()
     throws FederateAlreadyExecutionMember
   {
@@ -3549,56 +3477,6 @@ public class Federate
     }
 
     return future;
-  }
-
-  public void initiateFederateSave(String label, LogicalTime saveTime,
-                                   Set<FederateHandle> participants)
-  {
-    federateStateLock.writeLock().lock();
-    try
-    {
-      if (saveTime == null)
-      {
-        federateAmbassador.initiateFederateSave(label);
-      }
-      else
-      {
-        federateAmbassador.initiateFederateSave(label, saveTime);
-      }
-
-      FederateSaveInitiated federateSaveInitiated =
-        new FederateSaveInitiated(participants);
-
-      rtiSession.write(federateSaveInitiated);
-      sendToPeers(federateSaveInitiated);
-    }
-    catch (Throwable t)
-    {
-      FederateSaveInitiatedFailed federateSaveInitiatedFailed =
-        new FederateSaveInitiatedFailed(t, participants);
-
-      rtiSession.write(federateSaveInitiatedFailed);
-      sendToPeers(federateSaveInitiatedFailed);
-    }
-    finally
-    {
-      federateState = FederateState.SAVE_IN_PROGRESS;
-
-      // hold any pending callbacks so only callbacks that can occur during
-      // a save will get through
-      //
-      callbackManager.holdCallbacks();
-
-      federateStateLock.writeLock().unlock();
-    }
-  }
-
-  public void attributeOwnershipAcquisitionNotification(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles, byte[] tag)
-  {
-    objectManager.attributeOwnershipAcquisitionNotification(
-      objectInstanceHandle, attributeHandles, tag);
   }
 
   protected class TimestampedFutureTask
@@ -3844,6 +3722,625 @@ public class Federate
     protected FederateHandle getPeerFederateHandle(IoSession session)
     {
       return (FederateHandle) session.getAttribute(PEER_FEDERATE_HANDLE);
+    }
+  }
+
+  protected class FederateAmbassadorInterceptor
+    extends NullFederateAmbassador
+  {
+    public void synchronizationPointRegistrationSucceeded(String label)
+      throws FederateInternalError
+    {
+      federateAmbassador.synchronizationPointRegistrationSucceeded(label);
+    }
+
+    public void synchronizationPointRegistrationFailed(String label,
+                                                       SynchronizationPointFailureReason reason)
+      throws FederateInternalError
+    {
+      federateAmbassador.synchronizationPointRegistrationFailed(label, reason);
+    }
+
+    public void announceSynchronizationPoint(String label, byte[] tag)
+      throws FederateInternalError
+    {
+      FederateSynchronizationPoint federateSynchronizationPoint;
+
+      synchronizationPointLock.lock();
+      try
+      {
+        federateSynchronizationPoint = synchronizationPoints.get(label);
+        if (federateSynchronizationPoint == null)
+        {
+          federateSynchronizationPoint =
+            new FederateSynchronizationPoint(label, tag);
+          synchronizationPoints.put(label, federateSynchronizationPoint);
+        }
+      }
+      finally
+      {
+        synchronizationPointLock.unlock();
+      }
+
+      federateSynchronizationPoint.announceSynchronizationPoint();
+
+      federateAmbassador.announceSynchronizationPoint(label, tag);
+    }
+
+    public void federationSynchronized(String label)
+      throws FederateInternalError
+    {
+      FederateSynchronizationPoint federateSynchronizationPoint;
+
+      synchronizationPointLock.lock();
+      try
+      {
+        // remove the synchronization point
+        //
+        federateSynchronizationPoint = synchronizationPoints.remove(label);
+      }
+      finally
+      {
+        synchronizationPointLock.unlock();
+      }
+
+      assert federateSynchronizationPoint != null;
+
+      federateSynchronizationPoint.federationSynchronized();
+
+      federateAmbassador.federationSynchronized(label);
+    }
+
+    public void initiateFederateSave(String label)
+      throws UnableToPerformSave, FederateInternalError
+    {
+      federateStateLock.writeLock().lock();
+      try
+      {
+        federateAmbassador.initiateFederateSave(label);
+
+        FederateSaveInitiated federateSaveInitiated =
+          new FederateSaveInitiated(federateSave.getParticipants());
+
+        rtiSession.write(federateSaveInitiated);
+        sendToPeers(federateSaveInitiated);
+      }
+      catch (Throwable t)
+      {
+        FederateSaveInitiatedFailed federateSaveInitiatedFailed =
+          new FederateSaveInitiatedFailed(t, federateSave.getParticipants());
+
+        rtiSession.write(federateSaveInitiatedFailed);
+        sendToPeers(federateSaveInitiatedFailed);
+      }
+      finally
+      {
+        federateState = FederateState.SAVE_IN_PROGRESS;
+
+        // hold any pending callbacks so only callbacks that can occur during
+        // a save will get through
+        //
+        callbackManager.holdCallbacks();
+
+        federateStateLock.writeLock().unlock();
+      }
+    }
+
+    public void initiateFederateSave(String label, LogicalTime saveTime)
+      throws InvalidLogicalTime, UnableToPerformSave, FederateInternalError
+    {
+      federateStateLock.writeLock().lock();
+      try
+      {
+        federateAmbassador.initiateFederateSave(label, saveTime);
+
+        FederateSaveInitiated federateSaveInitiated =
+          new FederateSaveInitiated(federateSave.getParticipants());
+
+        rtiSession.write(federateSaveInitiated);
+        sendToPeers(federateSaveInitiated);
+      }
+      catch (Throwable t)
+      {
+        FederateSaveInitiatedFailed federateSaveInitiatedFailed =
+          new FederateSaveInitiatedFailed(t, federateSave.getParticipants());
+
+        rtiSession.write(federateSaveInitiatedFailed);
+        sendToPeers(federateSaveInitiatedFailed);
+      }
+      finally
+      {
+        federateState = FederateState.SAVE_IN_PROGRESS;
+
+        // hold any pending callbacks so only callbacks that can occur during
+        // a save will get through
+        //
+        callbackManager.holdCallbacks();
+
+        federateStateLock.writeLock().unlock();
+      }
+      federateAmbassador.initiateFederateSave(label, time);
+    }
+
+    public void federationSaved()
+      throws FederateInternalError
+    {
+      federateAmbassador.federationSaved();
+    }
+
+    public void federationNotSaved(SaveFailureReason reason)
+      throws FederateInternalError
+    {
+      federateAmbassador.federationNotSaved(reason);
+    }
+
+    public void federationSaveStatusResponse(
+      FederateHandleSaveStatusPair[] response)
+      throws FederateInternalError
+    {
+      federateAmbassador.federationSaveStatusResponse(response);
+    }
+
+    public void requestFederationRestoreSucceeded(String label)
+      throws FederateInternalError
+    {
+      federateAmbassador.requestFederationRestoreSucceeded(label);
+    }
+
+    public void requestFederationRestoreFailed(String label)
+      throws FederateInternalError
+    {
+      federateAmbassador.requestFederationRestoreFailed(label);
+    }
+
+    public void federationRestoreBegun()
+      throws FederateInternalError
+    {
+      federateAmbassador.federationRestoreBegun();
+    }
+
+    public void initiateFederateRestore(String label,
+                                        FederateHandle federateHandle)
+      throws SpecifiedSaveLabelDoesNotExist, CouldNotInitiateRestore,
+             FederateInternalError
+    {
+      federateAmbassador.initiateFederateRestore(label, federateHandle);
+    }
+
+    public void federationRestored()
+      throws FederateInternalError
+    {
+      federateAmbassador.federationRestored();
+    }
+
+    public void federationNotRestored(RestoreFailureReason reason)
+      throws FederateInternalError
+    {
+      federateAmbassador.federationNotRestored(reason);
+    }
+
+    public void federationRestoreStatusResponse(
+      FederateHandleRestoreStatusPair[] response)
+      throws FederateInternalError
+    {
+      federateAmbassador.federationRestoreStatusResponse(response);
+    }
+
+    public void startRegistrationForObjectClass(
+      ObjectClassHandle objectClassHandle)
+      throws ObjectClassNotPublished, FederateInternalError
+    {
+      federateAmbassador.startRegistrationForObjectClass(objectClassHandle);
+    }
+
+    public void stopRegistrationForObjectClass(
+      ObjectClassHandle objectClassHandle)
+      throws ObjectClassNotPublished, FederateInternalError
+    {
+      federateAmbassador.stopRegistrationForObjectClass(objectClassHandle);
+    }
+
+    public void turnInteractionsOn(InteractionClassHandle interactionClassHandle)
+      throws InteractionClassNotPublished, FederateInternalError
+    {
+      federateAmbassador.turnInteractionsOn(interactionClassHandle);
+    }
+
+    public void turnInteractionsOff(
+      InteractionClassHandle interactionClassHandle)
+      throws InteractionClassNotPublished, FederateInternalError
+    {
+      federateAmbassador.turnInteractionsOff(interactionClassHandle);
+    }
+
+    public void objectInstanceNameReservationSucceeded(String name)
+      throws UnknownName, FederateInternalError
+    {
+      federateAmbassador.objectInstanceNameReservationSucceeded(name);
+    }
+
+    public void objectInstanceNameReservationFailed(String name)
+      throws UnknownName, FederateInternalError
+    {
+      federateAmbassador.objectInstanceNameReservationFailed(name);
+    }
+
+    public void discoverObjectInstance(
+      ObjectInstanceHandle objectInstanceHandle,
+      ObjectClassHandle objectClassHandle, String name)
+      throws CouldNotDiscover, ObjectClassNotRecognized, FederateInternalError
+    {
+      objectManager.discoverObjectInstance(
+        objectInstanceHandle, objectClassHandle, name, federateAmbassador);
+    }
+
+    public void reflectAttributeValues(
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandleValueMap attributeValues, byte[] tag,
+      OrderType sentOrderType, TransportationType transportationType)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             AttributeNotSubscribed, FederateInternalError
+    {
+      objectManager.reflectAttributeValues(
+        objectInstanceHandle, attributeValues, tag, sentOrderType,
+        transportationType, null, null, null, null, federateAmbassador);
+    }
+
+    public void reflectAttributeValues(
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandleValueMap attributeValues, byte[] tag,
+      OrderType sentOrderType, TransportationType transportationType,
+      RegionHandleSet regionHandles)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             AttributeNotSubscribed, FederateInternalError
+    {
+      objectManager.reflectAttributeValues(
+        objectInstanceHandle, attributeValues, tag, sentOrderType,
+        transportationType, null, null, null, regionHandles,
+        federateAmbassador);
+    }
+
+    public void reflectAttributeValues(
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandleValueMap attributeValues, byte[] tag,
+      OrderType sentOrderType, TransportationType transportationType,
+      LogicalTime updateTime, OrderType receivedOrderType)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             AttributeNotSubscribed, FederateInternalError
+    {
+      objectManager.reflectAttributeValues(
+        objectInstanceHandle, attributeValues, tag, sentOrderType,
+        transportationType, updateTime, receivedOrderType, null, null,
+        federateAmbassador);
+    }
+
+    public void reflectAttributeValues(
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandleValueMap attributeValues, byte[] tag,
+      OrderType sentOrderType, TransportationType transportationType,
+      LogicalTime updateTime, OrderType receivedOrderType,
+      RegionHandleSet regionHandles)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             AttributeNotSubscribed, FederateInternalError
+    {
+      objectManager.reflectAttributeValues(
+        objectInstanceHandle, attributeValues, tag, sentOrderType,
+        transportationType, updateTime, receivedOrderType, null, regionHandles,
+        federateAmbassador);
+    }
+
+    public void reflectAttributeValues(
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandleValueMap attributeValues, byte[] tag, OrderType sentOrderType,
+      TransportationType transportationType, LogicalTime updateTime,
+      OrderType receivedOrderType,
+      MessageRetractionHandle messageRetractionHandle)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             AttributeNotSubscribed, InvalidLogicalTime, FederateInternalError
+    {
+      objectManager.reflectAttributeValues(
+        objectInstanceHandle, attributeValues, tag, sentOrderType,
+        transportationType, updateTime, receivedOrderType,
+        messageRetractionHandle, null, federateAmbassador);
+    }
+
+    public void reflectAttributeValues(
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandleValueMap attributeValues, byte[] tag, OrderType sentOrderType,
+      TransportationType transportationType, LogicalTime updateTime,
+      OrderType receivedOrderType,
+      MessageRetractionHandle messageRetractionHandle,
+      RegionHandleSet regionHandles)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             AttributeNotSubscribed, InvalidLogicalTime, FederateInternalError
+    {
+      objectManager.reflectAttributeValues(
+        objectInstanceHandle, attributeValues, tag, sentOrderType,
+        transportationType, updateTime, receivedOrderType,
+        messageRetractionHandle, regionHandles, federateAmbassador);
+    }
+
+    public void receiveInteraction(
+      InteractionClassHandle interactionClassHandle,
+      ParameterHandleValueMap parameterValues, byte[] tag,
+      OrderType sentOrderType, TransportationType transportationType)
+      throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
+             InteractionClassNotSubscribed, FederateInternalError
+    {
+      objectManager.receiveInteraction(
+        interactionClassHandle, parameterValues, tag, sentOrderType,
+        transportationType, null, null, null, null, federateAmbassador);
+    }
+
+    public void receiveInteraction(
+      InteractionClassHandle interactionClassHandle,
+      ParameterHandleValueMap parameterValues, byte[] tag,
+      OrderType sentOrderType, TransportationType transportationType,
+      RegionHandleSet regionHandles)
+      throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
+             InteractionClassNotSubscribed, FederateInternalError
+    {
+      objectManager.receiveInteraction(
+        interactionClassHandle, parameterValues, tag, sentOrderType,
+        transportationType, null, null, null, regionHandles,
+        federateAmbassador);
+    }
+
+    public void receiveInteraction(
+      InteractionClassHandle interactionClassHandle,
+      ParameterHandleValueMap parameterValues, byte[] tag,
+      OrderType sentOrderType, TransportationType transportationType,
+      LogicalTime sentTime, OrderType receivedOrderType)
+      throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
+             InteractionClassNotSubscribed, FederateInternalError
+    {
+      objectManager.receiveInteraction(
+        interactionClassHandle, parameterValues, tag, sentOrderType,
+        transportationType, sentTime, receivedOrderType, null, null,
+        federateAmbassador);
+    }
+
+    public void receiveInteraction(
+      InteractionClassHandle interactionClassHandle,
+      ParameterHandleValueMap parameterValues, byte[] tag,
+      OrderType sentOrderType, TransportationType transportationType,
+      LogicalTime sentTime, OrderType receivedOrderType,
+      RegionHandleSet regionHandles)
+      throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
+             InteractionClassNotSubscribed, FederateInternalError
+    {
+      objectManager.receiveInteraction(
+        interactionClassHandle, parameterValues, tag, sentOrderType,
+        transportationType, sentTime, receivedOrderType, null, regionHandles,
+        federateAmbassador);
+    }
+
+    public void receiveInteraction(
+      InteractionClassHandle interactionClassHandle,
+      ParameterHandleValueMap parameterValues, byte[] tag,
+      OrderType sentOrderType, TransportationType transportationType,
+      LogicalTime sentTime, OrderType receivedOrderType,
+      MessageRetractionHandle messageRetractionHandle)
+      throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
+             InteractionClassNotSubscribed, InvalidLogicalTime,
+             FederateInternalError
+    {
+      objectManager.receiveInteraction(
+        interactionClassHandle, parameterValues, tag, sentOrderType,
+        transportationType, sentTime, receivedOrderType,
+        messageRetractionHandle, null, federateAmbassador);
+    }
+
+    public void receiveInteraction(
+      InteractionClassHandle interactionClassHandle,
+      ParameterHandleValueMap parameterValues, byte[] tag,
+      OrderType sentOrderType, TransportationType transportationType,
+      LogicalTime sentTime, OrderType receivedOrderType,
+      MessageRetractionHandle messageRetractionHandle,
+      RegionHandleSet regionHandles)
+      throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
+             InteractionClassNotSubscribed, InvalidLogicalTime,
+             FederateInternalError
+    {
+      objectManager.receiveInteraction(
+        interactionClassHandle, parameterValues, tag, sentOrderType,
+        transportationType, sentTime, receivedOrderType,
+        messageRetractionHandle, regionHandles, federateAmbassador);
+    }
+
+    public void removeObjectInstance(ObjectInstanceHandle objectInstanceHandle,
+                                     byte[] tag, OrderType sentOrderType)
+      throws ObjectInstanceNotKnown, FederateInternalError
+    {
+      objectManager.removeObjectInstance(
+        objectInstanceHandle, tag, sentOrderType, null, null, null,
+        federateAmbassador);
+    }
+
+    public void removeObjectInstance(ObjectInstanceHandle objectInstanceHandle,
+                                     byte[] tag, OrderType sentOrderType,
+                                     LogicalTime deleteTime,
+                                     OrderType receivedOrderType)
+      throws ObjectInstanceNotKnown, FederateInternalError
+    {
+      objectManager.removeObjectInstance(
+        objectInstanceHandle, tag, sentOrderType, deleteTime, receivedOrderType,
+        null, federateAmbassador);
+    }
+
+    public void removeObjectInstance(ObjectInstanceHandle objectInstanceHandle,
+                                     byte[] tag, OrderType sentOrderType,
+                                     LogicalTime deleteTime,
+                                     OrderType receivedOrderType,
+                                     MessageRetractionHandle messageRetractionHandle)
+      throws ObjectInstanceNotKnown, InvalidLogicalTime, FederateInternalError
+    {
+      objectManager.removeObjectInstance(
+        objectInstanceHandle, tag, sentOrderType, deleteTime, receivedOrderType,
+        messageRetractionHandle, federateAmbassador);
+    }
+
+    public void attributesInScope(ObjectInstanceHandle objectInstanceHandle,
+                                  AttributeHandleSet attributeHandles)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             AttributeNotSubscribed, FederateInternalError
+    {
+      federateAmbassador.attributesInScope(
+        objectInstanceHandle, attributeHandles);
+    }
+
+    public void attributesOutOfScope(ObjectInstanceHandle objectInstanceHandle,
+                                     AttributeHandleSet attributeHandles)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             AttributeNotSubscribed, FederateInternalError
+    {
+      federateAmbassador.attributesOutOfScope(
+        objectInstanceHandle, attributeHandles);
+    }
+
+    public void provideAttributeValueUpdate(
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandleSet attributeHandles, byte[] tag)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized, AttributeNotOwned,
+             FederateInternalError
+    {
+      federateAmbassador.provideAttributeValueUpdate(
+        objectInstanceHandle, attributeHandles, tag);
+    }
+
+    public void turnUpdatesOnForObjectInstance(
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandleSet attributeHandles)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized, AttributeNotOwned,
+             FederateInternalError
+    {
+      federateAmbassador.turnUpdatesOnForObjectInstance(
+        objectInstanceHandle, attributeHandles);
+    }
+
+    public void turnUpdatesOffForObjectInstance(
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandleSet attributeHandles)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized, AttributeNotOwned,
+             FederateInternalError
+    {
+      federateAmbassador.turnUpdatesOffForObjectInstance(
+        objectInstanceHandle, attributeHandles);
+    }
+
+    public void requestAttributeOwnershipAssumption(
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandleSet attributeHandles, byte[] tag)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             AttributeAlreadyOwned, AttributeNotPublished, FederateInternalError
+    {
+      federateAmbassador.requestAttributeOwnershipAssumption(
+        objectInstanceHandle, attributeHandles, tag);
+    }
+
+    public void requestDivestitureConfirmation(
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandleSet attributeHandles)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized, AttributeNotOwned,
+             AttributeDivestitureWasNotRequested, FederateInternalError
+    {
+      federateAmbassador.requestDivestitureConfirmation(
+        objectInstanceHandle, attributeHandles);
+    }
+
+    public void attributeOwnershipAcquisitionNotification(
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandleSet attributeHandles, byte[] tag)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             AttributeAcquisitionWasNotRequested, AttributeAlreadyOwned,
+             AttributeNotPublished, FederateInternalError
+    {
+      objectManager.attributeOwnershipAcquisitionNotification(
+        objectInstanceHandle, attributeHandles, tag, federateAmbassador);
+    }
+
+    public void attributeOwnershipUnavailable(
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandleSet attributeHandles)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             AttributeAlreadyOwned, AttributeAcquisitionWasNotRequested,
+             FederateInternalError
+    {
+      federateAmbassador.attributeOwnershipUnavailable(
+        objectInstanceHandle, attributeHandles);
+    }
+
+    public void requestAttributeOwnershipRelease(
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandleSet attributeHandles, byte[] tag)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized, AttributeNotOwned,
+             FederateInternalError
+    {
+      federateAmbassador.requestAttributeOwnershipRelease(
+        objectInstanceHandle, attributeHandles, tag);
+    }
+
+    public void confirmAttributeOwnershipAcquisitionCancellation(
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandleSet attributeHandles)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             AttributeAlreadyOwned, AttributeAcquisitionWasNotCanceled,
+             FederateInternalError
+    {
+      federateAmbassador.confirmAttributeOwnershipAcquisitionCancellation(
+        objectInstanceHandle, attributeHandles);
+    }
+
+    public void informAttributeOwnership(
+      ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle,
+      FederateHandle federateHandle)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized, FederateInternalError
+    {
+      federateAmbassador.informAttributeOwnership(
+        objectInstanceHandle, attributeHandle, federateHandle);
+    }
+
+    public void attributeIsNotOwned(ObjectInstanceHandle objectInstanceHandle,
+                                    AttributeHandle attributeHandle)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized, FederateInternalError
+    {
+      federateAmbassador.attributeIsNotOwned(
+        objectInstanceHandle, attributeHandle);
+    }
+
+    public void attributeIsOwnedByRTI(ObjectInstanceHandle objectInstanceHandle,
+                                      AttributeHandle attributeHandle)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized, FederateInternalError
+    {
+      federateAmbassador.attributeIsOwnedByRTI(
+        objectInstanceHandle, attributeHandle);
+    }
+
+    public void timeRegulationEnabled(LogicalTime time)
+      throws InvalidLogicalTime, NoRequestToEnableTimeRegulationWasPending,
+             FederateInternalError
+    {
+      federateAmbassador.timeRegulationEnabled(time);
+    }
+
+    public void timeConstrainedEnabled(LogicalTime time)
+      throws InvalidLogicalTime, NoRequestToEnableTimeConstrainedWasPending,
+             FederateInternalError
+    {
+      federateAmbassador.timeConstrainedEnabled(time);
+    }
+
+    public void timeAdvanceGrant(LogicalTime time)
+      throws InvalidLogicalTime, JoinedFederateIsNotInTimeAdvancingState,
+             FederateInternalError
+    {
+      federateAmbassador.timeAdvanceGrant(time);
+    }
+
+    public void requestRetraction(MessageRetractionHandle messageRetractionHandle)
+      throws FederateInternalError
+    {
+      federateAmbassador.requestRetraction(messageRetractionHandle);
     }
   }
 }
