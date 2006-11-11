@@ -2,7 +2,8 @@
 
 <project name="Open HLA (OHLA)" basedir="." default="default">
 
-  <property name="ohla.version" value="0.3"/>
+  <property name="ohla.version" value="0.4-SNAPSHOT"/>
+  <property name="dist.name" value="ohla-${ohla.version}"/>
 
   <!-- ================================================================== -->
   <!-- Configuration                                                      -->
@@ -379,14 +380,23 @@
   <!-- Distribution                                                       -->
   <!-- ================================================================== -->
 
-  <!--<target name="dist" depends="jar-ohla-ieee1516, jar-ohla-hla13">-->
-    <!--<mkdir dir="${output.dist}"/>-->
-    <!--<tar destfile="${output.dist}/${dist.name}.tar.gz" compression="gzip">-->
-      <!--<tarfileset prefix="${dist.name}" dir="${output.lib}"/>-->
-      <!--<tarfileset prefix="${dist.name}" dir="${apache.log4j.lib}"/>-->
-      <!--<tarfileset prefix="${dist.name}" dir="${project.resources.properties}"/>-->
-    <!--</tar>-->
-  <!--</target>-->
+  <target name="dist" depends="jar-ieee-1516, jar-hla-1.3, jar-ohla, docs">
+    <mkdir dir="${output.dist}"/>
+
+    <tar destfile="${output.dist}/${dist.name}.tar.gz" compression="gzip">
+      <tarfileset prefix="${dist.name}" dir="${project.root}"
+                  excludes="build/output/**"/>
+      <tarfileset prefix="${dist.name}" dir="${output}" includes="docs/**"/>
+      <tarfileset prefix="${dist.name}" dir="${output.lib}"/>
+    </tar>
+
+    <zip destfile="${output.dist}/${dist.name}.zip">
+      <zipfileset prefix="${dist.name}" dir="${project.root}"
+                  excludes="build/output/**"/>
+      <zipfileset prefix="${dist.name}" dir="${output}" includes="docs/**"/>
+      <zipfileset prefix="${dist.name}" dir="${output.lib}"/>
+    </zip>
+  </target>
 
 
   <!-- ================================================================== -->
