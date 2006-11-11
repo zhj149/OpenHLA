@@ -174,7 +174,7 @@ public class NullFederateAmbassador
 
   public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle,
                                      AttributeHandleValueMap attributeValues,
-                                     byte[] tag, OrderType sentOrdering,
+                                     byte[] tag, OrderType sentOrderType,
                                      TransportationType transportationType)
     throws ObjectInstanceNotKnown, AttributeNotRecognized,
            AttributeNotSubscribed, FederateInternalError
@@ -183,7 +183,7 @@ public class NullFederateAmbassador
 
   public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle,
                                      AttributeHandleValueMap attributeValues,
-                                     byte[] tag, OrderType sentOrdering,
+                                     byte[] tag, OrderType sentOrderType,
                                      TransportationType transportationType,
                                      RegionHandleSet regionHandles)
     throws ObjectInstanceNotKnown, AttributeNotRecognized,
@@ -193,10 +193,10 @@ public class NullFederateAmbassador
 
   public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle,
                                      AttributeHandleValueMap attributeValues,
-                                     byte[] tag, OrderType sentOrdering,
+                                     byte[] tag, OrderType sentOrderType,
                                      TransportationType transportationType,
                                      LogicalTime updateTime,
-                                     OrderType receivedOrdering)
+                                     OrderType receivedOrderType)
     throws ObjectInstanceNotKnown, AttributeNotRecognized,
            AttributeNotSubscribed, FederateInternalError
   {
@@ -204,10 +204,10 @@ public class NullFederateAmbassador
 
   public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle,
                                      AttributeHandleValueMap attributeValues,
-                                     byte[] tag, OrderType sentOrdering,
+                                     byte[] tag, OrderType sentOrderType,
                                      TransportationType transportationType,
                                      LogicalTime updateTime,
-                                     OrderType receivedOrdering,
+                                     OrderType receivedOrderType,
                                      RegionHandleSet regionHandles)
     throws ObjectInstanceNotKnown, AttributeNotRecognized,
            AttributeNotSubscribed, FederateInternalError
@@ -217,8 +217,8 @@ public class NullFederateAmbassador
   public void reflectAttributeValues(
     ObjectInstanceHandle objectInstanceHandle,
     AttributeHandleValueMap attributeValues, byte[] tag,
-    OrderType sentOrdering, TransportationType transportationType,
-    LogicalTime updateTime, OrderType receivedOrdering,
+    OrderType sentOrderType, TransportationType transportationType,
+    LogicalTime updateTime, OrderType receivedOrderType,
     MessageRetractionHandle messageRetractionHandle)
     throws ObjectInstanceNotKnown, AttributeNotRecognized,
            AttributeNotSubscribed, InvalidLogicalTime, FederateInternalError
@@ -228,8 +228,8 @@ public class NullFederateAmbassador
   public void reflectAttributeValues(
     ObjectInstanceHandle objectInstanceHandle,
     AttributeHandleValueMap attributeValues, byte[] tag,
-    OrderType sentOrdering, TransportationType transportationType,
-    LogicalTime updateTime, OrderType receivedOrdering,
+    OrderType sentOrderType, TransportationType transportationType,
+    LogicalTime updateTime, OrderType receivedOrderType,
     MessageRetractionHandle messageRetractionHandle,
     RegionHandleSet regionHandles)
     throws ObjectInstanceNotKnown, AttributeNotRecognized,
@@ -239,7 +239,7 @@ public class NullFederateAmbassador
 
   public void receiveInteraction(InteractionClassHandle interactionClassHandle,
                                  ParameterHandleValueMap parameterValues,
-                                 byte[] tag, OrderType sentOrdering,
+                                 byte[] tag, OrderType sentOrderType,
                                  TransportationType transportationType)
     throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
            InteractionClassNotSubscribed, FederateInternalError
@@ -248,7 +248,7 @@ public class NullFederateAmbassador
 
   public void receiveInteraction(InteractionClassHandle interactionClassHandle,
                                  ParameterHandleValueMap parameterValues,
-                                 byte[] tag, OrderType sentOrdering,
+                                 byte[] tag, OrderType sentOrderType,
                                  TransportationType transportationType,
                                  RegionHandleSet regionHandles)
     throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
@@ -258,10 +258,10 @@ public class NullFederateAmbassador
 
   public void receiveInteraction(InteractionClassHandle interactionClassHandle,
                                  ParameterHandleValueMap parameterValues,
-                                 byte[] tag, OrderType sentOrdering,
+                                 byte[] tag, OrderType sentOrderType,
                                  TransportationType transportationType,
                                  LogicalTime sentTime,
-                                 OrderType receivedOrdering)
+                                 OrderType receivedOrderType)
     throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
            InteractionClassNotSubscribed, FederateInternalError
   {
@@ -269,10 +269,10 @@ public class NullFederateAmbassador
 
   public void receiveInteraction(InteractionClassHandle interactionClassHandle,
                                  ParameterHandleValueMap parameterValues,
-                                 byte[] tag, OrderType sentOrdering,
+                                 byte[] tag, OrderType sentOrderType,
                                  TransportationType transportationType,
                                  LogicalTime sentTime,
-                                 OrderType receivedOrdering,
+                                 OrderType receivedOrderType,
                                  RegionHandleSet regionHandles)
     throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
            InteractionClassNotSubscribed, FederateInternalError
@@ -281,10 +281,10 @@ public class NullFederateAmbassador
 
   public void receiveInteraction(InteractionClassHandle interactionClassHandle,
                                  ParameterHandleValueMap parameterValues,
-                                 byte[] tag, OrderType sentOrdering,
+                                 byte[] tag, OrderType sentOrderType,
                                  TransportationType transportationType,
                                  LogicalTime sentTime,
-                                 OrderType receivedOrdering,
+                                 OrderType receivedOrderType,
                                  MessageRetractionHandle messageRetractionHandle)
     throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
            InteractionClassNotSubscribed, InvalidLogicalTime,
@@ -294,10 +294,10 @@ public class NullFederateAmbassador
 
   public void receiveInteraction(InteractionClassHandle interactionClassHandle,
                                  ParameterHandleValueMap parameterValues,
-                                 byte[] tag, OrderType sentOrdering,
+                                 byte[] tag, OrderType sentOrderType,
                                  TransportationType transportationType,
                                  LogicalTime sentTime,
-                                 OrderType receivedOrdering,
+                                 OrderType receivedOrderType,
                                  MessageRetractionHandle messageRetractionHandle,
                                  RegionHandleSet regionHandles)
     throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
@@ -308,22 +308,22 @@ public class NullFederateAmbassador
 
   public void removeObjectInstance(ObjectInstanceHandle objectInstanceHandle,
                                    byte[] tag,
-                                   OrderType sentOrdering)
+                                   OrderType sentOrderType)
     throws ObjectInstanceNotKnown, FederateInternalError
   {
   }
 
   public void removeObjectInstance(ObjectInstanceHandle objectInstanceHandle,
-                                   byte[] tag, OrderType sentOrdering,
+                                   byte[] tag, OrderType sentOrderType,
                                    LogicalTime deleteTime,
-                                   OrderType receivedOrdering)
+                                   OrderType receivedOrderType)
     throws ObjectInstanceNotKnown, FederateInternalError
   {
   }
 
   public void removeObjectInstance(
     ObjectInstanceHandle objectInstanceHandle, byte[] tag,
-    OrderType sentOrdering, LogicalTime deleteTime, OrderType receivedOrdering,
+    OrderType sentOrderType, LogicalTime deleteTime, OrderType receivedOrderType,
     MessageRetractionHandle messageRetractionHandle)
     throws ObjectInstanceNotKnown, InvalidLogicalTime, FederateInternalError
   {
