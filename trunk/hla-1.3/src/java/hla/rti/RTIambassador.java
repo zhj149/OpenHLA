@@ -40,7 +40,7 @@ public interface RTIambassador
     throws SynchronizationLabelNotAnnounced, FederateNotExecutionMember,
            SaveInProgress, RestoreInProgress, RTIinternalError;
 
-  void requestFederationSave(String label, LogicalTime time)
+  void requestFederationSave(String label, LogicalTime saveTime)
     throws FederationTimeAlreadyPassed, InvalidFederationTime,
            FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError;

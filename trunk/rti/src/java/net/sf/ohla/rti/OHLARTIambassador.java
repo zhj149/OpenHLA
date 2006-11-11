@@ -454,14 +454,14 @@ public class OHLARTIambassador
     }
   }
 
-  public void requestFederationSave(String label, LogicalTime time)
+  public void requestFederationSave(String label, LogicalTime saveTime)
     throws FederationTimeAlreadyPassed, InvalidFederationTime,
            FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
     try
     {
-      rtiAmbassador.requestFederationSave(label, convert(time));
+      rtiAmbassador.requestFederationSave(label, convert(saveTime));
     }
     catch (LogicalTimeAlreadyPassed ltap)
     {
