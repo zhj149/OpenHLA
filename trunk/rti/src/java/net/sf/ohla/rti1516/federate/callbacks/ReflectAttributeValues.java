@@ -16,11 +16,10 @@
 
 package net.sf.ohla.rti1516.federate.callbacks;
 
-import net.sf.ohla.rti1516.federate.Federate;
-
 import hla.rti1516.AttributeHandleValueMap;
 import hla.rti1516.AttributeNotRecognized;
 import hla.rti1516.AttributeNotSubscribed;
+import hla.rti1516.FederateAmbassador;
 import hla.rti1516.FederateInternalError;
 import hla.rti1516.InvalidLogicalTime;
 import hla.rti1516.LogicalTime;
@@ -132,14 +131,54 @@ public class ReflectAttributeValues
     this.receivedOrderType = receivedOrderType;
   }
 
-  public void execute(Federate federate)
+  public void execute(FederateAmbassador federateAmbassador)
     throws ObjectInstanceNotKnown, AttributeNotRecognized,
            AttributeNotSubscribed, InvalidLogicalTime, FederateInternalError
   {
-    federate.reflectAttributeValues(
-      objectInstanceHandle, objectClassHandle, attributeValues, tag,
-      sentOrderType, transportationType, updateTime, receivedOrderType,
-      messageRetractionHandle, sentRegionHandles);
+    if (updateTime == null)
+    {
+      if (sentRegionHandles == null)
+      {
+        federateAmbassador.reflectAttributeValues(
+          objectInstanceHandle, attributeValues, tag, sentOrderType,
+          transportationType);
+      }
+      else
+      {
+        federateAmbassador.reflectAttributeValues(
+          objectInstanceHandle, attributeValues, tag, sentOrderType,
+          transportationType, sentRegionHandles);
+      }
+    }
+    else if (messageRetractionHandle == null)
+    {
+      if (sentRegionHandles == null)
+      {
+        federateAmbassador.reflectAttributeValues(
+          objectInstanceHandle, attributeValues, tag, sentOrderType,
+          transportationType, updateTime, receivedOrderType);
+      }
+      else
+      {
+        federateAmbassador.reflectAttributeValues(
+          objectInstanceHandle, attributeValues, tag, sentOrderType,
+          transportationType, updateTime, receivedOrderType, sentRegionHandles);
+      }
+    }
+    else if (sentRegionHandles == null)
+    {
+      federateAmbassador.reflectAttributeValues(
+        objectInstanceHandle, attributeValues, tag, sentOrderType,
+        transportationType, updateTime, receivedOrderType,
+        messageRetractionHandle);
+    }
+    else
+    {
+      federateAmbassador.reflectAttributeValues(
+        objectInstanceHandle, attributeValues, tag, sentOrderType,
+        transportationType, updateTime, receivedOrderType,
+        messageRetractionHandle, sentRegionHandles);
+    }
   }
 
   public String toString()

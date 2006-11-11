@@ -16,9 +16,8 @@
 
 package net.sf.ohla.rti1516.federate.callbacks;
 
-import net.sf.ohla.rti1516.federate.Federate;
-
 import hla.rti1516.CouldNotInitiateRestore;
+import hla.rti1516.FederateAmbassador;
 import hla.rti1516.FederateHandle;
 import hla.rti1516.FederateInternalError;
 import hla.rti1516.SpecifiedSaveLabelDoesNotExist;
@@ -35,11 +34,10 @@ public class InitiateFederateRestore
     this.federateHandle = federateHandle;
   }
 
-  public void execute(Federate federate)
+  public void execute(FederateAmbassador federateAmbassador)
     throws SpecifiedSaveLabelDoesNotExist, CouldNotInitiateRestore,
            FederateInternalError
   {
-    federate.getFederateAmbassador().initiateFederateRestore(
-      label, federateHandle);
+    federateAmbassador.initiateFederateRestore(label, federateHandle);
   }
 }

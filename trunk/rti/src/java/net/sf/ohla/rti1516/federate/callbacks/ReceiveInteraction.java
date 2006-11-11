@@ -16,8 +16,7 @@
 
 package net.sf.ohla.rti1516.federate.callbacks;
 
-import net.sf.ohla.rti1516.federate.Federate;
-
+import hla.rti1516.FederateAmbassador;
 import hla.rti1516.FederateInternalError;
 import hla.rti1516.InteractionClassHandle;
 import hla.rti1516.InteractionClassNotRecognized;
@@ -146,14 +145,55 @@ public class ReceiveInteraction
     this.receivedOrderType = receivedOrderType;
   }
 
-  public void execute(Federate federate)
+  public void execute(FederateAmbassador federateAmbassador)
     throws InteractionClassNotRecognized, InteractionClassNotSubscribed,
            InteractionParameterNotRecognized, InvalidLogicalTime,
            FederateInternalError
   {
-    federate.receiveInteraction(
-      interactionClassHandle, parameterValues, tag, sentOrderType,
-      transportationType, sendTime, receivedOrderType,
-      messageRetractionHandle, sentRegionHandles);
+    if (sendTime == null)
+    {
+      if (sentRegionHandles == null)
+      {
+        federateAmbassador.receiveInteraction(
+          interactionClassHandle, parameterValues, tag, sentOrderType,
+          transportationType);
+      }
+      else
+      {
+        federateAmbassador.receiveInteraction(
+          interactionClassHandle, parameterValues, tag, sentOrderType,
+          transportationType, sentRegionHandles);
+      }
+    }
+    else if (messageRetractionHandle == null)
+    {
+      if (sentRegionHandles == null)
+      {
+        federateAmbassador.receiveInteraction(
+          interactionClassHandle, parameterValues, tag, sentOrderType,
+          transportationType, sendTime, receivedOrderType);
+      }
+      else
+      {
+        federateAmbassador.receiveInteraction(
+          interactionClassHandle, parameterValues, tag, sentOrderType,
+          transportationType, sendTime, receivedOrderType,
+          sentRegionHandles);
+      }
+    }
+    else if (sentRegionHandles == null)
+    {
+      federateAmbassador.receiveInteraction(
+        interactionClassHandle, parameterValues, tag, sentOrderType,
+        transportationType, sendTime, receivedOrderType,
+        messageRetractionHandle);
+    }
+    else
+    {
+      federateAmbassador.receiveInteraction(
+        interactionClassHandle, parameterValues, tag, sentOrderType,
+        transportationType, sendTime, receivedOrderType,
+        messageRetractionHandle, sentRegionHandles);
+    }
   }
 }

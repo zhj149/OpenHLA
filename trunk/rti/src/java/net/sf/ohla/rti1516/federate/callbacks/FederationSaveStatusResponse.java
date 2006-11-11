@@ -16,8 +16,7 @@
 
 package net.sf.ohla.rti1516.federate.callbacks;
 
-import net.sf.ohla.rti1516.federate.Federate;
-
+import hla.rti1516.FederateAmbassador;
 import hla.rti1516.FederateHandleSaveStatusPair;
 import hla.rti1516.FederateInternalError;
 
@@ -31,9 +30,9 @@ public class FederationSaveStatusResponse
     this.response = response;
   }
 
-  public void execute(Federate federate)
+  public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federate.getFederateAmbassador().federationSaveStatusResponse(response);
+    federateAmbassador.federationSaveStatusResponse(response);
   }
 }

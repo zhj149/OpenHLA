@@ -16,13 +16,12 @@
 
 package net.sf.ohla.rti1516.federate.callbacks;
 
-import net.sf.ohla.rti1516.federate.Federate;
-
 import hla.rti1516.AttributeAcquisitionWasNotRequested;
 import hla.rti1516.AttributeAlreadyOwned;
 import hla.rti1516.AttributeHandleSet;
 import hla.rti1516.AttributeNotPublished;
 import hla.rti1516.AttributeNotRecognized;
+import hla.rti1516.FederateAmbassador;
 import hla.rti1516.FederateInternalError;
 import hla.rti1516.ObjectInstanceHandle;
 import hla.rti1516.ObjectInstanceNotKnown;
@@ -51,18 +50,19 @@ public class AttributeOwnershipAcquisitionNotification
     this.tag = tag;
   }
 
-  public void execute(Federate federate)
+  public void execute(FederateAmbassador federateAmbassador)
     throws ObjectInstanceNotKnown, AttributeNotRecognized,
            AttributeAcquisitionWasNotRequested, AttributeAlreadyOwned,
            AttributeNotPublished, FederateInternalError
   {
-    federate.attributeOwnershipAcquisitionNotification(
+    federateAmbassador.attributeOwnershipAcquisitionNotification(
       objectInstanceHandle, attributeHandles, tag);
   }
 
   @Override
   public String toString()
   {
-    return String.format("%s - %s", objectInstanceHandle, attributeHandles);
+    return String.format("AttributeOwnershipNotification: %s - %s",
+                         objectInstanceHandle, attributeHandles);
   }
 }

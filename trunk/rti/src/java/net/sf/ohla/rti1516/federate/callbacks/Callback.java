@@ -16,14 +16,14 @@
 
 package net.sf.ohla.rti1516.federate.callbacks;
 
-import net.sf.ohla.rti1516.federate.Federate;
 import net.sf.ohla.rti1516.messages.Message;
 
+import hla.rti1516.FederateAmbassador;
 import hla.rti1516.RTIexception;
 
 public interface Callback
   extends Message
 {
-  void execute(Federate federate)
+  void execute(FederateAmbassador federateAmbassador)
     throws RTIexception;
 }

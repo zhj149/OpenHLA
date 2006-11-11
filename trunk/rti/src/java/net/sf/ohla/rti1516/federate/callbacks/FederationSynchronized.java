@@ -16,8 +16,7 @@
 
 package net.sf.ohla.rti1516.federate.callbacks;
 
-import net.sf.ohla.rti1516.federate.Federate;
-
+import hla.rti1516.FederateAmbassador;
 import hla.rti1516.FederateInternalError;
 
 public class FederationSynchronized
@@ -30,9 +29,9 @@ public class FederationSynchronized
     this.label = label;
   }
 
-  public void execute(Federate federate)
+  public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federate.federationSynchronized(label);
+    federateAmbassador.federationSynchronized(label);
   }
 }

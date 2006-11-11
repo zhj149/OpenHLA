@@ -16,16 +16,20 @@
 
 package net.sf.ohla.rti1516.federate.callbacks;
 
-import net.sf.ohla.rti1516.federate.Federate;
-
+import hla.rti1516.FederateAmbassador;
 import hla.rti1516.ObjectClassHandle;
 import hla.rti1516.ObjectInstanceHandle;
+import hla.rti1516.ObjectClassNotRecognized;
+import hla.rti1516.CouldNotDiscover;
+import hla.rti1516.FederateInternalError;
 
 public class DiscoverObjectInstance
   implements Callback
 {
   protected ObjectInstanceHandle objectInstanceHandle;
   protected ObjectClassHandle objectClassHandle;
+
+  protected transient String name;
 
   public DiscoverObjectInstance(ObjectInstanceHandle objectInstanceHandle,
                                 ObjectClassHandle objectClassHandle)
@@ -44,8 +48,20 @@ public class DiscoverObjectInstance
     return objectClassHandle;
   }
 
-  public void execute(Federate federate)
+  public String getName()
   {
-    federate.discoverObjectInstance(objectInstanceHandle, objectClassHandle);
+    return name;
+  }
+
+  public void setName(String name)
+  {
+    this.name = name;
+  }
+
+  public void execute(FederateAmbassador federateAmbassador)
+    throws ObjectClassNotRecognized, CouldNotDiscover, FederateInternalError
+  {
+    federateAmbassador.discoverObjectInstance(
+      objectInstanceHandle, objectClassHandle, name);
   }
 }
