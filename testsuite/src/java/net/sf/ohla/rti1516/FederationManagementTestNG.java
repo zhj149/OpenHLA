@@ -37,6 +37,7 @@ import hla.rti1516.FederationExecutionDoesNotExist;
 import hla.rti1516.RTIambassador;
 import hla.rti1516.FederateInternalError;
 import hla.rti1516.SynchronizationPointFailureReason;
+import hla.rti1516.SynchronizationPointLabelNotAnnounced;
 import static hla.rti1516.ResignAction.NO_ACTION;
 import hla.rti1516.jlc.NullFederateAmbassador;
 
@@ -131,11 +132,14 @@ public class FederationManagementTestNG
       FEDERATE_TYPE, FEDERATION_NAME, new NullFederateAmbassador(), null);
   }
 
-  @Test(dependsOnMethods = {"testRegisterFederationSynchronizationPoint"})
+  @Test(
+    dependsOnMethods = {"testSynchronizationPointAchievedOfUnannouncedSynchronizationPoint"})
   public void testResignFederationExecution()
     throws Exception
   {
     rtiAmbassadors.get(0).resignFederationExecution(NO_ACTION);
+    rtiAmbassadors.get(1).resignFederationExecution(NO_ACTION);
+    rtiAmbassadors.get(2).resignFederationExecution(NO_ACTION);
   }
 
   @Test(expectedExceptions = {FederationExecutionDoesNotExist.class})
@@ -188,6 +192,26 @@ public class FederationManagementTestNG
       SYNCHRONIZATION_POINT_1);
   }
 
+  @Test(dependsOnMethods = {"testRegisterFederationSynchronizationPoint"})
+  public void testRegisterFederationSynchronizationPointAgain()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).registerFederationSynchronizationPoint(
+      SYNCHRONIZATION_POINT_1, null);
+
+    federateAmbassadors.get(0).checkSynchronizationPointRegistrationFailed(
+      SYNCHRONIZATION_POINT_1,
+      SynchronizationPointFailureReason.SYNCHRONIZATION_POINT_LABEL_NOT_UNIQUE);
+  }
+
+  @Test(dependsOnMethods = {"testRegisterFederationSynchronizationPointAgain"},
+        expectedExceptions = {SynchronizationPointLabelNotAnnounced.class})
+  public void testSynchronizationPointAchievedOfUnannouncedSynchronizationPoint()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).synchronizationPointAchieved(SYNCHRONIZATION_POINT_2);
+  }
+
   protected static class TestFederateAmbassador
     extends NullFederateAmbassador
   {
@@ -235,7 +259,8 @@ public class FederationManagementTestNG
     public void checkAnnouncedSynchronizationPoint(String label)
       throws Exception
     {
-      for (int i = 0; i < 5 && !announcedSynchronizationPoints.contains(label); i++)
+      for (int i = 0; i < 5 && !announcedSynchronizationPoints.contains(label);
+           i++)
       {
         rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
       }
