@@ -45,4 +45,10 @@
       <class name="net.sf.ohla.rti1516.OwnershipManagementTestNG"/>
     </classes>
   </test>
+
+  <test name="IEEE 1516 - Data Distribution Management">
+    <classes>
+      <class name="net.sf.ohla.rti1516.DataDistributionManagementTestNG"/>
+    </classes>
+  </test>
 </suite>
