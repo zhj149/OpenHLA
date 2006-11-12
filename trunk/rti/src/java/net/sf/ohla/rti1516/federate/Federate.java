@@ -2446,36 +2446,7 @@ public class Federate
     {
       checkIfActive();
 
-      CreateRegion createRegion = new CreateRegion(dimensionHandles);
-      WriteFuture writeFuture = rtiSession.write(createRegion);
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
-
-      // TODO: set timeout
-      //
-      Object response = createRegion.getResponse();
-      assert response instanceof RegionHandle : "unexpected response";
-
-      RegionHandle regionHandle = (RegionHandle) response;
-
-      // TODO: do region stuff
-
-      return regionHandle;
-    }
-    catch (InterruptedException ie)
-    {
-      throw new RTIinternalError("interrupted awaiting timeout", ie);
-    }
-    catch (ExecutionException ee)
-    {
-      throw new RTIinternalError("unable to get response", ee);
+      return regionManager.createRegion(dimensionHandles);
     }
     finally
     {
@@ -2492,8 +2463,7 @@ public class Federate
     {
       checkIfActive();
 
-      sendToPeers(new CommitRegionModifications(
-        regionManager.commitRegionModifications(regionHandles)));
+      regionManager.commitRegionModifications(regionHandles);
     }
     finally
     {
@@ -2512,8 +2482,6 @@ public class Federate
       checkIfActive();
 
       regionManager.deleteRegion(regionHandle);
-
-      sendToPeers(new DeleteRegion(regionHandle));
     }
     finally
     {
@@ -3171,7 +3139,7 @@ public class Federate
     {
       checkIfActive();
 
-      return null;
+      return regionManager.getRangeBounds(regionHandle, dimensionHandle);
     }
     finally
     {
@@ -3194,14 +3162,13 @@ public class Federate
     try
     {
       checkIfActive();
+
+      regionManager.setRangeBounds(regionHandle, dimensionHandle, rangeBounds);
     }
     finally
     {
       federateStateLock.readLock().unlock();
     }
-
-    regionManager.getRegionThrowIfNull(regionHandle).setRangeBounds(
-      dimensionHandle, rangeBounds);
   }
 
   public long normalizeFederateHandle(FederateHandle federateHandle)

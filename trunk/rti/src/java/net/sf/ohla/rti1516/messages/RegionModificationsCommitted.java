@@ -18,16 +18,16 @@ package net.sf.ohla.rti1516.messages;
 
 import java.util.Map;
 
+import hla.rti1516.RegionHandle;
 import hla.rti1516.DimensionHandle;
 import hla.rti1516.RangeBounds;
-import hla.rti1516.RegionHandle;
 
-public class CommitRegionModifications
-  extends AbstractRequest
+public class RegionModificationsCommitted
+  implements Message
 {
   protected Map<RegionHandle, Map<DimensionHandle, RangeBounds>> regionModifications;
 
-  public CommitRegionModifications(
+  public RegionModificationsCommitted(
     Map<RegionHandle, Map<DimensionHandle, RangeBounds>> regionModifications)
   {
     this.regionModifications = regionModifications;

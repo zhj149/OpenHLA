@@ -10,13 +10,19 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import net.sf.ohla.rti1516.OHLAAttributeHandleSet;
+import net.sf.ohla.rti1516.OHLAFederateHandle;
+import net.sf.ohla.rti1516.OHLAObjectInstanceHandle;
+import net.sf.ohla.rti1516.OHLARegionHandle;
 import net.sf.ohla.rti1516.RTI;
+import net.sf.ohla.rti1516.fdd.Dimension;
 import net.sf.ohla.rti1516.fdd.FDD;
 import net.sf.ohla.rti1516.fdd.ObjectClass;
 import net.sf.ohla.rti1516.federate.callbacks.AnnounceSynchronizationPoint;
@@ -30,18 +36,17 @@ import net.sf.ohla.rti1516.federate.callbacks.FederationSynchronized;
 import net.sf.ohla.rti1516.federate.callbacks.InitiateFederateSave;
 import net.sf.ohla.rti1516.federate.callbacks.RemoveObjectInstance;
 import net.sf.ohla.rti1516.federation.ownership.OwnershipManager;
-import net.sf.ohla.rti1516.OHLAAttributeHandleSet;
-import net.sf.ohla.rti1516.OHLAFederateHandle;
-import net.sf.ohla.rti1516.OHLAObjectInstanceHandle;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipAcquisition;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipAcquisitionIfAvailable;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipDivestitureIfWanted;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipDivestitureIfWantedResponse;
 import net.sf.ohla.rti1516.messages.CancelAttributeOwnershipAcquisition;
 import net.sf.ohla.rti1516.messages.CancelNegotiatedAttributeOwnershipDivestiture;
+import net.sf.ohla.rti1516.messages.CommitRegionModifications;
 import net.sf.ohla.rti1516.messages.ConfirmDivestiture;
 import net.sf.ohla.rti1516.messages.CreateRegion;
 import net.sf.ohla.rti1516.messages.DefaultResponse;
+import net.sf.ohla.rti1516.messages.DeleteRegion;
 import net.sf.ohla.rti1516.messages.DisableTimeConstrained;
 import net.sf.ohla.rti1516.messages.DisableTimeRegulation;
 import net.sf.ohla.rti1516.messages.EnableTimeConstrained;
@@ -73,6 +78,7 @@ import net.sf.ohla.rti1516.messages.SubscribeObjectClassAttributes;
 import net.sf.ohla.rti1516.messages.SynchronizationPointAchieved;
 import net.sf.ohla.rti1516.messages.TimeAdvanceRequest;
 import net.sf.ohla.rti1516.messages.UnconditionalAttributeOwnershipDivestiture;
+import net.sf.ohla.rti1516.messages.GetRangeBounds;
 
 import org.apache.mina.common.IoSession;
 import org.apache.mina.common.WriteFuture;
@@ -82,12 +88,15 @@ import org.slf4j.LoggerFactory;
 
 import hla.rti1516.AttributeHandle;
 import hla.rti1516.AttributeHandleSet;
+import hla.rti1516.DimensionHandle;
 import hla.rti1516.FederateHandle;
 import hla.rti1516.FederateHandleRestoreStatusPair;
 import hla.rti1516.FederateHandleSaveStatusPair;
 import hla.rti1516.FederatesCurrentlyJoined;
 import hla.rti1516.ObjectInstanceHandle;
 import hla.rti1516.OrderType;
+import hla.rti1516.RangeBounds;
+import hla.rti1516.RegionHandle;
 import hla.rti1516.RestoreInProgress;
 import hla.rti1516.RestoreStatus;
 import hla.rti1516.SaveInProgress;
@@ -124,6 +133,10 @@ public class FederationExecution
   protected Lock synchronizationPointsLock = new ReentrantLock(true);
   protected Map<String, FederationExecutionSynchronizationPoint> synchronizationPoints =
     new HashMap<String, FederationExecutionSynchronizationPoint>();
+
+  protected ReadWriteLock regionsLock = new ReentrantReadWriteLock(true);
+  protected Map<RegionHandle, Map<DimensionHandle, RangeBounds>> regions =
+    new HashMap<RegionHandle, Map<DimensionHandle, RangeBounds>>();
 
   protected OwnershipManager ownershipManager = new OwnershipManager(this);
 
@@ -294,9 +307,21 @@ public class FederationExecution
     {
       process(session, (TimeAdvanceRequest) message);
     }
+    else if (message instanceof CommitRegionModifications)
+    {
+      process(session, (CommitRegionModifications) message);
+    }
+    else if (message instanceof GetRangeBounds)
+    {
+      process(session, (GetRangeBounds) message);
+    }
     else if (message instanceof CreateRegion)
     {
       process(session, (CreateRegion) message);
+    }
+    else if (message instanceof DeleteRegion)
+    {
+      process(session, (DeleteRegion) message);
     }
     else if (message instanceof JoinFederationExecution)
     {
@@ -659,7 +684,7 @@ public class FederationExecution
           {
             // update the federate save status
             //
-            session.setAttribute(
+            federateSession.setAttribute(
               SAVE_STATUS, SaveStatus.FEDERATE_INSTRUCTED_TO_SAVE);
           }
 
@@ -769,7 +794,7 @@ public class FederationExecution
             {
               // update the federate save status
               //
-              session.setAttribute(SAVE_STATUS, SaveStatus.NO_SAVE_IN_PROGRESS);
+              federateSession.setAttribute(SAVE_STATUS, SaveStatus.NO_SAVE_IN_PROGRESS);
             }
 
             send(new FederationSaved());
@@ -825,7 +850,7 @@ public class FederationExecution
             {
               // update the federate save status
               //
-              session.setAttribute(SAVE_STATUS, SaveStatus.NO_SAVE_IN_PROGRESS);
+              federateSession.setAttribute(SAVE_STATUS, SaveStatus.NO_SAVE_IN_PROGRESS);
             }
 
             send(new FederationNotSaved(
@@ -1303,12 +1328,110 @@ public class FederationExecution
     }
   }
 
+  protected void process(IoSession session,
+                         CommitRegionModifications commitRegionModifications)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+      regionsLock.readLock().lock();
+      try
+      {
+        for (Map.Entry<RegionHandle, Map<DimensionHandle, RangeBounds>> entry :
+          commitRegionModifications.getRegionModifications().entrySet())
+        {
+          regions.get(entry.getKey()).putAll(entry.getValue());
+        }
+      }
+      finally
+      {
+        regionsLock.readLock().unlock();
+      }
+
+      session.write(new DefaultResponse(commitRegionModifications.getId()));
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
+  protected void process(IoSession session, GetRangeBounds getRangeBounds)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+      RangeBounds rangeBounds;
+
+      regionsLock.readLock().lock();
+      try
+      {
+        rangeBounds = regions.get(getRangeBounds.getRegionHandle()).get(
+          getRangeBounds.getDimensionHandle());
+      }
+      finally
+      {
+        regionsLock.readLock().unlock();
+      }
+
+      session.write(new DefaultResponse(getRangeBounds.getId(), rangeBounds));
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
   protected void process(IoSession session, CreateRegion createRegion)
   {
     federationExecutionStateLock.readLock().lock();
     try
     {
-      session.write(new DefaultResponse(createRegion.getId()));
+      RegionHandle regionHandle = nextRegionHandle();
+
+      regionsLock.writeLock().lock();
+      try
+      {
+        Map<DimensionHandle, RangeBounds> rangeBounds =
+          new ConcurrentHashMap<DimensionHandle, RangeBounds>();
+        for (DimensionHandle dimensionHandle : createRegion.getDimensionHandles())
+        {
+          Dimension dimension = fdd.getDimensions().get(dimensionHandle);
+          assert dimension != null;
+
+          rangeBounds.put(dimensionHandle, dimension.getRangeBounds());
+        }
+        regions.put(regionHandle, rangeBounds);
+      }
+      finally
+      {
+        regionsLock.writeLock().unlock();
+      }
+
+      session.write(new DefaultResponse(createRegion.getId(), regionHandle));
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
+  protected void process(IoSession session, DeleteRegion deleteRegion)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+      regionsLock.writeLock().lock();
+      try
+      {
+        regions.remove(deleteRegion.getRegionHandle());
+      }
+      finally
+      {
+        regionsLock.writeLock().unlock();
+      }
+
+      session.write(new DefaultResponse(deleteRegion.getId()));
     }
     finally
     {
@@ -1327,7 +1450,7 @@ public class FederationExecution
 
       // get the next federate handle
       //
-      FederateHandle federateHandle = nextFederateHandle(session);
+      FederateHandle federateHandle = nextFederateHandle();
 
       log.debug("new federate: {}", federateHandle);
 
@@ -1472,7 +1595,7 @@ public class FederationExecution
     }
   }
 
-  protected FederateHandle nextFederateHandle(IoSession session)
+  protected FederateHandle nextFederateHandle()
   {
     return new OHLAFederateHandle(federateCount.incrementAndGet());
   }
@@ -1480,6 +1603,11 @@ public class FederationExecution
   protected ObjectInstanceHandle nextObjectInstanceHandle()
   {
     return new OHLAObjectInstanceHandle(objectInstanceCount.incrementAndGet());
+  }
+
+  protected RegionHandle nextRegionHandle()
+  {
+    return new OHLARegionHandle(regionCount.incrementAndGet());
   }
 
   protected class WaitForObjectInstanceRegisteredConfirmation
