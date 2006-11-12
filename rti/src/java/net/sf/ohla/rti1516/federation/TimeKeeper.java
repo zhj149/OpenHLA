@@ -8,12 +8,17 @@ import java.util.Set;
 import net.sf.ohla.rti1516.Integer64TimeFactory;
 import net.sf.ohla.rti1516.Integer64TimeInterval;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import hla.rti1516.IllegalTimeArithmetic;
 import hla.rti1516.LogicalTime;
 import hla.rti1516.LogicalTimeFactory;
 
 public class TimeKeeper
 {
+  private static final Logger log = LoggerFactory.getLogger(TimeKeeper.class);
+
   protected LogicalTime time;
   protected LogicalTimeFactory logicalTimeFactory;
 
@@ -33,7 +38,7 @@ public class TimeKeeper
 
   public synchronized void timeAdvanceRequest(LogicalTime time, TimeClient client)
   {
-    System.out.printf("%s requesting advance to %s\n", client, time);
+    log.debug(String.format("%s requesting advance to %s", client.name, time));
 
     if (this.time.compareTo(time) > 0)
     {
@@ -75,21 +80,21 @@ public class TimeKeeper
     }
   }
 
-  protected LogicalTime min(LogicalTime lhs, LogicalTime rhs)
-  {
-    return lhs.compareTo(rhs) <= 0 ? lhs : rhs;
-  }
-
   public synchronized void timeAdvanceRequestAvailable(LogicalTime time,
                                                        TimeClient client)
   {
     timeAdvanceRequest(min(time, minAdvanceRequest), client);
   }
 
+  protected LogicalTime min(LogicalTime lhs, LogicalTime rhs)
+  {
+    return lhs.compareTo(rhs) <= 0 ? lhs : rhs;
+  }
+
   public void test()
   {
-    TimeClient tc = new TimeClient(new Integer64TimeInterval(3000), false);
-    TimeClient tc2 = new TimeClient(new Integer64TimeInterval(5000), false);
+    TimeClient tc = new TimeClient("A", new Integer64TimeInterval(3000), false);
+    TimeClient tc2 = new TimeClient("B", new Integer64TimeInterval(5000), true);
 //    TimeClient tc3 = new TimeClient(35000);
 
     tc.timeAdvanceGrant(time);
@@ -106,7 +111,7 @@ public class TimeKeeper
         int i = 0;
         while (true)
         {
-          System.out.printf("[%d] %s\n", i++, time);
+          log.debug(String.format("[%d] %s", i++, time));
           try
           {
             Thread.sleep(1000);
@@ -123,6 +128,9 @@ public class TimeKeeper
   protected class TimeClient
     extends Thread
   {
+    protected Logger log;
+
+    protected String name;
     protected Integer64TimeInterval step;
     protected boolean available;
 
@@ -130,8 +138,11 @@ public class TimeKeeper
     protected LogicalTime timeRequested;
     protected boolean advanceGranted;
 
-    public TimeClient(Integer64TimeInterval step, boolean available)
+    public TimeClient(String name, Integer64TimeInterval step, boolean available)
     {
+      log = LoggerFactory.getLogger(name);
+
+      this.name = name;
       this.step = step;
       this.available = available;
 
@@ -140,7 +151,7 @@ public class TimeKeeper
 
     public synchronized void timeAdvanceGrant(LogicalTime time)
     {
-      System.out.printf("%s advance granted to %s\n", this, time);
+      log.debug(String.format("advance granted to %s", time));
       this.time = time;
       advanceGranted = true;
       interrupt();
@@ -172,9 +183,9 @@ public class TimeKeeper
         Integer64TimeInterval distance =
           (Integer64TimeInterval) time.distance(timeRequested);
 
-        System.out.printf("%s %d %d %d\n", this, currentTime, distance.interval, step.interval);
+        log.debug(String.format("%d %d %d", currentTime, distance.interval, step.interval));
 
-        long waitUntil = currentTime + step.interval + distance.interval;
+        long waitUntil = currentTime + step.interval;
         for (long waitTime = waitUntil - System.currentTimeMillis();
              waitTime > 0; waitTime = waitUntil - System.currentTimeMillis())
         {
@@ -182,11 +193,12 @@ public class TimeKeeper
           {
             try
             {
-              System.out.printf("%s %d\n", this, waitUntil);
+              log.debug(String.format("waiting until %d", waitUntil));
               wait(waitTime);
             }
             catch (InterruptedException ie)
             {
+              log.debug(String.format("interrupted"));
             }
           }
         }
