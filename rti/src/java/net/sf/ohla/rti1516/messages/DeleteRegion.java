@@ -19,7 +19,7 @@ package net.sf.ohla.rti1516.messages;
 import hla.rti1516.RegionHandle;
 
 public class DeleteRegion
-  implements Message
+  extends AbstractRequest
 {
   protected RegionHandle regionHandle;
 

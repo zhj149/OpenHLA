@@ -5,17 +5,26 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import net.sf.ohla.rti1516.fdd.FDD;
 import net.sf.ohla.rti1516.OHLARegionHandleSet;
+import net.sf.ohla.rti1516.fdd.FDD;
+import net.sf.ohla.rti1516.messages.CreateRegion;
+import net.sf.ohla.rti1516.messages.CommitRegionModifications;
+import net.sf.ohla.rti1516.messages.RegionCreated;
+import net.sf.ohla.rti1516.messages.RegionModificationsCommitted;
+import net.sf.ohla.rti1516.messages.DeleteRegion;
+import net.sf.ohla.rti1516.messages.RegionDeleted;
+import net.sf.ohla.rti1516.messages.GetRangeBounds;
+
+import org.apache.mina.common.WriteFuture;
 
 import hla.rti1516.AttributeHandleSet;
 import hla.rti1516.AttributeRegionAssociation;
 import hla.rti1516.DimensionHandle;
 import hla.rti1516.DimensionHandleSet;
-import hla.rti1516.FederateHandle;
 import hla.rti1516.InteractionClassHandle;
 import hla.rti1516.InvalidDimensionHandle;
 import hla.rti1516.InvalidRegion;
@@ -33,9 +42,7 @@ public class RegionManager
 {
   protected Federate federate;
 
-  protected Region defaultRegion;
-
-  protected Lock regionsLock = new ReentrantLock(true);
+  protected ReadWriteLock regionsLock = new ReentrantReadWriteLock(true);
   protected Map<RegionHandle, Region> regions =
     new HashMap<RegionHandle, Region>();
 
@@ -44,12 +51,61 @@ public class RegionManager
     this.federate = federate;
   }
 
+  public RegionHandle createRegion(DimensionHandleSet dimensionHandles)
+    throws RTIinternalError
+  {
+    try
+    {
+      CreateRegion createRegion = new CreateRegion(dimensionHandles);
+      WriteFuture writeFuture = federate.getRTISession().write(createRegion);
+
+      // TODO: set timeout
+      //
+      writeFuture.join();
+
+      if (!writeFuture.isWritten())
+      {
+        throw new RTIinternalError("error communicating with RTI");
+      }
+
+      // TODO: set timeout
+      //
+      Object response = createRegion.getResponse();
+      assert response instanceof RegionHandle : "unexpected response";
+
+      RegionHandle regionHandle = (RegionHandle) response;
+
+      regionsLock.writeLock().lock();
+      try
+      {
+        regions.put(regionHandle, new Region(
+          regionHandle, dimensionHandles, federate.getFDD()));
+      }
+      finally
+      {
+        regionsLock.writeLock().unlock();
+      }
+
+      federate.sendToPeers(new RegionCreated(regionHandle, dimensionHandles));
+
+      return regionHandle;
+    }
+    catch (InterruptedException ie)
+    {
+      throw new RTIinternalError("interrupted awaiting timeout", ie);
+    }
+    catch (ExecutionException ee)
+    {
+      throw new RTIinternalError("unable to get response", ee);
+    }
+  }
+
   public RegionHandleSet getIntersectingRegions(
     Map<RegionHandle, Map<DimensionHandle, RangeBounds>> rangeBounds)
   {
     RegionHandleSet intersectingRegions = new OHLARegionHandleSet();
 
-    regionsLock.lock();
+    regionsLock.readLock().lock();
     try
     {
       for (Region region : regions.values())
@@ -65,35 +121,151 @@ public class RegionManager
     }
     finally
     {
-      regionsLock.unlock();
+      regionsLock.readLock().unlock();
     }
 
     return intersectingRegions;
   }
 
-  public Map<RegionHandle, Map<DimensionHandle, RangeBounds>> commitRegionModifications(
-    RegionHandleSet regionHandles)
-    throws InvalidRegion, RegionNotCreatedByThisFederate
+  public RangeBounds getRangeBounds(RegionHandle regionHandle,
+                                    DimensionHandle dimensionHandle)
+    throws RegionDoesNotContainSpecifiedDimension, RTIinternalError
   {
-    Map<RegionHandle, Map<DimensionHandle, RangeBounds>> regionModifications =
-      new HashMap<RegionHandle, Map<DimensionHandle, RangeBounds>>();
+    RangeBounds rangeBounds = null;
 
-    regionsLock.lock();
+    regionsLock.readLock().lock();
     try
     {
-      for (RegionHandle regionHandle : regionHandles)
+      Region region = regions.get(regionHandle);
+      if (region != null)
       {
-        Map<DimensionHandle, RangeBounds> committedRegionModifications =
-          getRegionThrowIfNull(regionHandle).commit();
-        if (!committedRegionModifications.isEmpty())
+        rangeBounds = region.getRangeBounds(dimensionHandle);
+      }
+      else
+      {
+        try
         {
-          regionModifications.put(regionHandle, committedRegionModifications);
+          GetRangeBounds getRangeBounds =
+            new GetRangeBounds(regionHandle, dimensionHandle);
+          WriteFuture writeFuture =
+            federate.getRTISession().write(getRangeBounds);
+
+          // TODO: set timeout
+          //
+          writeFuture.join();
+
+          if (!writeFuture.isWritten())
+          {
+            throw new RTIinternalError("error communicating with RTI");
+          }
+
+          // TODO: set timeout
+          //
+          Object response = getRangeBounds.getResponse();
+          if (response instanceof RangeBounds)
+          {
+            rangeBounds = (RangeBounds) response;
+          }
+          else if (response instanceof RegionDoesNotContainSpecifiedDimension)
+          {
+            throw new RegionDoesNotContainSpecifiedDimension(
+              (RegionDoesNotContainSpecifiedDimension) response);
+          }
+          else
+          {
+            assert false : String.format("unexpected response: %s", response);
+          }
+        }
+        catch (InterruptedException ie)
+        {
+          throw new RTIinternalError("interrupted awaiting timeout", ie);
+        }
+        catch (ExecutionException ee)
+        {
+          throw new RTIinternalError("unable to get response", ee);
         }
       }
     }
     finally
     {
-      regionsLock.unlock();
+      regionsLock.readLock().unlock();
+    }
+
+    return rangeBounds;
+  }
+
+  public void setRangeBounds(RegionHandle regionHandle,
+                             DimensionHandle dimensionHandle,
+                             RangeBounds rangeBounds)
+    throws RegionNotCreatedByThisFederate,
+           RegionDoesNotContainSpecifiedDimension
+  {
+    regionsLock.readLock().lock();
+    try
+    {
+      getRegion(regionHandle).setRangeBounds(dimensionHandle, rangeBounds);
+    }
+    finally
+    {
+      regionsLock.readLock().unlock();
+    }
+  }
+
+  public Map<RegionHandle, Map<DimensionHandle, RangeBounds>> commitRegionModifications(
+    RegionHandleSet regionHandles)
+    throws InvalidRegion, RegionNotCreatedByThisFederate, RTIinternalError
+  {
+    Map<RegionHandle, Map<DimensionHandle, RangeBounds>> regionModifications =
+      new HashMap<RegionHandle, Map<DimensionHandle, RangeBounds>>();
+
+    regionsLock.readLock().lock();
+    try
+    {
+      for (RegionHandle regionHandle : regionHandles)
+      {
+        Map<DimensionHandle, RangeBounds> committedRegionModifications =
+          getRegion(regionHandle).commit();
+        if (!committedRegionModifications.isEmpty())
+        {
+          regionModifications.put(regionHandle, committedRegionModifications);
+        }
+      }
+
+      try
+      {
+        CommitRegionModifications commitRegionModifications =
+          new CommitRegionModifications(regionModifications);
+        WriteFuture writeFuture = federate.getRTISession().write(
+          commitRegionModifications);
+
+        // TODO: set timeout
+        //
+        writeFuture.join();
+
+        if (!writeFuture.isWritten())
+        {
+          throw new RTIinternalError("error communicating with RTI");
+        }
+
+        // TODO: set timeout
+        //
+        commitRegionModifications.await();
+
+        federate.sendToPeers(
+          new RegionModificationsCommitted(regionModifications));
+      }
+      catch (InterruptedException ie)
+      {
+        throw new RTIinternalError("interrupted awaiting timeout", ie);
+      }
+      catch (ExecutionException ee)
+      {
+        throw new RTIinternalError("unable to get response", ee);
+      }
+    }
+    finally
+    {
+      regionsLock.readLock().unlock();
     }
 
     return regionModifications;
@@ -101,33 +273,90 @@ public class RegionManager
 
   public void deleteRegion(RegionHandle regionHandle)
     throws InvalidRegion, RegionNotCreatedByThisFederate,
-           RegionInUseForUpdateOrSubscription
+           RegionInUseForUpdateOrSubscription, RTIinternalError
   {
-    regionsLock.lock();
+    regionsLock.writeLock().lock();
     try
     {
-      Region region = getRegionThrowIfNull(regionHandle);
-
+      Region region = getRegion(regionHandle);
       region.checkIfInUse();
 
+      DeleteRegion deleteRegion = new DeleteRegion(regionHandle);
+      WriteFuture writeFuture = federate.getRTISession().write(deleteRegion);
+
+      // TODO: set timeout
+      //
+      writeFuture.join();
+
+      if (!writeFuture.isWritten())
+      {
+        throw new RTIinternalError("error communicating with RTI");
+      }
+
+      // TODO: set timeout
+      //
+      deleteRegion.await();
+
       regions.remove(regionHandle);
+
+      federate.sendToPeers(new RegionDeleted(regionHandle));
+    }
+    catch (InterruptedException ie)
+    {
+      throw new RTIinternalError("interrupted awaiting timeout", ie);
+    }
+    catch (ExecutionException ee)
+    {
+      throw new RTIinternalError("unable to get response", ee);
     }
     finally
     {
-      regionsLock.unlock();
+      regionsLock.writeLock().unlock();
     }
   }
 
   public void associateRegionsForUpdates(
     ObjectInstanceHandle objectInstanceHandle,
     AttributeRegionAssociation attributeRegionAssociation)
+    throws RegionNotCreatedByThisFederate
   {
+    regionsLock.readLock().lock();
+    try
+    {
+      checkIfRegionNotCreatedByThisFederate(attributeRegionAssociation.regions);
+
+      for (RegionHandle regionHandle : attributeRegionAssociation.regions)
+      {
+        regions.get(regionHandle).associateRegionsForUpdates(
+          objectInstanceHandle, attributeRegionAssociation.attributes);
+      }
+    }
+    finally
+    {
+      regionsLock.readLock().unlock();
+    }
   }
 
   public void unassociateRegionsForUpdates(
     ObjectInstanceHandle objectInstanceHandle,
     AttributeRegionAssociation attributeRegionAssociation)
+    throws RegionNotCreatedByThisFederate
   {
+    regionsLock.readLock().lock();
+    try
+    {
+      checkIfRegionNotCreatedByThisFederate(attributeRegionAssociation.regions);
+
+      for (RegionHandle regionHandle : attributeRegionAssociation.regions)
+      {
+        regions.get(regionHandle).unassociateRegionsForUpdates(
+          objectInstanceHandle, attributeRegionAssociation.attributes);
+      }
+    }
+    finally
+    {
+      regionsLock.readLock().unlock();
+    }
   }
 
   public void subscribeObjectClassAttributesWithRegions(
@@ -139,7 +368,7 @@ public class RegionManager
     {
       // TODO: don't forget passive
 
-      getRegionThrowIfNull(regionHandle).subscribe(
+      getRegion(regionHandle).subscribe(
         objectClassHandle, attributeRegionAssociation.attributes);
     }
   }
@@ -151,39 +380,9 @@ public class RegionManager
   {
     for (RegionHandle regionHandle : attributeRegionAssociation.regions)
     {
-      getRegionThrowIfNull(regionHandle).unsubscribe(
+      getRegion(regionHandle).unsubscribe(
         objectClassHandle, attributeRegionAssociation.attributes);
     }
-  }
-
-  public void checkIfRegionNotCreatedByThisFederate(RegionHandle regionHandle)
-    throws InvalidRegion, RegionNotCreatedByThisFederate
-  {
-    getRegionThrowIfNull(regionHandle).checkIfRegionNotCreatedByThisFederate();
-  }
-
-  protected Region getRegion(RegionHandle regionHandle)
-  {
-    regionsLock.lock();
-    try
-    {
-      return regions.get(regionHandle);
-    }
-    finally
-    {
-      regionsLock.unlock();
-    }
-  }
-
-  protected Region getRegionThrowIfNull(RegionHandle regionHandle)
-    throws InvalidRegion
-  {
-    Region region = getRegion(regionHandle);
-    if (region == null)
-    {
-      throw new InvalidRegion(String.format("%s", regionHandle));
-    }
-    return region;
   }
 
   public void subscribeInteractionClassWithRegions(
@@ -193,7 +392,7 @@ public class RegionManager
   {
     for (RegionHandle regionHandle : regionHandles)
     {
-      getRegionThrowIfNull(regionHandle).subscribe(interactionClassHandle);
+      getRegion(regionHandle).subscribe(interactionClassHandle);
     }
   }
 
@@ -204,7 +403,44 @@ public class RegionManager
   {
     for (RegionHandle regionHandle : regionHandles)
     {
-      getRegionThrowIfNull(regionHandle).unsubscribe(interactionClassHandle);
+      getRegion(regionHandle).unsubscribe(interactionClassHandle);
+    }
+  }
+
+  protected Region getRegion(RegionHandle regionHandle)
+    throws RegionNotCreatedByThisFederate
+  {
+    Region region = regions.get(regionHandle);
+    if (region == null)
+    {
+      throw new RegionNotCreatedByThisFederate(
+        String.format("%s", regionHandle));
+    }
+    return region;
+  }
+
+  protected void checkIfRegionNotCreatedByThisFederate(
+    RegionHandle regionHandle)
+  throws RegionNotCreatedByThisFederate
+  {
+    if (!regions.containsKey(regionHandle))
+    {
+      throw new RegionNotCreatedByThisFederate(
+        String.format("%s", regionHandle));
+    }
+  }
+
+  protected void checkIfRegionNotCreatedByThisFederate(
+    RegionHandleSet regionHandles)
+  throws RegionNotCreatedByThisFederate
+  {
+    for (RegionHandle regionHandle : regionHandles)
+    {
+      if (!regions.containsKey(regionHandle))
+      {
+        throw new RegionNotCreatedByThisFederate(
+          String.format("%s", regionHandle));
+      }
     }
   }
 
@@ -213,16 +449,18 @@ public class RegionManager
     protected RegionHandle regionHandle;
     protected DimensionHandleSet dimensionHandles;
 
-    protected FederateHandle creator;
-
+    protected ReadWriteLock rangeBoundsLock = new ReentrantReadWriteLock(true);
     protected Map<DimensionHandle, RangeBounds> rangeBounds =
       new HashMap<DimensionHandle, RangeBounds>();
-
     protected Map<DimensionHandle, RangeBounds> uncommittedRangeBounds =
       new HashMap<DimensionHandle, RangeBounds>();
 
+    protected ReadWriteLock associatedObjectsLock =
+      new ReentrantReadWriteLock(true);
     protected Map<ObjectInstanceHandle, AttributeHandleSet> associatedObjects =
       new HashMap<ObjectInstanceHandle, AttributeHandleSet>();
+
+    protected ReadWriteLock subscriptionLock = new ReentrantReadWriteLock(true);
 
     protected Map<ObjectClassHandle, AttributeHandleSet> subscribedObjectClasses =
       new HashMap<ObjectClassHandle, AttributeHandleSet>();
@@ -264,21 +502,24 @@ public class RegionManager
       return dimensionHandles;
     }
 
-    public Map<DimensionHandle, RangeBounds> getRangeBounds()
-    {
-      return rangeBounds;
-    }
-
     public RangeBounds getRangeBounds(DimensionHandle dimensionHandle)
       throws RegionDoesNotContainSpecifiedDimension
     {
-      RangeBounds rangeBounds = this.rangeBounds.get(dimensionHandle);
-      if (rangeBounds == null)
+      rangeBoundsLock.readLock().lock();
+      try
       {
-        throw new RegionDoesNotContainSpecifiedDimension(
-          String.format("%s", dimensionHandle));
+        RangeBounds rangeBounds = this.rangeBounds.get(dimensionHandle);
+        if (rangeBounds == null)
+        {
+          throw new RegionDoesNotContainSpecifiedDimension(
+            String.format("%s", dimensionHandle));
+        }
+        return clone(rangeBounds);
       }
-      return clone(rangeBounds);
+      finally
+      {
+        rangeBoundsLock.readLock().unlock();
+      }
     }
 
     public void setRangeBounds(DimensionHandle dimensionHandle,
@@ -332,8 +573,8 @@ public class RegionManager
       }
     }
 
-    public void associate(ObjectInstanceHandle objectInstanceHandle,
-                          AttributeHandleSet attributeHandles)
+    public void associateRegionsForUpdates(ObjectInstanceHandle objectInstanceHandle,
+                                           AttributeHandleSet attributeHandles)
     {
       AttributeHandleSet existingAttributeHandles =
         associatedObjects.get(objectInstanceHandle);
@@ -347,8 +588,8 @@ public class RegionManager
       existingAttributeHandles.addAll(attributeHandles);
     }
 
-    public void unassociate(ObjectInstanceHandle objectInstanceHandle,
-                            AttributeHandleSet attributeHandles)
+    public void unassociateRegionsForUpdates(ObjectInstanceHandle objectInstanceHandle,
+                                             AttributeHandleSet attributeHandles)
     {
       AttributeHandleSet existingAttributeHandles =
         associatedObjects.get(objectInstanceHandle);
@@ -367,8 +608,6 @@ public class RegionManager
                           AttributeHandleSet attributeHandles)
       throws RegionNotCreatedByThisFederate
     {
-      checkIfRegionNotCreatedByThisFederate();
-
       AttributeHandleSet existingAttributeHandles =
         subscribedObjectClasses.get(objectClassHandle);
       if (existingAttributeHandles == null)
@@ -386,8 +625,6 @@ public class RegionManager
                             AttributeHandleSet attributeHandles)
       throws RegionNotCreatedByThisFederate
     {
-      checkIfRegionNotCreatedByThisFederate();
-
       AttributeHandleSet existingAttributeHandles =
         subscribedObjectClasses.get(objectClassHandle);
       if (existingAttributeHandles != null)
@@ -404,16 +641,12 @@ public class RegionManager
     public void subscribe(InteractionClassHandle interactionClassHandle)
       throws RegionNotCreatedByThisFederate
     {
-      checkIfRegionNotCreatedByThisFederate();
-
       subscribedInteractionClasses.add(interactionClassHandle);
     }
 
     public void unsubscribe(InteractionClassHandle interactionClassHandle)
       throws RegionNotCreatedByThisFederate
     {
-      checkIfRegionNotCreatedByThisFederate();
-
       subscribedInteractionClasses.remove(interactionClassHandle);
     }
 
@@ -431,16 +664,6 @@ public class RegionManager
       }
 
       return intersect;
-    }
-
-    public void checkIfRegionNotCreatedByThisFederate()
-      throws RegionNotCreatedByThisFederate
-    {
-      if (creator.equals(federate.getFederateHandle()))
-      {
-        throw new RegionNotCreatedByThisFederate(
-          String.format("creator: %s", creator));
-      }
     }
 
     protected boolean intersects(RangeBounds lhs, RangeBounds rhs)

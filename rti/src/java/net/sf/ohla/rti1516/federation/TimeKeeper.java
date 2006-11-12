@@ -89,7 +89,7 @@ public class TimeKeeper
   public void test()
   {
     TimeClient tc = new TimeClient(new Integer64TimeInterval(3000), false);
-    TimeClient tc2 = new TimeClient(new Integer64TimeInterval(5000), true);
+    TimeClient tc2 = new TimeClient(new Integer64TimeInterval(5000), false);
 //    TimeClient tc3 = new TimeClient(35000);
 
     tc.timeAdvanceGrant(time);
@@ -143,6 +143,7 @@ public class TimeKeeper
       System.out.printf("%s advance granted to %s\n", this, time);
       this.time = time;
       advanceGranted = true;
+      interrupt();
       notifyAll();
     }
 
@@ -167,8 +168,13 @@ public class TimeKeeper
           timeAdvanceRequest(timeRequested, this);
         }
 
-        long waitUntil =
-          System.currentTimeMillis() + step.interval + ((Integer64TimeInterval) time.distance(timeRequested)).interval;
+        long currentTime = System.currentTimeMillis();
+        Integer64TimeInterval distance =
+          (Integer64TimeInterval) time.distance(timeRequested);
+
+        System.out.printf("%s %d %d %d\n", this, currentTime, distance.interval, step.interval);
+
+        long waitUntil = currentTime + step.interval + distance.interval;
         for (long waitTime = waitUntil - System.currentTimeMillis();
              waitTime > 0; waitTime = waitUntil - System.currentTimeMillis())
         {
@@ -176,6 +182,7 @@ public class TimeKeeper
           {
             try
             {
+              System.out.printf("%s %d\n", this, waitUntil);
               wait(waitTime);
             }
             catch (InterruptedException ie)

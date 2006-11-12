@@ -16,25 +16,29 @@
 
 package net.sf.ohla.rti1516.messages;
 
-import java.util.Map;
-
-import hla.rti1516.DimensionHandle;
-import hla.rti1516.RangeBounds;
+import hla.rti1516.DimensionHandleSet;
 import hla.rti1516.RegionHandle;
 
-public class CommitRegionModifications
-  extends AbstractRequest
+public class RegionCreated
+  implements Message
 {
-  protected Map<RegionHandle, Map<DimensionHandle, RangeBounds>> regionModifications;
+  protected RegionHandle regionHandle;
+  protected DimensionHandleSet dimensionHandles;
 
-  public CommitRegionModifications(
-    Map<RegionHandle, Map<DimensionHandle, RangeBounds>> regionModifications)
+  public RegionCreated(RegionHandle regionHandle,
+                       DimensionHandleSet dimensionHandles)
   {
-    this.regionModifications = regionModifications;
+    this.regionHandle = regionHandle;
+    this.dimensionHandles = dimensionHandles;
   }
 
-  public Map<RegionHandle, Map<DimensionHandle, RangeBounds>> getRegionModifications()
+  public RegionHandle getRegionHandle()
   {
-    return regionModifications;
+    return regionHandle;
+  }
+
+  public DimensionHandleSet getDimensionHandles()
+  {
+    return dimensionHandles;
   }
 }

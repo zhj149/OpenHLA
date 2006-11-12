@@ -30,6 +30,9 @@ import net.sf.ohla.rti1516.messages.SubscribeInteractionClass;
 import net.sf.ohla.rti1516.messages.SubscribeObjectClassAttributes;
 import net.sf.ohla.rti1516.messages.UnsubscribeInteractionClass;
 import net.sf.ohla.rti1516.messages.UnsubscribeObjectClassAttributes;
+import net.sf.ohla.rti1516.messages.RegionCreated;
+import net.sf.ohla.rti1516.messages.RegionModificationsCommitted;
+import net.sf.ohla.rti1516.messages.RegionDeleted;
 
 import org.apache.mina.common.IoFilterAdapter;
 import org.apache.mina.common.IoSession;
@@ -103,8 +106,7 @@ public class InterestManagementFilter
 
         // TODO: notify the PublicationManager that subsciption interests have changed
       }
-      else
-      if (unsubscribeObjectClassAttributes.getAttributesAndRegions() != null)
+      else if (unsubscribeObjectClassAttributes.getAttributesAndRegions() != null)
       {
         getSubscriptionManager(session).unsubscribeObjectClassAttributes(
           unsubscribeObjectClassAttributes.getObjectClassHandle(),
@@ -156,6 +158,15 @@ public class InterestManagementFilter
 
         // TODO: notify the PublicationManager that subsciption interests have changed
       }
+    }
+    else if (message instanceof RegionCreated)
+    {
+    }
+    else if (message instanceof RegionModificationsCommitted)
+    {
+    }
+    else if (message instanceof RegionDeleted)
+    {
     }
     else
     {
