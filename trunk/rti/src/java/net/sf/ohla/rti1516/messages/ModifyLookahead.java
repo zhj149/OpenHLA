@@ -16,7 +16,20 @@
 
 package net.sf.ohla.rti1516.messages;
 
-public class DisableTimeRegulation
+import hla.rti1516.LogicalTimeInterval;
+
+public class ModifyLookahead
   implements Message
 {
+  protected LogicalTimeInterval lookahead;
+
+  public ModifyLookahead(LogicalTimeInterval lookahead)
+  {
+    this.lookahead = lookahead;
+  }
+
+  public LogicalTimeInterval getLookahead()
+  {
+    return lookahead;
+  }
 }

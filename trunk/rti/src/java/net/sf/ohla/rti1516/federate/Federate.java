@@ -65,14 +65,7 @@ import net.sf.ohla.rti1516.federate.filter.InterestManagementFilter;
 import net.sf.ohla.rti1516.federate.objects.ObjectManager;
 import net.sf.ohla.rti1516.federate.time.TimeManager;
 import net.sf.ohla.rti1516.filter.RequestResponseFilter;
-import net.sf.ohla.rti1516.messages.CommitRegionModifications;
-import net.sf.ohla.rti1516.messages.CreateRegion;
 import net.sf.ohla.rti1516.messages.DefaultResponse;
-import net.sf.ohla.rti1516.messages.DeleteRegion;
-import net.sf.ohla.rti1516.messages.DisableTimeConstrained;
-import net.sf.ohla.rti1516.messages.DisableTimeRegulation;
-import net.sf.ohla.rti1516.messages.EnableTimeConstrained;
-import net.sf.ohla.rti1516.messages.EnableTimeRegulation;
 import net.sf.ohla.rti1516.messages.FederateJoined;
 import net.sf.ohla.rti1516.messages.FederateRestoreComplete;
 import net.sf.ohla.rti1516.messages.FederateRestoreNotComplete;
@@ -94,7 +87,6 @@ import net.sf.ohla.rti1516.messages.RequestFederationSave;
 import net.sf.ohla.rti1516.messages.Retract;
 import net.sf.ohla.rti1516.messages.SubscribeObjectClassAttributes;
 import net.sf.ohla.rti1516.messages.SynchronizationPointAchieved;
-import net.sf.ohla.rti1516.messages.TimeAdvanceRequest;
 import net.sf.ohla.rti1516.messages.UnsubscribeObjectClassAttributes;
 
 import org.apache.mina.common.ConnectFuture;
@@ -301,9 +293,6 @@ public class Federate
   protected Lock futureTasksLock = new ReentrantLock(true);
   protected Queue<TimestampedFutureTask> futureTasks =
     new PriorityQueue<TimestampedFutureTask>();
-
-  protected LogicalTime time;
-  protected LogicalTimeInterval lookahead;
 
   protected AttributeHandleFactory attributeHandleFactory =
     new OHLAAttributeHandleFactory();
@@ -825,6 +814,9 @@ public class Federate
     {
       checkIfActive();
 
+      // no need to lock time manager because we have a write lock on the
+      // federate state
+      //
       timeManager.checkIfLogicalTimeAlreadyPassed(saveTime);
 
       RequestFederationSave requestFederationSave =
@@ -1973,33 +1965,6 @@ public class Federate
       checkIfActive();
 
       timeManager.enableTimeRegulation(lookahead);
-
-      EnableTimeRegulation enableTimeRegulation =
-        new EnableTimeRegulation(lookahead);
-      WriteFuture writeFuture = rtiSession.write(enableTimeRegulation);
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
-
-      // TODO: set timeout
-      //
-      Object response = enableTimeRegulation.getResponse();
-      assert response != null :
-        String.format("unexpected response: %s", response);
-    }
-    catch (InterruptedException ie)
-    {
-      throw new RTIinternalError("interrupted awaiting timeout", ie);
-    }
-    catch (ExecutionException ee)
-    {
-      throw new RTIinternalError("unable to get response", ee);
     }
     finally
     {
@@ -2017,32 +1982,6 @@ public class Federate
       checkIfActive();
 
       timeManager.disableTimeRegulation();
-
-      DisableTimeRegulation disableTimeRegulation = new DisableTimeRegulation();
-      WriteFuture writeFuture = rtiSession.write(disableTimeRegulation);
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
-
-      // TODO: set timeout
-      //
-      Object response = disableTimeRegulation.getResponse();
-      assert response != null :
-        String.format("unexpected response: %s", response);
-    }
-    catch (InterruptedException ie)
-    {
-      throw new RTIinternalError("interrupted awaiting timeout", ie);
-    }
-    catch (ExecutionException ee)
-    {
-      throw new RTIinternalError("unable to get response", ee);
     }
     finally
     {
@@ -2061,32 +2000,6 @@ public class Federate
       checkIfActive();
 
       timeManager.enableTimeConstrained();
-
-      EnableTimeConstrained enableTimeConstrained = new EnableTimeConstrained();
-      WriteFuture writeFuture = rtiSession.write(enableTimeConstrained);
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
-
-      // TODO: set timeout
-      //
-      Object response = enableTimeConstrained.getResponse();
-      assert response != null :
-        String.format("unexpected response: %s", response);
-    }
-    catch (InterruptedException ie)
-    {
-      throw new RTIinternalError("interrupted awaiting timeout", ie);
-    }
-    catch (ExecutionException ee)
-    {
-      throw new RTIinternalError("unable to get response", ee);
     }
     finally
     {
@@ -2104,33 +2017,6 @@ public class Federate
       checkIfActive();
 
       timeManager.disableTimeConstrained();
-
-      DisableTimeConstrained disableTimeConstrained =
-        new DisableTimeConstrained();
-      WriteFuture writeFuture = rtiSession.write(disableTimeConstrained);
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
-
-      // TODO: set timeout
-      //
-      Object response = disableTimeConstrained.getResponse();
-      assert response != null :
-        String.format("unexpected response: %s", response);
-    }
-    catch (InterruptedException ie)
-    {
-      throw new RTIinternalError("interrupted awaiting timeout", ie);
-    }
-    catch (ExecutionException ee)
-    {
-      throw new RTIinternalError("unable to get response", ee);
     }
     finally
     {
@@ -2149,24 +2035,6 @@ public class Federate
       checkIfActive();
 
       timeManager.timeAdvanceRequest(time);
-
-      if (timeManager.isTimeAdvancing())
-      {
-        // release any callbacks held until we are time advancing
-        //
-        callbackManager.releaseHeld();
-      }
-
-      WriteFuture writeFuture = rtiSession.write(new TimeAdvanceRequest(time));
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
     }
     finally
     {
@@ -2382,11 +2250,20 @@ public class Federate
     {
       checkIfActive();
 
-      timeManager.checkIfTimeRegulationIsNotEnabled();
+      timeManager.getTimeLock().readLock().lock();
+      try
+      {
+        timeManager.checkIfTimeRegulationIsNotEnabled();
 
-      messageRetractionManager.retract(messageRetractionHandle, time);
+        messageRetractionManager.retract(messageRetractionHandle,
+                                         timeManager.queryLogicalTime());
 
-      sendToPeers(new Retract(messageRetractionHandle));
+        sendToPeers(new Retract(messageRetractionHandle));
+      }
+      finally
+      {
+        timeManager.getTimeLock().readLock().unlock();
+      }
     }
     finally
     {
@@ -3826,7 +3703,6 @@ public class Federate
 
         federateStateLock.writeLock().unlock();
       }
-      federateAmbassador.initiateFederateSave(label, time);
     }
 
     public void federationSaved()

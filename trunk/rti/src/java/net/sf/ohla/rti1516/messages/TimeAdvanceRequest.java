@@ -19,7 +19,7 @@ package net.sf.ohla.rti1516.messages;
 import hla.rti1516.LogicalTime;
 
 public class TimeAdvanceRequest
-  extends AbstractRequest
+  implements Message
 {
   protected LogicalTime time;
 

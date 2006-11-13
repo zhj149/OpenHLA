@@ -19,7 +19,7 @@ package net.sf.ohla.rti1516.messages;
 import hla.rti1516.LogicalTimeInterval;
 
 public class EnableTimeRegulation
-  extends AbstractRequest
+  implements Message
 {
   protected LogicalTimeInterval lookahead;
 
