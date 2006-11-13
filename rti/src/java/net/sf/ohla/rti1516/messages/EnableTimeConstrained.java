@@ -17,6 +17,6 @@
 package net.sf.ohla.rti1516.messages;
 
 public class EnableTimeConstrained
-  extends AbstractRequest
+  implements Message
 {
 }

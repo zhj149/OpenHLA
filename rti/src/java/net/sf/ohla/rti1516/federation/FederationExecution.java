@@ -79,6 +79,7 @@ import net.sf.ohla.rti1516.messages.SynchronizationPointAchieved;
 import net.sf.ohla.rti1516.messages.TimeAdvanceRequest;
 import net.sf.ohla.rti1516.messages.UnconditionalAttributeOwnershipDivestiture;
 import net.sf.ohla.rti1516.messages.GetRangeBounds;
+import net.sf.ohla.rti1516.messages.TimeAdvanceRequestAvailable;
 
 import org.apache.mina.common.IoSession;
 import org.apache.mina.common.WriteFuture;
@@ -306,6 +307,10 @@ public class FederationExecution
     else if (message instanceof TimeAdvanceRequest)
     {
       process(session, (TimeAdvanceRequest) message);
+    }
+    else if (message instanceof TimeAdvanceRequestAvailable)
+    {
+      process(session, (TimeAdvanceRequestAvailable) message);
     }
     else if (message instanceof CommitRegionModifications)
     {
@@ -1264,7 +1269,8 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      session.write(new DefaultResponse(enableTimeRegulation.getId()));
+      timeKeeper.enableTimeRegulation(
+        getFederateHandle(session), enableTimeRegulation.getLookahead());
     }
     finally
     {
@@ -1278,7 +1284,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      session.write(new DefaultResponse(disableTimeRegulation.getId()));
+      timeKeeper.disableTimeRegulation(getFederateHandle(session));
     }
     finally
     {
@@ -1292,7 +1298,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      session.write(new DefaultResponse(enableTimeConstrained.getId()));
+      timeKeeper.enableTimeConstrained(getFederateHandle(session));
     }
     finally
     {
@@ -1306,7 +1312,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      session.write(new DefaultResponse(disableTimeConstrained.getId()));
+      timeKeeper.disableTimeConstrained(getFederateHandle(session));
     }
     finally
     {
@@ -1320,7 +1326,23 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      session.write(new DefaultResponse(timeAdvanceRequest.getId()));
+      timeKeeper.timeAdvanceRequest(
+        getFederateHandle(session), timeAdvanceRequest.getTime());
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
+  protected void process(
+    IoSession session, TimeAdvanceRequestAvailable timeAdvanceRequestAvailable)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+      timeKeeper.timeAdvanceRequestAvailable(
+        getFederateHandle(session), timeAdvanceRequestAvailable.getTime());
     }
     finally
     {
@@ -1457,6 +1479,14 @@ public class FederationExecution
       federatesLock.lock();
       try
       {
+        if (federateSessions.isEmpty())
+        {
+          // this the first federate, use it's mobile federate services
+          //
+          timeKeeper = new TimeKeeper(
+            this, joinFederationExecution.getMobileFederateServices());
+        }
+
         // get all the current federate's connection info
         //
         Map<FederateHandle, SocketAddress> peerSocketAddresses =

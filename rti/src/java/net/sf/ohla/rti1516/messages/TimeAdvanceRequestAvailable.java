@@ -16,7 +16,20 @@
 
 package net.sf.ohla.rti1516.messages;
 
-public class DisableTimeRegulation
+import hla.rti1516.LogicalTime;
+
+public class TimeAdvanceRequestAvailable
   implements Message
 {
+  protected LogicalTime time;
+
+  public TimeAdvanceRequestAvailable(LogicalTime time)
+  {
+    this.time = time;
+  }
+
+  public LogicalTime getTime()
+  {
+    return time;
+  }
 }
