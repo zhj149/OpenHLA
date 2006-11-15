@@ -16,14 +16,250 @@
 
 package net.sf.ohla.rti1516;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.List;
+import java.util.ArrayList;
 
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+
+import hla.rti1516.ResignAction;
+import hla.rti1516.LogicalTimeInterval;
+import hla.rti1516.RTIambassador;
 import hla.rti1516.LogicalTime;
-import hla.rti1516.IllegalTimeArithmetic;
+import hla.rti1516.InvalidLogicalTime;
+import hla.rti1516.NoRequestToEnableTimeRegulationWasPending;
+import hla.rti1516.FederateInternalError;
+import hla.rti1516.NoRequestToEnableTimeConstrainedWasPending;
+import hla.rti1516.TimeRegulationAlreadyEnabled;
+import hla.rti1516.TimeConstrainedAlreadyEnabled;
+import hla.rti1516.TimeRegulationIsNotEnabled;
+import hla.rti1516.TimeConstrainedIsNotEnabled;
+import hla.rti1516.RequestForTimeConstrainedPending;
+import hla.rti1516.RequestForTimeRegulationPending;
+import hla.rti1516.InvalidLookahead;
+import hla.rti1516.jlc.NullFederateAmbassador;
 
 public class TimeManagementTestNG
+  extends BaseTestNG
 {
+  protected List<TestFederateAmbassador> federateAmbassadors =
+    new ArrayList<TestFederateAmbassador>(3);
+
+  protected LogicalTimeInterval lookahead1 = new Integer64TimeInterval(1);
+  protected LogicalTimeInterval lookahead2 = new Integer64TimeInterval(2);
+
+  public TimeManagementTestNG()
+  {
+    super(2);
+  }
+
+  @BeforeClass
+  public void setup()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
+
+    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(0)));
+    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(1)));
+
+    rtiAmbassadors.get(0).joinFederationExecution(
+      FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(0),
+      mobileFederateServices);
+    rtiAmbassadors.get(1).joinFederationExecution(
+      FEDERATE_TYPE + "2", FEDERATION_NAME, federateAmbassadors.get(1),
+      mobileFederateServices);
+  }
+
+  @AfterClass
+  public void teardown()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
+    rtiAmbassadors.get(1).resignFederationExecution(ResignAction.NO_ACTION);
+
+    rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
+  }
+
+  @Test
+  public void testEnableTimeRegulation()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).enableTimeRegulation(lookahead1);
+    federateAmbassadors.get(0).checkTimeRegulationEnabled();
+
+    rtiAmbassadors.get(1).enableTimeRegulation(lookahead2);
+    federateAmbassadors.get(1).checkTimeRegulationEnabled();
+  }
+
+  @Test(dependsOnMethods = {"testEnableTimeRegulation"},
+        expectedExceptions = {TimeRegulationAlreadyEnabled.class})
+  public void testEnableTimeRegulationAgain()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).enableTimeRegulation(lookahead1);
+  }
+
+  @Test(dependsOnMethods = {"testEnableTimeRegulationAgain"})
+  public void testQueryLookahead()
+    throws Exception
+  {
+    assert lookahead1.equals(rtiAmbassadors.get(0).queryLookahead());
+  }
+
+  @Test(dependsOnMethods = {"testQueryLookahead"})
+  public void testModifyLookahead()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).modifyLookahead(lookahead2);
+    assert lookahead2.equals(rtiAmbassadors.get(0).queryLookahead());
+  }
+
+  @Test(dependsOnMethods = {"testModifyLookahead"})
+  public void testDisableTimeRegulation()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).disableTimeRegulation();
+  }
+
+  @Test(dependsOnMethods = {"testDisableTimeRegulation"},
+        expectedExceptions = {TimeRegulationIsNotEnabled.class})
+  public void testDisableTimeRegulationAgain()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).disableTimeRegulation();
+  }
+
+  @Test(dependsOnMethods = {"testDisableTimeRegulationAgain"},
+        expectedExceptions = {RequestForTimeRegulationPending.class})
+  public void testEnableTimeRegulationWhileEnableTimeRegulationPending()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).enableTimeRegulation(lookahead1);
+
+    try
+    {
+      rtiAmbassadors.get(0).enableTimeRegulation(lookahead1);
+    }
+    finally
+    {
+      federateAmbassadors.get(0).checkTimeRegulationEnabled();
+      rtiAmbassadors.get(0).disableTimeRegulation();
+    }
+  }
+
+  @Test(dependsOnMethods = {"testEnableTimeRegulationWhileEnableTimeRegulationPending"},
+        expectedExceptions = {InvalidLookahead.class})
+  public void testEnableTimeRegulationOfInvalidLookahead()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).enableTimeRegulation(null);
+  }
+
+  @Test
+  public void testEnableTimeConstrained()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).enableTimeConstrained();
+    federateAmbassadors.get(0).checkTimeConstrainedEnabled();
+
+    rtiAmbassadors.get(1).enableTimeConstrained();
+    federateAmbassadors.get(1).checkTimeConstrainedEnabled();
+  }
+
+  @Test(dependsOnMethods = {"testEnableTimeConstrained"},
+        expectedExceptions = {TimeConstrainedAlreadyEnabled.class})
+  public void testEnableTimeConstrainedAgain()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).enableTimeConstrained();
+  }
+
+  @Test(dependsOnMethods = {"testEnableTimeConstrainedAgain"})
+  public void testDisableTimeConstrained()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).disableTimeConstrained();
+  }
+
+  @Test(dependsOnMethods = {"testDisableTimeConstrained"},
+        expectedExceptions = {TimeConstrainedIsNotEnabled.class})
+  public void testDisableTimeConstrainedAgain()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).disableTimeConstrained();
+  }
+
+  @Test(dependsOnMethods = {"testDisableTimeConstrainedAgain"},
+        expectedExceptions = {RequestForTimeConstrainedPending.class})
+  public void testEnableTimeConstrainedWhileEnableTimeConstrainedPending()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).enableTimeConstrained();
+
+    try
+    {
+      rtiAmbassadors.get(0).enableTimeConstrained();
+    }
+    finally
+    {
+      federateAmbassadors.get(0).checkTimeConstrainedEnabled();
+      rtiAmbassadors.get(0).disableTimeConstrained();
+    }
+  }
+
+  protected static class TestFederateAmbassador
+    extends NullFederateAmbassador
+  {
+    protected RTIambassador rtiAmbassador;
+
+    protected LogicalTime timeRegulationEnabledTime;
+    protected LogicalTime timeConstrainedEnabledTime;
+
+    public TestFederateAmbassador(RTIambassador rtiAmbassador)
+    {
+      this.rtiAmbassador = rtiAmbassador;
+    }
+
+    public void checkTimeRegulationEnabled()
+      throws Exception
+    {
+      timeRegulationEnabledTime = null;
+      for (int i = 0; i < 5 && timeRegulationEnabledTime == null; i++)
+      {
+        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+      }
+      assert timeRegulationEnabledTime != null;
+    }
+
+    public void checkTimeConstrainedEnabled()
+      throws Exception
+    {
+      timeConstrainedEnabledTime = null;
+      for (int i = 0; i < 5 && timeConstrainedEnabledTime == null; i++)
+      {
+        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+      }
+      assert timeConstrainedEnabledTime != null;
+    }
+
+    @Override
+    public void timeRegulationEnabled(LogicalTime time)
+      throws InvalidLogicalTime, NoRequestToEnableTimeRegulationWasPending,
+             FederateInternalError
+    {
+      timeRegulationEnabledTime = time;
+    }
+
+    @Override
+    public void timeConstrainedEnabled(LogicalTime time)
+      throws InvalidLogicalTime, NoRequestToEnableTimeConstrainedWasPending,
+             FederateInternalError
+    {
+      timeConstrainedEnabledTime = time;
+    }
+  }
+
 //  public void test()
 //  {
 //    TimeClient tc = new TimeClient("A", new Integer64TimeInterval(3000), false);

@@ -548,6 +548,8 @@ public class TimeManager
     {
       federateTime = time;
 
+      timeRegulatingState = TimeRegulatingState.TIME_REGULATING;
+
       federateAmbassador.timeRegulationEnabled(time);
     }
     catch (Throwable t)
@@ -568,6 +570,8 @@ public class TimeManager
     try
     {
       federateTime = time;
+
+      timeConstrainedState = TimeConstrainedState.TIME_CONSTRAINED;
 
       federateAmbassador.timeConstrainedEnabled(time);
     }
