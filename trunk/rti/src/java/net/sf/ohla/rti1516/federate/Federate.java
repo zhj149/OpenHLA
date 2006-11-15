@@ -61,6 +61,7 @@ import net.sf.ohla.rti1516.federate.callbacks.ReceiveInteraction;
 import net.sf.ohla.rti1516.federate.callbacks.ReflectAttributeValues;
 import net.sf.ohla.rti1516.federate.callbacks.SynchronizationPointRegistrationFailed;
 import net.sf.ohla.rti1516.federate.callbacks.SynchronizationPointRegistrationSucceeded;
+import net.sf.ohla.rti1516.federate.callbacks.RemoveObjectInstance;
 import net.sf.ohla.rti1516.federate.filter.InterestManagementFilter;
 import net.sf.ohla.rti1516.federate.objects.ObjectManager;
 import net.sf.ohla.rti1516.federate.time.TimeManager;
@@ -576,8 +577,24 @@ public class Federate
       {
       }
 
-      boolean hold = timeManager.isTimeConstrainedAndTimeGranted() &&
-                     !isAsynchronousDeliveryEnabled();
+      boolean hold = false;
+
+      if (message instanceof ReflectAttributeValues ||
+          message instanceof ReceiveInteraction ||
+          message instanceof RemoveObjectInstance)
+      {
+        timeManager.getTimeLock().readLock().lock();
+        try
+        {
+          hold = !isAsynchronousDeliveryEnabled() &&
+                 timeManager.isTimeConstrainedAndTimeGranted();
+
+        }
+        finally
+        {
+          timeManager.getTimeLock().readLock().unlock();
+        }
+      }
 
       callbackManager.add((Callback) message, hold);
     }
@@ -3570,19 +3587,22 @@ public class Federate
   protected class FederateAmbassadorInterceptor
     extends NullFederateAmbassador
   {
+    @Override
     public void synchronizationPointRegistrationSucceeded(String label)
       throws FederateInternalError
     {
       federateAmbassador.synchronizationPointRegistrationSucceeded(label);
     }
 
-    public void synchronizationPointRegistrationFailed(String label,
-                                                       SynchronizationPointFailureReason reason)
+    @Override
+    public void synchronizationPointRegistrationFailed(
+      String label, SynchronizationPointFailureReason reason)
       throws FederateInternalError
     {
       federateAmbassador.synchronizationPointRegistrationFailed(label, reason);
     }
 
+    @Override
     public void announceSynchronizationPoint(String label, byte[] tag)
       throws FederateInternalError
     {
@@ -3609,6 +3629,7 @@ public class Federate
       federateAmbassador.announceSynchronizationPoint(label, tag);
     }
 
+    @Override
     public void federationSynchronized(String label)
       throws FederateInternalError
     {
@@ -3633,6 +3654,7 @@ public class Federate
       federateAmbassador.federationSynchronized(label);
     }
 
+    @Override
     public void initiateFederateSave(String label)
       throws UnableToPerformSave, FederateInternalError
     {
@@ -3668,6 +3690,7 @@ public class Federate
       }
     }
 
+    @Override
     public void initiateFederateSave(String label, LogicalTime saveTime)
       throws InvalidLogicalTime, UnableToPerformSave, FederateInternalError
     {
@@ -3703,6 +3726,7 @@ public class Federate
       }
     }
 
+    @Override
     public void federationSaved()
       throws FederateInternalError
     {
@@ -3721,6 +3745,7 @@ public class Federate
       }
     }
 
+    @Override
     public void federationNotSaved(SaveFailureReason reason)
       throws FederateInternalError
     {
@@ -3739,6 +3764,7 @@ public class Federate
       }
     }
 
+    @Override
     public void federationSaveStatusResponse(
       FederateHandleSaveStatusPair[] response)
       throws FederateInternalError
@@ -3746,24 +3772,28 @@ public class Federate
       federateAmbassador.federationSaveStatusResponse(response);
     }
 
+    @Override
     public void requestFederationRestoreSucceeded(String label)
       throws FederateInternalError
     {
       federateAmbassador.requestFederationRestoreSucceeded(label);
     }
 
+    @Override
     public void requestFederationRestoreFailed(String label)
       throws FederateInternalError
     {
       federateAmbassador.requestFederationRestoreFailed(label);
     }
 
+    @Override
     public void federationRestoreBegun()
       throws FederateInternalError
     {
       federateAmbassador.federationRestoreBegun();
     }
 
+    @Override
     public void initiateFederateRestore(String label,
                                         FederateHandle federateHandle)
       throws SpecifiedSaveLabelDoesNotExist, CouldNotInitiateRestore,
@@ -3772,18 +3802,21 @@ public class Federate
       federateAmbassador.initiateFederateRestore(label, federateHandle);
     }
 
+    @Override
     public void federationRestored()
       throws FederateInternalError
     {
       federateAmbassador.federationRestored();
     }
 
+    @Override
     public void federationNotRestored(RestoreFailureReason reason)
       throws FederateInternalError
     {
       federateAmbassador.federationNotRestored(reason);
     }
 
+    @Override
     public void federationRestoreStatusResponse(
       FederateHandleRestoreStatusPair[] response)
       throws FederateInternalError
@@ -3791,6 +3824,7 @@ public class Federate
       federateAmbassador.federationRestoreStatusResponse(response);
     }
 
+    @Override
     public void startRegistrationForObjectClass(
       ObjectClassHandle objectClassHandle)
       throws ObjectClassNotPublished, FederateInternalError
@@ -3798,6 +3832,7 @@ public class Federate
       federateAmbassador.startRegistrationForObjectClass(objectClassHandle);
     }
 
+    @Override
     public void stopRegistrationForObjectClass(
       ObjectClassHandle objectClassHandle)
       throws ObjectClassNotPublished, FederateInternalError
@@ -3805,12 +3840,14 @@ public class Federate
       federateAmbassador.stopRegistrationForObjectClass(objectClassHandle);
     }
 
+    @Override
     public void turnInteractionsOn(InteractionClassHandle interactionClassHandle)
       throws InteractionClassNotPublished, FederateInternalError
     {
       federateAmbassador.turnInteractionsOn(interactionClassHandle);
     }
 
+    @Override
     public void turnInteractionsOff(
       InteractionClassHandle interactionClassHandle)
       throws InteractionClassNotPublished, FederateInternalError
@@ -3818,18 +3855,21 @@ public class Federate
       federateAmbassador.turnInteractionsOff(interactionClassHandle);
     }
 
+    @Override
     public void objectInstanceNameReservationSucceeded(String name)
       throws UnknownName, FederateInternalError
     {
       federateAmbassador.objectInstanceNameReservationSucceeded(name);
     }
 
+    @Override
     public void objectInstanceNameReservationFailed(String name)
       throws UnknownName, FederateInternalError
     {
       federateAmbassador.objectInstanceNameReservationFailed(name);
     }
 
+    @Override
     public void discoverObjectInstance(
       ObjectInstanceHandle objectInstanceHandle,
       ObjectClassHandle objectClassHandle, String name)
@@ -3839,6 +3879,7 @@ public class Federate
         objectInstanceHandle, objectClassHandle, name, federateAmbassador);
     }
 
+    @Override
     public void reflectAttributeValues(
       ObjectInstanceHandle objectInstanceHandle,
       AttributeHandleValueMap attributeValues, byte[] tag,
@@ -3851,6 +3892,7 @@ public class Federate
         transportationType, null, null, null, null, federateAmbassador);
     }
 
+    @Override
     public void reflectAttributeValues(
       ObjectInstanceHandle objectInstanceHandle,
       AttributeHandleValueMap attributeValues, byte[] tag,
@@ -3865,6 +3907,7 @@ public class Federate
         federateAmbassador);
     }
 
+    @Override
     public void reflectAttributeValues(
       ObjectInstanceHandle objectInstanceHandle,
       AttributeHandleValueMap attributeValues, byte[] tag,
@@ -3879,6 +3922,7 @@ public class Federate
         federateAmbassador);
     }
 
+    @Override
     public void reflectAttributeValues(
       ObjectInstanceHandle objectInstanceHandle,
       AttributeHandleValueMap attributeValues, byte[] tag,
@@ -3894,6 +3938,7 @@ public class Federate
         federateAmbassador);
     }
 
+    @Override
     public void reflectAttributeValues(
       ObjectInstanceHandle objectInstanceHandle,
       AttributeHandleValueMap attributeValues, byte[] tag, OrderType sentOrderType,
@@ -3909,6 +3954,7 @@ public class Federate
         messageRetractionHandle, null, federateAmbassador);
     }
 
+    @Override
     public void reflectAttributeValues(
       ObjectInstanceHandle objectInstanceHandle,
       AttributeHandleValueMap attributeValues, byte[] tag, OrderType sentOrderType,
@@ -3925,6 +3971,7 @@ public class Federate
         messageRetractionHandle, regionHandles, federateAmbassador);
     }
 
+    @Override
     public void receiveInteraction(
       InteractionClassHandle interactionClassHandle,
       ParameterHandleValueMap parameterValues, byte[] tag,
@@ -3937,6 +3984,7 @@ public class Federate
         transportationType, null, null, null, null, federateAmbassador);
     }
 
+    @Override
     public void receiveInteraction(
       InteractionClassHandle interactionClassHandle,
       ParameterHandleValueMap parameterValues, byte[] tag,
@@ -3951,6 +3999,7 @@ public class Federate
         federateAmbassador);
     }
 
+    @Override
     public void receiveInteraction(
       InteractionClassHandle interactionClassHandle,
       ParameterHandleValueMap parameterValues, byte[] tag,
@@ -3965,6 +4014,7 @@ public class Federate
         federateAmbassador);
     }
 
+    @Override
     public void receiveInteraction(
       InteractionClassHandle interactionClassHandle,
       ParameterHandleValueMap parameterValues, byte[] tag,
@@ -3980,6 +4030,7 @@ public class Federate
         federateAmbassador);
     }
 
+    @Override
     public void receiveInteraction(
       InteractionClassHandle interactionClassHandle,
       ParameterHandleValueMap parameterValues, byte[] tag,
@@ -3996,6 +4047,7 @@ public class Federate
         messageRetractionHandle, null, federateAmbassador);
     }
 
+    @Override
     public void receiveInteraction(
       InteractionClassHandle interactionClassHandle,
       ParameterHandleValueMap parameterValues, byte[] tag,
@@ -4013,6 +4065,7 @@ public class Federate
         messageRetractionHandle, regionHandles, federateAmbassador);
     }
 
+    @Override
     public void removeObjectInstance(ObjectInstanceHandle objectInstanceHandle,
                                      byte[] tag, OrderType sentOrderType)
       throws ObjectInstanceNotKnown, FederateInternalError
@@ -4022,6 +4075,7 @@ public class Federate
         federateAmbassador);
     }
 
+    @Override
     public void removeObjectInstance(ObjectInstanceHandle objectInstanceHandle,
                                      byte[] tag, OrderType sentOrderType,
                                      LogicalTime deleteTime,
@@ -4033,6 +4087,7 @@ public class Federate
         null, federateAmbassador);
     }
 
+    @Override
     public void removeObjectInstance(ObjectInstanceHandle objectInstanceHandle,
                                      byte[] tag, OrderType sentOrderType,
                                      LogicalTime deleteTime,
@@ -4045,6 +4100,7 @@ public class Federate
         messageRetractionHandle, federateAmbassador);
     }
 
+    @Override
     public void attributesInScope(ObjectInstanceHandle objectInstanceHandle,
                                   AttributeHandleSet attributeHandles)
       throws ObjectInstanceNotKnown, AttributeNotRecognized,
@@ -4054,6 +4110,7 @@ public class Federate
         objectInstanceHandle, attributeHandles);
     }
 
+    @Override
     public void attributesOutOfScope(ObjectInstanceHandle objectInstanceHandle,
                                      AttributeHandleSet attributeHandles)
       throws ObjectInstanceNotKnown, AttributeNotRecognized,
@@ -4063,6 +4120,7 @@ public class Federate
         objectInstanceHandle, attributeHandles);
     }
 
+    @Override
     public void provideAttributeValueUpdate(
       ObjectInstanceHandle objectInstanceHandle,
       AttributeHandleSet attributeHandles, byte[] tag)
@@ -4073,6 +4131,7 @@ public class Federate
         objectInstanceHandle, attributeHandles, tag);
     }
 
+    @Override
     public void turnUpdatesOnForObjectInstance(
       ObjectInstanceHandle objectInstanceHandle,
       AttributeHandleSet attributeHandles)
@@ -4083,6 +4142,7 @@ public class Federate
         objectInstanceHandle, attributeHandles);
     }
 
+    @Override
     public void turnUpdatesOffForObjectInstance(
       ObjectInstanceHandle objectInstanceHandle,
       AttributeHandleSet attributeHandles)
@@ -4093,6 +4153,7 @@ public class Federate
         objectInstanceHandle, attributeHandles);
     }
 
+    @Override
     public void requestAttributeOwnershipAssumption(
       ObjectInstanceHandle objectInstanceHandle,
       AttributeHandleSet attributeHandles, byte[] tag)
@@ -4103,6 +4164,7 @@ public class Federate
         objectInstanceHandle, attributeHandles, tag);
     }
 
+    @Override
     public void requestDivestitureConfirmation(
       ObjectInstanceHandle objectInstanceHandle,
       AttributeHandleSet attributeHandles)
@@ -4113,6 +4175,7 @@ public class Federate
         objectInstanceHandle, attributeHandles);
     }
 
+    @Override
     public void attributeOwnershipAcquisitionNotification(
       ObjectInstanceHandle objectInstanceHandle,
       AttributeHandleSet attributeHandles, byte[] tag)
@@ -4124,6 +4187,7 @@ public class Federate
         objectInstanceHandle, attributeHandles, tag, federateAmbassador);
     }
 
+    @Override
     public void attributeOwnershipUnavailable(
       ObjectInstanceHandle objectInstanceHandle,
       AttributeHandleSet attributeHandles)
@@ -4135,6 +4199,7 @@ public class Federate
         objectInstanceHandle, attributeHandles);
     }
 
+    @Override
     public void requestAttributeOwnershipRelease(
       ObjectInstanceHandle objectInstanceHandle,
       AttributeHandleSet attributeHandles, byte[] tag)
@@ -4145,6 +4210,7 @@ public class Federate
         objectInstanceHandle, attributeHandles, tag);
     }
 
+    @Override
     public void confirmAttributeOwnershipAcquisitionCancellation(
       ObjectInstanceHandle objectInstanceHandle,
       AttributeHandleSet attributeHandles)
@@ -4156,6 +4222,7 @@ public class Federate
         objectInstanceHandle, attributeHandles);
     }
 
+    @Override
     public void informAttributeOwnership(
       ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle,
       FederateHandle federateHandle)
@@ -4165,6 +4232,7 @@ public class Federate
         objectInstanceHandle, attributeHandle, federateHandle);
     }
 
+    @Override
     public void attributeIsNotOwned(ObjectInstanceHandle objectInstanceHandle,
                                     AttributeHandle attributeHandle)
       throws ObjectInstanceNotKnown, AttributeNotRecognized, FederateInternalError
@@ -4173,6 +4241,7 @@ public class Federate
         objectInstanceHandle, attributeHandle);
     }
 
+    @Override
     public void attributeIsOwnedByRTI(ObjectInstanceHandle objectInstanceHandle,
                                       AttributeHandle attributeHandle)
       throws ObjectInstanceNotKnown, AttributeNotRecognized, FederateInternalError
@@ -4181,6 +4250,7 @@ public class Federate
         objectInstanceHandle, attributeHandle);
     }
 
+    @Override
     public void timeRegulationEnabled(LogicalTime time)
       throws InvalidLogicalTime, NoRequestToEnableTimeRegulationWasPending,
              FederateInternalError
@@ -4188,6 +4258,7 @@ public class Federate
       timeManager.timeRegulationEnabled(time, federateAmbassador);
     }
 
+    @Override
     public void timeConstrainedEnabled(LogicalTime time)
       throws InvalidLogicalTime, NoRequestToEnableTimeConstrainedWasPending,
              FederateInternalError
@@ -4195,6 +4266,7 @@ public class Federate
       timeManager.timeConstrainedEnabled(time, federateAmbassador);
     }
 
+    @Override
     public void timeAdvanceGrant(LogicalTime time)
       throws InvalidLogicalTime, JoinedFederateIsNotInTimeAdvancingState,
              FederateInternalError
@@ -4202,6 +4274,7 @@ public class Federate
       timeManager.timeAdvanceGrant(time, federateAmbassador);
     }
 
+    @Override
     public void requestRetraction(MessageRetractionHandle messageRetractionHandle)
       throws FederateInternalError
     {
