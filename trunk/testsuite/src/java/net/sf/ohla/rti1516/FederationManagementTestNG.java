@@ -38,7 +38,7 @@ import hla.rti1516.RTIambassador;
 import hla.rti1516.FederateInternalError;
 import hla.rti1516.SynchronizationPointFailureReason;
 import hla.rti1516.SynchronizationPointLabelNotAnnounced;
-import static hla.rti1516.ResignAction.NO_ACTION;
+import hla.rti1516.ResignAction;
 import hla.rti1516.jlc.NullFederateAmbassador;
 
 @Test(groups = {"Federation Managmenet"})
@@ -137,9 +137,9 @@ public class FederationManagementTestNG
   public void testResignFederationExecution()
     throws Exception
   {
-    rtiAmbassadors.get(0).resignFederationExecution(NO_ACTION);
-    rtiAmbassadors.get(1).resignFederationExecution(NO_ACTION);
-    rtiAmbassadors.get(2).resignFederationExecution(NO_ACTION);
+    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
+    rtiAmbassadors.get(1).resignFederationExecution(ResignAction.NO_ACTION);
+    rtiAmbassadors.get(2).resignFederationExecution(ResignAction.NO_ACTION);
   }
 
   @Test(expectedExceptions = {FederationExecutionDoesNotExist.class})
@@ -155,7 +155,7 @@ public class FederationManagementTestNG
   public void testResignFederationExecutionThatNotAMember()
     throws Exception
   {
-    rtiAmbassadors.get(0).resignFederationExecution(NO_ACTION);
+    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
   }
 
   @Test(dependsOnMethods = {"testJoinFederationExecutionAgain"})

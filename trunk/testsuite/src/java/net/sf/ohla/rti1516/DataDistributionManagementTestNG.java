@@ -21,12 +21,12 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
 import hla.rti1516.jlc.NullFederateAmbassador;
-import static hla.rti1516.ResignAction.NO_ACTION;
 import hla.rti1516.DimensionHandleSet;
 import hla.rti1516.DimensionHandle;
 import hla.rti1516.RegionHandle;
 import hla.rti1516.RangeBounds;
 import hla.rti1516.RegionHandleSet;
+import hla.rti1516.ResignAction;
 
 public class DataDistributionManagementTestNG
   extends BaseTestNG
@@ -78,8 +78,8 @@ public class DataDistributionManagementTestNG
   public void teardown()
     throws Exception
   {
-    rtiAmbassadors.get(0).resignFederationExecution(NO_ACTION);
-    rtiAmbassadors.get(1).resignFederationExecution(NO_ACTION);
+    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
+    rtiAmbassadors.get(1).resignFederationExecution(ResignAction.NO_ACTION);
 
     rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
   }

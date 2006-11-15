@@ -26,6 +26,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import hla.rti1516.RTIambassador;
+import hla.rti1516.MobileFederateServices;
 import hla.rti1516.jlc.RtiFactory;
 import hla.rti1516.jlc.RtiFactoryFactory;
 
@@ -38,6 +39,10 @@ public abstract class BaseTestNG
 
   protected int rtiAmbassadorCount;
   protected List<RTIambassador> rtiAmbassadors;
+
+  protected MobileFederateServices mobileFederateServices =
+    new MobileFederateServices(
+      new Integer64TimeFactory(), new Integer64TimeIntervalFactory());
 
   protected BaseTestNG()
   {

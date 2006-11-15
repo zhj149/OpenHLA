@@ -30,11 +30,7 @@ import org.dom4j.Element;
 import hla.rti1516.AttributeHandle;
 import hla.rti1516.ErrorReadingFDD;
 import hla.rti1516.OrderType;
-import static hla.rti1516.OrderType.RECEIVE;
-import static hla.rti1516.OrderType.TIMESTAMP;
 import hla.rti1516.TransportationType;
-import static hla.rti1516.TransportationType.HLA_BEST_EFFORT;
-import static hla.rti1516.TransportationType.HLA_RELIABLE;
 
 public class Attribute
   implements Serializable
@@ -113,11 +109,11 @@ public class Attribute
 
     if ("timestamp".equalsIgnoreCase(order))
     {
-      orderType = TIMESTAMP;
+      orderType = OrderType.TIMESTAMP;
     }
     else if ("receive".equalsIgnoreCase(this.order))
     {
-      orderType = RECEIVE;
+      orderType = OrderType.RECEIVE;
     }
     else
     {
@@ -142,11 +138,11 @@ public class Attribute
 
     if ("hlabesteffort".equalsIgnoreCase(transportation))
     {
-      transportationType = HLA_BEST_EFFORT;
+      transportationType = TransportationType.HLA_BEST_EFFORT;
     }
     else if ("hlareliable".equalsIgnoreCase(transportation))
     {
-      transportationType = HLA_RELIABLE;
+      transportationType = TransportationType.HLA_RELIABLE;
     }
     else
     {
