@@ -57,13 +57,9 @@ import hla.rti1516.NameNotFound;
 import hla.rti1516.ObjectClassHandle;
 import hla.rti1516.ObjectClassNotDefined;
 import hla.rti1516.OrderType;
-import static hla.rti1516.OrderType.RECEIVE;
-import static hla.rti1516.OrderType.TIMESTAMP;
 import hla.rti1516.ParameterHandle;
 import hla.rti1516.RangeBounds;
 import hla.rti1516.TransportationType;
-import static hla.rti1516.TransportationType.HLA_BEST_EFFORT;
-import static hla.rti1516.TransportationType.HLA_RELIABLE;
 
 public class FDD
   implements Serializable
@@ -80,11 +76,11 @@ public class FDD
 
   static
   {
-    orderTypeNames.put(TIMESTAMP, "TimeStamp");
-    orderTypeNames.put(RECEIVE, "Receive");
+    orderTypeNames.put(OrderType.TIMESTAMP, "TimeStamp");
+    orderTypeNames.put(OrderType.RECEIVE, "Receive");
 
-    orderTypesByName.put("TimeStamp", TIMESTAMP);
-    orderTypesByName.put("Receive", RECEIVE);
+    orderTypesByName.put("TimeStamp", OrderType.TIMESTAMP);
+    orderTypesByName.put("Receive", OrderType.RECEIVE);
   }
 
   protected static Map<TransportationType, String> transportationTypeNames =
@@ -94,11 +90,15 @@ public class FDD
 
   static
   {
-    transportationTypeNames.put(HLA_RELIABLE, "HLAreliable");
-    transportationTypeNames.put(HLA_BEST_EFFORT, "HLAbestEffort");
+    transportationTypeNames.put(
+      TransportationType.HLA_RELIABLE, "HLAreliable");
+    transportationTypeNames.put(
+      TransportationType.HLA_BEST_EFFORT, "HLAbestEffort");
 
-    transportationTypesByName.put("HLAreliable", HLA_RELIABLE);
-    transportationTypesByName.put("HLAbestEffort", HLA_BEST_EFFORT);
+    transportationTypesByName.put(
+      "HLAreliable", TransportationType.HLA_RELIABLE);
+    transportationTypesByName.put(
+      "HLAbestEffort", TransportationType.HLA_BEST_EFFORT);
   }
 
   protected Map<ObjectClassHandle, ObjectClass> objectClasses =

@@ -202,8 +202,6 @@ import hla.rti1516.ObjectInstanceNameInUse;
 import hla.rti1516.ObjectInstanceNameNotReserved;
 import hla.rti1516.ObjectInstanceNotKnown;
 import hla.rti1516.OrderType;
-import static hla.rti1516.OrderType.RECEIVE;
-import static hla.rti1516.OrderType.TIMESTAMP;
 import hla.rti1516.OwnershipAcquisitionPending;
 import hla.rti1516.ParameterHandle;
 import hla.rti1516.ParameterHandleFactory;
@@ -1486,13 +1484,13 @@ public class Federate
       timeManager.getTimeLock().readLock().lock();
       try
       {
-        timeManager.checkIfInvalidLogicalTime(updateTime);
+        timeManager.updateAttributeValues(updateTime);
 
         OrderType sentOrderType =
           timeManager.isTimeRegulating() && updateTime != null ?
-            TIMESTAMP : RECEIVE;
+            OrderType.TIMESTAMP : OrderType.RECEIVE;
 
-        if (sentOrderType == TIMESTAMP)
+        if (sentOrderType == OrderType.TIMESTAMP)
         {
           messageRetractionHandle = messageRetractionManager.add(updateTime);
         }
@@ -1563,13 +1561,13 @@ public class Federate
       timeManager.getTimeLock().readLock().lock();
       try
       {
-        timeManager.checkIfInvalidLogicalTime(sendTime);
+        timeManager.sendInteraction(sendTime);
 
         OrderType sentOrderType =
           timeManager.isTimeRegulating() && sendTime != null ?
-            TIMESTAMP : RECEIVE;
+            OrderType.TIMESTAMP : OrderType.RECEIVE;
 
-        if (sentOrderType == TIMESTAMP)
+        if (sentOrderType == OrderType.TIMESTAMP)
         {
           messageRetractionHandle = messageRetractionManager.add(sendTime);
         }
@@ -1626,13 +1624,13 @@ public class Federate
       timeManager.getTimeLock().readLock().lock();
       try
       {
-        timeManager.checkIfInvalidLogicalTime(deleteTime);
+        timeManager.deleteObjectInstance(deleteTime);
 
         OrderType sentOrderType =
           timeManager.isTimeRegulating() && deleteTime != null ?
-            TIMESTAMP : RECEIVE;
+            OrderType.TIMESTAMP : OrderType.RECEIVE;
 
-        if (sentOrderType == TIMESTAMP)
+        if (sentOrderType == OrderType.TIMESTAMP)
         {
           messageRetractionHandle = messageRetractionManager.add(deleteTime);
         }
@@ -2692,10 +2690,10 @@ public class Federate
 
       OrderType sentOrderType =
         timeManager.isTimeRegulating() && sendTime != null ?
-          TIMESTAMP : RECEIVE;
+          OrderType.TIMESTAMP : OrderType.RECEIVE;
 
       MessageRetractionHandle messageRetractionHandle = null;
-      if (sentOrderType == TIMESTAMP)
+      if (sentOrderType == OrderType.TIMESTAMP)
       {
         messageRetractionHandle = messageRetractionManager.add(sendTime);
       }
@@ -3444,11 +3442,11 @@ public class Federate
           (ReflectAttributeValues) message;
 
         OrderType receivedOrderType =
-          reflectAttributeValues.getSentOrderType() == TIMESTAMP &&
-          timeManager.isTimeConstrained() ? TIMESTAMP : RECEIVE;
+          reflectAttributeValues.getSentOrderType() == OrderType.TIMESTAMP &&
+          timeManager.isTimeConstrained() ? OrderType.TIMESTAMP : OrderType.RECEIVE;
         reflectAttributeValues.setReceivedOrderType(receivedOrderType);
 
-        if (receivedOrderType == RECEIVE)
+        if (receivedOrderType == OrderType.RECEIVE)
         {
           // receive order callbacks need to be held until released if we are
           // constrained and in the time granted state if asynchronous delivery is
@@ -3479,12 +3477,12 @@ public class Federate
         ReceiveInteraction receiveInteraction = (ReceiveInteraction) message;
 
         OrderType receivedOrderType =
-          receiveInteraction.getSentOrderType() == TIMESTAMP &&
-          timeManager.isTimeConstrained() ? TIMESTAMP : RECEIVE;
+          receiveInteraction.getSentOrderType() == OrderType.TIMESTAMP &&
+          timeManager.isTimeConstrained() ? OrderType.TIMESTAMP : OrderType.RECEIVE;
 
         receiveInteraction.setReceivedOrderType(receivedOrderType);
 
-        if (receivedOrderType == RECEIVE)
+        if (receivedOrderType == OrderType.RECEIVE)
         {
           // receive order callbacks need to be held until released if we are
           // constrained and in the time granted state, if asynchronous delivery is
@@ -3708,13 +3706,37 @@ public class Federate
     public void federationSaved()
       throws FederateInternalError
     {
-      federateAmbassador.federationSaved();
+      federateStateLock.writeLock().lock();
+      try
+      {
+        federateAmbassador.federationSaved();
+      }
+      finally
+      {
+        federateState = FederateState.ACTIVE;
+
+        // TODO: unhold callbacks?
+
+        federateStateLock.writeLock().unlock();
+      }
     }
 
     public void federationNotSaved(SaveFailureReason reason)
       throws FederateInternalError
     {
-      federateAmbassador.federationNotSaved(reason);
+      federateStateLock.writeLock().lock();
+      try
+      {
+        federateAmbassador.federationNotSaved(reason);
+      }
+      finally
+      {
+        federateState = FederateState.ACTIVE;
+
+        // TODO: unhold callbacks?
+
+        federateStateLock.writeLock().unlock();
+      }
     }
 
     public void federationSaveStatusResponse(
@@ -4163,21 +4185,21 @@ public class Federate
       throws InvalidLogicalTime, NoRequestToEnableTimeRegulationWasPending,
              FederateInternalError
     {
-      federateAmbassador.timeRegulationEnabled(time);
+      timeManager.timeRegulationEnabled(time, federateAmbassador);
     }
 
     public void timeConstrainedEnabled(LogicalTime time)
       throws InvalidLogicalTime, NoRequestToEnableTimeConstrainedWasPending,
              FederateInternalError
     {
-      federateAmbassador.timeConstrainedEnabled(time);
+      timeManager.timeConstrainedEnabled(time, federateAmbassador);
     }
 
     public void timeAdvanceGrant(LogicalTime time)
       throws InvalidLogicalTime, JoinedFederateIsNotInTimeAdvancingState,
              FederateInternalError
     {
-      federateAmbassador.timeAdvanceGrant(time);
+      timeManager.timeAdvanceGrant(time, federateAmbassador);
     }
 
     public void requestRetraction(MessageRetractionHandle messageRetractionHandle)

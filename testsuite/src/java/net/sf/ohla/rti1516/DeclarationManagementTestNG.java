@@ -25,7 +25,7 @@ import hla.rti1516.InteractionClassHandle;
 import hla.rti1516.InteractionClassNotDefined;
 import hla.rti1516.ObjectClassHandle;
 import hla.rti1516.ObjectClassNotDefined;
-import static hla.rti1516.ResignAction.NO_ACTION;
+import hla.rti1516.ResignAction;
 import hla.rti1516.jlc.NullFederateAmbassador;
 
 @Test(groups = {"Declaration Management"})
@@ -67,7 +67,7 @@ public class DeclarationManagementTestNG
   public void teardown()
     throws Exception
   {
-    rtiAmbassadors.get(0).resignFederationExecution(NO_ACTION);
+    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
     rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
   }
 

@@ -20,14 +20,6 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.sf.ohla.rti1516.federate.Federate;
-import static net.sf.ohla.rti1516.federate.time.TemporalState.TIME_ADVANCING;
-import static net.sf.ohla.rti1516.federate.time.TemporalState.TIME_GRANTED;
-import static net.sf.ohla.rti1516.federate.time.TimeConstrainedState.BECOMING_TIME_CONSTRAINED;
-import static net.sf.ohla.rti1516.federate.time.TimeConstrainedState.NOT_TIME_CONSTRAINED;
-import static net.sf.ohla.rti1516.federate.time.TimeConstrainedState.TIME_CONSTRAINED;
-import static net.sf.ohla.rti1516.federate.time.TimeRegulatingState.BECOMING_TIME_REGULATING;
-import static net.sf.ohla.rti1516.federate.time.TimeRegulatingState.NOT_TIME_REGULATING;
-import static net.sf.ohla.rti1516.federate.time.TimeRegulatingState.TIME_REGULATING;
 import net.sf.ohla.rti1516.messages.DisableTimeConstrained;
 import net.sf.ohla.rti1516.messages.DisableTimeRegulation;
 import net.sf.ohla.rti1516.messages.EnableTimeConstrained;
@@ -38,6 +30,11 @@ import net.sf.ohla.rti1516.messages.TimeAdvanceRequestAvailable;
 
 import org.apache.mina.common.WriteFuture;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import hla.rti1516.FederateAmbassador;
+import hla.rti1516.IllegalTimeArithmetic;
 import hla.rti1516.InTimeAdvancingState;
 import hla.rti1516.InvalidLogicalTime;
 import hla.rti1516.InvalidLookahead;
@@ -55,19 +52,26 @@ import hla.rti1516.TimeRegulationIsNotEnabled;
 
 public class TimeManager
 {
+  private static final Logger log = LoggerFactory.getLogger(TimeManager.class);
+
   protected Federate federate;
 
   protected ReadWriteLock timeLock = new ReentrantReadWriteLock(true);
 
-  protected TemporalState temporalState = TIME_GRANTED;
-  protected TimeRegulatingState timeRegulatingState = NOT_TIME_REGULATING;
-  protected TimeConstrainedState timeConstrainedState = NOT_TIME_CONSTRAINED;
+  protected TemporalState temporalState = TemporalState.TIME_GRANTED;
+  protected TimeRegulatingState timeRegulatingState =
+    TimeRegulatingState.NOT_TIME_REGULATING;
+  protected TimeConstrainedState timeConstrainedState =
+    TimeConstrainedState.NOT_TIME_CONSTRAINED;
 
-  protected LogicalTime time;
+  protected LogicalTime federateTime;
   protected LogicalTime galt;
   protected LogicalTime lits;
 
   protected LogicalTimeInterval lookahead;
+
+  protected LogicalTime advanceRequestTime;
+  protected TimeAdvanceType advanceRequestTimeType;
 
   public TimeManager(Federate federate)
   {
@@ -81,22 +85,22 @@ public class TimeManager
 
   public boolean isTimeRegulating()
   {
-    return timeRegulatingState == TIME_REGULATING;
+    return timeRegulatingState == TimeRegulatingState.TIME_REGULATING;
   }
 
   public boolean isTimeConstrained()
   {
-    return timeConstrainedState == TIME_CONSTRAINED;
+    return timeConstrainedState == TimeConstrainedState.TIME_CONSTRAINED;
   }
 
   public boolean isTimeAdvancing()
   {
-    return temporalState == TIME_ADVANCING;
+    return temporalState == TemporalState.TIME_ADVANCING;
   }
 
   public boolean isTimeGranted()
   {
-    return temporalState == TIME_GRANTED;
+    return temporalState == TemporalState.TIME_GRANTED;
   }
 
   public boolean isTimeConstrainedAndTimeGranted()
@@ -111,7 +115,7 @@ public class TimeManager
     timeLock.writeLock().lock();
     try
     {
-      if (timeRegulatingState == TIME_REGULATING)
+      if (timeRegulatingState == TimeRegulatingState.TIME_REGULATING)
       {
         throw new TimeRegulationAlreadyEnabled();
       }
@@ -134,7 +138,7 @@ public class TimeManager
 
       this.lookahead = lookahead;
 
-      timeRegulatingState = BECOMING_TIME_REGULATING;
+      timeRegulatingState = TimeRegulatingState.BECOMING_TIME_REGULATING;
     }
     finally
     {
@@ -162,7 +166,7 @@ public class TimeManager
         throw new RTIinternalError("error communicating with RTI");
       }
 
-      timeRegulatingState = NOT_TIME_REGULATING;
+      timeRegulatingState = TimeRegulatingState.NOT_TIME_REGULATING;
     }
     finally
     {
@@ -177,7 +181,7 @@ public class TimeManager
     timeLock.writeLock().lock();
     try
     {
-      if (timeConstrainedState == TIME_CONSTRAINED)
+      if (timeConstrainedState == TimeConstrainedState.TIME_CONSTRAINED)
       {
         throw new TimeConstrainedAlreadyEnabled();
       }
@@ -198,7 +202,7 @@ public class TimeManager
         throw new RTIinternalError("error communicating with RTI");
       }
 
-      timeConstrainedState = BECOMING_TIME_CONSTRAINED;
+      timeConstrainedState = TimeConstrainedState.BECOMING_TIME_CONSTRAINED;
     }
     finally
     {
@@ -226,7 +230,7 @@ public class TimeManager
         throw new RTIinternalError("error communicating with RTI");
       }
 
-      timeConstrainedState = NOT_TIME_CONSTRAINED;
+      timeConstrainedState = TimeConstrainedState.NOT_TIME_CONSTRAINED;
 
       // TODO: release all TSO messages
     }
@@ -250,6 +254,9 @@ public class TimeManager
       checkIfRequestForTimeRegulationPending();
       checkIfRequestForTimeConstrainedPending();
 
+      advanceRequestTime = time;
+      advanceRequestTimeType = TimeAdvanceType.TIME_ADVANCE_REQUEST;
+
       WriteFuture writeFuture =
         federate.getRTISession().write(new TimeAdvanceRequest(time));
 
@@ -264,7 +271,7 @@ public class TimeManager
 
       // TODO: will need to send to peers as well
 
-      temporalState = TIME_ADVANCING;
+      temporalState = TemporalState.TIME_ADVANCING;
 
       // release any callbacks held until we are time advancing
       //
@@ -290,6 +297,8 @@ public class TimeManager
       checkIfRequestForTimeRegulationPending();
       checkIfRequestForTimeConstrainedPending();
 
+      advanceRequestTime = time;
+
       WriteFuture writeFuture =
         federate.getRTISession().write(new TimeAdvanceRequestAvailable(time));
 
@@ -302,7 +311,7 @@ public class TimeManager
         throw new RTIinternalError("error communicating with RTI");
       }
 
-      temporalState = TIME_ADVANCING;
+      temporalState = TemporalState.TIME_ADVANCING;
 
       // release any callbacks held until we are time advancing
       //
@@ -328,6 +337,8 @@ public class TimeManager
       checkIfRequestForTimeRegulationPending();
       checkIfRequestForTimeConstrainedPending();
 
+      advanceRequestTime = time;
+
       WriteFuture writeFuture =
         federate.getRTISession().write(new TimeAdvanceRequest(time));
 
@@ -340,7 +351,7 @@ public class TimeManager
         throw new RTIinternalError("error communicating with RTI");
       }
 
-      temporalState = TIME_ADVANCING;
+      temporalState = TemporalState.TIME_ADVANCING;
 
       // release any callbacks held until we are time advancing
       //
@@ -366,6 +377,8 @@ public class TimeManager
       checkIfRequestForTimeConstrainedPending();
       checkIfRequestForTimeRegulationPending();
 
+      advanceRequestTime = time;
+
       WriteFuture writeFuture =
         federate.getRTISession().write(new TimeAdvanceRequest(time));
 
@@ -378,7 +391,7 @@ public class TimeManager
         throw new RTIinternalError("error communicating with RTI");
       }
 
-      temporalState = TIME_ADVANCING;
+      temporalState = TemporalState.TIME_ADVANCING;
 
       // release any callbacks held until we are time advancing
       //
@@ -404,6 +417,8 @@ public class TimeManager
       checkIfRequestForTimeRegulationPending();
       checkIfRequestForTimeConstrainedPending();
 
+      advanceRequestTime = time;
+
       WriteFuture writeFuture =
         federate.getRTISession().write(new TimeAdvanceRequest(time));
 
@@ -416,7 +431,7 @@ public class TimeManager
         throw new RTIinternalError("error communicating with RTI");
       }
 
-      temporalState = TIME_ADVANCING;
+      temporalState = TemporalState.TIME_ADVANCING;
 
       // release any callbacks held until we are time advancing
       //
@@ -452,7 +467,7 @@ public class TimeManager
     timeLock.readLock().lock();
     try
     {
-      return time;
+      return federateTime;
     }
     finally
     {
@@ -525,6 +540,68 @@ public class TimeManager
     }
   }
 
+  public void timeRegulationEnabled(LogicalTime time,
+                                    FederateAmbassador federateAmbassador)
+  {
+    timeLock.writeLock().lock();
+    try
+    {
+      federateTime = time;
+
+      federateAmbassador.timeRegulationEnabled(time);
+    }
+    catch (Throwable t)
+    {
+      log.warn(String.format(
+        "federate unable enable time regulation to: %s", time), t);
+    }
+    finally
+    {
+      timeLock.writeLock().unlock();
+    }
+  }
+
+  public void timeConstrainedEnabled(LogicalTime time,
+                                     FederateAmbassador federateAmbassador)
+  {
+    timeLock.writeLock().lock();
+    try
+    {
+      federateTime = time;
+
+      federateAmbassador.timeConstrainedEnabled(time);
+    }
+    catch (Throwable t)
+    {
+      log.warn(String.format(
+        "federate unable enable time constrained to: %s", time), t);
+    }
+    finally
+    {
+      timeLock.writeLock().unlock();
+    }
+  }
+
+  public void timeAdvanceGrant(LogicalTime time,
+                               FederateAmbassador federateAmbassador)
+  {
+    timeLock.writeLock().lock();
+    try
+    {
+      federateTime = time;
+
+      federateAmbassador.timeAdvanceGrant(time);
+    }
+    catch (Throwable t)
+    {
+      log.warn(String.format("federate unable to advance to: %s", time), t);
+    }
+    finally
+    {
+      timeLock.writeLock().unlock();
+    }
+  }
+
   public void checkIfInTimeAdvancingState()
     throws InTimeAdvancingState
   {
@@ -546,7 +623,7 @@ public class TimeManager
   public void checkIfRequestForTimeRegulationPending()
     throws RequestForTimeRegulationPending
   {
-    if (timeRegulatingState == BECOMING_TIME_REGULATING)
+    if (timeRegulatingState == TimeRegulatingState.BECOMING_TIME_REGULATING)
     {
       throw new RequestForTimeRegulationPending();
     }
@@ -564,7 +641,7 @@ public class TimeManager
   public void checkIfRequestForTimeConstrainedPending()
     throws RequestForTimeConstrainedPending
   {
-    if (timeConstrainedState == BECOMING_TIME_CONSTRAINED)
+    if (timeConstrainedState == TimeConstrainedState.BECOMING_TIME_CONSTRAINED)
     {
       throw new RequestForTimeConstrainedPending();
     }
@@ -573,21 +650,105 @@ public class TimeManager
   public void checkIfLogicalTimeAlreadyPassed(LogicalTime time)
     throws LogicalTimeAlreadyPassed
   {
-    if (time.compareTo(this.time) <= 0)
+    if (time.compareTo(federateTime) <= 0)
     {
       throw new LogicalTimeAlreadyPassed(
-        String.format("%s <= %s", time, this.time));
+        String.format("%s <= %s", time, federateTime));
     }
   }
 
   public void checkIfInvalidLogicalTime(LogicalTime time)
     throws InvalidLogicalTime
   {
+    if (time == null)
+    {
+      throw new InvalidLogicalTime("null");
+    }
+
+    // TODO: check against factory type?
   }
 
   public void checkIfInvalidLookahead(LogicalTimeInterval lookahead)
     throws InvalidLookahead
   {
+    if (lookahead == null)
+    {
+      throw new InvalidLookahead("null");
+    }
+
+    // TODO: check against factory type?
+  }
+
+  public void updateAttributeValues(LogicalTime updateTime)
+    throws InvalidLogicalTime
+  {
+    checkIfInvalidTimestamp(updateTime);
+  }
+
+  public void sendInteraction(LogicalTime sendTime)
+    throws InvalidLogicalTime
+  {
+    checkIfInvalidTimestamp(sendTime);
+  }
+
+  public void deleteObjectInstance(LogicalTime deleteTime)
+    throws InvalidLogicalTime
+  {
+    checkIfInvalidTimestamp(deleteTime);
+  }
+
+  public void checkIfInvalidTimestamp(LogicalTime time)
+    throws InvalidLogicalTime
+  {
+    checkIfInvalidLogicalTime(time);
+
+    LogicalTime minimumTime =
+      isTimeAdvancing() ? advanceRequestTime : federateTime;
+    switch (advanceRequestTimeType)
+    {
+      case TIME_ADVANCE_REQUEST:
+      case NEXT_MESSAGE_REQUEST:
+      {
+        if (lookahead.isZero())
+        {
+          // handle special case when lookahead is 0
+
+          if (time.compareTo(minimumTime) <= 0)
+          {
+            throw new InvalidLogicalTime(
+              String.format("%s <= %s", time, minimumTime));
+          }
+
+          break;
+        }
+      }
+      case TIME_ADVANCE_REQUEST_AVAILABLE:
+      case NEXT_MESSAGE_REQUEST_AVAILABLE:
+      case FLUSH_QUEUE_REQUEST:
+      {
+        try
+        {
+          LogicalTime minimumTimePlusLookahead = minimumTime.add(lookahead);
+
+          if (time.compareTo(minimumTimePlusLookahead) < 0)
+          {
+            throw new InvalidLogicalTime(String.format(
+              "%s < %s (%s + %s)", time, minimumTimePlusLookahead,
+              minimumTime, lookahead));
+          }
+        }
+        catch (IllegalTimeArithmetic ita)
+        {
+          throw new InvalidLogicalTime(ita);
+        }
+
+        break;
+      }
+      default:
+      {
+        assert false :
+          String.format("unknown TimeAdvanceType: %s", advanceRequestTimeType);
+      }
+    }
   }
 }
-

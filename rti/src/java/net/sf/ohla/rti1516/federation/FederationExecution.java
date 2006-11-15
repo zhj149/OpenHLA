@@ -1269,8 +1269,8 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      timeKeeper.enableTimeRegulation(
-        getFederateHandle(session), enableTimeRegulation.getLookahead());
+      timeKeeper.enableTimeRegulation(session, getFederateHandle(session),
+                                      enableTimeRegulation.getLookahead());
     }
     finally
     {
@@ -1298,7 +1298,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      timeKeeper.enableTimeConstrained(getFederateHandle(session));
+      timeKeeper.enableTimeConstrained(session, getFederateHandle(session));
     }
     finally
     {
@@ -1479,9 +1479,18 @@ public class FederationExecution
       federatesLock.lock();
       try
       {
-        if (federateSessions.isEmpty())
+        if (joinFederationExecution.getMobileFederateServices() == null)
         {
-          // this the first federate, use it's mobile federate services
+          log.warn("federate did not specify MobileFederateServices: {}",
+                   federateHandle);
+        }
+        else if (timeKeeper != null)
+        {
+          // TODO: ensure each federate has the same mobile federate services
+        }
+        else
+        {
+          // use the first non-null mobile federate services
           //
           timeKeeper = new TimeKeeper(
             this, joinFederationExecution.getMobileFederateServices());

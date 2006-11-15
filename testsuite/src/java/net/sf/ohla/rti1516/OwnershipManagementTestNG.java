@@ -41,8 +41,8 @@ import hla.rti1516.ObjectInstanceHandle;
 import hla.rti1516.ObjectInstanceNotKnown;
 import hla.rti1516.OrderType;
 import hla.rti1516.RTIambassador;
-import static hla.rti1516.ResignAction.NO_ACTION;
 import hla.rti1516.TransportationType;
+import hla.rti1516.ResignAction;
 import hla.rti1516.jlc.NullFederateAmbassador;
 
 @Test(groups = {"Ownership Management"})
@@ -122,8 +122,8 @@ public class OwnershipManagementTestNG
   {
     rtiAmbassadors.get(0).deleteObjectInstance(objectInstanceHandle, null);
 
-    rtiAmbassadors.get(0).resignFederationExecution(NO_ACTION);
-    rtiAmbassadors.get(1).resignFederationExecution(NO_ACTION);
+    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
+    rtiAmbassadors.get(1).resignFederationExecution(ResignAction.NO_ACTION);
 
     rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
   }

@@ -44,9 +44,9 @@ import hla.rti1516.OrderType;
 import hla.rti1516.ParameterHandle;
 import hla.rti1516.ParameterHandleValueMap;
 import hla.rti1516.RTIambassador;
-import static hla.rti1516.ResignAction.NO_ACTION;
 import hla.rti1516.TransportationType;
 import hla.rti1516.UnknownName;
+import hla.rti1516.ResignAction;
 import hla.rti1516.jlc.NullFederateAmbassador;
 
 @Test(groups = {"Object Management"})
@@ -166,9 +166,9 @@ public class ObjectManagementTestNG
   public void teardown()
     throws Exception
   {
-    rtiAmbassadors.get(0).resignFederationExecution(NO_ACTION);
-    rtiAmbassadors.get(1).resignFederationExecution(NO_ACTION);
-    rtiAmbassadors.get(2).resignFederationExecution(NO_ACTION);
+    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
+    rtiAmbassadors.get(1).resignFederationExecution(ResignAction.NO_ACTION);
+    rtiAmbassadors.get(2).resignFederationExecution(ResignAction.NO_ACTION);
 
     rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
   }

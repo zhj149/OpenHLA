@@ -8,6 +8,10 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import net.sf.ohla.rti1516.federate.callbacks.TimeAdvanceGrant;
+import net.sf.ohla.rti1516.federate.callbacks.TimeRegulationEnabled;
+import net.sf.ohla.rti1516.federate.callbacks.TimeConstrainedEnabled;
+
+import org.apache.mina.common.IoSession;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,13 +54,16 @@ public class TimeKeeper
     minAdvanceRequest = mobileFederateServices.timeFactory.makeFinal();
   }
 
-  public void enableTimeRegulation(FederateHandle federateHandle,
+  public void enableTimeRegulation(IoSession session,
+                                   FederateHandle federateHandle,
                                    LogicalTimeInterval lookahead)
   {
     timeLock.lock();
     try
     {
       timeRegulatingFederates.put(federateHandle, lookahead);
+
+      session.write(new TimeRegulationEnabled(time));
     }
     finally
     {
@@ -77,12 +84,15 @@ public class TimeKeeper
     }
   }
 
-  public void enableTimeConstrained(FederateHandle federateHandle)
+  public void enableTimeConstrained(IoSession session,
+                                    FederateHandle federateHandle)
   {
     timeLock.lock();
     try
     {
       timeConstrainedFederates.add(federateHandle);
+
+      session.write(new TimeConstrainedEnabled(time));
     }
     finally
     {

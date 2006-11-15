@@ -36,8 +36,8 @@ import hla.rti1516.NameNotFound;
 import hla.rti1516.ObjectClassHandle;
 import hla.rti1516.OrderType;
 import hla.rti1516.ParameterHandle;
-import static hla.rti1516.ResignAction.NO_ACTION;
 import hla.rti1516.TransportationType;
+import hla.rti1516.ResignAction;
 import hla.rti1516.jlc.NullFederateAmbassador;
 
 @Test(groups = {"Support Services"})
@@ -57,7 +57,7 @@ public class SupportServicesTestNG
   public void teardown()
     throws Exception
   {
-    rtiAmbassadors.get(0).resignFederationExecution(NO_ACTION);
+    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
     rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
   }
 

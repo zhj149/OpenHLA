@@ -35,12 +35,8 @@ import hla.rti1516.InteractionClassHandle;
 import hla.rti1516.InteractionParameterNotDefined;
 import hla.rti1516.NameNotFound;
 import hla.rti1516.OrderType;
-import static hla.rti1516.OrderType.RECEIVE;
-import static hla.rti1516.OrderType.TIMESTAMP;
 import hla.rti1516.ParameterHandle;
 import hla.rti1516.TransportationType;
-import static hla.rti1516.TransportationType.HLA_BEST_EFFORT;
-import static hla.rti1516.TransportationType.HLA_RELIABLE;
 
 public class InteractionClass
   implements Serializable
@@ -211,11 +207,11 @@ public class InteractionClass
 
     if ("timestamp".equalsIgnoreCase(order))
     {
-      orderType = TIMESTAMP;
+      orderType = OrderType.TIMESTAMP;
     }
     else if ("receive".equalsIgnoreCase(this.order))
     {
-      orderType = RECEIVE;
+      orderType = OrderType.RECEIVE;
     }
     else
     {
@@ -245,11 +241,11 @@ public class InteractionClass
 
     if ("hlabesteffort".equalsIgnoreCase(transportation))
     {
-      transportationType = HLA_BEST_EFFORT;
+      transportationType = TransportationType.HLA_BEST_EFFORT;
     }
     else if ("hlareliable".equalsIgnoreCase(transportation))
     {
-      transportationType = HLA_RELIABLE;
+      transportationType = TransportationType.HLA_RELIABLE;
     }
     else
     {
