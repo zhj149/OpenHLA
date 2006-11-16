@@ -15,7 +15,7 @@ public interface LogicalTime
   LogicalTime subtract(LogicalTimeInterval lti)
     throws IllegalTimeArithmetic;
 
-  LogicalTimeInterval distance(LogicalTime lti);
+  LogicalTimeInterval distance(LogicalTime lt);
 
   int compareTo(Object rhs);
 
