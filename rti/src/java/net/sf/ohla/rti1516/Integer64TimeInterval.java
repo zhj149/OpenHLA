@@ -64,12 +64,10 @@ public class Integer64TimeInterval
 
   public LogicalTimeInterval subtract(LogicalTimeInterval lti)
   {
-    return subtract((Integer64TimeInterval) lti);
-  }
+    assert lti instanceof Integer64TimeInterval : String.format("%s", lti);
 
-  public Integer64TimeInterval subtract(Integer64TimeInterval i64ti)
-  {
-    return new Integer64TimeInterval(interval - i64ti.interval);
+    return new Integer64TimeInterval(
+      interval - ((Integer64TimeInterval) lti).interval);
   }
 
   public int encodedLength()
