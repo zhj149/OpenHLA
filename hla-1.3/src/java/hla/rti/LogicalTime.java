@@ -2,33 +2,33 @@ package hla.rti;
 
 public interface LogicalTime
 {
-  void decreaseBy(LogicalTimeInterval subtrahend)
+  void decreaseBy(LogicalTimeInterval lti)
     throws IllegalTimeArithmetic;
 
-  void increaseBy(LogicalTimeInterval addend)
+  void increaseBy(LogicalTimeInterval lti)
     throws IllegalTimeArithmetic;
 
   boolean isInitial();
 
   boolean isFinal();
 
-  boolean isEqualTo(LogicalTime value);
+  boolean isEqualTo(LogicalTime rhs);
 
-  boolean isGreaterThan(LogicalTime value);
+  boolean isGreaterThan(LogicalTime rhs);
 
-  boolean isGreaterThanOrEqualTo(LogicalTime value);
+  boolean isGreaterThanOrEqualTo(LogicalTime rhs);
 
-  boolean isLessThan(LogicalTime value);
+  boolean isLessThan(LogicalTime rhs);
 
-  boolean isLessThanOrEqualTo(LogicalTime value);
+  boolean isLessThanOrEqualTo(LogicalTime rhs);
 
   void setFinal();
 
   void setInitial();
 
-  void setTo(LogicalTime value);
+  void setTo(LogicalTime lt);
 
-  LogicalTimeInterval subtract(LogicalTime subtrahend);
+  LogicalTimeInterval subtract(LogicalTime lt);
 
   void encode(byte[] buffer, int offset);
 
