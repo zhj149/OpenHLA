@@ -65,35 +65,42 @@ public class Integer64Time
   public LogicalTime add(LogicalTimeInterval lti)
     throws IllegalTimeArithmetic
   {
-    return add((Integer64TimeInterval) lti);
-  }
+    LogicalTime lt;
 
-  public Integer64Time add(Integer64TimeInterval i64ti)
-    throws IllegalTimeArithmetic
-  {
-    return new Integer64Time(time + i64ti.interval);
+    if (lti instanceof Integer64TimeInterval)
+    {
+      lt = new Integer64Time(time + ((Integer64TimeInterval) lti).interval);
+    }
+    else
+    {
+      throw new IllegalTimeArithmetic(String.format("%s", lti));
+    }
+
+    return lt;
   }
 
   public LogicalTime subtract(LogicalTimeInterval lti)
     throws IllegalTimeArithmetic
   {
-    return subtract((Integer64TimeInterval) lti);
-  }
+    LogicalTime lt;
 
-  public Integer64Time subtract(Integer64TimeInterval i64ti)
-    throws IllegalTimeArithmetic
-  {
-    return new Integer64Time(time - i64ti.interval);
+    if (lti instanceof Integer64TimeInterval)
+    {
+      lt = new Integer64Time(time - ((Integer64TimeInterval) lti).interval);
+    }
+    else
+    {
+      throw new IllegalTimeArithmetic(String.format("%s", lti));
+    }
+
+    return lt;
   }
 
   public LogicalTimeInterval distance(LogicalTime lt)
   {
-    return distance((Integer64Time) lt);
-  }
+    assert lt instanceof Integer64Time : String.format("%s", lt);
 
-  public Integer64TimeInterval distance(Integer64Time i64t)
-  {
-    return new Integer64TimeInterval(Math.abs(time - i64t.time));
+    return new Integer64TimeInterval(time - ((Integer64Time) lt).time);
   }
 
   public int encodedLength()
