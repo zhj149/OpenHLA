@@ -178,6 +178,16 @@ public class OHLARTIambassador
   private static final Logger log =
     LoggerFactory.getLogger(OHLARTIambassador.class);
 
+  public static final String OHLA_FEDERATE_IEEE_1516_LOGICAL_TIME_FACTORY_PROPERTY =
+    "ohla.federate.%s.ieee1516.logicalTimeFactory";
+  public static final String DEFAULT_OHLA_FEDERATE_IEEE_1516_LOGICAL_TIME_FACTORY_PROPERTY =
+    "ohla.federate.ieee1516.logicalTimeFactory";
+
+  public static final String OHLA_FEDERATE_IEEE_1516_LOGICAL_TIME_INTERVAL_FACTORY_PROPERTY =
+    "ohla.federate.%s.ieee1516.logicalTimeIntervalFactory";
+  public static final String DEFAULT_OHLA_FEDERATE_IEEE_1516_LOGICAL_TIME_INTERVAL_FACTORY_PROPERTY =
+    "ohla.federate.ieee1516.logicalTimeIntervalFactory";
+
   protected net.sf.ohla.rti1516.OHLARTIambassador rtiAmbassador =
     new net.sf.ohla.rti1516.OHLARTIambassador();
 
@@ -301,11 +311,16 @@ public class OHLARTIambassador
         "MobileFederateServices._intervalFactory must be supplied");
     }
 
+    logicalTimeFactory = mobileFederateServices._timeFactory;
+    logicalTimeIntervalFactory = mobileFederateServices._intervalFactory;
+
+    ieee1516LogicalTimeFactory =
+      getIEEE1516LogicalTimeFactory(federateType);
+    ieee1516LogicalTimeIntervalFactory =
+      getIEEE1516LogicalTimeIntervalFactory(federateType);
+
     try
     {
-      logicalTimeFactory = mobileFederateServices._timeFactory;
-      logicalTimeIntervalFactory = mobileFederateServices._intervalFactory;
-
       FederateHandle federateHandle = rtiAmbassador.joinFederationExecution(
         federateType, federationName,
         new FederateAmbassadorBridge(this, federateAmbassador),
@@ -4855,5 +4870,109 @@ public class OHLARTIambassador
     }
 
     return ResignAction.values()[resignAction];
+  }
+
+  protected hla.rti1516.LogicalTimeFactory getIEEE1516LogicalTimeFactory(
+    String federateType)
+    throws RTIinternalError
+  {
+    String logicalTimeFactoryClassNameProperty = String.format(
+      OHLA_FEDERATE_IEEE_1516_LOGICAL_TIME_FACTORY_PROPERTY, federateType);
+    String logicalTimeFactoryClassName =
+      System.getProperty(String.format(
+        OHLA_FEDERATE_IEEE_1516_LOGICAL_TIME_FACTORY_PROPERTY, federateType));
+    if (logicalTimeFactoryClassName == null)
+    {
+      logicalTimeFactoryClassName = System.getProperty(
+        DEFAULT_OHLA_FEDERATE_IEEE_1516_LOGICAL_TIME_FACTORY_PROPERTY);
+    }
+
+    if (logicalTimeFactoryClassName == null)
+    {
+      throw new RTIinternalError(String.format(
+        "must supply either %s or %s properties",
+        logicalTimeFactoryClassNameProperty,
+        DEFAULT_OHLA_FEDERATE_IEEE_1516_LOGICAL_TIME_FACTORY_PROPERTY));
+    }
+
+    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+    try
+    {
+      return (hla.rti1516.LogicalTimeFactory) classLoader.loadClass(
+        logicalTimeFactoryClassName).newInstance();
+    }
+    catch (ClassCastException cce)
+    {
+      throw new RTIinternalError(String.format(
+        "invalid class: '%s' (not an %s)", logicalTimeFactoryClassName,
+        hla.rti1516.LogicalTimeFactory.class), cce);
+    }
+    catch (ClassNotFoundException cnfe)
+    {
+      throw new RTIinternalError(String.format(
+        "class not found: %s", logicalTimeFactoryClassName), cnfe);
+    }
+    catch (InstantiationException ie)
+    {
+      throw new RTIinternalError(String.format(
+        "unable to instantiate: %s", logicalTimeFactoryClassName), ie);
+    }
+    catch (IllegalAccessException iae)
+    {
+      throw new RTIinternalError(String.format(
+        "unable to access: %s", logicalTimeFactoryClassName), iae);
+    }
+  }
+
+  protected hla.rti1516.LogicalTimeIntervalFactory getIEEE1516LogicalTimeIntervalFactory(
+    String federateType)
+    throws RTIinternalError
+  {
+    String logicalTimeIntervalFactoryClassNameProperty = String.format(
+      OHLA_FEDERATE_IEEE_1516_LOGICAL_TIME_INTERVAL_FACTORY_PROPERTY,
+      federateType);
+    String logicalTimeIntervalFactoryClassName =
+      System.getProperty(logicalTimeIntervalFactoryClassNameProperty);
+    if (logicalTimeIntervalFactoryClassName == null)
+    {
+      logicalTimeIntervalFactoryClassName = System.getProperty(
+        DEFAULT_OHLA_FEDERATE_IEEE_1516_LOGICAL_TIME_INTERVAL_FACTORY_PROPERTY);
+    }
+
+    if (logicalTimeIntervalFactoryClassName == null)
+    {
+      throw new RTIinternalError(String.format(
+        "must supply either %s or %s properties",
+        logicalTimeIntervalFactoryClassNameProperty,
+        DEFAULT_OHLA_FEDERATE_IEEE_1516_LOGICAL_TIME_INTERVAL_FACTORY_PROPERTY));
+    }
+
+    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+    try
+    {
+      return (hla.rti1516.LogicalTimeIntervalFactory) classLoader.loadClass(
+        logicalTimeIntervalFactoryClassName).newInstance();
+    }
+    catch (ClassCastException cce)
+    {
+      throw new RTIinternalError(String.format(
+        "invalid class: '%s' (not an %s)", logicalTimeIntervalFactoryClassName,
+        hla.rti1516.LogicalTimeFactory.class), cce);
+    }
+    catch (ClassNotFoundException cnfe)
+    {
+      throw new RTIinternalError(String.format(
+        "class not found: %s", logicalTimeIntervalFactoryClassName), cnfe);
+    }
+    catch (InstantiationException ie)
+    {
+      throw new RTIinternalError(String.format(
+        "unable to instantiate: %s", logicalTimeIntervalFactoryClassName), ie);
+    }
+    catch (IllegalAccessException iae)
+    {
+      throw new RTIinternalError(String.format(
+        "unable to access: %s", logicalTimeIntervalFactoryClassName), iae);
+    }
   }
 }

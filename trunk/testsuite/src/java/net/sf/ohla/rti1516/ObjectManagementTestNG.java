@@ -98,7 +98,8 @@ public class ObjectManagementTestNG
     federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(2)));
 
     rtiAmbassadors.get(0).joinFederationExecution(
-      FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(0), null);
+      FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(0),
+      mobileFederateServices);
 
     testObjectClassHandle =
       rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT);
@@ -279,7 +280,8 @@ public class ObjectManagementTestNG
     throws Exception
   {
     rtiAmbassadors.get(1).joinFederationExecution(
-      FEDERATE_TYPE + "2", FEDERATION_NAME, federateAmbassadors.get(1), null);
+      FEDERATE_TYPE + "2", FEDERATION_NAME, federateAmbassadors.get(1),
+      mobileFederateServices);
 
     rtiAmbassadors.get(1).publishObjectClassAttributes(
       testObjectClassHandle2, testObjectAttributeHandles2);
@@ -301,7 +303,8 @@ public class ObjectManagementTestNG
     throws Exception
   {
     rtiAmbassadors.get(2).joinFederationExecution(
-      FEDERATE_TYPE + "3", FEDERATION_NAME, federateAmbassadors.get(2), null);
+      FEDERATE_TYPE + "3", FEDERATION_NAME, federateAmbassadors.get(2),
+      mobileFederateServices);
 
     rtiAmbassadors.get(2).subscribeObjectClassAttributes(
       testObjectClassHandle, testObjectAttributeHandles);

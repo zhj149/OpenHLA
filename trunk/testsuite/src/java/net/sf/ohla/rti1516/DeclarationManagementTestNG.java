@@ -43,7 +43,8 @@ public class DeclarationManagementTestNG
   {
     rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
     rtiAmbassadors.get(0).joinFederationExecution(
-      FEDERATE_TYPE, FEDERATION_NAME, new NullFederateAmbassador(), null);
+      FEDERATE_TYPE, FEDERATION_NAME, new NullFederateAmbassador(),
+      mobileFederateServices);
 
     testObjectClassHandle =
       rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT);

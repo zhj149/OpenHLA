@@ -39,6 +39,8 @@ import hla.rti1516.FederateInternalError;
 import hla.rti1516.SynchronizationPointFailureReason;
 import hla.rti1516.SynchronizationPointLabelNotAnnounced;
 import hla.rti1516.ResignAction;
+import hla.rti1516.RTIinternalError;
+import hla.rti1516.MobileFederateServices;
 import hla.rti1516.jlc.NullFederateAmbassador;
 
 @Test(groups = {"Federation Managmenet"})
@@ -140,6 +142,41 @@ public class FederationManagementTestNG
     rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
     rtiAmbassadors.get(1).resignFederationExecution(ResignAction.NO_ACTION);
     rtiAmbassadors.get(2).resignFederationExecution(ResignAction.NO_ACTION);
+  }
+
+  @Test(dependsOnMethods = {"testResignFederationExecution"},
+        expectedExceptions = {RTIinternalError.class})
+  public void testJoinFederationWithNullMobileFederateServices()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).joinFederationExecution(
+      FEDERATE_TYPE, FEDERATION_NAME, new NullFederateAmbassador(), null);
+  }
+
+  @Test(dependsOnMethods = {"testResignFederationExecution"},
+        expectedExceptions = {RTIinternalError.class})
+  public void testJoinFederationWithNullTimeFactory()
+    throws Exception
+  {
+    MobileFederateServices mobileFederateServices =
+      new MobileFederateServices(null, null);
+
+    rtiAmbassadors.get(0).joinFederationExecution(
+      FEDERATE_TYPE, FEDERATION_NAME, new NullFederateAmbassador(),
+      mobileFederateServices);
+  }
+
+  @Test(dependsOnMethods = {"testResignFederationExecution"},
+        expectedExceptions = {RTIinternalError.class})
+  public void testJoinFederationWithNullIntervalFactory()
+    throws Exception
+  {
+    MobileFederateServices mobileFederateServices =
+      new MobileFederateServices(new Integer64TimeFactory(), null);
+
+    rtiAmbassadors.get(0).joinFederationExecution(
+      FEDERATE_TYPE, FEDERATION_NAME, new NullFederateAmbassador(),
+      mobileFederateServices);
   }
 
   @Test(expectedExceptions = {FederationExecutionDoesNotExist.class})
