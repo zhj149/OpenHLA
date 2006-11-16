@@ -78,9 +78,11 @@ public class OwnershipManagementTestNG
     federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(1)));
 
     federateHandle1 = rtiAmbassadors.get(0).joinFederationExecution(
-      FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(0), null);
+      FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(0),
+      mobileFederateServices);
     federateHandle2 = rtiAmbassadors.get(1).joinFederationExecution(
-      FEDERATE_TYPE + "2", FEDERATION_NAME, federateAmbassadors.get(1), null);
+      FEDERATE_TYPE + "2", FEDERATION_NAME, federateAmbassadors.get(1),
+      mobileFederateServices);
 
     federateAmbassadors.get(0).setFederateHandle(federateHandle1);
     federateAmbassadors.get(1).setFederateHandle(federateHandle2);

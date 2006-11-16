@@ -1479,18 +1479,13 @@ public class FederationExecution
       federatesLock.lock();
       try
       {
-        if (joinFederationExecution.getMobileFederateServices() == null)
-        {
-          log.warn("federate did not specify MobileFederateServices: {}",
-                   federateHandle);
-        }
-        else if (timeKeeper != null)
+        if (timeKeeper != null)
         {
           // TODO: ensure each federate has the same mobile federate services
         }
         else
         {
-          // use the first non-null mobile federate services
+          // use the first federate's mobile services
           //
           timeKeeper = new TimeKeeper(
             this, joinFederationExecution.getMobileFederateServices());
