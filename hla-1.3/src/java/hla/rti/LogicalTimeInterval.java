@@ -6,21 +6,21 @@ public interface LogicalTimeInterval
 
   boolean isZero();
 
-  boolean isEqualTo(LogicalTimeInterval value);
+  boolean isEqualTo(LogicalTimeInterval rhs);
 
-  boolean isGreaterThan(LogicalTimeInterval value);
+  boolean isGreaterThan(LogicalTimeInterval rhs);
 
-  boolean isGreaterThanOrEqualTo(LogicalTimeInterval value);
+  boolean isGreaterThanOrEqualTo(LogicalTimeInterval rhs);
 
-  boolean isLessThan(LogicalTimeInterval value);
+  boolean isLessThan(LogicalTimeInterval rhs);
 
-  boolean isLessThanOrEqualTo(LogicalTimeInterval value);
+  boolean isLessThanOrEqualTo(LogicalTimeInterval rhs);
 
   void setEpsilon();
 
   void setZero();
 
-  void setTo(LogicalTimeInterval value);
+  void setTo(LogicalTimeInterval lti);
 
   void encode(byte[] buffer, int offset);
 
