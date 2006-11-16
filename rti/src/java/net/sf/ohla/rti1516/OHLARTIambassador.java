@@ -308,6 +308,22 @@ public class OHLARTIambassador
     throws FederateAlreadyExecutionMember, FederationExecutionDoesNotExist,
            SaveInProgress, RestoreInProgress, RTIinternalError
   {
+    if (mobileFederateServices == null)
+    {
+      throw new IllegalArgumentException(
+        "MobileFederateServices must be supplied");
+    }
+    else if (mobileFederateServices.timeFactory == null)
+    {
+      throw new IllegalArgumentException(
+        "MobileFederateServices.timeFactory must be supplied");
+    }
+    else if (mobileFederateServices.intervalFactory == null)
+    {
+      throw new IllegalArgumentException(
+        "MobileFederateServices.intervalFactory must be supplied");
+    }
+
     connectToRTI();
 
     joinResignLock.writeLock().lock();

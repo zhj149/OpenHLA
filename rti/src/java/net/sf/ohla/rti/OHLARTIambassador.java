@@ -112,6 +112,7 @@ import hla.rti.TimeConstrainedAlreadyEnabled;
 import hla.rti.TimeConstrainedWasNotEnabled;
 import hla.rti.TimeRegulationAlreadyEnabled;
 import hla.rti.TimeRegulationWasNotEnabled;
+import hla.rti.CouldNotDecode;
 import hla.rti.jlc.RTIambassadorEx;
 
 import hla.rti1516.AttributeHandle;
@@ -187,6 +188,12 @@ public class OHLARTIambassador
   protected Lock regionsLock = new ReentrantLock(true);
   protected Map<Integer, OHLARegion> regions =
     new HashMap<Integer, OHLARegion>();
+
+  protected LogicalTimeFactory logicalTimeFactory;
+  protected hla.rti1516.LogicalTimeFactory ieee1516LogicalTimeFactory;
+
+  protected LogicalTimeIntervalFactory logicalTimeIntervalFactory;
+  protected hla.rti1516.LogicalTimeIntervalFactory ieee1516LogicalTimeIntervalFactory;
 
   public Federate getJoinedFederate()
   {
@@ -278,8 +285,27 @@ public class OHLARTIambassador
     throws FederateAlreadyExecutionMember, FederationExecutionDoesNotExist,
            SaveInProgress, RestoreInProgress, RTIinternalError
   {
+    if (mobileFederateServices == null)
+    {
+      throw new IllegalArgumentException(
+        "MobileFederateServices must be supplied");
+    }
+    else if (mobileFederateServices._timeFactory == null)
+    {
+      throw new IllegalArgumentException(
+        "MobileFederateServices._timeFactory must be supplied");
+    }
+    else if (mobileFederateServices._intervalFactory == null)
+    {
+      throw new IllegalArgumentException(
+        "MobileFederateServices._intervalFactory must be supplied");
+    }
+
     try
     {
+      logicalTimeFactory = mobileFederateServices._timeFactory;
+      logicalTimeIntervalFactory = mobileFederateServices._intervalFactory;
+
       FederateHandle federateHandle = rtiAmbassador.joinFederationExecution(
         federateType, federationName,
         new FederateAmbassadorBridge(this, federateAmbassador),
@@ -4605,24 +4631,33 @@ public class OHLARTIambassador
   public hla.rti1516.LogicalTime convert(LogicalTime logicalTime)
     throws RTIinternalError
   {
-    if (logicalTime != null &&
-        !hla.rti1516.LogicalTime.class.isInstance(logicalTime))
+    byte[] buffer = new byte[logicalTime.encodedLength()];
+    logicalTime.encode(buffer, 0);
+
+    try
     {
-      throw new RTIinternalError(String.format(
-        "invalid LogicalTime: %s", logicalTime.getClass()));
+      return ieee1516LogicalTimeFactory.decode(buffer, 0);
     }
-    return (hla.rti1516.LogicalTime) logicalTime;
+    catch (hla.rti1516.CouldNotDecode cnd)
+    {
+      throw new RTIinternalError(cnd);
+    }
   }
 
   public LogicalTime convert(hla.rti1516.LogicalTime logicalTime)
     throws RTIinternalError
   {
-    if (logicalTime != null && !LogicalTime.class.isInstance(logicalTime))
+    byte[] buffer = new byte[logicalTime.encodedLength()];
+    logicalTime.encode(buffer, 0);
+
+    try
     {
-      throw new RTIinternalError(String.format(
-        "invalid LogicalTime: %s", logicalTime.getClass()));
+      return logicalTimeFactory.decode(buffer, 0);
     }
-    return (LogicalTime) logicalTime;
+    catch (CouldNotDecode cnd)
+    {
+      throw new RTIinternalError(cnd);
+    }
   }
 
   public hla.rti1516.LogicalTimeFactory convert(
@@ -4642,26 +4677,34 @@ public class OHLARTIambassador
     LogicalTimeInterval logicalTimeInterval)
     throws RTIinternalError
   {
-    if (logicalTimeInterval != null &&
-        !hla.rti1516.LogicalTimeInterval.class.isInstance(logicalTimeInterval))
+    byte[] buffer = new byte[logicalTimeInterval.encodedLength()];
+    logicalTimeInterval.encode(buffer, 0);
+
+    try
     {
-      throw new RTIinternalError(String.format(
-        "invalid LogicalTimeInterval: %s", logicalTimeInterval.getClass()));
+      return ieee1516LogicalTimeIntervalFactory.decode(buffer, 0);
     }
-    return (hla.rti1516.LogicalTimeInterval) logicalTimeInterval;
+    catch (hla.rti1516.CouldNotDecode cnd)
+    {
+      throw new RTIinternalError(cnd);
+    }
   }
 
   public LogicalTimeInterval convert(
     hla.rti1516.LogicalTimeInterval logicalTimeInterval)
     throws RTIinternalError
   {
-    if (logicalTimeInterval != null &&
-        !LogicalTimeInterval.class.isInstance(logicalTimeInterval))
+    byte[] buffer = new byte[logicalTimeInterval.encodedLength()];
+    logicalTimeInterval.encode(buffer, 0);
+
+    try
     {
-      throw new RTIinternalError(String.format(
-        "invalid LogicalTimeInterval: %s", logicalTimeInterval.getClass()));
+      return logicalTimeIntervalFactory.decode(buffer, 0);
     }
-    return (LogicalTimeInterval) logicalTimeInterval;
+    catch (CouldNotDecode cnd)
+    {
+      throw new RTIinternalError(cnd);
+    }
   }
 
   public hla.rti1516.LogicalTimeIntervalFactory convert(
