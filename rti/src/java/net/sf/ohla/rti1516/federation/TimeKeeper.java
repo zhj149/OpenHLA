@@ -8,8 +8,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import net.sf.ohla.rti1516.federate.callbacks.TimeAdvanceGrant;
-import net.sf.ohla.rti1516.federate.callbacks.TimeRegulationEnabled;
 import net.sf.ohla.rti1516.federate.callbacks.TimeConstrainedEnabled;
+import net.sf.ohla.rti1516.federate.callbacks.TimeRegulationEnabled;
 
 import org.apache.mina.common.IoSession;
 

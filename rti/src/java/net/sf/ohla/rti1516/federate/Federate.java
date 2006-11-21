@@ -59,9 +59,9 @@ import net.sf.ohla.rti1516.federate.callbacks.ObjectInstanceNameReservationFaile
 import net.sf.ohla.rti1516.federate.callbacks.ObjectInstanceNameReservationSucceeded;
 import net.sf.ohla.rti1516.federate.callbacks.ReceiveInteraction;
 import net.sf.ohla.rti1516.federate.callbacks.ReflectAttributeValues;
+import net.sf.ohla.rti1516.federate.callbacks.RemoveObjectInstance;
 import net.sf.ohla.rti1516.federate.callbacks.SynchronizationPointRegistrationFailed;
 import net.sf.ohla.rti1516.federate.callbacks.SynchronizationPointRegistrationSucceeded;
-import net.sf.ohla.rti1516.federate.callbacks.RemoveObjectInstance;
 import net.sf.ohla.rti1516.federate.filter.InterestManagementFilter;
 import net.sf.ohla.rti1516.federate.objects.ObjectManager;
 import net.sf.ohla.rti1516.federate.time.TimeManager;
@@ -400,7 +400,8 @@ public class Federate
         peerConnector.getFilterChain().addLast(
           "ProtocolCodecFilter", new ProtocolCodecFilter(codec));
 
-        peerConnector.getFilterChain().addLast("LoggingFilter", new LoggingFilter());
+        peerConnector.getFilterChain().addLast("LoggingFilter",
+                                               new LoggingFilter());
 
         // handles request/response pairs
         //
@@ -3223,7 +3224,8 @@ public class Federate
         peerAcceptor.getFilterChain().addLast(
           "ProtocolCodecFilter", new ProtocolCodecFilter(codec));
 
-        peerAcceptor.getFilterChain().addLast("LoggingFilter", new LoggingFilter());
+        peerAcceptor.getFilterChain().addLast(
+          "LoggingFilter", new LoggingFilter());
 
         // handles request/response pairs
         //
@@ -3238,7 +3240,8 @@ public class Federate
 
         peerConnectionInfo =
           new InetSocketAddress(
-            host == null ? InetAddress.getLocalHost() : InetAddress.getByName(host),
+            host == null ? InetAddress.getLocalHost() :
+              InetAddress.getByName(host),
             port == null ? 0 : Integer.parseInt(port));
 
         log.info("binding to {}", peerConnectionInfo);
@@ -3462,7 +3465,8 @@ public class Federate
 
         OrderType receivedOrderType =
           reflectAttributeValues.getSentOrderType() == OrderType.TIMESTAMP &&
-          timeManager.isTimeConstrained() ? OrderType.TIMESTAMP : OrderType.RECEIVE;
+          timeManager.isTimeConstrained() ? OrderType.TIMESTAMP :
+            OrderType.RECEIVE;
         reflectAttributeValues.setReceivedOrderType(receivedOrderType);
 
         if (receivedOrderType == OrderType.RECEIVE)
@@ -3497,7 +3501,8 @@ public class Federate
 
         OrderType receivedOrderType =
           receiveInteraction.getSentOrderType() == OrderType.TIMESTAMP &&
-          timeManager.isTimeConstrained() ? OrderType.TIMESTAMP : OrderType.RECEIVE;
+          timeManager.isTimeConstrained() ? OrderType.TIMESTAMP :
+            OrderType.RECEIVE;
 
         receiveInteraction.setReceivedOrderType(receivedOrderType);
 
@@ -3843,7 +3848,8 @@ public class Federate
     }
 
     @Override
-    public void turnInteractionsOn(InteractionClassHandle interactionClassHandle)
+    public void turnInteractionsOn(
+      InteractionClassHandle interactionClassHandle)
       throws InteractionClassNotPublished, FederateInternalError
     {
       federateAmbassador.turnInteractionsOn(interactionClassHandle);
@@ -3943,7 +3949,8 @@ public class Federate
     @Override
     public void reflectAttributeValues(
       ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleValueMap attributeValues, byte[] tag, OrderType sentOrderType,
+      AttributeHandleValueMap attributeValues, byte[] tag,
+      OrderType sentOrderType,
       TransportationType transportationType, LogicalTime updateTime,
       OrderType receivedOrderType,
       MessageRetractionHandle messageRetractionHandle)
@@ -3959,9 +3966,9 @@ public class Federate
     @Override
     public void reflectAttributeValues(
       ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleValueMap attributeValues, byte[] tag, OrderType sentOrderType,
-      TransportationType transportationType, LogicalTime updateTime,
-      OrderType receivedOrderType,
+      AttributeHandleValueMap attributeValues, byte[] tag,
+      OrderType sentOrderType, TransportationType transportationType,
+      LogicalTime updateTime, OrderType receivedOrderType,
       MessageRetractionHandle messageRetractionHandle,
       RegionHandleSet regionHandles)
       throws ObjectInstanceNotKnown, AttributeNotRecognized,
@@ -4226,9 +4233,10 @@ public class Federate
 
     @Override
     public void informAttributeOwnership(
-      ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle,
-      FederateHandle federateHandle)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized, FederateInternalError
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandle attributeHandle, FederateHandle federateHandle)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             FederateInternalError
     {
       federateAmbassador.informAttributeOwnership(
         objectInstanceHandle, attributeHandle, federateHandle);
@@ -4237,7 +4245,8 @@ public class Federate
     @Override
     public void attributeIsNotOwned(ObjectInstanceHandle objectInstanceHandle,
                                     AttributeHandle attributeHandle)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized, FederateInternalError
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             FederateInternalError
     {
       federateAmbassador.attributeIsNotOwned(
         objectInstanceHandle, attributeHandle);
@@ -4246,7 +4255,8 @@ public class Federate
     @Override
     public void attributeIsOwnedByRTI(ObjectInstanceHandle objectInstanceHandle,
                                       AttributeHandle attributeHandle)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized, FederateInternalError
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             FederateInternalError
     {
       federateAmbassador.attributeIsOwnedByRTI(
         objectInstanceHandle, attributeHandle);
@@ -4277,7 +4287,8 @@ public class Federate
     }
 
     @Override
-    public void requestRetraction(MessageRetractionHandle messageRetractionHandle)
+    public void requestRetraction(
+      MessageRetractionHandle messageRetractionHandle)
       throws FederateInternalError
     {
       federateAmbassador.requestRetraction(messageRetractionHandle);
