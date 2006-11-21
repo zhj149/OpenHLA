@@ -16,28 +16,28 @@
 
 package net.sf.ohla.rti1516;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import hla.rti1516.ResignAction;
-import hla.rti1516.LogicalTimeInterval;
-import hla.rti1516.RTIambassador;
-import hla.rti1516.LogicalTime;
-import hla.rti1516.InvalidLogicalTime;
-import hla.rti1516.NoRequestToEnableTimeRegulationWasPending;
 import hla.rti1516.FederateInternalError;
+import hla.rti1516.InvalidLogicalTime;
+import hla.rti1516.InvalidLookahead;
+import hla.rti1516.LogicalTime;
+import hla.rti1516.LogicalTimeInterval;
 import hla.rti1516.NoRequestToEnableTimeConstrainedWasPending;
-import hla.rti1516.TimeRegulationAlreadyEnabled;
-import hla.rti1516.TimeConstrainedAlreadyEnabled;
-import hla.rti1516.TimeRegulationIsNotEnabled;
-import hla.rti1516.TimeConstrainedIsNotEnabled;
+import hla.rti1516.NoRequestToEnableTimeRegulationWasPending;
+import hla.rti1516.RTIambassador;
 import hla.rti1516.RequestForTimeConstrainedPending;
 import hla.rti1516.RequestForTimeRegulationPending;
-import hla.rti1516.InvalidLookahead;
+import hla.rti1516.ResignAction;
+import hla.rti1516.TimeConstrainedAlreadyEnabled;
+import hla.rti1516.TimeConstrainedIsNotEnabled;
+import hla.rti1516.TimeRegulationAlreadyEnabled;
+import hla.rti1516.TimeRegulationIsNotEnabled;
 import hla.rti1516.jlc.NullFederateAmbassador;
 
 public class TimeManagementTestNG
@@ -131,6 +131,22 @@ public class TimeManagementTestNG
   }
 
   @Test(dependsOnMethods = {"testDisableTimeRegulationAgain"},
+        expectedExceptions = {TimeRegulationIsNotEnabled.class})
+  public void testQueryLookaheadWhenTimeRegulationDisabled()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).queryLookahead();
+  }
+
+  @Test(dependsOnMethods = {"testQueryLookaheadWhenTimeRegulationDisabled"},
+        expectedExceptions = {TimeRegulationIsNotEnabled.class})
+  public void testModifyLookaheadWhenTimeRegulationDisabled()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).modifyLookahead(lookahead1);
+  }
+
+  @Test(dependsOnMethods = {"testModifyLookaheadWhenTimeRegulationDisabled"},
         expectedExceptions = {RequestForTimeRegulationPending.class})
   public void testEnableTimeRegulationWhileEnableTimeRegulationPending()
     throws Exception
@@ -148,8 +164,9 @@ public class TimeManagementTestNG
     }
   }
 
-  @Test(dependsOnMethods = {"testEnableTimeRegulationWhileEnableTimeRegulationPending"},
-        expectedExceptions = {InvalidLookahead.class})
+  @Test(
+    dependsOnMethods = {"testEnableTimeRegulationWhileEnableTimeRegulationPending"},
+    expectedExceptions = {InvalidLookahead.class})
   public void testEnableTimeRegulationOfInvalidLookahead()
     throws Exception
   {
