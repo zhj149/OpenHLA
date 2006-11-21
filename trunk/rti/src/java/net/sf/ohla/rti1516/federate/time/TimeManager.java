@@ -41,6 +41,7 @@ import hla.rti1516.InvalidLookahead;
 import hla.rti1516.LogicalTime;
 import hla.rti1516.LogicalTimeAlreadyPassed;
 import hla.rti1516.LogicalTimeInterval;
+import hla.rti1516.MobileFederateServices;
 import hla.rti1516.RTIinternalError;
 import hla.rti1516.RequestForTimeConstrainedPending;
 import hla.rti1516.RequestForTimeRegulationPending;
@@ -49,7 +50,6 @@ import hla.rti1516.TimeConstrainedIsNotEnabled;
 import hla.rti1516.TimeQueryReturn;
 import hla.rti1516.TimeRegulationAlreadyEnabled;
 import hla.rti1516.TimeRegulationIsNotEnabled;
-import hla.rti1516.MobileFederateServices;
 
 public class TimeManager
 {
