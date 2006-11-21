@@ -51,7 +51,7 @@ public class TimeManagementTestNG
 
   public TimeManagementTestNG()
   {
-    super(2);
+    super(3);
   }
 
   @BeforeClass
@@ -62,12 +62,16 @@ public class TimeManagementTestNG
 
     federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(0)));
     federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(1)));
+    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(2)));
 
     rtiAmbassadors.get(0).joinFederationExecution(
       FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(0),
       mobileFederateServices);
     rtiAmbassadors.get(1).joinFederationExecution(
       FEDERATE_TYPE + "2", FEDERATION_NAME, federateAmbassadors.get(1),
+      mobileFederateServices);
+    rtiAmbassadors.get(2).joinFederationExecution(
+      FEDERATE_TYPE + "3", FEDERATION_NAME, federateAmbassadors.get(2),
       mobileFederateServices);
   }
 
@@ -77,6 +81,7 @@ public class TimeManagementTestNG
   {
     rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
     rtiAmbassadors.get(1).resignFederationExecution(ResignAction.NO_ACTION);
+    rtiAmbassadors.get(2).resignFederationExecution(ResignAction.NO_ACTION);
 
     rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
   }
@@ -88,8 +93,8 @@ public class TimeManagementTestNG
     rtiAmbassadors.get(0).enableTimeRegulation(lookahead1);
     federateAmbassadors.get(0).checkTimeRegulationEnabled();
 
-    rtiAmbassadors.get(1).enableTimeRegulation(lookahead2);
-    federateAmbassadors.get(1).checkTimeRegulationEnabled();
+    rtiAmbassadors.get(2).enableTimeRegulation(lookahead2);
+    federateAmbassadors.get(2).checkTimeRegulationEnabled();
   }
 
   @Test(dependsOnMethods = {"testEnableTimeRegulation"},
@@ -105,6 +110,7 @@ public class TimeManagementTestNG
     throws Exception
   {
     assert lookahead1.equals(rtiAmbassadors.get(0).queryLookahead());
+    assert lookahead2.equals(rtiAmbassadors.get(2).queryLookahead());
   }
 
   @Test(dependsOnMethods = {"testQueryLookahead"})
@@ -113,6 +119,9 @@ public class TimeManagementTestNG
   {
     rtiAmbassadors.get(0).modifyLookahead(lookahead2);
     assert lookahead2.equals(rtiAmbassadors.get(0).queryLookahead());
+
+    rtiAmbassadors.get(0).modifyLookahead(lookahead1);
+    assert lookahead1.equals(rtiAmbassadors.get(0).queryLookahead());
   }
 
   @Test(dependsOnMethods = {"testModifyLookahead"})
@@ -177,11 +186,11 @@ public class TimeManagementTestNG
   public void testEnableTimeConstrained()
     throws Exception
   {
-    rtiAmbassadors.get(0).enableTimeConstrained();
-    federateAmbassadors.get(0).checkTimeConstrainedEnabled();
-
     rtiAmbassadors.get(1).enableTimeConstrained();
     federateAmbassadors.get(1).checkTimeConstrainedEnabled();
+
+    rtiAmbassadors.get(2).enableTimeConstrained();
+    federateAmbassadors.get(2).checkTimeConstrainedEnabled();
   }
 
   @Test(dependsOnMethods = {"testEnableTimeConstrained"},
@@ -189,14 +198,14 @@ public class TimeManagementTestNG
   public void testEnableTimeConstrainedAgain()
     throws Exception
   {
-    rtiAmbassadors.get(0).enableTimeConstrained();
+    rtiAmbassadors.get(1).enableTimeConstrained();
   }
 
   @Test(dependsOnMethods = {"testEnableTimeConstrainedAgain"})
   public void testDisableTimeConstrained()
     throws Exception
   {
-    rtiAmbassadors.get(0).disableTimeConstrained();
+    rtiAmbassadors.get(1).disableTimeConstrained();
   }
 
   @Test(dependsOnMethods = {"testDisableTimeConstrained"},
@@ -204,7 +213,7 @@ public class TimeManagementTestNG
   public void testDisableTimeConstrainedAgain()
     throws Exception
   {
-    rtiAmbassadors.get(0).disableTimeConstrained();
+    rtiAmbassadors.get(1).disableTimeConstrained();
   }
 
   @Test(dependsOnMethods = {"testDisableTimeConstrainedAgain"},
@@ -212,16 +221,16 @@ public class TimeManagementTestNG
   public void testEnableTimeConstrainedWhileEnableTimeConstrainedPending()
     throws Exception
   {
-    rtiAmbassadors.get(0).enableTimeConstrained();
+    rtiAmbassadors.get(1).enableTimeConstrained();
 
     try
     {
-      rtiAmbassadors.get(0).enableTimeConstrained();
+      rtiAmbassadors.get(1).enableTimeConstrained();
     }
     finally
     {
-      federateAmbassadors.get(0).checkTimeConstrainedEnabled();
-      rtiAmbassadors.get(0).disableTimeConstrained();
+      federateAmbassadors.get(1).checkTimeConstrainedEnabled();
+      rtiAmbassadors.get(1).disableTimeConstrained();
     }
   }
 
