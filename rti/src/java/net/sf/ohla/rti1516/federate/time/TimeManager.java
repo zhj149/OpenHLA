@@ -49,12 +49,14 @@ import hla.rti1516.TimeConstrainedIsNotEnabled;
 import hla.rti1516.TimeQueryReturn;
 import hla.rti1516.TimeRegulationAlreadyEnabled;
 import hla.rti1516.TimeRegulationIsNotEnabled;
+import hla.rti1516.MobileFederateServices;
 
 public class TimeManager
 {
   private static final Logger log = LoggerFactory.getLogger(TimeManager.class);
 
-  protected Federate federate;
+  protected final Federate federate;
+  protected final MobileFederateServices mobileFederateServices;
 
   protected ReadWriteLock timeLock = new ReentrantReadWriteLock(true);
 
@@ -73,9 +75,13 @@ public class TimeManager
   protected LogicalTime advanceRequestTime;
   protected TimeAdvanceType advanceRequestTimeType;
 
-  public TimeManager(Federate federate)
+  public TimeManager(Federate federate,
+                     MobileFederateServices mobileFederateServices)
   {
     this.federate = federate;
+    this.mobileFederateServices = mobileFederateServices;
+
+    federateTime = mobileFederateServices.timeFactory.makeInitial();
   }
 
   public ReadWriteLock getTimeLock()
@@ -446,19 +452,20 @@ public class TimeManager
   public TimeQueryReturn queryGALT()
     throws RTIinternalError
   {
+    TimeQueryReturn timeQueryReturn = new TimeQueryReturn();
+
     timeLock.readLock().lock();
     try
     {
-      TimeQueryReturn timeQueryReturn = new TimeQueryReturn();
-      timeQueryReturn.timeIsValid = true;
+      timeQueryReturn.timeIsValid = galt != null;
       timeQueryReturn.time = galt;
-
-      return timeQueryReturn;
     }
     finally
     {
       timeLock.readLock().unlock();
     }
+
+    return timeQueryReturn;
   }
 
   public LogicalTime queryLogicalTime()
@@ -478,19 +485,20 @@ public class TimeManager
   public TimeQueryReturn queryLITS()
     throws RTIinternalError
   {
+    TimeQueryReturn timeQueryReturn = new TimeQueryReturn();
+
     timeLock.readLock().lock();
     try
     {
-      TimeQueryReturn timeQueryReturn = new TimeQueryReturn();
-      timeQueryReturn.timeIsValid = true;
+      timeQueryReturn.timeIsValid = lits != null;
       timeQueryReturn.time = lits;
-
-      return timeQueryReturn;
     }
     finally
     {
       timeLock.readLock().unlock();
     }
+
+    return timeQueryReturn;
   }
 
   public void modifyLookahead(LogicalTimeInterval lookahead)

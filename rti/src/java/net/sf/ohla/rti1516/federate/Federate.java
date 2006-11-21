@@ -286,7 +286,7 @@ public class Federate
   protected MessageRetractionManager messageRetractionManager =
     new MessageRetractionManager(this);
 
-  protected TimeManager timeManager = new TimeManager(this);
+  protected TimeManager timeManager;
   protected CallbackManager callbackManager = new CallbackManager(this);
 
   protected Lock futureTasksLock = new ReentrantLock(true);
@@ -354,6 +354,8 @@ public class Federate
     this.federateAmbassador = federateAmbassador;
     this.mobileFederateServices = mobileFederateServices;
     this.rtiSession = rtiSession;
+
+    timeManager = new TimeManager(this, mobileFederateServices);
 
     startPeerAcceptor(federateType);
 

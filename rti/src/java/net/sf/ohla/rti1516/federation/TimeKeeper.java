@@ -69,6 +69,8 @@ public class TimeKeeper
     {
       timeLock.unlock();
     }
+
+    log.debug("time regulation enabled: {}", federateHandle);
   }
 
   public void disableTimeRegulation(FederateHandle federateHandle)
@@ -77,11 +79,14 @@ public class TimeKeeper
     try
     {
       timeRegulatingFederates.remove(federateHandle);
+      timeRegulatingFederateAdvanceRequests.remove(federateHandle);
     }
     finally
     {
       timeLock.unlock();
     }
+
+    log.debug("time regulation disabled: {}", federateHandle);
   }
 
   public void enableTimeConstrained(IoSession session,
@@ -98,6 +103,8 @@ public class TimeKeeper
     {
       timeLock.unlock();
     }
+
+    log.debug("time constrained enabled: {}", federateHandle);
   }
 
   public void disableTimeConstrained(FederateHandle federateHandle)
@@ -106,20 +113,25 @@ public class TimeKeeper
     try
     {
       timeConstrainedFederates.remove(federateHandle);
+      timeConstrainedFederateAdvanceRequests.remove(federateHandle);
     }
     finally
     {
       timeLock.unlock();
     }
+
+    log.debug("time constrained disabled: {}", federateHandle);
   }
 
   public void timeAdvanceRequest(FederateHandle federateHandle,
                                  LogicalTime time)
   {
+    log.debug("time advance request: {} to {}", federateHandle, time);
+
     timeLock.lock();
     try
     {
-      assert this.time.compareTo(time) > 0;
+      assert this.time.compareTo(time) >= 0;
 
       if (timeRegulatingFederates.containsKey(federateHandle))
       {
@@ -129,10 +141,9 @@ public class TimeKeeper
 
         minAdvanceRequest = min(minAdvanceRequest, time);
       }
-      else
-      {
-        assert timeConstrainedFederates.contains(federateHandle);
 
+      if (timeConstrainedFederates.contains(federateHandle))
+      {
         LogicalTime pendingAdvance =
           timeConstrainedFederateAdvanceRequests.put(federateHandle, time);
         assert pendingAdvance == null;
@@ -142,6 +153,9 @@ public class TimeKeeper
           timeRegulatingFederates.size())
       {
         this.time = minAdvanceRequest;
+
+        log.debug("advancing time to: {}", this.time);
+
         minAdvanceRequest = mobileFederateServices.timeFactory.makeFinal();
 
         Map<FederateHandle, LogicalTime> advancingTimeRegulatingFederates =
