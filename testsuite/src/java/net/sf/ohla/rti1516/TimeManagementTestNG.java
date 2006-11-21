@@ -139,7 +139,7 @@ public class TimeManagementTestNG
     rtiAmbassadors.get(0).disableTimeRegulation();
   }
 
-  @Test(dependsOnMethods = {"testDisableTimeRegulationAgain"},
+  @Test(dependsOnMethods = {"testDisableTimeRegulation"},
         expectedExceptions = {TimeRegulationIsNotEnabled.class})
   public void testQueryLookaheadWhenTimeRegulationDisabled()
     throws Exception
@@ -147,7 +147,7 @@ public class TimeManagementTestNG
     rtiAmbassadors.get(0).queryLookahead();
   }
 
-  @Test(dependsOnMethods = {"testQueryLookaheadWhenTimeRegulationDisabled"},
+  @Test(dependsOnMethods = {"testDisableTimeRegulation"},
         expectedExceptions = {TimeRegulationIsNotEnabled.class})
   public void testModifyLookaheadWhenTimeRegulationDisabled()
     throws Exception
@@ -155,7 +155,7 @@ public class TimeManagementTestNG
     rtiAmbassadors.get(0).modifyLookahead(lookahead1);
   }
 
-  @Test(dependsOnMethods = {"testModifyLookaheadWhenTimeRegulationDisabled"},
+  @Test(dependsOnMethods = {"testDisableTimeRegulation"},
         expectedExceptions = {RequestForTimeRegulationPending.class})
   public void testEnableTimeRegulationWhileEnableTimeRegulationPending()
     throws Exception
@@ -173,8 +173,98 @@ public class TimeManagementTestNG
     }
   }
 
+  @Test(dependsOnMethods = {"testDisableTimeRegulation"},
+        expectedExceptions = {RequestForTimeRegulationPending.class})
+  public void testTimeAdvanceRequestWhileEnableTimeRegulationPending()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).enableTimeRegulation(lookahead1);
+
+    try
+    {
+      rtiAmbassadors.get(0).timeAdvanceRequest(new Integer64Time(100));
+    }
+    finally
+    {
+      federateAmbassadors.get(0).checkTimeRegulationEnabled();
+      rtiAmbassadors.get(0).disableTimeRegulation();
+    }
+  }
+
+  @Test(dependsOnMethods = {"testDisableTimeRegulation"},
+        expectedExceptions = {RequestForTimeRegulationPending.class})
+  public void testTimeAdvanceRequestAvailableWhileEnableTimeRegulationPending()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).enableTimeRegulation(lookahead1);
+
+    try
+    {
+      rtiAmbassadors.get(0).timeAdvanceRequestAvailable(new Integer64Time(100));
+    }
+    finally
+    {
+      federateAmbassadors.get(0).checkTimeRegulationEnabled();
+      rtiAmbassadors.get(0).disableTimeRegulation();
+    }
+  }
+
+  @Test(dependsOnMethods = {"testDisableTimeRegulation"},
+        expectedExceptions = {RequestForTimeRegulationPending.class})
+  public void testNextMessageRequestWhileEnableTimeRegulationPending()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).enableTimeRegulation(lookahead1);
+
+    try
+    {
+      rtiAmbassadors.get(0).nextMessageRequest(new Integer64Time(100));
+    }
+    finally
+    {
+      federateAmbassadors.get(0).checkTimeRegulationEnabled();
+      rtiAmbassadors.get(0).disableTimeRegulation();
+    }
+  }
+
+  @Test(dependsOnMethods = {"testDisableTimeRegulation"},
+        expectedExceptions = {RequestForTimeRegulationPending.class})
+  public void testNextMessageRequestAvailableWhileEnableTimeRegulationPending()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).enableTimeRegulation(lookahead1);
+
+    try
+    {
+      rtiAmbassadors.get(0).nextMessageRequestAvailable(new Integer64Time(100));
+    }
+    finally
+    {
+      federateAmbassadors.get(0).checkTimeRegulationEnabled();
+      rtiAmbassadors.get(0).disableTimeRegulation();
+    }
+  }
+
+  @Test(dependsOnMethods = {"testDisableTimeRegulation"},
+        expectedExceptions = {RequestForTimeRegulationPending.class})
+  public void testFlushQueueRequestWhileEnableTimeRegulationPending()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).enableTimeRegulation(lookahead1);
+
+    try
+    {
+      rtiAmbassadors.get(0).flushQueueRequest(new Integer64Time(100));
+    }
+    finally
+    {
+      federateAmbassadors.get(0).checkTimeRegulationEnabled();
+      rtiAmbassadors.get(0).disableTimeRegulation();
+    }
+  }
+
   @Test(
-    dependsOnMethods = {"testEnableTimeRegulationWhileEnableTimeRegulationPending"},
+    dependsOnMethods = {"testDisableTimeRegulation"},
     expectedExceptions = {InvalidLookahead.class})
   public void testEnableTimeRegulationOfInvalidLookahead()
     throws Exception
@@ -216,7 +306,7 @@ public class TimeManagementTestNG
     rtiAmbassadors.get(1).disableTimeConstrained();
   }
 
-  @Test(dependsOnMethods = {"testDisableTimeConstrainedAgain"},
+  @Test(dependsOnMethods = {"testDisableTimeConstrained"},
         expectedExceptions = {RequestForTimeConstrainedPending.class})
   public void testEnableTimeConstrainedWhileEnableTimeConstrainedPending()
     throws Exception
@@ -226,6 +316,96 @@ public class TimeManagementTestNG
     try
     {
       rtiAmbassadors.get(1).enableTimeConstrained();
+    }
+    finally
+    {
+      federateAmbassadors.get(1).checkTimeConstrainedEnabled();
+      rtiAmbassadors.get(1).disableTimeConstrained();
+    }
+  }
+
+  @Test(dependsOnMethods = {"testDisableTimeConstrained"},
+        expectedExceptions = {RequestForTimeConstrainedPending.class})
+  public void testTimeAdvanceRequestWhileEnableTimeConstrainedPending()
+    throws Exception
+  {
+    rtiAmbassadors.get(1).enableTimeConstrained();
+
+    try
+    {
+      rtiAmbassadors.get(1).timeAdvanceRequest(new Integer64Time(100));
+    }
+    finally
+    {
+      federateAmbassadors.get(1).checkTimeConstrainedEnabled();
+      rtiAmbassadors.get(1).disableTimeConstrained();
+    }
+  }
+
+  @Test(dependsOnMethods = {"testDisableTimeConstrained"},
+        expectedExceptions = {RequestForTimeConstrainedPending.class})
+  public void testTimeAdvanceRequestAvailableWhileEnableTimeConstrainedPending()
+    throws Exception
+  {
+    rtiAmbassadors.get(1).enableTimeConstrained();
+
+    try
+    {
+      rtiAmbassadors.get(1).timeAdvanceRequestAvailable(new Integer64Time(100));
+    }
+    finally
+    {
+      federateAmbassadors.get(1).checkTimeConstrainedEnabled();
+      rtiAmbassadors.get(1).disableTimeConstrained();
+    }
+  }
+
+  @Test(dependsOnMethods = {"testDisableTimeConstrained"},
+        expectedExceptions = {RequestForTimeConstrainedPending.class})
+  public void testNextMessageRequestWhileEnableTimeConstrainedPending()
+    throws Exception
+  {
+    rtiAmbassadors.get(1).enableTimeConstrained();
+
+    try
+    {
+      rtiAmbassadors.get(1).nextMessageRequest(new Integer64Time(100));
+    }
+    finally
+    {
+      federateAmbassadors.get(1).checkTimeConstrainedEnabled();
+      rtiAmbassadors.get(1).disableTimeConstrained();
+    }
+  }
+
+  @Test(dependsOnMethods = {"testDisableTimeConstrained"},
+        expectedExceptions = {RequestForTimeConstrainedPending.class})
+  public void testNextMessageRequestAvailableWhileEnableTimeConstrainedPending()
+    throws Exception
+  {
+    rtiAmbassadors.get(1).enableTimeConstrained();
+
+    try
+    {
+      rtiAmbassadors.get(1).nextMessageRequestAvailable(new Integer64Time(100));
+    }
+    finally
+    {
+      federateAmbassadors.get(1).checkTimeConstrainedEnabled();
+      rtiAmbassadors.get(1).disableTimeConstrained();
+    }
+  }
+
+  @Test(dependsOnMethods = {"testDisableTimeConstrained"},
+        expectedExceptions = {RequestForTimeConstrainedPending.class})
+  public void testFlushQueueRequestWhileEnableTimeConstrainedPending()
+    throws Exception
+  {
+    rtiAmbassadors.get(1).enableTimeConstrained();
+
+    try
+    {
+      rtiAmbassadors.get(1).flushQueueRequest(new Integer64Time(100));
     }
     finally
     {
