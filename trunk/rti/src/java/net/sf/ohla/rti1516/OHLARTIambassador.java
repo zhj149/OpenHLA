@@ -310,17 +310,17 @@ public class OHLARTIambassador
   {
     if (mobileFederateServices == null)
     {
-      throw new IllegalArgumentException(
+      throw new RTIinternalError(
         "MobileFederateServices must be supplied");
     }
     else if (mobileFederateServices.timeFactory == null)
     {
-      throw new IllegalArgumentException(
+      throw new RTIinternalError(
         "MobileFederateServices.timeFactory must be supplied");
     }
     else if (mobileFederateServices.intervalFactory == null)
     {
-      throw new IllegalArgumentException(
+      throw new RTIinternalError(
         "MobileFederateServices.intervalFactory must be supplied");
     }
 
