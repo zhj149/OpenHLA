@@ -38,6 +38,7 @@ import hla.rti1516.TimeConstrainedAlreadyEnabled;
 import hla.rti1516.TimeConstrainedIsNotEnabled;
 import hla.rti1516.TimeRegulationAlreadyEnabled;
 import hla.rti1516.TimeRegulationIsNotEnabled;
+import hla.rti1516.JoinedFederateIsNotInTimeAdvancingState;
 import hla.rti1516.jlc.NullFederateAmbassador;
 
 public class TimeManagementTestNG
@@ -224,7 +225,7 @@ public class TimeManagementTestNG
   public void testEnableTimeConstrained()
     throws Exception
   {
-    rtiAmbassadors.get(1).enableTimeConstrained();
+    rtiAmbassadors.get(0).enableTimeConstrained();
   }
 
   @Test(dependsOnMethods = {"testEnableTimeConstrained"},
@@ -232,7 +233,7 @@ public class TimeManagementTestNG
   public void testEnableTimeConstrainedWhileEnableTimeConstrainedPending()
     throws Exception
   {
-    rtiAmbassadors.get(1).enableTimeConstrained();
+    rtiAmbassadors.get(0).enableTimeConstrained();
   }
 
   @Test(dependsOnMethods = {"testEnableTimeConstrained"},
@@ -240,7 +241,7 @@ public class TimeManagementTestNG
   public void testTimeAdvanceRequestWhileEnableTimeConstrainedPending()
     throws Exception
   {
-    rtiAmbassadors.get(1).timeAdvanceRequest(new Integer64Time(100));
+    rtiAmbassadors.get(0).timeAdvanceRequest(new Integer64Time(100));
   }
 
   @Test(dependsOnMethods = {"testEnableTimeConstrained"},
@@ -248,7 +249,7 @@ public class TimeManagementTestNG
   public void testTimeAdvanceRequestAvailableWhileEnableTimeConstrainedPending()
     throws Exception
   {
-    rtiAmbassadors.get(1).timeAdvanceRequestAvailable(new Integer64Time(100));
+    rtiAmbassadors.get(0).timeAdvanceRequestAvailable(new Integer64Time(100));
   }
 
   @Test(dependsOnMethods = {"testEnableTimeConstrained"},
@@ -256,7 +257,7 @@ public class TimeManagementTestNG
   public void testNextMessageRequestWhileEnableTimeConstrainedPending()
     throws Exception
   {
-    rtiAmbassadors.get(1).nextMessageRequest(new Integer64Time(100));
+    rtiAmbassadors.get(0).nextMessageRequest(new Integer64Time(100));
   }
 
   @Test(dependsOnMethods = {"testEnableTimeConstrained"},
@@ -264,7 +265,7 @@ public class TimeManagementTestNG
   public void testNextMessageRequestAvailableWhileEnableTimeConstrainedPending()
     throws Exception
   {
-    rtiAmbassadors.get(1).nextMessageRequestAvailable(new Integer64Time(100));
+    rtiAmbassadors.get(0).nextMessageRequestAvailable(new Integer64Time(100));
   }
 
   @Test(dependsOnMethods = {"testEnableTimeConstrained"},
@@ -272,20 +273,20 @@ public class TimeManagementTestNG
   public void testFlushQueueRequestWhileEnableTimeConstrainedPending()
     throws Exception
   {
-    rtiAmbassadors.get(1).flushQueueRequest(new Integer64Time(100));
+    rtiAmbassadors.get(0).flushQueueRequest(new Integer64Time(100));
   }
 
   @Test(dependsOnMethods = {
+    "testEnableTimeConstrainedWhileEnableTimeConstrainedPending",
     "testTimeAdvanceRequestWhileEnableTimeConstrainedPending",
     "testTimeAdvanceRequestAvailableWhileEnableTimeConstrainedPending",
     "testNextMessageRequestWhileEnableTimeConstrainedPending",
     "testNextMessageRequestAvailableWhileEnableTimeConstrainedPending",
-    "testFlushQueueRequestWhileEnableTimeConstrainedPending",
-    "testEnableTimeConstrained"})
+    "testFlushQueueRequestWhileEnableTimeConstrainedPending"})
   public void testTimeConstrainedEnabled()
     throws Exception
   {
-    federateAmbassadors.get(1).checkTimeConstrainedEnabled();
+    federateAmbassadors.get(0).checkTimeConstrainedEnabled();
   }
 
   @Test(dependsOnMethods = {"testTimeConstrainedEnabled"},
@@ -293,14 +294,14 @@ public class TimeManagementTestNG
   public void testEnableTimeConstrainedAgain()
     throws Exception
   {
-    rtiAmbassadors.get(1).enableTimeConstrained();
+    rtiAmbassadors.get(0).enableTimeConstrained();
   }
 
   @Test(dependsOnMethods = {"testEnableTimeConstrainedAgain"})
   public void testDisableTimeConstrained()
     throws Exception
   {
-    rtiAmbassadors.get(1).disableTimeConstrained();
+    rtiAmbassadors.get(0).disableTimeConstrained();
   }
 
   @Test(dependsOnMethods = {"testDisableTimeConstrained"},
@@ -308,7 +309,23 @@ public class TimeManagementTestNG
   public void testDisableTimeConstrainedAgain()
     throws Exception
   {
-    rtiAmbassadors.get(1).disableTimeConstrained();
+    rtiAmbassadors.get(0).disableTimeConstrained();
+  }
+
+  @Test(dependsOnMethods = {"testDisableTimeRegulation",
+    "testDisableTimeConstrained"})
+  public void testTimeAdvanceRequestWhileNeitherRegulatingOrConstrained()
+    throws Exception
+  {
+    rtiAmbassadors.get(1).timeAdvanceRequest(new Integer64Time(10));
+  }
+
+  @Test(dependsOnMethods =
+    {"testTimeAdvanceRequestWhileNeitherRegulatingOrConstrained"})
+  public void testTimeAdvanceGrantWhileNeitherRegulatingOrConstrained()
+    throws Exception
+  {
+    federateAmbassadors.get(1).checkTimeAdvanceGrant(new Integer64Time(10));
   }
 
   protected static class TestFederateAmbassador
@@ -318,6 +335,7 @@ public class TimeManagementTestNG
 
     protected LogicalTime timeRegulationEnabledTime;
     protected LogicalTime timeConstrainedEnabledTime;
+    protected LogicalTime federateTime;
 
     public TestFederateAmbassador(RTIambassador rtiAmbassador)
     {
@@ -346,6 +364,17 @@ public class TimeManagementTestNG
       assert timeConstrainedEnabledTime != null;
     }
 
+    public void checkTimeAdvanceGrant(LogicalTime time)
+      throws Exception
+    {
+      federateTime = null;
+      for (int i = 0; i < 5 && federateTime == null; i++)
+      {
+        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+      }
+      assert time.equals(federateTime);
+    }
+
     @Override
     public void timeRegulationEnabled(LogicalTime time)
       throws InvalidLogicalTime, NoRequestToEnableTimeRegulationWasPending,
@@ -360,6 +389,14 @@ public class TimeManagementTestNG
              FederateInternalError
     {
       timeConstrainedEnabledTime = time;
+    }
+
+    @Override
+    public void timeAdvanceGrant(LogicalTime time)
+      throws InvalidLogicalTime, JoinedFederateIsNotInTimeAdvancingState,
+             FederateInternalError
+    {
+      federateTime = time;
     }
   }
 
