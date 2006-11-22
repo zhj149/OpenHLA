@@ -657,6 +657,8 @@ public class TimeManager
     {
       federateTime = time;
 
+      temporalState = TemporalState.TIME_GRANTED;
+
       federateAmbassador.timeAdvanceGrant(time);
     }
     catch (Throwable t)
