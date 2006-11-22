@@ -20,6 +20,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.sf.ohla.rti1516.federate.Federate;
+import net.sf.ohla.rti1516.federate.callbacks.TimeAdvanceGrant;
 import net.sf.ohla.rti1516.messages.DisableTimeConstrained;
 import net.sf.ohla.rti1516.messages.DisableTimeRegulation;
 import net.sf.ohla.rti1516.messages.EnableTimeConstrained;
@@ -263,19 +264,29 @@ public class TimeManager
       advanceRequestTime = time;
       advanceRequestTimeType = TimeAdvanceType.TIME_ADVANCE_REQUEST;
 
-      WriteFuture writeFuture =
-        federate.getRTISession().write(new TimeAdvanceRequest(time));
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
+      if (timeRegulatingState == TimeRegulatingState.NOT_TIME_REGULATING &&
+          timeConstrainedState == TimeConstrainedState.NOT_TIME_CONSTRAINED)
       {
-        throw new RTIinternalError("error communicating with RTI");
+        // immediately grant the request
+        //
+        federate.getCallbackManager().add(new TimeAdvanceGrant(time));
       }
+      else
+      {
+        WriteFuture writeFuture =
+          federate.getRTISession().write(new TimeAdvanceRequest(time));
 
-      // TODO: will need to send to peers as well
+        // TODO: set timeout
+        //
+        writeFuture.join();
+
+        if (!writeFuture.isWritten())
+        {
+          throw new RTIinternalError("error communicating with RTI");
+        }
+
+        // TODO: will need to send to peers as well
+      }
 
       temporalState = TemporalState.TIME_ADVANCING;
 
@@ -304,17 +315,28 @@ public class TimeManager
       checkIfRequestForTimeConstrainedPending();
 
       advanceRequestTime = time;
+      advanceRequestTimeType = TimeAdvanceType.TIME_ADVANCE_REQUEST_AVAILABLE;
 
-      WriteFuture writeFuture =
-        federate.getRTISession().write(new TimeAdvanceRequestAvailable(time));
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
+      if (timeRegulatingState == TimeRegulatingState.NOT_TIME_REGULATING &&
+          timeConstrainedState == TimeConstrainedState.NOT_TIME_CONSTRAINED)
       {
-        throw new RTIinternalError("error communicating with RTI");
+        // immediately grant the request
+        //
+        federate.getCallbackManager().add(new TimeAdvanceGrant(time));
+      }
+      else
+      {
+        WriteFuture writeFuture =
+          federate.getRTISession().write(new TimeAdvanceRequestAvailable(time));
+
+        // TODO: set timeout
+        //
+        writeFuture.join();
+
+        if (!writeFuture.isWritten())
+        {
+          throw new RTIinternalError("error communicating with RTI");
+        }
       }
 
       temporalState = TemporalState.TIME_ADVANCING;
@@ -344,17 +366,28 @@ public class TimeManager
       checkIfRequestForTimeConstrainedPending();
 
       advanceRequestTime = time;
+      advanceRequestTimeType = TimeAdvanceType.NEXT_MESSAGE_REQUEST;
 
-      WriteFuture writeFuture =
-        federate.getRTISession().write(new TimeAdvanceRequest(time));
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
+      if (timeRegulatingState == TimeRegulatingState.NOT_TIME_REGULATING &&
+          timeConstrainedState == TimeConstrainedState.NOT_TIME_CONSTRAINED)
       {
-        throw new RTIinternalError("error communicating with RTI");
+        // immediately grant the request
+        //
+        federate.getCallbackManager().add(new TimeAdvanceGrant(time));
+      }
+      else
+      {
+        WriteFuture writeFuture =
+          federate.getRTISession().write(new TimeAdvanceRequest(time));
+
+        // TODO: set timeout
+        //
+        writeFuture.join();
+
+        if (!writeFuture.isWritten())
+        {
+          throw new RTIinternalError("error communicating with RTI");
+        }
       }
 
       temporalState = TemporalState.TIME_ADVANCING;
@@ -384,17 +417,28 @@ public class TimeManager
       checkIfRequestForTimeRegulationPending();
 
       advanceRequestTime = time;
+      advanceRequestTimeType = TimeAdvanceType.NEXT_MESSAGE_REQUEST_AVAILABLE;
 
-      WriteFuture writeFuture =
-        federate.getRTISession().write(new TimeAdvanceRequest(time));
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
+      if (timeRegulatingState == TimeRegulatingState.NOT_TIME_REGULATING &&
+          timeConstrainedState == TimeConstrainedState.NOT_TIME_CONSTRAINED)
       {
-        throw new RTIinternalError("error communicating with RTI");
+        // immediately grant the request
+        //
+        federate.getCallbackManager().add(new TimeAdvanceGrant(time));
+      }
+      else
+      {
+        WriteFuture writeFuture =
+          federate.getRTISession().write(new TimeAdvanceRequest(time));
+
+        // TODO: set timeout
+        //
+        writeFuture.join();
+
+        if (!writeFuture.isWritten())
+        {
+          throw new RTIinternalError("error communicating with RTI");
+        }
       }
 
       temporalState = TemporalState.TIME_ADVANCING;
@@ -424,17 +468,28 @@ public class TimeManager
       checkIfRequestForTimeConstrainedPending();
 
       advanceRequestTime = time;
+      advanceRequestTimeType = TimeAdvanceType.FLUSH_QUEUE_REQUEST;
 
-      WriteFuture writeFuture =
-        federate.getRTISession().write(new TimeAdvanceRequest(time));
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
+      if (timeRegulatingState == TimeRegulatingState.NOT_TIME_REGULATING &&
+          timeConstrainedState == TimeConstrainedState.NOT_TIME_CONSTRAINED)
       {
-        throw new RTIinternalError("error communicating with RTI");
+        // immediately grant the request
+        //
+        federate.getCallbackManager().add(new TimeAdvanceGrant(time));
+      }
+      else
+      {
+        WriteFuture writeFuture =
+          federate.getRTISession().write(new TimeAdvanceRequest(time));
+
+        // TODO: set timeout
+        //
+        writeFuture.join();
+
+        if (!writeFuture.isWritten())
+        {
+          throw new RTIinternalError("error communicating with RTI");
+        }
       }
 
       temporalState = TemporalState.TIME_ADVANCING;
