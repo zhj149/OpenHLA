@@ -717,10 +717,10 @@ public class TimeManager
   public void checkIfLogicalTimeAlreadyPassed(LogicalTime time)
     throws LogicalTimeAlreadyPassed
   {
-    if (time.compareTo(federateTime) <= 0)
+    if (time.compareTo(federateTime) < 0)
     {
       throw new LogicalTimeAlreadyPassed(
-        String.format("%s <= %s", time, federateTime));
+        String.format("%s < %s", time, federateTime));
     }
   }
 
