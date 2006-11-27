@@ -47,19 +47,24 @@ public class TimeManagementTestNG
   extends BaseTestNG
 {
   protected List<TestFederateAmbassador> federateAmbassadors =
-    new ArrayList<TestFederateAmbassador>(3);
+    new ArrayList<TestFederateAmbassador>(5);
 
   protected LogicalTimeInterval lookahead1 = new Integer64TimeInterval(1);
   protected LogicalTimeInterval lookahead2 = new Integer64TimeInterval(2);
 
-  protected Integer64Time oneHundred = new Integer64Time(100);
+  protected Integer64Time zero = new Integer64Time(0);
+  protected Integer64Time one = new Integer64Time(1);
+  protected Integer64Time two = new Integer64Time(2);
+  protected Integer64Time three = new Integer64Time(3);
+  protected Integer64Time four = new Integer64Time(4);
   protected Integer64Time five = new Integer64Time(5);
   protected Integer64Time ten = new Integer64Time(10);
   protected Integer64Time twenty = new Integer64Time(20);
+  protected Integer64Time oneHundred = new Integer64Time(100);
 
   public TimeManagementTestNG()
   {
-    super(3);
+    super(5);
   }
 
   @BeforeClass
@@ -71,6 +76,8 @@ public class TimeManagementTestNG
     federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(0)));
     federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(1)));
     federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(2)));
+    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(3)));
+    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(4)));
 
     rtiAmbassadors.get(0).joinFederationExecution(
       FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(0),
@@ -81,6 +88,12 @@ public class TimeManagementTestNG
     rtiAmbassadors.get(2).joinFederationExecution(
       FEDERATE_TYPE + "3", FEDERATION_NAME, federateAmbassadors.get(2),
       mobileFederateServices);
+    rtiAmbassadors.get(3).joinFederationExecution(
+      FEDERATE_TYPE + "4", FEDERATION_NAME, federateAmbassadors.get(3),
+      mobileFederateServices);
+    rtiAmbassadors.get(4).joinFederationExecution(
+      FEDERATE_TYPE + "5", FEDERATION_NAME, federateAmbassadors.get(4),
+      mobileFederateServices);
   }
 
   @AfterClass
@@ -90,6 +103,8 @@ public class TimeManagementTestNG
     rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
     rtiAmbassadors.get(1).resignFederationExecution(ResignAction.NO_ACTION);
     rtiAmbassadors.get(2).resignFederationExecution(ResignAction.NO_ACTION);
+    rtiAmbassadors.get(3).resignFederationExecution(ResignAction.NO_ACTION);
+    rtiAmbassadors.get(4).resignFederationExecution(ResignAction.NO_ACTION);
 
     rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
   }
@@ -435,6 +450,70 @@ public class TimeManagementTestNG
     assert twenty.equals(rtiAmbassadors.get(1).queryLogicalTime());
   }
 
+  @Test(dependsOnMethods = {"testDisableTimeRegulation",
+    "testDisableTimeConstrained", "testTimeAdvanceRequestToNextTime"})
+  public void testTimeAdvanceRequest()
+    throws Exception
+  {
+    rtiAmbassadors.get(2).enableTimeRegulation(lookahead1);
+    federateAmbassadors.get(2).checkTimeRegulationEnabled(zero);
+
+    rtiAmbassadors.get(4).enableTimeRegulation(lookahead1);
+    federateAmbassadors.get(4).checkTimeRegulationEnabled(zero);
+
+    rtiAmbassadors.get(3).enableTimeConstrained();
+    federateAmbassadors.get(3).checkTimeConstrainedEnabled(zero);
+
+    rtiAmbassadors.get(4).enableTimeConstrained();
+    federateAmbassadors.get(4).checkTimeConstrainedEnabled(zero);
+
+    // request advance by regulating-only federate
+    //
+    rtiAmbassadors.get(2).timeAdvanceRequest(five);
+
+    // should be immediately granted because not constrained
+    //
+    federateAmbassadors.get(2).checkTimeAdvanceGrant(five);
+
+    // request advance by constrained-only federate
+    //
+    rtiAmbassadors.get(3).timeAdvanceRequest(three);
+
+    // should NOT be granted because other regulating federate not advanced
+    //
+    federateAmbassadors.get(3).checkTimeAdvanceGrantNotGranted(zero);
+
+    // request advance by regulating-and-constrained federate
+    //
+    rtiAmbassadors.get(4).timeAdvanceRequest(two);
+
+    // should be immediately granted because other regulating federate is
+    // requesting advance to five
+    //
+    federateAmbassadors.get(4).checkTimeAdvanceGrant(two);
+
+    // request advance by regulating-and-constrained federate
+    //
+    rtiAmbassadors.get(4).timeAdvanceRequest(four);
+
+    // should be immediately granted because other regulating federate is
+    // requesting advance to five
+    //
+    federateAmbassadors.get(4).checkTimeAdvanceGrant(four);
+
+    // should be granted because regulating federates are at four
+    //
+    federateAmbassadors.get(3).checkTimeAdvanceGrant(three);
+
+    // request advance by constrained-only federate
+    //
+    rtiAmbassadors.get(3).timeAdvanceRequest(four);
+
+    // should be granted because regulating federates are at four
+    //
+    federateAmbassadors.get(3).checkTimeAdvanceGrant(four);
+  }
+
   protected static class TestFederateAmbassador
     extends NullFederateAmbassador
   {
@@ -460,6 +539,17 @@ public class TimeManagementTestNG
       assert timeRegulationEnabledTime != null;
     }
 
+    public void checkTimeRegulationEnabled(LogicalTime time)
+      throws Exception
+    {
+      timeRegulationEnabledTime = null;
+      for (int i = 0; i < 5 && timeRegulationEnabledTime == null; i++)
+      {
+        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+      }
+      assert time.equals(timeRegulationEnabledTime);
+    }
+
     public void checkTimeConstrainedEnabled()
       throws Exception
     {
@@ -471,6 +561,17 @@ public class TimeManagementTestNG
       assert timeConstrainedEnabledTime != null;
     }
 
+    public void checkTimeConstrainedEnabled(LogicalTime time)
+      throws Exception
+    {
+      timeConstrainedEnabledTime = null;
+      for (int i = 0; i < 5 && timeConstrainedEnabledTime == null; i++)
+      {
+        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+      }
+      assert time.equals(timeConstrainedEnabledTime);
+    }
+
     public void checkTimeAdvanceGrant(LogicalTime time)
       throws Exception
     {
@@ -480,6 +581,17 @@ public class TimeManagementTestNG
         rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
       }
       assert time.equals(federateTime);
+    }
+
+    public void checkTimeAdvanceGrantNotGranted(LogicalTime time)
+      throws Exception
+    {
+      federateTime = null;
+      for (int i = 0; i < 5; i++)
+      {
+        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+      }
+      assert federateTime == null;
     }
 
     @Override
