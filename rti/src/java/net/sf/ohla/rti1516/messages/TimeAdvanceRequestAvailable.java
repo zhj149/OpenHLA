@@ -32,4 +32,10 @@ public class TimeAdvanceRequestAvailable
   {
     return time;
   }
+
+  @Override
+  public String toString()
+  {
+    return String.format("Time Advance Request Available: %s", time);
+  }
 }

@@ -32,4 +32,10 @@ public class TimeAdvanceRequest
   {
     return time;
   }
+
+  @Override
+  public String toString()
+  {
+    return String.format("Time Advance Request: %s", time);
+  }
 }

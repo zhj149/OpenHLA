@@ -38,4 +38,10 @@ public class TimeAdvanceGrant
   {
     federateAmbassador.timeAdvanceGrant(time);
   }
+
+  @Override
+  public String toString()
+  {
+    return String.format("Time Advance Grant: %s", time);
+  }
 }
