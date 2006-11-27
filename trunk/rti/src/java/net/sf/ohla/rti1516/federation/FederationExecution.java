@@ -36,6 +36,7 @@ import net.sf.ohla.rti1516.federate.callbacks.FederationSynchronized;
 import net.sf.ohla.rti1516.federate.callbacks.InitiateFederateSave;
 import net.sf.ohla.rti1516.federate.callbacks.RemoveObjectInstance;
 import net.sf.ohla.rti1516.federation.ownership.OwnershipManager;
+import net.sf.ohla.rti1516.federation.time.TimeKeeper;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipAcquisition;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipAcquisitionIfAvailable;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipDivestitureIfWanted;
