@@ -356,8 +356,6 @@ public class Federate
     this.mobileFederateServices = mobileFederateServices;
     this.rtiSession = rtiSession;
 
-    timeManager = new TimeManager(this, mobileFederateServices);
-
     startPeerAcceptor(federateType);
 
     JoinFederationExecution joinFederationExecution =
@@ -387,6 +385,9 @@ public class Federate
 
         federateHandle = joinFederationExecutionResponse.getFederateHandle();
         fdd = joinFederationExecutionResponse.getFdd();
+
+        LogicalTime galt = joinFederationExecutionResponse.getGALT();
+        timeManager = new TimeManager(this, mobileFederateServices, galt);
 
         SocketConnector peerConnector = new SocketConnector();
 
