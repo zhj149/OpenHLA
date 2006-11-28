@@ -3463,72 +3463,88 @@ public class Federate
         ReflectAttributeValues reflectAttributeValues =
           (ReflectAttributeValues) message;
 
-        OrderType receivedOrderType =
-          reflectAttributeValues.getSentOrderType() == OrderType.TIMESTAMP &&
-          timeManager.isTimeConstrained() ? OrderType.TIMESTAMP :
-            OrderType.RECEIVE;
-        reflectAttributeValues.setReceivedOrderType(receivedOrderType);
-
-        if (receivedOrderType == OrderType.RECEIVE)
+        timeManager.getTimeLock().readLock().lock();
+        try
         {
-          // receive order callbacks need to be held until released if we are
-          // constrained and in the time granted state if asynchronous delivery is
-          // disabled
-          //
-          boolean hold = timeManager.isTimeConstrainedAndTimeGranted() &&
-                         !isAsynchronousDeliveryEnabled();
+          OrderType receivedOrderType =
+            reflectAttributeValues.getSentOrderType() == OrderType.TIMESTAMP &&
+            timeManager.isTimeConstrained() ? OrderType.TIMESTAMP :
+              OrderType.RECEIVE;
+          reflectAttributeValues.setReceivedOrderType(receivedOrderType);
 
-          callbackManager.add(reflectAttributeValues, hold);
+          if (receivedOrderType == OrderType.RECEIVE)
+          {
+            // receive order callbacks need to be held until released if we are
+            // constrained and in the time granted state if asynchronous delivery is
+            // disabled
+            //
+            boolean hold = timeManager.isTimeConstrainedAndTimeGranted() &&
+                           !isAsynchronousDeliveryEnabled();
+
+            callbackManager.add(reflectAttributeValues, hold);
+          }
+          else
+          {
+            // schedule the callback for the appropriate time
+            //
+            Future future = schedule(
+              reflectAttributeValues.getUpdateTime(),
+              new AddCallback(reflectAttributeValues));
+
+            // register the message retraction handle
+            //
+            messageRetractionManager.add(
+              reflectAttributeValues.getUpdateTime(), future,
+              reflectAttributeValues.getMessageRetractionHandle());
+          }
         }
-        else
+        finally
         {
-          // schedule the callback for the appropriate time
-          //
-          Future future = schedule(
-            reflectAttributeValues.getUpdateTime(),
-            new AddCallback(reflectAttributeValues));
-
-          // register the message retraction handle
-          //
-          messageRetractionManager.add(
-            reflectAttributeValues.getUpdateTime(), future,
-            reflectAttributeValues.getMessageRetractionHandle());
+          timeManager.getTimeLock().readLock().unlock();
         }
       }
       else if (message instanceof ReceiveInteraction)
       {
         ReceiveInteraction receiveInteraction = (ReceiveInteraction) message;
 
-        OrderType receivedOrderType =
-          receiveInteraction.getSentOrderType() == OrderType.TIMESTAMP &&
-          timeManager.isTimeConstrained() ? OrderType.TIMESTAMP :
-            OrderType.RECEIVE;
-
-        receiveInteraction.setReceivedOrderType(receivedOrderType);
-
-        if (receivedOrderType == OrderType.RECEIVE)
+        timeManager.getTimeLock().readLock().lock();
+        try
         {
-          // receive order callbacks need to be held until released if we are
-          // constrained and in the time granted state, if asynchronous delivery is
-          // disabled
-          //
-          boolean hold = timeManager.isTimeConstrainedAndTimeGranted() &&
-                         !isAsynchronousDeliveryEnabled();
+          OrderType receivedOrderType =
+            receiveInteraction.getSentOrderType() == OrderType.TIMESTAMP &&
+            timeManager.isTimeConstrained() ? OrderType.TIMESTAMP :
+              OrderType.RECEIVE;
 
-          callbackManager.add(receiveInteraction, hold);
+          receiveInteraction.setReceivedOrderType(receivedOrderType);
+
+          if (receivedOrderType == OrderType.RECEIVE)
+          {
+            // receive order callbacks need to be held until released if we are
+            // constrained and in the time granted state, if asynchronous delivery is
+            // disabled
+            //
+            boolean hold = timeManager.isTimeConstrainedAndTimeGranted() &&
+                           !isAsynchronousDeliveryEnabled();
+
+            callbackManager.add(receiveInteraction, hold);
+          }
+          else
+          {
+            // schedule the callback for the appropriate time
+            //
+            Future future = schedule(receiveInteraction.getSendTime(),
+                                     new AddCallback(receiveInteraction));
+
+            // register the message retraction handle
+            //
+            messageRetractionManager.add(
+              receiveInteraction.getSendTime(), future,
+              receiveInteraction.getMessageRetractionHandle());
+          }
         }
-        else
+        finally
         {
-          // schedule the callback for the appropriate time
-          //
-          Future future = schedule(receiveInteraction.getSendTime(),
-                                   new AddCallback(receiveInteraction));
-
-          // register the message retraction handle
-          //
-          messageRetractionManager.add(
-            receiveInteraction.getSendTime(), future,
-            receiveInteraction.getMessageRetractionHandle());
+          timeManager.getTimeLock().readLock().unlock();
         }
       }
       else if (message instanceof FederateSaveInitiated)
