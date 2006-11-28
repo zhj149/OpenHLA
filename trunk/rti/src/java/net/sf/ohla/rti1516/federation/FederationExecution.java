@@ -163,6 +163,11 @@ public class FederationExecution
       String.format("%s.%s", FederationExecution.class, name));
   }
 
+  public void destroy()
+    throws FederatesCurrentlyJoined
+  {
+  }
+
   public IoSession getFederateSession(FederateHandle federateHandle)
   {
     federatesLock.lock();
@@ -176,9 +181,20 @@ public class FederationExecution
     }
   }
 
-  public void destroy()
-    throws FederatesCurrentlyJoined
+  public void send(Message message)
   {
+    send(message, null);
+  }
+
+  public void send(Message message, IoSession sender)
+  {
+    for (IoSession federateSession : federateSessions.values())
+    {
+      if (federateSession != sender)
+      {
+        federateSession.write(message);
+      }
+    }
   }
 
   public boolean process(IoSession session, Object message)
@@ -382,7 +398,7 @@ public class FederationExecution
       ObjectInstanceRegistered objectInstanceRegistered =
         new ObjectInstanceRegistered(objectInstanceHandle, name);
 
-      WriteFuture writeFuture = session.write(new RequestResponse(
+      session.write(new RequestResponse(
         registerObjectInstance.getId(), objectInstanceRegistered));
 
       ownershipManager.registerObjectInstance(
@@ -1614,22 +1630,6 @@ public class FederationExecution
     return (SocketAddress) session.getAttribute(CONNECTION_INFO);
   }
 
-  protected void send(Message message)
-  {
-    send(message, null);
-  }
-
-  protected void send(Message message, IoSession sender)
-  {
-    for (IoSession federateSession : federateSessions.values())
-    {
-      if (federateSession != sender)
-      {
-        federateSession.write(message);
-      }
-    }
-  }
-
   protected FederateHandle nextFederateHandle()
   {
     return new OHLAFederateHandle(federateCount.incrementAndGet());
@@ -1646,7 +1646,7 @@ public class FederationExecution
   }
 
   protected class WaitForObjectInstanceRegisteredConfirmation
-    implements Callable
+    implements Callable<Object>
   {
     protected ObjectInstanceRegistered objectInstanceRegistered;
     protected DiscoverObjectInstance discoverObjectInstance;
