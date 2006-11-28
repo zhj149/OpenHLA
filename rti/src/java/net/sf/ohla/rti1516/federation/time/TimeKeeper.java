@@ -9,6 +9,7 @@ import net.sf.ohla.rti1516.federate.callbacks.TimeAdvanceGrant;
 import net.sf.ohla.rti1516.federate.callbacks.TimeConstrainedEnabled;
 import net.sf.ohla.rti1516.federate.callbacks.TimeRegulationEnabled;
 import net.sf.ohla.rti1516.federation.FederationExecution;
+import net.sf.ohla.rti1516.messages.GALTAdvanced;
 
 import org.apache.mina.common.IoSession;
 
@@ -139,6 +140,8 @@ public class TimeKeeper
       TimeConstrainedFederate timeConstrainedFederate =
         timeConstrainedFederates.get(federateHandle);
 
+      boolean galtAdvanced = false;
+
       if (timeRegulatingFederate != null)
       {
         try
@@ -156,7 +159,8 @@ public class TimeKeeper
           newGALT = min(newGALT, trf.getLITS());
         }
 
-        if (galt.compareTo(newGALT) < 0)
+        galtAdvanced = galt.compareTo(newGALT) < 0;
+        if (galtAdvanced)
         {
           galt = newGALT;
         }
@@ -169,6 +173,11 @@ public class TimeKeeper
               trf.getFederateHandle(), trf.getFederateTime());
           }
         }
+      }
+
+      if (galtAdvanced)
+      {
+        federationExecution.send(new GALTAdvanced(galt));
       }
 
       if (timeConstrainedFederate != null)
@@ -194,6 +203,8 @@ public class TimeKeeper
           timeRegulatingFederate.getFederateHandle(),
           timeRegulatingFederate.getFederateTime());
       }
+
+      log.debug("advancing federates: {}", advancingFederates);
 
       for (Map.Entry<FederateHandle, LogicalTime> entry :
         advancingFederates.entrySet())

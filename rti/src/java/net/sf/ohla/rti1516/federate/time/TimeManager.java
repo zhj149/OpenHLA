@@ -671,6 +671,19 @@ public class TimeManager
     }
   }
 
+  public void galtAdvanced(LogicalTime galt)
+  {
+    timeLock.writeLock().lock();
+    try
+    {
+      this.galt = galt;
+    }
+    finally
+    {
+      timeLock.writeLock().unlock();
+    }
+  }
+
   public void checkIfInTimeAdvancingState()
     throws InTimeAdvancingState
   {
