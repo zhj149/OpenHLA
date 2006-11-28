@@ -23,21 +23,24 @@ import java.util.Map;
 import net.sf.ohla.rti1516.fdd.FDD;
 
 import hla.rti1516.FederateHandle;
+import hla.rti1516.LogicalTime;
 
 public class JoinFederationExecutionResponse
   implements Message
 {
   protected FederateHandle federateHandle;
   protected FDD fdd;
+  protected LogicalTime galt;
 
   protected Map<FederateHandle, SocketAddress> peerConnectionInfo;
 
   public JoinFederationExecutionResponse(
-    FederateHandle federateHandle, FDD fdd,
+    FederateHandle federateHandle, FDD fdd, LogicalTime galt,
     Map<FederateHandle, SocketAddress> peerConnectionInfo)
   {
     this.federateHandle = federateHandle;
     this.fdd = fdd;
+    this.galt = galt;
     this.peerConnectionInfo = peerConnectionInfo;
   }
 
@@ -49,6 +52,11 @@ public class JoinFederationExecutionResponse
   public FDD getFdd()
   {
     return fdd;
+  }
+
+  public LogicalTime getGALT()
+  {
+    return galt;
   }
 
   public Map<FederateHandle, SocketAddress> getPeerConnectionInfo()

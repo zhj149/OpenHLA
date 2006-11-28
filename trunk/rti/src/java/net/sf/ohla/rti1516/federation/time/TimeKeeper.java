@@ -49,6 +49,11 @@ public class TimeKeeper
     galt = mobileFederateServices.timeFactory.makeInitial();
   }
 
+  public LogicalTime getGALT()
+  {
+    return galt;
+  }
+
   public void enableTimeRegulation(IoSession session,
                                    FederateHandle federateHandle,
                                    LogicalTimeInterval lookahead)

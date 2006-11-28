@@ -1537,7 +1537,7 @@ public class FederationExecution
         WriteFuture writeFuture = session.write(new DefaultResponse(
           joinFederationExecution.getId(),
           new JoinFederationExecutionResponse(
-            federateHandle, fdd, peerSocketAddresses)));
+            federateHandle, fdd, timeKeeper.getGALT(), peerSocketAddresses)));
 
         // TODO: set timeout
         //

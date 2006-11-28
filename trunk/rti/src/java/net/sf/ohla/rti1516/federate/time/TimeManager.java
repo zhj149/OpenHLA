@@ -77,10 +77,12 @@ public class TimeManager
   protected TimeAdvanceType advanceRequestTimeType;
 
   public TimeManager(Federate federate,
-                     MobileFederateServices mobileFederateServices)
+                     MobileFederateServices mobileFederateServices,
+                     LogicalTime galt)
   {
     this.federate = federate;
     this.mobileFederateServices = mobileFederateServices;
+    this.galt = galt;
 
     federateTime = mobileFederateServices.timeFactory.makeInitial();
   }
