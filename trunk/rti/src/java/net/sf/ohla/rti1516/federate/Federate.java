@@ -89,6 +89,7 @@ import net.sf.ohla.rti1516.messages.Retract;
 import net.sf.ohla.rti1516.messages.SubscribeObjectClassAttributes;
 import net.sf.ohla.rti1516.messages.SynchronizationPointAchieved;
 import net.sf.ohla.rti1516.messages.UnsubscribeObjectClassAttributes;
+import net.sf.ohla.rti1516.messages.GALTAdvanced;
 
 import org.apache.mina.common.ConnectFuture;
 import org.apache.mina.common.IoHandlerAdapter;
@@ -609,6 +610,40 @@ public class Federate
       objectManager.objectInstanceNameReserved(
         objectInstanceNameReserved.getName(),
         objectInstanceNameReserved.getObjectInstanceHandle());
+    }
+    else if (message instanceof GALTAdvanced)
+    {
+      GALTAdvanced galtAdvanced = (GALTAdvanced) message;
+
+      LogicalTime galt = galtAdvanced.getGALT();
+      log.debug("GALT advanced: {}", galt);
+
+      timeManager.galtAdvanced(galt);
+
+      futureTasksLock.lock();
+      try
+      {
+        TimestampedFutureTask timestampedFutureTask = futureTasks.peek();
+        while (timestampedFutureTask != null &&
+               timestampedFutureTask.getTime().compareTo(galt) <= 0)
+        {
+          try
+          {
+            timestampedFutureTask.run();
+          }
+          catch (Throwable t)
+          {
+            log.error(String.format("unable to execute scheduled task: %s",
+                                    timestampedFutureTask), t);
+          }
+
+          futureTasks.poll();
+        }
+      }
+      finally
+      {
+        futureTasksLock.unlock();
+      }
     }
     else
     {
@@ -3363,12 +3398,7 @@ public class Federate
 
     public int compareTo(Object rhs)
     {
-      return compareTo((TimestampedFutureTask) rhs);
-    }
-
-    public int compareTo(TimestampedFutureTask rhs)
-    {
-      return time.compareTo(rhs.time);
+      return time.compareTo(((TimestampedFutureTask) rhs).time);
     }
   }
 

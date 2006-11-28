@@ -31,8 +31,6 @@ public class TimeConstrainedFederate
   {
     this.federateHandle = federateHandle;
     this.federateTime = federateTime;
-
-    timeAdvanceRequest = federateTime;
   }
 
   public FederateHandle getFederateHandle()

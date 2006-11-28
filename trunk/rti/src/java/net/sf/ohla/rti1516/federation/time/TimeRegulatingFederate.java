@@ -39,7 +39,6 @@ public class TimeRegulatingFederate
     this.federateTime = federateTime;
     this.lookahead = lookahead;
 
-    timeAdvanceRequest = federateTime;
     lits = federateTime.add(lookahead);
   }
 
