@@ -78,13 +78,6 @@ public class TimeKeeper
     try
     {
       timeRegulatingFederates.remove(federateHandle);
-
-      if (timeRegulatingFederates.isEmpty())
-      {
-        // TODO: is this correct?
-        //
-        galt = mobileFederateServices.timeFactory.makeInitial();
-      }
     }
     finally
     {
