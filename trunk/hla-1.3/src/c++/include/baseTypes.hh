@@ -3,14 +3,14 @@
 
 #ifndef NULL
 #define NULL 0
-#endif
+#endif // NULL
 
-typedef unsigned short  UShort;
-typedef short           Short;
-typedef unsigned long   ULong;
-typedef long            Long;
-typedef double          Double;
-typedef float           Float;
+typedef unsigned short UShort;
+typedef short          Short;
+typedef unsigned long  ULong;
+typedef long           Long;
+typedef double         Double;
+typedef float          Float;
 
 enum Boolean
 {
@@ -32,9 +32,6 @@ public:
   virtual ~Exception();
 
   Exception &operator =(const Exception& e);
-
-  friend RTI_STD::ostream &operator <<(RTI_STD::ostream& os, Exception* e);
-  friend RTI_STD::ostream &operator <<(RTI_STD::ostream& os, const Exception& e);
 };
 
 #define RTI_EXCEPT(A)                                                   \

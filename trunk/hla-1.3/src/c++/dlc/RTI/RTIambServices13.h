@@ -1,5 +1,5 @@
-// File RTIambServices.hh
-// Included in RTI.hh
+// File RTIambServices13.h
+// Included in RTI13.h
 
 //
 // RTI Parameter Passing Memory Conventions

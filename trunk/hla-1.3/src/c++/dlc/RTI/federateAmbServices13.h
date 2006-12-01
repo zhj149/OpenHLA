@@ -19,6 +19,9 @@
 //    Callee constructs an instance on the heap (new) and returns a reference.
 //    The caller destroys the instance (delete) at its leisure.
 
+virtual ~FederateAmbassador()
+  throw(FederateInternalError){ ; }
+
 //
 // Federation Management Services
 
