@@ -1,7 +1,12 @@
-// File RTI.hh
+// File RTI13.h
 
-#ifndef RTI_hh
-#define RTI_hh
+#ifndef RTI13_h
+#define RTI13_h
+
+// Identification of the API version number.
+#define HLA_SPECIFICATION_NAME  "1.3"
+#define HLA_API_MAJOR_VERSION   7
+#define HLA_API_MINOR_VERSION   0
 
 #ifndef _WIN32
 // no special qualfifers are necessary on non-WIN32 platforms
@@ -73,35 +78,38 @@
 #define RTI_STD /* nothing */
 #endif
 
-#include <math.h>
+#include "baseTypes13.h"
+#include "RTItypes13.h"
 
-struct RTIambPrivateRefs;
-struct RTIambPrivateData;
-
-class RTI
+namespace rti13
 {
-public:
-#include "baseTypes.hh"
-#include "RTItypes.hh"
+  struct RTIambPrivateRefs;
+  struct RTIambPrivateData;
+
+  // Vendor-specific name and version of the RTI implementation
+  const char* RTIname();
+  const char* RTIversion(); // identical to MOM attributes of same name
 
   class RTI_EXPORT RTIambassador
   {
-  public:
-#include "RTIambServices.hh"
-    RTIambPrivateData* privateData;
+public:
+#include "RTIambServices13.h"
+    RTIambPrivateData*  privateData;
 
-  private:
-    RTIambPrivateRefs* privateRefs;
+private:
+    RTIambPrivateRefs*  privateRefs;
   };
 
-  class RTI_EXPORT FederateAmbassador
+  class RTI_EXPORT  FederateAmbassador
   {
-  public:
-#include "federateAmbServices.hh"
+public:
+#include "federateAmbServices13.h"
   };
 
-  RTI_STD::ostream RTI_EXPORT & operator << (RTI_STD::ostream &, RTI::Exception* e);
-  RTI_STD::ostream RTI_EXPORT & operator << (RTI_STD::ostream &, RTI::Exception& const e);
-};
+}
 
-#endif // RTI_hh
+RTI_STD::ostream& RTI_EXPORT operator <<(RTI_STD::ostream& os, rti13::Exception* e);
+RTI_STD::ostream& RTI_EXPORT operator <<(RTI_STD::ostream& os, rti13::Exception& const e);
+RTI_STD::ostream& RTI_EXPORT operator <<(RTI_STD::ostream& os, const rti13::FedTime& time);
+
+#endif // RTI13_h

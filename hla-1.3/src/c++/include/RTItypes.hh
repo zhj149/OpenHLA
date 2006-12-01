@@ -148,17 +148,19 @@ typedef ULong RegionToken;
 class RTI_EXPORT AttributeHandleValuePairSet
 {
   //
-  // -----------------------------------------------------------------------------------------------------------------------
-  //  Instances of class HandleValuePairSet are the containers used to pass object attribute values and interaction
-  //  parameter values between the Fedrate and the RTI. These containers hold sets of attribute/parameter values indexed by
-  //  their attribute/parameter handle. Instances of this class are provided to the RTI in the Update Attribute Values and
-  //  Send Interaction service invocations. Instances of this class are provided to the Federate in the Reflect Attribute
-  //  Values and Receive Interaction service invocations. When instances of HandleValuePairSet are provided to the Federate
-  //  by the RTI, the memory used to store attribute/parameter values is valid for use by the federate only within the
-  //  scope of the Reflect Attribute Values or Receive Interaction service invocation. Symmetrically, for instances of
-  //  HandleValuePairSet provided by the Federate to the RTI, the memory used to store attribute/parameter values is valid
-  //  for use by the RTI only within the scope of the Update Attribute Values or Send Interaction service invocation.
-  // -----------------------------------------------------------------------------------------------------------------------
+  // ------------------------------------------------------------------------------------------------
+  // Instances of class HandleValuePairSet are the containers used to pass object attribute values
+  // and interaction parameter values between the Fedrate and the RTI. These containers hold sets of
+  // attribute/parameter values indexed by their attribute/parameter handle. Instances of this class
+  // are provided to the RTI in the Update Attribute Values and Send Interaction service invocations.
+  // Instances of this class are provided to the Federate in the Reflect Attribute Values and
+  // Receive Interaction service invocations. When instances of HandleValuePairSet are provided to
+  // the Federate by the RTI, the memory used to store attribute/parameter values is valid for use by
+  // the federate only within the scope of the Reflect Attribute Values or Receive Interaction
+  // service invocation. Symmetrically, for instances of HandleValuePairSet provided by the Federate
+  // to the RTI, the memory used to store attribute/parameter values is valid for use by the RTI only
+  // within the scope of the Update Attribute Values or Send Interaction service invocation.
+  // ------------------------------------------------------------------------------------------------
   //
 public:
   virtual ~AttributeHandleValuePairSet()  { ; }
@@ -245,17 +247,19 @@ public:
 class RTI_EXPORT ParameterHandleValuePairSet
 {
   //
-  // -----------------------------------------------------------------------------------------------------------------------
-  //  Instances of class HandleValuePairSet are the containers used to pass object attribute values and interaction
-  //  parameter values between the Fedrate and the RTI. These containers hold sets of attribute/parameter values indexed by
-  //  their attribute/parameter handle. Instances of this class are provided to the RTI in the Update Attribute Values and
-  //  Send Interaction service invocations. Instances of this class are provided to the Federate in the Reflect Attribute
-  //  Values and Receive Interaction service invocations. When instances of HandleValuePairSet are provided to the Federate
-  //  by the RTI, the memory used to store attribute/parameter values is valid for use by the federate only within the
-  //  scope of the Reflect Attribute Values or Receive Interaction service invocation. Symmetrically, for instances of
-  //  HandleValuePairSet provided by the Federate to the RTI, the memory used to store attribute/parameter values is valid
-  //  for use by the RTI only within the scope of the Update Attribute Values or Send Interaction service invocation.
-  // -----------------------------------------------------------------------------------------------------------------------
+  // ------------------------------------------------------------------------------------------------
+  // Instances of class HandleValuePairSet are the containers used to pass object attribute values
+  // and interaction parameter values between the Fedrate and the RTI. These containers hold sets of
+  // attribute/parameter values indexed by their attribute/parameter handle. Instances of this class
+  // are provided to the RTI in the Update Attribute Values and Send Interaction service invocations.
+  // Instances of this class are provided to the Federate in the Reflect Attribute Values and
+  // Receive Interaction service invocations. When instances of HandleValuePairSet are provided to
+  // the Federate by the RTI, the memory used to store attribute/parameter values is valid for use by
+  // the federate only within the scope of the Reflect Attribute Values or Receive Interaction
+  // service invocation. Symmetrically, for instances of HandleValuePairSet provided by the Federate
+  // to the RTI, the memory used to store attribute/parameter values is valid for use by the RTI only
+  // within the scope of the Update Attribute Values or Send Interaction service invocation.
+  // ------------------------------------------------------------------------------------------------
   //
 public:
   virtual ~ParameterHandleValuePairSet()  { ; }
