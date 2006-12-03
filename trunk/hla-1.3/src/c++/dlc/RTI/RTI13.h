@@ -51,7 +51,7 @@
 #ifdef STATIC_FEDTIME
 #define RTI_EXPORT_FEDTIME
 #else
-#if defined(BUILDING_FEDTIME)
+#ifdef BUILDING_FEDTIME
 // define the proper qualifiers to import/export symbols from/to DLL
 #define RTI_EXPORT_FEDTIME  __declspec(dllexport)
 #else // !BUILDING_FEDTIME

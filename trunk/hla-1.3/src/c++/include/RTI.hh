@@ -46,7 +46,7 @@
 #ifdef STATIC_FEDTIME
 #define RTI_EXPORT_FEDTIME
 #else
-#if defined(BUILDING_FEDTIME)
+#ifdef BUILDING_FEDTIME
 // define the proper qualifiers to import/export symbols from/to DLL
 #define RTI_EXPORT_FEDTIME  __declspec(dllexport)
 #else // !BUILDING_FEDTIME
@@ -100,8 +100,8 @@ public:
 #include "federateAmbServices.hh"
   };
 
-  RTI_STD::ostream RTI_EXPORT & operator << (RTI_STD::ostream &, RTI::Exception* e);
-  RTI_STD::ostream RTI_EXPORT & operator << (RTI_STD::ostream &, RTI::Exception& const e);
+  RTI_STD::ostream RTI_EXPORT & operator << (RTI_STD::ostream& os, RTI::Exception* e);
+  RTI_STD::ostream RTI_EXPORT & operator << (RTI_STD::ostream& os, RTI::Exception& const e);
 };
 
 #endif // RTI_hh
