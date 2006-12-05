@@ -518,8 +518,7 @@ public class ObjectManagementTestNG
     }
 
     public void checkForRemovedObjectInstanceHandle(
-      ObjectInstanceHandle objectInstanceHandle
-    )
+      ObjectInstanceHandle objectInstanceHandle)
       throws Exception
     {
       for (int i = 0;
