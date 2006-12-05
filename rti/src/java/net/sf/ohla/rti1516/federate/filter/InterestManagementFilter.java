@@ -256,7 +256,10 @@ public class InterestManagementFilter
           objectInstanceHandle, objectClassHandle, trimmedAttributeValues,
           reflectAttributeValues.getTag(),
           reflectAttributeValues.getSentOrderType(),
-          reflectAttributeValues.getTransportationType());
+          reflectAttributeValues.getTransportationType(),
+          reflectAttributeValues.getUpdateTime(),
+          reflectAttributeValues.getMessageRetractionHandle(),
+          reflectAttributeValues.getSentRegionHandles());
       }
 
       return reflectAttributeValues;
