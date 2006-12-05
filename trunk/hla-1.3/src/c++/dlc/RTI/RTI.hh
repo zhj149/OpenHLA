@@ -6,8 +6,8 @@
 // New federates should be including RTI13.h rather than
 // this file, RTI.hh.
 
-#ifndef RTI_BACKCOMPAT_hh
-#define RTI_BACKCOMPAT_hh
+#ifndef RTI_hh
+#define RTI_hh
 
 #include "RTI13.h"
 
@@ -19,4 +19,4 @@ namespace RTI = rti13;
 #define MAX_EXTENT (RTI::Region::getMaxExtent())
 #define MIN_EXTENT (RTI::Region::getMinExtent())
 
-#endif
+#endif // RTI_hh

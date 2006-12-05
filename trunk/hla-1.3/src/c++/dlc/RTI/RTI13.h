@@ -92,24 +92,24 @@ namespace rti13
 
   class RTI_EXPORT RTIambassador
   {
-public:
+  public:
 #include "RTIambServices13.h"
     RTIambPrivateData*  privateData;
 
-private:
+  private:
     RTIambPrivateRefs*  privateRefs;
   };
 
   class RTI_EXPORT  FederateAmbassador
   {
-public:
+  public:
 #include "federateAmbServices13.h"
   };
 
 }
 
 RTI_STD::ostream& RTI_EXPORT operator <<(RTI_STD::ostream& os, rti13::Exception* e);
-RTI_STD::ostream& RTI_EXPORT operator <<(RTI_STD::ostream& os, rti13::Exception& const e);
+RTI_STD::ostream& RTI_EXPORT operator <<(RTI_STD::ostream& os, const rti13::Exception& e);
 RTI_STD::ostream& RTI_EXPORT operator <<(RTI_STD::ostream& os, const rti13::FedTime& time);
 
 #endif // RTI13_h

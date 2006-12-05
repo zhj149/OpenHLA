@@ -6,11 +6,11 @@
 #endif // NULL
 
 typedef unsigned short UShort;
-typedef short          Short;
-typedef unsigned long  ULong;
-typedef long           Long;
-typedef double         Double;
-typedef float          Float;
+typedef short Short;
+typedef unsigned long ULong;
+typedef long Long;
+typedef double Double;
+typedef float Float;
 
 enum Boolean
 {
@@ -31,7 +31,7 @@ public:
 
   virtual ~Exception();
 
-  Exception &operator =(const Exception& e);
+  Exception& operator=(const Exception& e);
 };
 
 #define RTI_EXCEPT(A)                                                   \

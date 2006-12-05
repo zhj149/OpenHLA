@@ -331,28 +331,29 @@ public:
   virtual void setEpsilon() = 0;
   virtual void setPositiveInfinity() = 0;
   virtual Boolean isPositiveInfinity() = 0;
-  virtual FedTime &operator +=(const FedTime& rhs)
-    throw(InvalidFederationTime) = 0;
-  virtual FedTime &operator -=(const FedTime& rhs)
-    throw(InvalidFederationTime) = 0;
-  virtual Boolean operator  <=(const FedTime& rhs) const
-    throw(InvalidFederationTime) = 0;
-  virtual Boolean operator< (const FedTime& rhs) const
-    throw(InvalidFederationTime) = 0;
-  virtual Boolean operator>=(const FedTime& rhs) const
-    throw(InvalidFederationTime) = 0;
-  virtual Boolean operator> (const FedTime& rhs) const
-    throw(InvalidFederationTime) = 0;
-  virtual Boolean operator==(const FedTime& rhs) const
-    throw(InvalidFederationTime) = 0;
-  virtual FedTime &operator=(const FedTime& rhs)
-    throw(InvalidFederationTime) = 0;
 
   virtual int encodedLength() const = 0;
 
   virtual void encode(char* buff) const = 0;
   virtual int getPrintableLength() const = 0;
   virtual void getPrintableString(char* destination) = 0;
+
+  virtual FedTime& operator+=(const FedTime& rhs)
+    throw(InvalidFederationTime) = 0;
+  virtual FedTime& operator-=(const FedTime& rhs)
+    throw(InvalidFederationTime) = 0;
+  virtual Boolean operator<=(const FedTime& rhs) const
+    throw(InvalidFederationTime) = 0;
+  virtual Boolean operator<(const FedTime& rhs) const
+    throw(InvalidFederationTime) = 0;
+  virtual Boolean operator>=(const FedTime& rhs) const
+    throw(InvalidFederationTime) = 0;
+  virtual Boolean operator>(const FedTime& rhs) const
+    throw(InvalidFederationTime) = 0;
+  virtual Boolean operator==(const FedTime& rhs) const
+    throw(InvalidFederationTime) = 0;
+  virtual FedTime& operator=(const FedTime& rhs)
+    throw(InvalidFederationTime) = 0;
 };
 
 class RTI_EXPORT_FEDTIME FedTimeFactory

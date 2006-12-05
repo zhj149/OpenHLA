@@ -101,7 +101,7 @@ void registerFederationSynchronizationPoint(
 void registerFederationSynchronizationPoint(
     const char* label, // supplied C4
     const char* tag, // supplied C4
-    const FederateHandleSet&syncSet // supplied C4
+    const FederateHandleSet& syncSet // supplied C4
 )
   throw(
       FederateNotExecutionMember,

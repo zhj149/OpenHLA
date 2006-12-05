@@ -100,8 +100,8 @@ public:
 #include "federateAmbServices.hh"
   };
 
-  RTI_STD::ostream RTI_EXPORT & operator << (RTI_STD::ostream& os, RTI::Exception* e);
-  RTI_STD::ostream RTI_EXPORT & operator << (RTI_STD::ostream& os, RTI::Exception& const e);
+  RTI_STD::ostream& RTI_EXPORT operator<<(RTI_STD::ostream& os, RTI::Exception* e);
+  RTI_STD::ostream& RTI_EXPORT operator<<(RTI_STD::ostream& os, const RTI::Exception& e);
 };
 
 #endif // RTI_hh
