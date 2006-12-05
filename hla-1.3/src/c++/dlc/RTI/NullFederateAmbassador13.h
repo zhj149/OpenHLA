@@ -1,7 +1,7 @@
 // File NullFederateAmbassador13.h
 
-#ifndef NULLFEDERATEAMBASSADOR13_h
-#define NULLFEDERATEAMBASSADOR13_h
+#ifndef NullFederateAmbassador13_h
+#define NullFederateAmbassador13_h
 
 #include <RTI13.h>
 
@@ -471,4 +471,4 @@ namespace rti13
 
 }
 
-#endif // NULLFEDERATEAMBASSADOR13_h
+#endif // NullFederateAmbassador13_h

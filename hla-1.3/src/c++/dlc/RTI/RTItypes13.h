@@ -1,8 +1,8 @@
 // File RTItypes13.h
 // Included in RTI13.h
 
-#ifndef RTITYPES13_H
-#define RTITYPES13_H
+#ifndef RTItypes13_H
+#define RTItypes13_H
 
 namespace rti13
 {
@@ -317,11 +317,19 @@ namespace rti13
     virtual void setPositiveInfinity() = 0;
     virtual Boolean isPositiveInfinity() = 0;
 
-    virtual FedTime &operator +=(const FedTime& rhs)
+    // return bytes needed to encode
+    virtual int encodedLength() const = 0;
+
+    // encode into suppled buffer
+    virtual void  encode(char* buff) const = 0;
+    virtual int   getPrintableLength() const = 0;
+    virtual void  getPrintableString(char* ) const = 0;
+
+    virtual FedTime& operator+=(const FedTime& rhs)
       throw(InvalidFederationTime) = 0;
-    virtual FedTime &operator -=(const FedTime& rhs)
+    virtual FedTime& operator-=(const FedTime& rhs)
       throw(InvalidFederationTime) = 0;
-    virtual Boolean operator  <=(const FedTime& rhs) const
+    virtual Boolean operator<=(const FedTime& rhs) const
       throw(InvalidFederationTime) = 0;
     virtual Boolean operator<(const FedTime&) const
       throw(InvalidFederationTime) = 0;
@@ -331,16 +339,8 @@ namespace rti13
       throw(InvalidFederationTime) = 0;
     virtual Boolean operator==(const FedTime& rhs) const
       throw(InvalidFederationTime) = 0;
-    virtual FedTime &operator=(const FedTime& rhs)
+    virtual FedTime& operator=(const FedTime& rhs)
       throw(InvalidFederationTime) = 0;
-
-    // return bytes needed to encode
-    virtual int encodedLength() const = 0;
-
-    // encode into suppled buffer
-    virtual void  encode(char* buff) const = 0;
-    virtual int   getPrintableLength() const = 0;
-    virtual void  getPrintableString(char* ) const = 0;
   };
 
   class RTI_EXPORT_FEDTIME  FedTimeFactory
@@ -361,4 +361,4 @@ namespace rti13
 
 }
 
-#endif // RTITYPES13_H
+#endif // RTItypes13_H

@@ -1,8 +1,8 @@
 // File baseTypes13.h
 // Included in RTI13.h
 
-#ifndef BASETYPES13_H
-#define BASETYPES13_H
+#ifndef baseTypes13_H
+#define baseTypes13_H
 
 #ifndef NULL
 #define NULL 0
@@ -11,20 +11,21 @@
 namespace rti13
 {
   typedef unsigned short UShort;
-  typedef short          Short;
+  typedef short Short;
 #ifdef RTI_64_BIT_LONG
-  typedef unsigned int   ULong;
-  typedef int            Long;
+  typedef unsigned int ULong;
+  typedef int Long;
 #else // !RTI_64_BIT_LONG
-  typedef unsigned long  ULong;
-  typedef long           Long;
+  typedef unsigned long ULong;
+  typedef long Long;
 #endif // RTI_64_BIT_LONG
-  typedef double         Double;
-  typedef float          Float;
+  typedef double Double;
+  typedef float Float;
 
   enum Boolean
   {
-      RTI_FALSE = 0, RTI_TRUE
+      RTI_FALSE = 0,
+      RTI_TRUE
   };
 
   class RTI_EXPORT Exception
@@ -39,10 +40,11 @@ namespace rti13
     Exception(const Exception& e);
     virtual ~Exception();
 
-    Exception &operator =(const Exception& e);
     virtual Exception* cloneSelf() const
       throw() = 0;
     virtual void throwSelf() const = 0;
+
+    Exception& operator=(const Exception& e);
   };
 
 #define RTI_EXCEPT(A)                                                   \
@@ -63,7 +65,9 @@ namespace rti13
       _name = _ex;                                                      \
     }                                                                   \
                                                                         \
-    Exception*  cloneSelf() const throw() { return (new A(_reason)); }  \
+    Exception* cloneSelf() const                                        \
+      throw()                                                           \
+    { return (new A(_reason)); }                                        \
                                                                         \
     void throwSelf() const                                              \
     {                                                                   \
@@ -72,4 +76,4 @@ namespace rti13
   };
 }
 
-#endif // BASETYPES13_H
+#endif // baseTypes13_H
