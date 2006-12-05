@@ -593,7 +593,6 @@ public class Federate
         {
           hold = !isAsynchronousDeliveryEnabled() &&
                  timeManager.isTimeConstrainedAndTimeGranted();
-
         }
         finally
         {
