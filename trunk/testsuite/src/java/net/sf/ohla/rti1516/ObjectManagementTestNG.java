@@ -379,7 +379,7 @@ public class ObjectManagementTestNG
   {
     rtiAmbassadors.get(0).deleteObjectInstance(objectInstanceHandle, null);
 
-    federateAmbassadors.get(2).checkForRemovedlObjectInstanceHandle(
+    federateAmbassadors.get(2).checkForRemovedObjectInstanceHandle(
       objectInstanceHandle);
   }
 
@@ -389,9 +389,9 @@ public class ObjectManagementTestNG
   {
     rtiAmbassadors.get(1).deleteObjectInstance(objectInstanceHandle2, null);
 
-    federateAmbassadors.get(0).checkForRemovedlObjectInstanceHandle(
+    federateAmbassadors.get(0).checkForRemovedObjectInstanceHandle(
       objectInstanceHandle2);
-    federateAmbassadors.get(2).checkForRemovedlObjectInstanceHandle(
+    federateAmbassadors.get(2).checkForRemovedObjectInstanceHandle(
       objectInstanceHandle2);
   }
 
@@ -517,7 +517,7 @@ public class ObjectManagementTestNG
              objectInstances.containsKey(objectInstanceHandle2);
     }
 
-    public void checkForRemovedlObjectInstanceHandle(
+    public void checkForRemovedObjectInstanceHandle(
       ObjectInstanceHandle objectInstanceHandle
     )
       throws Exception
