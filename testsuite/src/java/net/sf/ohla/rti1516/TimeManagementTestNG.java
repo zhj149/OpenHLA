@@ -53,6 +53,11 @@ import hla.rti1516.AttributeHandleValueMap;
 import hla.rti1516.OrderType;
 import hla.rti1516.TransportationType;
 import hla.rti1516.ParameterHandleValueMap;
+import hla.rti1516.ObjectInstanceNotKnown;
+import hla.rti1516.AttributeNotRecognized;
+import hla.rti1516.AttributeNotSubscribed;
+import hla.rti1516.RegionHandleSet;
+import hla.rti1516.MessageRetractionHandle;
 import hla.rti1516.jlc.NullFederateAmbassador;
 
 public class TimeManagementTestNG
@@ -71,6 +76,8 @@ public class TimeManagementTestNG
   protected Integer64Time four = new Integer64Time(4);
   protected Integer64Time five = new Integer64Time(5);
   protected Integer64Time six = new Integer64Time(6);
+  protected Integer64Time seven = new Integer64Time(7);
+  protected Integer64Time nine = new Integer64Time(9);
   protected Integer64Time ten = new Integer64Time(10);
   protected Integer64Time fifteen = new Integer64Time(15);
   protected Integer64Time twenty = new Integer64Time(20);
@@ -609,8 +616,8 @@ public class TimeManagementTestNG
       rtiAmbassadors.get(2).updateAttributeValues(
         objectInstanceHandle, attributeValues, null);
 
-      // the 2 constrained federates will not receive it because they do not have
-      // asynchronous delivery enabled and are not in the time
+      // the 2 constrained federates will not receive it because they do not
+      // have asynchronous delivery enabled and are not in the time
       // advancing state
       //
       federateAmbassadors.get(3).checkAttributeValuesNotReceived(
@@ -626,6 +633,8 @@ public class TimeManagementTestNG
       federateAmbassadors.get(3).checkTimeAdvanceGrant(five);
       federateAmbassadors.get(4).checkTimeAdvanceGrant(five);
 
+      // attribute values should have been released
+      //
       federateAmbassadors.get(3).checkAttributeValues(
         objectInstanceHandle, attributeValues);
       federateAmbassadors.get(4).checkAttributeValues(
@@ -634,6 +643,21 @@ public class TimeManagementTestNG
     finally
     {
       rtiAmbassadors.get(2).deleteObjectInstance(objectInstanceHandle, null);
+
+      // bring all the federates to the same time
+      //
+      rtiAmbassadors.get(2).timeAdvanceRequest(six);
+      rtiAmbassadors.get(3).timeAdvanceRequest(six);
+      rtiAmbassadors.get(4).timeAdvanceRequest(six);
+
+      federateAmbassadors.get(2).checkTimeAdvanceGrant(six);
+      federateAmbassadors.get(3).checkTimeAdvanceGrant(six);
+      federateAmbassadors.get(4).checkTimeAdvanceGrant(six);
+
+      federateAmbassadors.get(3).checkForRemovedObjectInstanceHandle(
+        objectInstanceHandle);
+      federateAmbassadors.get(4).checkForRemovedObjectInstanceHandle(
+        objectInstanceHandle);
     }
   }
 
@@ -659,16 +683,116 @@ public class TimeManagementTestNG
 
     // bring all the federates to the same time
     //
-    rtiAmbassadors.get(2).timeAdvanceRequest(six);
-    rtiAmbassadors.get(3).timeAdvanceRequest(six);
-    rtiAmbassadors.get(4).timeAdvanceRequest(six);
+    rtiAmbassadors.get(2).timeAdvanceRequest(seven);
+    rtiAmbassadors.get(3).timeAdvanceRequest(seven);
+    rtiAmbassadors.get(4).timeAdvanceRequest(seven);
 
-    federateAmbassadors.get(2).checkTimeAdvanceGrant(six);
-    federateAmbassadors.get(3).checkTimeAdvanceGrant(six);
-    federateAmbassadors.get(4).checkTimeAdvanceGrant(six);
+    federateAmbassadors.get(2).checkTimeAdvanceGrant(seven);
+    federateAmbassadors.get(3).checkTimeAdvanceGrant(seven);
+    federateAmbassadors.get(4).checkTimeAdvanceGrant(seven);
 
+    // parameter values should have been released
+    //
     federateAmbassadors.get(3).checkParameterValues(parameterValues);
     federateAmbassadors.get(4).checkParameterValues(parameterValues);
+  }
+
+  @Test(dependsOnMethods = {"testSendInteractionWhileNotTimeAdvancing"})
+  public void testUpdateValuesInTheFuture()
+    throws Exception
+  {
+    ObjectInstanceHandle objectInstanceHandle =
+      rtiAmbassadors.get(2).registerObjectInstance(testObjectClassHandle);
+    try
+    {
+      federateAmbassadors.get(3).checkObjectInstanceHandle(
+        objectInstanceHandle);
+      federateAmbassadors.get(4).checkObjectInstanceHandle(
+        objectInstanceHandle);
+
+      AttributeHandleValueMap attributeValues =
+        rtiAmbassadors.get(1).getAttributeHandleValueMapFactory().create(3);
+      attributeValues.put(attributeHandle1, ATTRIBUTE1_VALUE.getBytes());
+      attributeValues.put(attributeHandle2, ATTRIBUTE2_VALUE.getBytes());
+      attributeValues.put(attributeHandle3, ATTRIBUTE3_VALUE.getBytes());
+
+      rtiAmbassadors.get(2).updateAttributeValues(
+        objectInstanceHandle, attributeValues, null, ten);
+
+      // the 2 constrained federates will not receive it because they do not
+      // have asynchronous delivery enabled and are not in the time
+      // advancing state
+      //
+      federateAmbassadors.get(3).checkAttributeValuesNotReceived(
+        objectInstanceHandle);
+      federateAmbassadors.get(4).checkAttributeValuesNotReceived(
+        objectInstanceHandle);
+
+      rtiAmbassadors.get(2).timeAdvanceRequest(nine);
+      rtiAmbassadors.get(3).timeAdvanceRequest(nine);
+      rtiAmbassadors.get(4).timeAdvanceRequest(nine);
+
+      federateAmbassadors.get(2).checkTimeAdvanceGrant(nine);
+      federateAmbassadors.get(3).checkTimeAdvanceGrant(nine);
+      federateAmbassadors.get(4).checkTimeAdvanceGrant(nine);
+
+      // the 2 constrained federates will not receive it because they have not
+      // advanced to the scheduled time
+      //
+      federateAmbassadors.get(3).checkAttributeValuesNotReceived(
+        objectInstanceHandle);
+      federateAmbassadors.get(4).checkAttributeValuesNotReceived(
+        objectInstanceHandle);
+
+      // bring all the federates to the same time
+      //
+      rtiAmbassadors.get(2).timeAdvanceRequest(ten);
+      rtiAmbassadors.get(3).timeAdvanceRequest(ten);
+      rtiAmbassadors.get(4).timeAdvanceRequest(ten);
+
+      federateAmbassadors.get(2).checkTimeAdvanceGrant(ten);
+      federateAmbassadors.get(3).checkTimeAdvanceGrant(ten);
+      federateAmbassadors.get(4).checkTimeAdvanceGrant(ten);
+
+      // attribute values should have been released
+      //
+      federateAmbassadors.get(3).checkAttributeValues(
+        objectInstanceHandle, attributeValues);
+      federateAmbassadors.get(4).checkAttributeValues(
+        objectInstanceHandle, attributeValues);
+    }
+    finally
+    {
+      try
+      {
+      rtiAmbassadors.get(2).deleteObjectInstance(objectInstanceHandle, null);
+
+      System.out.println("fuck me");
+
+      // bring all the federates to the same time
+      //
+      rtiAmbassadors.get(2).timeAdvanceRequest(fifteen);
+      System.out.println("fuck me 2");
+      rtiAmbassadors.get(3).timeAdvanceRequest(fifteen);
+      System.out.println("fuck me 3");
+      rtiAmbassadors.get(4).timeAdvanceRequest(fifteen);
+
+      federateAmbassadors.get(2).checkTimeAdvanceGrant(fifteen);
+      federateAmbassadors.get(3).checkTimeAdvanceGrant(fifteen);
+      federateAmbassadors.get(4).checkTimeAdvanceGrant(fifteen);
+
+      System.out.println("fuck you");
+      federateAmbassadors.get(3).checkForRemovedObjectInstanceHandle(
+        objectInstanceHandle);
+      System.out.println("fuck you too");
+      federateAmbassadors.get(4).checkForRemovedObjectInstanceHandle(
+        objectInstanceHandle);
+      }
+      catch (Throwable t)
+      {
+        t.printStackTrace();
+      }
+    }
   }
 
   protected static class TestFederateAmbassador
@@ -740,7 +864,8 @@ public class TimeManagementTestNG
       federateTime = null;
       for (int i = 0; i < 5 && federateTime == null; i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeMultipleCallbacks(.5, 1.0);
+        System.out.println("&$*%$&%&$*$&$&$");
       }
       assert time.equals(federateTime);
     }
@@ -779,6 +904,7 @@ public class TimeManagementTestNG
            i++)
       {
         rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        System.out.println("HHHH");
       }
 
       assert attributeValues.equals(
@@ -799,6 +925,19 @@ public class TimeManagementTestNG
       }
 
       assert objectInstances.get(objectInstanceHandle).getAttributeValues() == null;
+    }
+
+    public void checkForRemovedObjectInstanceHandle(
+      ObjectInstanceHandle objectInstanceHandle)
+      throws Exception
+    {
+      for (int i = 0;
+           i < 5 && !objectInstances.get(objectInstanceHandle).isRemoved();
+           i++)
+      {
+        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+      }
+      assert objectInstances.get(objectInstanceHandle).isRemoved();
     }
 
     public void checkParameterValues(ParameterHandleValueMap parameterValues)
@@ -862,6 +1001,71 @@ public class TimeManagementTestNG
       byte[] tag, OrderType sentOrderType,
       TransportationType transportationType)
     {
+      System.out.println("11111");
+      objectInstances.get(objectInstanceHandle).setAttributeValues(
+        attributeValues);
+    }
+
+    @Override
+    public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle,
+                                       AttributeHandleValueMap attributeValues,
+                                       byte[] tag, OrderType sentOrderType,
+                                       TransportationType transportationType,
+                                       LogicalTime updateTime,
+                                       OrderType receivedOrderType)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             AttributeNotSubscribed, FederateInternalError
+    {
+      System.out.println("22222");
+      objectInstances.get(objectInstanceHandle).setAttributeValues(
+        attributeValues);
+    }
+
+    @Override
+    public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle,
+                                       AttributeHandleValueMap attributeValues,
+                                       byte[] tag, OrderType sentOrderType,
+                                       TransportationType transportationType,
+                                       LogicalTime updateTime,
+                                       OrderType receivedOrderType,
+                                       RegionHandleSet regionHandles)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             AttributeNotSubscribed, FederateInternalError
+    {
+      System.out.println("33333");
+      objectInstances.get(objectInstanceHandle).setAttributeValues(
+        attributeValues);
+    }
+
+    @Override
+    public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle,
+                                       AttributeHandleValueMap attributeValues,
+                                       byte[] tag, OrderType sentOrderType,
+                                       TransportationType transportationType,
+                                       LogicalTime updateTime,
+                                       OrderType receivedOrderType,
+                                       MessageRetractionHandle messageRetractionHandle)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             AttributeNotSubscribed, InvalidLogicalTime, FederateInternalError
+    {
+      System.out.println("44444");
+      objectInstances.get(objectInstanceHandle).setAttributeValues(
+        attributeValues);
+    }
+
+    @Override
+    public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle,
+                                       AttributeHandleValueMap attributeValues,
+                                       byte[] tag, OrderType sentOrderType,
+                                       TransportationType transportationType,
+                                       LogicalTime updateTime,
+                                       OrderType receivedOrderType,
+                                       MessageRetractionHandle messageRetractionHandle,
+                                       RegionHandleSet regionHandles)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             AttributeNotSubscribed, InvalidLogicalTime, FederateInternalError
+    {
+      System.out.println("55555");
       objectInstances.get(objectInstanceHandle).setAttributeValues(
         attributeValues);
     }
