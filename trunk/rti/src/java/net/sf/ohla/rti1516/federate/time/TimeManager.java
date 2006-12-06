@@ -679,6 +679,11 @@ public class TimeManager
     try
     {
       this.galt = galt;
+
+      LogicalTime maxFutureTaskTimestamp = isTimeAdvancing() ?
+        (galt.compareTo(advanceRequestTime) <= 0 ? galt : advanceRequestTime) :
+        (galt.compareTo(federateTime) <= 0 ? galt : federateTime);
+      federate.processFutureTasks(maxFutureTaskTimestamp);
     }
     finally
     {
