@@ -623,9 +623,10 @@ public class Federate
       futureTasksLock.lock();
       try
       {
-        TimestampedFutureTask timestampedFutureTask = futureTasks.peek();
-        while (timestampedFutureTask != null &&
-               timestampedFutureTask.getTime().compareTo(galt) <= 0)
+        for (TimestampedFutureTask timestampedFutureTask = futureTasks.peek();
+             timestampedFutureTask != null &&
+             timestampedFutureTask.getTime().compareTo(galt) <= 0;
+             timestampedFutureTask = futureTasks.peek())
         {
           try
           {
