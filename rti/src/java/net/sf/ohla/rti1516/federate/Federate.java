@@ -534,6 +534,52 @@ public class Federate
     return asynchronousDeliveryEnabled;
   }
 
+  public void processFutureTasks(LogicalTime maxFutureTaskTimestamp)
+  {
+    futureTasksLock.lock();
+    try
+    {
+      for (TimestampedFutureTask timestampedFutureTask = futureTasks.peek();
+           timestampedFutureTask != null &&
+           timestampedFutureTask.getTime().compareTo(
+             maxFutureTaskTimestamp) <= 0;
+           timestampedFutureTask = futureTasks.peek())
+      {
+        try
+        {
+          timestampedFutureTask.run();
+        }
+        catch (Throwable t)
+        {
+          log.error(String.format("unable to execute scheduled task: %s",
+                                  timestampedFutureTask), t);
+        }
+
+        futureTasks.poll();
+      }
+    }
+    finally
+    {
+      futureTasksLock.unlock();
+    }
+  }
+
+  public void sendToPeers(Message message)
+  {
+    peersLock.lock();
+    try
+    {
+      for (IoSession peerSession : peerSessions.values())
+      {
+        peerSession.write(message);
+      }
+    }
+    finally
+    {
+      peersLock.unlock();
+    }
+  }
+
   public boolean process(IoSession session, Object message)
   {
     boolean processed = true;
@@ -582,25 +628,25 @@ public class Federate
       {
       }
 
-      boolean hold = false;
-
-      if (message instanceof ReflectAttributeValues ||
-          message instanceof ReceiveInteraction ||
-          message instanceof RemoveObjectInstance)
+      timeManager.getTimeLock().readLock().lock();
+      try
       {
-        timeManager.getTimeLock().readLock().lock();
-        try
+        boolean hold = false;
+
+        if (message instanceof ReflectAttributeValues ||
+            message instanceof ReceiveInteraction ||
+            message instanceof RemoveObjectInstance)
         {
           hold = !isAsynchronousDeliveryEnabled() &&
                  timeManager.isTimeConstrainedAndTimeGranted();
         }
-        finally
-        {
-          timeManager.getTimeLock().readLock().unlock();
-        }
-      }
 
-      callbackManager.add((Callback) message, hold);
+        callbackManager.add((Callback) message, hold);
+      }
+      finally
+      {
+        timeManager.getTimeLock().readLock().unlock();
+      }
     }
     else if (message instanceof ObjectInstanceNameReserved)
     {
@@ -619,32 +665,6 @@ public class Federate
       log.debug("GALT advanced: {}", galt);
 
       timeManager.galtAdvanced(galt);
-
-      futureTasksLock.lock();
-      try
-      {
-        for (TimestampedFutureTask timestampedFutureTask = futureTasks.peek();
-             timestampedFutureTask != null &&
-             timestampedFutureTask.getTime().compareTo(galt) <= 0;
-             timestampedFutureTask = futureTasks.peek())
-        {
-          try
-          {
-            timestampedFutureTask.run();
-          }
-          catch (Throwable t)
-          {
-            log.error(String.format("unable to execute scheduled task: %s",
-                                    timestampedFutureTask), t);
-          }
-
-          futureTasks.poll();
-        }
-      }
-      finally
-      {
-        futureTasksLock.unlock();
-      }
     }
     else
     {
@@ -3234,6 +3254,15 @@ public class Federate
     return "1516.1.5";
   }
 
+  protected void checkIfAlreadyExecutionMember()
+    throws FederateAlreadyExecutionMember
+  {
+    if (federateHandle != null)
+    {
+      throw new FederateAlreadyExecutionMember(federateHandle.toString());
+    }
+  }
+
   protected void startPeerAcceptor(String federateType)
     throws RTIinternalError
   {
@@ -3307,32 +3336,7 @@ public class Federate
     }
   }
 
-  public void sendToPeers(Message message)
-  {
-    peersLock.lock();
-    try
-    {
-      for (IoSession peerSession : peerSessions.values())
-      {
-        peerSession.write(message);
-      }
-    }
-    finally
-    {
-      peersLock.unlock();
-    }
-  }
-
-  protected void checkIfAlreadyExecutionMember()
-    throws FederateAlreadyExecutionMember
-  {
-    if (federateHandle != null)
-    {
-      throw new FederateAlreadyExecutionMember(federateHandle.toString());
-    }
-  }
-
-  public void checkIfSaveInProgress()
+  protected void checkIfSaveInProgress()
     throws SaveInProgress
   {
     if (federateState == FederateState.SAVE_IN_PROGRESS)
@@ -3341,7 +3345,7 @@ public class Federate
     }
   }
 
-  public void checkIfRestoreInProgress()
+  protected void checkIfRestoreInProgress()
     throws RestoreInProgress
   {
     if (federateState == FederateState.RESTORE_IN_PROGRESS)
@@ -3350,7 +3354,7 @@ public class Federate
     }
   }
 
-  public void checkIfActive()
+  protected void checkIfActive()
     throws SaveInProgress, RestoreInProgress, RTIinternalError
   {
     if (federateState != FederateState.ACTIVE)
@@ -3362,7 +3366,7 @@ public class Federate
     }
   }
 
-  public Future<Object> schedule(LogicalTime time, Callable<Object> callable)
+  protected Future<Object> schedule(LogicalTime time, Callable<Object> callable)
   {
     TimestampedFutureTask future = new TimestampedFutureTask(time, callable);
 
@@ -3415,7 +3419,18 @@ public class Federate
 
     public Object call()
     {
-      callbackManager.add(callback);
+      timeManager.getTimeLock().readLock().lock();
+      try
+      {
+        boolean hold = !isAsynchronousDeliveryEnabled() &&
+                       timeManager.isTimeConstrainedAndTimeGranted();
+
+        callbackManager.add(callback, hold);
+      }
+      finally
+      {
+        timeManager.getTimeLock().readLock().unlock();
+      }
 
       return null;
     }
@@ -3453,8 +3468,6 @@ public class Federate
       try
       {
         throw new RuntimeException();
-//        log.debug("removing {}", getPeerFederateHandle(session));
-//        peerSessions.remove(getPeerFederateHandle(session));
       }
       finally
       {
