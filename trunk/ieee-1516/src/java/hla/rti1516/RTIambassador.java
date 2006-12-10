@@ -185,7 +185,7 @@ public interface RTIambassador
     throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError;
 
-  void requestFederationSave(String label, LogicalTime time)
+  void requestFederationSave(String label, LogicalTime saveTime)
     throws LogicalTimeAlreadyPassed, InvalidLogicalTime,
            FederateUnableToUseTime, FederateNotExecutionMember,
            SaveInProgress, RestoreInProgress, RTIinternalError;
