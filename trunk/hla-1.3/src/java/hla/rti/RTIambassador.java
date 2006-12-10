@@ -4,20 +4,20 @@ import java.net.URL;
 
 public interface RTIambassador
 {
-  void createFederationExecution(String federationName, URL fed)
+  void createFederationExecution(String federationExecutionName, URL fed)
     throws FederationExecutionAlreadyExists, CouldNotOpenFED, ErrorReadingFED,
            RTIinternalError;
 
-  void destroyFederationExecution(String federationName)
+  void destroyFederationExecution(String federationExecutionName)
     throws FederatesCurrentlyJoined, FederationExecutionDoesNotExist,
            RTIinternalError;
 
-  int joinFederationExecution(String federateType, String federationName,
+  int joinFederationExecution(String federateType, String federationExecutionName,
                               FederateAmbassador federateAmbassador)
     throws FederateAlreadyExecutionMember, FederationExecutionDoesNotExist,
            SaveInProgress, RestoreInProgress, RTIinternalError;
 
-  int joinFederationExecution(String federateType, String federationName,
+  int joinFederationExecution(String federateType, String federationExecutionName,
                               FederateAmbassador federateAmbassador,
                               MobileFederateServices mobileFederateServices)
     throws FederateAlreadyExecutionMember, FederationExecutionDoesNotExist,

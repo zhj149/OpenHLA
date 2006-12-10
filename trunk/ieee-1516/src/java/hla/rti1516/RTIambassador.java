@@ -13,7 +13,7 @@ public interface RTIambassador
    * argument shall identify the FOM that furnishes the FDD for the federation
    * execution to be created.
    *
-   * @param federationName the name of the federation execution
+   * @param federationExecutionName the name of the federation execution
    * @param fdd the FOM document designator (FDD)
    * @throws FederationExecutionAlreadyExists thrown if the specified federation
    *                                          name already exists
@@ -21,7 +21,7 @@ public interface RTIambassador
    * @throws ErrorReadingFDD thrown if the FDD could not be read
    * @throws RTIinternalError thrown if the RTI encountered an error
    */
-  void createFederationExecution(String federationName, URL fdd)
+  void createFederationExecution(String federationExecutionName, URL fdd)
     throws FederationExecutionAlreadyExists, CouldNotOpenFDD, ErrorReadingFDD,
            RTIinternalError;
 
@@ -32,14 +32,14 @@ public interface RTIambassador
    * federates (all joined federates shall have resigned, either by explicit
    * action or via MOM activity) before this service is invoked.
    *
-   * @param federationName the name of the federation execution
+   * @param federationExecutionName the name of the federation execution
    * @throws FederatesCurrentlyJoined thrown if there are still federates joined
    *                                  to the specified federation execution
    * @throws FederationExecutionDoesNotExist thrown if the federation execution
    *                                         specified does not exist
    * @throws RTIinternalError thrown if the RTI encountered an error
    */
-  void destroyFederationExecution(String federationName)
+  void destroyFederationExecution(String federationExecutionName)
     throws FederatesCurrentlyJoined, FederationExecutionDoesNotExist,
            RTIinternalError;
 
@@ -52,7 +52,7 @@ public interface RTIambassador
    * designator shall be unique for the lifetime of the federation execution.
    *
    * @param federateType
-   * @param federationName the name of the federation execution to join
+   * @param federationExecutionName the name of the federation execution to join
    * @param federateAmbassador
    * @param mobileFederateServices
    * @return the unique federate handle representing this federate
@@ -65,7 +65,7 @@ public interface RTIambassador
    * @throws RTIinternalError thrown if the RTI encountered an error
    */
   FederateHandle joinFederationExecution(
-    String federateType, String federationName,
+    String federateType, String federationExecutionName,
     FederateAmbassador federateAmbassador,
     MobileFederateServices mobileFederateServices)
     throws FederateAlreadyExecutionMember, FederationExecutionDoesNotExist,
