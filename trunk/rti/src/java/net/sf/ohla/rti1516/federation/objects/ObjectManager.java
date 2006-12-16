@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.sf.ohla.rti1516.federation.ownership;
+package net.sf.ohla.rti1516.federation.objects;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -36,15 +36,15 @@ import hla.rti1516.AttributeSetRegionSetPairList;
 import hla.rti1516.FederateHandle;
 import hla.rti1516.ObjectInstanceHandle;
 
-public class OwnershipManager
+public class ObjectManager
 {
   protected FederationExecution federationExecution;
 
   protected ReadWriteLock objectsLock = new ReentrantReadWriteLock(true);
-  protected Map<ObjectInstanceHandle, ObjectInstanceOwnership> objects =
-    new HashMap<ObjectInstanceHandle, ObjectInstanceOwnership>();
+  protected Map<ObjectInstanceHandle, ObjectInstance> objects =
+    new HashMap<ObjectInstanceHandle, ObjectInstance>();
 
-  public OwnershipManager(FederationExecution federationExecution)
+  public ObjectManager(FederationExecution federationExecution)
   {
     this.federationExecution = federationExecution;
   }
@@ -56,7 +56,7 @@ public class OwnershipManager
     objectsLock.writeLock().lock();
     try
     {
-      objects.put(objectInstanceHandle, new ObjectInstanceOwnership(
+      objects.put(objectInstanceHandle, new ObjectInstance(
         objectInstanceHandle, objectClass, publishedAttributeHandles, owner));
     }
     finally
@@ -73,15 +73,15 @@ public class OwnershipManager
     try
     {
       WriteFuture lastWriteFuture = null;
-      for (ObjectInstanceOwnership objectInstanceOwnership : objects.values())
+      for (ObjectInstance objectInstance : objects.values())
       {
         if (objectClass.isAssignableFrom(
-          objectInstanceOwnership.getObjectClass()))
+          objectInstance.getObjectClass()))
         {
           // TODO: DDM
 
           lastWriteFuture = session.write(new DiscoverObjectInstance(
-            objectInstanceOwnership.getObjectInstanceHandle(),
+            objectInstance.getObjectInstanceHandle(),
             objectClass.getObjectClassHandle()));
         }
       }
@@ -106,11 +106,11 @@ public class OwnershipManager
     objectsLock.readLock().lock();
     try
     {
-      ObjectInstanceOwnership objectInstanceOwnership =
+      ObjectInstance objectInstance =
         objects.get(objectInstanceHandle);
-      if (objectInstanceOwnership != null)
+      if (objectInstance != null)
       {
-        objectInstanceOwnership.unconditionalAttributeOwnershipDivestiture(
+        objectInstance.unconditionalAttributeOwnershipDivestiture(
           attributeHandles, federationExecution);
       }
     }
@@ -127,11 +127,11 @@ public class OwnershipManager
     objectsLock.readLock().lock();
     try
     {
-      ObjectInstanceOwnership objectInstanceOwnership =
+      ObjectInstance objectInstance =
         objects.get(objectInstanceHandle);
-      if (objectInstanceOwnership != null)
+      if (objectInstance != null)
       {
-        objectInstanceOwnership.negotiatedAttributeOwnershipDivestiture(
+        objectInstance.negotiatedAttributeOwnershipDivestiture(
           attributeHandles, tag, session);
       }
     }
@@ -147,11 +147,11 @@ public class OwnershipManager
     objectsLock.readLock().lock();
     try
     {
-      ObjectInstanceOwnership objectInstanceOwnership =
+      ObjectInstance objectInstance =
         objects.get(objectInstanceHandle);
-      if (objectInstanceOwnership != null)
+      if (objectInstance != null)
       {
-        objectInstanceOwnership.confirmDivestiture(
+        objectInstance.confirmDivestiture(
           attributeHandles, federationExecution);
       }
     }
@@ -169,11 +169,11 @@ public class OwnershipManager
     objectsLock.readLock().lock();
     try
     {
-      ObjectInstanceOwnership objectInstanceOwnership =
+      ObjectInstance objectInstance =
         objects.get(objectInstanceHandle);
-      if (objectInstanceOwnership != null)
+      if (objectInstance != null)
       {
-        objectInstanceOwnership.attributeOwnershipAcquisition(
+        objectInstance.attributeOwnershipAcquisition(
           attributeHandles, tag, acquiree, session, federationExecution);
       }
     }
@@ -191,11 +191,11 @@ public class OwnershipManager
     objectsLock.readLock().lock();
     try
     {
-      ObjectInstanceOwnership objectInstanceOwnership =
+      ObjectInstance objectInstance =
         objects.get(objectInstanceHandle);
-      if (objectInstanceOwnership != null)
+      if (objectInstance != null)
       {
-        objectInstanceOwnership.attributeOwnershipAcquisitionIfAvailable(
+        objectInstance.attributeOwnershipAcquisitionIfAvailable(
           attributeHandles, acquiree, session);
       }
     }
@@ -212,10 +212,10 @@ public class OwnershipManager
     objectsLock.readLock().lock();
     try
     {
-      ObjectInstanceOwnership objectInstanceOwnership =
+      ObjectInstance objectInstance =
         objects.get(objectInstanceHandle);
-      return objectInstanceOwnership != null ?
-        objectInstanceOwnership.attributeOwnershipDivestitureIfWanted(
+      return objectInstance != null ?
+        objectInstance.attributeOwnershipDivestitureIfWanted(
           attributeHandles) :
         (Map<AttributeHandle, FederateHandle>) Collections.EMPTY_MAP;
     }
@@ -232,11 +232,11 @@ public class OwnershipManager
     objectsLock.readLock().lock();
     try
     {
-      ObjectInstanceOwnership objectInstanceOwnership =
+      ObjectInstance objectInstance =
         objects.get(objectInstanceHandle);
-      if (objectInstanceOwnership != null)
+      if (objectInstance != null)
       {
-        objectInstanceOwnership.cancelNegotiatedAttributeOwnershipDivestiture(
+        objectInstance.cancelNegotiatedAttributeOwnershipDivestiture(
           attributeHandles, owner);
       }
     }
@@ -254,11 +254,11 @@ public class OwnershipManager
     objectsLock.readLock().lock();
     try
     {
-      ObjectInstanceOwnership objectInstanceOwnership =
+      ObjectInstance objectInstance =
         objects.get(objectInstanceHandle);
-      if (objectInstanceOwnership != null)
+      if (objectInstance != null)
       {
-        objectInstanceOwnership.cancelAttributeOwnershipAcquisition(
+        objectInstance.cancelAttributeOwnershipAcquisition(
           attributeHandles, acquiree, session);
       }
     }
@@ -275,15 +275,15 @@ public class OwnershipManager
     objectsLock.readLock().lock();
     try
     {
-      ObjectInstanceOwnership objectInstanceOwnership =
+      ObjectInstance objectInstance =
         objects.get(objectInstanceHandle);
-      if (objectInstanceOwnership == null)
+      if (objectInstance == null)
       {
         // the object was deleted after a query was issued...
       }
       else
       {
-        objectInstanceOwnership.queryAttributeOwnership(
+        objectInstance.queryAttributeOwnership(
           attributeHandle, session);
       }
     }
