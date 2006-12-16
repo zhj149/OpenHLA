@@ -63,7 +63,7 @@ import net.sf.ohla.rti1516.federate.callbacks.RemoveObjectInstance;
 import net.sf.ohla.rti1516.federate.callbacks.SynchronizationPointRegistrationFailed;
 import net.sf.ohla.rti1516.federate.callbacks.SynchronizationPointRegistrationSucceeded;
 import net.sf.ohla.rti1516.federate.filter.InterestManagementFilter;
-import net.sf.ohla.rti1516.federation.objects.ObjectManager;
+import net.sf.ohla.rti1516.federate.objects.ObjectManager;
 import net.sf.ohla.rti1516.federate.time.TimeManager;
 import net.sf.ohla.rti1516.filter.RequestResponseFilter;
 import net.sf.ohla.rti1516.messages.DefaultResponse;
@@ -138,6 +138,7 @@ import hla.rti1516.DimensionHandle;
 import hla.rti1516.DimensionHandleFactory;
 import hla.rti1516.DimensionHandleSet;
 import hla.rti1516.DimensionHandleSetFactory;
+import hla.rti1516.FederateAlreadyExecutionMember;
 import hla.rti1516.FederateAmbassador;
 import hla.rti1516.FederateHandle;
 import hla.rti1516.FederateHandleFactory;
@@ -3251,6 +3252,15 @@ public class Federate
   public String getHLAversion()
   {
     return "1516.1.5";
+  }
+
+  protected void checkIfAlreadyExecutionMember()
+    throws FederateAlreadyExecutionMember
+  {
+    if (federateHandle != null)
+    {
+      throw new FederateAlreadyExecutionMember(federateHandle.toString());
+    }
   }
 
   protected void startPeerAcceptor(String federateType)

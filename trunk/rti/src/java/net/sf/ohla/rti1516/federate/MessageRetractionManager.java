@@ -17,6 +17,8 @@ import hla.rti1516.MessageRetractionHandle;
 
 public class MessageRetractionManager
 {
+  protected Federate federate;
+
   protected AtomicLong messageRetractionCount = new AtomicLong();
 
   protected Lock messageRetractionsLock = new ReentrantLock(true);
@@ -25,8 +27,9 @@ public class MessageRetractionManager
   protected Queue<MessageRetraction> messageRetractionsByExpiration =
     new PriorityQueue<MessageRetraction>();
 
-  public MessageRetractionManager()
+  public MessageRetractionManager(Federate federate)
   {
+    this.federate = federate;
   }
 
   public MessageRetractionHandle add(LogicalTime time)

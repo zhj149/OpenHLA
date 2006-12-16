@@ -36,6 +36,7 @@ import net.sf.ohla.rti1516.OHLAObjectClassHandle;
 import net.sf.ohla.rti1516.OHLAObjectInstanceHandle;
 import net.sf.ohla.rti1516.OHLAParameterHandle;
 import net.sf.ohla.rti1516.OHLARegionHandleSet;
+import net.sf.ohla.rti1516.federate.Federate;
 import net.sf.ohla.rti1516.fdd.ObjectClass;
 
 import org.slf4j.Logger;
@@ -213,6 +214,11 @@ public class OHLARTIambassador
 
   protected LogicalTimeIntervalFactory logicalTimeIntervalFactory;
   protected hla.rti1516.LogicalTimeIntervalFactory ieee1516LogicalTimeIntervalFactory;
+
+  public Federate getJoinedFederate()
+  {
+    return rtiAmbassador.getJoinedFederate();
+  }
 
   public void createFederationExecution(String name, URL fed)
     throws FederationExecutionAlreadyExists, CouldNotOpenFED, ErrorReadingFED,

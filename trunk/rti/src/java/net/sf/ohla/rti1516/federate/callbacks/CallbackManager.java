@@ -22,10 +22,11 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import net.sf.ohla.rti1516.federate.Federate;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import hla.rti1516.FederateAmbassador;
 import hla.rti1516.RTIexception;
 
 public class CallbackManager
@@ -33,7 +34,7 @@ public class CallbackManager
   private static final Logger log =
     LoggerFactory.getLogger(CallbackManager.class);
 
-  protected FederateAmbassador federateAmbassador;
+  protected Federate federate;
 
   protected boolean enabled = true;
 
@@ -43,9 +44,9 @@ public class CallbackManager
 
   protected Queue<Callback> heldCallbacks = new LinkedList<Callback>();
 
-  public CallbackManager(FederateAmbassador federateAmbassador)
+  public CallbackManager(Federate federate)
   {
-    this.federateAmbassador = federateAmbassador;
+    this.federate = federate;
   }
 
   public void add(Callback callback)
@@ -125,17 +126,17 @@ public class CallbackManager
                                   nanoTime + maxNanosTimeout, nanoTime);
   }
 
-  public void enableCallbacks()
+  public synchronized void enableCallbacks()
   {
     enabled = true;
   }
 
-  public void disableCallbacks()
+  public synchronized void disableCallbacks()
   {
     enabled = false;
   }
 
-  protected boolean evokeCallback(long nanoTimeout)
+  protected synchronized boolean evokeCallback(long nanoTimeout)
   {
     Callback callback = null;
 
@@ -160,7 +161,7 @@ public class CallbackManager
     {
       try
       {
-        callback.execute(federateAmbassador);
+        callback.execute(federate.getFederateAmbassador());
       }
       catch (Throwable t)
       {
@@ -171,9 +172,9 @@ public class CallbackManager
     return areCallbacksPending();
   }
 
-  protected boolean evokeMultipleCallbacks(long minNanoExpiration,
-                                           long maxNanoExpiration,
-                                           long nanoTime)
+  protected synchronized boolean evokeMultipleCallbacks(long minNanoExpiration,
+                                                        long maxNanoExpiration,
+                                                        long nanoTime)
   {
     while ((nanoTime < minNanoExpiration &&
             evokeCallback(minNanoExpiration - nanoTime)) ||
@@ -187,14 +188,14 @@ public class CallbackManager
     return areCallbacksPending();
   }
 
-  protected boolean evokeCallback()
+  protected synchronized boolean evokeCallback()
   {
     Callback callback = nextCallback();
     if (callback != null)
     {
       try
       {
-        callback.execute(federateAmbassador);
+        callback.execute(federate.getFederateAmbassador());
       }
       catch (RTIexception rtie)
       {

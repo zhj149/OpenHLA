@@ -20,6 +20,7 @@ import java.util.Map;
 
 import net.sf.ohla.rti1516.fdd.InteractionClass;
 import net.sf.ohla.rti1516.fdd.ObjectClass;
+import net.sf.ohla.rti1516.federate.Federate;
 import net.sf.ohla.rti1516.federate.SubscriptionManager;
 import net.sf.ohla.rti1516.federate.callbacks.ReceiveInteraction;
 import net.sf.ohla.rti1516.federate.callbacks.ReflectAttributeValues;

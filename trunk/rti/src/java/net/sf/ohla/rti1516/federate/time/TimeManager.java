@@ -19,6 +19,7 @@ package net.sf.ohla.rti1516.federate.time;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import net.sf.ohla.rti1516.federate.Federate;
 import net.sf.ohla.rti1516.federate.callbacks.TimeAdvanceGrant;
 import net.sf.ohla.rti1516.messages.DisableTimeConstrained;
 import net.sf.ohla.rti1516.messages.DisableTimeRegulation;
@@ -28,7 +29,6 @@ import net.sf.ohla.rti1516.messages.ModifyLookahead;
 import net.sf.ohla.rti1516.messages.TimeAdvanceRequest;
 import net.sf.ohla.rti1516.messages.TimeAdvanceRequestAvailable;
 
-import org.apache.mina.common.IoSession;
 import org.apache.mina.common.WriteFuture;
 
 import org.slf4j.Logger;
@@ -56,7 +56,7 @@ public class TimeManager
 {
   private static final Logger log = LoggerFactory.getLogger(TimeManager.class);
 
-  protected IoSession rtiSession;
+  protected final Federate federate;
   protected final MobileFederateServices mobileFederateServices;
 
   protected ReadWriteLock timeLock = new ReentrantReadWriteLock(true);
@@ -76,11 +76,11 @@ public class TimeManager
   protected LogicalTime advanceRequestTime;
   protected TimeAdvanceType advanceRequestTimeType;
 
-  public TimeManager(IoSession rtiSession,
+  public TimeManager(Federate federate,
                      MobileFederateServices mobileFederateServices,
                      LogicalTime galt)
   {
-    this.rtiSession = rtiSession;
+    this.federate = federate;
     this.mobileFederateServices = mobileFederateServices;
     this.galt = galt;
 
@@ -134,7 +134,7 @@ public class TimeManager
       checkIfRequestForTimeRegulationPending();
 
       WriteFuture writeFuture =
-        rtiSession.write(new EnableTimeRegulation(lookahead));
+        federate.getRTISession().write(new EnableTimeRegulation(lookahead));
 
       // TODO: set timeout
       //
@@ -164,7 +164,7 @@ public class TimeManager
       checkIfTimeRegulationIsNotEnabled();
 
       WriteFuture writeFuture =
-        rtiSession.write(new DisableTimeRegulation());
+        federate.getRTISession().write(new DisableTimeRegulation());
 
       // TODO: set timeout
       //
@@ -200,7 +200,7 @@ public class TimeManager
       checkIfRequestForTimeConstrainedPending();
 
       WriteFuture writeFuture =
-        rtiSession.write(new EnableTimeConstrained());
+        federate.getRTISession().write(new EnableTimeConstrained());
 
       // TODO: set timeout
       //
@@ -228,7 +228,7 @@ public class TimeManager
       checkIfTimeConstrainedIsNotEnabled();
 
       WriteFuture writeFuture =
-        rtiSession.write(new DisableTimeConstrained());
+        federate.getRTISession().write(new DisableTimeConstrained());
 
       // TODO: set timeout
       //
@@ -276,7 +276,7 @@ public class TimeManager
       else
       {
         WriteFuture writeFuture =
-          rtiSession.write(new TimeAdvanceRequest(time));
+          federate.getRTISession().write(new TimeAdvanceRequest(time));
 
         // TODO: set timeout
         //
@@ -329,7 +329,7 @@ public class TimeManager
       else
       {
         WriteFuture writeFuture =
-          rtiSession.write(new TimeAdvanceRequestAvailable(time));
+          federate.getRTISession().write(new TimeAdvanceRequestAvailable(time));
 
         // TODO: set timeout
         //
@@ -380,7 +380,7 @@ public class TimeManager
       else
       {
         WriteFuture writeFuture =
-          rtiSession.write(new TimeAdvanceRequest(time));
+          federate.getRTISession().write(new TimeAdvanceRequest(time));
 
         // TODO: set timeout
         //
@@ -431,7 +431,7 @@ public class TimeManager
       else
       {
         WriteFuture writeFuture =
-          rtiSession.write(new TimeAdvanceRequest(time));
+          federate.getRTISession().write(new TimeAdvanceRequest(time));
 
         // TODO: set timeout
         //
@@ -482,7 +482,7 @@ public class TimeManager
       else
       {
         WriteFuture writeFuture =
-          rtiSession.write(new TimeAdvanceRequest(time));
+          federate.getRTISession().write(new TimeAdvanceRequest(time));
 
         // TODO: set timeout
         //
@@ -570,7 +570,7 @@ public class TimeManager
       checkIfInTimeAdvancingState();
 
       WriteFuture writeFuture =
-        rtiSession.write(new ModifyLookahead(lookahead));
+        federate.getRTISession().write(new ModifyLookahead(lookahead));
 
       // TODO: set timeout
       //
