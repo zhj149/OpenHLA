@@ -11,16 +11,17 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.sf.ohla.rti1516.OHLARegionHandleSet;
 import net.sf.ohla.rti1516.fdd.FDD;
-import net.sf.ohla.rti1516.messages.CommitRegionModifications;
 import net.sf.ohla.rti1516.messages.CreateRegion;
+import net.sf.ohla.rti1516.messages.CommitRegionModifications;
+import net.sf.ohla.rti1516.messages.RegionCreated;
+import net.sf.ohla.rti1516.messages.RegionModificationsCommitted;
 import net.sf.ohla.rti1516.messages.DeleteRegion;
+import net.sf.ohla.rti1516.messages.RegionDeleted;
 import net.sf.ohla.rti1516.messages.GetRangeBounds;
 
-import org.apache.mina.common.IoSession;
 import org.apache.mina.common.WriteFuture;
 
 import hla.rti1516.AttributeHandleSet;
-import hla.rti1516.AttributeHandleSetFactory;
 import hla.rti1516.AttributeRegionAssociation;
 import hla.rti1516.DimensionHandle;
 import hla.rti1516.DimensionHandleSet;
@@ -39,20 +40,15 @@ import hla.rti1516.RegionNotCreatedByThisFederate;
 
 public class RegionManager
 {
-  protected IoSession rtiSession;
-  protected FDD fdd;
-  protected AttributeHandleSetFactory attributeHandleSetFactory;
+  protected Federate federate;
 
   protected ReadWriteLock regionsLock = new ReentrantReadWriteLock(true);
   protected Map<RegionHandle, Region> regions =
     new HashMap<RegionHandle, Region>();
 
-  public RegionManager(IoSession rtiSession, FDD fdd,
-                       AttributeHandleSetFactory attributeHandleSetFactory)
+  public RegionManager(Federate federate)
   {
-    this.rtiSession = rtiSession;
-    this.fdd = fdd;
-    this.attributeHandleSetFactory = attributeHandleSetFactory;
+    this.federate = federate;
   }
 
   public RegionHandle createRegion(DimensionHandleSet dimensionHandles)
@@ -61,7 +57,7 @@ public class RegionManager
     try
     {
       CreateRegion createRegion = new CreateRegion(dimensionHandles);
-      WriteFuture writeFuture = rtiSession.write(createRegion);
+      WriteFuture writeFuture = federate.getRTISession().write(createRegion);
 
       // TODO: set timeout
       //
@@ -83,12 +79,14 @@ public class RegionManager
       try
       {
         regions.put(regionHandle, new Region(
-          regionHandle, dimensionHandles, fdd));
+          regionHandle, dimensionHandles, federate.getFDD()));
       }
       finally
       {
         regionsLock.writeLock().unlock();
       }
+
+      federate.sendToPeers(new RegionCreated(regionHandle, dimensionHandles));
 
       return regionHandle;
     }
@@ -149,7 +147,8 @@ public class RegionManager
         {
           GetRangeBounds getRangeBounds =
             new GetRangeBounds(regionHandle, dimensionHandle);
-          WriteFuture writeFuture = rtiSession.write(getRangeBounds);
+          WriteFuture writeFuture =
+            federate.getRTISession().write(getRangeBounds);
 
           // TODO: set timeout
           //
@@ -236,7 +235,8 @@ public class RegionManager
       {
         CommitRegionModifications commitRegionModifications =
           new CommitRegionModifications(regionModifications);
-        WriteFuture writeFuture = rtiSession.write(commitRegionModifications);
+        WriteFuture writeFuture = federate.getRTISession().write(
+          commitRegionModifications);
 
         // TODO: set timeout
         //
@@ -250,6 +250,9 @@ public class RegionManager
         // TODO: set timeout
         //
         commitRegionModifications.await();
+
+        federate.sendToPeers(
+          new RegionModificationsCommitted(regionModifications));
       }
       catch (InterruptedException ie)
       {
@@ -279,7 +282,7 @@ public class RegionManager
       region.checkIfInUse();
 
       DeleteRegion deleteRegion = new DeleteRegion(regionHandle);
-      WriteFuture writeFuture = rtiSession.write(deleteRegion);
+      WriteFuture writeFuture = federate.getRTISession().write(deleteRegion);
 
       // TODO: set timeout
       //
@@ -295,6 +298,8 @@ public class RegionManager
       deleteRegion.await();
 
       regions.remove(regionHandle);
+
+      federate.sendToPeers(new RegionDeleted(regionHandle));
     }
     catch (InterruptedException ie)
     {
@@ -575,7 +580,8 @@ public class RegionManager
         associatedObjects.get(objectInstanceHandle);
       if (existingAttributeHandles == null)
       {
-        existingAttributeHandles = attributeHandleSetFactory.create();
+        existingAttributeHandles =
+          federate.getAttributeHandleSetFactory().create();
         associatedObjects.put(objectInstanceHandle, existingAttributeHandles);
       }
 
@@ -606,7 +612,8 @@ public class RegionManager
         subscribedObjectClasses.get(objectClassHandle);
       if (existingAttributeHandles == null)
       {
-        existingAttributeHandles = attributeHandleSetFactory.create();
+        existingAttributeHandles =
+          federate.getAttributeHandleSetFactory().create();
         subscribedObjectClasses.put(objectClassHandle,
                                     existingAttributeHandles);
       }
