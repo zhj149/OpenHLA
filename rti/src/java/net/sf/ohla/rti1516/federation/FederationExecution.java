@@ -35,7 +35,7 @@ import net.sf.ohla.rti1516.federate.callbacks.FederationSaved;
 import net.sf.ohla.rti1516.federate.callbacks.FederationSynchronized;
 import net.sf.ohla.rti1516.federate.callbacks.InitiateFederateSave;
 import net.sf.ohla.rti1516.federate.callbacks.RemoveObjectInstance;
-import net.sf.ohla.rti1516.federation.ownership.OwnershipManager;
+import net.sf.ohla.rti1516.federation.objects.ObjectManager;
 import net.sf.ohla.rti1516.federation.time.TimeKeeper;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipAcquisition;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipAcquisitionIfAvailable;
@@ -140,7 +140,7 @@ public class FederationExecution
   protected Map<RegionHandle, Map<DimensionHandle, RangeBounds>> regions =
     new HashMap<RegionHandle, Map<DimensionHandle, RangeBounds>>();
 
-  protected OwnershipManager ownershipManager = new OwnershipManager(this);
+  protected ObjectManager objectManager = new ObjectManager(this);
 
   protected TimeKeeper timeKeeper;
 
@@ -401,7 +401,7 @@ public class FederationExecution
       session.write(new RequestResponse(
         registerObjectInstance.getId(), objectInstanceRegistered));
 
-      ownershipManager.registerObjectInstance(
+      objectManager.registerObjectInstance(
         objectInstanceHandle, objectClass,
         registerObjectInstance.getPublishedAttributeHandles(),
         getFederateHandle(session));
@@ -530,7 +530,7 @@ public class FederationExecution
           subscribeObjectClassAttributes.getObjectClassHandle());
       assert objectClass != null;
 
-      ownershipManager.subscribeObjectClassAttributes(
+      objectManager.subscribeObjectClassAttributes(
         objectClass, subscribeObjectClassAttributes.getAttributeHandles(),
         subscribeObjectClassAttributes.getAttributesAndRegions(), session);
     }
@@ -1060,7 +1060,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      ownershipManager.unconditionalAttributeOwnershipDivestiture(
+      objectManager.unconditionalAttributeOwnershipDivestiture(
         unconditionalAttributeOwnershipDivestiture.getObjectInstanceHandle(),
         unconditionalAttributeOwnershipDivestiture.getAttributeHandles());
     }
@@ -1077,7 +1077,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      ownershipManager.negotiatedAttributeOwnershipDivestiture(
+      objectManager.negotiatedAttributeOwnershipDivestiture(
         negotiatedAttributeOwnershipDivestiture.getObjectInstanceHandle(),
         negotiatedAttributeOwnershipDivestiture.getAttributeHandles(),
         negotiatedAttributeOwnershipDivestiture.getTag(), session);
@@ -1094,7 +1094,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      ownershipManager.confirmDivestiture(
+      objectManager.confirmDivestiture(
         confirmDivestiture.getObjectInstanceHandle(),
         confirmDivestiture.getAttributeHandles());
     }
@@ -1111,7 +1111,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      ownershipManager.attributeOwnershipAcquisition(
+      objectManager.attributeOwnershipAcquisition(
         attributeOwnershipAcquisition.getObjectInstanceHandle(),
         attributeOwnershipAcquisition.getAttributeHandles(),
         attributeOwnershipAcquisition.getTag(), getFederateHandle(session),
@@ -1130,7 +1130,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      ownershipManager.attributeOwnershipAcquisitionIfAvailable(
+      objectManager.attributeOwnershipAcquisitionIfAvailable(
         attributeOwnershipAcquisitionIfAvailable.getObjectInstanceHandle(),
         attributeOwnershipAcquisitionIfAvailable.getAttributeHandles(),
         getFederateHandle(session), session);
@@ -1149,7 +1149,7 @@ public class FederationExecution
     try
     {
       Map<AttributeHandle, FederateHandle> newOwners =
-        ownershipManager.attributeOwnershipDivestitureIfWanted(
+        objectManager.attributeOwnershipDivestitureIfWanted(
           attributeOwnershipDivestitureIfWanted.getObjectInstanceHandle(),
           attributeOwnershipDivestitureIfWanted.getAttributeHandles());
 
@@ -1235,7 +1235,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      ownershipManager.cancelNegotiatedAttributeOwnershipDivestiture(
+      objectManager.cancelNegotiatedAttributeOwnershipDivestiture(
         cancelNegotiatedAttributeOwnershipDivestiture.getObjectInstanceHandle(),
         cancelNegotiatedAttributeOwnershipDivestiture.getAttributeHandles(),
         getFederateHandle(session));
@@ -1253,7 +1253,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      ownershipManager.cancelAttributeOwnershipAcquisition(
+      objectManager.cancelAttributeOwnershipAcquisition(
         cancelAttributeOwnershipAcquisition.getObjectInstanceHandle(),
         cancelAttributeOwnershipAcquisition.getAttributeHandles(),
         getFederateHandle(session), session);
@@ -1270,7 +1270,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      ownershipManager.queryAttributeOwnership(
+      objectManager.queryAttributeOwnership(
         queryAttributeOwnership.getObjectInstanceHandle(),
         queryAttributeOwnership.getAttributeHandle(), session);
     }
