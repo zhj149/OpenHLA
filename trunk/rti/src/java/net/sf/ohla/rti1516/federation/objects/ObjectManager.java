@@ -18,9 +18,12 @@ package net.sf.ohla.rti1516.federation.objects;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.sf.ohla.rti1516.fdd.ObjectClass;
@@ -40,6 +43,15 @@ public class ObjectManager
 {
   protected FederationExecution federationExecution;
 
+  protected Lock reservedObjectInstanceNamesLock = new ReentrantLock(true);
+  protected Map<String, ObjectInstanceHandle> reservedObjectInstanceNames =
+    new HashMap<String, ObjectInstanceHandle>();
+  protected Map<ObjectInstanceHandle, String> reservedObjectInstanceNamesByHandle =
+    new HashMap<ObjectInstanceHandle, String>();
+
+  protected Lock retiredObjectInstanceNamesLock = new ReentrantLock(true);
+  protected Set<String> retiredObjectInstanceNames = new HashSet<String>();
+
   protected ReadWriteLock objectsLock = new ReentrantReadWriteLock(true);
   protected Map<ObjectInstanceHandle, ObjectInstance> objects =
     new HashMap<ObjectInstanceHandle, ObjectInstance>();
@@ -51,13 +63,15 @@ public class ObjectManager
 
   public void registerObjectInstance(
     ObjectInstanceHandle objectInstanceHandle, ObjectClass objectClass,
-    Set<AttributeHandle> publishedAttributeHandles, FederateHandle owner)
+    String name, Set<AttributeHandle> publishedAttributeHandles,
+    FederateHandle owner)
   {
     objectsLock.writeLock().lock();
     try
     {
       objects.put(objectInstanceHandle, new ObjectInstance(
-        objectInstanceHandle, objectClass, publishedAttributeHandles, owner));
+        objectInstanceHandle, objectClass, name,
+        publishedAttributeHandles, owner));
     }
     finally
     {
