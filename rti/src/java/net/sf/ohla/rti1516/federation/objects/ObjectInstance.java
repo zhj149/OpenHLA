@@ -16,23 +16,25 @@
 
 package net.sf.ohla.rti1516.federation.objects;
 
+import java.io.Serializable;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import net.sf.ohla.rti1516.fdd.ObjectClass;
+import net.sf.ohla.rti1516.OHLAAttributeHandleSet;
 import net.sf.ohla.rti1516.fdd.Attribute;
+import net.sf.ohla.rti1516.fdd.ObjectClass;
+import net.sf.ohla.rti1516.federate.callbacks.AttributeIsNotOwned;
+import net.sf.ohla.rti1516.federate.callbacks.AttributeIsOwnedByRTI;
 import net.sf.ohla.rti1516.federate.callbacks.AttributeOwnershipAcquisitionNotification;
 import net.sf.ohla.rti1516.federate.callbacks.AttributeOwnershipUnavailable;
 import net.sf.ohla.rti1516.federate.callbacks.ConfirmAttributeOwnershipAcquisitionCancellation;
+import net.sf.ohla.rti1516.federate.callbacks.InformAttributeOwnership;
 import net.sf.ohla.rti1516.federate.callbacks.RequestAttributeOwnershipRelease;
 import net.sf.ohla.rti1516.federate.callbacks.RequestDivestitureConfirmation;
-import net.sf.ohla.rti1516.federate.callbacks.AttributeIsNotOwned;
-import net.sf.ohla.rti1516.federate.callbacks.AttributeIsOwnedByRTI;
-import net.sf.ohla.rti1516.federate.callbacks.InformAttributeOwnership;
-import net.sf.ohla.rti1516.OHLAAttributeHandleSet;
 import net.sf.ohla.rti1516.federation.FederationExecution;
 
 import org.apache.mina.common.IoSession;
@@ -40,32 +42,34 @@ import org.apache.mina.common.IoSession;
 import hla.rti1516.AttributeHandle;
 import hla.rti1516.AttributeHandleSet;
 import hla.rti1516.FederateHandle;
+import hla.rti1516.ObjectClassHandle;
 import hla.rti1516.ObjectInstanceHandle;
 
 public class ObjectInstance
+  implements Serializable
 {
-  protected ObjectInstanceHandle objectInstanceHandle;
-  protected ObjectClass objectClass;
+  protected final ObjectInstanceHandle objectInstanceHandle;
+  protected final ObjectClass objectClass;
+  protected final String name;
 
-  protected Lock objectLock = new ReentrantLock(true);
+  protected ReadWriteLock objectLock = new ReentrantReadWriteLock(true);
 
   protected Map<AttributeHandle, AttributeInstance> attributes =
     new HashMap<AttributeHandle, AttributeInstance>();
 
   public ObjectInstance(ObjectInstanceHandle objectInstanceHandle,
-                        ObjectClass objectClass,
+                        ObjectClass objectClass, String name,
                         Set<AttributeHandle> publishedAttributeHandles,
                         FederateHandle owner)
   {
     this.objectInstanceHandle = objectInstanceHandle;
     this.objectClass = objectClass;
+    this.name = name;
 
     for (Attribute attribute : objectClass.getAttributes().values())
     {
-      AttributeInstance attributeInstance =
-        new AttributeInstance(attribute);
-      attributes.put(attribute.getAttributeHandle(),
-                     attributeInstance);
+      AttributeInstance attributeInstance = new AttributeInstance(attribute);
+      attributes.put(attribute.getAttributeHandle(), attributeInstance);
 
       if (publishedAttributeHandles.contains(attribute.getAttributeHandle()))
       {
@@ -79,9 +83,19 @@ public class ObjectInstance
     return objectInstanceHandle;
   }
 
+  public ObjectClassHandle getObjectClassHandle()
+  {
+    return objectClass.getObjectClassHandle();
+  }
+
   public ObjectClass getObjectClass()
   {
     return objectClass;
+  }
+
+  public String getName()
+  {
+    return name;
   }
 
   public FederateHandle getOwner(AttributeHandle attributeHandle)
@@ -93,7 +107,7 @@ public class ObjectInstance
     AttributeHandleSet attributeHandles,
     FederationExecution federationExecution)
   {
-    objectLock.lock();
+    objectLock.writeLock().lock();
     try
     {
       Map<FederateHandle, AttributeHandleSet> newOwners =
@@ -131,14 +145,14 @@ public class ObjectInstance
     }
     finally
     {
-      objectLock.unlock();
+      objectLock.writeLock().unlock();
     }
   }
 
   public void negotiatedAttributeOwnershipDivestiture(
     AttributeHandleSet attributeHandles, byte[] tag, IoSession session)
   {
-    objectLock.lock();
+    objectLock.writeLock().lock();
     try
     {
       AttributeHandleSet divestableAttributeHandles =
@@ -160,14 +174,14 @@ public class ObjectInstance
     }
     finally
     {
-      objectLock.unlock();
+      objectLock.writeLock().unlock();
     }
   }
 
   public void confirmDivestiture(AttributeHandleSet attributeHandles,
                                  FederationExecution federationExecution)
   {
-    objectLock.lock();
+    objectLock.writeLock().lock();
     try
     {
       Map<FederateHandle, AttributeHandleSet> newOwners =
@@ -205,7 +219,7 @@ public class ObjectInstance
     }
     finally
     {
-      objectLock.unlock();
+      objectLock.writeLock().unlock();
     }
   }
 
@@ -213,7 +227,7 @@ public class ObjectInstance
     AttributeHandleSet attributeHandles, byte[] tag, FederateHandle acquiree,
     IoSession session, FederationExecution federationExecution)
   {
-    objectLock.lock();
+    objectLock.writeLock().lock();
     try
     {
       AttributeHandleSet acquiredAttributeHandles =
@@ -297,7 +311,7 @@ public class ObjectInstance
     }
     finally
     {
-      objectLock.unlock();
+      objectLock.writeLock().unlock();
     }
   }
 
@@ -305,7 +319,7 @@ public class ObjectInstance
     AttributeHandleSet attributeHandles, FederateHandle acquiree,
     IoSession session)
   {
-    objectLock.lock();
+    objectLock.writeLock().lock();
     try
     {
       AttributeHandleSet acquiredAttributeHandles =
@@ -337,14 +351,14 @@ public class ObjectInstance
     }
     finally
     {
-      objectLock.unlock();
+      objectLock.writeLock().unlock();
     }
   }
 
   public Map<AttributeHandle, FederateHandle> attributeOwnershipDivestitureIfWanted(
     AttributeHandleSet attributeHandles)
   {
-    objectLock.lock();
+    objectLock.writeLock().lock();
     try
     {
       Map<AttributeHandle, FederateHandle> newOwners =
@@ -363,14 +377,14 @@ public class ObjectInstance
     }
     finally
     {
-      objectLock.unlock();
+      objectLock.writeLock().unlock();
     }
   }
 
   public void cancelNegotiatedAttributeOwnershipDivestiture(
     AttributeHandleSet attributeHandles, FederateHandle owner)
   {
-    objectLock.lock();
+    objectLock.writeLock().lock();
     try
     {
       for (AttributeHandle attributeHandle : attributeHandles)
@@ -381,7 +395,7 @@ public class ObjectInstance
     }
     finally
     {
-      objectLock.unlock();
+      objectLock.writeLock().unlock();
     }
   }
 
@@ -389,7 +403,7 @@ public class ObjectInstance
     AttributeHandleSet attributeHandles, FederateHandle acquiree,
     IoSession session)
   {
-    objectLock.lock();
+    objectLock.writeLock().lock();
     try
     {
       AttributeHandleSet canceledOwnershipAcquisitionAttributeHandles =
@@ -411,18 +425,17 @@ public class ObjectInstance
     }
     finally
     {
-      objectLock.unlock();
+      objectLock.writeLock().unlock();
     }
   }
 
   public void queryAttributeOwnership(AttributeHandle attributeHandle,
                                       IoSession session)
   {
-    objectLock.lock();
+    objectLock.writeLock().lock();
     try
     {
-      AttributeInstance attributeInstance =
-        attributes.get(attributeHandle);
+      AttributeInstance attributeInstance = attributes.get(attributeHandle);
       assert attributeInstance != null;
 
       FederateHandle owner = attributeInstance.getOwner();
@@ -444,7 +457,7 @@ public class ObjectInstance
     }
     finally
     {
-      objectLock.unlock();
+      objectLock.writeLock().unlock();
     }
   }
 }

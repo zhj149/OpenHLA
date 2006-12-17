@@ -402,7 +402,7 @@ public class FederationExecution
         registerObjectInstance.getId(), objectInstanceRegistered));
 
       objectManager.registerObjectInstance(
-        objectInstanceHandle, objectClass,
+        objectInstanceHandle, objectClass, name,
         registerObjectInstance.getPublishedAttributeHandles(),
         getFederateHandle(session));
 

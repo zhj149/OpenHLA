@@ -16,16 +16,29 @@
 
 package net.sf.ohla.rti1516.federation.objects;
 
+import java.io.Serializable;
+
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 
+import net.sf.ohla.rti1516.OHLARegionHandleSet;
 import net.sf.ohla.rti1516.fdd.Attribute;
 
+import hla.rti1516.AttributeHandle;
 import hla.rti1516.FederateHandle;
+import hla.rti1516.OrderType;
+import hla.rti1516.RegionHandleSet;
+import hla.rti1516.TransportationType;
 
 public class AttributeInstance
+  implements Serializable
 {
   protected final Attribute attribute;
+
+  protected TransportationType transportationType;
+  protected OrderType orderType;
+
+  protected RegionHandleSet associatedRegions = new OHLARegionHandleSet();
 
   protected FederateHandle owner;
 
@@ -52,6 +65,46 @@ public class AttributeInstance
     return attribute;
   }
 
+  public AttributeHandle getAttributeHandle()
+  {
+    return attribute.getAttributeHandle();
+  }
+
+  public TransportationType getTransportationType()
+  {
+    return transportationType;
+  }
+
+  public void setTransportationType(TransportationType transportationType)
+  {
+    this.transportationType = transportationType;
+  }
+
+  public OrderType getOrderType()
+  {
+    return orderType;
+  }
+
+  public void setOrderType(OrderType orderType)
+  {
+    this.orderType = orderType;
+  }
+
+  public RegionHandleSet getAssociatedRegions()
+  {
+    return associatedRegions;
+  }
+
+  public void associateRegionsForUpdates(RegionHandleSet regionHandles)
+  {
+    associatedRegions.addAll(regionHandles);
+  }
+
+  public void unassociateRegionsForUpdates(RegionHandleSet regionHandles)
+  {
+    associatedRegions.removeAll(regionHandles);
+  }
+
   public FederateHandle getOwner()
   {
     return owner;
@@ -71,6 +124,8 @@ public class AttributeInstance
   {
     owner = null;
     wantsToDivest = false;
+
+    // TODO: reset transportation/order types to what's in FDD?
 
     // give ownership to the next in line
     //
@@ -95,6 +150,8 @@ public class AttributeInstance
   {
     owner = null;
     wantsToDivest = false;
+
+    // TODO: reset transportation/order types to what's in FDD?
 
     // give ownership to the next in line
     //
@@ -146,6 +203,8 @@ public class AttributeInstance
       i.remove();
 
       wantsToDivest = false;
+
+      // TODO: reset transportation/order types to what's in FDD?
     }
 
     return divested ? owner : null;
