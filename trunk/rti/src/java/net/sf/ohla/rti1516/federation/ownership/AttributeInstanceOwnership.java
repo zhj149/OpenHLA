@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.sf.ohla.rti1516.federation.objects;
+package net.sf.ohla.rti1516.federation.ownership;
 
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -23,7 +23,7 @@ import net.sf.ohla.rti1516.fdd.Attribute;
 
 import hla.rti1516.FederateHandle;
 
-public class AttributeInstance
+public class AttributeInstanceOwnership
 {
   protected final Attribute attribute;
 
@@ -42,7 +42,7 @@ public class AttributeInstance
   protected LinkedHashSet<FederateHandle> requestingOwnership =
     new LinkedHashSet<FederateHandle>();
 
-  public AttributeInstance(Attribute attribute)
+  public AttributeInstanceOwnership(Attribute attribute)
   {
     this.attribute = attribute;
   }
