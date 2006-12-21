@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.sf.ohla.rti1516.federation.objects;
+package net.sf.ohla.rti1516.federation.ownership;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -42,34 +42,34 @@ import hla.rti1516.AttributeHandleSet;
 import hla.rti1516.FederateHandle;
 import hla.rti1516.ObjectInstanceHandle;
 
-public class ObjectInstance
+public class ObjectInstanceOwnership
 {
   protected ObjectInstanceHandle objectInstanceHandle;
   protected ObjectClass objectClass;
 
   protected Lock objectLock = new ReentrantLock(true);
 
-  protected Map<AttributeHandle, AttributeInstance> attributes =
-    new HashMap<AttributeHandle, AttributeInstance>();
+  protected Map<AttributeHandle, AttributeInstanceOwnership> attributes =
+    new HashMap<AttributeHandle, AttributeInstanceOwnership>();
 
-  public ObjectInstance(ObjectInstanceHandle objectInstanceHandle,
-                        ObjectClass objectClass,
-                        Set<AttributeHandle> publishedAttributeHandles,
-                        FederateHandle owner)
+  public ObjectInstanceOwnership(ObjectInstanceHandle objectInstanceHandle,
+                                 ObjectClass objectClass,
+                                 Set<AttributeHandle> publishedAttributeHandles,
+                                 FederateHandle owner)
   {
     this.objectInstanceHandle = objectInstanceHandle;
     this.objectClass = objectClass;
 
     for (Attribute attribute : objectClass.getAttributes().values())
     {
-      AttributeInstance attributeInstance =
-        new AttributeInstance(attribute);
+      AttributeInstanceOwnership attributeInstanceOwnership =
+        new AttributeInstanceOwnership(attribute);
       attributes.put(attribute.getAttributeHandle(),
-                     attributeInstance);
+                     attributeInstanceOwnership);
 
       if (publishedAttributeHandles.contains(attribute.getAttributeHandle()))
       {
-        attributeInstance.setOwner(owner);
+        attributeInstanceOwnership.setOwner(owner);
       }
     }
   }
@@ -225,18 +225,18 @@ public class ObjectInstance
 
       for (AttributeHandle attributeHandle : attributeHandles)
       {
-        AttributeInstance attributeInstance =
+        AttributeInstanceOwnership attributeInstanceOwnership =
           attributes.get(attributeHandle);
 
         FederateHandle owner =
-          attributeInstance.attributeOwnershipAcquisition(acquiree);
+          attributeInstanceOwnership.attributeOwnershipAcquisition(acquiree);
         if (acquiree.equals(owner))
         {
           // the attribute was unowned and therefore immediately acquired
           //
           acquiredAttributeHandles.add(attributeHandle);
         }
-        else if (attributeInstance.wantsToDivest())
+        else if (attributeInstanceOwnership.wantsToDivest())
         {
           // the attribute is owned but the owner is willing to divest
           //
@@ -421,17 +421,17 @@ public class ObjectInstance
     objectLock.lock();
     try
     {
-      AttributeInstance attributeInstance =
+      AttributeInstanceOwnership attributeInstanceOwnership =
         attributes.get(attributeHandle);
-      assert attributeInstance != null;
+      assert attributeInstanceOwnership != null;
 
-      FederateHandle owner = attributeInstance.getOwner();
+      FederateHandle owner = attributeInstanceOwnership.getOwner();
       if (owner == null)
       {
         session.write(new AttributeIsNotOwned(
           objectInstanceHandle, attributeHandle));
       }
-      else if (attributeInstance.getAttribute().isMOM())
+      else if (attributeInstanceOwnership.getAttribute().isMOM())
       {
         session.write(new AttributeIsOwnedByRTI(
           objectInstanceHandle, attributeHandle));
