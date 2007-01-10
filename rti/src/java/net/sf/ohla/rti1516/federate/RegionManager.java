@@ -11,12 +11,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.sf.ohla.rti1516.OHLARegionHandleSet;
 import net.sf.ohla.rti1516.fdd.FDD;
-import net.sf.ohla.rti1516.messages.CreateRegion;
 import net.sf.ohla.rti1516.messages.CommitRegionModifications;
-import net.sf.ohla.rti1516.messages.RegionCreated;
-import net.sf.ohla.rti1516.messages.RegionModificationsCommitted;
+import net.sf.ohla.rti1516.messages.CreateRegion;
 import net.sf.ohla.rti1516.messages.DeleteRegion;
-import net.sf.ohla.rti1516.messages.RegionDeleted;
 import net.sf.ohla.rti1516.messages.GetRangeBounds;
 
 import org.apache.mina.common.WriteFuture;
@@ -85,8 +82,6 @@ public class RegionManager
       {
         regionsLock.writeLock().unlock();
       }
-
-      federate.sendToPeers(new RegionCreated(regionHandle, dimensionHandles));
 
       return regionHandle;
     }
@@ -250,9 +245,6 @@ public class RegionManager
         // TODO: set timeout
         //
         commitRegionModifications.await();
-
-        federate.sendToPeers(
-          new RegionModificationsCommitted(regionModifications));
       }
       catch (InterruptedException ie)
       {
@@ -298,8 +290,6 @@ public class RegionManager
       deleteRegion.await();
 
       regions.remove(regionHandle);
-
-      federate.sendToPeers(new RegionDeleted(regionHandle));
     }
     catch (InterruptedException ie)
     {
