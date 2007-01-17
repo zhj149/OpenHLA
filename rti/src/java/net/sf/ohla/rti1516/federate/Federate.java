@@ -2342,7 +2342,17 @@ public class Federate
         messageRetractionManager.retract(messageRetractionHandle,
                                          timeManager.queryLogicalTime());
 
-        sendToPeers(new Retract(messageRetractionHandle));
+        WriteFuture writeFuture = rtiSession.write(
+          new Retract(messageRetractionHandle));
+
+        // TODO: set timeout
+        //
+        writeFuture.join();
+
+        if (!writeFuture.isWritten())
+        {
+          throw new RTIinternalError("error communicating with RTI");
+        }
       }
       finally
       {

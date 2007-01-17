@@ -82,6 +82,7 @@ import net.sf.ohla.rti1516.messages.UnconditionalAttributeOwnershipDivestiture;
 import net.sf.ohla.rti1516.messages.GetRangeBounds;
 import net.sf.ohla.rti1516.messages.TimeAdvanceRequestAvailable;
 import net.sf.ohla.rti1516.messages.RequestAttributeValueUpdate;
+import net.sf.ohla.rti1516.messages.Retract;
 
 import org.apache.mina.common.IoSession;
 import org.apache.mina.common.WriteFuture;
@@ -217,6 +218,10 @@ public class FederationExecution
     else if (message instanceof RequestAttributeValueUpdate)
     {
       process(session, (RequestAttributeValueUpdate) message);
+    }
+    else if (message instanceof Retract)
+    {
+      process(session, (Retract) message);
     }
     else if (message instanceof SubscribeObjectClassAttributes)
     {
@@ -530,6 +535,19 @@ public class FederationExecution
     try
     {
       send(requestAttributeValueUpdate);
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
+  protected void process(IoSession session, Retract retract)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+      send(retract);
     }
     finally
     {
