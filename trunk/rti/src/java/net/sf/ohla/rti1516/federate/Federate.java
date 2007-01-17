@@ -2820,8 +2820,18 @@ public class Federate
     {
       checkIfActive();
 
-      sendToPeers(new RequestAttributeValueUpdate(
-        objectClassHandle, attributesAndRegions, tag));
+      WriteFuture writeFuture = rtiSession.write(
+        new RequestAttributeValueUpdate(
+          objectClassHandle, attributesAndRegions, tag));
+
+      // TODO: set timeout
+      //
+      writeFuture.join();
+
+      if (!writeFuture.isWritten())
+      {
+        throw new RTIinternalError("error communicating with RTI");
+      }
     }
     finally
     {
