@@ -151,7 +151,7 @@ public class FederationExecution
   protected AtomicInteger federateCount = new AtomicInteger(Short.MIN_VALUE);
   protected AtomicInteger regionCount = new AtomicInteger(Short.MIN_VALUE);
 
-  protected Logger log;
+  protected final Logger log;
 
   protected ExecutorService synchronousWaiter =
     Executors.newSingleThreadExecutor();
@@ -161,8 +161,17 @@ public class FederationExecution
     this.name = name;
     this.fdd = fdd;
 
-    log = LoggerFactory.getLogger(
-      String.format("%s.%s", FederationExecution.class, name));
+    log = LoggerFactory.getLogger(String.format("%s.%s", getClass(), name));
+  }
+
+  public String getName()
+  {
+    return name;
+  }
+
+  public FDD getFDD()
+  {
+    return fdd;
   }
 
   public void destroy()
