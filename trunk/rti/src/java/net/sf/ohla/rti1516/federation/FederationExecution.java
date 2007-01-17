@@ -81,6 +81,7 @@ import net.sf.ohla.rti1516.messages.TimeAdvanceRequest;
 import net.sf.ohla.rti1516.messages.UnconditionalAttributeOwnershipDivestiture;
 import net.sf.ohla.rti1516.messages.GetRangeBounds;
 import net.sf.ohla.rti1516.messages.TimeAdvanceRequestAvailable;
+import net.sf.ohla.rti1516.messages.RequestAttributeValueUpdate;
 
 import org.apache.mina.common.IoSession;
 import org.apache.mina.common.WriteFuture;
@@ -212,6 +213,10 @@ public class FederationExecution
     else if (message instanceof RemoveObjectInstance)
     {
       process(session, (RemoveObjectInstance) message);
+    }
+    else if (message instanceof RequestAttributeValueUpdate)
+    {
+      process(session, (RequestAttributeValueUpdate) message);
     }
     else if (message instanceof SubscribeObjectClassAttributes)
     {
@@ -511,6 +516,20 @@ public class FederationExecution
       {
         // TODO: schedule delete
       }
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
+  protected void process(
+    IoSession session, RequestAttributeValueUpdate requestAttributeValueUpdate)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+      send(requestAttributeValueUpdate);
     }
     finally
     {
