@@ -137,9 +137,8 @@ public class RTI
         log.info("federation execution already exists: {}",
                  federationExecutionName);
 
-        response = new FederationExecutionAlreadyExists(
-          String.format("federation execution already exists: %s",
-                        federationExecutionName));
+        response =
+          new FederationExecutionAlreadyExists(federationExecutionName);
       }
       else
       {
@@ -179,9 +178,7 @@ public class RTI
         log.info("federation execution does not exist: {}",
                  federationExecutionName);
 
-        response = new FederationExecutionDoesNotExist(
-          String.format("federation execution does not exist: %s",
-                        federationExecutionName));
+        response = new FederationExecutionDoesNotExist(federationExecutionName);
       }
       else
       {
@@ -229,11 +226,9 @@ public class RTI
         log.info("federation execution does not exist: {}",
                  federationExecutionName);
 
-        Object response = new FederationExecutionDoesNotExist(
-          String.format("federation execution does not exist: %s",
-                        federationExecutionName));
         session.write(new DefaultResponse(
-          joinFederationExecution.getId(), response));
+          joinFederationExecution.getId(),
+          new FederationExecutionDoesNotExist(federationExecutionName)));
       }
     }
     finally
