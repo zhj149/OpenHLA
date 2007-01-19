@@ -2913,9 +2913,9 @@ public class OHLARTIambassador
     if (rtiSession == null || !rtiSession.isConnected())
     {
       String host =
-        System.getProperties().getProperty(RTI.OHLA_RTI_HOST_PROPERTY);
+        System.getProperties().getProperty("ohla.rti.host");
       String port =
-        System.getProperties().getProperty(RTI.OHLA_RTI_PORT_PROPERTY);
+        System.getProperties().getProperty("ohla.rti.port");
 
       try
       {
