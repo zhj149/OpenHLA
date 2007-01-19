@@ -214,163 +214,176 @@ public class FederationExecution
 
     if (message instanceof RegisterObjectInstance)
     {
-      process(session, (RegisterObjectInstance) message);
+      registerObjectInstance(session, (RegisterObjectInstance) message);
     }
     else if (message instanceof ReserveObjectInstanceName)
     {
-      process(session, (ReserveObjectInstanceName) message);
+      reserveObjectInstanceName(session, (ReserveObjectInstanceName) message);
     }
     else if (message instanceof RemoveObjectInstance)
     {
-      process(session, (RemoveObjectInstance) message);
+      removeObjectInstance(session, (RemoveObjectInstance) message);
     }
     else if (message instanceof RequestAttributeValueUpdate)
     {
-      process(session, (RequestAttributeValueUpdate) message);
+      requestAttributeValueUpdate(
+        session, (RequestAttributeValueUpdate) message);
     }
     else if (message instanceof Retract)
     {
-      process(session, (Retract) message);
+      retract(session, (Retract) message);
     }
     else if (message instanceof SubscribeObjectClassAttributes)
     {
-      process(session, (SubscribeObjectClassAttributes) message);
+      subscribeObjectClassAttributes(
+        session, (SubscribeObjectClassAttributes) message);
     }
     else if (message instanceof RegisterFederationSynchronizationPoint)
     {
-      process(session, (RegisterFederationSynchronizationPoint) message);
+      registerFederationSynchronizationPoint(
+        session, (RegisterFederationSynchronizationPoint) message);
     }
     else if (message instanceof SynchronizationPointAchieved)
     {
-      process(session, (SynchronizationPointAchieved) message);
+      synchronizationPointAchieved(
+        session, (SynchronizationPointAchieved) message);
     }
     else if (message instanceof RequestFederationSave)
     {
-      process(session, (RequestFederationSave) message);
+      requestFederationSave(session, (RequestFederationSave) message);
     }
     else if (message instanceof FederateSaveInitiated)
     {
-      process(session, (FederateSaveInitiated) message);
+      federateSaveInitiated(session, (FederateSaveInitiated) message);
     }
     else if (message instanceof FederateSaveInitiatedFailed)
     {
-      process(session, (FederateSaveInitiatedFailed) message);
+      federateSaveInitiatedFailed(
+        session, (FederateSaveInitiatedFailed) message);
     }
     else if (message instanceof FederateSaveBegun)
     {
-      process(session, (FederateSaveBegun) message);
+      federateSaveBegun(session, (FederateSaveBegun) message);
     }
     else if (message instanceof FederateSaveComplete)
     {
-      process(session, (FederateSaveComplete) message);
+      federateSaveComplete(session, (FederateSaveComplete) message);
     }
     else if (message instanceof FederateSaveNotComplete)
     {
-      process(session, (FederateSaveNotComplete) message);
+      federateSaveNotComplete(session, (FederateSaveNotComplete) message);
     }
     else if (message instanceof QueryFederationSaveStatus)
     {
-      process(session, (QueryFederationSaveStatus) message);
+      queryFederationSaveStatus(session, (QueryFederationSaveStatus) message);
     }
     else if (message instanceof RequestFederationRestore)
     {
-      process(session, (RequestFederationRestore) message);
+      requestFederationRestore(session, (RequestFederationRestore) message);
     }
     else if (message instanceof FederateRestoreComplete)
     {
-      process(session, (FederateRestoreComplete) message);
+      federateRestoreComplete(session, (FederateRestoreComplete) message);
     }
     else if (message instanceof FederateRestoreNotComplete)
     {
-      process(session, (FederateRestoreNotComplete) message);
+      federateRestoreNotComplete(session, (FederateRestoreNotComplete) message);
     }
     else if (message instanceof QueryFederationRestoreStatus)
     {
-      process(session, (QueryFederationRestoreStatus) message);
+      queryFederationRestoreStatus(session, (QueryFederationRestoreStatus) message);
     }
     else if (message instanceof UnconditionalAttributeOwnershipDivestiture)
     {
-      process(session, (UnconditionalAttributeOwnershipDivestiture) message);
+      unconditionalAttributeOwnershipDivestiture(
+        session, (UnconditionalAttributeOwnershipDivestiture) message);
     }
     else if (message instanceof NegotiatedAttributeOwnershipDivestiture)
     {
-      process(session, (NegotiatedAttributeOwnershipDivestiture) message);
+      negotiatedAttributeOwnershipDivestiture(
+        session, (NegotiatedAttributeOwnershipDivestiture) message);
     }
     else if (message instanceof ConfirmDivestiture)
     {
-      process(session, (ConfirmDivestiture) message);
+      confirmDivestiture(session, (ConfirmDivestiture) message);
     }
     else if (message instanceof AttributeOwnershipAcquisition)
     {
-      process(session, (AttributeOwnershipAcquisition) message);
+      attributeOwnershipAcquisition(
+        session, (AttributeOwnershipAcquisition) message);
     }
     else if (message instanceof AttributeOwnershipAcquisitionIfAvailable)
     {
-      process(session, (AttributeOwnershipAcquisitionIfAvailable) message);
+      attributeOwnershipAcquisitionIfAvailable(
+        session, (AttributeOwnershipAcquisitionIfAvailable) message);
     }
     else if (message instanceof AttributeOwnershipDivestitureIfWanted)
     {
-      process(session, (AttributeOwnershipDivestitureIfWanted) message);
+      attributeOwnershipDivestitureIfWanted(
+        session, (AttributeOwnershipDivestitureIfWanted) message);
     }
     else if (message instanceof CancelNegotiatedAttributeOwnershipDivestiture)
     {
-      process(session, (CancelNegotiatedAttributeOwnershipDivestiture) message);
+      cancelNegotiatedAttributeOwnershipDivestiture(
+        session, (CancelNegotiatedAttributeOwnershipDivestiture) message);
     }
     else if (message instanceof CancelAttributeOwnershipAcquisition)
     {
-      process(session, (CancelAttributeOwnershipAcquisition) message);
+      cancelAttributeOwnershipAcquisition(
+        session, (CancelAttributeOwnershipAcquisition) message);
     }
     else if (message instanceof QueryAttributeOwnership)
     {
-      process(session, (QueryAttributeOwnership) message);
+      queryAttributeOwnership(session, (QueryAttributeOwnership) message);
     }
     else if (message instanceof EnableTimeRegulation)
     {
-      process(session, (EnableTimeRegulation) message);
+      enableTimeRegulation(session, (EnableTimeRegulation) message);
     }
     else if (message instanceof DisableTimeRegulation)
     {
-      process(session, (DisableTimeRegulation) message);
+      disableTimeRegulation(session, (DisableTimeRegulation) message);
     }
     else if (message instanceof EnableTimeConstrained)
     {
-      process(session, (EnableTimeConstrained) message);
+      enableTimeConstrained(session, (EnableTimeConstrained) message);
     }
     else if (message instanceof DisableTimeConstrained)
     {
-      process(session, (DisableTimeConstrained) message);
+      disableTimeConstrained(session, (DisableTimeConstrained) message);
     }
     else if (message instanceof TimeAdvanceRequest)
     {
-      process(session, (TimeAdvanceRequest) message);
+      timeAdvanceRequest(session, (TimeAdvanceRequest) message);
     }
     else if (message instanceof TimeAdvanceRequestAvailable)
     {
-      process(session, (TimeAdvanceRequestAvailable) message);
+      timeAdvanceRequestAvailable(
+        session, (TimeAdvanceRequestAvailable) message);
     }
     else if (message instanceof CommitRegionModifications)
     {
-      process(session, (CommitRegionModifications) message);
+      commitRegionModifications(session, (CommitRegionModifications) message);
     }
     else if (message instanceof GetRangeBounds)
     {
-      process(session, (GetRangeBounds) message);
+      getRangeBounds(session, (GetRangeBounds) message);
     }
     else if (message instanceof CreateRegion)
     {
-      process(session, (CreateRegion) message);
+      createRegion(session, (CreateRegion) message);
     }
     else if (message instanceof DeleteRegion)
     {
-      process(session, (DeleteRegion) message);
+      deleteRegion(session, (DeleteRegion) message);
     }
     else if (message instanceof JoinFederationExecution)
     {
-      process(session, (JoinFederationExecution) message);
+      joinFederationExecution(session, (JoinFederationExecution) message);
     }
     else if (message instanceof ResignFederationExecution)
     {
-      process(session, (ResignFederationExecution) message);
+      resignFederationExecution(session, (ResignFederationExecution) message);
     }
     else
     {
@@ -380,7 +393,7 @@ public class FederationExecution
     return processed;
   }
 
-  protected void process(IoSession session,
+  protected void registerObjectInstance(IoSession session,
                          RegisterObjectInstance registerObjectInstance)
   {
     boolean unlock = true;
@@ -441,7 +454,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(IoSession session,
+  protected void reserveObjectInstanceName(IoSession session,
                          ReserveObjectInstanceName reserveObjectInstanceName)
   {
     federationExecutionStateLock.readLock().lock();
@@ -516,7 +529,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(IoSession session,
+  protected void removeObjectInstance(IoSession session,
                          RemoveObjectInstance removeObjectInstance)
   {
     federationExecutionStateLock.readLock().lock();
@@ -537,7 +550,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(
+  protected void requestAttributeValueUpdate(
     IoSession session, RequestAttributeValueUpdate requestAttributeValueUpdate)
   {
     federationExecutionStateLock.readLock().lock();
@@ -551,7 +564,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(IoSession session, Retract retract)
+  protected void retract(IoSession session, Retract retract)
   {
     federationExecutionStateLock.readLock().lock();
     try
@@ -564,7 +577,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(
+  protected void subscribeObjectClassAttributes(
     IoSession session,
     SubscribeObjectClassAttributes subscribeObjectClassAttributes)
   {
@@ -586,7 +599,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(
+  protected void registerFederationSynchronizationPoint(
     IoSession session,
     RegisterFederationSynchronizationPoint registerFederationSynchronizationPoint)
   {
@@ -662,7 +675,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(
+  protected void synchronizationPointAchieved(
     IoSession session,
     SynchronizationPointAchieved synchronizationPointAchieved)
   {
@@ -702,7 +715,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(IoSession session,
+  protected void requestFederationSave(IoSession session,
                          RequestFederationSave requestFederationSave)
   {
     federationExecutionStateLock.writeLock().lock();
@@ -781,7 +794,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(IoSession session,
+  protected void federateSaveInitiated(IoSession session,
                          FederateSaveInitiated federateSaveInitiated)
   {
     federationExecutionStateLock.readLock().lock();
@@ -797,7 +810,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(
+  protected void federateSaveInitiatedFailed(
     IoSession session, FederateSaveInitiatedFailed federateSaveInitiatedFailed)
   {
     federationExecutionStateLock.readLock().lock();
@@ -814,7 +827,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(IoSession session, FederateSaveBegun federateSaveBegun)
+  protected void federateSaveBegun(IoSession session, FederateSaveBegun federateSaveBegun)
   {
     federationExecutionStateLock.readLock().lock();
     try
@@ -833,7 +846,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(IoSession session,
+  protected void federateSaveComplete(IoSession session,
                          FederateSaveComplete federateSaveComplete)
   {
     federationExecutionStateLock.readLock().lock();
@@ -889,7 +902,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(IoSession session,
+  protected void federateSaveNotComplete(IoSession session,
                          FederateSaveNotComplete federateSaveNotComplete)
   {
     federationExecutionStateLock.readLock().lock();
@@ -946,7 +959,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(IoSession session,
+  protected void queryFederationSaveStatus(IoSession session,
                          QueryFederationSaveStatus queryFederationSaveStatus)
   {
     federationExecutionStateLock.readLock().lock();
@@ -984,7 +997,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(IoSession session,
+  protected void requestFederationRestore(IoSession session,
                          RequestFederationRestore requestFederationRestore)
   {
     federationExecutionStateLock.readLock().lock();
@@ -1019,7 +1032,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(IoSession session,
+  protected void federateRestoreComplete(IoSession session,
                          FederateRestoreComplete federateRestoreComplete)
   {
     federationExecutionStateLock.readLock().lock();
@@ -1039,7 +1052,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(IoSession session,
+  protected void federateRestoreNotComplete(IoSession session,
                          FederateRestoreNotComplete federateRestoreNotComplete)
   {
     federationExecutionStateLock.readLock().lock();
@@ -1059,7 +1072,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(
+  protected void queryFederationRestoreStatus(
     IoSession session,
     QueryFederationRestoreStatus queryFederationRestoreStatus)
   {
@@ -1099,7 +1112,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(
+  protected void unconditionalAttributeOwnershipDivestiture(
     IoSession session,
     UnconditionalAttributeOwnershipDivestiture unconditionalAttributeOwnershipDivestiture)
   {
@@ -1116,7 +1129,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(
+  protected void negotiatedAttributeOwnershipDivestiture(
     IoSession session,
     NegotiatedAttributeOwnershipDivestiture negotiatedAttributeOwnershipDivestiture)
   {
@@ -1134,7 +1147,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(IoSession session,
+  protected void confirmDivestiture(IoSession session,
                          ConfirmDivestiture confirmDivestiture)
   {
     federationExecutionStateLock.readLock().lock();
@@ -1150,7 +1163,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(
+  protected void attributeOwnershipAcquisition(
     IoSession session,
     AttributeOwnershipAcquisition attributeOwnershipAcquisition)
   {
@@ -1169,7 +1182,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(
+  protected void attributeOwnershipAcquisitionIfAvailable(
     IoSession session,
     AttributeOwnershipAcquisitionIfAvailable attributeOwnershipAcquisitionIfAvailable)
   {
@@ -1187,7 +1200,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(
+  protected void attributeOwnershipDivestitureIfWanted(
     IoSession session,
     AttributeOwnershipDivestitureIfWanted attributeOwnershipDivestitureIfWanted)
   {
@@ -1274,7 +1287,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(
+  protected void cancelNegotiatedAttributeOwnershipDivestiture(
     IoSession session,
     CancelNegotiatedAttributeOwnershipDivestiture cancelNegotiatedAttributeOwnershipDivestiture)
   {
@@ -1292,7 +1305,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(
+  protected void cancelAttributeOwnershipAcquisition(
     IoSession session,
     CancelAttributeOwnershipAcquisition cancelAttributeOwnershipAcquisition)
   {
@@ -1310,7 +1323,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(IoSession session,
+  protected void queryAttributeOwnership(IoSession session,
                          QueryAttributeOwnership queryAttributeOwnership)
   {
     federationExecutionStateLock.readLock().lock();
@@ -1326,7 +1339,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(IoSession session,
+  protected void enableTimeRegulation(IoSession session,
                          EnableTimeRegulation enableTimeRegulation)
   {
     federationExecutionStateLock.readLock().lock();
@@ -1341,7 +1354,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(IoSession session,
+  protected void disableTimeRegulation(IoSession session,
                          DisableTimeRegulation disableTimeRegulation)
   {
     federationExecutionStateLock.readLock().lock();
@@ -1355,7 +1368,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(IoSession session,
+  protected void enableTimeConstrained(IoSession session,
                          EnableTimeConstrained enableTimeConstrained)
   {
     federationExecutionStateLock.readLock().lock();
@@ -1369,7 +1382,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(IoSession session,
+  protected void disableTimeConstrained(IoSession session,
                          DisableTimeConstrained disableTimeConstrained)
   {
     federationExecutionStateLock.readLock().lock();
@@ -1383,7 +1396,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(IoSession session,
+  protected void timeAdvanceRequest(IoSession session,
                          TimeAdvanceRequest timeAdvanceRequest)
   {
     federationExecutionStateLock.readLock().lock();
@@ -1398,7 +1411,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(
+  protected void timeAdvanceRequestAvailable(
     IoSession session, TimeAdvanceRequestAvailable timeAdvanceRequestAvailable)
   {
     federationExecutionStateLock.readLock().lock();
@@ -1413,7 +1426,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(IoSession session,
+  protected void commitRegionModifications(IoSession session,
                          CommitRegionModifications commitRegionModifications)
   {
     federationExecutionStateLock.readLock().lock();
@@ -1441,7 +1454,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(IoSession session, GetRangeBounds getRangeBounds)
+  protected void getRangeBounds(IoSession session, GetRangeBounds getRangeBounds)
   {
     federationExecutionStateLock.readLock().lock();
     try
@@ -1467,7 +1480,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(IoSession session, CreateRegion createRegion)
+  protected void createRegion(IoSession session, CreateRegion createRegion)
   {
     federationExecutionStateLock.readLock().lock();
     try
@@ -1501,7 +1514,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(IoSession session, DeleteRegion deleteRegion)
+  protected void deleteRegion(IoSession session, DeleteRegion deleteRegion)
   {
     federationExecutionStateLock.readLock().lock();
     try
@@ -1524,7 +1537,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(IoSession session,
+  protected void joinFederationExecution(IoSession session,
                          JoinFederationExecution joinFederationExecution)
   {
     federationExecutionStateLock.readLock().lock();
@@ -1608,7 +1621,7 @@ public class FederationExecution
     }
   }
 
-  protected void process(IoSession session,
+  protected void resignFederationExecution(IoSession session,
                          ResignFederationExecution resignFederationExecution)
   {
     federationExecutionStateLock.readLock().lock();
