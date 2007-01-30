@@ -23,15 +23,4 @@ import hla.rti1516.FederateHandle;
 public class FederateSaveInitiated
   implements Message
 {
-  protected Set<FederateHandle> participants;
-
-  public FederateSaveInitiated(Set<FederateHandle> participants)
-  {
-    this.participants = participants;
-  }
-
-  public Set<FederateHandle> getParticipants()
-  {
-    return participants;
-  }
 }

@@ -32,16 +32,12 @@ public class JoinFederationExecutionResponse
   protected FDD fdd;
   protected LogicalTime galt;
 
-  protected Map<FederateHandle, SocketAddress> peerConnectionInfo;
-
   public JoinFederationExecutionResponse(
-    FederateHandle federateHandle, FDD fdd, LogicalTime galt,
-    Map<FederateHandle, SocketAddress> peerConnectionInfo)
+    FederateHandle federateHandle, FDD fdd, LogicalTime galt)
   {
     this.federateHandle = federateHandle;
     this.fdd = fdd;
     this.galt = galt;
-    this.peerConnectionInfo = peerConnectionInfo;
   }
 
   public FederateHandle getFederateHandle()
@@ -57,10 +53,5 @@ public class JoinFederationExecutionResponse
   public LogicalTime getGALT()
   {
     return galt;
-  }
-
-  public Map<FederateHandle, SocketAddress> getPeerConnectionInfo()
-  {
-    return peerConnectionInfo;
   }
 }

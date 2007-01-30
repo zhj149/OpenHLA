@@ -18,10 +18,9 @@ import net.sf.ohla.rti1516.fdd.InteractionClass;
 import net.sf.ohla.rti1516.fdd.ObjectClass;
 import net.sf.ohla.rti1516.federate.Federate;
 import net.sf.ohla.rti1516.federate.SubscriptionManager;
-import net.sf.ohla.rti1516.federate.callbacks.ReceiveInteraction;
-import net.sf.ohla.rti1516.federate.callbacks.RemoveObjectInstance;
+import net.sf.ohla.rti1516.messages.callbacks.ReceiveInteraction;
+import net.sf.ohla.rti1516.messages.callbacks.RemoveObjectInstance;
 import net.sf.ohla.rti1516.messages.DefaultResponse;
-import net.sf.ohla.rti1516.messages.ObjectInstanceRegistered;
 import net.sf.ohla.rti1516.messages.RegisterObjectInstance;
 import net.sf.ohla.rti1516.messages.ReserveObjectInstanceName;
 import net.sf.ohla.rti1516.messages.ResignFederationExecution;
@@ -605,11 +604,8 @@ public class ObjectManager
       //
       Object response = registerObjectInstance.getResponse();
 
-      assert response instanceof ObjectInstanceRegistered :
-        String.format("unexpected response: %s");
-
-      ObjectInstanceRegistered objectInstanceRegistered =
-        (ObjectInstanceRegistered) response;
+//      assert response instanceof ObjectInstanceRegistered :
+//        String.format("unexpected response: %s");
 
       ObjectInstanceHandle objectInstanceHandle =
         objectInstanceRegistered.getObjectInstanceHandle();
@@ -704,11 +700,8 @@ public class ObjectManager
       //
       Object response = registerObjectInstance.getResponse();
 
-      assert response instanceof ObjectInstanceRegistered :
-        String.format("unexpected response: %s");
-
-      ObjectInstanceRegistered objectInstanceRegistered =
-        (ObjectInstanceRegistered) response;
+//      assert response instanceof ObjectInstanceRegistered :
+//        String.format("unexpected response: %s");
 
       ObjectInstanceHandle objectInstanceHandle =
         objectInstanceRegistered.getObjectInstanceHandle();

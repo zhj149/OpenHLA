@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, Michael Newcomb
+ * Copyright (c) 2007, Michael Newcomb
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,10 @@
 
 package net.sf.ohla.rti1516.messages;
 
-import hla.rti1516.ObjectInstanceHandle;
-import hla.rti1516.OrderType;
 import hla.rti1516.LogicalTime;
 import hla.rti1516.MessageRetractionHandle;
+import hla.rti1516.ObjectInstanceHandle;
+import hla.rti1516.OrderType;
 
 public class DeleteObjectInstance
   implements Message
@@ -29,4 +29,48 @@ public class DeleteObjectInstance
   protected OrderType sentOrderType;
   protected LogicalTime deleteTime;
   protected MessageRetractionHandle messageRetractionHandle;
+
+  public DeleteObjectInstance(ObjectInstanceHandle objectInstanceHandle,
+                              byte[] tag, OrderType sentOrderType)
+  {
+    this.objectInstanceHandle = objectInstanceHandle;
+    this.tag = tag;
+    this.sentOrderType = sentOrderType;
+  }
+
+  public DeleteObjectInstance(ObjectInstanceHandle objectInstanceHandle,
+                              byte[] tag, OrderType sentOrderType,
+                              LogicalTime deleteTime,
+                              MessageRetractionHandle messageRetractionHandle)
+  {
+    this(objectInstanceHandle, tag, sentOrderType);
+
+    this.deleteTime = deleteTime;
+    this.messageRetractionHandle = messageRetractionHandle;
+  }
+
+  public ObjectInstanceHandle getObjectInstanceHandle()
+  {
+    return objectInstanceHandle;
+  }
+
+  public byte[] getTag()
+  {
+    return tag;
+  }
+
+  public OrderType getSentOrderType()
+  {
+    return sentOrderType;
+  }
+
+  public LogicalTime getDeleteTime()
+  {
+    return deleteTime;
+  }
+
+  public MessageRetractionHandle getMessageRetractionHandle()
+  {
+    return messageRetractionHandle;
+  }
 }

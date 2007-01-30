@@ -27,17 +27,13 @@ public class JoinFederationExecution
   protected String federationExecutionName;
   protected MobileFederateServices mobileFederateServices;
 
-  protected SocketAddress connectionInfo;
-
   public JoinFederationExecution(
     String federateType, String federationExecutionName,
-    MobileFederateServices mobileFederateServices,
-    SocketAddress connectionInfo)
+    MobileFederateServices mobileFederateServices)
   {
     this.federateType = federateType;
     this.federationExecutionName = federationExecutionName;
     this.mobileFederateServices = mobileFederateServices;
-    this.connectionInfo = connectionInfo;
   }
 
   public String getFederateType()
@@ -53,10 +49,5 @@ public class JoinFederationExecution
   public MobileFederateServices getMobileFederateServices()
   {
     return mobileFederateServices;
-  }
-
-  public SocketAddress getConnectionInfo()
-  {
-    return connectionInfo;
   }
 }

@@ -29,7 +29,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import net.sf.ohla.rti1516.fdd.Attribute;
 import net.sf.ohla.rti1516.fdd.ObjectClass;
 import net.sf.ohla.rti1516.federate.Federate;
-import net.sf.ohla.rti1516.federate.callbacks.ReflectAttributeValues;
+import net.sf.ohla.rti1516.messages.callbacks.ReflectAttributeValues;
 import net.sf.ohla.rti1516.OHLAAttributeHandleSet;
 import net.sf.ohla.rti1516.OHLARegionHandleSet;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipAcquisition;
