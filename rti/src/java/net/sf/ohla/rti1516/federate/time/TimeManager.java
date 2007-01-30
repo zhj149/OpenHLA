@@ -20,7 +20,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.sf.ohla.rti1516.federate.Federate;
-import net.sf.ohla.rti1516.federate.callbacks.TimeAdvanceGrant;
+import net.sf.ohla.rti1516.messages.callbacks.TimeAdvanceGrant;
 import net.sf.ohla.rti1516.messages.DisableTimeConstrained;
 import net.sf.ohla.rti1516.messages.DisableTimeRegulation;
 import net.sf.ohla.rti1516.messages.EnableTimeConstrained;

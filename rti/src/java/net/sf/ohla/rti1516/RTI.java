@@ -39,8 +39,6 @@ import hla.rti1516.FederationExecutionDoesNotExist;
 
 public class RTI
 {
-  public static final String FEDERATION_EXECUTION = "FederationExecution";
-
   private static final Logger log = LoggerFactory.getLogger(RTI.class);
 
   public static final String OHLA_RTI_ACCEPTOR_PATTERN =
@@ -218,7 +216,7 @@ public class RTI
         federations.get(federationExecutionName);
       if (federationExecution != null)
       {
-        federationExecution.process(
+        federationExecution.joinFederationExecution(
           session, joinFederationExecution);
       }
       else
@@ -251,37 +249,23 @@ public class RTI
     public void messageReceived(IoSession session, Object message)
       throws Exception
     {
-      FederationExecution federationExecution = getFederationExecution(session);
-      if (federationExecution == null ||
-          !federationExecution.process(session, message))
+      if (message instanceof CreateFederationExecution)
       {
-        // there was no FederationExecution associated with this channel or
-        // the one associated could not createFederationExecution the message
-
-        if (message instanceof CreateFederationExecution)
-        {
-          createFederationExecution(
-            session, (CreateFederationExecution) message);
-        }
-        else if (message instanceof DestroyFederationExecution)
-        {
-          destroyFederationExecution(
-            session, (DestroyFederationExecution) message);
-        }
-        else if (message instanceof JoinFederationExecution)
-        {
-          joinFederationExecution(session, (JoinFederationExecution) message);
-        }
-        else
-        {
-          assert false : String.format("unexpected message: %s", message);
-        }
+        createFederationExecution(session, (CreateFederationExecution) message);
       }
-    }
-
-    protected FederationExecution getFederationExecution(IoSession session)
-    {
-      return (FederationExecution) session.getAttribute(FEDERATION_EXECUTION);
+      else if (message instanceof DestroyFederationExecution)
+      {
+        destroyFederationExecution(
+          session, (DestroyFederationExecution) message);
+      }
+      else if (message instanceof JoinFederationExecution)
+      {
+        joinFederationExecution(session, (JoinFederationExecution) message);
+      }
+      else
+      {
+        assert false : String.format("unexpected message: %s", message);
+      }
     }
   }
 

@@ -16,6 +16,8 @@
 
 package net.sf.ohla.rti1516.federation.time;
 
+import net.sf.ohla.rti1516.federation.Federate;
+
 import hla.rti1516.LogicalTimeInterval;
 import hla.rti1516.LogicalTime;
 import hla.rti1516.FederateHandle;
@@ -23,28 +25,28 @@ import hla.rti1516.IllegalTimeArithmetic;
 
 public class TimeRegulatingFederate
 {
-  protected final FederateHandle federateHandle;
+  protected final Federate federate;
 
   protected LogicalTime federateTime;
   protected LogicalTimeInterval lookahead;
   protected LogicalTime timeAdvanceRequest;
   protected LogicalTime lits;
 
-  public TimeRegulatingFederate(FederateHandle federateHandle,
+  public TimeRegulatingFederate(Federate federate,
                                 LogicalTime federateTime,
                                 LogicalTimeInterval lookahead)
     throws IllegalTimeArithmetic
   {
-    this.federateHandle = federateHandle;
+    this.federate = federate;
     this.federateTime = federateTime;
     this.lookahead = lookahead;
 
     lits = federateTime.add(lookahead);
   }
 
-  public FederateHandle getFederateHandle()
+  public Federate getFederate()
   {
-    return federateHandle;
+    return federate;
   }
 
   public LogicalTime getFederateTime()

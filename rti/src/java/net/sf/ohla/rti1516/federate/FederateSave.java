@@ -16,8 +16,6 @@
 
 package net.sf.ohla.rti1516.federate;
 
-import java.util.Set;
-
 import hla.rti1516.FederateHandle;
 
 public class FederateSave
@@ -25,14 +23,10 @@ public class FederateSave
   protected FederateHandle federateHandle;
   protected String federateType;
 
-  protected transient Set<FederateHandle> participants;
-
-  public FederateSave(FederateHandle federateHandle, String federateType,
-                      Set<FederateHandle> participants)
+  public FederateSave(FederateHandle federateHandle, String federateType)
   {
     this.federateHandle = federateHandle;
     this.federateType = federateType;
-    this.participants = participants;
   }
 
   public FederateHandle getFederateHandle()
@@ -43,28 +37,5 @@ public class FederateSave
   public String getFederateType()
   {
     return federateType;
-  }
-
-  public Set<FederateHandle> getParticipants()
-  {
-    return participants;
-  }
-
-  public boolean federateSaveInitiated(FederateHandle peerFederateHandle)
-  {
-    participants.remove(federateHandle);
-    return participants.isEmpty();
-  }
-
-  public boolean federateSaveInitiatedFailed(FederateHandle peerFederateHandle)
-  {
-    participants.remove(federateHandle);
-    return participants.isEmpty();
-  }
-
-  public boolean federateResigned(FederateHandle federateHandle)
-  {
-    participants.remove(federateHandle);
-    return participants.isEmpty();
   }
 }

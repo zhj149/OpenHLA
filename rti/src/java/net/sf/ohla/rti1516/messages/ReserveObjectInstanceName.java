@@ -17,7 +17,7 @@
 package net.sf.ohla.rti1516.messages;
 
 public class ReserveObjectInstanceName
-  extends AbstractRequest
+  implements Message
 {
   protected String name;
 

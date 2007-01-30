@@ -5,22 +5,20 @@ import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import net.sf.ohla.rti1516.federate.callbacks.TimeAdvanceGrant;
-import net.sf.ohla.rti1516.federate.callbacks.TimeConstrainedEnabled;
-import net.sf.ohla.rti1516.federate.callbacks.TimeRegulationEnabled;
+import net.sf.ohla.rti1516.messages.callbacks.TimeAdvanceGrant;
+import net.sf.ohla.rti1516.messages.callbacks.TimeConstrainedEnabled;
+import net.sf.ohla.rti1516.messages.callbacks.TimeRegulationEnabled;
+import net.sf.ohla.rti1516.federation.Federate;
 import net.sf.ohla.rti1516.federation.FederationExecution;
 import net.sf.ohla.rti1516.messages.GALTAdvanced;
-
-import org.apache.mina.common.IoSession;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import hla.rti1516.FederateHandle;
+import hla.rti1516.IllegalTimeArithmetic;
 import hla.rti1516.LogicalTime;
 import hla.rti1516.LogicalTimeInterval;
 import hla.rti1516.MobileFederateServices;
-import hla.rti1516.IllegalTimeArithmetic;
 
 public class TimeKeeper
 {
@@ -34,11 +32,11 @@ public class TimeKeeper
 
   protected Lock timeLock = new ReentrantLock(true);
 
-  protected Map<FederateHandle, TimeRegulatingFederate> timeRegulatingFederates =
-    new HashMap<FederateHandle, TimeRegulatingFederate>();
+  protected Map<Federate, TimeRegulatingFederate> timeRegulatingFederates =
+    new HashMap<Federate, TimeRegulatingFederate>();
 
-  protected Map<FederateHandle, TimeConstrainedFederate> timeConstrainedFederates =
-    new HashMap<FederateHandle, TimeConstrainedFederate>();
+  protected Map<Federate, TimeConstrainedFederate> timeConstrainedFederates =
+    new HashMap<Federate, TimeConstrainedFederate>();
 
   public TimeKeeper(FederationExecution federationExecution,
                     MobileFederateServices mobileFederateServices)
@@ -54,17 +52,16 @@ public class TimeKeeper
     return galt;
   }
 
-  public void enableTimeRegulation(IoSession session,
-                                   FederateHandle federateHandle,
+  public void enableTimeRegulation(Federate federate,
                                    LogicalTimeInterval lookahead)
   {
     timeLock.lock();
     try
     {
-      timeRegulatingFederates.put(federateHandle, new TimeRegulatingFederate(
-        federateHandle, galt, lookahead));
+      timeRegulatingFederates.put(
+        federate, new TimeRegulatingFederate(federate, galt, lookahead));
 
-      session.write(new TimeRegulationEnabled(galt));
+      federate.getSession().write(new TimeRegulationEnabled(galt));
     }
     catch (IllegalTimeArithmetic ita)
     {
@@ -75,75 +72,73 @@ public class TimeKeeper
       timeLock.unlock();
     }
 
-    log.debug("time regulation enabled: {}", federateHandle);
+    log.debug("time regulation enabled: {}", federate);
   }
 
-  public void disableTimeRegulation(FederateHandle federateHandle)
+  public void disableTimeRegulation(Federate federate)
   {
     timeLock.lock();
     try
     {
-      timeRegulatingFederates.remove(federateHandle);
+      timeRegulatingFederates.remove(federate);
     }
     finally
     {
       timeLock.unlock();
     }
 
-    log.debug("time regulation disabled: {}", federateHandle);
+    log.debug("time regulation disabled: {}", federate);
   }
 
-  public void enableTimeConstrained(IoSession session,
-                                    FederateHandle federateHandle)
+  public void enableTimeConstrained(Federate federate)
   {
     timeLock.lock();
     try
     {
       timeConstrainedFederates.put(
-        federateHandle, new TimeConstrainedFederate(federateHandle, galt));
+        federate, new TimeConstrainedFederate(federate, galt));
 
-      session.write(new TimeConstrainedEnabled(galt));
+      federate.getSession().write(new TimeConstrainedEnabled(galt));
     }
     finally
     {
       timeLock.unlock();
     }
 
-    log.debug("time constrained enabled: {}", federateHandle);
+    log.debug("time constrained enabled: {}", federate);
   }
 
-  public void disableTimeConstrained(FederateHandle federateHandle)
+  public void disableTimeConstrained(Federate federate)
   {
     timeLock.lock();
     try
     {
-      timeConstrainedFederates.remove(federateHandle);
+      timeConstrainedFederates.remove(federate);
     }
     finally
     {
       timeLock.unlock();
     }
 
-    log.debug("time constrained disabled: {}", federateHandle);
+    log.debug("time constrained disabled: {}", federate);
   }
 
-  public void timeAdvanceRequest(FederateHandle federateHandle,
-                                 LogicalTime time)
+  public void timeAdvanceRequest(Federate federate, LogicalTime time)
   {
-    log.debug("time advance request: {} to {}", federateHandle, time);
+    log.debug("time advance request: {} to {}", federate, time);
 
     timeLock.lock();
     try
     {
       assert galt.compareTo(time) >= 0;
 
-      Map<FederateHandle, LogicalTime> advancingFederates =
-        new HashMap<FederateHandle, LogicalTime>();
+      Map<Federate, LogicalTime> advancingFederates =
+        new HashMap<Federate, LogicalTime>();
 
       TimeRegulatingFederate timeRegulatingFederate =
-        timeRegulatingFederates.get(federateHandle);
+        timeRegulatingFederates.get(federate);
       TimeConstrainedFederate timeConstrainedFederate =
-        timeConstrainedFederates.get(federateHandle);
+        timeConstrainedFederates.get(federate);
 
       boolean galtAdvanced = false;
 
@@ -175,7 +170,7 @@ public class TimeKeeper
           if (trf.timeAdvanceGrant(galt))
           {
             advancingFederates.put(
-              trf.getFederateHandle(), trf.getFederateTime());
+              trf.getFederate(), trf.getFederateTime());
           }
         }
       }
@@ -194,27 +189,27 @@ public class TimeKeeper
           if (tcf.galtAdvanced(galt))
           {
             advancingFederates.put(
-              tcf.getFederateHandle(), tcf.getFederateTime());
+              tcf.getFederate(), tcf.getFederateTime());
           }
         }
       }
-      else if (!advancingFederates.containsKey(federateHandle))
+      else if (!advancingFederates.containsKey(federate))
       {
         assert timeRegulatingFederate != null;
 
         timeRegulatingFederate.timeAdvanceGrant();
 
         advancingFederates.put(
-          timeRegulatingFederate.getFederateHandle(),
+          timeRegulatingFederate.getFederate(),
           timeRegulatingFederate.getFederateTime());
       }
 
       log.debug("advancing federates: {}", advancingFederates);
 
-      for (Map.Entry<FederateHandle, LogicalTime> entry :
+      for (Map.Entry<Federate, LogicalTime> entry :
         advancingFederates.entrySet())
       {
-        federationExecution.getFederateSession(entry.getKey()).write(
+        entry.getKey().getSession().write(
           new TimeAdvanceGrant(entry.getValue()));
       }
     }
@@ -224,10 +219,9 @@ public class TimeKeeper
     }
   }
 
-  public void timeAdvanceRequestAvailable(FederateHandle federateHandle,
-                                          LogicalTime time)
+  public void timeAdvanceRequestAvailable(Federate federate, LogicalTime time)
   {
-    timeAdvanceRequest(federateHandle, min(time, galt));
+    timeAdvanceRequest(federate, min(time, galt));
   }
 
   protected LogicalTime min(LogicalTime lhs, LogicalTime rhs)

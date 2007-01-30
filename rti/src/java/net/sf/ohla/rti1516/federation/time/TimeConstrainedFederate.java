@@ -16,26 +16,27 @@
 
 package net.sf.ohla.rti1516.federation.time;
 
+import net.sf.ohla.rti1516.federation.Federate;
+
 import hla.rti1516.LogicalTime;
 import hla.rti1516.FederateHandle;
 
 public class TimeConstrainedFederate
 {
-  protected final FederateHandle federateHandle;
+  protected final Federate federate;
 
   protected LogicalTime federateTime;
   protected LogicalTime timeAdvanceRequest;
 
-  public TimeConstrainedFederate(FederateHandle federateHandle,
-                                 LogicalTime federateTime)
+  public TimeConstrainedFederate(Federate federate, LogicalTime federateTime)
   {
-    this.federateHandle = federateHandle;
+    this.federate = federate;
     this.federateTime = federateTime;
   }
 
-  public FederateHandle getFederateHandle()
+  public Federate getFederate()
   {
-    return federateHandle;
+    return federate;
   }
 
   public LogicalTime getFederateTime()
