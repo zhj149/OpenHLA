@@ -177,7 +177,20 @@ public class TimeKeeper
 
       if (galtAdvanced)
       {
-        federationExecution.send(new GALTAdvanced(galt));
+        GALTAdvanced message = new GALTAdvanced(galt);
+
+        federationExecution.getFederatesLock().lock();
+        try
+        {
+          for (Federate f : federationExecution.getFederates().values())
+          {
+            f.galtAdvanced(message);
+          }
+        }
+        finally
+        {
+          federationExecution.getFederatesLock().unlock();
+        }
       }
 
       if (timeConstrainedFederate != null)

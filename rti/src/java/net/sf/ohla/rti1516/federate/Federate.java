@@ -452,6 +452,8 @@ public class Federate
 
   public boolean process(IoSession session, Object message)
   {
+    log.debug("{} processing: {}", federateHandle, message);
+
     boolean processed = true;
     if (message instanceof Callback)
     {

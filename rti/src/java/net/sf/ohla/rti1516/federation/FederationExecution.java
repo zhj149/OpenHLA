@@ -20,20 +20,6 @@ import net.sf.ohla.rti1516.OHLARegionHandle;
 import net.sf.ohla.rti1516.fdd.Dimension;
 import net.sf.ohla.rti1516.fdd.FDD;
 import net.sf.ohla.rti1516.fdd.ObjectClass;
-import net.sf.ohla.rti1516.messages.callbacks.AnnounceSynchronizationPoint;
-import net.sf.ohla.rti1516.messages.callbacks.AttributeOwnershipAcquisitionNotification;
-import net.sf.ohla.rti1516.messages.callbacks.DiscoverObjectInstance;
-import net.sf.ohla.rti1516.messages.callbacks.FederationNotSaved;
-import net.sf.ohla.rti1516.messages.callbacks.FederationRestoreStatusResponse;
-import net.sf.ohla.rti1516.messages.callbacks.FederationSaveStatusResponse;
-import net.sf.ohla.rti1516.messages.callbacks.FederationSaved;
-import net.sf.ohla.rti1516.messages.callbacks.FederationSynchronized;
-import net.sf.ohla.rti1516.messages.callbacks.InitiateFederateSave;
-import net.sf.ohla.rti1516.messages.callbacks.ReflectAttributeValues;
-import net.sf.ohla.rti1516.messages.callbacks.ReceiveInteraction;
-import net.sf.ohla.rti1516.messages.callbacks.RemoveObjectInstance;
-import net.sf.ohla.rti1516.messages.callbacks.SynchronizationPointRegistrationFailed;
-import net.sf.ohla.rti1516.messages.callbacks.SynchronizationPointRegistrationSucceeded;
 import net.sf.ohla.rti1516.federation.objects.ObjectManager;
 import net.sf.ohla.rti1516.federation.time.TimeKeeper;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipAcquisition;
@@ -62,7 +48,6 @@ import net.sf.ohla.rti1516.messages.FederateSaveNotComplete;
 import net.sf.ohla.rti1516.messages.GetRangeBounds;
 import net.sf.ohla.rti1516.messages.JoinFederationExecution;
 import net.sf.ohla.rti1516.messages.JoinFederationExecutionResponse;
-import net.sf.ohla.rti1516.messages.Message;
 import net.sf.ohla.rti1516.messages.NegotiatedAttributeOwnershipDivestiture;
 import net.sf.ohla.rti1516.messages.QueryAttributeOwnership;
 import net.sf.ohla.rti1516.messages.QueryFederationRestoreStatus;
@@ -83,6 +68,19 @@ import net.sf.ohla.rti1516.messages.TimeAdvanceRequest;
 import net.sf.ohla.rti1516.messages.TimeAdvanceRequestAvailable;
 import net.sf.ohla.rti1516.messages.UnconditionalAttributeOwnershipDivestiture;
 import net.sf.ohla.rti1516.messages.UpdateAttributeValues;
+import net.sf.ohla.rti1516.messages.callbacks.AnnounceSynchronizationPoint;
+import net.sf.ohla.rti1516.messages.callbacks.AttributeOwnershipAcquisitionNotification;
+import net.sf.ohla.rti1516.messages.callbacks.DiscoverObjectInstance;
+import net.sf.ohla.rti1516.messages.callbacks.FederationNotSaved;
+import net.sf.ohla.rti1516.messages.callbacks.FederationRestoreStatusResponse;
+import net.sf.ohla.rti1516.messages.callbacks.FederationSaveStatusResponse;
+import net.sf.ohla.rti1516.messages.callbacks.FederationSaved;
+import net.sf.ohla.rti1516.messages.callbacks.FederationSynchronized;
+import net.sf.ohla.rti1516.messages.callbacks.InitiateFederateSave;
+import net.sf.ohla.rti1516.messages.callbacks.ReceiveInteraction;
+import net.sf.ohla.rti1516.messages.callbacks.RemoveObjectInstance;
+import net.sf.ohla.rti1516.messages.callbacks.SynchronizationPointRegistrationFailed;
+import net.sf.ohla.rti1516.messages.callbacks.SynchronizationPointRegistrationSucceeded;
 
 import org.apache.mina.common.IoSession;
 import org.apache.mina.common.WriteFuture;
@@ -185,30 +183,6 @@ public class FederationExecution
     try
     {
       return federates.get(federateHandle);
-    }
-    finally
-    {
-      federatesLock.unlock();
-    }
-  }
-
-  public void send(Message message)
-  {
-    send(message, null);
-  }
-
-  public void send(Message message, Federate sender)
-  {
-    federatesLock.lock();
-    try
-    {
-      for (Federate federate : federates.values())
-      {
-        if (federate != sender)
-        {
-          federate.getSession().write(message);
-        }
-      }
     }
     finally
     {
@@ -374,8 +348,7 @@ public class FederationExecution
                   registerFederationSynchronizationPoint.getTag());
               for (Federate f : federates.values())
               {
-                federate.announceSynchronizationPoint(
-                  announceSynchronizationPoint);
+                f.announceSynchronizationPoint(announceSynchronizationPoint);
               }
             }
           }
@@ -413,11 +386,16 @@ public class FederationExecution
         if (federationExecutionSynchronizationPoint.synchronizationPointAchieved(
           federate.getFederateHandle()))
         {
+          FederationSynchronized federationSynchronized =
+            new FederationSynchronized(
+              federationExecutionSynchronizationPoint.getLabel());
           federatesLock.lock();
           try
           {
-            send(new FederationSynchronized(
-              federationExecutionSynchronizationPoint.getLabel()));
+            for (Federate f : federates.values())
+            {
+              f.getSession().write(federationSynchronized);
+            }
           }
           finally
           {
@@ -929,38 +907,6 @@ public class FederationExecution
           updateAttributeValues.getTransportationType(),
           updateAttributeValues.getUpdateTime(),
           updateAttributeValues.getMessageRetractionHandle());
-
-      if (updateAttributeValues.getSentOrderType() == OrderType.TIMESTAMP)
-      {
-        // TODO: track for future federates
-      }
-
-      ReflectAttributeValues reflectAttributeValues =
-        new ReflectAttributeValues(
-          updateAttributeValues.getObjectInstanceHandle(),
-          updateAttributeValues.getAttributeValues(),
-          updateAttributeValues.getTag(),
-          updateAttributeValues.getSentRegionHandles(),
-          updateAttributeValues.getSentOrderType(),
-          updateAttributeValues.getTransportationType(),
-          updateAttributeValues.getUpdateTime(),
-          updateAttributeValues.getMessageRetractionHandle());
-
-      federatesLock.lock();
-      try
-      {
-        for (Federate f : federates.values())
-        {
-          if (f != federate)
-          {
-            f.reflectAttributeValues(reflectAttributeValues);
-          }
-        }
-      }
-      finally
-      {
-        federatesLock.unlock();
-      }
     }
     finally
     {
