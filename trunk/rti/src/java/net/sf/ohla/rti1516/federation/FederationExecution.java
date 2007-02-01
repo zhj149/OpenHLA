@@ -32,6 +32,8 @@ import net.sf.ohla.rti1516.messages.callbacks.InitiateFederateSave;
 import net.sf.ohla.rti1516.messages.callbacks.ReflectAttributeValues;
 import net.sf.ohla.rti1516.messages.callbacks.ReceiveInteraction;
 import net.sf.ohla.rti1516.messages.callbacks.RemoveObjectInstance;
+import net.sf.ohla.rti1516.messages.callbacks.SynchronizationPointRegistrationFailed;
+import net.sf.ohla.rti1516.messages.callbacks.SynchronizationPointRegistrationSucceeded;
 import net.sf.ohla.rti1516.federation.objects.ObjectManager;
 import net.sf.ohla.rti1516.federation.time.TimeKeeper;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipAcquisition;
@@ -162,6 +164,16 @@ public class FederationExecution
     return fdd;
   }
 
+  public Lock getFederatesLock()
+  {
+    return federatesLock;
+  }
+
+  public Map<FederateHandle, Federate> getFederates()
+  {
+    return federates;
+  }
+
   public void destroy()
     throws FederatesCurrentlyJoined
   {
@@ -282,7 +294,7 @@ public class FederationExecution
       federatesLock.lock();
       try
       {
-        federate.resign();
+        federate.resignFederationExecution();
 
         federates.remove(federate.getFederateHandle());
 
@@ -314,9 +326,10 @@ public class FederationExecution
             registerFederationSynchronizationPoint.getLabel());
         if (federationExecutionSynchronizationPoint != null)
         {
-          federate.getSession().write(new DefaultResponse(
-            registerFederationSynchronizationPoint.getId(),
-            SynchronizationPointFailureReason.SYNCHRONIZATION_POINT_LABEL_NOT_UNIQUE));
+          federate.getSession().write(
+            new SynchronizationPointRegistrationFailed(
+              registerFederationSynchronizationPoint.getLabel(),
+              SynchronizationPointFailureReason.SYNCHRONIZATION_POINT_LABEL_NOT_UNIQUE));
         }
         else
         {
@@ -337,9 +350,10 @@ public class FederationExecution
             //
             if (!federates.keySet().containsAll(federateHandles))
             {
-              federate.getSession().write(new DefaultResponse(
-                registerFederationSynchronizationPoint.getId(),
-                SynchronizationPointFailureReason.SYNCHRONIZATION_SET_MEMBER_NOT_JOINED));
+              federate.getSession().write(
+                new SynchronizationPointRegistrationFailed(
+                  registerFederationSynchronizationPoint.getLabel(),
+                  SynchronizationPointFailureReason.SYNCHRONIZATION_SET_MEMBER_NOT_JOINED));
             }
             else
             {
@@ -350,12 +364,19 @@ public class FederationExecution
                   registerFederationSynchronizationPoint.getTag(),
                   federateHandles));
 
-              federate.getSession().write(new DefaultResponse(
-                registerFederationSynchronizationPoint.getId()));
+              federate.getSession().write(
+                new SynchronizationPointRegistrationSucceeded(
+                  registerFederationSynchronizationPoint.getLabel()));
 
-              send(new AnnounceSynchronizationPoint(
-                registerFederationSynchronizationPoint.getLabel(),
-                registerFederationSynchronizationPoint.getTag()));
+              AnnounceSynchronizationPoint announceSynchronizationPoint =
+                new AnnounceSynchronizationPoint(
+                  registerFederationSynchronizationPoint.getLabel(),
+                  registerFederationSynchronizationPoint.getTag());
+              for (Federate f : federates.values())
+              {
+                federate.announceSynchronizationPoint(
+                  announceSynchronizationPoint);
+              }
             }
           }
           finally
@@ -899,6 +920,16 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
+      objectManager.updateAttributeValues(
+          federate, updateAttributeValues.getObjectInstanceHandle(),
+          updateAttributeValues.getAttributeValues(),
+          updateAttributeValues.getTag(),
+          updateAttributeValues.getSentRegionHandles(),
+          updateAttributeValues.getSentOrderType(),
+          updateAttributeValues.getTransportationType(),
+          updateAttributeValues.getUpdateTime(),
+          updateAttributeValues.getMessageRetractionHandle());
+
       if (updateAttributeValues.getSentOrderType() == OrderType.TIMESTAMP)
       {
         // TODO: track for future federates

@@ -26,12 +26,15 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import net.sf.ohla.rti1516.OHLAObjectInstanceHandle;
 import net.sf.ohla.rti1516.fdd.ObjectClass;
 import net.sf.ohla.rti1516.messages.callbacks.DiscoverObjectInstance;
 import net.sf.ohla.rti1516.messages.callbacks.ObjectInstanceNameReservationFailed;
 import net.sf.ohla.rti1516.messages.callbacks.ObjectInstanceNameReservationSucceeded;
+import net.sf.ohla.rti1516.messages.callbacks.ReflectAttributeValues;
 import net.sf.ohla.rti1516.federation.Federate;
 import net.sf.ohla.rti1516.federation.FederationExecution;
 
@@ -45,6 +48,12 @@ import hla.rti1516.AttributeHandleSet;
 import hla.rti1516.AttributeSetRegionSetPairList;
 import hla.rti1516.ObjectClassHandle;
 import hla.rti1516.ObjectInstanceHandle;
+import hla.rti1516.AttributeHandleValueMap;
+import hla.rti1516.RegionHandleSet;
+import hla.rti1516.OrderType;
+import hla.rti1516.TransportationType;
+import hla.rti1516.LogicalTime;
+import hla.rti1516.MessageRetractionHandle;
 
 public class ObjectManager
 {
@@ -53,9 +62,8 @@ public class ObjectManager
   protected AtomicInteger objectInstanceCount =
     new AtomicInteger(Integer.MIN_VALUE);
 
-  protected Lock reservedObjectInstanceNamesLock = new ReentrantLock(true);
-  protected Map<String, Federate> reservedObjectInstanceNames =
-    new HashMap<String, Federate>();
+  protected ConcurrentMap<String, Federate> reservedObjectInstanceNames =
+    new ConcurrentHashMap<String, Federate>();
 
   protected Lock retiredObjectInstanceNamesLock = new ReentrantLock(true);
   protected Set<String> retiredObjectInstanceNames = new HashSet<String>();
@@ -118,31 +126,22 @@ public class ObjectManager
 
   public void reserveObjectInstanceName(Federate federate, String name)
   {
-    reservedObjectInstanceNamesLock.lock();
-    try
+    Federate reservingFederate =
+      reservedObjectInstanceNames.putIfAbsent(name, federate);
+    if (reservingFederate != null)
     {
-      Federate reservingFederate = reservedObjectInstanceNames.get(name);
-      if (reservingFederate != null)
-      {
-        log.debug("object instance name already reserved: {} by {}", name,
-                  reservingFederate);
+      log.debug("object instance name already reserved: {} by {}", name,
+                reservingFederate);
 
-        federate.getSession().write(
-          new ObjectInstanceNameReservationFailed(name));
-      }
-      else
-      {
-        reservedObjectInstanceNames.put(name, federate);
-
-        log.debug("object instance name reserved: {} by {}", name, federate);
-
-        federate.getSession().write(
-          new ObjectInstanceNameReservationSucceeded(name));
-      }
+      federate.getSession().write(
+        new ObjectInstanceNameReservationFailed(name));
     }
-    finally
+    else
     {
-      reservedObjectInstanceNamesLock.unlock();
+      log.debug("object instance name reserved: {} by {}", name, federate);
+
+      federate.getSession().write(
+        new ObjectInstanceNameReservationSucceeded(name));
     }
   }
 
@@ -150,33 +149,77 @@ public class ObjectManager
     Federate federate, ObjectClassHandle objectClassHandle,
     Set<AttributeHandle> publishedAttributeHandles, String name)
   {
+    ObjectInstanceHandle objectInstanceHandle = nextObjectInstanceHandle();
+
     ObjectClass objectClass =
       federationExecution.getFDD().getObjectClasses().get(objectClassHandle);
     assert objectClass != null;
 
-    ObjectInstanceHandle objectInstanceHandle = nextObjectInstanceHandle();
+    assert name != null && federate.equals(
+      reservedObjectInstanceNames.get(name));
 
-    if (name != null)
+    ObjectInstance objectInstance = new ObjectInstance(
+      objectInstanceHandle, objectClass, name,
+      publishedAttributeHandles, federate);
+
+    objectsLock.writeLock().lock();
+    try
     {
-      reservedObjectInstanceNamesLock.lock();
-      try
-      {
-        Federate reservingFederate = reservedObjectInstanceNames.get(name);
-        assert federate.equals(reservingFederate);
-      }
-      finally
-      {
-        reservedObjectInstanceNamesLock.unlock();
-      }
+      objects.put(objectInstanceHandle, objectInstance);
+    }
+    finally
+    {
+      objectsLock.writeLock().unlock();
     }
 
-    ObjectInstance objectInstance =
-      new ObjectInstance(objectInstanceHandle, objectClass, name,
-                         publishedAttributeHandles, federate);
-
-    objects.put(objectInstanceHandle, objectInstance);
-
     return objectInstanceHandle;
+  }
+
+  public void updateAttributeValues(
+    Federate federate, ObjectInstanceHandle objectInstanceHandle,
+    AttributeHandleValueMap attributeValues, byte[] tag,
+    RegionHandleSet sentRegionHandles, OrderType sentOrderType,
+    TransportationType transportationType, LogicalTime updateTime,
+    MessageRetractionHandle messageRetractionHandle)
+  {
+    objectsLock.readLock().lock();
+    try
+    {
+      ObjectInstance objectInstance = objects.get(objectInstanceHandle);
+      if (objectInstance != null)
+      {
+        if (sentOrderType == OrderType.TIMESTAMP)
+        {
+          // TODO: track for future federates
+        }
+
+        ReflectAttributeValues reflectAttributeValues =
+          new ReflectAttributeValues(objectInstanceHandle, attributeValues,
+            tag, sentRegionHandles, sentOrderType, transportationType,
+            updateTime, messageRetractionHandle,
+            objectInstance.getObjectClass());
+
+        federationExecution.getFederatesLock().lock();
+        try
+        {
+          for (Federate f : federationExecution.getFederates().values())
+          {
+            if (f != federate)
+            {
+              f.reflectAttributeValues(reflectAttributeValues);
+            }
+          }
+        }
+        finally
+        {
+          federationExecution.getFederatesLock().unlock();
+        }
+      }
+    }
+    finally
+    {
+      objectsLock.readLock().unlock();
+    }
   }
 
   public void unconditionalAttributeOwnershipDivestiture(

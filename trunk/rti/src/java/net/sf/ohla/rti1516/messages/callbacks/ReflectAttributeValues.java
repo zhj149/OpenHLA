@@ -16,6 +16,8 @@
 
 package net.sf.ohla.rti1516.messages.callbacks;
 
+import net.sf.ohla.rti1516.fdd.ObjectClass;
+
 import hla.rti1516.AttributeHandleValueMap;
 import hla.rti1516.AttributeNotRecognized;
 import hla.rti1516.AttributeNotSubscribed;
@@ -42,12 +44,13 @@ public class ReflectAttributeValues
   protected LogicalTime updateTime;
   protected MessageRetractionHandle messageRetractionHandle;
 
+  protected transient ObjectClass objectClass;
   protected transient OrderType receivedOrderType;
 
   public ReflectAttributeValues(ObjectInstanceHandle objectInstanceHandle,
                                 AttributeHandleValueMap attributeValues,
-                                byte[] tag, RegionHandleSet sentRegionHandles,
-                                OrderType sentOrderType,
+                                byte[] tag,
+                                RegionHandleSet sentRegionHandles, OrderType sentOrderType,
                                 TransportationType transportationType,
                                 LogicalTime updateTime,
                                 MessageRetractionHandle messageRetractionHandle)
@@ -60,6 +63,22 @@ public class ReflectAttributeValues
     this.transportationType = transportationType;
     this.updateTime = updateTime;
     this.messageRetractionHandle = messageRetractionHandle;
+  }
+
+  public ReflectAttributeValues(ObjectInstanceHandle objectInstanceHandle,
+                                AttributeHandleValueMap attributeValues,
+                                byte[] tag, RegionHandleSet sentRegionHandles,
+                                OrderType sentOrderType,
+                                TransportationType transportationType,
+                                LogicalTime updateTime,
+                                MessageRetractionHandle messageRetractionHandle,
+                                ObjectClass objectClass)
+  {
+    this(objectInstanceHandle, attributeValues, tag, sentRegionHandles,
+         sentOrderType, transportationType, updateTime,
+         messageRetractionHandle);
+
+    this.objectClass = objectClass;
   }
 
   public ObjectInstanceHandle getObjectInstanceHandle()
@@ -100,6 +119,11 @@ public class ReflectAttributeValues
   public MessageRetractionHandle getMessageRetractionHandle()
   {
     return messageRetractionHandle;
+  }
+
+  public ObjectClass getObjectClass()
+  {
+    return objectClass;
   }
 
   public OrderType getReceivedOrderType()

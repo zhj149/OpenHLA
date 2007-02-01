@@ -1108,15 +1108,14 @@ public class OHLARTIambassador
   {
     try
     {
-      if (rtiAmbassador.getJoinedFederate().reserveObjectInstanceName(name))
-      {
-        return convert(rtiAmbassador.registerObjectInstance(
-          convertToObjectClassHandle(objectClassHandle), name));
-      }
-      else
-      {
-        throw new ObjectAlreadyRegistered(name);
-      }
+      rtiAmbassador.getJoinedFederate().reserveObjectInstanceName(name);
+
+      // TODO: wait for notification
+      //
+      // throw new ObjectAlreadyRegistered(name);
+
+      return convert(rtiAmbassador.registerObjectInstance(
+        convertToObjectClassHandle(objectClassHandle), name));
     }
     catch (IllegalName in)
     {

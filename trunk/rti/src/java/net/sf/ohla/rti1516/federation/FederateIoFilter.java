@@ -21,10 +21,7 @@ import java.util.Map;
 import net.sf.ohla.rti1516.OHLAAttributeHandleValueMap;
 import net.sf.ohla.rti1516.OHLAParameterHandleValueMap;
 import net.sf.ohla.rti1516.fdd.InteractionClass;
-import net.sf.ohla.rti1516.fdd.ObjectClass;
 import net.sf.ohla.rti1516.federate.SubscriptionManager;
-import net.sf.ohla.rti1516.messages.callbacks.ReceiveInteraction;
-import net.sf.ohla.rti1516.messages.callbacks.ReflectAttributeValues;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipAcquisition;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipAcquisitionIfAvailable;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipDivestitureIfWanted;
@@ -33,6 +30,7 @@ import net.sf.ohla.rti1516.messages.CancelNegotiatedAttributeOwnershipDivestitur
 import net.sf.ohla.rti1516.messages.CommitRegionModifications;
 import net.sf.ohla.rti1516.messages.ConfirmDivestiture;
 import net.sf.ohla.rti1516.messages.CreateRegion;
+import net.sf.ohla.rti1516.messages.DeleteObjectInstance;
 import net.sf.ohla.rti1516.messages.DeleteRegion;
 import net.sf.ohla.rti1516.messages.DisableTimeConstrained;
 import net.sf.ohla.rti1516.messages.DisableTimeRegulation;
@@ -66,6 +64,10 @@ import net.sf.ohla.rti1516.messages.TimeAdvanceRequestAvailable;
 import net.sf.ohla.rti1516.messages.UnconditionalAttributeOwnershipDivestiture;
 import net.sf.ohla.rti1516.messages.UnsubscribeInteractionClass;
 import net.sf.ohla.rti1516.messages.UnsubscribeObjectClassAttributes;
+import net.sf.ohla.rti1516.messages.UpdateAttributeValues;
+import net.sf.ohla.rti1516.messages.SendInteraction;
+import net.sf.ohla.rti1516.messages.callbacks.ReceiveInteraction;
+import net.sf.ohla.rti1516.messages.callbacks.ReflectAttributeValues;
 
 import org.apache.mina.common.IoFilterAdapter;
 import org.apache.mina.common.IoSession;
@@ -73,7 +75,6 @@ import org.apache.mina.common.IoSession;
 import hla.rti1516.AttributeHandle;
 import hla.rti1516.AttributeHandleValueMap;
 import hla.rti1516.InteractionClassHandle;
-import hla.rti1516.ObjectClassHandle;
 import hla.rti1516.ObjectInstanceHandle;
 import hla.rti1516.ParameterHandleValueMap;
 
@@ -105,7 +106,17 @@ public class FederateIoFilter
                               Object message)
     throws Exception
   {
-    if (message instanceof RegisterObjectInstance)
+    if (message instanceof UpdateAttributeValues)
+    {
+      federationExecution.updateAttributeValues(
+        federate, (UpdateAttributeValues) message);
+    }
+    else if (message instanceof SendInteraction)
+    {
+      federationExecution.sendInteraction(
+        federate, (SendInteraction) message);
+    }
+    else if (message instanceof RegisterObjectInstance)
     {
       federationExecution.registerObjectInstance(
         federate, (RegisterObjectInstance) message);
@@ -440,15 +451,10 @@ public class FederateIoFilter
     {
       ObjectInstanceHandle objectInstanceHandle =
         reflectAttributeValues.getObjectInstanceHandle();
-      ObjectClassHandle objectClassHandle =
-        reflectAttributeValues.getObjectClassHandle();
-
-      ObjectClass objectClass =
-        federationExecution.getFDD().getObjectClasses().get(objectClassHandle);
-      assert objectClass != null;
 
       Map<AttributeHandle, AttributeSubscription> subscriptions =
-        getSubscribedAttributeSubscriptions(objectClass);
+        getSubscribedAttributeSubscriptions(
+          reflectAttributeValues.getObjectClass());
 
       if (subscriptions == null)
       {
@@ -464,13 +470,13 @@ public class FederateIoFilter
         // TODO: DDM
 
         reflectAttributeValues = new ReflectAttributeValues(
-          objectInstanceHandle, objectClassHandle, trimmedAttributeValues,
+          objectInstanceHandle, trimmedAttributeValues,
           reflectAttributeValues.getTag(),
+          reflectAttributeValues.getSentRegionHandles(),
           reflectAttributeValues.getSentOrderType(),
           reflectAttributeValues.getTransportationType(),
           reflectAttributeValues.getUpdateTime(),
-          reflectAttributeValues.getMessageRetractionHandle(),
-          reflectAttributeValues.getSentRegionHandles());
+          reflectAttributeValues.getMessageRetractionHandle());
       }
 
       return reflectAttributeValues;
