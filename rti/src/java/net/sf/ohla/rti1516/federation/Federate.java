@@ -23,6 +23,7 @@ import net.sf.ohla.rti1516.messages.callbacks.DiscoverObjectInstance;
 import net.sf.ohla.rti1516.messages.callbacks.ReflectAttributeValues;
 import net.sf.ohla.rti1516.messages.callbacks.ReceiveInteraction;
 import net.sf.ohla.rti1516.messages.callbacks.RemoveObjectInstance;
+import net.sf.ohla.rti1516.messages.callbacks.AnnounceSynchronizationPoint;
 import net.sf.ohla.rti1516.messages.FederateSaveInitiated;
 import net.sf.ohla.rti1516.messages.FederateSaveInitiatedFailed;
 import net.sf.ohla.rti1516.messages.FederateSaveBegun;
@@ -88,9 +89,15 @@ public class Federate
     return restoreStatus;
   }
 
-  public void resign()
+  public void resignFederationExecution()
   {
     session.getFilterChain().remove(FEDERATE_IO_FILTER);
+  }
+
+  public void announceSynchronizationPoint(
+    AnnounceSynchronizationPoint announceSynchronizationPoint)
+  {
+    session.write(announceSynchronizationPoint);
   }
 
   public void initiateFederateSave(InitiateFederateSave initiateFederateSave)

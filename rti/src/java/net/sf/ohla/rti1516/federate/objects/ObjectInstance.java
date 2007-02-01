@@ -26,12 +26,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import net.sf.ohla.rti1516.fdd.Attribute;
-import net.sf.ohla.rti1516.fdd.ObjectClass;
-import net.sf.ohla.rti1516.federate.Federate;
-import net.sf.ohla.rti1516.messages.callbacks.ReflectAttributeValues;
 import net.sf.ohla.rti1516.OHLAAttributeHandleSet;
 import net.sf.ohla.rti1516.OHLARegionHandleSet;
+import net.sf.ohla.rti1516.fdd.Attribute;
+import net.sf.ohla.rti1516.fdd.ObjectClass;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipAcquisition;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipAcquisitionIfAvailable;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipDivestitureIfWanted;
@@ -44,6 +42,7 @@ import net.sf.ohla.rti1516.messages.NegotiatedAttributeOwnershipDivestiture;
 import net.sf.ohla.rti1516.messages.QueryAttributeOwnership;
 import net.sf.ohla.rti1516.messages.RequestAttributeValueUpdate;
 import net.sf.ohla.rti1516.messages.UnconditionalAttributeOwnershipDivestiture;
+import net.sf.ohla.rti1516.messages.UpdateAttributeValues;
 
 import org.apache.mina.common.IoSession;
 import org.apache.mina.common.WriteFuture;
@@ -152,8 +151,8 @@ public class ObjectInstance
     return name;
   }
 
-  public void updateAttributeValues(AttributeHandleValueMap attributeValues,
-                                    byte[] tag, Federate federate)
+  public WriteFuture updateAttributeValues(
+    AttributeHandleValueMap attributeValues, byte[] tag, IoSession rtiSession)
     throws AttributeNotDefined, AttributeNotOwned
   {
     objectLock.readLock().lock();
@@ -161,10 +160,16 @@ public class ObjectInstance
     {
       checkIfAttributeNotOwned(attributeValues.keySet());
 
-      federate.sendToPeers(new ReflectAttributeValues(
-        objectInstanceHandle, objectClass.getObjectClassHandle(),
-        attributeValues, tag, OrderType.RECEIVE,
-        TransportationType.HLA_RELIABLE));
+      RegionHandleSet sentRegionHandles = new OHLARegionHandleSet();
+      for (AttributeHandle attributeHandle : attributeValues.keySet())
+      {
+        sentRegionHandles.addAll(
+          getAttributeInstance(attributeHandle).getAssociatedRegions());
+      }
+
+      return rtiSession.write(new UpdateAttributeValues(
+        objectInstanceHandle, attributeValues, tag, sentRegionHandles,
+        OrderType.RECEIVE, TransportationType.HLA_RELIABLE));
     }
     finally
     {
@@ -172,10 +177,10 @@ public class ObjectInstance
     }
   }
 
-  public void updateAttributeValues(
+  public WriteFuture updateAttributeValues(
     AttributeHandleValueMap attributeValues, byte[] tag,
     LogicalTime updateTime, MessageRetractionHandle messageRetractionHandle,
-    OrderType sentOrderType, Federate federate)
+    OrderType sentOrderType, IoSession rtiSession)
     throws AttributeNotDefined, AttributeNotOwned
   {
     objectLock.readLock().lock();
@@ -193,10 +198,10 @@ public class ObjectInstance
           getAttributeInstance(attributeHandle).getAssociatedRegions());
       }
 
-      federate.sendToPeers(new ReflectAttributeValues(
-        objectInstanceHandle, objectClass.getObjectClassHandle(),
-        attributeValues, tag, sentOrderType, TransportationType.HLA_RELIABLE,
-        updateTime, messageRetractionHandle, sentRegionHandles));
+      return rtiSession.write(new UpdateAttributeValues(
+        objectInstanceHandle, attributeValues, tag, sentRegionHandles,
+        sentOrderType, TransportationType.HLA_RELIABLE, updateTime,
+        messageRetractionHandle));
     }
     finally
     {
@@ -267,6 +272,7 @@ public class ObjectInstance
     // TODO: set timeout
     //
     writeFuture.join();
+
     if (!writeFuture.isWritten())
     {
       throw new RTIinternalError("error communicating with RTI");
@@ -303,6 +309,7 @@ public class ObjectInstance
     // TODO: set timeout
     //
     writeFuture.join();
+
     if (!writeFuture.isWritten())
     {
       throw new RTIinternalError("error communicating with RTI");
@@ -338,6 +345,7 @@ public class ObjectInstance
     // TODO: set timeout
     //
     writeFuture.join();
+
     if (!writeFuture.isWritten())
     {
       throw new RTIinternalError("error communicating with RTI");
@@ -369,6 +377,7 @@ public class ObjectInstance
     // TODO: set timeout
     //
     writeFuture.join();
+
     if (!writeFuture.isWritten())
     {
       throw new RTIinternalError("error communicating with RTI");
@@ -430,6 +439,7 @@ public class ObjectInstance
     // TODO: set timeout
     //
     writeFuture.join();
+
     if (!writeFuture.isWritten())
     {
       throw new RTIinternalError("error communicating with RTI");
@@ -540,6 +550,7 @@ public class ObjectInstance
     // TODO: set timeout
     //
     writeFuture.join();
+
     if (!writeFuture.isWritten())
     {
       throw new RTIinternalError("error communicating with RTI");
@@ -591,6 +602,7 @@ public class ObjectInstance
     // TODO: set timeout
     //
     writeFuture.join();
+
     if (!writeFuture.isWritten())
     {
       throw new RTIinternalError("error communicating with RTI");
@@ -619,6 +631,7 @@ public class ObjectInstance
     // TODO: set timeout
     //
     writeFuture.join();
+
     if (!writeFuture.isWritten())
     {
       throw new RTIinternalError("error communicating with RTI");
@@ -686,8 +699,8 @@ public class ObjectInstance
     }
   }
 
-  public void requestAttributeValueUpdate(AttributeHandleSet attributeHandles,
-                                          byte[] tag, Federate federate)
+  public WriteFuture requestAttributeValueUpdate(
+    AttributeHandleSet attributeHandles, byte[] tag, IoSession rtiSession)
     throws AttributeNotDefined
   {
     objectClass.checkIfAttributeNotDefined(attributeHandles);
@@ -701,7 +714,7 @@ public class ObjectInstance
       //
       attributeHandles.removeAll(attributes.keySet());
 
-      federate.sendToPeers(new RequestAttributeValueUpdate(
+      return rtiSession.write(new RequestAttributeValueUpdate(
         objectInstanceHandle, attributeHandles, tag));
     }
     finally
@@ -777,6 +790,7 @@ public class ObjectInstance
     // TODO: set timeout
     //
     writeFuture.join();
+
     if (!writeFuture.isWritten())
     {
       throw new RTIinternalError("error communicating with RTI");

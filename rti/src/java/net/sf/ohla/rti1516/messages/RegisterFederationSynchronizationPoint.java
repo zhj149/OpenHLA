@@ -19,7 +19,7 @@ package net.sf.ohla.rti1516.messages;
 import hla.rti1516.FederateHandleSet;
 
 public class RegisterFederationSynchronizationPoint
-  extends AbstractRequest
+  implements Message
 {
   protected String label;
   protected byte[] tag;

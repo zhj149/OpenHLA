@@ -44,15 +44,6 @@ import net.sf.ohla.rti1516.OHLAParameterHandleFactory;
 import net.sf.ohla.rti1516.OHLAParameterHandleValueMapFactory;
 import net.sf.ohla.rti1516.OHLARegionHandleSetFactory;
 import net.sf.ohla.rti1516.fdd.FDD;
-import net.sf.ohla.rti1516.messages.callbacks.Callback;
-import net.sf.ohla.rti1516.messages.callbacks.CallbackManager;
-import net.sf.ohla.rti1516.messages.callbacks.ObjectInstanceNameReservationFailed;
-import net.sf.ohla.rti1516.messages.callbacks.ObjectInstanceNameReservationSucceeded;
-import net.sf.ohla.rti1516.messages.callbacks.ReceiveInteraction;
-import net.sf.ohla.rti1516.messages.callbacks.ReflectAttributeValues;
-import net.sf.ohla.rti1516.messages.callbacks.RemoveObjectInstance;
-import net.sf.ohla.rti1516.messages.callbacks.SynchronizationPointRegistrationFailed;
-import net.sf.ohla.rti1516.messages.callbacks.SynchronizationPointRegistrationSucceeded;
 import net.sf.ohla.rti1516.federate.objects.ObjectManager;
 import net.sf.ohla.rti1516.federate.time.TimeManager;
 import net.sf.ohla.rti1516.messages.FederateRestoreComplete;
@@ -74,6 +65,11 @@ import net.sf.ohla.rti1516.messages.SendInteraction;
 import net.sf.ohla.rti1516.messages.SubscribeObjectClassAttributes;
 import net.sf.ohla.rti1516.messages.SynchronizationPointAchieved;
 import net.sf.ohla.rti1516.messages.UnsubscribeObjectClassAttributes;
+import net.sf.ohla.rti1516.messages.callbacks.Callback;
+import net.sf.ohla.rti1516.messages.callbacks.CallbackManager;
+import net.sf.ohla.rti1516.messages.callbacks.ReceiveInteraction;
+import net.sf.ohla.rti1516.messages.callbacks.ReflectAttributeValues;
+import net.sf.ohla.rti1516.messages.callbacks.RemoveObjectInstance;
 
 import org.apache.mina.common.IoSession;
 import org.apache.mina.common.WriteFuture;
@@ -608,83 +604,29 @@ public class Federate
     String label, byte[] tag, FederateHandleSet federateHandles)
     throws SaveInProgress, RestoreInProgress, RTIinternalError
   {
+    WriteFuture writeFuture;
+
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      synchronizationPointLock.lock();
-      try
-      {
-        FederateSynchronizationPoint federateSynchronizationPoint =
-          synchronizationPoints.get(label);
-        if (federateSynchronizationPoint != null)
-        {
-          callbackManager.add(new SynchronizationPointRegistrationFailed(
-            label,
-            SynchronizationPointFailureReason.SYNCHRONIZATION_POINT_LABEL_NOT_UNIQUE));
-        }
-        else
-        {
-          RegisterFederationSynchronizationPoint
-            registerFederationSynchronizationPoint =
-            new RegisterFederationSynchronizationPoint(label, tag,
-                                                       federateHandles);
-          WriteFuture writeFuture =
-            rtiSession.write(registerFederationSynchronizationPoint);
-
-          // TODO: set timeout
-          //
-          writeFuture.join();
-
-          if (!writeFuture.isWritten())
-          {
-            throw new RTIinternalError("error communicating with RTI");
-          }
-
-          // TODO: set timeout
-          //
-          Object response =
-            registerFederationSynchronizationPoint.getResponse();
-
-          if (response == null)
-          {
-            callbackManager.add(
-              new SynchronizationPointRegistrationSucceeded(label));
-
-            // track the synchronization point upon success
-            //
-            synchronizationPoints.put(label, new FederateSynchronizationPoint(
-              label, tag, federateHandles));
-          }
-          else if (response instanceof SynchronizationPointFailureReason)
-          {
-            callbackManager.add(
-              new SynchronizationPointRegistrationFailed(
-                label, (SynchronizationPointFailureReason) response));
-          }
-          else
-          {
-            assert false : String.format("unexpected response: %s", response);
-          }
-        }
-      }
-      catch (InterruptedException ie)
-      {
-        throw new RTIinternalError("interrupted awaiting timeout", ie);
-      }
-      catch (ExecutionException ee)
-      {
-        throw new RTIinternalError("unable to get response", ee);
-      }
-      finally
-      {
-        synchronizationPointLock.unlock();
-      }
+      writeFuture = rtiSession.write(
+        new RegisterFederationSynchronizationPoint(
+          label, tag, federateHandles));
     }
     finally
     {
       federateStateLock.readLock().unlock();
+    }
+
+    // TODO: set timeout
+    //
+    writeFuture.join();
+
+    if (!writeFuture.isWritten())
+    {
+      throw new RTIinternalError("error communicating with RTI");
     }
   }
 
@@ -692,6 +634,8 @@ public class Federate
     throws SynchronizationPointLabelNotAnnounced, SaveInProgress,
            RestoreInProgress, RTIinternalError
   {
+    WriteFuture writeFuture = null;
+
     federateStateLock.readLock().lock();
     try
     {
@@ -710,17 +654,8 @@ public class Federate
         {
           federateSynchronizationPoint.synchronizationPointAchieved();
 
-          WriteFuture writeFuture =
+          writeFuture =
             rtiSession.write(new SynchronizationPointAchieved(label));
-
-          // TODO: set timeout
-          //
-          writeFuture.join();
-
-          if (!writeFuture.isWritten())
-          {
-            throw new RTIinternalError("error communicating with RTI");
-          }
         }
       }
       finally
@@ -731,6 +666,18 @@ public class Federate
     finally
     {
       federateStateLock.readLock().unlock();
+    }
+
+    if (writeFuture != null)
+    {
+      // TODO: set timeout
+      //
+      writeFuture.join();
+
+      if (!writeFuture.isWritten())
+      {
+        throw new RTIinternalError("error communicating with RTI");
+      }
     }
   }
 
@@ -851,6 +798,8 @@ public class Federate
   public void federateSaveBegun()
     throws SaveNotInitiated, RestoreInProgress, RTIinternalError
   {
+    WriteFuture writeFuture;
+
     federateStateLock.readLock().lock();
     try
     {
@@ -859,16 +808,7 @@ public class Federate
         throw new SaveNotInitiated();
       }
 
-      WriteFuture writeFuture = rtiSession.write(new FederateSaveBegun());
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
+      writeFuture = rtiSession.write(new FederateSaveBegun());
 
       federateSaveState = FederateSaveState.SAVING;
     }
@@ -876,11 +816,22 @@ public class Federate
     {
       federateStateLock.readLock().unlock();
     }
+
+    // TODO: set timeout
+    //
+    writeFuture.join();
+
+    if (!writeFuture.isWritten())
+    {
+      throw new RTIinternalError("error communicating with RTI");
+    }
   }
 
   public void federateSaveComplete()
     throws FederateHasNotBegunSave, RestoreInProgress, RTIinternalError
   {
+    WriteFuture writeFuture;
+
     federateStateLock.readLock().lock();
     try
     {
@@ -891,29 +842,30 @@ public class Federate
         throw new FederateHasNotBegunSave();
       }
 
-      WriteFuture writeFuture =
-        rtiSession.write(new FederateSaveComplete(null));
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
+      writeFuture = rtiSession.write(new FederateSaveComplete(null));
 
       federateSaveState = FederateSaveState.WAITING_FOR_FEDERATION_TO_SAVE;
     }
     finally
     {
       federateStateLock.readLock().unlock();
+    }
+
+    // TODO: set timeout
+    //
+    writeFuture.join();
+
+    if (!writeFuture.isWritten())
+    {
+      throw new RTIinternalError("error communicating with RTI");
     }
   }
 
   public void federateSaveNotComplete()
     throws FederateHasNotBegunSave, RestoreInProgress, RTIinternalError
   {
+    WriteFuture writeFuture;
+
     federateStateLock.readLock().lock();
     try
     {
@@ -924,16 +876,7 @@ public class Federate
         throw new FederateHasNotBegunSave();
       }
 
-      WriteFuture writeFuture = rtiSession.write(new FederateSaveNotComplete());
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
+      writeFuture = rtiSession.write(new FederateSaveNotComplete());
 
       federateSaveState = FederateSaveState.WAITING_FOR_FEDERATION_TO_SAVE;
     }
@@ -941,31 +884,41 @@ public class Federate
     {
       federateStateLock.readLock().unlock();
     }
+
+    // TODO: set timeout
+    //
+    writeFuture.join();
+
+    if (!writeFuture.isWritten())
+    {
+      throw new RTIinternalError("error communicating with RTI");
+    }
   }
 
   public void queryFederationSaveStatus()
     throws RestoreInProgress, RTIinternalError
   {
+    WriteFuture writeFuture;
+
     federateStateLock.readLock().lock();
     try
     {
       checkIfRestoreInProgress();
 
-      WriteFuture writeFuture =
-        rtiSession.write(new QueryFederationSaveStatus());
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
+      writeFuture = rtiSession.write(new QueryFederationSaveStatus());
     }
     finally
     {
       federateStateLock.readLock().unlock();
+    }
+
+    // TODO: set timeout
+    //
+    writeFuture.join();
+
+    if (!writeFuture.isWritten())
+    {
+      throw new RTIinternalError("error communicating with RTI");
     }
   }
 
@@ -993,8 +946,18 @@ public class Federate
       // TODO: set timeout
       //
       Object response = requestFederationRestore.getResponse();
-      assert response != null :
-        String.format("unexpected response: %s", response);
+      if (response instanceof SaveInProgress)
+      {
+        throw new SaveInProgress((SaveInProgress) response);
+      }
+      else if (response instanceof RestoreInProgress)
+      {
+        throw new RestoreInProgress((RestoreInProgress) response);
+      }
+      else
+      {
+        assert false : String.format("unexpected response: %s", response);
+      }
     }
     catch (InterruptedException ie)
     {
@@ -1013,6 +976,8 @@ public class Federate
   public void federateRestoreComplete()
     throws RestoreNotRequested, SaveInProgress, RTIinternalError
   {
+    WriteFuture writeFuture;
+
     federateStateLock.readLock().lock();
     try
     {
@@ -1023,16 +988,7 @@ public class Federate
         throw new RestoreNotRequested();
       }
 
-      WriteFuture writeFuture = rtiSession.write(new FederateRestoreComplete());
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
+      writeFuture = rtiSession.write(new FederateRestoreComplete());
 
       federateRestoreState =
         FederateRestoreState.WAITING_FOR_FEDERATION_TO_RESTORE;
@@ -1040,12 +996,23 @@ public class Federate
     finally
     {
       federateStateLock.readLock().unlock();
+    }
+
+    // TODO: set timeout
+    //
+    writeFuture.join();
+
+    if (!writeFuture.isWritten())
+    {
+      throw new RTIinternalError("error communicating with RTI");
     }
   }
 
   public void federateRestoreNotComplete()
     throws RestoreNotRequested, SaveInProgress, RTIinternalError
   {
+    WriteFuture writeFuture;
+
     federateStateLock.readLock().lock();
     try
     {
@@ -1056,17 +1023,7 @@ public class Federate
         throw new RestoreNotRequested();
       }
 
-      WriteFuture writeFuture =
-        rtiSession.write(new FederateRestoreNotComplete());
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
+      writeFuture = rtiSession.write(new FederateRestoreNotComplete());
 
       federateRestoreState =
         FederateRestoreState.WAITING_FOR_FEDERATION_TO_RESTORE;
@@ -1074,6 +1031,15 @@ public class Federate
     finally
     {
       federateStateLock.readLock().unlock();
+    }
+
+    // TODO: set timeout
+    //
+    writeFuture.join();
+
+    if (!writeFuture.isWritten())
+    {
+      throw new RTIinternalError("error communicating with RTI");
     }
   }
 
@@ -1364,7 +1330,7 @@ public class Federate
     }
   }
 
-  public boolean reserveObjectInstanceName(String name)
+  public void reserveObjectInstanceName(String name)
     throws IllegalName, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     if (name.startsWith("HLA"))
@@ -1377,16 +1343,7 @@ public class Federate
     {
       checkIfActive();
 
-      boolean reserved = objectManager.reserveObjectInstanceName(name);
-      if (reserved)
-      {
-        callbackManager.add(new ObjectInstanceNameReservationSucceeded(name));
-      }
-      else
-      {
-        callbackManager.add(new ObjectInstanceNameReservationFailed(name));
-      }
-      return reserved;
+      objectManager.reserveObjectInstanceName(name);
     }
     finally
     {
@@ -3609,7 +3566,8 @@ public class Federate
     public void objectInstanceNameReservationSucceeded(String name)
       throws UnknownName, FederateInternalError
     {
-      federateAmbassador.objectInstanceNameReservationSucceeded(name);
+      objectManager.objectInstanceNameReservationSucceeded(
+        name, federateAmbassador);
     }
 
     @Override

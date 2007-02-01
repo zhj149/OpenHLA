@@ -183,7 +183,7 @@ public class OHLARTIambassador
   protected RTIIoHandler rtiIoHandler = new RTIIoHandler();
 
   /**
-   * Allows concurrent access to all methods, but ensures that join/resign
+   * Allows concurrent access to all methods, but ensures that join/resignFederationExecution
    * are exclusive to all others.
    */
   protected ReadWriteLock joinResignLock = new ReentrantReadWriteLock(true);

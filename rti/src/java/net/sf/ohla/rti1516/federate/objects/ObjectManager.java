@@ -6,33 +6,33 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import net.sf.ohla.rti1516.OHLAAttributeHandleSet;
 import net.sf.ohla.rti1516.fdd.InteractionClass;
 import net.sf.ohla.rti1516.fdd.ObjectClass;
 import net.sf.ohla.rti1516.federate.Federate;
 import net.sf.ohla.rti1516.federate.SubscriptionManager;
-import net.sf.ohla.rti1516.messages.callbacks.ReceiveInteraction;
-import net.sf.ohla.rti1516.messages.callbacks.RemoveObjectInstance;
-import net.sf.ohla.rti1516.messages.DefaultResponse;
+import net.sf.ohla.rti1516.messages.DeleteObjectInstance;
 import net.sf.ohla.rti1516.messages.RegisterObjectInstance;
 import net.sf.ohla.rti1516.messages.ReserveObjectInstanceName;
 import net.sf.ohla.rti1516.messages.ResignFederationExecution;
+import net.sf.ohla.rti1516.messages.SendInteraction;
 import net.sf.ohla.rti1516.messages.SubscribeInteractionClass;
 import net.sf.ohla.rti1516.messages.SubscribeObjectClassAttributes;
 import net.sf.ohla.rti1516.messages.UnconditionalAttributeOwnershipDivestiture;
 import net.sf.ohla.rti1516.messages.UnsubscribeInteractionClass;
 import net.sf.ohla.rti1516.messages.UnsubscribeObjectClassAttributes;
-import net.sf.ohla.rti1516.OHLAAttributeHandleSet;
+import net.sf.ohla.rti1516.messages.callbacks.RemoveObjectInstance;
 
-import org.apache.mina.common.WriteFuture;
 import org.apache.mina.common.IoSession;
+import org.apache.mina.common.WriteFuture;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +50,7 @@ import hla.rti1516.AttributeNotOwned;
 import hla.rti1516.AttributeNotPublished;
 import hla.rti1516.AttributeRegionAssociation;
 import hla.rti1516.DeletePrivilegeNotHeld;
+import hla.rti1516.FederateAmbassador;
 import hla.rti1516.FederateOwnsAttributes;
 import hla.rti1516.IllegalName;
 import hla.rti1516.InteractionClassHandle;
@@ -73,7 +74,6 @@ import hla.rti1516.ResignAction;
 import hla.rti1516.RestoreInProgress;
 import hla.rti1516.SaveInProgress;
 import hla.rti1516.TransportationType;
-import hla.rti1516.FederateAmbassador;
 
 public class ObjectManager
 {
@@ -93,10 +93,9 @@ public class ObjectManager
     new ObjectManagerSubscriptionManager();
 
   protected Lock reservedObjectInstanceNamesLock = new ReentrantLock(true);
-  protected Map<String, ObjectInstanceHandle> reservedObjectInstanceNames =
-    new HashMap<String, ObjectInstanceHandle>();
-  protected Map<ObjectInstanceHandle, String> reservedObjectInstanceNamesByHandle =
-    new HashMap<ObjectInstanceHandle, String>();
+  protected Set<String> reservedObjectInstanceNames = new HashSet<String>();
+  protected Set<String> objectInstanceNamesBeingReserved =
+    new HashSet<String>();
 
   protected Lock retiredObjectInstanceNamesLock = new ReentrantLock(true);
   protected Set<String> retiredObjectInstanceNames = new HashSet<String>();
@@ -132,12 +131,10 @@ public class ObjectManager
     }
   }
 
-  public void resignFederationExecution(ResignAction resignAction)
+  public WriteFuture resignFederationExecution(ResignAction resignAction)
     throws OwnershipAcquisitionPending, FederateOwnsAttributes,
            RTIinternalError
   {
-    WriteFuture writeFuture;
-
     objectsLock.readLock().lock();
     try
     {
@@ -147,20 +144,12 @@ public class ObjectManager
         objectInstance.checkIfFederateOwnsAttributes();
       }
 
-      writeFuture = federate.getRTISession().write(
+      return federate.getRTISession().write(
         new ResignFederationExecution(resignAction));
     }
     finally
     {
       objectsLock.readLock().unlock();
-    }
-
-    // TODO: set timeout
-    //
-    writeFuture.join();
-    if (!writeFuture.isWritten())
-    {
-      throw new RTIinternalError("error communicating with RTI");
     }
   }
 
@@ -346,7 +335,7 @@ public class ObjectManager
     }
   }
 
-  public void subscribeObjectClassAttributes(
+  public WriteFuture subscribeObjectClassAttributes(
     ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles,
     boolean passive)
     throws RTIinternalError
@@ -357,23 +346,9 @@ public class ObjectManager
       subscriptionManager.subscribeObjectClassAttributes(
         objectClassHandle, attributeHandles, passive);
 
-      SubscribeObjectClassAttributes subscribeObjectClassAttributes =
+      return federate.getRTISession().write(
         new SubscribeObjectClassAttributes(
-          objectClassHandle, attributeHandles, passive);
-
-      WriteFuture writeFuture =
-        federate.getRTISession().write(subscribeObjectClassAttributes);
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
-
-      federate.sendToPeers(subscribeObjectClassAttributes);
+          objectClassHandle, attributeHandles, passive));
     }
     finally
     {
@@ -381,15 +356,16 @@ public class ObjectManager
     }
   }
 
-  public void unsubscribeObjectClass(ObjectClassHandle objectClassHandle)
+  public WriteFuture unsubscribeObjectClass(ObjectClassHandle objectClassHandle)
+    throws RTIinternalError
   {
     subscriptionLock.writeLock().lock();
     try
     {
       subscriptionManager.unsubscribeObjectClass(objectClassHandle);
 
-      federate.sendToPeers(new UnsubscribeObjectClassAttributes(
-        objectClassHandle));
+      return federate.getRTISession().write(
+        new UnsubscribeObjectClassAttributes(objectClassHandle));
     }
     finally
     {
@@ -397,8 +373,9 @@ public class ObjectManager
     }
   }
 
-  public void unsubscribeObjectClassAttributes(
+  public WriteFuture unsubscribeObjectClassAttributes(
     ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles)
+    throws RTIinternalError
   {
     subscriptionLock.writeLock().lock();
     try
@@ -406,8 +383,9 @@ public class ObjectManager
       subscriptionManager.unsubscribeObjectClassAttributes(
         objectClassHandle, attributeHandles);
 
-      federate.sendToPeers(new UnsubscribeObjectClassAttributes(
-        objectClassHandle, attributeHandles));
+      return federate.getRTISession().write(
+        new UnsubscribeObjectClassAttributes(
+          objectClassHandle, attributeHandles));
     }
     finally
     {
@@ -415,8 +393,9 @@ public class ObjectManager
     }
   }
 
-  public void subscribeInteractionClass(
+  public WriteFuture subscribeInteractionClass(
     InteractionClassHandle interactionClassHandle, boolean passive)
+    throws RTIinternalError
   {
     subscriptionLock.writeLock().lock();
     try
@@ -424,7 +403,7 @@ public class ObjectManager
       subscriptionManager.subscribeInteractionClass(
         interactionClassHandle, passive);
 
-      federate.sendToPeers(
+      return federate.getRTISession().write(
         new SubscribeInteractionClass(interactionClassHandle, passive));
     }
     finally
@@ -433,16 +412,17 @@ public class ObjectManager
     }
   }
 
-  public void unsubscribeInteractionClass(
+  public WriteFuture unsubscribeInteractionClass(
     InteractionClassHandle interactionClassHandle)
+    throws RTIinternalError
   {
     subscriptionLock.writeLock().lock();
     try
     {
       subscriptionManager.unsubscribeInteractionClass(interactionClassHandle);
 
-      federate.sendToPeers(new UnsubscribeInteractionClass(
-        interactionClassHandle));
+      return federate.getRTISession().write(
+        new UnsubscribeInteractionClass(interactionClassHandle));
     }
     finally
     {
@@ -494,17 +474,24 @@ public class ObjectManager
     }
   }
 
-  public boolean reserveObjectInstanceName(String name)
+  public WriteFuture reserveObjectInstanceName(String name)
     throws IllegalName, RTIinternalError
   {
     reservedObjectInstanceNamesLock.lock();
     try
     {
-      if (reservedObjectInstanceNames.containsKey(name))
+      if (reservedObjectInstanceNames.contains(name))
       {
-        throw new IllegalName(
-          String.format("object instance name already reserved: %s", name));
+        throw new IllegalName(String.format(
+          "object instance name already reserved: %s", name));
       }
+      else if (objectInstanceNamesBeingReserved.contains(name))
+      {
+        throw new IllegalName(String.format(
+          "object instance name already being reserved: %s", name));
+      }
+
+      objectInstanceNamesBeingReserved.add(name);
     }
     finally
     {
@@ -525,49 +512,7 @@ public class ObjectManager
       retiredObjectInstanceNamesLock.unlock();
     }
 
-    ReserveObjectInstanceName reserveObjectInstanceName =
-      new ReserveObjectInstanceName(name);
-    WriteFuture writeFuture =
-      federate.getRTISession().write(reserveObjectInstanceName);
-
-    // TODO: set timeout
-    //
-    writeFuture.join();
-
-    if (!writeFuture.isWritten())
-    {
-      throw new RTIinternalError("error communicating with RTI");
-    }
-
-    try
-    {
-      // TODO: set timeout
-      //
-      Object response = reserveObjectInstanceName.getResponse();
-      boolean reserved = response instanceof ObjectInstanceHandle;
-      if (reserved)
-      {
-        reservedObjectInstanceNamesLock.lock();
-        try
-        {
-          reservedObjectInstanceNames.put(
-            name, (ObjectInstanceHandle) response);
-        }
-        finally
-        {
-          reservedObjectInstanceNamesLock.unlock();
-        }
-      }
-      return reserved;
-    }
-    catch (InterruptedException ie)
-    {
-      throw new RTIinternalError("interrupted awaiting timeout", ie);
-    }
-    catch (ExecutionException ee)
-    {
-      throw new RTIinternalError("unable to get response", ee);
-    }
+    return federate.getRTISession().write(new ReserveObjectInstanceName(name));
   }
 
   public ObjectInstanceHandle registerObjectInstance(
@@ -579,58 +524,40 @@ public class ObjectManager
       federate.getFDD().getObjectClass(objectClassHandle);
     assert objectClass != null;
 
+    Set<AttributeHandle> publishedAttributeHandles;
+    RegisterObjectInstance registerObjectInstance;
+    WriteFuture writeFuture;
+
     publicationLock.readLock().lock();
     try
     {
-      Set<AttributeHandle> publishedAttributeHandles =
+      publishedAttributeHandles =
         getPublishedObjectClassAttributes(objectClassHandle);
 
-      RegisterObjectInstance registerObjectInstance =
-        new RegisterObjectInstance(objectClassHandle,
-                                   publishedAttributeHandles);
-      WriteFuture writeFuture =
-        federate.getRTISession().write(registerObjectInstance);
+      registerObjectInstance = new RegisterObjectInstance(
+        objectClassHandle, publishedAttributeHandles);
+      writeFuture = federate.getRTISession().write(registerObjectInstance);
+    }
+    finally
+    {
+      publicationLock.readLock().unlock();
+    }
 
+    // TODO: set timeout
+    //
+    writeFuture.join();
+
+    if (!writeFuture.isWritten())
+    {
+      throw new RTIinternalError("error communicating with RTI");
+    }
+
+    Object response;
+    try
+    {
       // TODO: set timeout
       //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
-
-      // TODO: set timeout
-      //
-      Object response = registerObjectInstance.getResponse();
-
-//      assert response instanceof ObjectInstanceRegistered :
-//        String.format("unexpected response: %s");
-
-      ObjectInstanceHandle objectInstanceHandle =
-        objectInstanceRegistered.getObjectInstanceHandle();
-      String name = String.format("HLA-%s", objectInstanceHandle);
-
-      ObjectInstance objectInstance =
-        new ObjectInstance(objectInstanceHandle, objectClass, name,
-                           publishedAttributeHandles);
-
-      objectsLock.writeLock().lock();
-      try
-      {
-        objects.put(objectInstanceHandle, objectInstance);
-        objectsByName.put(name, objectInstance);
-        getObjectsByClassHandle(objectClassHandle).add(objectInstanceHandle);
-      }
-      finally
-      {
-        objectsLock.writeLock().unlock();
-      }
-
-      federate.getRTISession().write(new DefaultResponse(
-        objectInstanceRegistered.getId()));
-
-      return objectInstanceHandle;
+      response = registerObjectInstance.getResponse();
     }
     catch (InterruptedException ie)
     {
@@ -640,10 +567,33 @@ public class ObjectManager
     {
       throw new RTIinternalError("unable to get response", ee);
     }
+
+    assert response instanceof ObjectInstanceHandle :
+      String.format("unexpected response: %s", response);
+
+    ObjectInstanceHandle objectInstanceHandle = (ObjectInstanceHandle) response;
+
+    // TODO: get this from response
+    //
+    String name = String.format("HLA-%s", objectInstanceHandle);
+
+    ObjectInstance objectInstance =
+      new ObjectInstance(objectInstanceHandle, objectClass, name,
+                         publishedAttributeHandles);
+
+    objectsLock.writeLock().lock();
+    try
+    {
+      objects.put(objectInstanceHandle, objectInstance);
+      objectsByName.put(name, objectInstance);
+      getObjectsByClassHandle(objectClassHandle).add(objectInstanceHandle);
+    }
     finally
     {
-      publicationLock.readLock().unlock();
+      objectsLock.writeLock().unlock();
     }
+
+    return objectInstanceHandle;
   }
 
   public ObjectInstanceHandle registerObjectInstance(
@@ -655,10 +605,14 @@ public class ObjectManager
     ObjectClass objectClass =
       federate.getFDD().getObjectClass(objectClassHandle);
 
+    Set<AttributeHandle> publishedAttributeHandles;
+    RegisterObjectInstance registerObjectInstance;
+    WriteFuture writeFuture;
+
     publicationLock.readLock().lock();
     try
     {
-      Set<AttributeHandle> publishedAttributeHandles =
+      publishedAttributeHandles =
         getPublishedObjectClassAttributes(objectClassHandle);
 
       objectsLock.writeLock().lock();
@@ -681,60 +635,30 @@ public class ObjectManager
         objectsLock.writeLock().unlock();
       }
 
-      RegisterObjectInstance registerObjectInstance =
-        new RegisterObjectInstance(objectClassHandle,
-                                   publishedAttributeHandles);
-      WriteFuture writeFuture =
-        federate.getRTISession().write(registerObjectInstance);
+      registerObjectInstance = new RegisterObjectInstance(
+        objectClassHandle, publishedAttributeHandles);
+      writeFuture = federate.getRTISession().write(registerObjectInstance);
+    }
+    finally
+    {
+      publicationLock.readLock().unlock();
+    }
 
+    // TODO: set timeout
+    //
+    writeFuture.join();
+
+    if (!writeFuture.isWritten())
+    {
+      throw new RTIinternalError("error communicating with RTI");
+    }
+
+    Object response;
+    try
+    {
       // TODO: set timeout
       //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
-
-      // TODO: set timeout
-      //
-      Object response = registerObjectInstance.getResponse();
-
-//      assert response instanceof ObjectInstanceRegistered :
-//        String.format("unexpected response: %s");
-
-      ObjectInstanceHandle objectInstanceHandle =
-        objectInstanceRegistered.getObjectInstanceHandle();
-
-      ObjectInstance objectInstance =
-        new ObjectInstance(objectInstanceHandle, objectClass, name,
-                           publishedAttributeHandles);
-
-      objectsLock.writeLock().lock();
-      try
-      {
-        objects.put(objectInstanceHandle, objectInstance);
-        objectsByName.put(name, objectInstance);
-        getObjectsByClassHandle(objectClassHandle).add(objectInstanceHandle);
-      }
-      finally
-      {
-        objectsLock.writeLock().unlock();
-      }
-
-      writeFuture = federate.getRTISession().write(new DefaultResponse(
-        objectInstanceRegistered.getId()));
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
-
-      return objectInstanceHandle;
+      response = registerObjectInstance.getResponse();
     }
     catch (InterruptedException ie)
     {
@@ -744,23 +668,42 @@ public class ObjectManager
     {
       throw new RTIinternalError("unable to get response", ee);
     }
+
+    assert response instanceof ObjectInstanceHandle :
+      String.format("unexpected response: %s", response);
+
+    ObjectInstanceHandle objectInstanceHandle = (ObjectInstanceHandle) response;
+
+    ObjectInstance objectInstance =
+      new ObjectInstance(objectInstanceHandle, objectClass, name,
+                         publishedAttributeHandles);
+
+    objectsLock.writeLock().lock();
+    try
+    {
+      objects.put(objectInstanceHandle, objectInstance);
+      objectsByName.put(name, objectInstance);
+      getObjectsByClassHandle(objectClassHandle).add(objectInstanceHandle);
+    }
     finally
     {
-      publicationLock.readLock().unlock();
+      objectsLock.writeLock().unlock();
     }
+
+    return objectInstanceHandle;
   }
 
-  public void updateAttributeValues(ObjectInstanceHandle objectInstanceHandle,
-                                    AttributeHandleValueMap attributeValues,
-                                    byte[] tag)
+  public WriteFuture updateAttributeValues(
+    ObjectInstanceHandle objectInstanceHandle,
+    AttributeHandleValueMap attributeValues, byte[] tag)
     throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned,
            RTIinternalError
   {
     objectsLock.readLock().lock();
     try
     {
-      getObjectInstance(objectInstanceHandle).updateAttributeValues(
-        attributeValues, tag, federate);
+      return getObjectInstance(objectInstanceHandle).updateAttributeValues(
+        attributeValues, tag, federate.getRTISession());
     }
     finally
     {
@@ -768,7 +711,7 @@ public class ObjectManager
     }
   }
 
-  public void updateAttributeValues(
+  public WriteFuture updateAttributeValues(
     ObjectInstanceHandle objectInstanceHandle,
     AttributeHandleValueMap attributeValues, byte[] tag, LogicalTime updateTime,
     MessageRetractionHandle messageRetractionHandle, OrderType sentOrderType)
@@ -778,9 +721,9 @@ public class ObjectManager
     objectsLock.readLock().lock();
     try
     {
-      getObjectInstance(objectInstanceHandle).updateAttributeValues(
+      return getObjectInstance(objectInstanceHandle).updateAttributeValues(
         attributeValues, tag, updateTime, messageRetractionHandle,
-        sentOrderType, federate);
+        sentOrderType, federate.getRTISession());
     }
     finally
     {
@@ -788,19 +731,20 @@ public class ObjectManager
     }
   }
 
-  public void sendInteraction(InteractionClassHandle interactionClassHandle,
-                              ParameterHandleValueMap parameterValues,
-                              byte[] tag)
-    throws InteractionClassNotPublished
+  public WriteFuture sendInteraction(
+    InteractionClassHandle interactionClassHandle,
+    ParameterHandleValueMap parameterValues, byte[] tag)
+    throws InteractionClassNotPublished, RTIinternalError
   {
     publicationLock.readLock().lock();
     try
     {
       checkIfInteractionClassNotPublished(interactionClassHandle);
 
-      federate.sendToPeers(new ReceiveInteraction(
-        interactionClassHandle, parameterValues, tag, OrderType.RECEIVE,
-        TransportationType.HLA_RELIABLE));
+      return federate.getRTISession().write(
+        new SendInteraction(
+          interactionClassHandle, parameterValues, tag, OrderType.RECEIVE,
+          TransportationType.HLA_RELIABLE));
     }
     finally
     {
@@ -808,20 +752,21 @@ public class ObjectManager
     }
   }
 
-  public void sendInteraction(
+  public WriteFuture sendInteraction(
     InteractionClassHandle interactionClassHandle,
     ParameterHandleValueMap parameterValues, byte[] tag, LogicalTime sendTime,
     MessageRetractionHandle messageRetractionHandle, OrderType sentOrderType)
-    throws InteractionClassNotPublished
+    throws InteractionClassNotPublished, RTIinternalError
   {
     publicationLock.readLock().lock();
     try
     {
       checkIfInteractionClassNotPublished(interactionClassHandle);
 
-      federate.sendToPeers(new ReceiveInteraction(
-        interactionClassHandle, parameterValues, tag, sentOrderType,
-        TransportationType.HLA_RELIABLE, sendTime, messageRetractionHandle));
+      return federate.getRTISession().write(
+        new SendInteraction(
+          interactionClassHandle, parameterValues, tag, sentOrderType,
+          TransportationType.HLA_RELIABLE, sendTime, messageRetractionHandle));
     }
     finally
     {
@@ -829,12 +774,10 @@ public class ObjectManager
     }
   }
 
-  public void deleteObjectInstance(
+  public WriteFuture deleteObjectInstance(
     ObjectInstanceHandle objectInstanceHandle, byte[] tag)
     throws ObjectInstanceNotKnown, DeletePrivilegeNotHeld, RTIinternalError
   {
-    WriteFuture writeFuture;
-
     objectsLock.writeLock().lock();
     try
     {
@@ -843,31 +786,21 @@ public class ObjectManager
 
       removeObjectInstance(objectInstance);
 
-      writeFuture = federate.getRTISession().write(new RemoveObjectInstance(
-        objectInstanceHandle, tag, OrderType.RECEIVE));
+      return federate.getRTISession().write(
+        new DeleteObjectInstance(objectInstanceHandle, tag, OrderType.RECEIVE));
     }
     finally
     {
       objectsLock.writeLock().unlock();
     }
-
-    // TODO: set timeout
-    //
-    writeFuture.join();
-    if (!writeFuture.isWritten())
-    {
-      throw new RTIinternalError("error communicating with RTI");
-    }
   }
 
-  public void deleteObjectInstance(
+  public WriteFuture deleteObjectInstance(
     ObjectInstanceHandle objectInstanceHandle, byte[] tag,
     LogicalTime deleteTime, MessageRetractionHandle messageRetractionHandle,
     OrderType sentOrderType)
     throws ObjectInstanceNotKnown, DeletePrivilegeNotHeld, RTIinternalError
   {
-    WriteFuture writeFuture;
-
     objectsLock.writeLock().lock();
     try
     {
@@ -879,7 +812,7 @@ public class ObjectManager
         removeObjectInstance(objectInstance);
       }
 
-      writeFuture = federate.getRTISession().write(
+      return federate.getRTISession().write(
         new RemoveObjectInstance(
           objectInstanceHandle, tag, sentOrderType, deleteTime,
           messageRetractionHandle));
@@ -887,14 +820,6 @@ public class ObjectManager
     finally
     {
       objectsLock.writeLock().unlock();
-    }
-
-    // TODO: set timeout
-    //
-    writeFuture.join();
-    if (!writeFuture.isWritten())
-    {
-      throw new RTIinternalError("error communicating with RTI");
     }
   }
 
@@ -915,8 +840,31 @@ public class ObjectManager
     {
       objectsLock.writeLock().unlock();
     }
+  }
 
-    // TODO: send local delete to peers
+  public void objectInstanceNameReservationSucceeded(
+    String name, FederateAmbassador federateAmbassador)
+  {
+    try
+    {
+      reservedObjectInstanceNamesLock.lock();
+      try
+      {
+        objectInstanceNamesBeingReserved.remove(name);
+        reservedObjectInstanceNames.add(name);
+
+        federateAmbassador.objectInstanceNameReservationSucceeded(name);
+      }
+      finally
+      {
+        reservedObjectInstanceNamesLock.unlock();
+      }
+    }
+    catch (Throwable t)
+    {
+      log.warn(String.format(
+        "federate could not process name reservation success: %s", name), t);
+    }
   }
 
   public void discoverObjectInstance(ObjectInstanceHandle objectInstanceHandle,
@@ -935,30 +883,18 @@ public class ObjectManager
 
       if (objectClass != null)
       {
+        ObjectInstance objectInstance =
+          new ObjectInstance(objectInstanceHandle, objectClass, name);
+
         objectsLock.writeLock().lock();
         try
         {
-          ObjectInstance objectInstance =
-            new ObjectInstance(objectInstanceHandle, objectClass, name);
-          ObjectInstance oldObjectInstance =
-            objects.put(objectInstanceHandle, objectInstance);
-          if (oldObjectInstance != null)
-          {
-            // the object has already been discovered, put it back and don't
-            // complete the callback
-            //
-            objects.put(objectInstanceHandle, oldObjectInstance);
-          }
-          else
-          {
-            objectsByName.put(name, objectInstance);
-            getObjectsByClassHandle(objectClassHandle).add(
-              objectInstanceHandle);
+          objects.put(objectInstanceHandle, objectInstance);
+          objectsByName.put(name, objectInstance);
+          getObjectsByClassHandle(objectClassHandle).add(objectInstanceHandle);
 
-            objectInstance.discoverObjectInstance(
-              objectInstanceHandle, objectClassHandle, name,
-              federateAmbassador);
-          }
+          objectInstance.discoverObjectInstance(
+            objectInstanceHandle, objectClassHandle, name, federateAmbassador);
         }
         catch (Throwable t)
         {
@@ -989,86 +925,29 @@ public class ObjectManager
     subscriptionLock.readLock().lock();
     try
     {
-      ObjectClass objectClass = null;
-      ObjectClass subscribedObjectClass = null;
-
       objectsLock.readLock().lock();
       try
       {
         ObjectInstance objectInstance = objects.get(objectInstanceHandle);
         if (objectInstance != null)
         {
-          objectClass = objectInstance.getObjectClass();
-          subscribedObjectClass =
-            subscriptionManager.getSubscribedObjectClass(objectClass);
-        }
-        else if (!removedObjects.contains(objectInstanceHandle))
-        {
-          // object has not been discovered yet
-
-          ObjectClassHandle objectClassHandle =
-            reflectedObjectClassHandles.get(objectInstanceHandle);
-
-          objectClass =
-            federate.getFDD().getObjectClasses().get(objectClassHandle);
-          assert objectClass != null;
-
-          subscribedObjectClass =
+          ObjectClass objectClass = objectInstance.getObjectClass();
+          ObjectClass subscribedObjectClass =
             subscriptionManager.getSubscribedObjectClass(objectClass);
 
-          // upgrade to a write lock
-          //
-          objectsLock.readLock().unlock();
-          objectsLock.writeLock().lock();
-          try
+          if (subscribedObjectClass != null)
           {
-            // objects only get removed/added during callbacks and only one
-            // callback can occur at a time (this method is called in one)
-            //
-            assert !objects.containsKey(objectInstanceHandle);
-            assert !removedObjects.contains(objectInstanceHandle);
+            if (!subscribedObjectClass.equals(objectClass))
+            {
+              subscriptionManager.trim(
+                attributeValues, subscribedObjectClass.getObjectClassHandle());
+            }
 
-            String name =
-              reservedObjectInstanceNamesByHandle.get(
-                objectInstanceHandle);
-            name = name != null ?
-              name : String.format("HLA-%s", objectInstanceHandle);
-
-            objectInstance = new ObjectInstance(
-              objectInstanceHandle, subscribedObjectClass, name);
-
-            objects.put(objectInstanceHandle, objectInstance);
-            objectsByName.put(name, objectInstance);
-            getObjectsByClassHandle(objectClassHandle).add(
-              objectInstanceHandle);
-
-            // TODO: this means 2 callbacks are happening
-            //
-            objectInstance.discoverObjectInstance(
-              objectInstanceHandle, objectClassHandle, name,
-              federateAmbassador);
+            objectInstance.reflectAttributeValues(
+              objectInstanceHandle, attributeValues, tag, sentOrderType,
+              transportationType, updateTime, receivedOrderType,
+              messageRetractionHandle, sentRegionHandles, federateAmbassador);
           }
-          finally
-          {
-            // downgrade to read lock
-            //
-            objectsLock.readLock().lock();
-            objectsLock.writeLock().unlock();
-          }
-        }
-
-        if (objectInstance != null && subscribedObjectClass != null)
-        {
-          if (!subscribedObjectClass.equals(objectClass))
-          {
-            subscriptionManager.trim(
-              attributeValues, subscribedObjectClass.getObjectClassHandle());
-          }
-
-          objectInstance.reflectAttributeValues(
-            objectInstanceHandle, attributeValues, tag, sentOrderType,
-            transportationType, updateTime, receivedOrderType,
-            messageRetractionHandle, sentRegionHandles, federateAmbassador);
         }
       }
       catch (Throwable t)
@@ -1306,7 +1185,7 @@ public class ObjectManager
     try
     {
       getObjectInstance(objectInstanceHandle).requestAttributeValueUpdate(
-        attributeHandles, tag, federate);
+        attributeHandles, tag, federate.getRTISession());
     }
     finally
     {
@@ -1553,22 +1432,6 @@ public class ObjectManager
       attributeHandle, federate.getRTISession());
   }
 
-  public void objectInstanceNameReserved(
-    String name, ObjectInstanceHandle objectInstanceHandle)
-  {
-    reservedObjectInstanceNamesLock.lock();
-    try
-    {
-      ObjectInstanceHandle oldObjectInstanceHandle =
-        reservedObjectInstanceNames.put(name, objectInstanceHandle);
-      assert oldObjectInstanceHandle == null;
-    }
-    finally
-    {
-      reservedObjectInstanceNamesLock.unlock();
-    }
-  }
-
   protected Set<AttributeHandle> getPublishedObjectClassAttributes(
     ObjectClassHandle objectClassHandle)
     throws ObjectClassNotPublished
@@ -1662,7 +1525,7 @@ public class ObjectManager
     reservedObjectInstanceNamesLock.lock();
     try
     {
-      if (!reservedObjectInstanceNames.containsKey(name))
+      if (!reservedObjectInstanceNames.contains(name))
       {
         throw new ObjectInstanceNameNotReserved(name);
       }
@@ -1701,7 +1564,7 @@ public class ObjectManager
     reservedObjectInstanceNamesLock.lock();
     try
     {
-      if (reservedObjectInstanceNames.containsKey(objectInstance.getName()))
+      if (reservedObjectInstanceNames.contains(objectInstance.getName()))
       {
         retiredObjectInstanceNamesLock.lock();
         try
@@ -1718,38 +1581,6 @@ public class ObjectManager
     {
       reservedObjectInstanceNamesLock.unlock();
     }
-  }
-
-  public String createObjectInstanceName(
-    ObjectInstanceHandle objectInstanceHandle,
-    ObjectClassHandle objectClassHandle)
-  {
-    String objectInstanceName;
-
-    objectsLock.readLock().lock();
-    try
-    {
-      objectInstanceName =
-        reservedObjectInstanceNamesByHandle.get(objectInstanceHandle);
-    }
-    finally
-    {
-      objectsLock.readLock().unlock();
-    }
-
-    if (objectInstanceName == null)
-    {
-      objectInstanceName = String.format("HLA-%s", objectInstanceHandle);
-    }
-
-    return objectInstanceName;
-  }
-
-  public void objectReflected(ObjectInstanceHandle objectInstanceHandle,
-                              ObjectClassHandle objectClassHandle)
-  {
-    reflectedObjectClassHandles.putIfAbsent(
-      objectInstanceHandle, objectClassHandle);
   }
 
   protected class ObjectManagerSubscriptionManager
