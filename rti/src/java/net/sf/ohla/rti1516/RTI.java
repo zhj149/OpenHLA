@@ -93,6 +93,18 @@ public class RTI
       }
     }
 
+    if (socketAcceptorProfiles.isEmpty())
+    {
+      // add default socket acceptor profile
+
+      SocketAcceptorProfile defaultSocketAcceptorProfile =
+        new SocketAcceptorProfile("localhost");
+      defaultSocketAcceptorProfile.setPort(5000);
+      defaultSocketAcceptorProfile.setLogging(true);
+      socketAcceptorProfiles.put(
+        defaultSocketAcceptorProfile.getName(), defaultSocketAcceptorProfile);
+    }
+
     log.debug("creating {} socket acceptor(s)", socketAcceptorProfiles.size());
 
     for (SocketAcceptorProfile socketAcceptorProfile : socketAcceptorProfiles.values())
