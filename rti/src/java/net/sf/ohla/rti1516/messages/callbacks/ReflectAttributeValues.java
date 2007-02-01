@@ -142,7 +142,7 @@ public class ReflectAttributeValues
   {
     if (updateTime == null)
     {
-      if (sentRegionHandles == null)
+      if (sentRegionHandles == null || sentRegionHandles.isEmpty())
       {
         federateAmbassador.reflectAttributeValues(
           objectInstanceHandle, attributeValues, tag, sentOrderType,
@@ -157,7 +157,7 @@ public class ReflectAttributeValues
     }
     else if (messageRetractionHandle == null)
     {
-      if (sentRegionHandles == null)
+      if (sentRegionHandles == null || sentRegionHandles.isEmpty())
       {
         federateAmbassador.reflectAttributeValues(
           objectInstanceHandle, attributeValues, tag, sentOrderType,
@@ -170,7 +170,7 @@ public class ReflectAttributeValues
           transportationType, updateTime, receivedOrderType, sentRegionHandles);
       }
     }
-    else if (sentRegionHandles == null)
+    else if (sentRegionHandles == null || sentRegionHandles.isEmpty())
     {
       federateAmbassador.reflectAttributeValues(
         objectInstanceHandle, attributeValues, tag, sentOrderType,
