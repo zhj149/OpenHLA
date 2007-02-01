@@ -94,33 +94,34 @@ public class ObjectManager
     AttributeHandleSet attributeHandles,
     AttributeSetRegionSetPairList attributesAndRegions)
   {
+    WriteFuture lastWriteFuture = null;
+
     objectsLock.readLock().lock();
     try
     {
-      WriteFuture lastWriteFuture = null;
       for (ObjectInstance objectInstance : objects.values())
       {
         if (objectClass.isAssignableFrom(objectInstance.getObjectClass()))
         {
           // TODO: DDM
 
-          lastWriteFuture = federate.getSession().write(
+          lastWriteFuture = federate.discoverObjectInstance(
             new DiscoverObjectInstance(
               objectInstance.getObjectInstanceHandle(),
               objectClass.getObjectClassHandle(), objectInstance.getName()));
         }
       }
-
-      if (lastWriteFuture != null)
-      {
-        // wait until the last discover has been sent
-        //
-        lastWriteFuture.join();
-      }
     }
     finally
     {
       objectsLock.readLock().unlock();
+    }
+
+    if (lastWriteFuture != null)
+    {
+      // wait until the last discover has been sent
+      //
+      lastWriteFuture.join();
     }
   }
 
@@ -155,7 +156,7 @@ public class ObjectManager
       federationExecution.getFDD().getObjectClasses().get(objectClassHandle);
     assert objectClass != null;
 
-    assert name != null && federate.equals(
+    assert name == null || federate.equals(
       reservedObjectInstanceNames.get(name));
 
     ObjectInstance objectInstance = new ObjectInstance(

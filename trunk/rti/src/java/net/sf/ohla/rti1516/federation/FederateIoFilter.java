@@ -163,6 +163,9 @@ public class FederateIoFilter
 
         // TODO: notify the PublicationManager that subsciption interests have changed
       }
+
+      federationExecution.subscribeObjectClassAttributes(
+        federate, subscribeObjectClassAttributes);
     }
     else if (message instanceof UnsubscribeObjectClassAttributes)
     {
@@ -455,7 +458,7 @@ public class FederateIoFilter
       Map<AttributeHandle, AttributeSubscription> subscriptions =
         getSubscribedAttributeSubscriptions(
           reflectAttributeValues.getObjectClass());
-
+System.out.printf("subscriptions for %s: %s\n", reflectAttributeValues.getObjectClass(), subscriptions);
       if (subscriptions == null)
       {
         reflectAttributeValues = null;

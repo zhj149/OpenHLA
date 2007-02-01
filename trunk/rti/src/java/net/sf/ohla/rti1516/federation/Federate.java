@@ -33,8 +33,10 @@ import net.sf.ohla.rti1516.messages.FederateRestoreComplete;
 import net.sf.ohla.rti1516.messages.FederateRestoreNotComplete;
 import net.sf.ohla.rti1516.messages.RequestAttributeValueUpdate;
 import net.sf.ohla.rti1516.messages.Retract;
+import net.sf.ohla.rti1516.messages.GALTAdvanced;
 
 import org.apache.mina.common.IoSession;
+import org.apache.mina.common.WriteFuture;
 
 import hla.rti1516.FederateHandle;
 import hla.rti1516.RestoreStatus;
@@ -94,17 +96,18 @@ public class Federate
     session.getFilterChain().remove(FEDERATE_IO_FILTER);
   }
 
-  public void announceSynchronizationPoint(
+  public WriteFuture announceSynchronizationPoint(
     AnnounceSynchronizationPoint announceSynchronizationPoint)
   {
-    session.write(announceSynchronizationPoint);
+    return session.write(announceSynchronizationPoint);
   }
 
-  public void initiateFederateSave(InitiateFederateSave initiateFederateSave)
+  public WriteFuture initiateFederateSave(
+    InitiateFederateSave initiateFederateSave)
   {
     saveStatus = SaveStatus.FEDERATE_INSTRUCTED_TO_SAVE;
 
-    session.write(initiateFederateSave);
+    return session.write(initiateFederateSave);
   }
 
   public void federateSaveInitiated(FederateSaveInitiated federateSaveInitiated)
@@ -133,18 +136,18 @@ public class Federate
     saveStatus = SaveStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_SAVE;
   }
 
-  public void federationSaved(FederationSaved federationSaved)
+  public WriteFuture federationSaved(FederationSaved federationSaved)
   {
     saveStatus = SaveStatus.NO_SAVE_IN_PROGRESS;
 
-    session.write(federationSaved);
+    return session.write(federationSaved);
   }
 
-  public void federationNotSaved(FederationNotSaved federationNotSaved)
+  public WriteFuture federationNotSaved(FederationNotSaved federationNotSaved)
   {
     saveStatus = SaveStatus.NO_SAVE_IN_PROGRESS;
 
-    session.write(federationNotSaved);
+    return session.write(federationNotSaved);
   }
 
   public void federateRestoreComplete(
@@ -159,37 +162,42 @@ public class Federate
     restoreStatus = RestoreStatus.NO_RESTORE_IN_PROGRESS;
   }
 
-  public void discoverObjectInstance(
+  public WriteFuture discoverObjectInstance(
     DiscoverObjectInstance discoverObjectInstance)
   {
-    session.write(discoverObjectInstance);
+    return session.write(discoverObjectInstance);
   }
 
-  public void reflectAttributeValues(
+  public WriteFuture reflectAttributeValues(
     ReflectAttributeValues reflectAttributeValues)
   {
-    session.write(reflectAttributeValues);
+    return session.write(reflectAttributeValues);
   }
 
-  public void receiveInteraction(ReceiveInteraction receiveInteraction)
+  public WriteFuture receiveInteraction(ReceiveInteraction receiveInteraction)
   {
-    session.write(receiveInteraction);
+    return session.write(receiveInteraction);
   }
 
-  public void removeObjectInstance(RemoveObjectInstance removeObjectInstance)
+  public WriteFuture removeObjectInstance(RemoveObjectInstance removeObjectInstance)
   {
-    session.write(removeObjectInstance);
+    return session.write(removeObjectInstance);
   }
 
-  public void requestAttributeValueUpdate(
+  public WriteFuture requestAttributeValueUpdate(
     RequestAttributeValueUpdate requestAttributeValueUpdate)
   {
-    session.write(requestAttributeValueUpdate);
+    return session.write(requestAttributeValueUpdate);
   }
 
-  public void retract(Retract retract)
+  public WriteFuture retract(Retract retract)
   {
-    session.write(retract);
+    return session.write(retract);
+  }
+
+  public WriteFuture galtAdvanced(GALTAdvanced galtAdvanced)
+  {
+    return session.write(galtAdvanced);
   }
 
   @Override
