@@ -324,12 +324,6 @@ public class ObjectManagementTestNG
     attributeValues.put(attributeHandle2, ATTRIBUTE2_VALUE.getBytes());
     attributeValues.put(attributeHandle3, ATTRIBUTE3_VALUE.getBytes());
 
-    // because of the nature of distributed computing, the subscribe message
-    // from federate #3 may not have arrived at federate #1 or #2, so we need
-    // to put in an artificual pause because we want the testing to succeed
-    //
-    rtiAmbassadors.get(0).evokeCallback(1.0);
-
     rtiAmbassadors.get(0).updateAttributeValues(
       objectInstanceHandle, attributeValues, null);
 
