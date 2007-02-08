@@ -325,7 +325,7 @@ public class OwnershipManagementTestNG
       for (int i = 0;
            i < 5 && !objectInstances.containsKey(objectInstanceHandle); i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(1.0);
       }
       assert objectInstances.containsKey(objectInstanceHandle);
     }
@@ -339,7 +339,7 @@ public class OwnershipManagementTestNG
            i < 5 && (!objectInstances.containsKey(objectInstanceHandle1) ||
                      !objectInstances.containsKey(objectInstanceHandle2)); i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(1.0);
       }
       assert objectInstances.containsKey(objectInstanceHandle1) &&
              objectInstances.containsKey(objectInstanceHandle2);
@@ -354,7 +354,7 @@ public class OwnershipManagementTestNG
            i < 5 && !objectInstances.get(objectInstanceHandle).isRemoved();
            i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(1.0);
       }
       assert objectInstances.get(objectInstanceHandle).isRemoved();
     }
@@ -369,7 +369,7 @@ public class OwnershipManagementTestNG
            null;
            i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(1.0);
       }
 
       assert attributeValues.equals(
@@ -396,7 +396,7 @@ public class OwnershipManagementTestNG
                                                                   attributeOwnership.size();
            i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(1.0);
       }
 
       assert attributeOwnership.equals(objectInstances.get(
@@ -423,7 +423,7 @@ public class OwnershipManagementTestNG
                                                                             null;
            i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(1.0);
       }
 
       assert requestingAttributeOwnershipRelease.equals(objectInstances.get(
@@ -450,7 +450,7 @@ public class OwnershipManagementTestNG
                                                                           null;
            i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(1.0);
       }
 
       assert requestingDivestitureConfirmation.equals(objectInstances.get(
@@ -476,13 +476,14 @@ public class OwnershipManagementTestNG
              objectInstanceHandle).getAttributesAcquired() == null;
            i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(1.0);
       }
 
       assert attributesAcquired.equals(objectInstances.get(
         objectInstanceHandle).getAttributesAcquired());
     }
 
+    @Override
     public void discoverObjectInstance(
       ObjectInstanceHandle objectInstanceHandle,
       ObjectClassHandle objectClassHandle,
@@ -492,6 +493,7 @@ public class OwnershipManagementTestNG
         objectInstanceHandle, objectClassHandle, name));
     }
 
+    @Override
     public void reflectAttributeValues(
       ObjectInstanceHandle objectInstanceHandle,
       AttributeHandleValueMap attributeValues,
@@ -502,12 +504,14 @@ public class OwnershipManagementTestNG
         attributeValues);
     }
 
+    @Override
     public void removeObjectInstance(ObjectInstanceHandle objectInstanceHandle,
                                      byte[] tag, OrderType sentOrderType)
     {
       objectInstances.get(objectInstanceHandle).setRemoved(true);
     }
 
+    @Override
     public void attributeOwnershipAcquisitionNotification(
       ObjectInstanceHandle objectInstanceHandle,
       AttributeHandleSet attributeHandles, byte[] tag)
@@ -520,6 +524,7 @@ public class OwnershipManagementTestNG
         attributeHandles, tag);
     }
 
+    @Override
     public void requestAttributeOwnershipRelease(
       ObjectInstanceHandle objectInstanceHandle,
       AttributeHandleSet attributeHandles, byte[] tag)
@@ -531,6 +536,7 @@ public class OwnershipManagementTestNG
         attributeHandles, tag);
     }
 
+    @Override
     public void requestDivestitureConfirmation(
       ObjectInstanceHandle objectInstanceHandle,
       AttributeHandleSet attributeHandles)
@@ -541,6 +547,7 @@ public class OwnershipManagementTestNG
         objectInstanceHandle).requestDivestitureConfirmation(attributeHandles);
     }
 
+    @Override
     public void informAttributeOwnership(
       ObjectInstanceHandle objectInstanceHandle,
       AttributeHandle attributeHandle, FederateHandle federateHandle)

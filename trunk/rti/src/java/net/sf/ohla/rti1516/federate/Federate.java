@@ -425,6 +425,8 @@ public class Federate
     futureTasksLock.lock();
     try
     {
+      log.debug("{} processing future tasks: {}", this, maxFutureTaskTimestamp);
+
       for (TimestampedFutureTask timestampedFutureTask = futureTasks.peek();
            timestampedFutureTask != null &&
            timestampedFutureTask.getTime().compareTo(
@@ -452,7 +454,7 @@ public class Federate
 
   public boolean process(IoSession session, Object message)
   {
-    log.debug("{} processing: {}", federateHandle, message);
+    log.debug("{} processing: {}", this, message);
 
     boolean processed = true;
     if (message instanceof Callback)
@@ -568,7 +570,6 @@ public class Federate
       GALTAdvanced galtAdvanced = (GALTAdvanced) message;
 
       LogicalTime galt = galtAdvanced.getGALT();
-      log.debug("GALT advanced: {}", galt);
 
       timeManager.galtAdvanced(galt);
     }

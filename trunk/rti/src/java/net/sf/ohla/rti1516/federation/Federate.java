@@ -24,6 +24,9 @@ import net.sf.ohla.rti1516.messages.callbacks.ReflectAttributeValues;
 import net.sf.ohla.rti1516.messages.callbacks.ReceiveInteraction;
 import net.sf.ohla.rti1516.messages.callbacks.RemoveObjectInstance;
 import net.sf.ohla.rti1516.messages.callbacks.AnnounceSynchronizationPoint;
+import net.sf.ohla.rti1516.messages.callbacks.TimeRegulationEnabled;
+import net.sf.ohla.rti1516.messages.callbacks.TimeConstrainedEnabled;
+import net.sf.ohla.rti1516.messages.callbacks.TimeAdvanceGrant;
 import net.sf.ohla.rti1516.messages.FederateSaveInitiated;
 import net.sf.ohla.rti1516.messages.FederateSaveInitiatedFailed;
 import net.sf.ohla.rti1516.messages.FederateSaveBegun;
@@ -38,9 +41,17 @@ import net.sf.ohla.rti1516.messages.GALTAdvanced;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.common.WriteFuture;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
+
 import hla.rti1516.FederateHandle;
 import hla.rti1516.RestoreStatus;
 import hla.rti1516.SaveStatus;
+import hla.rti1516.LogicalTime;
+import hla.rti1516.LogicalTimeInterval;
+import hla.rti1516.IllegalTimeArithmetic;
 
 public class Federate
 {
@@ -54,6 +65,18 @@ public class Federate
   protected SaveStatus saveStatus = SaveStatus.NO_SAVE_IN_PROGRESS;
   protected RestoreStatus restoreStatus = RestoreStatus.NO_RESTORE_IN_PROGRESS;
 
+  protected boolean timeRegulationEnabled;
+  protected boolean timeConstrainedEnabled;
+
+  protected LogicalTime federateTime;
+  protected LogicalTimeInterval lookahead;
+  protected LogicalTime timeAdvanceRequest;
+  protected LogicalTime lits;
+  protected LogicalTime galt;
+
+  protected final Logger log = LoggerFactory.getLogger(getClass());
+  protected final Marker marker;
+
   public Federate(FederateHandle federateHandle, String federateType,
                   IoSession session, FederationExecution federationExecution)
   {
@@ -64,6 +87,8 @@ public class Federate
 
     session.getFilterChain().addLast(
       FEDERATE_IO_FILTER, new FederateIoFilter(this, federationExecution));
+
+    marker = MarkerFactory.getMarker(federateType);
   }
 
   public FederateHandle getFederateHandle()
@@ -89,6 +114,31 @@ public class Federate
   public RestoreStatus getRestoreStatus()
   {
     return restoreStatus;
+  }
+
+  public LogicalTime getFederateTime()
+  {
+    return federateTime;
+  }
+
+  public LogicalTimeInterval getLookahead()
+  {
+    return lookahead;
+  }
+
+  public void modifyLookahead(LogicalTimeInterval lookahead)
+  {
+    this.lookahead = lookahead;
+  }
+
+  public LogicalTime getTimeAdvanceRequest()
+  {
+    return timeAdvanceRequest;
+  }
+
+  public LogicalTime getLITS()
+  {
+    return lits;
   }
 
   public void resignFederationExecution()
@@ -195,9 +245,106 @@ public class Federate
     return session.write(retract);
   }
 
-  public WriteFuture galtAdvanced(GALTAdvanced galtAdvanced)
+  public void enableTimeRegulation(LogicalTime galt,
+                                   LogicalTimeInterval lookahead)
+    throws IllegalTimeArithmetic
   {
-    return session.write(galtAdvanced);
+    // keep existing time
+    //
+    federateTime = federateTime != null ? federateTime : galt;
+
+    // federate time should always be less than galt
+    //
+    assert federateTime.compareTo(galt) <= 0;
+
+    this.lookahead = lookahead;
+
+    lits = this.federateTime.add(lookahead);
+
+    log.debug(marker, "time regulation enabled: {} - {}",
+              galt, lookahead);
+
+    timeRegulationEnabled = true;
+
+    session.write(new TimeRegulationEnabled(galt));
+  }
+
+  public void disableTimeRegulation()
+  {
+    federateTime = timeConstrainedEnabled ? federateTime : null;
+    lookahead = null;
+
+    timeRegulationEnabled = false;
+
+    log.debug(marker, "time regulation disabled");
+  }
+
+  public void enableTimeConstrained(LogicalTime galt)
+  {
+    // keep existing time
+    //
+    federateTime = federateTime != null ? federateTime : galt;
+
+    // federate time should always be less than galt
+    //
+    assert federateTime.compareTo(galt) <= 0;
+
+    timeConstrainedEnabled = true;
+
+    log.debug(marker, "time constrained enabled: {}", galt);
+
+    session.write(new TimeConstrainedEnabled(galt));
+  }
+
+  public void disableTimeConstrained()
+  {
+    federateTime = timeRegulationEnabled ? federateTime : null;
+
+    timeConstrainedEnabled = false;
+
+    log.debug(marker, "time constrained disabled");
+  }
+
+  public void timeAdvanceRequest(LogicalTime time)
+    throws IllegalTimeArithmetic
+  {
+    log.debug(marker, "time advance request: {}", time);
+
+    timeAdvanceRequest = time;
+
+    if (timeRegulationEnabled)
+    {
+      lits = timeAdvanceRequest.add(lookahead);
+
+      log.debug(marker, "lits: {}", lits);
+    }
+
+    if (!timeConstrainedEnabled || timeAdvanceRequest.compareTo(galt) <= 0)
+    {
+      // immediately grant the request
+
+      federateTime = timeAdvanceRequest;
+      timeAdvanceRequest = null;
+
+      session.write(new TimeAdvanceGrant(federateTime));
+    }
+  }
+
+  public WriteFuture galtAdvanced(LogicalTime galt)
+  {
+    this.galt = galt;
+
+    WriteFuture writeFuture = session.write(new GALTAdvanced(galt));
+
+    if (timeAdvanceRequest != null && timeAdvanceRequest.compareTo(galt) <= 0)
+    {
+      federateTime = timeAdvanceRequest;
+      timeAdvanceRequest = null;
+
+      writeFuture = session.write(new TimeAdvanceGrant(federateTime));
+    }
+
+    return writeFuture;
   }
 
   @Override
@@ -209,13 +356,14 @@ public class Federate
   @Override
   public boolean equals(Object rhs)
   {
-    return federateHandle.equals(rhs);
+    return rhs instanceof Federate &&
+           federateHandle.equals(((Federate) rhs).federateHandle);
   }
 
   @Override
   public String toString()
   {
-    return String.format("%s - %s - %s", federateHandle,
+    return String.format("%s,%s,%s", federateHandle,
                          session.getLocalAddress(), federateType);
   }
 }

@@ -180,8 +180,6 @@ public class TimeManagementTestNG
   public void teardown()
     throws Exception
   {
-    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
-    rtiAmbassadors.get(1).resignFederationExecution(ResignAction.NO_ACTION);
     rtiAmbassadors.get(2).resignFederationExecution(ResignAction.NO_ACTION);
     rtiAmbassadors.get(3).resignFederationExecution(ResignAction.NO_ACTION);
     rtiAmbassadors.get(4).resignFederationExecution(ResignAction.NO_ACTION);
@@ -323,7 +321,7 @@ public class TimeManagementTestNG
     rtiAmbassadors.get(0).enableTimeRegulation(null);
   }
 
-  @Test
+  @Test(dependsOnMethods = {"testDisableTimeRegulation"})
   public void testEnableTimeConstrained()
     throws Exception
   {
@@ -414,7 +412,9 @@ public class TimeManagementTestNG
     rtiAmbassadors.get(0).disableTimeConstrained();
   }
 
-  @Test
+  @Test(dependsOnMethods = {
+    "testDisableTimeRegulation",
+    "testDisableTimeConstrained"})
   public void testTimeAdvanceRequestWhileNeitherRegulatingOrConstrained()
     throws Exception
   {
@@ -535,6 +535,9 @@ public class TimeManagementTestNG
   public void testTimeAdvanceRequest()
     throws Exception
   {
+    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
+    rtiAmbassadors.get(1).resignFederationExecution(ResignAction.NO_ACTION);
+
     rtiAmbassadors.get(2).enableTimeRegulation(lookahead1);
     federateAmbassadors.get(2).checkTimeRegulationEnabled(zero);
 
@@ -608,7 +611,7 @@ public class TimeManagementTestNG
         objectInstanceHandle);
 
       AttributeHandleValueMap attributeValues =
-        rtiAmbassadors.get(1).getAttributeHandleValueMapFactory().create(3);
+        rtiAmbassadors.get(2).getAttributeHandleValueMapFactory().create(3);
       attributeValues.put(attributeHandle1, ATTRIBUTE1_VALUE.getBytes());
       attributeValues.put(attributeHandle2, ATTRIBUTE2_VALUE.getBytes());
       attributeValues.put(attributeHandle3, ATTRIBUTE3_VALUE.getBytes());
@@ -666,7 +669,7 @@ public class TimeManagementTestNG
     throws Exception
   {
     ParameterHandleValueMap parameterValues =
-      rtiAmbassadors.get(0).getParameterHandleValueMapFactory().create(3);
+      rtiAmbassadors.get(2).getParameterHandleValueMapFactory().create(3);
     parameterValues.put(parameterHandle1, PARAMETER1_VALUE.getBytes());
     parameterValues.put(parameterHandle2, PARAMETER2_VALUE.getBytes());
     parameterValues.put(parameterHandle3, PARAMETER3_VALUE.getBytes());
@@ -711,7 +714,7 @@ public class TimeManagementTestNG
         objectInstanceHandle);
 
       AttributeHandleValueMap attributeValues =
-        rtiAmbassadors.get(1).getAttributeHandleValueMapFactory().create(3);
+        rtiAmbassadors.get(2).getAttributeHandleValueMapFactory().create(3);
       attributeValues.put(attributeHandle1, ATTRIBUTE1_VALUE.getBytes());
       attributeValues.put(attributeHandle2, ATTRIBUTE2_VALUE.getBytes());
       attributeValues.put(attributeHandle3, ATTRIBUTE3_VALUE.getBytes());
@@ -763,35 +766,22 @@ public class TimeManagementTestNG
     }
     finally
     {
-      try
-      {
       rtiAmbassadors.get(2).deleteObjectInstance(objectInstanceHandle, null);
-
-      System.out.println("fuck me");
 
       // bring all the federates to the same time
       //
       rtiAmbassadors.get(2).timeAdvanceRequest(fifteen);
-      System.out.println("fuck me 2");
       rtiAmbassadors.get(3).timeAdvanceRequest(fifteen);
-      System.out.println("fuck me 3");
       rtiAmbassadors.get(4).timeAdvanceRequest(fifteen);
 
       federateAmbassadors.get(2).checkTimeAdvanceGrant(fifteen);
       federateAmbassadors.get(3).checkTimeAdvanceGrant(fifteen);
       federateAmbassadors.get(4).checkTimeAdvanceGrant(fifteen);
 
-      System.out.println("fuck you");
       federateAmbassadors.get(3).checkForRemovedObjectInstanceHandle(
         objectInstanceHandle);
-      System.out.println("fuck you too");
       federateAmbassadors.get(4).checkForRemovedObjectInstanceHandle(
         objectInstanceHandle);
-      }
-      catch (Throwable t)
-      {
-        t.printStackTrace();
-      }
     }
   }
 
@@ -820,7 +810,7 @@ public class TimeManagementTestNG
       timeRegulationEnabledTime = null;
       for (int i = 0; i < 5 && timeRegulationEnabledTime == null; i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(1.0);
       }
       assert timeRegulationEnabledTime != null;
     }
@@ -831,7 +821,7 @@ public class TimeManagementTestNG
       timeRegulationEnabledTime = null;
       for (int i = 0; i < 5 && timeRegulationEnabledTime == null; i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(1.0);
       }
       assert time.equals(timeRegulationEnabledTime);
     }
@@ -842,7 +832,7 @@ public class TimeManagementTestNG
       timeConstrainedEnabledTime = null;
       for (int i = 0; i < 5 && timeConstrainedEnabledTime == null; i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(1.0);
       }
       assert timeConstrainedEnabledTime != null;
     }
@@ -853,7 +843,7 @@ public class TimeManagementTestNG
       timeConstrainedEnabledTime = null;
       for (int i = 0; i < 5 && timeConstrainedEnabledTime == null; i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(1.0);
       }
       assert time.equals(timeConstrainedEnabledTime);
     }
@@ -864,10 +854,9 @@ public class TimeManagementTestNG
       federateTime = null;
       for (int i = 0; i < 5 && federateTime == null; i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.5, 1.0);
-        System.out.println("&$*%$&%&$*$&$&$");
+        rtiAmbassador.evokeCallback(1.0);
       }
-      assert time.equals(federateTime);
+      assert time.equals(federateTime) : time + " = " + federateTime;
     }
 
     public void checkTimeAdvanceGrantNotGranted(LogicalTime time)
@@ -876,7 +865,7 @@ public class TimeManagementTestNG
       federateTime = null;
       for (int i = 0; i < 5; i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(0.1);
       }
       assert federateTime == null;
     }
@@ -888,7 +877,7 @@ public class TimeManagementTestNG
       for (int i = 0;
            i < 5 && !objectInstances.containsKey(objectInstanceHandle); i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(1.0);
       }
       assert objectInstances.containsKey(objectInstanceHandle);
     }
@@ -903,12 +892,12 @@ public class TimeManagementTestNG
            null;
            i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
-        System.out.println("HHHH");
+        rtiAmbassador.evokeCallback(1.0);
       }
 
       assert attributeValues.equals(
-        objectInstances.get(objectInstanceHandle).getAttributeValues());
+        objectInstances.get(objectInstanceHandle).getAttributeValues()) :
+      attributeValues + " = " + objectInstances.get(objectInstanceHandle).getAttributeValues();
     }
 
     public void checkAttributeValuesNotReceived(
@@ -921,7 +910,7 @@ public class TimeManagementTestNG
            null;
            i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(0.1);
       }
 
       assert objectInstances.get(objectInstanceHandle).getAttributeValues() == null;
@@ -935,7 +924,7 @@ public class TimeManagementTestNG
            i < 5 && !objectInstances.get(objectInstanceHandle).isRemoved();
            i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(1.0);
       }
       assert objectInstances.get(objectInstanceHandle).isRemoved();
     }
@@ -945,7 +934,7 @@ public class TimeManagementTestNG
     {
       for (int i = 0; i < 5 && this.parameterValues == null; i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(1.0);
       }
       assert parameterValues.equals(this.parameterValues);
     }
@@ -955,7 +944,7 @@ public class TimeManagementTestNG
     {
       for (int i = 0; i < 5 && this.parameterValues == null; i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(0.1);
       }
       assert parameterValues == null;
     }
@@ -1001,7 +990,6 @@ public class TimeManagementTestNG
       byte[] tag, OrderType sentOrderType,
       TransportationType transportationType)
     {
-      System.out.println("11111");
       objectInstances.get(objectInstanceHandle).setAttributeValues(
         attributeValues);
     }
@@ -1016,7 +1004,6 @@ public class TimeManagementTestNG
       throws ObjectInstanceNotKnown, AttributeNotRecognized,
              AttributeNotSubscribed, FederateInternalError
     {
-      System.out.println("22222");
       objectInstances.get(objectInstanceHandle).setAttributeValues(
         attributeValues);
     }
@@ -1032,7 +1019,6 @@ public class TimeManagementTestNG
       throws ObjectInstanceNotKnown, AttributeNotRecognized,
              AttributeNotSubscribed, FederateInternalError
     {
-      System.out.println("33333");
       objectInstances.get(objectInstanceHandle).setAttributeValues(
         attributeValues);
     }
@@ -1048,7 +1034,6 @@ public class TimeManagementTestNG
       throws ObjectInstanceNotKnown, AttributeNotRecognized,
              AttributeNotSubscribed, InvalidLogicalTime, FederateInternalError
     {
-      System.out.println("44444");
       objectInstances.get(objectInstanceHandle).setAttributeValues(
         attributeValues);
     }
@@ -1065,7 +1050,6 @@ public class TimeManagementTestNG
       throws ObjectInstanceNotKnown, AttributeNotRecognized,
              AttributeNotSubscribed, InvalidLogicalTime, FederateInternalError
     {
-      System.out.println("55555");
       objectInstances.get(objectInstanceHandle).setAttributeValues(
         attributeValues);
     }

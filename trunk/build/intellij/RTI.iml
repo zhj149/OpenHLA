@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module version="4" relativePaths="true" type="JAVA_MODULE">
   <component name="ModuleRootManager" />
-  <component name="NewModuleRootManager">
+  <component name="NewModuleRootManager" inherit-compiler-output="false">
     <output url="file://$MODULE_DIR$/../output/rti/classes" />
     <exclude-output />
     <content url="file://$MODULE_DIR$/../../rti">
@@ -14,17 +14,17 @@
     <orderEntry type="library" name="dom4j" level="project" />
     <orderEntry type="library" name="mina" level="project" />
     <orderEntry type="library" name="testng" level="project" />
+    <orderEntry type="library" name="logback" level="project" />
+    <orderEntry type="library" name="slf4j" level="project" />
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="file://$MODULE_DIR$/../../resources/properties" />
+          <root url="file://$MODULE_DIR$/../../resources" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="slf4j-log4j12" level="project" />
-    <orderEntry type="library" name="log4j-1.2.14" level="project" />
     <orderEntryProperties />
   </component>
   <component name="copyright">
