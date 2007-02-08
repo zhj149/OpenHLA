@@ -16,35 +16,35 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
 <suite name="OHLA IEEE 1516 Testsuite" parallel="false" verbose="5">
-  <test name="IEEE 1516 - Federation Management">
-    <classes>
-      <class name="net.sf.ohla.rti1516.FederationManagementTestNG"/>
-    </classes>
-  </test>
+  <!--<test name="IEEE 1516 - Federation Management">-->
+    <!--<classes>-->
+      <!--<class name="net.sf.ohla.rti1516.FederationManagementTestNG"/>-->
+    <!--</classes>-->
+  <!--</test>-->
 
-  <test name="IEEE 1516 - Support Services">
-    <classes>
-      <class name="net.sf.ohla.rti1516.SupportServicesTestNG"/>
-    </classes>
-  </test>
+  <!--<test name="IEEE 1516 - Support Services">-->
+    <!--<classes>-->
+      <!--<class name="net.sf.ohla.rti1516.SupportServicesTestNG"/>-->
+    <!--</classes>-->
+  <!--</test>-->
 
-  <test name="IEEE 1516 - Declaration Management">
-    <classes>
-      <class name="net.sf.ohla.rti1516.DeclarationManagementTestNG"/>
-    </classes>
-  </test>
+  <!--<test name="IEEE 1516 - Declaration Management">-->
+    <!--<classes>-->
+      <!--<class name="net.sf.ohla.rti1516.DeclarationManagementTestNG"/>-->
+    <!--</classes>-->
+  <!--</test>-->
 
-  <test name="IEEE 1516 - Object Management">
-    <classes>
-      <class name="net.sf.ohla.rti1516.ObjectManagementTestNG"/>
-    </classes>
-  </test>
+  <!--<test name="IEEE 1516 - Object Management">-->
+    <!--<classes>-->
+      <!--<class name="net.sf.ohla.rti1516.ObjectManagementTestNG"/>-->
+    <!--</classes>-->
+  <!--</test>-->
 
-  <test name="IEEE 1516 - Ownership Management">
-    <classes>
-      <class name="net.sf.ohla.rti1516.OwnershipManagementTestNG"/>
-    </classes>
-  </test>
+  <!--<test name="IEEE 1516 - Ownership Management">-->
+    <!--<classes>-->
+      <!--<class name="net.sf.ohla.rti1516.OwnershipManagementTestNG"/>-->
+    <!--</classes>-->
+  <!--</test>-->
 
   <test name="IEEE 1516 - Time Management">
     <classes>
@@ -52,9 +52,9 @@
     </classes>
   </test>
 
-  <test name="IEEE 1516 - Data Distribution Management">
-    <classes>
-      <class name="net.sf.ohla.rti1516.DataDistributionManagementTestNG"/>
-    </classes>
-  </test>
+  <!--<test name="IEEE 1516 - Data Distribution Management">-->
+    <!--<classes>-->
+      <!--<class name="net.sf.ohla.rti1516.DataDistributionManagementTestNG"/>-->
+    <!--</classes>-->
+  <!--</test>-->
 </suite>

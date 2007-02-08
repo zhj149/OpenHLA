@@ -467,7 +467,7 @@ public class ObjectManagementTestNG
            i < 5 && !reservedObjectInstanceNames.contains(objectInstanceName);
            i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(1.0);
       }
       assert reservedObjectInstanceNames.contains(objectInstanceName);
     }
@@ -479,7 +479,7 @@ public class ObjectManagementTestNG
            i < 5 &&
            !notReservedObjectInstanceNames.contains(objectInstanceName); i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(0.1);
       }
       assert notReservedObjectInstanceNames.contains(objectInstanceName);
     }
@@ -491,7 +491,7 @@ public class ObjectManagementTestNG
       for (int i = 0;
            i < 5 && !objectInstances.containsKey(objectInstanceHandle); i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(1.0);
       }
       assert objectInstances.containsKey(objectInstanceHandle);
     }
@@ -505,7 +505,7 @@ public class ObjectManagementTestNG
            i < 5 && (!objectInstances.containsKey(objectInstanceHandle1) ||
                      !objectInstances.containsKey(objectInstanceHandle2)); i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(1.0);
       }
       assert objectInstances.containsKey(objectInstanceHandle1) &&
              objectInstances.containsKey(objectInstanceHandle2);
@@ -519,7 +519,7 @@ public class ObjectManagementTestNG
            i < 5 && !objectInstances.get(objectInstanceHandle).isRemoved();
            i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(1.0);
       }
       assert objectInstances.get(objectInstanceHandle).isRemoved();
     }
@@ -534,7 +534,7 @@ public class ObjectManagementTestNG
            null;
            i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(1.0);
       }
 
       assert attributeValues.equals(
@@ -546,7 +546,7 @@ public class ObjectManagementTestNG
     {
       for (int i = 0; i < 5 && this.parameterValues == null; i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(1.0);
       }
       assert parameterValues.equals(this.parameterValues);
     }

@@ -680,6 +680,8 @@ public class TimeManager
     {
       this.galt = galt;
 
+      log.debug("GALT advanced: {}", galt);
+
       LogicalTime maxFutureTaskTimestamp = isTimeAdvancing() ?
         (galt.compareTo(advanceRequestTime) <= 0 ? galt : advanceRequestTime) :
         (galt.compareTo(federateTime) <= 0 ? galt : federateTime);

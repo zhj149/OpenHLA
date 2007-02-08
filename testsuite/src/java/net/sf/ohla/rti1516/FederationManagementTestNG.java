@@ -279,7 +279,7 @@ public class FederationManagementTestNG
            i < 5 &&
            !successfullyRegisteredSynchronizationPoints.contains(label); i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(1.0);
       }
       assert successfullyRegisteredSynchronizationPoints.contains(label);
     }
@@ -293,7 +293,7 @@ public class FederationManagementTestNG
            !unsuccessfullyRegisteredSynchronizationPoints.containsKey(label);
            i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(1.0);
       }
       assert reason == unsuccessfullyRegisteredSynchronizationPoints.get(label);
     }
@@ -304,7 +304,7 @@ public class FederationManagementTestNG
       for (int i = 0; i < 5 && !announcedSynchronizationPoints.contains(label);
            i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(1.0);
       }
       assert announcedSynchronizationPoints.contains(label);
     }
@@ -314,7 +314,7 @@ public class FederationManagementTestNG
     {
       for (int i = 0; i < 5 && !federationSynchronized.contains(label); i++)
       {
-        rtiAmbassador.evokeMultipleCallbacks(.1, 1.0);
+        rtiAmbassador.evokeCallback(1.0);
       }
       assert federationSynchronized.contains(label);
     }
