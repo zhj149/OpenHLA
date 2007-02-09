@@ -359,14 +359,14 @@
       <jvmarg value="-Dohla.rti.host=localhost"/>
       <jvmarg value="-Dohla.rti.port=5000"/>
 
-      <!--<jvmarg value="-Dohla.federate.Test Federate.host=localhost"/>-->
-      <!--<jvmarg value="-Dohla.federate.Test Federate.port=5001"/>-->
-<!---->
-      <!--<jvmarg value="-Dohla.federate.Test Federate2.host=localhost"/>-->
-      <!--<jvmarg value="-Dohla.federate.Test Federate2.port=5002"/>-->
-<!---->
-      <!--<jvmarg value="-Dohla.federate.Test Federate3.host=localhost"/>-->
-      <!--<jvmarg value="-Dohla.federate.Test Federate3.port=5003"/>-->
+      <sysproperty key="ohla.federate.rti.logicalTimeFactory"
+                   value="net.sf.ohla.rti.Integer64TimeFactory"/>
+      <sysproperty key="ohla.federate.rti.logicalTimeIntervalFactory"
+                   value="net.sf.ohla.rti.Integer64TimeIntervalFactory"/>
+      <sysproperty key="ohla.federate.rti1516.logicalTimeFactory"
+                   value="net.sf.ohla.rti1516.Integer64TimeFactory"/>
+      <sysproperty key="ohla.federate.rti1516.logicalTimeIntervalFactory"
+                   value="net.sf.ohla.rti1516.Integer64TimeIntervalFactory"/>
     </testng>
   </target>
 
