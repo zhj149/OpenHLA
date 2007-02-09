@@ -70,12 +70,15 @@ import net.sf.ohla.rti1516.messages.callbacks.CallbackManager;
 import net.sf.ohla.rti1516.messages.callbacks.ReceiveInteraction;
 import net.sf.ohla.rti1516.messages.callbacks.ReflectAttributeValues;
 import net.sf.ohla.rti1516.messages.callbacks.RemoveObjectInstance;
+import net.sf.ohla.rti1516.messages.callbacks.TimeAdvanceGrant;
 
 import org.apache.mina.common.IoSession;
 import org.apache.mina.common.WriteFuture;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 import hla.rti1516.AsynchronousDeliveryAlreadyDisabled;
 import hla.rti1516.AsynchronousDeliveryAlreadyEnabled;
@@ -214,8 +217,6 @@ import hla.rti1516.jlc.NullFederateAmbassador;
 
 public class Federate
 {
-  private static final Logger log = LoggerFactory.getLogger(Federate.class);
-
   public static final String OHLA_FEDERATE_HOST_PROPERTY =
     "ohla.federate.%s.host";
   public static final String OHLA_FEDERATE_PORT_PROPERTY =
@@ -297,6 +298,9 @@ public class Federate
    */
   protected IoSession rtiSession;
 
+  protected final Logger log = LoggerFactory.getLogger(getClass());
+  protected final Marker marker;
+
   public Federate(String federateType, String federationExecutionName,
                   FederateAmbassador federateAmbassador,
                   MobileFederateServices mobileFederateServices,
@@ -309,6 +313,8 @@ public class Federate
     this.federateAmbassador = federateAmbassador;
     this.mobileFederateServices = mobileFederateServices;
     this.rtiSession = rtiSession;
+
+    marker = MarkerFactory.getMarker(federateType);
 
     JoinFederationExecution joinFederationExecution =
       new JoinFederationExecution(
@@ -340,7 +346,7 @@ public class Federate
         LogicalTime galt = joinFederationExecutionResponse.getGALT();
         timeManager = new TimeManager(this, mobileFederateServices, galt);
 
-        log.info("joined federation execution: {}", federateHandle);
+        log.info(marker, "joined federation execution: {}", federateHandle);
       }
       else if (response instanceof FederationExecutionDoesNotExist)
       {
@@ -425,7 +431,7 @@ public class Federate
     futureTasksLock.lock();
     try
     {
-      log.debug("{} processing future tasks: {}", this, maxFutureTaskTimestamp);
+      log.debug(marker, "processing future tasks: {}", maxFutureTaskTimestamp);
 
       for (TimestampedFutureTask timestampedFutureTask = futureTasks.peek();
            timestampedFutureTask != null &&
@@ -433,14 +439,16 @@ public class Federate
              maxFutureTaskTimestamp) <= 0;
            timestampedFutureTask = futureTasks.peek())
       {
+        log.debug(marker, "processing future task: {}", timestampedFutureTask);
+
         try
         {
           timestampedFutureTask.run();
         }
         catch (Throwable t)
         {
-          log.error(String.format("unable to execute scheduled task: %s",
-                                  timestampedFutureTask), t);
+          log.error(marker, String.format("unable to execute scheduled task: %s",
+                                          timestampedFutureTask), t);
         }
 
         futureTasks.poll();
@@ -454,7 +462,7 @@ public class Federate
 
   public boolean process(IoSession session, Object message)
   {
-    log.debug("{} processing: {}", this, message);
+    log.debug(marker, "processing: {}", message);
 
     boolean processed = true;
     if (message instanceof Callback)
@@ -551,13 +559,59 @@ public class Federate
             timeManager.getTimeLock().readLock().unlock();
           }
         }
+        else if (message instanceof RemoveObjectInstance)
+        {
+          RemoveObjectInstance removeObjectInstance =
+            (RemoveObjectInstance) message;
+
+          timeManager.getTimeLock().readLock().lock();
+          try
+          {
+            OrderType receivedOrderType =
+              removeObjectInstance.getSentOrderType() == OrderType.TIMESTAMP &&
+              timeManager.isTimeConstrained() ? OrderType.TIMESTAMP :
+                OrderType.RECEIVE;
+
+            removeObjectInstance.setReceivedOrderType(receivedOrderType);
+
+            if (receivedOrderType == OrderType.RECEIVE)
+            {
+              // receive order callbacks need to be held until released if we
+              // are constrained and in the time granted state, if asynchronous
+              // delivery is disabled
+              //
+              boolean hold = timeManager.isTimeConstrainedAndTimeGranted() &&
+                             !isAsynchronousDeliveryEnabled();
+
+              callbackManager.add(removeObjectInstance, hold);
+            }
+            else
+            {
+              // schedule the callback for the appropriate time
+              //
+              Future future = schedule(removeObjectInstance.getDeleteTime(),
+                                       new AddCallback(removeObjectInstance));
+
+              // register the message retraction handle
+              //
+              messageRetractionManager.add(
+                removeObjectInstance.getDeleteTime(), future,
+                removeObjectInstance.getMessageRetractionHandle());
+            }
+          }
+          finally
+          {
+            timeManager.getTimeLock().readLock().unlock();
+          }
+        }
         else
         {
-          boolean hold = message instanceof RemoveObjectInstance &&
-                         !isAsynchronousDeliveryEnabled() &&
-                         timeManager.isTimeConstrainedAndTimeGranted();
+          if (message instanceof TimeAdvanceGrant)
+          {
+            processFutureTasks(((TimeAdvanceGrant) message).getTime());
+          }
 
-          callbackManager.add((Callback) message, hold);
+          callbackManager.add((Callback) message);
         }
       }
       finally
@@ -3231,6 +3285,8 @@ public class Federate
 
   protected Future<Object> schedule(LogicalTime time, Callable<Object> callable)
   {
+    log.debug(marker, "scheduling task: {} at {}", callable, time);
+
     TimestampedFutureTask future = new TimestampedFutureTask(time, callable);
 
     futureTasksLock.lock();

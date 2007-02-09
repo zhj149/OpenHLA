@@ -32,6 +32,11 @@ public class TimeAdvanceGrant
     this.time = time;
   }
 
+  public LogicalTime getTime()
+  {
+    return time;
+  }
+
   public void execute(FederateAmbassador federateAmbassador)
     throws InvalidLogicalTime, JoinedFederateIsNotInTimeAdvancingState,
            FederateInternalError
