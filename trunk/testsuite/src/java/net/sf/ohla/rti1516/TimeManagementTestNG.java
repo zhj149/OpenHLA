@@ -76,9 +76,10 @@ public class TimeManagementTestNG
   protected Integer64Time four = new Integer64Time(4);
   protected Integer64Time five = new Integer64Time(5);
   protected Integer64Time six = new Integer64Time(6);
-  protected Integer64Time seven = new Integer64Time(7);
-  protected Integer64Time nine = new Integer64Time(9);
+  protected Integer64Time eight = new Integer64Time(8);
   protected Integer64Time ten = new Integer64Time(10);
+  protected Integer64Time eleven = new Integer64Time(11);
+  protected Integer64Time twelve = new Integer64Time(12);
   protected Integer64Time fifteen = new Integer64Time(15);
   protected Integer64Time twenty = new Integer64Time(20);
   protected Integer64Time thirty = new Integer64Time(30);
@@ -628,13 +629,12 @@ public class TimeManagementTestNG
       federateAmbassadors.get(4).checkAttributeValuesNotReceived(
         objectInstanceHandle);
 
-      // bring all the federates to the same time
+      // advance constrained federates so they will be sure to receive the
+      // update (because they will be waiting for the remaining regulating
+      // federate to advance)
       //
-      rtiAmbassadors.get(3).timeAdvanceRequest(five);
-      rtiAmbassadors.get(4).timeAdvanceRequest(five);
-
-      federateAmbassadors.get(3).checkTimeAdvanceGrant(five);
-      federateAmbassadors.get(4).checkTimeAdvanceGrant(five);
+      rtiAmbassadors.get(3).timeAdvanceRequest(six);
+      rtiAmbassadors.get(4).timeAdvanceRequest(six);
 
       // attribute values should have been released
       //
@@ -642,25 +642,38 @@ public class TimeManagementTestNG
         objectInstanceHandle, attributeValues);
       federateAmbassadors.get(4).checkAttributeValues(
         objectInstanceHandle, attributeValues);
+
+      // finish time advance
+      //
+      rtiAmbassadors.get(2).timeAdvanceRequest(six);
+
+      federateAmbassadors.get(2).checkTimeAdvanceGrant(six);
+      federateAmbassadors.get(3).checkTimeAdvanceGrant(six);
+      federateAmbassadors.get(4).checkTimeAdvanceGrant(six);
     }
     finally
     {
       rtiAmbassadors.get(2).deleteObjectInstance(objectInstanceHandle, null);
 
-      // bring all the federates to the same time
+      // advance constrained federates so they will be sure to receive the
+      // update (because they will be waiting for the remaining regulating
+      // federate to advance)
       //
-      rtiAmbassadors.get(2).timeAdvanceRequest(six);
-      rtiAmbassadors.get(3).timeAdvanceRequest(six);
-      rtiAmbassadors.get(4).timeAdvanceRequest(six);
-
-      federateAmbassadors.get(2).checkTimeAdvanceGrant(six);
-      federateAmbassadors.get(3).checkTimeAdvanceGrant(six);
-      federateAmbassadors.get(4).checkTimeAdvanceGrant(six);
+      rtiAmbassadors.get(3).timeAdvanceRequest(eight);
+      rtiAmbassadors.get(4).timeAdvanceRequest(eight);
 
       federateAmbassadors.get(3).checkForRemovedObjectInstanceHandle(
         objectInstanceHandle);
       federateAmbassadors.get(4).checkForRemovedObjectInstanceHandle(
         objectInstanceHandle);
+
+      // finish time advance
+      //
+      rtiAmbassadors.get(2).timeAdvanceRequest(eight);
+
+      federateAmbassadors.get(2).checkTimeAdvanceGrant(eight);
+      federateAmbassadors.get(3).checkTimeAdvanceGrant(eight);
+      federateAmbassadors.get(4).checkTimeAdvanceGrant(eight);
     }
   }
 
@@ -684,20 +697,25 @@ public class TimeManagementTestNG
     federateAmbassadors.get(3).checkParameterValuesNotReceived();
     federateAmbassadors.get(4).checkParameterValuesNotReceived();
 
-    // bring all the federates to the same time
+    // advance constrained federates so they will be sure to receive the
+    // update (because they will be waiting for the remaining regulating
+    // federate to advance)
     //
-    rtiAmbassadors.get(2).timeAdvanceRequest(seven);
-    rtiAmbassadors.get(3).timeAdvanceRequest(seven);
-    rtiAmbassadors.get(4).timeAdvanceRequest(seven);
-
-    federateAmbassadors.get(2).checkTimeAdvanceGrant(seven);
-    federateAmbassadors.get(3).checkTimeAdvanceGrant(seven);
-    federateAmbassadors.get(4).checkTimeAdvanceGrant(seven);
+    rtiAmbassadors.get(3).timeAdvanceRequest(ten);
+    rtiAmbassadors.get(4).timeAdvanceRequest(ten);
 
     // parameter values should have been released
     //
     federateAmbassadors.get(3).checkParameterValues(parameterValues);
     federateAmbassadors.get(4).checkParameterValues(parameterValues);
+
+    // finish time advance
+    //
+    rtiAmbassadors.get(2).timeAdvanceRequest(ten);
+
+    federateAmbassadors.get(2).checkTimeAdvanceGrant(ten);
+    federateAmbassadors.get(3).checkTimeAdvanceGrant(ten);
+    federateAmbassadors.get(4).checkTimeAdvanceGrant(ten);
   }
 
   @Test(dependsOnMethods = {"testSendInteractionWhileNotTimeAdvancing"})
@@ -720,24 +738,23 @@ public class TimeManagementTestNG
       attributeValues.put(attributeHandle3, ATTRIBUTE3_VALUE.getBytes());
 
       rtiAmbassadors.get(2).updateAttributeValues(
-        objectInstanceHandle, attributeValues, null, ten);
+        objectInstanceHandle, attributeValues, null, twelve);
 
-      // the 2 constrained federates will not receive it because they do not
-      // have asynchronous delivery enabled and are not in the time
-      // advancing state
+      // the 2 constrained federates will not receive it because they have not
+      // advanced to the scheduled time
       //
       federateAmbassadors.get(3).checkAttributeValuesNotReceived(
         objectInstanceHandle);
       federateAmbassadors.get(4).checkAttributeValuesNotReceived(
         objectInstanceHandle);
 
-      rtiAmbassadors.get(2).timeAdvanceRequest(nine);
-      rtiAmbassadors.get(3).timeAdvanceRequest(nine);
-      rtiAmbassadors.get(4).timeAdvanceRequest(nine);
+      rtiAmbassadors.get(2).timeAdvanceRequest(eleven);
+      rtiAmbassadors.get(3).timeAdvanceRequest(eleven);
+      rtiAmbassadors.get(4).timeAdvanceRequest(eleven);
 
-      federateAmbassadors.get(2).checkTimeAdvanceGrant(nine);
-      federateAmbassadors.get(3).checkTimeAdvanceGrant(nine);
-      federateAmbassadors.get(4).checkTimeAdvanceGrant(nine);
+      federateAmbassadors.get(2).checkTimeAdvanceGrant(eleven);
+      federateAmbassadors.get(3).checkTimeAdvanceGrant(eleven);
+      federateAmbassadors.get(4).checkTimeAdvanceGrant(eleven);
 
       // the 2 constrained federates will not receive it because they have not
       // advanced to the scheduled time
@@ -749,13 +766,13 @@ public class TimeManagementTestNG
 
       // bring all the federates to the same time
       //
-      rtiAmbassadors.get(2).timeAdvanceRequest(ten);
-      rtiAmbassadors.get(3).timeAdvanceRequest(ten);
-      rtiAmbassadors.get(4).timeAdvanceRequest(ten);
+      rtiAmbassadors.get(2).timeAdvanceRequest(twelve);
+      rtiAmbassadors.get(3).timeAdvanceRequest(twelve);
+      rtiAmbassadors.get(4).timeAdvanceRequest(twelve);
 
-      federateAmbassadors.get(2).checkTimeAdvanceGrant(ten);
-      federateAmbassadors.get(3).checkTimeAdvanceGrant(ten);
-      federateAmbassadors.get(4).checkTimeAdvanceGrant(ten);
+      federateAmbassadors.get(2).checkTimeAdvanceGrant(twelve);
+      federateAmbassadors.get(3).checkTimeAdvanceGrant(twelve);
+      federateAmbassadors.get(4).checkTimeAdvanceGrant(twelve);
 
       // attribute values should have been released
       //
@@ -768,20 +785,25 @@ public class TimeManagementTestNG
     {
       rtiAmbassadors.get(2).deleteObjectInstance(objectInstanceHandle, null);
 
-      // bring all the federates to the same time
+      // advance constrained federates so they will be sure to receive the
+      // update (because they will be waiting for the remaining regulating
+      // federate to advance)
       //
-      rtiAmbassadors.get(2).timeAdvanceRequest(fifteen);
       rtiAmbassadors.get(3).timeAdvanceRequest(fifteen);
       rtiAmbassadors.get(4).timeAdvanceRequest(fifteen);
-
-      federateAmbassadors.get(2).checkTimeAdvanceGrant(fifteen);
-      federateAmbassadors.get(3).checkTimeAdvanceGrant(fifteen);
-      federateAmbassadors.get(4).checkTimeAdvanceGrant(fifteen);
 
       federateAmbassadors.get(3).checkForRemovedObjectInstanceHandle(
         objectInstanceHandle);
       federateAmbassadors.get(4).checkForRemovedObjectInstanceHandle(
         objectInstanceHandle);
+
+      // finish time advance
+      //
+      rtiAmbassadors.get(2).timeAdvanceRequest(fifteen);
+
+      federateAmbassadors.get(2).checkTimeAdvanceGrant(fifteen);
+      federateAmbassadors.get(3).checkTimeAdvanceGrant(fifteen);
+      federateAmbassadors.get(4).checkTimeAdvanceGrant(fifteen);
     }
   }
 
@@ -1062,6 +1084,17 @@ public class TimeManagementTestNG
     }
 
     @Override
+    public void removeObjectInstance(ObjectInstanceHandle objectInstanceHandle,
+                                     byte[] tag, OrderType sentOrderType,
+                                     LogicalTime deleteTime,
+                                     OrderType receivedOrderType,
+                                     MessageRetractionHandle messageRetractionHandle)
+      throws ObjectInstanceNotKnown, InvalidLogicalTime, FederateInternalError
+    {
+      objectInstances.get(objectInstanceHandle).setRemoved(true);
+    }
+
+    @Override
     public void receiveInteraction(
       InteractionClassHandle interactionClassHandle,
       ParameterHandleValueMap parameterValues,
@@ -1123,134 +1156,4 @@ public class TimeManagementTestNG
       this.removed = removed;
     }
   }
-//  public void test()
-//  {
-//    TimeClient tc = new TimeClient("A", new Integer64TimeInterval(3000), false);
-//    TimeClient tc2 = new TimeClient("B", new Integer64TimeInterval(5000), true);
-////    TimeClient tc3 = new TimeClient(35000);
-//
-//    tc.timeAdvanceGrant(time);
-//    tc2.timeAdvanceGrant(time);
-//
-//    tc.start();
-//    tc2.start();
-////    tc3.start();
-//
-//    new Thread()
-//    {
-//      public void run()
-//      {
-//        int i = 0;
-//        while (true)
-//        {
-//          log.debug(String.format("[%d] %s", i++, time));
-//          try
-//          {
-//            Thread.sleep(1000);
-//          }
-//          catch (InterruptedException e)
-//          {
-//            e.printStackTrace();
-//          }
-//        }
-//      }
-//    }.start();
-//  }
-//
-//  protected class TimeClient
-//    extends Thread
-//  {
-//    protected Logger log;
-//
-//    protected String name;
-//    protected Integer64TimeInterval step;
-//    protected boolean available;
-//
-//    protected LogicalTime time;
-//    protected LogicalTime timeRequested;
-//    protected boolean advanceGranted;
-//
-//    public TimeClient(String name, Integer64TimeInterval step, boolean available)
-//    {
-//      log = LoggerFactory.getLogger(name);
-//
-//      this.name = name;
-//      this.step = step;
-//      this.available = available;
-//
-//      clients.add(this);
-//    }
-//
-//    public synchronized void timeAdvanceGrant(LogicalTime time)
-//    {
-//      log.debug(String.format("advance granted to %s", time));
-//      this.time = time;
-//      advanceGranted = true;
-//      interrupt();
-//      notifyAll();
-//    }
-//
-//    public void run()
-//    {
-//      do
-//      {
-//        try
-//        {
-//          timeRequested = time.add(step);
-//        }
-//        catch (IllegalTimeArithmetic illegalTimeArithmetic)
-//        {
-//          illegalTimeArithmetic.printStackTrace();
-//        }
-//        if (available)
-//        {
-//          timeAdvanceRequestAvailable(timeRequested, this);
-//        }
-//        else
-//        {
-//          timeAdvanceRequest(timeRequested, this);
-//        }
-//
-//        long currentTime = System.currentTimeMillis();
-//        Integer64TimeInterval distance =
-//          (Integer64TimeInterval) time.distance(timeRequested);
-//
-//        log.debug(String.format("%d %d %d", currentTime, distance.interval, step.interval));
-//
-//        long waitUntil = currentTime + step.interval;
-//        for (long waitTime = waitUntil - System.currentTimeMillis();
-//             waitTime > 0; waitTime = waitUntil - System.currentTimeMillis())
-//        {
-//          synchronized (this)
-//          {
-//            try
-//            {
-//              log.debug(String.format("waiting until %d", waitUntil));
-//              wait(waitTime);
-//            }
-//            catch (InterruptedException ie)
-//            {
-//              log.debug(String.format("interrupted"));
-//            }
-//          }
-//        }
-//
-//        synchronized (this)
-//        {
-//          while (!advanceGranted)
-//          {
-//            try
-//            {
-//              wait();
-//            }
-//            catch (InterruptedException ie)
-//            {
-//            }
-//          }
-//          advanceGranted = false;
-//        }
-//      }
-//      while (true);
-//    }
-//  }
 }

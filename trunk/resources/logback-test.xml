@@ -22,6 +22,10 @@
     </layout>
   </appender>
 
+  <logger name="org.apache.mina.filter.executor.ExecutorFilter">
+    <level value="INFO"/>
+  </logger>
+
   <root>
     <level value="debug"/>
     <appender-ref ref="STDOUT"/>

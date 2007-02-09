@@ -87,6 +87,8 @@ import org.apache.mina.common.WriteFuture;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
 import hla.rti1516.AttributeHandle;
 import hla.rti1516.AttributeHandleSet;
@@ -139,17 +141,15 @@ public class FederationExecution
   protected AtomicInteger federateCount = new AtomicInteger(Short.MIN_VALUE);
   protected AtomicInteger regionCount = new AtomicInteger(Short.MIN_VALUE);
 
-  protected final Logger log;
-
-  protected ExecutorService synchronousWaiter =
-    Executors.newSingleThreadExecutor();
+  protected final Logger log = LoggerFactory.getLogger(getClass());
+  protected final Marker marker;
 
   public FederationExecution(String name, FDD fdd)
   {
     this.name = name;
     this.fdd = fdd;
 
-    log = LoggerFactory.getLogger(String.format("%s.%s", getClass(), name));
+    marker = MarkerFactory.getMarker(name);
   }
 
   public String getName()
@@ -193,7 +193,7 @@ public class FederationExecution
   public void joinFederationExecution(
     IoSession session, JoinFederationExecution joinFederationExecution)
   {
-    log.debug("client joining: {}", session.getRemoteAddress());
+    log.debug(marker, "client joining: {}", session.getRemoteAddress());
 
     federationExecutionStateLock.readLock().lock();
     try
@@ -231,7 +231,7 @@ public class FederationExecution
           new JoinFederationExecutionResponse(
             federateHandle, fdd, timeKeeper.getGALT())));
 
-        log.debug("federate joined: {}", federate);
+        log.debug(marker, "federate joined: {}", federate);
 
         // TODO: set timeout
         //
@@ -259,7 +259,7 @@ public class FederationExecution
   public void resignFederationExecution(
     Federate federate, ResignFederationExecution resignFederationExecution)
   {
-    log.debug("federate resigning: {} - {}", federate,
+    log.debug(marker, "federate resigning: {} - {}", federate,
               resignFederationExecution.getResignAction());
 
     federationExecutionStateLock.readLock().lock();
@@ -272,7 +272,7 @@ public class FederationExecution
 
         federates.remove(federate.getFederateHandle());
 
-        log.debug("federate resigned: {}", federate);
+        log.debug(marker, "federate resigned: {}", federate);
       }
       finally
       {
