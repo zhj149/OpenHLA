@@ -467,156 +467,148 @@ public class Federate
     boolean processed = true;
     if (message instanceof Callback)
     {
-      timeManager.getTimeLock().readLock().lock();
-      try
+      if (message instanceof ReflectAttributeValues)
       {
-        if (message instanceof ReflectAttributeValues)
+        ReflectAttributeValues reflectAttributeValues =
+          (ReflectAttributeValues) message;
+
+        timeManager.getTimeLock().readLock().lock();
+        try
         {
-          ReflectAttributeValues reflectAttributeValues =
-            (ReflectAttributeValues) message;
+          OrderType receivedOrderType =
+            reflectAttributeValues.getSentOrderType() == OrderType.TIMESTAMP &&
+            timeManager.isTimeConstrained() ? OrderType.TIMESTAMP :
+              OrderType.RECEIVE;
+          reflectAttributeValues.setReceivedOrderType(receivedOrderType);
 
-          timeManager.getTimeLock().readLock().lock();
-          try
+          if (receivedOrderType == OrderType.RECEIVE)
           {
-            OrderType receivedOrderType =
-              reflectAttributeValues.getSentOrderType() == OrderType.TIMESTAMP &&
-              timeManager.isTimeConstrained() ? OrderType.TIMESTAMP :
-                OrderType.RECEIVE;
-            reflectAttributeValues.setReceivedOrderType(receivedOrderType);
+            // receive order callbacks need to be held until released if we
+            // are constrained and in the time granted state if asynchronous
+            // delivery is disabled
+            //
+            boolean hold = timeManager.isTimeConstrainedAndTimeGranted() &&
+                           !isAsynchronousDeliveryEnabled();
 
-            if (receivedOrderType == OrderType.RECEIVE)
-            {
-              // receive order callbacks need to be held until released if we
-              // are constrained and in the time granted state if asynchronous
-              // delivery is disabled
-              //
-              boolean hold = timeManager.isTimeConstrainedAndTimeGranted() &&
-                             !isAsynchronousDeliveryEnabled();
-
-              callbackManager.add(reflectAttributeValues, hold);
-            }
-            else
-            {
-              // schedule the callback for the appropriate time
-              //
-              Future future = schedule(
-                reflectAttributeValues.getUpdateTime(),
-                new AddCallback(reflectAttributeValues));
-
-              // register the message retraction handle
-              //
-              messageRetractionManager.add(
-                reflectAttributeValues.getUpdateTime(), future,
-                reflectAttributeValues.getMessageRetractionHandle());
-            }
+            callbackManager.add(reflectAttributeValues, hold);
           }
-          finally
+          else
           {
-            timeManager.getTimeLock().readLock().unlock();
+            // schedule the callback for the appropriate time
+            //
+            Future future = schedule(
+              reflectAttributeValues.getUpdateTime(),
+              new AddCallback(reflectAttributeValues));
+
+            // register the message retraction handle
+            //
+            messageRetractionManager.add(
+              reflectAttributeValues.getUpdateTime(), future,
+              reflectAttributeValues.getMessageRetractionHandle());
           }
         }
-        else if (message instanceof ReceiveInteraction)
+        finally
         {
-          ReceiveInteraction receiveInteraction = (ReceiveInteraction) message;
-
-          timeManager.getTimeLock().readLock().lock();
-          try
-          {
-            OrderType receivedOrderType =
-              receiveInteraction.getSentOrderType() == OrderType.TIMESTAMP &&
-              timeManager.isTimeConstrained() ? OrderType.TIMESTAMP :
-                OrderType.RECEIVE;
-
-            receiveInteraction.setReceivedOrderType(receivedOrderType);
-
-            if (receivedOrderType == OrderType.RECEIVE)
-            {
-              // receive order callbacks need to be held until released if we
-              // are constrained and in the time granted state, if asynchronous
-              // delivery is disabled
-              //
-              boolean hold = timeManager.isTimeConstrainedAndTimeGranted() &&
-                             !isAsynchronousDeliveryEnabled();
-
-              callbackManager.add(receiveInteraction, hold);
-            }
-            else
-            {
-              // schedule the callback for the appropriate time
-              //
-              Future future = schedule(receiveInteraction.getSendTime(),
-                                       new AddCallback(receiveInteraction));
-
-              // register the message retraction handle
-              //
-              messageRetractionManager.add(
-                receiveInteraction.getSendTime(), future,
-                receiveInteraction.getMessageRetractionHandle());
-            }
-          }
-          finally
-          {
-            timeManager.getTimeLock().readLock().unlock();
-          }
-        }
-        else if (message instanceof RemoveObjectInstance)
-        {
-          RemoveObjectInstance removeObjectInstance =
-            (RemoveObjectInstance) message;
-
-          timeManager.getTimeLock().readLock().lock();
-          try
-          {
-            OrderType receivedOrderType =
-              removeObjectInstance.getSentOrderType() == OrderType.TIMESTAMP &&
-              timeManager.isTimeConstrained() ? OrderType.TIMESTAMP :
-                OrderType.RECEIVE;
-
-            removeObjectInstance.setReceivedOrderType(receivedOrderType);
-
-            if (receivedOrderType == OrderType.RECEIVE)
-            {
-              // receive order callbacks need to be held until released if we
-              // are constrained and in the time granted state, if asynchronous
-              // delivery is disabled
-              //
-              boolean hold = timeManager.isTimeConstrainedAndTimeGranted() &&
-                             !isAsynchronousDeliveryEnabled();
-
-              callbackManager.add(removeObjectInstance, hold);
-            }
-            else
-            {
-              // schedule the callback for the appropriate time
-              //
-              Future future = schedule(removeObjectInstance.getDeleteTime(),
-                                       new AddCallback(removeObjectInstance));
-
-              // register the message retraction handle
-              //
-              messageRetractionManager.add(
-                removeObjectInstance.getDeleteTime(), future,
-                removeObjectInstance.getMessageRetractionHandle());
-            }
-          }
-          finally
-          {
-            timeManager.getTimeLock().readLock().unlock();
-          }
-        }
-        else
-        {
-          if (message instanceof TimeAdvanceGrant)
-          {
-            processFutureTasks(((TimeAdvanceGrant) message).getTime());
-          }
-
-          callbackManager.add((Callback) message);
+          timeManager.getTimeLock().readLock().unlock();
         }
       }
-      finally
+      else if (message instanceof ReceiveInteraction)
       {
-        timeManager.getTimeLock().readLock().unlock();
+        ReceiveInteraction receiveInteraction = (ReceiveInteraction) message;
+
+        timeManager.getTimeLock().readLock().lock();
+        try
+        {
+          OrderType receivedOrderType =
+            receiveInteraction.getSentOrderType() == OrderType.TIMESTAMP &&
+            timeManager.isTimeConstrained() ? OrderType.TIMESTAMP :
+              OrderType.RECEIVE;
+
+          receiveInteraction.setReceivedOrderType(receivedOrderType);
+
+          if (receivedOrderType == OrderType.RECEIVE)
+          {
+            // receive order callbacks need to be held until released if we
+            // are constrained and in the time granted state, if asynchronous
+            // delivery is disabled
+            //
+            boolean hold = timeManager.isTimeConstrainedAndTimeGranted() &&
+                           !isAsynchronousDeliveryEnabled();
+
+            callbackManager.add(receiveInteraction, hold);
+          }
+          else
+          {
+            // schedule the callback for the appropriate time
+            //
+            Future future = schedule(receiveInteraction.getSendTime(),
+                                     new AddCallback(receiveInteraction));
+
+            // register the message retraction handle
+            //
+            messageRetractionManager.add(
+              receiveInteraction.getSendTime(), future,
+              receiveInteraction.getMessageRetractionHandle());
+          }
+        }
+        finally
+        {
+          timeManager.getTimeLock().readLock().unlock();
+        }
+      }
+      else if (message instanceof RemoveObjectInstance)
+      {
+        RemoveObjectInstance removeObjectInstance =
+          (RemoveObjectInstance) message;
+
+        timeManager.getTimeLock().readLock().lock();
+        try
+        {
+          OrderType receivedOrderType =
+            removeObjectInstance.getSentOrderType() == OrderType.TIMESTAMP &&
+            timeManager.isTimeConstrained() ? OrderType.TIMESTAMP :
+              OrderType.RECEIVE;
+
+          removeObjectInstance.setReceivedOrderType(receivedOrderType);
+
+          if (receivedOrderType == OrderType.RECEIVE)
+          {
+            // receive order callbacks need to be held until released if we
+            // are constrained and in the time granted state, if asynchronous
+            // delivery is disabled
+            //
+            boolean hold = timeManager.isTimeConstrainedAndTimeGranted() &&
+                           !isAsynchronousDeliveryEnabled();
+
+            callbackManager.add(removeObjectInstance, hold);
+          }
+          else
+          {
+            // schedule the callback for the appropriate time
+            //
+            Future future = schedule(removeObjectInstance.getDeleteTime(),
+                                     new AddCallback(removeObjectInstance));
+
+            // register the message retraction handle
+            //
+            messageRetractionManager.add(
+              removeObjectInstance.getDeleteTime(), future,
+              removeObjectInstance.getMessageRetractionHandle());
+          }
+        }
+        finally
+        {
+          timeManager.getTimeLock().readLock().unlock();
+        }
+      }
+      else
+      {
+        if (message instanceof TimeAdvanceGrant)
+        {
+          processFutureTasks(((TimeAdvanceGrant) message).getTime());
+        }
+
+        callbackManager.add((Callback) message);
       }
     }
     else if (message instanceof GALTAdvanced)
