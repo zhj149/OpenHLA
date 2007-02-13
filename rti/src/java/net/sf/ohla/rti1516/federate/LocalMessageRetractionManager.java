@@ -15,9 +15,9 @@ import hla.rti1516.LogicalTime;
 import hla.rti1516.MessageCanNoLongerBeRetracted;
 import hla.rti1516.MessageRetractionHandle;
 
-public class MessageRetractionManager
+public class LocalMessageRetractionManager
 {
-  protected Federate federate;
+  protected LocalFederate federate;
 
   protected AtomicLong messageRetractionCount = new AtomicLong();
 
@@ -27,7 +27,7 @@ public class MessageRetractionManager
   protected Queue<MessageRetraction> messageRetractionsByExpiration =
     new PriorityQueue<MessageRetraction>();
 
-  public MessageRetractionManager(Federate federate)
+  public LocalMessageRetractionManager(LocalFederate federate)
   {
     this.federate = federate;
   }
