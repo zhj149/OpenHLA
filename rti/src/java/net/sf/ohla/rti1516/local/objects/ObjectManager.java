@@ -1,4 +1,4 @@
-package net.sf.ohla.rti1516.federate.objects;
+package net.sf.ohla.rti1516.local.objects;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -15,10 +15,10 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.sf.ohla.rti1516.OHLAAttributeHandleSet;
+import net.sf.ohla.rti1516.SubscriptionManager;
 import net.sf.ohla.rti1516.fdd.InteractionClass;
 import net.sf.ohla.rti1516.fdd.ObjectClass;
-import net.sf.ohla.rti1516.federate.LocalFederate;
-import net.sf.ohla.rti1516.federate.SubscriptionManager;
+import net.sf.ohla.rti1516.local.LocalFederate;
 import net.sf.ohla.rti1516.messages.DeleteObjectInstance;
 import net.sf.ohla.rti1516.messages.RegisterObjectInstance;
 import net.sf.ohla.rti1516.messages.ReserveObjectInstanceName;
