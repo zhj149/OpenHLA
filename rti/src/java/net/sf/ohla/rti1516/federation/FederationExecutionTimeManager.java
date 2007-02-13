@@ -1,12 +1,9 @@
-package net.sf.ohla.rti1516.federation.time;
+package net.sf.ohla.rti1516.federation;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import net.sf.ohla.rti1516.federation.Federate;
-import net.sf.ohla.rti1516.federation.FederationExecution;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,9 +13,10 @@ import hla.rti1516.LogicalTime;
 import hla.rti1516.LogicalTimeInterval;
 import hla.rti1516.MobileFederateServices;
 
-public class TimeKeeper
+public class FederationExecutionTimeManager
 {
-  private static final Logger log = LoggerFactory.getLogger(TimeKeeper.class);
+  private static final Logger log = LoggerFactory.getLogger(
+    FederationExecutionTimeManager.class);
 
   protected FederationExecution federationExecution;
 
@@ -31,7 +29,7 @@ public class TimeKeeper
   protected Set<Federate> timeRegulatingFederates = new HashSet<Federate>();
   protected Set<Federate> timeConstrainedFederates = new HashSet<Federate>();
 
-  public TimeKeeper(FederationExecution federationExecution,
+  public FederationExecutionTimeManager(FederationExecution federationExecution,
                     MobileFederateServices mobileFederateServices)
   {
     this.federationExecution = federationExecution;

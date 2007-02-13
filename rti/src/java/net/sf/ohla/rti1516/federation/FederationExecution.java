@@ -6,8 +6,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -21,7 +19,6 @@ import net.sf.ohla.rti1516.fdd.Dimension;
 import net.sf.ohla.rti1516.fdd.FDD;
 import net.sf.ohla.rti1516.fdd.ObjectClass;
 import net.sf.ohla.rti1516.federation.objects.ObjectManager;
-import net.sf.ohla.rti1516.federation.time.TimeKeeper;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipAcquisition;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipAcquisitionIfAvailable;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipDivestitureIfWanted;
@@ -134,7 +131,7 @@ public class FederationExecution
 
   protected ObjectManager objectManager = new ObjectManager(this);
 
-  protected TimeKeeper timeKeeper;
+  protected FederationExecutionTimeManager federationExecutionTimeManager;
 
   protected AtomicInteger objectInstanceCount =
     new AtomicInteger(Integer.MIN_VALUE);
@@ -208,7 +205,7 @@ public class FederationExecution
       federatesLock.lock();
       try
       {
-        if (timeKeeper != null)
+        if (federationExecutionTimeManager != null)
         {
           // TODO: ensure each federate has the same mobile federate services
         }
@@ -216,7 +213,7 @@ public class FederationExecution
         {
           // use the first federate's mobile services
           //
-          timeKeeper = new TimeKeeper(
+          federationExecutionTimeManager = new FederationExecutionTimeManager(
             this, joinFederationExecution.getMobileFederateServices());
         }
 
@@ -229,7 +226,7 @@ public class FederationExecution
         WriteFuture writeFuture = session.write(new DefaultResponse(
           joinFederationExecution.getId(),
           new JoinFederationExecutionResponse(
-            federateHandle, fdd, timeKeeper.getGALT())));
+            federateHandle, fdd, federationExecutionTimeManager.getGALT())));
 
         log.debug(marker, "federate joined: {}", federate);
 
@@ -1298,7 +1295,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      timeKeeper.enableTimeRegulation(
+      federationExecutionTimeManager.enableTimeRegulation(
         federate, enableTimeRegulation.getLookahead());
     }
     finally
@@ -1313,7 +1310,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      timeKeeper.disableTimeRegulation(federate);
+      federationExecutionTimeManager.disableTimeRegulation(federate);
     }
     finally
     {
@@ -1327,7 +1324,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      timeKeeper.enableTimeConstrained(federate);
+      federationExecutionTimeManager.enableTimeConstrained(federate);
     }
     finally
     {
@@ -1341,7 +1338,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      timeKeeper.disableTimeConstrained(federate);
+      federationExecutionTimeManager.disableTimeConstrained(federate);
     }
     finally
     {
@@ -1355,7 +1352,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      timeKeeper.timeAdvanceRequest(federate, timeAdvanceRequest.getTime());
+      federationExecutionTimeManager.timeAdvanceRequest(federate, timeAdvanceRequest.getTime());
     }
     finally
     {
@@ -1369,7 +1366,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      timeKeeper.timeAdvanceRequestAvailable(
+      federationExecutionTimeManager.timeAdvanceRequestAvailable(
         federate, timeAdvanceRequestAvailable.getTime());
     }
     finally
