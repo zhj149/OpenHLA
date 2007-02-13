@@ -56,6 +56,28 @@ public class TimeManager
 {
   private static final Logger log = LoggerFactory.getLogger(TimeManager.class);
 
+  protected enum TemporalState
+  {
+    TIME_ADVANCING, TIME_GRANTED
+  }
+
+  protected enum TimeAdvanceType
+  {
+    TIME_ADVANCE_REQUEST, TIME_ADVANCE_REQUEST_AVAILABLE,
+    NEXT_MESSAGE_REQUEST, NEXT_MESSAGE_REQUEST_AVAILABLE,
+    FLUSH_QUEUE_REQUEST
+  }
+
+  protected enum TimeRegulatingState
+  {
+    TIME_REGULATING, BECOMING_TIME_REGULATING, NOT_TIME_REGULATING
+  }
+
+  protected enum TimeConstrainedState
+  {
+    TIME_CONSTRAINED, BECOMING_TIME_CONSTRAINED, NOT_TIME_CONSTRAINED
+  }
+
   protected final Federate federate;
   protected final MobileFederateServices mobileFederateServices;
 
