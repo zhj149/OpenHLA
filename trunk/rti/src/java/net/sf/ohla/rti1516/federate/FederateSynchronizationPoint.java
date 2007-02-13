@@ -20,20 +20,20 @@ import hla.rti1516.FederateHandleSet;
 import hla.rti1516.SynchronizationPointFailureReason;
 import hla.rti1516.SynchronizationPointLabelNotAnnounced;
 
-public class LocalSynchronizationPoint
+public class FederateSynchronizationPoint
 {
   protected String label;
   protected byte[] tag;
   protected FederateHandleSet federateHandles;
   protected State state = State.ATTEMPTING_TO_REGISTER_SYNCH_POINT;
 
-  public LocalSynchronizationPoint(String label, byte[] tag)
+  public FederateSynchronizationPoint(String label, byte[] tag)
   {
     this.label = label;
     this.tag = tag;
   }
 
-  public LocalSynchronizationPoint(String label, byte[] tag,
+  public FederateSynchronizationPoint(String label, byte[] tag,
                                       FederateHandleSet federateHandles)
   {
     this(label, tag);

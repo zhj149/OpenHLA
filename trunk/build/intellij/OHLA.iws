@@ -20,21 +20,24 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" name="Default" comment="">
-      <change type="DELETED" beforePath="D:\projects\ohla-0.4\rti\src\java\net\sf\ohla\rti1516\federate\FederateRestoreState.java" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/LocalMessageRetractionManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/LocalMessageRetractionManager.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/Federate.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.4\rti\src\java\net\sf\ohla\rti1516\federate\LocalRegionManager.java" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/messages/callbacks/CallbackManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/messages/callbacks/CallbackManager.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.4\rti\src\java\net\sf\ohla\rti1516\federate\LocalMessageRetractionManager.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/FederateMessageRetractionManager.java" />
       <change type="DELETED" beforePath="D:\projects\ohla-0.4\rti\src\java\net\sf\ohla\rti1516\local\objects\AttributeInstance.java" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/LocalFederate.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/LocalFederate.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/FederateRestore.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/FederateRestore.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/objects/ObjectManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/objects/ObjectManager.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.4\rti\src\java\net\sf\ohla\rti1516\federate\LocalTimeManager.java" afterPath="" />
       <change type="DELETED" beforePath="D:\projects\ohla-0.4\rti\src\java\net\sf\ohla\rti1516\local\objects\ObjectManager.java" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/FederateSave.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/FederateSave.java" />
-      <change type="DELETED" beforePath="D:\projects\ohla-0.4\rti\src\java\net\sf\ohla\rti1516\federate\FederateSaveState.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/FederateSynchronizationPoint.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/OHLARTIambassador.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/OHLARTIambassador.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/OHLARTIambassador.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/OHLARTIambassador.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/FederateTimeManager.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.4\rti\src\java\net\sf\ohla\rti1516\federate\LocalSynchronizationPoint.java" afterPath="" />
       <change type="DELETED" beforePath="D:\projects\ohla-0.4\rti\src\java\net\sf\ohla\rti1516\local\objects\ObjectInstance.java" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../build.xml" afterPath="$PROJECT_DIR$/../build.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/SubscriptionManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/SubscriptionManager.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/OHLA.iws" afterPath="$PROJECT_DIR$/OHLA.iws" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/LocalTimeManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/LocalTimeManager.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/LocalRegionManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/LocalRegionManager.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/LocalSynchronizationPoint.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/LocalSynchronizationPoint.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/FederateRegionManager.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.4\rti\src\java\net\sf\ohla\rti1516\federate\LocalFederate.java" afterPath="" />
     </list>
     <list name="Failed commit: Default" comment="- removed log4j" />
     <list name="Failed commit: Default (2)" comment="- refactoring" />
@@ -250,10 +253,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="LocalFederate.java" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/LocalFederate.java">
+      <file leaf-file-name="Federate.java" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/Federate.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="1040" column="50" selection-start="33230" selection-end="33230" vertical-scroll-proportion="0.7612782">
+            <state line="265" column="33" selection-start="11524" selection-end="11524" vertical-scroll-proportion="0.15413533">
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -261,8 +264,8 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="LocalMessageRetractionManager.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/LocalMessageRetractionManager.java">
+      <file leaf-file-name="FederateMessageRetractionManager.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/FederateMessageRetractionManager.java">
           <provider selected="true" editor-type-id="text-editor">
             <state line="0" column="36" selection-start="28" selection-end="36" vertical-scroll-proportion="0.0">
               <folding />
@@ -270,8 +273,8 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="LocalRegionManager.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/LocalRegionManager.java">
+      <file leaf-file-name="FederateRegionManager.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/FederateRegionManager.java">
           <provider selected="true" editor-type-id="text-editor">
             <state line="0" column="36" selection-start="36" selection-end="36" vertical-scroll-proportion="0.0">
               <folding />
@@ -279,8 +282,8 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="LocalSynchronizationPoint.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/LocalSynchronizationPoint.java">
+      <file leaf-file-name="FederateSynchronizationPoint.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/FederateSynchronizationPoint.java">
           <provider selected="true" editor-type-id="text-editor">
             <state line="16" column="36" selection-start="642" selection-end="642" vertical-scroll-proportion="0.06390978">
               <folding />
@@ -288,8 +291,8 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="LocalTimeManager.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/LocalTimeManager.java">
+      <file leaf-file-name="FederateTimeManager.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/FederateTimeManager.java">
           <provider selected="true" editor-type-id="text-editor">
             <state line="21" column="35" selection-start="788" selection-end="788" vertical-scroll-proportion="0.2236842">
               <folding>
@@ -434,6 +437,40 @@
         </PATH_ELEMENT>
         <PATH_ELEMENT>
           <option name="myItemId" value="PsiDirectory:D:\projects\ohla-0.4\rti\src\java\net\sf\ohla\rti1516" />
+          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+        </PATH_ELEMENT>
+      </PATH>
+      <PATH>
+        <PATH_ELEMENT>
+          <option name="myItemId" value="OHLA.ipr" />
+          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+        </PATH_ELEMENT>
+        <PATH_ELEMENT>
+          <option name="myItemId" value="RTI" />
+          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewModuleNode" />
+        </PATH_ELEMENT>
+        <PATH_ELEMENT>
+          <option name="myItemId" value="PsiDirectory:D:\projects\ohla-0.4\rti" />
+          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+        </PATH_ELEMENT>
+        <PATH_ELEMENT>
+          <option name="myItemId" value="PsiDirectory:D:\projects\ohla-0.4\rti\src" />
+          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+        </PATH_ELEMENT>
+        <PATH_ELEMENT>
+          <option name="myItemId" value="PsiDirectory:D:\projects\ohla-0.4\rti\src\java" />
+          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+        </PATH_ELEMENT>
+        <PATH_ELEMENT>
+          <option name="myItemId" value="PsiDirectory:D:\projects\ohla-0.4\rti\src\java\net\sf\ohla" />
+          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+        </PATH_ELEMENT>
+        <PATH_ELEMENT>
+          <option name="myItemId" value="PsiDirectory:D:\projects\ohla-0.4\rti\src\java\net\sf\ohla\rti1516" />
+          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+        </PATH_ELEMENT>
+        <PATH_ELEMENT>
+          <option name="myItemId" value="PsiDirectory:D:\projects\ohla-0.4\rti\src\java\net\sf\ohla\rti1516\federate" />
           <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
         </PATH_ELEMENT>
       </PATH>
@@ -1023,21 +1060,21 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/LocalMessageRetractionManager.java">
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/FederateMessageRetractionManager.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="0" column="36" selection-start="28" selection-end="36" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/LocalRegionManager.java">
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/FederateRegionManager.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="0" column="36" selection-start="36" selection-end="36" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/LocalSynchronizationPoint.java">
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/FederateSynchronizationPoint.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="16" column="36" selection-start="642" selection-end="642" vertical-scroll-proportion="0.06390978">
           <folding />
@@ -1051,7 +1088,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/LocalTimeManager.java">
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/FederateTimeManager.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="21" column="35" selection-start="788" selection-end="788" vertical-scroll-proportion="0.2236842">
           <folding>
@@ -1067,9 +1104,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/LocalFederate.java">
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/Federate.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="1040" column="50" selection-start="33230" selection-end="33230" vertical-scroll-proportion="0.7612782">
+        <state line="265" column="33" selection-start="11524" selection-end="11524" vertical-scroll-proportion="0.15413533">
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
