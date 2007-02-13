@@ -45,7 +45,6 @@ import net.sf.ohla.rti1516.OHLAParameterHandleValueMapFactory;
 import net.sf.ohla.rti1516.OHLARegionHandleSetFactory;
 import net.sf.ohla.rti1516.fdd.FDD;
 import net.sf.ohla.rti1516.local.objects.ObjectManager;
-import net.sf.ohla.rti1516.local.LocalTimeManager;
 import net.sf.ohla.rti1516.messages.FederateRestoreComplete;
 import net.sf.ohla.rti1516.messages.FederateRestoreNotComplete;
 import net.sf.ohla.rti1516.messages.FederateSaveBegun;
@@ -198,9 +197,11 @@ import hla.rti1516.ResignAction;
 import hla.rti1516.RestoreFailureReason;
 import hla.rti1516.RestoreInProgress;
 import hla.rti1516.RestoreNotRequested;
+import hla.rti1516.RestoreStatus;
 import hla.rti1516.SaveFailureReason;
 import hla.rti1516.SaveInProgress;
 import hla.rti1516.SaveNotInitiated;
+import hla.rti1516.SaveStatus;
 import hla.rti1516.ServiceGroup;
 import hla.rti1516.SpecifiedSaveLabelDoesNotExist;
 import hla.rti1516.SynchronizationPointFailureReason;
@@ -245,10 +246,10 @@ public class LocalFederate
   protected ReadWriteLock federateStateLock =
     new ReentrantReadWriteLock(true);
 
-  protected FederateSaveState federateSaveState;
+  protected SaveStatus saveStatus;
   protected FederateSave federateSave;
 
-  protected FederateRestoreState federateRestoreState;
+  protected RestoreStatus restoreStatus;
   protected FederateRestore federateRestore;
 
   protected Lock synchronizationPointLock = new ReentrantLock(true);
@@ -857,14 +858,14 @@ public class LocalFederate
     federateStateLock.readLock().lock();
     try
     {
-      if (federateSaveState != FederateSaveState.INSTRUCTED_TO_SAVE)
+      if (saveStatus != SaveStatus.FEDERATE_INSTRUCTED_TO_SAVE)
       {
         throw new SaveNotInitiated();
       }
 
       writeFuture = rtiSession.write(new FederateSaveBegun());
 
-      federateSaveState = FederateSaveState.SAVING;
+      saveStatus = SaveStatus.FEDERATE_SAVING;
     }
     finally
     {
@@ -891,14 +892,14 @@ public class LocalFederate
     {
       checkIfRestoreInProgress();
 
-      if (federateSaveState != FederateSaveState.SAVING)
+      if (saveStatus != SaveStatus.FEDERATE_SAVING)
       {
         throw new FederateHasNotBegunSave();
       }
 
       writeFuture = rtiSession.write(new FederateSaveComplete(null));
 
-      federateSaveState = FederateSaveState.WAITING_FOR_FEDERATION_TO_SAVE;
+      saveStatus = SaveStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_SAVE;
     }
     finally
     {
@@ -925,14 +926,14 @@ public class LocalFederate
     {
       checkIfRestoreInProgress();
 
-      if (federateSaveState != FederateSaveState.SAVING)
+      if (saveStatus != SaveStatus.FEDERATE_SAVING)
       {
         throw new FederateHasNotBegunSave();
       }
 
       writeFuture = rtiSession.write(new FederateSaveNotComplete());
 
-      federateSaveState = FederateSaveState.WAITING_FOR_FEDERATION_TO_SAVE;
+      saveStatus = SaveStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_SAVE;
     }
     finally
     {
@@ -1037,15 +1038,14 @@ public class LocalFederate
     {
       checkIfSaveInProgress();
 
-      if (federateRestoreState != FederateRestoreState.RESTORING)
+      if (restoreStatus != RestoreStatus.FEDERATE_RESTORING)
       {
         throw new RestoreNotRequested();
       }
 
       writeFuture = rtiSession.write(new FederateRestoreComplete());
 
-      federateRestoreState =
-        FederateRestoreState.WAITING_FOR_FEDERATION_TO_RESTORE;
+      restoreStatus = RestoreStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_RESTORE;
     }
     finally
     {
@@ -1072,15 +1072,14 @@ public class LocalFederate
     {
       checkIfSaveInProgress();
 
-      if (federateRestoreState != FederateRestoreState.RESTORING)
+      if (restoreStatus != RestoreStatus.FEDERATE_RESTORING)
       {
         throw new RestoreNotRequested();
       }
 
       writeFuture = rtiSession.write(new FederateRestoreNotComplete());
 
-      federateRestoreState =
-        FederateRestoreState.WAITING_FOR_FEDERATION_TO_RESTORE;
+      restoreStatus = RestoreStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_RESTORE;
     }
     finally
     {
