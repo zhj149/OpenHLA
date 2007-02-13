@@ -228,8 +228,6 @@ public class FederationExecution
           new JoinFederationExecutionResponse(
             federateHandle, fdd, federationExecutionTimeManager.getGALT())));
 
-        log.debug(marker, "federate joined: {}", federate);
-
         // TODO: set timeout
         //
         writeFuture.join();
@@ -265,11 +263,10 @@ public class FederationExecution
       federatesLock.lock();
       try
       {
-        federate.resignFederationExecution();
+        federate.resignFederationExecution(
+          resignFederationExecution.getResignAction());
 
         federates.remove(federate.getFederateHandle());
-
-        log.debug(marker, "federate resigned: {}", federate);
       }
       finally
       {

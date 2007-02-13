@@ -14,9 +14,28 @@
  * limitations under the License.
  */
 
-package net.sf.ohla.rti1516.federate;
+package net.sf.ohla.rti1516.local;
 
-public enum FederateSaveState
+import hla.rti1516.FederateHandle;
+
+public class FederateSave
 {
-  INSTRUCTED_TO_SAVE, SAVING, WAITING_FOR_FEDERATION_TO_SAVE
+  protected FederateHandle federateHandle;
+  protected String federateType;
+
+  public FederateSave(FederateHandle federateHandle, String federateType)
+  {
+    this.federateHandle = federateHandle;
+    this.federateType = federateType;
+  }
+
+  public FederateHandle getFederateHandle()
+  {
+    return federateHandle;
+  }
+
+  public String getFederateType()
+  {
+    return federateType;
+  }
 }

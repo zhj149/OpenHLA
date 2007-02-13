@@ -1,4 +1,4 @@
-package net.sf.ohla.rti1516.federate;
+package net.sf.ohla.rti1516.local;
 
 import java.util.HashMap;
 import java.util.Map;

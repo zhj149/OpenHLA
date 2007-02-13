@@ -52,13 +52,14 @@ import hla.rti1516.SaveStatus;
 import hla.rti1516.LogicalTime;
 import hla.rti1516.LogicalTimeInterval;
 import hla.rti1516.IllegalTimeArithmetic;
+import hla.rti1516.ResignAction;
 
 public class Federate
 {
   private static final String FEDERATE_IO_FILTER = "FederateIoFilter";
 
   protected final FederateHandle federateHandle;
-  protected final String federateType;
+  protected final String federateName;
   protected final IoSession session;
   protected final FederationExecution federationExecution;
 
@@ -77,18 +78,20 @@ public class Federate
   protected final Logger log = LoggerFactory.getLogger(getClass());
   protected final Marker marker;
 
-  public Federate(FederateHandle federateHandle, String federateType,
+  public Federate(FederateHandle federateHandle, String federateName,
                   IoSession session, FederationExecution federationExecution)
   {
     this.federateHandle = federateHandle;
-    this.federateType = federateType;
+    this.federateName = federateName;
     this.session = session;
     this.federationExecution = federationExecution;
 
     session.getFilterChain().addLast(
       FEDERATE_IO_FILTER, new FederateIoFilter(this, federationExecution));
 
-    marker = MarkerFactory.getMarker(federateType);
+    marker = MarkerFactory.getMarker(federateName);
+
+    log.debug(marker, "joined: {}", federateName);
   }
 
   public FederateHandle getFederateHandle()
@@ -96,9 +99,9 @@ public class Federate
     return federateHandle;
   }
 
-  public String getFederateType()
+  public String getFederateName()
   {
-    return federateType;
+    return federateName;
   }
 
   public IoSession getSession()
@@ -141,9 +144,11 @@ public class Federate
     return lits;
   }
 
-  public void resignFederationExecution()
+  public void resignFederationExecution(ResignAction resignAction)
   {
     session.getFilterChain().remove(FEDERATE_IO_FILTER);
+
+    log.debug(marker, "resigned: {}", resignAction);
   }
 
   public WriteFuture announceSynchronizationPoint(
@@ -364,6 +369,6 @@ public class Federate
   public String toString()
   {
     return String.format("%s,%s,%s", federateHandle,
-                         session.getLocalAddress(), federateType);
+                         session.getLocalAddress(), federateName);
   }
 }
