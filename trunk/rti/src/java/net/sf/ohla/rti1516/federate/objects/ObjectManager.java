@@ -17,7 +17,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import net.sf.ohla.rti1516.OHLAAttributeHandleSet;
 import net.sf.ohla.rti1516.fdd.InteractionClass;
 import net.sf.ohla.rti1516.fdd.ObjectClass;
-import net.sf.ohla.rti1516.federate.Federate;
+import net.sf.ohla.rti1516.federate.LocalFederate;
 import net.sf.ohla.rti1516.federate.SubscriptionManager;
 import net.sf.ohla.rti1516.messages.DeleteObjectInstance;
 import net.sf.ohla.rti1516.messages.RegisterObjectInstance;
@@ -80,7 +80,7 @@ public class ObjectManager
   private static final Logger log =
     LoggerFactory.getLogger(ObjectManager.class);
 
-  protected Federate federate;
+  protected LocalFederate federate;
 
   protected ReadWriteLock publicationLock = new ReentrantReadWriteLock(true);
   protected Map<ObjectClassHandle, Set<AttributeHandle>> publishedObjectClasses =
@@ -113,7 +113,7 @@ public class ObjectManager
   protected ConcurrentMap<ObjectInstanceHandle, ObjectClassHandle> reflectedObjectClassHandles =
     new ConcurrentHashMap<ObjectInstanceHandle, ObjectClassHandle>();
 
-  public ObjectManager(Federate federate)
+  public ObjectManager(LocalFederate federate)
   {
     this.federate = federate;
   }

@@ -35,15 +35,15 @@ import hla.rti1516.RegionHandleSet;
 import hla.rti1516.RegionInUseForUpdateOrSubscription;
 import hla.rti1516.RegionNotCreatedByThisFederate;
 
-public class RegionManager
+public class LocalRegionManager
 {
-  protected Federate federate;
+  protected LocalFederate federate;
 
   protected ReadWriteLock regionsLock = new ReentrantReadWriteLock(true);
   protected Map<RegionHandle, Region> regions =
     new HashMap<RegionHandle, Region>();
 
-  public RegionManager(Federate federate)
+  public LocalRegionManager(LocalFederate federate)
   {
     this.federate = federate;
   }

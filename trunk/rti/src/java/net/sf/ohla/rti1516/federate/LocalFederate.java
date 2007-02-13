@@ -45,7 +45,7 @@ import net.sf.ohla.rti1516.OHLAParameterHandleValueMapFactory;
 import net.sf.ohla.rti1516.OHLARegionHandleSetFactory;
 import net.sf.ohla.rti1516.fdd.FDD;
 import net.sf.ohla.rti1516.federate.objects.ObjectManager;
-import net.sf.ohla.rti1516.federate.TimeManager;
+import net.sf.ohla.rti1516.federate.LocalTimeManager;
 import net.sf.ohla.rti1516.messages.FederateRestoreComplete;
 import net.sf.ohla.rti1516.messages.FederateRestoreNotComplete;
 import net.sf.ohla.rti1516.messages.FederateSaveBegun;
@@ -215,12 +215,17 @@ import hla.rti1516.UnableToPerformSave;
 import hla.rti1516.UnknownName;
 import hla.rti1516.jlc.NullFederateAmbassador;
 
-public class Federate
+public class LocalFederate
 {
   public static final String OHLA_FEDERATE_HOST_PROPERTY =
     "ohla.federate.%s.host";
   public static final String OHLA_FEDERATE_PORT_PROPERTY =
     "ohla.federate.%s.port";
+
+  public enum LocalFederateState
+  {
+    ACTIVE, SAVE_IN_PROGRESS, RESTORE_IN_PROGRESS
+  }
 
   protected final String federateType;
   protected final String federationExecutionName;
@@ -235,7 +240,7 @@ public class Federate
   protected String federationName;
   protected FDD fdd;
 
-  protected FederateState federateState = FederateState.ACTIVE;
+  protected LocalFederateState federateState = LocalFederateState.ACTIVE;
 
   protected ReadWriteLock federateStateLock =
     new ReentrantReadWriteLock(true);
@@ -247,17 +252,17 @@ public class Federate
   protected FederateRestore federateRestore;
 
   protected Lock synchronizationPointLock = new ReentrantLock(true);
-  protected Map<String, FederateSynchronizationPoint> synchronizationPoints =
-    new HashMap<String, FederateSynchronizationPoint>();
+  protected Map<String, LocalSynchronizationPoint> synchronizationPoints =
+    new HashMap<String, LocalSynchronizationPoint>();
 
   protected boolean asynchronousDeliveryEnabled;
 
   protected ObjectManager objectManager = new ObjectManager(this);
-  protected RegionManager regionManager = new RegionManager(this);
-  protected MessageRetractionManager messageRetractionManager =
-    new MessageRetractionManager(this);
+  protected LocalRegionManager regionManager = new LocalRegionManager(this);
+  protected LocalMessageRetractionManager messageRetractionManager =
+    new LocalMessageRetractionManager(this);
 
-  protected TimeManager timeManager;
+  protected LocalTimeManager localTimeManager;
   protected CallbackManager callbackManager = new CallbackManager(this);
 
   protected Lock futureTasksLock = new ReentrantLock(true);
@@ -301,7 +306,7 @@ public class Federate
   protected final Logger log = LoggerFactory.getLogger(getClass());
   protected final Marker marker;
 
-  public Federate(String federateType, String federationExecutionName,
+  public LocalFederate(String federateType, String federationExecutionName,
                   FederateAmbassador federateAmbassador,
                   MobileFederateServices mobileFederateServices,
                   IoSession rtiSession)
@@ -344,7 +349,7 @@ public class Federate
         fdd = joinFederationExecutionResponse.getFdd();
 
         LogicalTime galt = joinFederationExecutionResponse.getGALT();
-        timeManager = new TimeManager(this, mobileFederateServices, galt);
+        localTimeManager = new LocalTimeManager(this, mobileFederateServices, galt);
 
         log.info(marker, "joined federation execution: {}", federateHandle);
       }
@@ -396,19 +401,19 @@ public class Federate
     return objectManager;
   }
 
-  public RegionManager getRegionManager()
+  public LocalRegionManager getRegionManager()
   {
     return regionManager;
   }
 
-  public MessageRetractionManager getMessageRetractionManager()
+  public LocalMessageRetractionManager getMessageRetractionManager()
   {
     return messageRetractionManager;
   }
 
-  public TimeManager getTimeManager()
+  public LocalTimeManager getTimeManager()
   {
-    return timeManager;
+    return localTimeManager;
   }
 
   public CallbackManager getCallbackManager()
@@ -472,12 +477,12 @@ public class Federate
         ReflectAttributeValues reflectAttributeValues =
           (ReflectAttributeValues) message;
 
-        timeManager.getTimeLock().readLock().lock();
+        localTimeManager.getTimeLock().readLock().lock();
         try
         {
           OrderType receivedOrderType =
             reflectAttributeValues.getSentOrderType() == OrderType.TIMESTAMP &&
-            timeManager.isTimeConstrained() ? OrderType.TIMESTAMP :
+            localTimeManager.isTimeConstrained() ? OrderType.TIMESTAMP :
               OrderType.RECEIVE;
           reflectAttributeValues.setReceivedOrderType(receivedOrderType);
 
@@ -487,7 +492,7 @@ public class Federate
             // are constrained and in the time granted state if asynchronous
             // delivery is disabled
             //
-            boolean hold = timeManager.isTimeConstrainedAndTimeGranted() &&
+            boolean hold = localTimeManager.isTimeConstrainedAndTimeGranted() &&
                            !isAsynchronousDeliveryEnabled();
 
             callbackManager.add(reflectAttributeValues, hold);
@@ -509,19 +514,19 @@ public class Federate
         }
         finally
         {
-          timeManager.getTimeLock().readLock().unlock();
+          localTimeManager.getTimeLock().readLock().unlock();
         }
       }
       else if (message instanceof ReceiveInteraction)
       {
         ReceiveInteraction receiveInteraction = (ReceiveInteraction) message;
 
-        timeManager.getTimeLock().readLock().lock();
+        localTimeManager.getTimeLock().readLock().lock();
         try
         {
           OrderType receivedOrderType =
             receiveInteraction.getSentOrderType() == OrderType.TIMESTAMP &&
-            timeManager.isTimeConstrained() ? OrderType.TIMESTAMP :
+            localTimeManager.isTimeConstrained() ? OrderType.TIMESTAMP :
               OrderType.RECEIVE;
 
           receiveInteraction.setReceivedOrderType(receivedOrderType);
@@ -532,7 +537,7 @@ public class Federate
             // are constrained and in the time granted state, if asynchronous
             // delivery is disabled
             //
-            boolean hold = timeManager.isTimeConstrainedAndTimeGranted() &&
+            boolean hold = localTimeManager.isTimeConstrainedAndTimeGranted() &&
                            !isAsynchronousDeliveryEnabled();
 
             callbackManager.add(receiveInteraction, hold);
@@ -553,7 +558,7 @@ public class Federate
         }
         finally
         {
-          timeManager.getTimeLock().readLock().unlock();
+          localTimeManager.getTimeLock().readLock().unlock();
         }
       }
       else if (message instanceof RemoveObjectInstance)
@@ -561,12 +566,12 @@ public class Federate
         RemoveObjectInstance removeObjectInstance =
           (RemoveObjectInstance) message;
 
-        timeManager.getTimeLock().readLock().lock();
+        localTimeManager.getTimeLock().readLock().lock();
         try
         {
           OrderType receivedOrderType =
             removeObjectInstance.getSentOrderType() == OrderType.TIMESTAMP &&
-            timeManager.isTimeConstrained() ? OrderType.TIMESTAMP :
+            localTimeManager.isTimeConstrained() ? OrderType.TIMESTAMP :
               OrderType.RECEIVE;
 
           removeObjectInstance.setReceivedOrderType(receivedOrderType);
@@ -577,7 +582,7 @@ public class Federate
             // are constrained and in the time granted state, if asynchronous
             // delivery is disabled
             //
-            boolean hold = timeManager.isTimeConstrainedAndTimeGranted() &&
+            boolean hold = localTimeManager.isTimeConstrainedAndTimeGranted() &&
                            !isAsynchronousDeliveryEnabled();
 
             callbackManager.add(removeObjectInstance, hold);
@@ -598,7 +603,7 @@ public class Federate
         }
         finally
         {
-          timeManager.getTimeLock().readLock().unlock();
+          localTimeManager.getTimeLock().readLock().unlock();
         }
       }
       else
@@ -617,7 +622,7 @@ public class Federate
 
       LogicalTime galt = galtAdvanced.getGALT();
 
-      timeManager.galtAdvanced(galt);
+      localTimeManager.galtAdvanced(galt);
     }
     else
     {
@@ -693,7 +698,7 @@ public class Federate
       synchronizationPointLock.lock();
       try
       {
-        FederateSynchronizationPoint federateSynchronizationPoint =
+        LocalSynchronizationPoint federateSynchronizationPoint =
           synchronizationPoints.get(label);
         if (federateSynchronizationPoint == null)
         {
@@ -795,7 +800,7 @@ public class Federate
       // no need to lock time manager because we have a write lock on the
       // federate state
       //
-      timeManager.checkIfLogicalTimeAlreadyPassed(saveTime);
+      localTimeManager.checkIfLogicalTimeAlreadyPassed(saveTime);
 
       RequestFederationSave requestFederationSave =
         new RequestFederationSave(label, saveTime);
@@ -1471,13 +1476,13 @@ public class Federate
 
       MessageRetractionHandle messageRetractionHandle = null;
 
-      timeManager.getTimeLock().readLock().lock();
+      localTimeManager.getTimeLock().readLock().lock();
       try
       {
-        timeManager.updateAttributeValues(updateTime);
+        localTimeManager.updateAttributeValues(updateTime);
 
         OrderType sentOrderType =
-          timeManager.isTimeRegulating() && updateTime != null ?
+          localTimeManager.isTimeRegulating() && updateTime != null ?
             OrderType.TIMESTAMP : OrderType.RECEIVE;
 
         if (sentOrderType == OrderType.TIMESTAMP)
@@ -1491,7 +1496,7 @@ public class Federate
       }
       finally
       {
-        timeManager.getTimeLock().readLock().unlock();
+        localTimeManager.getTimeLock().readLock().unlock();
       }
 
       return new MessageRetractionReturn(messageRetractionHandle != null,
@@ -1548,13 +1553,13 @@ public class Federate
 
       MessageRetractionHandle messageRetractionHandle = null;
 
-      timeManager.getTimeLock().readLock().lock();
+      localTimeManager.getTimeLock().readLock().lock();
       try
       {
-        timeManager.sendInteraction(sendTime);
+        localTimeManager.sendInteraction(sendTime);
 
         OrderType sentOrderType =
-          timeManager.isTimeRegulating() && sendTime != null ?
+          localTimeManager.isTimeRegulating() && sendTime != null ?
             OrderType.TIMESTAMP : OrderType.RECEIVE;
 
         if (sentOrderType == OrderType.TIMESTAMP)
@@ -1568,7 +1573,7 @@ public class Federate
       }
       finally
       {
-        timeManager.getTimeLock().readLock().unlock();
+        localTimeManager.getTimeLock().readLock().unlock();
       }
 
       return new MessageRetractionReturn(messageRetractionHandle != null,
@@ -1611,13 +1616,13 @@ public class Federate
 
       MessageRetractionHandle messageRetractionHandle = null;
 
-      timeManager.getTimeLock().readLock().lock();
+      localTimeManager.getTimeLock().readLock().lock();
       try
       {
-        timeManager.deleteObjectInstance(deleteTime);
+        localTimeManager.deleteObjectInstance(deleteTime);
 
         OrderType sentOrderType =
-          timeManager.isTimeRegulating() && deleteTime != null ?
+          localTimeManager.isTimeRegulating() && deleteTime != null ?
             OrderType.TIMESTAMP : OrderType.RECEIVE;
 
         if (sentOrderType == OrderType.TIMESTAMP)
@@ -1631,7 +1636,7 @@ public class Federate
       }
       finally
       {
-        timeManager.getTimeLock().readLock().unlock();
+        localTimeManager.getTimeLock().readLock().unlock();
       }
 
       return new MessageRetractionReturn(messageRetractionHandle != null,
@@ -1962,7 +1967,7 @@ public class Federate
     {
       checkIfActive();
 
-      timeManager.enableTimeRegulation(lookahead);
+      localTimeManager.enableTimeRegulation(lookahead);
     }
     finally
     {
@@ -1979,7 +1984,7 @@ public class Federate
     {
       checkIfActive();
 
-      timeManager.disableTimeRegulation();
+      localTimeManager.disableTimeRegulation();
     }
     finally
     {
@@ -1997,7 +2002,7 @@ public class Federate
     {
       checkIfActive();
 
-      timeManager.enableTimeConstrained();
+      localTimeManager.enableTimeConstrained();
     }
     finally
     {
@@ -2014,7 +2019,7 @@ public class Federate
     {
       checkIfActive();
 
-      timeManager.disableTimeConstrained();
+      localTimeManager.disableTimeConstrained();
     }
     finally
     {
@@ -2032,7 +2037,7 @@ public class Federate
     {
       checkIfActive();
 
-      timeManager.timeAdvanceRequest(time);
+      localTimeManager.timeAdvanceRequest(time);
     }
     finally
     {
@@ -2050,7 +2055,7 @@ public class Federate
     {
       checkIfActive();
 
-      timeManager.timeAdvanceRequestAvailable(time);
+      localTimeManager.timeAdvanceRequestAvailable(time);
     }
     finally
     {
@@ -2068,7 +2073,7 @@ public class Federate
     {
       checkIfActive();
 
-      timeManager.nextMessageRequest(time);
+      localTimeManager.nextMessageRequest(time);
     }
     finally
     {
@@ -2086,7 +2091,7 @@ public class Federate
     {
       checkIfActive();
 
-      timeManager.nextMessageRequestAvailable(time);
+      localTimeManager.nextMessageRequestAvailable(time);
     }
     finally
     {
@@ -2104,7 +2109,7 @@ public class Federate
     {
       checkIfActive();
 
-      timeManager.flushQueueRequest(time);
+      localTimeManager.flushQueueRequest(time);
     }
     finally
     {
@@ -2164,7 +2169,7 @@ public class Federate
     {
       checkIfActive();
 
-      return timeManager.queryGALT();
+      return localTimeManager.queryGALT();
     }
     finally
     {
@@ -2180,7 +2185,7 @@ public class Federate
     {
       checkIfActive();
 
-      return timeManager.queryLogicalTime();
+      return localTimeManager.queryLogicalTime();
     }
     finally
     {
@@ -2196,7 +2201,7 @@ public class Federate
     {
       checkIfActive();
 
-      return timeManager.queryLITS();
+      return localTimeManager.queryLITS();
     }
     finally
     {
@@ -2213,7 +2218,7 @@ public class Federate
     {
       checkIfActive();
 
-      timeManager.modifyLookahead(lookahead);
+      localTimeManager.modifyLookahead(lookahead);
     }
     finally
     {
@@ -2230,7 +2235,7 @@ public class Federate
     {
       checkIfActive();
 
-      return timeManager.queryLookahead();
+      return localTimeManager.queryLookahead();
     }
     finally
     {
@@ -2248,13 +2253,13 @@ public class Federate
     {
       checkIfActive();
 
-      timeManager.getTimeLock().readLock().lock();
+      localTimeManager.getTimeLock().readLock().lock();
       try
       {
-        timeManager.checkIfTimeRegulationIsNotEnabled();
+        localTimeManager.checkIfTimeRegulationIsNotEnabled();
 
         messageRetractionManager.retract(messageRetractionHandle,
-                                         timeManager.queryLogicalTime());
+                                         localTimeManager.queryLogicalTime());
 
         WriteFuture writeFuture = rtiSession.write(
           new Retract(messageRetractionHandle));
@@ -2270,7 +2275,7 @@ public class Federate
       }
       finally
       {
-        timeManager.getTimeLock().readLock().unlock();
+        localTimeManager.getTimeLock().readLock().unlock();
       }
     }
     finally
@@ -2728,7 +2733,7 @@ public class Federate
 //      objectManager.checkIfInteractionClassPublished(interactionClassHandle);
 
       OrderType sentOrderType =
-        timeManager.isTimeRegulating() && sendTime != null ?
+        localTimeManager.isTimeRegulating() && sendTime != null ?
           OrderType.TIMESTAMP : OrderType.RECEIVE;
 
       MessageRetractionHandle messageRetractionHandle = null;
@@ -3248,7 +3253,7 @@ public class Federate
   protected void checkIfSaveInProgress()
     throws SaveInProgress
   {
-    if (federateState == FederateState.SAVE_IN_PROGRESS)
+    if (federateState == LocalFederateState.SAVE_IN_PROGRESS)
     {
       throw new SaveInProgress();
     }
@@ -3257,7 +3262,7 @@ public class Federate
   protected void checkIfRestoreInProgress()
     throws RestoreInProgress
   {
-    if (federateState == FederateState.RESTORE_IN_PROGRESS)
+    if (federateState == LocalFederateState.RESTORE_IN_PROGRESS)
     {
       throw new RestoreInProgress();
     }
@@ -3266,7 +3271,7 @@ public class Federate
   protected void checkIfActive()
     throws SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    if (federateState != FederateState.ACTIVE)
+    if (federateState != LocalFederateState.ACTIVE)
     {
       checkIfSaveInProgress();
       checkIfRestoreInProgress();
@@ -3330,17 +3335,17 @@ public class Federate
 
     public Object call()
     {
-      timeManager.getTimeLock().readLock().lock();
+      localTimeManager.getTimeLock().readLock().lock();
       try
       {
         boolean hold = !isAsynchronousDeliveryEnabled() &&
-                       timeManager.isTimeConstrainedAndTimeGranted();
+                       localTimeManager.isTimeConstrainedAndTimeGranted();
 
         callbackManager.add(callback, hold);
       }
       finally
       {
-        timeManager.getTimeLock().readLock().unlock();
+        localTimeManager.getTimeLock().readLock().unlock();
       }
 
       return null;
@@ -3391,7 +3396,7 @@ public class Federate
     public void announceSynchronizationPoint(String label, byte[] tag)
       throws FederateInternalError
     {
-      FederateSynchronizationPoint federateSynchronizationPoint;
+      LocalSynchronizationPoint federateSynchronizationPoint;
 
       synchronizationPointLock.lock();
       try
@@ -3400,7 +3405,7 @@ public class Federate
         if (federateSynchronizationPoint == null)
         {
           federateSynchronizationPoint =
-            new FederateSynchronizationPoint(label, tag);
+            new LocalSynchronizationPoint(label, tag);
           synchronizationPoints.put(label, federateSynchronizationPoint);
         }
       }
@@ -3418,7 +3423,7 @@ public class Federate
     public void federationSynchronized(String label)
       throws FederateInternalError
     {
-      FederateSynchronizationPoint federateSynchronizationPoint;
+      LocalSynchronizationPoint federateSynchronizationPoint;
 
       synchronizationPointLock.lock();
       try
@@ -3450,7 +3455,7 @@ public class Federate
       }
       finally
       {
-        federateState = FederateState.SAVE_IN_PROGRESS;
+        federateState = LocalFederateState.SAVE_IN_PROGRESS;
 
         // hold any pending callbacks so only callbacks that can occur during
         // a save will get through
@@ -3472,7 +3477,7 @@ public class Federate
       }
       finally
       {
-        federateState = FederateState.SAVE_IN_PROGRESS;
+        federateState = LocalFederateState.SAVE_IN_PROGRESS;
 
         // hold any pending callbacks so only callbacks that can occur during
         // a save will get through
@@ -3494,7 +3499,7 @@ public class Federate
       }
       finally
       {
-        federateState = FederateState.ACTIVE;
+        federateState = LocalFederateState.ACTIVE;
 
         // TODO: unhold callbacks?
 
@@ -3513,7 +3518,7 @@ public class Federate
       }
       finally
       {
-        federateState = FederateState.ACTIVE;
+        federateState = LocalFederateState.ACTIVE;
 
         // TODO: unhold callbacks?
 
@@ -4018,7 +4023,7 @@ public class Federate
       throws InvalidLogicalTime, NoRequestToEnableTimeRegulationWasPending,
              FederateInternalError
     {
-      timeManager.timeRegulationEnabled(time, federateAmbassador);
+      localTimeManager.timeRegulationEnabled(time, federateAmbassador);
     }
 
     @Override
@@ -4026,7 +4031,7 @@ public class Federate
       throws InvalidLogicalTime, NoRequestToEnableTimeConstrainedWasPending,
              FederateInternalError
     {
-      timeManager.timeConstrainedEnabled(time, federateAmbassador);
+      localTimeManager.timeConstrainedEnabled(time, federateAmbassador);
     }
 
     @Override
@@ -4034,7 +4039,7 @@ public class Federate
       throws InvalidLogicalTime, JoinedFederateIsNotInTimeAdvancingState,
              FederateInternalError
     {
-      timeManager.timeAdvanceGrant(time, federateAmbassador);
+      localTimeManager.timeAdvanceGrant(time, federateAmbassador);
     }
 
     @Override
