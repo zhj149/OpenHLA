@@ -19,8 +19,6 @@ package net.sf.ohla.rti1516.federate;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import net.sf.ohla.rti1516.federate.Federate;
-import net.sf.ohla.rti1516.messages.callbacks.TimeAdvanceGrant;
 import net.sf.ohla.rti1516.messages.DisableTimeConstrained;
 import net.sf.ohla.rti1516.messages.DisableTimeRegulation;
 import net.sf.ohla.rti1516.messages.EnableTimeConstrained;
@@ -28,6 +26,7 @@ import net.sf.ohla.rti1516.messages.EnableTimeRegulation;
 import net.sf.ohla.rti1516.messages.ModifyLookahead;
 import net.sf.ohla.rti1516.messages.TimeAdvanceRequest;
 import net.sf.ohla.rti1516.messages.TimeAdvanceRequestAvailable;
+import net.sf.ohla.rti1516.messages.callbacks.TimeAdvanceGrant;
 
 import org.apache.mina.common.WriteFuture;
 
