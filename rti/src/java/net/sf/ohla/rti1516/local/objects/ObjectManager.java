@@ -1,4 +1,4 @@
-package net.sf.ohla.rti1516.local.objects;
+package net.sf.ohla.rti1516.federate.objects;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,7 +18,7 @@ import net.sf.ohla.rti1516.OHLAAttributeHandleSet;
 import net.sf.ohla.rti1516.SubscriptionManager;
 import net.sf.ohla.rti1516.fdd.InteractionClass;
 import net.sf.ohla.rti1516.fdd.ObjectClass;
-import net.sf.ohla.rti1516.local.LocalFederate;
+import net.sf.ohla.rti1516.federate.LocalFederate;
 import net.sf.ohla.rti1516.messages.DeleteObjectInstance;
 import net.sf.ohla.rti1516.messages.RegisterObjectInstance;
 import net.sf.ohla.rti1516.messages.ReserveObjectInstanceName;
