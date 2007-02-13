@@ -19,7 +19,7 @@ package net.sf.ohla.rti1516.federate;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import net.sf.ohla.rti1516.federate.LocalFederate;
+import net.sf.ohla.rti1516.federate.Federate;
 import net.sf.ohla.rti1516.messages.callbacks.TimeAdvanceGrant;
 import net.sf.ohla.rti1516.messages.DisableTimeConstrained;
 import net.sf.ohla.rti1516.messages.DisableTimeRegulation;
@@ -52,9 +52,9 @@ import hla.rti1516.TimeQueryReturn;
 import hla.rti1516.TimeRegulationAlreadyEnabled;
 import hla.rti1516.TimeRegulationIsNotEnabled;
 
-public class LocalTimeManager
+public class FederateTimeManager
 {
-  private static final Logger log = LoggerFactory.getLogger(LocalTimeManager.class);
+  private static final Logger log = LoggerFactory.getLogger(FederateTimeManager.class);
 
   protected enum TemporalState
   {
@@ -78,7 +78,7 @@ public class LocalTimeManager
     TIME_CONSTRAINED, BECOMING_TIME_CONSTRAINED, NOT_TIME_CONSTRAINED
   }
 
-  protected final LocalFederate federate;
+  protected final Federate federate;
   protected final MobileFederateServices mobileFederateServices;
 
   protected ReadWriteLock timeLock = new ReentrantReadWriteLock(true);
@@ -98,7 +98,7 @@ public class LocalTimeManager
   protected LogicalTime advanceRequestTime;
   protected TimeAdvanceType advanceRequestTimeType;
 
-  public LocalTimeManager(LocalFederate federate,
+  public FederateTimeManager(Federate federate,
                      MobileFederateServices mobileFederateServices,
                      LogicalTime galt)
   {

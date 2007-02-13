@@ -29,7 +29,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.sf.ohla.rti1516.fdd.FDD;
-import net.sf.ohla.rti1516.federate.LocalFederate;
+import net.sf.ohla.rti1516.federate.Federate;
 import net.sf.ohla.rti1516.filter.RequestResponseFilter;
 import net.sf.ohla.rti1516.messages.CreateFederationExecution;
 import net.sf.ohla.rti1516.messages.DestroyFederationExecution;
@@ -193,9 +193,9 @@ public class OHLARTIambassador
    */
   protected Semaphore callbackSemaphore = new Semaphore(1, true);
 
-  protected LocalFederate federate;
+  protected Federate federate;
 
-  public LocalFederate getJoinedFederate()
+  public Federate getJoinedFederate()
   {
     return federate;
   }
@@ -332,7 +332,7 @@ public class OHLARTIambassador
       checkIfFederateAlreadyExecutionMember();
 
       federate =
-        new LocalFederate(federateType, federationName, federateAmbassador,
+        new Federate(federateType, federationName, federateAmbassador,
                      mobileFederateServices, rtiSession);
 
       return federate.getFederateHandle();

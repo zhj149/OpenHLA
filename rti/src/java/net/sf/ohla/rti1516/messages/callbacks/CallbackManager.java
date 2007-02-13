@@ -22,7 +22,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import net.sf.ohla.rti1516.federate.LocalFederate;
+import net.sf.ohla.rti1516.federate.Federate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +34,7 @@ public class CallbackManager
   private static final Logger log =
     LoggerFactory.getLogger(CallbackManager.class);
 
-  protected LocalFederate federate;
+  protected Federate federate;
 
   protected boolean enabled = true;
 
@@ -44,7 +44,7 @@ public class CallbackManager
 
   protected Queue<Callback> heldCallbacks = new LinkedList<Callback>();
 
-  public CallbackManager(LocalFederate federate)
+  public CallbackManager(Federate federate)
   {
     this.federate = federate;
   }
