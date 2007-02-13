@@ -21,7 +21,7 @@ import java.util.Map;
 import net.sf.ohla.rti1516.OHLAAttributeHandleValueMap;
 import net.sf.ohla.rti1516.OHLAParameterHandleValueMap;
 import net.sf.ohla.rti1516.fdd.InteractionClass;
-import net.sf.ohla.rti1516.federate.SubscriptionManager;
+import net.sf.ohla.rti1516.local.SubscriptionManager;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipAcquisition;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipAcquisitionIfAvailable;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipDivestitureIfWanted;

@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package net.sf.ohla.rti1516.federate;
+package net.sf.ohla.rti1516.local;
 
-public class FederateRestore
+public enum FederateSaveState
 {
+  INSTRUCTED_TO_SAVE, SAVING, WAITING_FOR_FEDERATION_TO_SAVE
 }

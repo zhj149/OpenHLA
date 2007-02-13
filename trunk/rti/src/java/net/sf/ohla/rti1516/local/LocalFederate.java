@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.sf.ohla.rti1516.federate;
+package net.sf.ohla.rti1516.local;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,8 +44,8 @@ import net.sf.ohla.rti1516.OHLAParameterHandleFactory;
 import net.sf.ohla.rti1516.OHLAParameterHandleValueMapFactory;
 import net.sf.ohla.rti1516.OHLARegionHandleSetFactory;
 import net.sf.ohla.rti1516.fdd.FDD;
-import net.sf.ohla.rti1516.federate.objects.ObjectManager;
-import net.sf.ohla.rti1516.federate.LocalTimeManager;
+import net.sf.ohla.rti1516.local.objects.ObjectManager;
+import net.sf.ohla.rti1516.local.LocalTimeManager;
 import net.sf.ohla.rti1516.messages.FederateRestoreComplete;
 import net.sf.ohla.rti1516.messages.FederateRestoreNotComplete;
 import net.sf.ohla.rti1516.messages.FederateSaveBegun;

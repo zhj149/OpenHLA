@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package net.sf.ohla.rti1516.federate;
+package net.sf.ohla.rti1516.local;
 
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import net.sf.ohla.rti1516.federate.LocalFederate;
+import net.sf.ohla.rti1516.local.LocalFederate;
 import net.sf.ohla.rti1516.messages.callbacks.TimeAdvanceGrant;
 import net.sf.ohla.rti1516.messages.DisableTimeConstrained;
 import net.sf.ohla.rti1516.messages.DisableTimeRegulation;
@@ -642,7 +642,7 @@ public class LocalTimeManager
     catch (Throwable t)
     {
       log.warn(String.format(
-        "federate unable enable time regulation to: %s", time), t);
+        "federate unable to enable time regulation to: %s", time), t);
     }
     finally
     {
@@ -665,7 +665,7 @@ public class LocalTimeManager
     catch (Throwable t)
     {
       log.warn(String.format(
-        "federate unable enable time constrained to: %s", time), t);
+        "federate unable to enable time constrained to: %s", time), t);
     }
     finally
     {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.sf.ohla.rti1516.federate;
+package net.sf.ohla.rti1516.local;
 
 import hla.rti1516.FederateHandleSet;
 import hla.rti1516.SynchronizationPointFailureReason;

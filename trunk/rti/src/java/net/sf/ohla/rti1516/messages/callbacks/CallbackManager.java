@@ -22,7 +22,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import net.sf.ohla.rti1516.federate.LocalFederate;
+import net.sf.ohla.rti1516.local.LocalFederate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
