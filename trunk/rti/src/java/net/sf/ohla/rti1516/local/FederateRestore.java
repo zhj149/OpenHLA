@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.sf.ohla.rti1516.local;
+package net.sf.ohla.rti1516.federate;
 
 public class FederateRestore
 {

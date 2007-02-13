@@ -29,7 +29,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.sf.ohla.rti1516.fdd.FDD;
-import net.sf.ohla.rti1516.local.LocalFederate;
+import net.sf.ohla.rti1516.federate.LocalFederate;
 import net.sf.ohla.rti1516.filter.RequestResponseFilter;
 import net.sf.ohla.rti1516.messages.CreateFederationExecution;
 import net.sf.ohla.rti1516.messages.DestroyFederationExecution;

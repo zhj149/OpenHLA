@@ -36,7 +36,7 @@ import net.sf.ohla.rti1516.OHLAObjectClassHandle;
 import net.sf.ohla.rti1516.OHLAObjectInstanceHandle;
 import net.sf.ohla.rti1516.OHLAParameterHandle;
 import net.sf.ohla.rti1516.OHLARegionHandleSet;
-import net.sf.ohla.rti1516.local.LocalFederate;
+import net.sf.ohla.rti1516.federate.LocalFederate;
 import net.sf.ohla.rti1516.fdd.ObjectClass;
 
 import org.slf4j.Logger;

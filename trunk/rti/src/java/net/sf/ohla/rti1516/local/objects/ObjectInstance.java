@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.sf.ohla.rti1516.local.objects;
+package net.sf.ohla.rti1516.federate.objects;
 
 import java.io.Serializable;
 

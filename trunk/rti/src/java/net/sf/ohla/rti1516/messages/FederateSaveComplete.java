@@ -16,7 +16,7 @@
 
 package net.sf.ohla.rti1516.messages;
 
-import net.sf.ohla.rti1516.local.FederateSave;
+import net.sf.ohla.rti1516.federate.FederateSave;
 
 public class FederateSaveComplete
   implements Message

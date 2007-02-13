@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import net.sf.ohla.rti1516.local.FederateSave;
+import net.sf.ohla.rti1516.federate.FederateSave;
 
 import hla.rti1516.FederateHandle;
 import hla.rti1516.FederateHandleSaveStatusPair;
