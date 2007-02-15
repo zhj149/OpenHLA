@@ -54,9 +54,9 @@ import hla.rti1516.LogicalTimeInterval;
 import hla.rti1516.IllegalTimeArithmetic;
 import hla.rti1516.ResignAction;
 
-public class Federate
+public class FederateProxy
 {
-  private static final String FEDERATE_IO_FILTER = "FederateIoFilter";
+  private static final String FEDERATE_IO_FILTER = "FederateProxyIoFilter";
 
   protected final FederateHandle federateHandle;
   protected final String federateName;
@@ -78,7 +78,7 @@ public class Federate
   protected final Logger log = LoggerFactory.getLogger(getClass());
   protected final Marker marker;
 
-  public Federate(FederateHandle federateHandle, String federateName,
+  public FederateProxy(FederateHandle federateHandle, String federateName,
                   IoSession session, FederationExecution federationExecution)
   {
     this.federateHandle = federateHandle;
@@ -87,7 +87,7 @@ public class Federate
     this.federationExecution = federationExecution;
 
     session.getFilterChain().addLast(
-      FEDERATE_IO_FILTER, new FederateIoFilter(this, federationExecution));
+      FEDERATE_IO_FILTER, new FederateProxyIoFilter(this, federationExecution));
 
     marker = MarkerFactory.getMarker(federateName);
 
@@ -361,8 +361,8 @@ public class Federate
   @Override
   public boolean equals(Object rhs)
   {
-    return rhs instanceof Federate &&
-           federateHandle.equals(((Federate) rhs).federateHandle);
+    return rhs instanceof FederateProxy &&
+           federateHandle.equals(((FederateProxy) rhs).federateHandle);
   }
 
   @Override

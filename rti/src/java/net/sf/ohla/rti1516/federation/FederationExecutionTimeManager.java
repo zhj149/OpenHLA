@@ -26,8 +26,8 @@ public class FederationExecutionTimeManager
 
   protected Lock timeLock = new ReentrantLock(true);
 
-  protected Set<Federate> timeRegulatingFederates = new HashSet<Federate>();
-  protected Set<Federate> timeConstrainedFederates = new HashSet<Federate>();
+  protected Set<FederateProxy> timeRegulatingFederateProxies = new HashSet<FederateProxy>();
+  protected Set<FederateProxy> timeConstrainedFederateProxies = new HashSet<FederateProxy>();
 
   public FederationExecutionTimeManager(FederationExecution federationExecution,
                     MobileFederateServices mobileFederateServices)
@@ -43,15 +43,15 @@ public class FederationExecutionTimeManager
     return galt;
   }
 
-  public void enableTimeRegulation(Federate federate,
+  public void enableTimeRegulation(FederateProxy federateProxy,
                                    LogicalTimeInterval lookahead)
   {
     timeLock.lock();
     try
     {
-      timeRegulatingFederates.add(federate);
+      timeRegulatingFederateProxies.add(federateProxy);
 
-      federate.enableTimeRegulation(galt, lookahead);
+      federateProxy.enableTimeRegulation(galt, lookahead);
     }
     catch (IllegalTimeArithmetic ita)
     {
@@ -63,14 +63,14 @@ public class FederationExecutionTimeManager
     }
   }
 
-  public void disableTimeRegulation(Federate federate)
+  public void disableTimeRegulation(FederateProxy federateProxy)
   {
     timeLock.lock();
     try
     {
-      timeRegulatingFederates.remove(federate);
+      timeRegulatingFederateProxies.remove(federateProxy);
 
-      federate.disableTimeRegulation();
+      federateProxy.disableTimeRegulation();
     }
     finally
     {
@@ -78,14 +78,14 @@ public class FederationExecutionTimeManager
     }
   }
 
-  public void enableTimeConstrained(Federate federate)
+  public void enableTimeConstrained(FederateProxy federateProxy)
   {
     timeLock.lock();
     try
     {
-      timeConstrainedFederates.add(federate);
+      timeConstrainedFederateProxies.add(federateProxy);
 
-      federate.enableTimeConstrained(galt);
+      federateProxy.enableTimeConstrained(galt);
     }
     finally
     {
@@ -93,14 +93,14 @@ public class FederationExecutionTimeManager
     }
   }
 
-  public void disableTimeConstrained(Federate federate)
+  public void disableTimeConstrained(FederateProxy federateProxy)
   {
     timeLock.lock();
     try
     {
-      timeConstrainedFederates.remove(federate);
+      timeConstrainedFederateProxies.remove(federateProxy);
 
-      federate.disableTimeConstrained();
+      federateProxy.disableTimeConstrained();
     }
     finally
     {
@@ -108,21 +108,21 @@ public class FederationExecutionTimeManager
     }
   }
 
-  public void timeAdvanceRequest(Federate federate, LogicalTime time)
+  public void timeAdvanceRequest(FederateProxy federateProxy, LogicalTime time)
   {
     timeLock.lock();
     try
     {
       assert galt.compareTo(time) >= 0;
 
-      federate.timeAdvanceRequest(time);
+      federateProxy.timeAdvanceRequest(time);
 
       boolean galtAdvanced = false;
 
-      if (timeRegulatingFederates.contains(federate))
+      if (timeRegulatingFederateProxies.contains(federateProxy))
       {
         LogicalTime newGALT = mobileFederateServices.timeFactory.makeFinal();
-        for (Federate f : timeRegulatingFederates)
+        for (FederateProxy f : timeRegulatingFederateProxies)
         {
           newGALT = min(newGALT, f.getLITS());
         }
@@ -139,7 +139,7 @@ public class FederationExecutionTimeManager
         federationExecution.getFederatesLock().lock();
         try
         {
-          for (Federate f : federationExecution.getFederates().values())
+          for (FederateProxy f : federationExecution.getFederates().values())
           {
             f.galtAdvanced(galt);
           }
@@ -160,9 +160,9 @@ public class FederationExecutionTimeManager
     }
   }
 
-  public void timeAdvanceRequestAvailable(Federate federate, LogicalTime time)
+  public void timeAdvanceRequestAvailable(FederateProxy federateProxy, LogicalTime time)
   {
-    timeAdvanceRequest(federate, min(time, galt));
+    timeAdvanceRequest(federateProxy, min(time, galt));
   }
 
   protected LogicalTime min(LogicalTime lhs, LogicalTime rhs)

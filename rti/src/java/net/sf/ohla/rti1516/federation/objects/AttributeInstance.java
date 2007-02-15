@@ -23,7 +23,7 @@ import java.util.LinkedHashSet;
 
 import net.sf.ohla.rti1516.OHLARegionHandleSet;
 import net.sf.ohla.rti1516.fdd.Attribute;
-import net.sf.ohla.rti1516.federation.Federate;
+import net.sf.ohla.rti1516.federation.FederateProxy;
 
 import hla.rti1516.AttributeAlreadyBeingDivested;
 import hla.rti1516.AttributeDivestitureWasNotRequested;
@@ -42,7 +42,7 @@ public class AttributeInstance
 
   protected RegionHandleSet associatedRegions = new OHLARegionHandleSet();
 
-  protected Federate owner;
+  protected FederateProxy owner;
 
   /**
    * Set if the owner of this attribute is willing to divest ownership.
@@ -54,8 +54,8 @@ public class AttributeInstance
    * they are placed into a line and given ownership based upon when they
    * entered the line.
    */
-  protected LinkedHashSet<Federate> requestingOwnership =
-    new LinkedHashSet<Federate>();
+  protected LinkedHashSet<FederateProxy> requestingOwnerships =
+    new LinkedHashSet<FederateProxy>();
 
   public AttributeInstance(Attribute attribute)
   {
@@ -110,12 +110,12 @@ public class AttributeInstance
     associatedRegions.removeAll(regionHandles);
   }
 
-  public Federate getOwner()
+  public FederateProxy getOwner()
   {
     return owner;
   }
 
-  public void setOwner(Federate owner)
+  public void setOwner(FederateProxy owner)
   {
     this.owner = owner;
   }
@@ -137,16 +137,16 @@ public class AttributeInstance
     // TODO: check status
   }
 
-  public Federate unconditionalAttributeOwnershipDivestiture()
+  public FederateProxy unconditionalAttributeOwnershipDivestiture()
   {
     owner = null;
     wantsToDivest = false;
 
     // give ownership to the next in line
     //
-    if (!requestingOwnership.isEmpty())
+    if (!requestingOwnerships.isEmpty())
     {
-      Iterator<Federate> i = requestingOwnership.iterator();
+      Iterator<FederateProxy> i = requestingOwnerships.iterator();
       owner = i.next();
       i.remove();
     }
@@ -158,19 +158,19 @@ public class AttributeInstance
   {
     wantsToDivest = true;
 
-    return !requestingOwnership.isEmpty();
+    return !requestingOwnerships.isEmpty();
   }
 
-  public Federate confirmDivestiture()
+  public FederateProxy confirmDivestiture()
   {
     owner = null;
     wantsToDivest = false;
 
     // give ownership to the next in line
     //
-    if (!requestingOwnership.isEmpty())
+    if (!requestingOwnerships.isEmpty())
     {
-      Iterator<Federate> i = requestingOwnership.iterator();
+      Iterator<FederateProxy> i = requestingOwnerships.iterator();
       owner = i.next();
       i.remove();
     }
@@ -178,7 +178,7 @@ public class AttributeInstance
     return owner;
   }
 
-  public boolean attributeOwnershipAcquisitionIfAvailable(Federate acquiree)
+  public boolean attributeOwnershipAcquisitionIfAvailable(FederateProxy acquiree)
   {
     if (owner == null)
     {
@@ -190,27 +190,27 @@ public class AttributeInstance
     return owner == acquiree;
   }
 
-  public Federate attributeOwnershipAcquisition(Federate acquiree)
+  public FederateProxy attributeOwnershipAcquisition(FederateProxy acquiree)
   {
     if (!attributeOwnershipAcquisitionIfAvailable(acquiree))
     {
       // get in line
       //
-      requestingOwnership.add(acquiree);
+      requestingOwnerships.add(acquiree);
     }
 
     return owner;
   }
 
-  public Federate attributeOwnershipDivestitureIfWanted()
+  public FederateProxy attributeOwnershipDivestitureIfWanted()
   {
-    boolean divested = !requestingOwnership.isEmpty();
+    boolean divested = !requestingOwnerships.isEmpty();
 
     // give ownership to the next in line
     //
     if (divested)
     {
-      Iterator<Federate> i = requestingOwnership.iterator();
+      Iterator<FederateProxy> i = requestingOwnerships.iterator();
       owner = i.next();
       i.remove();
 
@@ -220,12 +220,12 @@ public class AttributeInstance
     return divested ? owner : null;
   }
 
-  public boolean cancelAttributeOwnershipAcquisition(Federate acquiree)
+  public boolean cancelAttributeOwnershipAcquisition(FederateProxy acquiree)
   {
-    return requestingOwnership.remove(acquiree);
+    return requestingOwnerships.remove(acquiree);
   }
 
-  public void cancelNegotiatedAttributeOwnershipDivestiture(Federate owner)
+  public void cancelNegotiatedAttributeOwnershipDivestiture(FederateProxy owner)
   {
     if (owner.equals(this.owner))
     {
