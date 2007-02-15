@@ -35,7 +35,7 @@ import net.sf.ohla.rti1516.messages.callbacks.ConfirmAttributeOwnershipAcquisiti
 import net.sf.ohla.rti1516.messages.callbacks.InformAttributeOwnership;
 import net.sf.ohla.rti1516.messages.callbacks.RequestAttributeOwnershipRelease;
 import net.sf.ohla.rti1516.messages.callbacks.RequestDivestitureConfirmation;
-import net.sf.ohla.rti1516.federation.Federate;
+import net.sf.ohla.rti1516.federation.FederateProxy;
 
 import hla.rti1516.AttributeHandle;
 import hla.rti1516.AttributeHandleSet;
@@ -56,7 +56,7 @@ public class ObjectInstance
 
   public ObjectInstance(
     ObjectInstanceHandle objectInstanceHandle, ObjectClass objectClass,
-    String name, Set<AttributeHandle> publishedAttributeHandles, Federate owner)
+    String name, Set<AttributeHandle> publishedAttributeHandles, FederateProxy owner)
   {
     this.objectInstanceHandle = objectInstanceHandle;
     this.objectClass = objectClass;
@@ -89,22 +89,22 @@ public class ObjectInstance
     return name;
   }
 
-  public Federate getOwner(AttributeHandle attributeHandle)
+  public FederateProxy getOwner(AttributeHandle attributeHandle)
   {
     return attributes.get(attributeHandle).getOwner();
   }
 
   public void unconditionalAttributeOwnershipDivestiture(
-    Federate owner, AttributeHandleSet attributeHandles)
+    FederateProxy owner, AttributeHandleSet attributeHandles)
   {
     objectLock.lock();
     try
     {
-      Map<Federate, AttributeHandleSet> newOwners =
-        new HashMap<Federate, AttributeHandleSet>();
+      Map<FederateProxy, AttributeHandleSet> newOwners =
+        new HashMap<FederateProxy, AttributeHandleSet>();
       for (AttributeHandle attributeHandle : attributeHandles)
       {
-        Federate newOwner =
+        FederateProxy newOwner =
           attributes.get(
             attributeHandle).unconditionalAttributeOwnershipDivestiture();
         if (newOwner != null)
@@ -121,7 +121,7 @@ public class ObjectInstance
 
       // notify the new owners
       //
-      for (Map.Entry<Federate, AttributeHandleSet> entry : newOwners.entrySet())
+      for (Map.Entry<FederateProxy, AttributeHandleSet> entry : newOwners.entrySet())
       {
         entry.getKey().getSession().write(
           new AttributeOwnershipAcquisitionNotification(
@@ -135,7 +135,7 @@ public class ObjectInstance
   }
 
   public void negotiatedAttributeOwnershipDivestiture(
-    Federate owner, AttributeHandleSet attributeHandles, byte[] tag)
+    FederateProxy owner, AttributeHandleSet attributeHandles, byte[] tag)
   {
     objectLock.lock();
     try
@@ -164,16 +164,16 @@ public class ObjectInstance
   }
 
   public void confirmDivestiture(
-    Federate owner, AttributeHandleSet attributeHandles)
+    FederateProxy owner, AttributeHandleSet attributeHandles)
   {
     objectLock.lock();
     try
     {
-      Map<Federate, AttributeHandleSet> newOwners =
-        new HashMap<Federate, AttributeHandleSet>();
+      Map<FederateProxy, AttributeHandleSet> newOwners =
+        new HashMap<FederateProxy, AttributeHandleSet>();
       for (AttributeHandle attributeHandle : attributeHandles)
       {
-        Federate newOwner =
+        FederateProxy newOwner =
           attributes.get(attributeHandle).confirmDivestiture();
         if (newOwner != null)
         {
@@ -190,7 +190,7 @@ public class ObjectInstance
 
       // notify the new owners
       //
-      for (Map.Entry<Federate, AttributeHandleSet> entry : newOwners.entrySet())
+      for (Map.Entry<FederateProxy, AttributeHandleSet> entry : newOwners.entrySet())
       {
         entry.getKey().getSession().write(
           new AttributeOwnershipAcquisitionNotification(
@@ -204,24 +204,24 @@ public class ObjectInstance
   }
 
   public void attributeOwnershipAcquisition(
-    Federate acquiree, AttributeHandleSet attributeHandles, byte[] tag)
+    FederateProxy acquiree, AttributeHandleSet attributeHandles, byte[] tag)
   {
     objectLock.lock();
     try
     {
       AttributeHandleSet acquiredAttributeHandles =
         new OHLAAttributeHandleSet();
-      Map<Federate, AttributeHandleSet> federatesThatNeedToConfirmDivestiture =
-        new HashMap<Federate, AttributeHandleSet>();
-      Map<Federate, AttributeHandleSet> federatesThatNeedToRelease =
-        new HashMap<Federate, AttributeHandleSet>();
+      Map<FederateProxy, AttributeHandleSet> federatesThatNeedToConfirmDivestiture =
+        new HashMap<FederateProxy, AttributeHandleSet>();
+      Map<FederateProxy, AttributeHandleSet> federatesThatNeedToRelease =
+        new HashMap<FederateProxy, AttributeHandleSet>();
 
       for (AttributeHandle attributeHandle : attributeHandles)
       {
         AttributeInstance attributeInstance =
           attributes.get(attributeHandle);
 
-        Federate owner =
+        FederateProxy owner =
           attributeInstance.attributeOwnershipAcquisition(acquiree);
         if (acquiree.equals(owner))
         {
@@ -265,14 +265,14 @@ public class ObjectInstance
             objectInstanceHandle, acquiredAttributeHandles, tag));
       }
 
-      for (Map.Entry<Federate, AttributeHandleSet> entry :
+      for (Map.Entry<FederateProxy, AttributeHandleSet> entry :
         federatesThatNeedToConfirmDivestiture.entrySet())
       {
         entry.getKey().getSession().write(new RequestDivestitureConfirmation(
           objectInstanceHandle, entry.getValue()));
       }
 
-      for (Map.Entry<Federate, AttributeHandleSet> entry :
+      for (Map.Entry<FederateProxy, AttributeHandleSet> entry :
         federatesThatNeedToRelease.entrySet())
       {
         entry.getKey().getSession().write(new RequestAttributeOwnershipRelease(
@@ -286,7 +286,7 @@ public class ObjectInstance
   }
 
   public void attributeOwnershipAcquisitionIfAvailable(
-    Federate acquiree, AttributeHandleSet attributeHandles)
+    FederateProxy acquiree, AttributeHandleSet attributeHandles)
   {
     objectLock.lock();
     try
@@ -325,17 +325,17 @@ public class ObjectInstance
     }
   }
 
-  public Map<AttributeHandle, Federate> attributeOwnershipDivestitureIfWanted(
-    Federate owner, AttributeHandleSet attributeHandles)
+  public Map<AttributeHandle, FederateProxy> attributeOwnershipDivestitureIfWanted(
+    FederateProxy owner, AttributeHandleSet attributeHandles)
   {
     objectLock.lock();
     try
     {
-      Map<AttributeHandle, Federate> newOwners =
-        new HashMap<AttributeHandle, Federate>();
+      Map<AttributeHandle, FederateProxy> newOwners =
+        new HashMap<AttributeHandle, FederateProxy>();
       for (AttributeHandle attributeHandle : attributeHandles)
       {
-        Federate newOwner = attributes.get(
+        FederateProxy newOwner = attributes.get(
           attributeHandle).attributeOwnershipDivestitureIfWanted();
         if (newOwner != null)
         {
@@ -352,7 +352,7 @@ public class ObjectInstance
   }
 
   public void cancelNegotiatedAttributeOwnershipDivestiture(
-    Federate owner, AttributeHandleSet attributeHandles)
+    FederateProxy owner, AttributeHandleSet attributeHandles)
   {
     objectLock.lock();
     try
@@ -370,7 +370,7 @@ public class ObjectInstance
   }
 
   public void cancelAttributeOwnershipAcquisition(
-    Federate acquiree, AttributeHandleSet attributeHandles)
+    FederateProxy acquiree, AttributeHandleSet attributeHandles)
   {
     objectLock.lock();
     try
@@ -400,7 +400,7 @@ public class ObjectInstance
   }
 
   public void queryAttributeOwnership(
-    Federate federate, AttributeHandle attributeHandle)
+    FederateProxy federateProxy, AttributeHandle attributeHandle)
   {
     objectLock.lock();
     try
@@ -409,20 +409,20 @@ public class ObjectInstance
         attributes.get(attributeHandle);
       assert attributeInstance != null;
 
-      Federate owner = attributeInstance.getOwner();
+      FederateProxy owner = attributeInstance.getOwner();
       if (owner == null)
       {
-        federate.getSession().write(new AttributeIsNotOwned(
+        federateProxy.getSession().write(new AttributeIsNotOwned(
           objectInstanceHandle, attributeHandle));
       }
       else if (attributeInstance.getAttribute().isMOM())
       {
-        federate.getSession().write(new AttributeIsOwnedByRTI(
+        federateProxy.getSession().write(new AttributeIsOwnedByRTI(
           objectInstanceHandle, attributeHandle));
       }
       else
       {
-        federate.getSession().write(new InformAttributeOwnership(
+        federateProxy.getSession().write(new InformAttributeOwnership(
           objectInstanceHandle, attributeHandle, owner.getFederateHandle()));
       }
     }
