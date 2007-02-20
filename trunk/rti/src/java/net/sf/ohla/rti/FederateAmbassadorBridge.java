@@ -16,6 +16,10 @@
 
 package net.sf.ohla.rti;
 
+import net.sf.ohla.rti.impl.OHLARTIambassador;
+import net.sf.ohla.rti.impl.OHLAReflectedAttributes;
+import net.sf.ohla.rti.impl.OHLAReceivedInteraction;
+
 import hla.rti.AttributeNotKnown;
 import hla.rti.CouldNotRestore;
 import hla.rti.EnableTimeConstrainedWasNotPending;
