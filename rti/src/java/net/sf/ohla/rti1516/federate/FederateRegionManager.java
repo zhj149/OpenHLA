@@ -9,7 +9,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import net.sf.ohla.rti1516.OHLARegionHandleSet;
+import net.sf.ohla.rti1516.impl.OHLARegionHandleSet;
 import net.sf.ohla.rti1516.fdd.FDD;
 import net.sf.ohla.rti1516.messages.CommitRegionModifications;
 import net.sf.ohla.rti1516.messages.CreateRegion;

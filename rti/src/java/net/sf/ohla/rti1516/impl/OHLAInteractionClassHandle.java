@@ -14,30 +14,25 @@
  * limitations under the License.
  */
 
-package net.sf.ohla.rti1516.jlc;
+package net.sf.ohla.rti1516.impl;
 
-import net.sf.ohla.rti1516.impl.OHLARTIambassador;
+import net.sf.ohla.rti1516.handles.ShortHandle;
 
-import hla.rti1516.RTIambassador;
-import hla.rti1516.RTIinternalError;
-import hla.rti1516.jlc.RtiFactory;
+import hla.rti1516.CouldNotDecode;
+import hla.rti1516.InteractionClassHandle;
 
-public class OHLARtiFactory
-  implements RtiFactory
+public class OHLAInteractionClassHandle
+  extends ShortHandle
+  implements InteractionClassHandle
 {
-  public RTIambassador getRtiAmbassador()
-    throws RTIinternalError
+  public OHLAInteractionClassHandle(int handle)
   {
-    return new OHLARTIambassador();
+    super(handle);
   }
 
-  public String RtiName()
+  public OHLAInteractionClassHandle(byte[] buffer, int offset)
+    throws CouldNotDecode
   {
-    return "OHLA";
-  }
-
-  public String RtiVersion()
-  {
-    return "0.3";
+    super(buffer, offset);
   }
 }

@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import net.sf.ohla.rti1516.OHLAMessageRetractionHandle;
+import net.sf.ohla.rti1516.impl.OHLAMessageRetractionHandle;
 
 import hla.rti1516.LogicalTime;
 import hla.rti1516.MessageCanNoLongerBeRetracted;

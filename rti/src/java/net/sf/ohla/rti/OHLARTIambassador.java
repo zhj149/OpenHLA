@@ -28,14 +28,14 @@ import java.util.concurrent.locks.ReentrantLock;
 import net.sf.ohla.rti.fed.FEDFDD;
 import net.sf.ohla.rti.fed.RoutingSpace;
 import net.sf.ohla.rti.fed.javacc.FEDParser;
-import net.sf.ohla.rti1516.OHLAAttributeHandle;
-import net.sf.ohla.rti1516.OHLAAttributeSetRegionSetPairList;
-import net.sf.ohla.rti1516.OHLAFederateHandle;
-import net.sf.ohla.rti1516.OHLAInteractionClassHandle;
-import net.sf.ohla.rti1516.OHLAObjectClassHandle;
-import net.sf.ohla.rti1516.OHLAObjectInstanceHandle;
-import net.sf.ohla.rti1516.OHLAParameterHandle;
-import net.sf.ohla.rti1516.OHLARegionHandleSet;
+import net.sf.ohla.rti1516.impl.OHLAAttributeHandle;
+import net.sf.ohla.rti1516.impl.OHLAAttributeSetRegionSetPairList;
+import net.sf.ohla.rti1516.impl.OHLAFederateHandle;
+import net.sf.ohla.rti1516.impl.OHLAInteractionClassHandle;
+import net.sf.ohla.rti1516.impl.OHLAObjectClassHandle;
+import net.sf.ohla.rti1516.impl.OHLAObjectInstanceHandle;
+import net.sf.ohla.rti1516.impl.OHLAParameterHandle;
+import net.sf.ohla.rti1516.impl.OHLARegionHandleSet;
 import net.sf.ohla.rti1516.federate.Federate;
 import net.sf.ohla.rti1516.fdd.ObjectClass;
 
@@ -198,8 +198,8 @@ public class OHLARTIambassador
   public static final String DEFAULT_OHLA_FEDERATE_RTI_1516_LOGICAL_TIME_INTERVAL_FACTORY_PROPERTY =
     "ohla.federate.rti1516.logicalTimeIntervalFactory";
 
-  protected net.sf.ohla.rti1516.OHLARTIambassador rtiAmbassador =
-    new net.sf.ohla.rti1516.OHLARTIambassador();
+  protected net.sf.ohla.rti1516.impl.OHLARTIambassador rtiAmbassador =
+    new net.sf.ohla.rti1516.impl.OHLARTIambassador();
 
   protected FEDFDD fedFDD;
 

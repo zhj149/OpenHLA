@@ -19,7 +19,7 @@ package net.sf.ohla.rti1516.federate.objects;
 import java.io.Serializable;
 
 import net.sf.ohla.rti1516.fdd.Attribute;
-import net.sf.ohla.rti1516.OHLARegionHandleSet;
+import net.sf.ohla.rti1516.impl.OHLARegionHandleSet;
 
 import hla.rti1516.AttributeAlreadyBeingDivested;
 import hla.rti1516.AttributeDivestitureWasNotRequested;

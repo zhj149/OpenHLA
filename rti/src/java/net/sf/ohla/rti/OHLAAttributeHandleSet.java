@@ -19,7 +19,7 @@ package net.sf.ohla.rti;
 import java.util.Iterator;
 import java.util.Set;
 
-import net.sf.ohla.rti1516.OHLAAttributeHandle;
+import net.sf.ohla.rti1516.impl.OHLAAttributeHandle;
 
 import hla.rti.AttributeHandleSet;
 import hla.rti.HandleIterator;
@@ -27,7 +27,7 @@ import hla.rti.HandleIterator;
 import hla.rti1516.AttributeHandle;
 
 public class OHLAAttributeHandleSet
-  extends net.sf.ohla.rti1516.OHLAAttributeHandleSet
+  extends net.sf.ohla.rti1516.impl.OHLAAttributeHandleSet
   implements AttributeHandleSet
 {
   public OHLAAttributeHandleSet()
