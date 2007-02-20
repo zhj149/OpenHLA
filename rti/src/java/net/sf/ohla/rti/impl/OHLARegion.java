@@ -16,16 +16,18 @@
 
 package net.sf.ohla.rti.impl;
 
+import java.io.Serializable;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sf.ohla.rti.impl.Extent;
 import net.sf.ohla.rti1516.fdd.Dimension;
 import net.sf.ohla.rti1516.impl.OHLARegionHandleSet;
 
 import hla.rti.ArrayIndexOutOfBounds;
 import hla.rti.Region;
 
+import hla.rti1516.RangeBounds;
 import hla.rti1516.RegionHandle;
 import hla.rti1516.RegionHandleSet;
 
@@ -134,5 +136,84 @@ public class OHLARegion
     throws ArrayIndexOutOfBounds
   {
     getExtent(extentIndex).setRangeUpperBound(dimensionHandle, upperBound);
+  }
+
+  public class Extent
+    implements Serializable
+  {
+    protected RegionHandle regionHandle;
+    protected List<RangeBounds> rangeBounds;
+
+    protected Extent(Extent extent)
+    {
+      regionHandle = extent.regionHandle;
+      rangeBounds = new ArrayList<RangeBounds>(extent.rangeBounds.size());
+      for (RangeBounds rangeBounds : extent.rangeBounds)
+      {
+        RangeBounds tempRangeBounds = new RangeBounds();
+        tempRangeBounds.lower = rangeBounds.lower;
+        tempRangeBounds.upper = rangeBounds.upper;
+        this.rangeBounds.add(tempRangeBounds);
+      }
+    }
+
+    protected Extent(RegionHandle regionHandle, List<Dimension> dimensions)
+    {
+      this.regionHandle = regionHandle;
+
+      rangeBounds = new ArrayList<RangeBounds>(dimensions.size());
+
+      // initialize all dimensions to default range bounds
+      //
+      for (Dimension dimension : dimensions)
+      {
+        rangeBounds.add(new RangeBounds());
+      }
+    }
+
+    public RegionHandle getRegionHandle()
+    {
+      return regionHandle;
+    }
+
+    public List<RangeBounds> getRangeBounds()
+    {
+      return rangeBounds;
+    }
+
+    public RangeBounds getRangeBounds(int dimensionHandle)
+      throws ArrayIndexOutOfBounds
+    {
+      if (dimensionHandle >= rangeBounds.size())
+      {
+        throw new ArrayIndexOutOfBounds(Integer.toString(dimensionHandle));
+      }
+
+      return rangeBounds.get(dimensionHandle);
+    }
+
+    public long getRangeLowerBound(int dimensionHandle)
+      throws ArrayIndexOutOfBounds
+    {
+      return getRangeBounds(dimensionHandle).lower;
+    }
+
+    public long getRangeUpperBound(int dimensionHandle)
+      throws ArrayIndexOutOfBounds
+    {
+      return getRangeBounds(dimensionHandle).upper;
+    }
+
+    public void setRangeLowerBound(int dimensionHandle, long lowerBound)
+      throws ArrayIndexOutOfBounds
+    {
+      getRangeBounds(dimensionHandle).lower = lowerBound;
+    }
+
+    public void setRangeUpperBound(int dimensionHandle, long upperBound)
+      throws ArrayIndexOutOfBounds
+    {
+      getRangeBounds(dimensionHandle).upper = upperBound;
+    }
   }
 }
