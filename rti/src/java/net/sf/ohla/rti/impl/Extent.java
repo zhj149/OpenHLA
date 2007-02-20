@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.sf.ohla.rti;
+package net.sf.ohla.rti.impl;
 
 import java.io.Serializable;
 import java.util.ArrayList;
