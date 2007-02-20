@@ -29,7 +29,6 @@ import net.sf.ohla.rti.fed.FEDFDD;
 import net.sf.ohla.rti.fed.RoutingSpace;
 import net.sf.ohla.rti.fed.javacc.FEDParser;
 import net.sf.ohla.rti.FederateAmbassadorBridge;
-import net.sf.ohla.rti.impl.Extent;
 import net.sf.ohla.rti1516.impl.OHLAAttributeHandle;
 import net.sf.ohla.rti1516.impl.OHLAAttributeSetRegionSetPairList;
 import net.sf.ohla.rti1516.impl.OHLAFederateHandle;
@@ -2827,7 +2826,7 @@ public class OHLARTIambassador
     {
       routingSpace = fedFDD.getRoutingSpace(region.getSpaceHandle());
 
-      for (Extent extent : ohlaRegion.getExtents())
+      for (OHLARegion.Extent extent : ohlaRegion.getExtents())
       {
         for (ListIterator<RangeBounds> i =
           extent.getRangeBounds().listIterator(); i.hasNext();)
@@ -4515,7 +4514,7 @@ public class OHLARTIambassador
           fedFDD.getRoutingSpace(region.getSpaceHandle());
 
         OHLARegion snapshot = new OHLARegion(region);
-        for (Extent extent : snapshot.getExtents())
+        for (OHLARegion.Extent extent : snapshot.getExtents())
         {
           for (int i = 0; i < extent.getRangeBounds().size(); i++)
           {
