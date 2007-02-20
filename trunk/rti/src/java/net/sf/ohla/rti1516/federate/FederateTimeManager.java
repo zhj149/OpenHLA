@@ -62,7 +62,7 @@ public class FederateTimeManager
 
   protected enum TimeAdvanceType
   {
-    TIME_ADVANCE_REQUEST, TIME_ADVANCE_REQUEST_AVAILABLE,
+    NONE, TIME_ADVANCE_REQUEST, TIME_ADVANCE_REQUEST_AVAILABLE,
     NEXT_MESSAGE_REQUEST, NEXT_MESSAGE_REQUEST_AVAILABLE,
     FLUSH_QUEUE_REQUEST
   }
@@ -95,11 +95,11 @@ public class FederateTimeManager
   protected LogicalTimeInterval lookahead;
 
   protected LogicalTime advanceRequestTime;
-  protected TimeAdvanceType advanceRequestTimeType;
+  protected TimeAdvanceType advanceRequestTimeType = TimeAdvanceType.NONE;
 
   public FederateTimeManager(Federate federate,
-                     MobileFederateServices mobileFederateServices,
-                     LogicalTime galt)
+                             MobileFederateServices mobileFederateServices,
+                             LogicalTime galt)
   {
     this.federate = federate;
     this.mobileFederateServices = mobileFederateServices;
@@ -681,6 +681,7 @@ public class FederateTimeManager
       federateTime = time;
 
       temporalState = TemporalState.TIME_GRANTED;
+      advanceRequestTimeType = TimeAdvanceType.NONE;
 
       federateAmbassador.timeAdvanceGrant(time);
     }
@@ -816,50 +817,61 @@ public class FederateTimeManager
 
     LogicalTime minimumTime =
       isTimeAdvancing() ? advanceRequestTime : federateTime;
-    switch (advanceRequestTimeType)
-    {
-      case TIME_ADVANCE_REQUEST:
-      case NEXT_MESSAGE_REQUEST:
-      {
-        if (lookahead.isZero())
-        {
-          // handle special case when lookahead is 0
 
-          if (time.compareTo(minimumTime) <= 0)
+    if (!isTimeRegulating() && time.compareTo(minimumTime) <= 0)
+    {
+      throw new InvalidLogicalTime(
+        String.format("%s <= %s", time, minimumTime));
+    }
+    else
+    {
+      switch (advanceRequestTimeType)
+      {
+        case NONE:
+        case TIME_ADVANCE_REQUEST:
+        case NEXT_MESSAGE_REQUEST:
+        {
+          if (lookahead.isZero())
           {
-            throw new InvalidLogicalTime(
-              String.format("%s <= %s", time, minimumTime));
+            // handle special case when lookahead is 0
+
+            if (time.compareTo(minimumTime) <= 0)
+            {
+              throw new InvalidLogicalTime(
+                String.format("%s <= %s", time, minimumTime));
+            }
+
+            break;
+          }
+        }
+        case TIME_ADVANCE_REQUEST_AVAILABLE:
+        case NEXT_MESSAGE_REQUEST_AVAILABLE:
+        case FLUSH_QUEUE_REQUEST:
+        {
+          try
+          {
+            LogicalTime minimumTimePlusLookahead = minimumTime.add(lookahead);
+
+            if (time.compareTo(minimumTimePlusLookahead) < 0)
+            {
+              throw new InvalidLogicalTime(String.format(
+                "%s < %s (%s + %s)", time, minimumTimePlusLookahead,
+                minimumTime, lookahead));
+            }
+          }
+          catch (IllegalTimeArithmetic ita)
+          {
+            throw new InvalidLogicalTime(ita);
           }
 
           break;
         }
-      }
-      case TIME_ADVANCE_REQUEST_AVAILABLE:
-      case NEXT_MESSAGE_REQUEST_AVAILABLE:
-      case FLUSH_QUEUE_REQUEST:
-      {
-        try
+        default:
         {
-          LogicalTime minimumTimePlusLookahead = minimumTime.add(lookahead);
-
-          if (time.compareTo(minimumTimePlusLookahead) < 0)
-          {
-            throw new InvalidLogicalTime(String.format(
-              "%s < %s (%s + %s)", time, minimumTimePlusLookahead,
-              minimumTime, lookahead));
-          }
+          assert false :
+            String.format("unknown TimeAdvanceType: %s",
+                          advanceRequestTimeType);
         }
-        catch (IllegalTimeArithmetic ita)
-        {
-          throw new InvalidLogicalTime(ita);
-        }
-
-        break;
-      }
-      default:
-      {
-        assert false :
-          String.format("unknown TimeAdvanceType: %s", advanceRequestTimeType);
       }
     }
   }
