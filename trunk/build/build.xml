@@ -351,9 +351,9 @@
       <sysproperty key="ohla.rti.port" value="5000"/>
 
       <sysproperty key="ohla.federate.rti.logicalTimeFactory"
-                   value="net.sf.ohla.rti.Integer64TimeFactory"/>
+                   value="net.sf.ohla.rti.impl.Integer64TimeFactory"/>
       <sysproperty key="ohla.federate.rti.logicalTimeIntervalFactory"
-                   value="net.sf.ohla.rti.Integer64TimeIntervalFactory"/>
+                   value="net.sf.ohla.rti.impl.Integer64TimeIntervalFactory"/>
       <sysproperty key="ohla.federate.rti1516.logicalTimeFactory"
                    value="net.sf.ohla.rti1516.impl.Integer64TimeFactory"/>
       <sysproperty key="ohla.federate.rti1516.logicalTimeIntervalFactory"
