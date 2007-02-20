@@ -29,7 +29,7 @@ import net.sf.ohla.rti.fed.FEDFDD;
 import net.sf.ohla.rti.fed.RoutingSpace;
 import net.sf.ohla.rti.fed.javacc.FEDParser;
 import net.sf.ohla.rti.FederateAmbassadorBridge;
-import net.sf.ohla.rti.Extent;
+import net.sf.ohla.rti.impl.Extent;
 import net.sf.ohla.rti1516.impl.OHLAAttributeHandle;
 import net.sf.ohla.rti1516.impl.OHLAAttributeSetRegionSetPairList;
 import net.sf.ohla.rti1516.impl.OHLAFederateHandle;
