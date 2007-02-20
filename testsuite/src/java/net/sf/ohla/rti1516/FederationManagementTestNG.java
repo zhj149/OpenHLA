@@ -25,6 +25,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 
+import net.sf.ohla.rti1516.impl.Integer64TimeFactory;
+
 import org.testng.annotations.Test;
 import org.testng.annotations.BeforeClass;
 

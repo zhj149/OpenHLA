@@ -21,6 +21,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.sf.ohla.rti1516.impl.Integer64TimeIntervalFactory;
+import net.sf.ohla.rti1516.impl.Integer64TimeFactory;
+
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
