@@ -19,8 +19,8 @@ package net.sf.ohla.rti;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sf.ohla.rti1516.OHLAParameterHandle;
-import net.sf.ohla.rti1516.OHLAParameterHandleValueMap;
+import net.sf.ohla.rti1516.impl.OHLAParameterHandle;
+import net.sf.ohla.rti1516.impl.OHLAParameterHandleValueMap;
 
 import hla.rti.ArrayIndexOutOfBounds;
 import hla.rti.SuppliedParameters;

@@ -26,8 +26,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import net.sf.ohla.rti1516.OHLAAttributeHandleSet;
-import net.sf.ohla.rti1516.OHLARegionHandleSet;
+import net.sf.ohla.rti1516.impl.OHLAAttributeHandleSet;
+import net.sf.ohla.rti1516.impl.OHLARegionHandleSet;
 import net.sf.ohla.rti1516.fdd.Attribute;
 import net.sf.ohla.rti1516.fdd.ObjectClass;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipAcquisition;

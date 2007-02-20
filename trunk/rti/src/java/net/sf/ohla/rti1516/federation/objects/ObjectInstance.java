@@ -24,7 +24,7 @@ import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import net.sf.ohla.rti1516.OHLAAttributeHandleSet;
+import net.sf.ohla.rti1516.impl.OHLAAttributeHandleSet;
 import net.sf.ohla.rti1516.fdd.Attribute;
 import net.sf.ohla.rti1516.fdd.ObjectClass;
 import net.sf.ohla.rti1516.messages.callbacks.AttributeIsNotOwned;

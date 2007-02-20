@@ -28,7 +28,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import net.sf.ohla.rti1516.OHLAAttributeHandleSet;
+import net.sf.ohla.rti1516.impl.OHLAAttributeHandleSet;
 import net.sf.ohla.rti1516.SubscriptionManager;
 import net.sf.ohla.rti1516.fdd.InteractionClass;
 import net.sf.ohla.rti1516.fdd.ObjectClass;

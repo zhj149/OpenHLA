@@ -20,7 +20,7 @@ import java.io.Serializable;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import net.sf.ohla.rti1516.OHLAParameterHandle;
+import net.sf.ohla.rti1516.impl.OHLAParameterHandle;
 
 import org.dom4j.Element;
 

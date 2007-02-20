@@ -29,7 +29,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentHashMap;
 
-import net.sf.ohla.rti1516.OHLAObjectInstanceHandle;
+import net.sf.ohla.rti1516.impl.OHLAObjectInstanceHandle;
 import net.sf.ohla.rti1516.fdd.ObjectClass;
 import net.sf.ohla.rti1516.messages.callbacks.DiscoverObjectInstance;
 import net.sf.ohla.rti1516.messages.callbacks.ObjectInstanceNameReservationFailed;

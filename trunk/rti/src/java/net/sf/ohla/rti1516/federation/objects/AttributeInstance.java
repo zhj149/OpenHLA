@@ -21,7 +21,7 @@ import java.io.Serializable;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 
-import net.sf.ohla.rti1516.OHLARegionHandleSet;
+import net.sf.ohla.rti1516.impl.OHLARegionHandleSet;
 import net.sf.ohla.rti1516.fdd.Attribute;
 import net.sf.ohla.rti1516.federation.FederateProxy;
 

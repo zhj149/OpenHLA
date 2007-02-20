@@ -12,9 +12,9 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import net.sf.ohla.rti1516.OHLAAttributeHandleSet;
-import net.sf.ohla.rti1516.OHLAFederateHandle;
-import net.sf.ohla.rti1516.OHLARegionHandle;
+import net.sf.ohla.rti1516.impl.OHLAAttributeHandleSet;
+import net.sf.ohla.rti1516.impl.OHLAFederateHandle;
+import net.sf.ohla.rti1516.impl.OHLARegionHandle;
 import net.sf.ohla.rti1516.fdd.Dimension;
 import net.sf.ohla.rti1516.fdd.FDD;
 import net.sf.ohla.rti1516.fdd.ObjectClass;
