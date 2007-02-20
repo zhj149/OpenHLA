@@ -78,13 +78,15 @@ public class FederateProxy
   protected final Logger log = LoggerFactory.getLogger(getClass());
   protected final Marker marker;
 
-  public FederateProxy(FederateHandle federateHandle, String federateName,
-                  IoSession session, FederationExecution federationExecution)
+  public FederateProxy(
+    FederateHandle federateHandle, String federateName, IoSession session,
+    FederationExecution federationExecution, LogicalTime galt)
   {
     this.federateHandle = federateHandle;
     this.federateName = federateName;
     this.session = session;
     this.federationExecution = federationExecution;
+    this.galt = galt;
 
     session.getFilterChain().addLast(
       FEDERATE_IO_FILTER, new FederateProxyIoFilter(this, federationExecution));

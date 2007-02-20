@@ -219,7 +219,7 @@ public class FederationExecution
 
         FederateProxy federateProxy = new FederateProxy(
           federateHandle, joinFederationExecution.getFederateType(),
-          session, this);
+          session, this, federationExecutionTimeManager.getGALT());
 
         federates.put(federateHandle, federateProxy);
 
