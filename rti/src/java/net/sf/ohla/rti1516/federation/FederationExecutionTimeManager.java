@@ -2,8 +2,8 @@ package net.sf.ohla.rti1516.federation;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,18 +24,26 @@ public class FederationExecutionTimeManager
 
   protected LogicalTime galt;
 
-  protected Lock timeLock = new ReentrantLock(true);
+  protected ReadWriteLock timeLock = new ReentrantReadWriteLock(true);
 
-  protected Set<FederateProxy> timeRegulatingFederateProxies = new HashSet<FederateProxy>();
-  protected Set<FederateProxy> timeConstrainedFederateProxies = new HashSet<FederateProxy>();
+  protected Set<FederateProxy> timeRegulatingFederates =
+    new HashSet<FederateProxy>();
+  protected Set<FederateProxy> timeConstrainedFederates =
+    new HashSet<FederateProxy>();
 
-  public FederationExecutionTimeManager(FederationExecution federationExecution,
-                    MobileFederateServices mobileFederateServices)
+  public FederationExecutionTimeManager(
+    FederationExecution federationExecution,
+    MobileFederateServices mobileFederateServices)
   {
     this.federationExecution = federationExecution;
     this.mobileFederateServices = mobileFederateServices;
 
     galt = mobileFederateServices.timeFactory.makeInitial();
+  }
+
+  public ReadWriteLock getTimeLock()
+  {
+    return timeLock;
   }
 
   public LogicalTime getGALT()
@@ -46,10 +54,10 @@ public class FederationExecutionTimeManager
   public void enableTimeRegulation(FederateProxy federateProxy,
                                    LogicalTimeInterval lookahead)
   {
-    timeLock.lock();
+    timeLock.writeLock().lock();
     try
     {
-      timeRegulatingFederateProxies.add(federateProxy);
+      timeRegulatingFederates.add(federateProxy);
 
       federateProxy.enableTimeRegulation(galt, lookahead);
     }
@@ -59,70 +67,89 @@ public class FederationExecutionTimeManager
     }
     finally
     {
-      timeLock.unlock();
+      timeLock.writeLock().unlock();
     }
   }
 
   public void disableTimeRegulation(FederateProxy federateProxy)
   {
-    timeLock.lock();
+    timeLock.writeLock().lock();
     try
     {
-      timeRegulatingFederateProxies.remove(federateProxy);
+      timeRegulatingFederates.remove(federateProxy);
 
       federateProxy.disableTimeRegulation();
     }
     finally
     {
-      timeLock.unlock();
+      timeLock.writeLock().unlock();
     }
   }
 
   public void enableTimeConstrained(FederateProxy federateProxy)
   {
-    timeLock.lock();
+    timeLock.writeLock().lock();
     try
     {
-      timeConstrainedFederateProxies.add(federateProxy);
+      timeConstrainedFederates.add(federateProxy);
 
       federateProxy.enableTimeConstrained(galt);
     }
     finally
     {
-      timeLock.unlock();
+      timeLock.writeLock().unlock();
     }
   }
 
   public void disableTimeConstrained(FederateProxy federateProxy)
   {
-    timeLock.lock();
+    timeLock.writeLock().lock();
     try
     {
-      timeConstrainedFederateProxies.remove(federateProxy);
+      timeConstrainedFederates.remove(federateProxy);
 
       federateProxy.disableTimeConstrained();
     }
     finally
     {
-      timeLock.unlock();
+      timeLock.writeLock().unlock();
     }
   }
 
   public void timeAdvanceRequest(FederateProxy federateProxy, LogicalTime time)
   {
-    timeLock.lock();
+    timeAdvanceRequest(federateProxy, time, false);
+  }
+
+  public void timeAdvanceRequestAvailable(FederateProxy federateProxy,
+                                          LogicalTime time)
+  {
+    timeAdvanceRequest(federateProxy, time, true);
+  }
+
+  protected void timeAdvanceRequest(FederateProxy federateProxy,
+                                    LogicalTime time, boolean available)
+  {
+    timeLock.writeLock().lock();
     try
     {
-      assert galt.compareTo(time) >= 0;
+      if (available)
+      {
+        time = min(time, galt);
+      }
+      else
+      {
+        assert galt.compareTo(time) >= 0;
+      }
 
       federateProxy.timeAdvanceRequest(time);
 
       boolean galtAdvanced = false;
 
-      if (timeRegulatingFederateProxies.contains(federateProxy))
+      if (timeRegulatingFederates.contains(federateProxy))
       {
         LogicalTime newGALT = mobileFederateServices.timeFactory.makeFinal();
-        for (FederateProxy f : timeRegulatingFederateProxies)
+        for (FederateProxy f : timeRegulatingFederates)
         {
           newGALT = min(newGALT, f.getLITS());
         }
@@ -156,13 +183,8 @@ public class FederationExecutionTimeManager
     }
     finally
     {
-      timeLock.unlock();
+      timeLock.writeLock().unlock();
     }
-  }
-
-  public void timeAdvanceRequestAvailable(FederateProxy federateProxy, LogicalTime time)
-  {
-    timeAdvanceRequest(federateProxy, min(time, galt));
   }
 
   protected LogicalTime min(LogicalTime lhs, LogicalTime rhs)
