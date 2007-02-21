@@ -50,7 +50,7 @@ public class RTI
   protected RTIIoHandler rtiIoHandler = new RTIIoHandler();
 
   protected Lock federationsLock = new ReentrantLock(true);
-  protected SortedMap<String, FederationExecution> federations =
+  protected SortedMap<String, FederationExecution> federationExecutions =
     new TreeMap<String, FederationExecution>();
 
   public RTI()
@@ -142,7 +142,7 @@ public class RTI
     federationsLock.lock();
     try
     {
-      if (federations.containsKey(federationExecutionName))
+      if (federationExecutions.containsKey(federationExecutionName))
       {
         log.info("federation execution already exists: {}",
                  federationExecutionName);
@@ -152,7 +152,7 @@ public class RTI
       }
       else
       {
-        federations.put(federationExecutionName,
+        federationExecutions.put(federationExecutionName,
                         new FederationExecution(federationExecutionName, fdd));
       }
     }
@@ -182,7 +182,7 @@ public class RTI
       // optimistically remove the federation
       //
       FederationExecution federationExecution =
-        federations.remove(federationExecutionName);
+        federationExecutions.remove(federationExecutionName);
       if (federationExecution == null)
       {
         log.info("federation execution does not exist: {}",
@@ -200,7 +200,7 @@ public class RTI
         {
           // put it back
           //
-          federations.put(federationExecutionName, federationExecution);
+          federationExecutions.put(federationExecutionName, federationExecution);
 
           response = fcj;
         }
@@ -225,7 +225,7 @@ public class RTI
     try
     {
       FederationExecution federationExecution =
-        federations.get(federationExecutionName);
+        federationExecutions.get(federationExecutionName);
       if (federationExecution != null)
       {
         federationExecution.joinFederationExecution(
