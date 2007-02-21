@@ -2986,6 +2986,16 @@ public class OHLARTIambassador
   protected class RTIIoHandler
     extends IoHandlerAdapter
   {
+    @Override
+    public void exceptionCaught(IoSession session, Throwable throwable)
+      throws Exception
+    {
+      // close the session if an unexpected exception occurs
+      //
+      session.close();
+    }
+
+    @Override
     public void messageReceived(IoSession session, Object message)
       throws Exception
     {
