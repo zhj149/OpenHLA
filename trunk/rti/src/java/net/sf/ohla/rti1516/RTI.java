@@ -250,6 +250,7 @@ public class RTI
   protected class RTIIoHandler
     extends IoHandlerAdapter
   {
+    @Override
     public void exceptionCaught(IoSession session, Throwable throwable)
       throws Exception
     {
@@ -258,6 +259,7 @@ public class RTI
       session.close();
     }
 
+    @Override
     public void messageReceived(IoSession session, Object message)
       throws Exception
     {
