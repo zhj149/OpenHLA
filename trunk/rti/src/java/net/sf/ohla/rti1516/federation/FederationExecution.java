@@ -28,13 +28,12 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import net.sf.ohla.rti1516.impl.OHLAAttributeHandleSet;
-import net.sf.ohla.rti1516.impl.OHLAFederateHandle;
-import net.sf.ohla.rti1516.impl.OHLARegionHandle;
 import net.sf.ohla.rti1516.fdd.Dimension;
 import net.sf.ohla.rti1516.fdd.FDD;
 import net.sf.ohla.rti1516.fdd.ObjectClass;
-import net.sf.ohla.rti1516.federation.FederationExecutionObjectManager;
+import net.sf.ohla.rti1516.impl.OHLAAttributeHandleSet;
+import net.sf.ohla.rti1516.impl.OHLAFederateHandle;
+import net.sf.ohla.rti1516.impl.OHLARegionHandle;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipAcquisition;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipAcquisitionIfAvailable;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipDivestitureIfWanted;
@@ -145,9 +144,10 @@ public class FederationExecution
   protected Map<RegionHandle, Map<DimensionHandle, RangeBounds>> regions =
     new HashMap<RegionHandle, Map<DimensionHandle, RangeBounds>>();
 
-  protected FederationExecutionObjectManager federationExecutionObjectManager = new FederationExecutionObjectManager(this);
+  protected FederationExecutionObjectManager objectManager =
+    new FederationExecutionObjectManager(this);
 
-  protected FederationExecutionTimeManager federationExecutionTimeManager;
+  protected FederationExecutionTimeManager timeManager;
 
   protected AtomicInteger objectInstanceCount =
     new AtomicInteger(Integer.MIN_VALUE);
@@ -226,7 +226,7 @@ public class FederationExecution
       federatesLock.lock();
       try
       {
-        if (federationExecutionTimeManager != null)
+        if (timeManager != null)
         {
           // TODO: ensure each federate has the same mobile federate services
         }
@@ -234,20 +234,20 @@ public class FederationExecution
         {
           // use the first federate's mobile services
           //
-          federationExecutionTimeManager = new FederationExecutionTimeManager(
+          timeManager = new FederationExecutionTimeManager(
             this, joinFederationExecution.getMobileFederateServices());
         }
 
         FederateProxy federateProxy = new FederateProxy(
           federateHandle, joinFederationExecution.getFederateType(),
-          session, this, federationExecutionTimeManager.getGALT());
+          session, this, timeManager.getGALT());
 
         federates.put(federateHandle, federateProxy);
 
         WriteFuture writeFuture = session.write(new DefaultResponse(
           joinFederationExecution.getId(),
           new JoinFederationExecutionResponse(
-            federateHandle, fdd, federationExecutionTimeManager.getGALT())));
+            federateHandle, fdd, timeManager.getGALT())));
 
         // TODO: set timeout
         //
@@ -854,7 +854,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      federationExecutionObjectManager.reserveObjectInstanceName(
+      objectManager.reserveObjectInstanceName(
         federateProxy, reserveObjectInstanceName.getName());
     }
     finally
@@ -870,7 +870,7 @@ public class FederationExecution
     try
     {
       ObjectInstanceHandle objectInstanceHandle =
-        federationExecutionObjectManager.registerObjectInstance(
+        objectManager.registerObjectInstance(
           federateProxy, registerObjectInstance.getObjectClassHandle(),
           registerObjectInstance.getPublishedAttributeHandles(),
           registerObjectInstance.getName());
@@ -913,7 +913,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      federationExecutionObjectManager.updateAttributeValues(
+      objectManager.updateAttributeValues(
         federateProxy, updateAttributeValues.getObjectInstanceHandle(),
           updateAttributeValues.getAttributeValues(),
           updateAttributeValues.getTag(),
@@ -1080,7 +1080,7 @@ public class FederationExecution
           subscribeObjectClassAttributes.getObjectClassHandle());
       assert objectClass != null;
 
-      federationExecutionObjectManager.subscribeObjectClassAttributes(
+      objectManager.subscribeObjectClassAttributes(
         federateProxy, objectClass,
         subscribeObjectClassAttributes.getAttributeHandles(),
         subscribeObjectClassAttributes.getAttributesAndRegions());
@@ -1098,7 +1098,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      federationExecutionObjectManager.unconditionalAttributeOwnershipDivestiture(
+      objectManager.unconditionalAttributeOwnershipDivestiture(
         federateProxy,
         unconditionalAttributeOwnershipDivestiture.getObjectInstanceHandle(),
         unconditionalAttributeOwnershipDivestiture.getAttributeHandles());
@@ -1116,7 +1116,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      federationExecutionObjectManager.negotiatedAttributeOwnershipDivestiture(
+      objectManager.negotiatedAttributeOwnershipDivestiture(
         federateProxy,
         negotiatedAttributeOwnershipDivestiture.getObjectInstanceHandle(),
         negotiatedAttributeOwnershipDivestiture.getAttributeHandles(),
@@ -1134,7 +1134,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      federationExecutionObjectManager.confirmDivestiture(
+      objectManager.confirmDivestiture(
         federateProxy, confirmDivestiture.getObjectInstanceHandle(),
         confirmDivestiture.getAttributeHandles());
     }
@@ -1151,7 +1151,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      federationExecutionObjectManager.attributeOwnershipAcquisition(
+      objectManager.attributeOwnershipAcquisition(
         federateProxy, attributeOwnershipAcquisition.getObjectInstanceHandle(),
         attributeOwnershipAcquisition.getAttributeHandles(),
         attributeOwnershipAcquisition.getTag());
@@ -1169,7 +1169,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      federationExecutionObjectManager.attributeOwnershipAcquisitionIfAvailable(
+      objectManager.attributeOwnershipAcquisitionIfAvailable(
         federateProxy,
         attributeOwnershipAcquisitionIfAvailable.getObjectInstanceHandle(),
         attributeOwnershipAcquisitionIfAvailable.getAttributeHandles());
@@ -1188,7 +1188,7 @@ public class FederationExecution
     try
     {
       Map<AttributeHandle, FederateProxy> newOwners =
-        federationExecutionObjectManager.attributeOwnershipDivestitureIfWanted(
+        objectManager.attributeOwnershipDivestitureIfWanted(
           federateProxy,
           attributeOwnershipDivestitureIfWanted.getObjectInstanceHandle(),
           attributeOwnershipDivestitureIfWanted.getAttributeHandles());
@@ -1263,7 +1263,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      federationExecutionObjectManager.cancelNegotiatedAttributeOwnershipDivestiture(
+      objectManager.cancelNegotiatedAttributeOwnershipDivestiture(
         federateProxy,
         cancelNegotiatedAttributeOwnershipDivestiture.getObjectInstanceHandle(),
         cancelNegotiatedAttributeOwnershipDivestiture.getAttributeHandles());
@@ -1281,7 +1281,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      federationExecutionObjectManager.cancelAttributeOwnershipAcquisition(
+      objectManager.cancelAttributeOwnershipAcquisition(
         federateProxy, cancelAttributeOwnershipAcquisition.getObjectInstanceHandle(),
         cancelAttributeOwnershipAcquisition.getAttributeHandles());
     }
@@ -1297,7 +1297,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      federationExecutionObjectManager.queryAttributeOwnership(
+      objectManager.queryAttributeOwnership(
         federateProxy, queryAttributeOwnership.getObjectInstanceHandle(),
         queryAttributeOwnership.getAttributeHandle());
     }
@@ -1313,7 +1313,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      federationExecutionTimeManager.enableTimeRegulation(
+      timeManager.enableTimeRegulation(
         federateProxy, enableTimeRegulation.getLookahead());
     }
     finally
@@ -1328,7 +1328,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      federationExecutionTimeManager.disableTimeRegulation(federateProxy);
+      timeManager.disableTimeRegulation(federateProxy);
     }
     finally
     {
@@ -1342,7 +1342,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      federationExecutionTimeManager.enableTimeConstrained(federateProxy);
+      timeManager.enableTimeConstrained(federateProxy);
     }
     finally
     {
@@ -1356,7 +1356,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      federationExecutionTimeManager.disableTimeConstrained(federateProxy);
+      timeManager.disableTimeConstrained(federateProxy);
     }
     finally
     {
@@ -1370,7 +1370,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      federationExecutionTimeManager.timeAdvanceRequest(federateProxy, timeAdvanceRequest.getTime());
+      timeManager.timeAdvanceRequest(federateProxy, timeAdvanceRequest.getTime());
     }
     finally
     {
@@ -1384,7 +1384,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      federationExecutionTimeManager.timeAdvanceRequestAvailable(
+      timeManager.timeAdvanceRequestAvailable(
         federateProxy, timeAdvanceRequestAvailable.getTime());
     }
     finally

@@ -29,6 +29,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import net.sf.ohla.rti1516.fdd.FDD;
 import net.sf.ohla.rti1516.impl.OHLAAttributeHandleFactory;
 import net.sf.ohla.rti1516.impl.OHLAAttributeHandleSetFactory;
 import net.sf.ohla.rti1516.impl.OHLAAttributeHandleValueMapFactory;
@@ -43,8 +44,6 @@ import net.sf.ohla.rti1516.impl.OHLAObjectInstanceHandleFactory;
 import net.sf.ohla.rti1516.impl.OHLAParameterHandleFactory;
 import net.sf.ohla.rti1516.impl.OHLAParameterHandleValueMapFactory;
 import net.sf.ohla.rti1516.impl.OHLARegionHandleSetFactory;
-import net.sf.ohla.rti1516.fdd.FDD;
-import net.sf.ohla.rti1516.federate.FederateObjectManager;
 import net.sf.ohla.rti1516.messages.FederateRestoreComplete;
 import net.sf.ohla.rti1516.messages.FederateRestoreNotComplete;
 import net.sf.ohla.rti1516.messages.FederateSaveBegun;
@@ -197,6 +196,7 @@ import hla.rti1516.ResignAction;
 import hla.rti1516.RestoreFailureReason;
 import hla.rti1516.RestoreInProgress;
 import hla.rti1516.RestoreNotRequested;
+import hla.rti1516.RestoreStatus;
 import hla.rti1516.SaveFailureReason;
 import hla.rti1516.SaveInProgress;
 import hla.rti1516.SaveNotInitiated;
@@ -213,7 +213,6 @@ import hla.rti1516.TimeRegulationIsNotEnabled;
 import hla.rti1516.TransportationType;
 import hla.rti1516.UnableToPerformSave;
 import hla.rti1516.UnknownName;
-import hla.rti1516.RestoreStatus;
 import hla.rti1516.jlc.NullFederateAmbassador;
 
 public class Federate
@@ -258,7 +257,7 @@ public class Federate
 
   protected boolean asynchronousDeliveryEnabled;
 
-  protected FederateObjectManager federateObjectManager = new FederateObjectManager(this);
+  protected FederateObjectManager objectManager = new FederateObjectManager(this);
   protected FederateRegionManager regionManager = new FederateRegionManager(this);
   protected FederateMessageRetractionManager messageRetractionManager =
     new FederateMessageRetractionManager(this);
@@ -399,7 +398,7 @@ public class Federate
 
   public FederateObjectManager getObjectManager()
   {
-    return federateObjectManager;
+    return objectManager;
   }
 
   public FederateRegionManager getRegionManager()
@@ -425,6 +424,11 @@ public class Federate
   public IoSession getRTISession()
   {
     return rtiSession;
+  }
+
+  public Marker getMarker()
+  {
+    return marker;
   }
 
   public boolean isAsynchronousDeliveryEnabled()
@@ -639,7 +643,7 @@ public class Federate
     federateStateLock.writeLock().lock();
     try
     {
-      federateObjectManager.resignFederationExecution(resignAction);
+      objectManager.resignFederationExecution(resignAction);
 
       federateState = null;
     }
@@ -1136,7 +1140,7 @@ public class Federate
     {
       checkIfActive();
 
-      federateObjectManager.publishObjectClassAttributes(
+      objectManager.publishObjectClassAttributes(
         objectClassHandle, attributeHandles);
     }
     finally
@@ -1158,7 +1162,7 @@ public class Federate
     {
       checkIfActive();
 
-      federateObjectManager.unpublishObjectClass(objectClassHandle);
+      objectManager.unpublishObjectClass(objectClassHandle);
     }
     finally
     {
@@ -1181,7 +1185,7 @@ public class Federate
     {
       checkIfActive();
 
-      federateObjectManager.unpublishObjectClassAttributes(
+      objectManager.unpublishObjectClassAttributes(
         objectClassHandle, attributeHandles);
 
       // TODO: give up ownership of the specified attributes
@@ -1206,7 +1210,7 @@ public class Federate
     {
       checkIfActive();
 
-      federateObjectManager.publishInteractionClass(interactionClassHandle);
+      objectManager.publishInteractionClass(interactionClassHandle);
     }
     finally
     {
@@ -1228,7 +1232,7 @@ public class Federate
     {
       checkIfActive();
 
-      federateObjectManager.unpublishInteractionClass(interactionClassHandle);
+      objectManager.unpublishInteractionClass(interactionClassHandle);
     }
     finally
     {
@@ -1267,7 +1271,7 @@ public class Federate
     {
       checkIfActive();
 
-      federateObjectManager.subscribeObjectClassAttributes(
+      objectManager.subscribeObjectClassAttributes(
         objectClassHandle, attributeHandles, passive);
     }
     finally
@@ -1289,7 +1293,7 @@ public class Federate
     {
       checkIfActive();
 
-      federateObjectManager.unsubscribeObjectClass(objectClassHandle);
+      objectManager.unsubscribeObjectClass(objectClassHandle);
     }
     finally
     {
@@ -1311,7 +1315,7 @@ public class Federate
     {
       checkIfActive();
 
-      federateObjectManager.unsubscribeObjectClassAttributes(
+      objectManager.unsubscribeObjectClassAttributes(
         objectClassHandle, attributeHandles);
     }
     finally
@@ -1353,7 +1357,7 @@ public class Federate
     {
       checkIfActive();
 
-      federateObjectManager.subscribeInteractionClass(interactionClassHandle, passive);
+      objectManager.subscribeInteractionClass(interactionClassHandle, passive);
     }
     finally
     {
@@ -1375,7 +1379,7 @@ public class Federate
     {
       checkIfActive();
 
-      federateObjectManager.unsubscribeInteractionClass(interactionClassHandle);
+      objectManager.unsubscribeInteractionClass(interactionClassHandle);
     }
     finally
     {
@@ -1396,7 +1400,7 @@ public class Federate
     {
       checkIfActive();
 
-      federateObjectManager.reserveObjectInstanceName(name);
+      objectManager.reserveObjectInstanceName(name);
     }
     finally
     {
@@ -1414,7 +1418,7 @@ public class Federate
     {
       checkIfActive();
 
-      return federateObjectManager.registerObjectInstance(objectClassHandle);
+      return objectManager.registerObjectInstance(objectClassHandle);
     }
     finally
     {
@@ -1433,7 +1437,7 @@ public class Federate
     {
       checkIfActive();
 
-      return federateObjectManager.registerObjectInstance(objectClassHandle, name);
+      return objectManager.registerObjectInstance(objectClassHandle, name);
     }
     finally
     {
@@ -1452,7 +1456,7 @@ public class Federate
     {
       checkIfActive();
 
-      federateObjectManager.updateAttributeValues(
+      objectManager.updateAttributeValues(
         objectInstanceHandle, attributeValues, tag);
     }
     finally
@@ -1489,7 +1493,7 @@ public class Federate
           messageRetractionHandle = messageRetractionManager.add(updateTime);
         }
 
-        federateObjectManager.updateAttributeValues(
+        objectManager.updateAttributeValues(
           objectInstanceHandle, attributeValues, tag, updateTime,
           messageRetractionHandle, sentOrderType);
       }
@@ -1524,7 +1528,7 @@ public class Federate
     {
       checkIfActive();
 
-      federateObjectManager.sendInteraction(
+      objectManager.sendInteraction(
         interactionClassHandle, parameterValues, tag);
     }
     finally
@@ -1566,7 +1570,7 @@ public class Federate
           messageRetractionHandle = messageRetractionManager.add(sendTime);
         }
 
-        federateObjectManager.sendInteraction(
+        objectManager.sendInteraction(
           interactionClassHandle, parameterValues, tag, sendTime,
           messageRetractionHandle, sentOrderType);
       }
@@ -1594,7 +1598,7 @@ public class Federate
     {
       checkIfActive();
 
-      federateObjectManager.deleteObjectInstance(objectInstanceHandle, tag);
+      objectManager.deleteObjectInstance(objectInstanceHandle, tag);
     }
     finally
     {
@@ -1629,7 +1633,7 @@ public class Federate
           messageRetractionHandle = messageRetractionManager.add(deleteTime);
         }
 
-        federateObjectManager.deleteObjectInstance(
+        objectManager.deleteObjectInstance(
           objectInstanceHandle, tag, deleteTime, messageRetractionHandle,
           sentOrderType);
       }
@@ -1653,7 +1657,7 @@ public class Federate
            OwnershipAcquisitionPending, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
-    federateObjectManager.localDeleteObjectInstance(objectInstanceHandle);
+    objectManager.localDeleteObjectInstance(objectInstanceHandle);
   }
 
   public void changeAttributeTransportationType(
@@ -1667,7 +1671,7 @@ public class Federate
     {
       checkIfActive();
 
-      federateObjectManager.changeAttributeTransportationType(
+      objectManager.changeAttributeTransportationType(
         objectInstanceHandle, attributeHandles, transportationType);
     }
     finally
@@ -1687,7 +1691,7 @@ public class Federate
     {
       checkIfActive();
 
-      federateObjectManager.changeInteractionTransportationType(
+      objectManager.changeInteractionTransportationType(
         interactionClassHandle, transportationType);
     }
     finally
@@ -1707,7 +1711,7 @@ public class Federate
     {
       checkIfActive();
 
-      federateObjectManager.requestAttributeValueUpdate(
+      objectManager.requestAttributeValueUpdate(
         objectInstanceHandle, attributeHandles, tag);
     }
     finally
@@ -1762,7 +1766,7 @@ public class Federate
     {
       checkIfActive();
 
-      federateObjectManager.unconditionalAttributeOwnershipDivestiture(
+      objectManager.unconditionalAttributeOwnershipDivestiture(
         objectInstanceHandle, attributeHandles);
     }
     finally
@@ -1783,7 +1787,7 @@ public class Federate
     {
       checkIfActive();
 
-      federateObjectManager.negotiatedAttributeOwnershipDivestiture(
+      objectManager.negotiatedAttributeOwnershipDivestiture(
         objectInstanceHandle, attributeHandles, tag);
     }
     finally
@@ -1804,7 +1808,7 @@ public class Federate
     {
       checkIfActive();
 
-      federateObjectManager.confirmDivestiture(
+      objectManager.confirmDivestiture(
         objectInstanceHandle, attributeHandles, tag);
     }
     finally
@@ -1825,7 +1829,7 @@ public class Federate
     {
       checkIfActive();
 
-      federateObjectManager.attributeOwnershipAcquisition(
+      objectManager.attributeOwnershipAcquisition(
         objectInstanceHandle, attributeHandles, tag);
     }
     finally
@@ -1847,7 +1851,7 @@ public class Federate
     {
       checkIfActive();
 
-      federateObjectManager.attributeOwnershipAcquisitionIfAvailable(
+      objectManager.attributeOwnershipAcquisitionIfAvailable(
         objectInstanceHandle, attributeHandles);
     }
     finally
@@ -1867,7 +1871,7 @@ public class Federate
     {
       checkIfActive();
 
-      return federateObjectManager.attributeOwnershipDivestitureIfWanted(
+      return objectManager.attributeOwnershipDivestitureIfWanted(
         objectInstanceHandle, attributeHandles);
     }
     finally
@@ -1888,7 +1892,7 @@ public class Federate
     {
       checkIfActive();
 
-      federateObjectManager.cancelNegotiatedAttributeOwnershipDivestiture(
+      objectManager.cancelNegotiatedAttributeOwnershipDivestiture(
         objectInstanceHandle, attributeHandles);
     }
     finally
@@ -1909,7 +1913,7 @@ public class Federate
     {
       checkIfActive();
 
-      federateObjectManager.cancelAttributeOwnershipAcquisition(
+      objectManager.cancelAttributeOwnershipAcquisition(
         objectInstanceHandle, attributeHandles);
     }
     finally
@@ -1928,7 +1932,7 @@ public class Federate
     {
       checkIfActive();
 
-      federateObjectManager.queryAttributeOwnership(
+      objectManager.queryAttributeOwnership(
         objectInstanceHandle, attributeHandle);
     }
     finally
@@ -1947,7 +1951,7 @@ public class Federate
     {
       checkIfActive();
 
-      return federateObjectManager.isAttributeOwnedByFederate(
+      return objectManager.isAttributeOwnedByFederate(
         objectInstanceHandle, attributeHandle);
     }
     finally
@@ -2294,7 +2298,7 @@ public class Federate
     {
       checkIfActive();
 
-      federateObjectManager.changeAttributeOrderType(
+      objectManager.changeAttributeOrderType(
         objectInstanceHandle, attributeHandles, orderType);
     }
     finally
@@ -2313,7 +2317,7 @@ public class Federate
     {
       checkIfActive();
 
-      federateObjectManager.changeInteractionOrderType(
+      objectManager.changeInteractionOrderType(
         interactionClassHandle, orderType);
     }
     finally
@@ -2463,7 +2467,7 @@ public class Federate
 
       for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
       {
-        federateObjectManager.associateRegionsForUpdates(
+        objectManager.associateRegionsForUpdates(
           objectInstanceHandle, attributeRegionAssociation);
         regionManager.associateRegionsForUpdates(
           objectInstanceHandle, attributeRegionAssociation);
@@ -2489,7 +2493,7 @@ public class Federate
 
       for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
       {
-        federateObjectManager.unassociateRegionsForUpdates(
+        objectManager.unassociateRegionsForUpdates(
           objectInstanceHandle, attributeRegionAssociation);
         regionManager.unassociateRegionsForUpdates(
           objectInstanceHandle, attributeRegionAssociation);
@@ -2689,7 +2693,7 @@ public class Federate
     {
       checkIfActive();
 
-//      federateObjectManager.checkIfInteractionClassPublished(interactionClassHandle);
+//      objectManager.checkIfInteractionClassPublished(interactionClassHandle);
 
       WriteFuture writeFuture = rtiSession.write(new SendInteraction(
         interactionClassHandle, parameterValues, tag, OrderType.RECEIVE,
@@ -2729,7 +2733,7 @@ public class Federate
     {
       checkIfActive();
 
-//      federateObjectManager.checkIfInteractionClassPublished(interactionClassHandle);
+//      objectManager.checkIfInteractionClassPublished(interactionClassHandle);
 
       OrderType sentOrderType =
         timeManager.isTimeRegulating() && sendTime != null ?
@@ -2854,13 +2858,13 @@ public class Federate
   public ObjectInstanceHandle getObjectInstanceHandle(String name)
     throws ObjectInstanceNotKnown, RTIinternalError
   {
-    return federateObjectManager.getObjectInstanceHandle(name);
+    return objectManager.getObjectInstanceHandle(name);
   }
 
   public String getObjectInstanceName(ObjectInstanceHandle objectInstanceHandle)
     throws ObjectInstanceNotKnown, RTIinternalError
   {
-    return federateObjectManager.getObjectInstanceName(objectInstanceHandle);
+    return objectManager.getObjectInstanceName(objectInstanceHandle);
   }
 
   public DimensionHandle getDimensionHandle(String name)
@@ -2895,7 +2899,7 @@ public class Federate
     ObjectInstanceHandle objectInstanceHandle)
     throws ObjectInstanceNotKnown, RTIinternalError
   {
-    return federateObjectManager.getObjectClassHandle(objectInstanceHandle);
+    return objectManager.getObjectClassHandle(objectInstanceHandle);
   }
 
   public DimensionHandleSet getAvailableDimensionsForInteractionClass(
@@ -3367,7 +3371,7 @@ public class Federate
     public Object call()
       throws Exception
     {
-      federateObjectManager.deleteObjectInstance(objectInstanceHandle, tag);
+      objectManager.deleteObjectInstance(objectInstanceHandle, tag);
 
       return null;
     }
@@ -3621,7 +3625,7 @@ public class Federate
     public void objectInstanceNameReservationSucceeded(String name)
       throws UnknownName, FederateInternalError
     {
-      federateObjectManager.objectInstanceNameReservationSucceeded(
+      objectManager.objectInstanceNameReservationSucceeded(
         name, federateAmbassador);
     }
 
@@ -3638,7 +3642,7 @@ public class Federate
       ObjectClassHandle objectClassHandle, String name)
       throws CouldNotDiscover, ObjectClassNotRecognized, FederateInternalError
     {
-      federateObjectManager.discoverObjectInstance(
+      objectManager.discoverObjectInstance(
         objectInstanceHandle, objectClassHandle, name, federateAmbassador);
     }
 
@@ -3650,7 +3654,7 @@ public class Federate
       throws ObjectInstanceNotKnown, AttributeNotRecognized,
              AttributeNotSubscribed, FederateInternalError
     {
-      federateObjectManager.reflectAttributeValues(
+      objectManager.reflectAttributeValues(
         objectInstanceHandle, attributeValues, tag, sentOrderType,
         transportationType, null, null, null, null, federateAmbassador);
     }
@@ -3664,7 +3668,7 @@ public class Federate
       throws ObjectInstanceNotKnown, AttributeNotRecognized,
              AttributeNotSubscribed, FederateInternalError
     {
-      federateObjectManager.reflectAttributeValues(
+      objectManager.reflectAttributeValues(
         objectInstanceHandle, attributeValues, tag, sentOrderType,
         transportationType, null, null, null, regionHandles,
         federateAmbassador);
@@ -3679,7 +3683,7 @@ public class Federate
       throws ObjectInstanceNotKnown, AttributeNotRecognized,
              AttributeNotSubscribed, FederateInternalError
     {
-      federateObjectManager.reflectAttributeValues(
+      objectManager.reflectAttributeValues(
         objectInstanceHandle, attributeValues, tag, sentOrderType,
         transportationType, updateTime, receivedOrderType, null, null,
         federateAmbassador);
@@ -3695,7 +3699,7 @@ public class Federate
       throws ObjectInstanceNotKnown, AttributeNotRecognized,
              AttributeNotSubscribed, FederateInternalError
     {
-      federateObjectManager.reflectAttributeValues(
+      objectManager.reflectAttributeValues(
         objectInstanceHandle, attributeValues, tag, sentOrderType,
         transportationType, updateTime, receivedOrderType, null, regionHandles,
         federateAmbassador);
@@ -3712,7 +3716,7 @@ public class Federate
       throws ObjectInstanceNotKnown, AttributeNotRecognized,
              AttributeNotSubscribed, InvalidLogicalTime, FederateInternalError
     {
-      federateObjectManager.reflectAttributeValues(
+      objectManager.reflectAttributeValues(
         objectInstanceHandle, attributeValues, tag, sentOrderType,
         transportationType, updateTime, receivedOrderType,
         messageRetractionHandle, null, federateAmbassador);
@@ -3729,7 +3733,7 @@ public class Federate
       throws ObjectInstanceNotKnown, AttributeNotRecognized,
              AttributeNotSubscribed, InvalidLogicalTime, FederateInternalError
     {
-      federateObjectManager.reflectAttributeValues(
+      objectManager.reflectAttributeValues(
         objectInstanceHandle, attributeValues, tag, sentOrderType,
         transportationType, updateTime, receivedOrderType,
         messageRetractionHandle, regionHandles, federateAmbassador);
@@ -3743,7 +3747,7 @@ public class Federate
       throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
              InteractionClassNotSubscribed, FederateInternalError
     {
-      federateObjectManager.receiveInteraction(
+      objectManager.receiveInteraction(
         interactionClassHandle, parameterValues, tag, sentOrderType,
         transportationType, null, null, null, null, federateAmbassador);
     }
@@ -3757,7 +3761,7 @@ public class Federate
       throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
              InteractionClassNotSubscribed, FederateInternalError
     {
-      federateObjectManager.receiveInteraction(
+      objectManager.receiveInteraction(
         interactionClassHandle, parameterValues, tag, sentOrderType,
         transportationType, null, null, null, regionHandles,
         federateAmbassador);
@@ -3772,7 +3776,7 @@ public class Federate
       throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
              InteractionClassNotSubscribed, FederateInternalError
     {
-      federateObjectManager.receiveInteraction(
+      objectManager.receiveInteraction(
         interactionClassHandle, parameterValues, tag, sentOrderType,
         transportationType, sentTime, receivedOrderType, null, null,
         federateAmbassador);
@@ -3788,7 +3792,7 @@ public class Federate
       throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
              InteractionClassNotSubscribed, FederateInternalError
     {
-      federateObjectManager.receiveInteraction(
+      objectManager.receiveInteraction(
         interactionClassHandle, parameterValues, tag, sentOrderType,
         transportationType, sentTime, receivedOrderType, null, regionHandles,
         federateAmbassador);
@@ -3805,7 +3809,7 @@ public class Federate
              InteractionClassNotSubscribed, InvalidLogicalTime,
              FederateInternalError
     {
-      federateObjectManager.receiveInteraction(
+      objectManager.receiveInteraction(
         interactionClassHandle, parameterValues, tag, sentOrderType,
         transportationType, sentTime, receivedOrderType,
         messageRetractionHandle, null, federateAmbassador);
@@ -3823,7 +3827,7 @@ public class Federate
              InteractionClassNotSubscribed, InvalidLogicalTime,
              FederateInternalError
     {
-      federateObjectManager.receiveInteraction(
+      objectManager.receiveInteraction(
         interactionClassHandle, parameterValues, tag, sentOrderType,
         transportationType, sentTime, receivedOrderType,
         messageRetractionHandle, regionHandles, federateAmbassador);
@@ -3834,7 +3838,7 @@ public class Federate
                                      byte[] tag, OrderType sentOrderType)
       throws ObjectInstanceNotKnown, FederateInternalError
     {
-      federateObjectManager.removeObjectInstance(
+      objectManager.removeObjectInstance(
         objectInstanceHandle, tag, sentOrderType, null, null, null,
         federateAmbassador);
     }
@@ -3846,7 +3850,7 @@ public class Federate
                                      OrderType receivedOrderType)
       throws ObjectInstanceNotKnown, FederateInternalError
     {
-      federateObjectManager.removeObjectInstance(
+      objectManager.removeObjectInstance(
         objectInstanceHandle, tag, sentOrderType, deleteTime, receivedOrderType,
         null, federateAmbassador);
     }
@@ -3859,7 +3863,7 @@ public class Federate
                                      MessageRetractionHandle messageRetractionHandle)
       throws ObjectInstanceNotKnown, InvalidLogicalTime, FederateInternalError
     {
-      federateObjectManager.removeObjectInstance(
+      objectManager.removeObjectInstance(
         objectInstanceHandle, tag, sentOrderType, deleteTime, receivedOrderType,
         messageRetractionHandle, federateAmbassador);
     }
@@ -3947,7 +3951,7 @@ public class Federate
              AttributeAcquisitionWasNotRequested, AttributeAlreadyOwned,
              AttributeNotPublished, FederateInternalError
     {
-      federateObjectManager.attributeOwnershipAcquisitionNotification(
+      objectManager.attributeOwnershipAcquisitionNotification(
         objectInstanceHandle, attributeHandles, tag, federateAmbassador);
     }
 

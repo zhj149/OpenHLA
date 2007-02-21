@@ -66,6 +66,7 @@ import org.apache.mina.common.WriteFuture;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
 
 import hla.rti1516.AttributeAcquisitionWasNotRequested;
 import hla.rti1516.AttributeAlreadyBeingAcquired;
@@ -104,12 +105,15 @@ import hla.rti1516.ResignAction;
 import hla.rti1516.RestoreInProgress;
 import hla.rti1516.SaveInProgress;
 import hla.rti1516.TransportationType;
+import hla.rti1516.ObjectClassNotRecognized;
+import hla.rti1516.CouldNotDiscover;
+import hla.rti1516.FederateInternalError;
+import hla.rti1516.AttributeNotSubscribed;
+import hla.rti1516.InvalidLogicalTime;
+import hla.rti1516.AttributeNotRecognized;
 
 public class FederateObjectManager
 {
-  private static final Logger log =
-    LoggerFactory.getLogger(FederateObjectManager.class);
-
   protected Federate federate;
 
   protected ReadWriteLock publicationLock = new ReentrantReadWriteLock(true);
@@ -140,9 +144,14 @@ public class FederateObjectManager
   protected Set<ObjectInstanceHandle> removedObjects =
     new HashSet<ObjectInstanceHandle>();
 
+  private final Logger log = LoggerFactory.getLogger(getClass());
+  private final Marker marker;
+
   public FederateObjectManager(Federate federate)
   {
     this.federate = federate;
+
+    marker = federate.getMarker();
   }
 
   public void federateJoined(IoSession session)
@@ -889,7 +898,7 @@ public class FederateObjectManager
     }
     catch (Throwable t)
     {
-      log.warn(String.format(
+      log.warn(marker, String.format(
         "federate could not process name reservation success: %s", name), t);
     }
   }
@@ -925,7 +934,7 @@ public class FederateObjectManager
         }
         catch (Throwable t)
         {
-          log.warn(String.format(
+          log.warn(marker, String.format(
             "federate could not discover object instance: %s",
             objectInstanceHandle), t);
         }
@@ -979,7 +988,7 @@ public class FederateObjectManager
       }
       catch (Throwable t)
       {
-        log.warn(String.format(
+        log.warn(marker, String.format(
           "federate could not reflect attributes: %s", objectInstanceHandle),
                  t);
       }
@@ -1074,7 +1083,7 @@ public class FederateObjectManager
     }
     catch (Throwable t)
     {
-      log.warn(String.format(
+      log.warn(marker, String.format(
         "federate could not receive interaction: %s", interactionClassHandle),
                t);
     }
@@ -1104,6 +1113,12 @@ public class FederateObjectManager
           receivedOrderType, messageRetractionHandle, federateAmbassador);
       }
     }
+    catch (Throwable t)
+    {
+      log.warn(marker, String.format(
+        "federate unable to remove object instance: %s",
+        objectInstanceHandle), t);
+    }
     finally
     {
       objectsLock.writeLock().unlock();
@@ -1124,6 +1139,12 @@ public class FederateObjectManager
         objectInstance.attributeOwnershipAcquisitionNotification(
           attributeHandles, tag, federateAmbassador);
       }
+    }
+    catch (Throwable t)
+    {
+      log.warn(marker, String.format(
+        "federate unable to acquire object instance attributes: %s - %s",
+        objectInstanceHandle, attributeHandles), t);
     }
     finally
     {
@@ -1671,9 +1692,6 @@ public class FederateObjectManager
   public static class ObjectInstance
     implements Serializable
   {
-    private static final Logger log =
-      LoggerFactory.getLogger(ObjectInstance.class);
-
     protected final ObjectInstanceHandle objectInstanceHandle;
     protected final ObjectClass objectClass;
     protected final String name;
@@ -2565,18 +2583,13 @@ public class FederateObjectManager
                                        ObjectClassHandle objectClassHandle,
                                        String name,
                                        FederateAmbassador federateAmbassador)
+      throws ObjectClassNotRecognized, CouldNotDiscover, FederateInternalError
     {
       objectLock.readLock().lock();
       try
       {
         federateAmbassador.discoverObjectInstance(
           objectInstanceHandle, objectClassHandle, name);
-      }
-      catch (Throwable t)
-      {
-        log.warn(String.format(
-          "federate unable to discover object instance: %s",
-          objectInstanceHandle), t);
       }
       finally
       {
@@ -2591,6 +2604,8 @@ public class FederateObjectManager
       LogicalTime updateTime, OrderType receivedOrderType,
       MessageRetractionHandle messageRetractionHandle,
       RegionHandleSet sentRegionHandles, FederateAmbassador federateAmbassador)
+      throws AttributeNotSubscribed, InvalidLogicalTime, FederateInternalError,
+             AttributeNotRecognized, ObjectInstanceNotKnown
     {
       objectLock.readLock().lock();
       try
@@ -2640,11 +2655,6 @@ public class FederateObjectManager
             messageRetractionHandle, sentRegionHandles);
         }
       }
-      catch (Throwable t)
-      {
-        log.warn(String.format(
-          "federate could not reflect attributes: %s", objectInstanceHandle), t);
-      }
       finally
       {
         objectLock.readLock().unlock();
@@ -2657,6 +2667,7 @@ public class FederateObjectManager
       OrderType receivedOrderType,
       MessageRetractionHandle messageRetractionHandle,
       FederateAmbassador federateAmbassador)
+      throws InvalidLogicalTime, FederateInternalError, ObjectInstanceNotKnown
     {
       objectLock.readLock().lock();
       try
@@ -2685,12 +2696,6 @@ public class FederateObjectManager
           }
         }
       }
-      catch (Throwable t)
-      {
-        log.warn(String.format(
-          "federate unable to remove object instance: %s",
-          objectInstanceHandle), t);
-      }
       finally
       {
         objectLock.readLock().unlock();
@@ -2700,6 +2705,9 @@ public class FederateObjectManager
     public void attributeOwnershipAcquisitionNotification(
       AttributeHandleSet attributeHandles, byte[] tag,
       FederateAmbassador federateAmbassador)
+      throws AttributeAlreadyOwned, FederateInternalError,
+             AttributeNotRecognized, ObjectInstanceNotKnown,
+             AttributeNotPublished, AttributeAcquisitionWasNotRequested
     {
       objectLock.writeLock().lock();
       try
@@ -2718,12 +2726,6 @@ public class FederateObjectManager
 
         federateAmbassador.attributeOwnershipAcquisitionNotification(
           objectInstanceHandle, attributeHandles, tag);
-      }
-      catch (Throwable t)
-      {
-        log.warn(String.format(
-          "federate unable to acquire object instance attributes: %s - %s",
-          objectInstanceHandle, attributeHandles), t);
       }
       finally
       {
