@@ -470,7 +470,7 @@ public class Federate
     }
   }
 
-  public boolean process(IoSession session, Object message)
+  public boolean messageReceived(IoSession session, Object message)
   {
     log.debug(marker, "processing: {}", message);
 

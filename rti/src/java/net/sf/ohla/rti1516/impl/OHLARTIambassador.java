@@ -2567,30 +2567,24 @@ public class OHLARTIambassador
   public boolean evokeCallback(double seconds)
     throws FederateNotExecutionMember, RTIinternalError
   {
+    // ensure only one callback is in progress
+    //
+    if (!callbackSemaphore.tryAcquire())
+    {
+      throw new RTIinternalError("concurrent access attempted");
+    }
+
     joinResignLock.readLock().lock();
     try
     {
-      // ensure only one callback is in progress
-      //
-      if (!callbackSemaphore.tryAcquire())
-      {
-        throw new RTIinternalError("concurrent access attempted");
-      }
+      checkIfFederateNotExecutionMember();
 
-      try
-      {
-        checkIfFederateNotExecutionMember();
-
-        return federate.evokeCallback(seconds);
-      }
-      finally
-      {
-        callbackSemaphore.release();
-      }
+      return federate.evokeCallback(seconds);
     }
     finally
     {
       joinResignLock.readLock().unlock();
+      callbackSemaphore.release();
     }
   }
 
@@ -3006,7 +3000,7 @@ public class OHLARTIambassador
         {
           log.debug("discarding message (no longer joined): {}", message);
         }
-        else if (!federate.process(session, message))
+        else if (!federate.messageReceived(session, message))
         {
           assert false : String.format("unexpected message: %s", message);
         }
