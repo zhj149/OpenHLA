@@ -59,7 +59,7 @@ public class RtiFactoryFactory
     String defaultRTI = properties.getProperty("Default");
     if (defaultRTI == null)
     {
-      rtiFactory = getRtiFactory("net.sf.ohla.rti1516.jlc.OHLARtiFactory");
+      rtiFactory = getRtiFactory("net.sf.ohla.rti1516.jlc.impl.OHLARtiFactory");
     }
     else
     {
