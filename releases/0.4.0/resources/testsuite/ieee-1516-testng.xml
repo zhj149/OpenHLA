@@ -1,0 +1,60 @@
+<!--
+  ~ Copyright (c) 2006, Michael Newcomb
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="OHLA IEEE 1516 Testsuite" parallel="false" verbose="5">
+  <test name="IEEE 1516 - Federation Management">
+    <classes>
+      <class name="net.sf.ohla.rti1516.FederationManagementTestNG"/>
+    </classes>
+  </test>
+
+  <test name="IEEE 1516 - Support Services">
+    <classes>
+      <class name="net.sf.ohla.rti1516.SupportServicesTestNG"/>
+    </classes>
+  </test>
+
+  <test name="IEEE 1516 - Declaration Management">
+    <classes>
+      <class name="net.sf.ohla.rti1516.DeclarationManagementTestNG"/>
+    </classes>
+  </test>
+
+  <test name="IEEE 1516 - Object Management">
+    <classes>
+      <class name="net.sf.ohla.rti1516.ObjectManagementTestNG"/>
+    </classes>
+  </test>
+
+  <test name="IEEE 1516 - Ownership Management">
+    <classes>
+      <class name="net.sf.ohla.rti1516.OwnershipManagementTestNG"/>
+    </classes>
+  </test>
+
+  <test name="IEEE 1516 - Time Management">
+    <classes>
+      <class name="net.sf.ohla.rti1516.TimeManagementTestNG"/>
+    </classes>
+  </test>
+
+  <test name="IEEE 1516 - Data Distribution Management">
+    <classes>
+      <class name="net.sf.ohla.rti1516.DataDistributionManagementTestNG"/>
+    </classes>
+  </test>
+</suite>
