@@ -222,9 +222,9 @@ public class Federate
   public static final String OHLA_FEDERATE_PORT_PROPERTY =
     "ohla.federate.%s.port";
 
-  public enum LocalFederateState
+  public enum FederateState
   {
-    ACTIVE, SAVE_IN_PROGRESS, RESTORE_IN_PROGRESS
+    ACTIVE, SAVE_IN_PROGRESS, RESTORE_IN_PROGRESS, RESIGNED
   }
 
   protected final String federateType;
@@ -240,7 +240,7 @@ public class Federate
   protected String federationName;
   protected FDD fdd;
 
-  protected LocalFederateState federateState = LocalFederateState.ACTIVE;
+  protected FederateState federateState = FederateState.ACTIVE;
 
   protected ReadWriteLock federateStateLock =
     new ReentrantReadWriteLock(true);
@@ -645,7 +645,7 @@ public class Federate
     {
       objectManager.resignFederationExecution(resignAction);
 
-      federateState = null;
+      federateState = FederateState.RESIGNED;
     }
     finally
     {
@@ -3256,7 +3256,7 @@ public class Federate
   protected void checkIfSaveInProgress()
     throws SaveInProgress
   {
-    if (federateState == LocalFederateState.SAVE_IN_PROGRESS)
+    if (federateState == FederateState.SAVE_IN_PROGRESS)
     {
       throw new SaveInProgress();
     }
@@ -3265,7 +3265,7 @@ public class Federate
   protected void checkIfRestoreInProgress()
     throws RestoreInProgress
   {
-    if (federateState == LocalFederateState.RESTORE_IN_PROGRESS)
+    if (federateState == FederateState.RESTORE_IN_PROGRESS)
     {
       throw new RestoreInProgress();
     }
@@ -3274,7 +3274,7 @@ public class Federate
   protected void checkIfActive()
     throws SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    if (federateState != LocalFederateState.ACTIVE)
+    if (federateState != FederateState.ACTIVE)
     {
       checkIfSaveInProgress();
       checkIfRestoreInProgress();
@@ -3458,7 +3458,7 @@ public class Federate
       }
       finally
       {
-        federateState = LocalFederateState.SAVE_IN_PROGRESS;
+        federateState = FederateState.SAVE_IN_PROGRESS;
 
         // hold any pending callbacks so only callbacks that can occur during
         // a save will get through
@@ -3480,7 +3480,7 @@ public class Federate
       }
       finally
       {
-        federateState = LocalFederateState.SAVE_IN_PROGRESS;
+        federateState = FederateState.SAVE_IN_PROGRESS;
 
         // hold any pending callbacks so only callbacks that can occur during
         // a save will get through
@@ -3502,7 +3502,7 @@ public class Federate
       }
       finally
       {
-        federateState = LocalFederateState.ACTIVE;
+        federateState = FederateState.ACTIVE;
 
         // TODO: unhold callbacks?
 
@@ -3521,7 +3521,7 @@ public class Federate
       }
       finally
       {
-        federateState = LocalFederateState.ACTIVE;
+        federateState = FederateState.ACTIVE;
 
         // TODO: unhold callbacks?
 
