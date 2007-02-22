@@ -21,14 +21,17 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import net.sf.ohla.rti.FederateAmbassadorBridge;
 import net.sf.ohla.rti.fed.FEDFDD;
 import net.sf.ohla.rti.fed.RoutingSpace;
 import net.sf.ohla.rti.fed.javacc.FEDParser;
-import net.sf.ohla.rti.FederateAmbassadorBridge;
+import net.sf.ohla.rti1516.fdd.ObjectClass;
+import net.sf.ohla.rti1516.federate.Federate;
 import net.sf.ohla.rti1516.impl.OHLAAttributeHandle;
 import net.sf.ohla.rti1516.impl.OHLAAttributeSetRegionSetPairList;
 import net.sf.ohla.rti1516.impl.OHLAFederateHandle;
@@ -37,8 +40,11 @@ import net.sf.ohla.rti1516.impl.OHLAObjectClassHandle;
 import net.sf.ohla.rti1516.impl.OHLAObjectInstanceHandle;
 import net.sf.ohla.rti1516.impl.OHLAParameterHandle;
 import net.sf.ohla.rti1516.impl.OHLARegionHandleSet;
-import net.sf.ohla.rti1516.federate.Federate;
-import net.sf.ohla.rti1516.fdd.ObjectClass;
+import net.sf.ohla.rti1516.messages.callbacks.ObjectInstanceNameReservationFailed;
+import net.sf.ohla.rti1516.messages.callbacks.ObjectInstanceNameReservationSucceeded;
+
+import org.apache.mina.common.IoFilterAdapter;
+import org.apache.mina.common.IoSession;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +60,7 @@ import hla.rti.AttributeDivestitureWasNotRequested;
 import hla.rti.AttributeNotDefined;
 import hla.rti.AttributeNotOwned;
 import hla.rti.AttributeNotPublished;
+import hla.rti.CouldNotDecode;
 import hla.rti.CouldNotOpenFED;
 import hla.rti.DeletePrivilegeNotHeld;
 import hla.rti.DimensionNotDefined;
@@ -113,10 +120,10 @@ import hla.rti.TimeConstrainedAlreadyEnabled;
 import hla.rti.TimeConstrainedWasNotEnabled;
 import hla.rti.TimeRegulationAlreadyEnabled;
 import hla.rti.TimeRegulationWasNotEnabled;
-import hla.rti.CouldNotDecode;
 import hla.rti.jlc.RTIambassadorEx;
 
 import hla.rti1516.AttributeHandle;
+import hla.rti1516.AttributeHandleValueMap;
 import hla.rti1516.AttributeRegionAssociation;
 import hla.rti1516.AttributeRelevanceAdvisorySwitchIsOff;
 import hla.rti1516.AttributeRelevanceAdvisorySwitchIsOn;
@@ -147,6 +154,7 @@ import hla.rti1516.InvalidTransportationName;
 import hla.rti1516.InvalidTransportationType;
 import hla.rti1516.LogicalTimeAlreadyPassed;
 import hla.rti1516.MessageCanNoLongerBeRetracted;
+import hla.rti1516.MessageRetractionHandle;
 import hla.rti1516.MessageRetractionReturn;
 import hla.rti1516.ObjectClassHandle;
 import hla.rti1516.ObjectClassRelevanceAdvisorySwitchIsOff;
@@ -156,6 +164,8 @@ import hla.rti1516.ObjectInstanceNameInUse;
 import hla.rti1516.ObjectInstanceNameNotReserved;
 import hla.rti1516.ObjectInstanceNotKnown;
 import hla.rti1516.OrderType;
+import hla.rti1516.ParameterHandle;
+import hla.rti1516.ParameterHandleValueMap;
 import hla.rti1516.RangeBounds;
 import hla.rti1516.RegionDoesNotContainSpecifiedDimension;
 import hla.rti1516.RegionHandle;
@@ -168,10 +178,6 @@ import hla.rti1516.TimeConstrainedIsNotEnabled;
 import hla.rti1516.TimeQueryReturn;
 import hla.rti1516.TimeRegulationIsNotEnabled;
 import hla.rti1516.TransportationType;
-import hla.rti1516.ParameterHandle;
-import hla.rti1516.AttributeHandleValueMap;
-import hla.rti1516.ParameterHandleValueMap;
-import hla.rti1516.MessageRetractionHandle;
 
 public class OHLARTIambassador
   implements RTIambassadorEx
@@ -215,6 +221,8 @@ public class OHLARTIambassador
 
   protected LogicalTimeIntervalFactory logicalTimeIntervalFactory;
   protected hla.rti1516.LogicalTimeIntervalFactory ieee1516LogicalTimeIntervalFactory;
+
+  protected FederateAmbassadorBridge federateAmbassadorBridge;
 
   public Federate getJoinedFederate()
   {
@@ -267,21 +275,27 @@ public class OHLARTIambassador
     throws FederateAlreadyExecutionMember, FederationExecutionDoesNotExist,
            SaveInProgress, RestoreInProgress, RTIinternalError
   {
+    logicalTimeFactory = getLogicalTimeFactory(federateType);
+    logicalTimeIntervalFactory = getLogicalTimeIntervalFactory(federateType);
+
+    ieee1516LogicalTimeFactory =
+      getIEEE1516LogicalTimeFactory(federateType);
+    ieee1516LogicalTimeIntervalFactory =
+      getIEEE1516LogicalTimeIntervalFactory(federateType);
+
+    federateAmbassadorBridge =
+      new FederateAmbassadorBridge(this, federateAmbassador);
+
     try
     {
-      logicalTimeFactory = getLogicalTimeFactory(federateType);
-      logicalTimeIntervalFactory = getLogicalTimeIntervalFactory(federateType);
-
-      ieee1516LogicalTimeFactory =
-        getIEEE1516LogicalTimeFactory(federateType);
-      ieee1516LogicalTimeIntervalFactory =
-        getIEEE1516LogicalTimeIntervalFactory(federateType);
-
       FederateHandle federateHandle = rtiAmbassador.joinFederationExecution(
-        federateType, federationName,
-        new FederateAmbassadorBridge(this, federateAmbassador),
+        federateType, federationName, federateAmbassadorBridge,
         new hla.rti1516.MobileFederateServices(
           ieee1516LogicalTimeFactory, ieee1516LogicalTimeIntervalFactory));
+
+      rtiAmbassador.getJoinedFederate().getRTISession().getFilterChain().addLast(
+        "ReserveObjectInstanceNameIoFilter",
+        new ReserveObjectInstanceNameIoFilter());
 
       setFEDFDD();
 
@@ -345,13 +359,19 @@ public class OHLARTIambassador
     ieee1516LogicalTimeIntervalFactory =
       getIEEE1516LogicalTimeIntervalFactory(federateType);
 
+    federateAmbassadorBridge =
+      new FederateAmbassadorBridge(this, federateAmbassador);
+
     try
     {
       FederateHandle federateHandle = rtiAmbassador.joinFederationExecution(
-        federateType, federationName,
-        new FederateAmbassadorBridge(this, federateAmbassador),
+        federateType, federationName, federateAmbassadorBridge,
         new hla.rti1516.MobileFederateServices(
           ieee1516LogicalTimeFactory, ieee1516LogicalTimeIntervalFactory));
+
+      rtiAmbassador.getJoinedFederate().getRTISession().getFilterChain().addLast(
+        "ReserveObjectInstanceNameIoFilter",
+        new ReserveObjectInstanceNameIoFilter());
 
       setFEDFDD();
 
@@ -1109,11 +1129,10 @@ public class OHLARTIambassador
   {
     try
     {
-      rtiAmbassador.getJoinedFederate().reserveObjectInstanceName(name);
-
-      // TODO: wait for notification
-      //
-      // throw new ObjectAlreadyRegistered(name);
+      if (!federateAmbassadorBridge.reserveObjectInstanceName(name).get())
+      {
+        throw new ObjectAlreadyRegistered(name);
+      }
 
       return convert(rtiAmbassador.registerObjectInstance(
         convertToObjectClassHandle(objectClassHandle), name));
@@ -1153,6 +1172,14 @@ public class OHLARTIambassador
     catch (hla.rti1516.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
+    }
+    catch (ExecutionException ee)
+    {
+      throw new RTIinternalError(ee);
+    }
+    catch (InterruptedException ie)
+    {
+      throw new RTIinternalError(ie);
     }
   }
 
@@ -5063,6 +5090,37 @@ public class OHLARTIambassador
     {
       throw new RTIinternalError(String.format(
         "unable to access: %s", logicalTimeIntervalFactoryClassName), iae);
+    }
+  }
+
+  protected class ReserveObjectInstanceNameIoFilter
+    extends IoFilterAdapter
+  {
+    @Override
+    public void messageReceived(NextFilter nextFilter, IoSession session,
+                                Object message)
+      throws Exception
+    {
+      if (message instanceof ObjectInstanceNameReservationSucceeded)
+      {
+        ObjectInstanceNameReservationSucceeded oinrs =
+          (ObjectInstanceNameReservationSucceeded) message;
+
+        oinrs.execute(
+          rtiAmbassador.getJoinedFederate().getFederateAmbassador());
+      }
+      else if (message instanceof ObjectInstanceNameReservationFailed)
+      {
+        ObjectInstanceNameReservationFailed oinrf =
+          (ObjectInstanceNameReservationFailed) message;
+
+        oinrf.execute(
+          rtiAmbassador.getJoinedFederate().getFederateAmbassador());
+      }
+      else
+      {
+        nextFilter.messageReceived(session, message);
+      }
     }
   }
 }

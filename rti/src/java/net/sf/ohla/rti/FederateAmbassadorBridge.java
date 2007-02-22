@@ -16,9 +16,17 @@
 
 package net.sf.ohla.rti;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 import net.sf.ohla.rti.impl.OHLARTIambassador;
-import net.sf.ohla.rti.impl.OHLAReflectedAttributes;
 import net.sf.ohla.rti.impl.OHLAReceivedInteraction;
+import net.sf.ohla.rti.impl.OHLAReflectedAttributes;
 
 import hla.rti.AttributeNotKnown;
 import hla.rti.CouldNotRestore;
@@ -42,6 +50,7 @@ import hla.rti1516.AttributeDivestitureWasNotRequested;
 import hla.rti1516.AttributeHandle;
 import hla.rti1516.AttributeHandleSet;
 import hla.rti1516.AttributeHandleValueMap;
+import hla.rti1516.AttributeNotDefined;
 import hla.rti1516.AttributeNotOwned;
 import hla.rti1516.AttributeNotPublished;
 import hla.rti1516.AttributeNotRecognized;
@@ -52,6 +61,7 @@ import hla.rti1516.FederateHandle;
 import hla.rti1516.FederateHandleRestoreStatusPair;
 import hla.rti1516.FederateHandleSaveStatusPair;
 import hla.rti1516.FederateInternalError;
+import hla.rti1516.IllegalName;
 import hla.rti1516.InteractionClassHandle;
 import hla.rti1516.InteractionClassNotPublished;
 import hla.rti1516.InteractionClassNotRecognized;
@@ -72,15 +82,14 @@ import hla.rti1516.OrderType;
 import hla.rti1516.ParameterHandleValueMap;
 import hla.rti1516.RegionHandleSet;
 import hla.rti1516.RestoreFailureReason;
+import hla.rti1516.RestoreInProgress;
 import hla.rti1516.SaveFailureReason;
+import hla.rti1516.SaveInProgress;
 import hla.rti1516.SpecifiedSaveLabelDoesNotExist;
 import hla.rti1516.SynchronizationPointFailureReason;
 import hla.rti1516.TransportationType;
 import hla.rti1516.UnableToPerformSave;
 import hla.rti1516.UnknownName;
-import hla.rti1516.RestoreInProgress;
-import hla.rti1516.SaveInProgress;
-import hla.rti1516.AttributeNotDefined;
 
 public class FederateAmbassadorBridge
   extends hla.rti1516.jlc.NullFederateAmbassador
@@ -88,11 +97,25 @@ public class FederateAmbassadorBridge
   protected OHLARTIambassador rtiAmbassador;
   protected FederateAmbassador federateAmbassador;
 
+  protected ConcurrentMap<String, ReserveObjectInstanceNameResult> results =
+    new ConcurrentHashMap<String, ReserveObjectInstanceNameResult>();
+
   public FederateAmbassadorBridge(OHLARTIambassador rtiAmbassador,
                                   FederateAmbassador federateAmbassador)
   {
     this.rtiAmbassador = rtiAmbassador;
     this.federateAmbassador = federateAmbassador;
+  }
+
+  public synchronized Future<Boolean> reserveObjectInstanceName(String name)
+    throws RestoreInProgress, SaveInProgress, hla.rti1516.RTIinternalError,
+           IllegalName
+  {
+    rtiAmbassador.getJoinedFederate().reserveObjectInstanceName(name);
+    ReserveObjectInstanceNameResult roinr =
+      new ReserveObjectInstanceNameResult();
+    results.put(name, roinr);
+    return roinr;
   }
 
   @Override
@@ -409,15 +432,17 @@ public class FederateAmbassadorBridge
   }
 
   @Override
-  public void objectInstanceNameReservationSucceeded(String name)
+  public synchronized void objectInstanceNameReservationSucceeded(String name)
     throws UnknownName, FederateInternalError
   {
+    results.remove(name).objectInstanceNameReservationSucceeded();
   }
 
   @Override
-  public void objectInstanceNameReservationFailed(String name)
+  public synchronized void objectInstanceNameReservationFailed(String name)
     throws UnknownName, FederateInternalError
   {
+    results.remove(name).objectInstanceNameReservationFailed();
   }
 
   @Override
@@ -1567,6 +1592,56 @@ public class FederateAmbassadorBridge
     catch (hla.rti.FederateInternalError fie)
     {
       throw new FederateInternalError(fie);
+    }
+  }
+
+  protected static class ReserveObjectInstanceNameResult
+    implements Future<Boolean>
+  {
+    public final CountDownLatch latch = new CountDownLatch(1);
+
+    public boolean succeeded;
+
+    public void objectInstanceNameReservationSucceeded()
+    {
+      succeeded = true;
+      latch.countDown();
+    }
+
+    public void objectInstanceNameReservationFailed()
+    {
+      latch.countDown();
+    }
+
+    public boolean cancel(boolean mayInterruptIfRunning)
+    {
+      return false;
+    }
+
+    public boolean isCancelled()
+    {
+      return false;
+    }
+
+    public boolean isDone()
+    {
+      return latch.getCount() == 0;
+    }
+
+    public Boolean get()
+      throws InterruptedException, ExecutionException
+    {
+      latch.await();
+
+      return succeeded;
+    }
+
+    public Boolean get(long timeout, TimeUnit unit)
+      throws InterruptedException, ExecutionException, TimeoutException
+    {
+      latch.await(timeout, unit);
+
+      return succeeded;
     }
   }
 }
