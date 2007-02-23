@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import net.sf.ohla.rti.hla.rti1516.OHLAObjectClassHandle;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516ObjectClassHandle;
 
 import org.dom4j.Element;
 
@@ -64,7 +64,7 @@ public class ObjectClass
                      AtomicInteger objectCount)
   {
     objectClassHandle =
-      new OHLAObjectClassHandle(objectCount.incrementAndGet());
+      new IEEE1516ObjectClassHandle(objectCount.incrementAndGet());
 
     this.name = name;
     this.superObjectClass = superObjectClass;

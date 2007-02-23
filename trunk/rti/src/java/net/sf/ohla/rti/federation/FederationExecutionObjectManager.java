@@ -37,9 +37,9 @@ import net.sf.ohla.rti.fdd.Attribute;
 import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
-import net.sf.ohla.rti.hla.rti1516.OHLAAttributeHandleSet;
-import net.sf.ohla.rti.hla.rti1516.OHLAObjectInstanceHandle;
-import net.sf.ohla.rti.hla.rti1516.OHLARegionHandleSet;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandleSet;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516ObjectInstanceHandle;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516RegionHandleSet;
 import net.sf.ohla.rti.messages.callbacks.AttributeIsNotOwned;
 import net.sf.ohla.rti.messages.callbacks.AttributeIsOwnedByRTI;
 import net.sf.ohla.rti.messages.callbacks.AttributeOwnershipAcquisitionNotification;
@@ -424,7 +424,7 @@ public class FederationExecutionObjectManager
 
   protected ObjectInstanceHandle nextObjectInstanceHandle()
   {
-    return new OHLAObjectInstanceHandle(objectInstanceCount.incrementAndGet());
+    return new IEEE1516ObjectInstanceHandle(objectInstanceCount.incrementAndGet());
   }
 
   public static class ObjectInstance
@@ -499,7 +499,7 @@ public class FederationExecutionObjectManager
             AttributeHandleSet acquiredAttributes = newOwners.get(newOwner);
             if (acquiredAttributes == null)
             {
-              acquiredAttributes = new OHLAAttributeHandleSet();
+              acquiredAttributes = new IEEE1516AttributeHandleSet();
               newOwners.put(newOwner, acquiredAttributes);
             }
             acquiredAttributes.add(attributeHandle);
@@ -528,7 +528,7 @@ public class FederationExecutionObjectManager
       try
       {
         AttributeHandleSet divestableAttributeHandles =
-          new OHLAAttributeHandleSet();
+          new IEEE1516AttributeHandleSet();
         for (AttributeHandle attributeHandle : attributeHandles)
         {
           if (attributes.get(
@@ -567,7 +567,7 @@ public class FederationExecutionObjectManager
             AttributeHandleSet acquiredAttributes = newOwners.get(newOwner);
             if (acquiredAttributes == null)
             {
-              acquiredAttributes = new OHLAAttributeHandleSet();
+              acquiredAttributes = new IEEE1516AttributeHandleSet();
               newOwners.put(newOwner, acquiredAttributes);
             }
             acquiredAttributes.add(attributeHandle);
@@ -597,7 +597,7 @@ public class FederationExecutionObjectManager
       try
       {
         AttributeHandleSet acquiredAttributeHandles =
-          new OHLAAttributeHandleSet();
+          new IEEE1516AttributeHandleSet();
         Map<FederateProxy, AttributeHandleSet> federatesThatNeedToConfirmDivestiture =
           new HashMap<FederateProxy, AttributeHandleSet>();
         Map<FederateProxy, AttributeHandleSet> federatesThatNeedToRelease =
@@ -624,7 +624,7 @@ public class FederationExecutionObjectManager
               federatesThatNeedToConfirmDivestiture.get(owner);
             if (divestingAttributeHandles == null)
             {
-              divestingAttributeHandles = new OHLAAttributeHandleSet();
+              divestingAttributeHandles = new IEEE1516AttributeHandleSet();
               federatesThatNeedToConfirmDivestiture.put(
                 owner, divestingAttributeHandles);
             }
@@ -638,7 +638,7 @@ public class FederationExecutionObjectManager
               federatesThatNeedToRelease.get(owner);
             if (releasingAttributeHandles == null)
             {
-              releasingAttributeHandles = new OHLAAttributeHandleSet();
+              releasingAttributeHandles = new IEEE1516AttributeHandleSet();
               federatesThatNeedToRelease.put(owner, releasingAttributeHandles);
             }
             releasingAttributeHandles.add(attributeHandle);
@@ -679,7 +679,7 @@ public class FederationExecutionObjectManager
       try
       {
         AttributeHandleSet acquiredAttributeHandles =
-          new OHLAAttributeHandleSet();
+          new IEEE1516AttributeHandleSet();
         for (AttributeHandle attributeHandle : attributeHandles)
         {
           if (attributes.get(
@@ -697,7 +697,7 @@ public class FederationExecutionObjectManager
         }
 
         AttributeHandleSet unacquiredAttributeHandles =
-          new OHLAAttributeHandleSet(attributeHandles);
+          new IEEE1516AttributeHandleSet(attributeHandles);
         unacquiredAttributeHandles.removeAll(acquiredAttributeHandles);
 
         if (!unacquiredAttributeHandles.isEmpty())
@@ -763,7 +763,7 @@ public class FederationExecutionObjectManager
       try
       {
         AttributeHandleSet canceledAcquisitionAttributeHandles =
-          new OHLAAttributeHandleSet();
+          new IEEE1516AttributeHandleSet();
         for (AttributeHandle attributeHandle : attributeHandles)
         {
           if (attributes.get(
@@ -827,7 +827,7 @@ public class FederationExecutionObjectManager
       protected TransportationType transportationType;
       protected OrderType orderType;
 
-      protected RegionHandleSet associatedRegions = new OHLARegionHandleSet();
+      protected RegionHandleSet associatedRegions = new IEEE1516RegionHandleSet();
 
       protected FederateProxy owner;
 

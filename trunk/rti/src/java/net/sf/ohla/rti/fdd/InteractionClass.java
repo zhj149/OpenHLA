@@ -26,7 +26,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import net.sf.ohla.rti.hla.rti1516.OHLAInteractionClassHandle;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516InteractionClassHandle;
 
 import org.dom4j.Element;
 
@@ -96,7 +96,7 @@ public class InteractionClass
     }
 
     interactionClassHandle =
-      new OHLAInteractionClassHandle(interactionClassCount.incrementAndGet());
+      new IEEE1516InteractionClassHandle(interactionClassCount.incrementAndGet());
   }
 
   public InteractionClass(Element interactionClass,

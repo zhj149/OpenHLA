@@ -18,7 +18,7 @@ package net.sf.ohla.rti.fdd;
 
 import java.io.Serializable;
 
-import net.sf.ohla.rti.hla.rti1516.OHLADimensionHandle;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516DimensionHandle;
 
 import org.dom4j.Element;
 
@@ -41,7 +41,7 @@ public class Dimension
   {
     this.name = name;
 
-    dimensionHandle = new OHLADimensionHandle(name);
+    dimensionHandle = new IEEE1516DimensionHandle(name);
   }
 
   public Dimension(Element dimension)

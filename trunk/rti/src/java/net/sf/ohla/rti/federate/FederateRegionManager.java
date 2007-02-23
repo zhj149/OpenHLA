@@ -9,7 +9,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import net.sf.ohla.rti.hla.rti1516.OHLARegionHandleSet;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516RegionHandleSet;
 import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.messages.CommitRegionModifications;
 import net.sf.ohla.rti.messages.CreateRegion;
@@ -101,7 +101,7 @@ public class FederateRegionManager
   public RegionHandleSet getIntersectingRegions(
     Map<RegionHandle, Map<DimensionHandle, RangeBounds>> rangeBounds)
   {
-    RegionHandleSet intersectingRegions = new OHLARegionHandleSet();
+    RegionHandleSet intersectingRegions = new IEEE1516RegionHandleSet();
 
     regionsLock.readLock().lock();
     try

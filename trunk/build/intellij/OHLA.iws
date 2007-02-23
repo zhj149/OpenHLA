@@ -18,9 +18,169 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/impl/OHLARTIambassador.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/impl/OHLARTIambassador.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/FederateAmbassadorBridge.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/FederateAmbassadorBridge.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516RTIambassador.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLAAttributeHandleValueMapFactory.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLADimensionHandleSetFactory.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\jlc\OHLAHLAinteger32BE.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516HLAunicodeChar.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FederateHandle.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti\OHLAFederateHandleSet.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516HLAhandle.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ParameterHandleValueMap.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516HLAboolean.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13RTIambassador.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti\OHLAEventRetractionHandle.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516HLAfloat64BE.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13SuppliedAttributesFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516HLAoctetPairLE.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\jlc\OHLAHLAoctetPairBE.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLADimensionHandleSet.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13AttributeHandleSet.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti\OHLASuppliedParameters.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeHandleFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeHandleValueMap.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeHandleValueMapFactory.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\jlc\OHLAHLAoctetPairLE.java" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/InteractionClass.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/InteractionClass.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516RtiFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13AttributeHandleSetFactory.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti\OHLASuppliedParametersFactory.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\jlc\OHLAHLAinteger64LE.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13ReceivedInteraction.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\jlc\OHLAHLAfixedRecord.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ParameterHandleFactory.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516/FederationManagementTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516/FederationManagementTestNG.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLAAttributeHandleSetFactory.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516DimensionHandleSetFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeHandle.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13FederateHandleSetFactory.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\jlc\OHLAHLAinteger16LE.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\jlc\OHLAHLAfloat64LE.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13Region.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516MessageRetractionHandle.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516RegionHandle.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516HLAlogicalTime.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederateProxyIoFilter.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederateProxyIoFilter.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516HLAopaqueData.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\jlc\OHLAHLAhandle.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\jlc\OHLARtiFactory.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516HLAfixedRecord.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeSetRegionSetPairList.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLADimensionHandleFactory.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti\jlc\OHLARtiFactory.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516HLAunicodeString.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLAInteractionClassHandle.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLAObjectInstanceHandleFactory.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLAMessageRetractionHandle.java" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/javacc/FEDParser.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/javacc/FEDParser.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13SuppliedAttributes.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../build.xml" afterPath="$PROJECT_DIR$/../build.xml" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\jlc\OHLAHLAASCIIstring.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13ReflectedAttributes.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLAAttributeHandleSet.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti\OHLAReceivedInteraction.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLAObjectInstanceHandle.java" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateObjectManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateObjectManager.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\jlc\OHLAHLAunicodeChar.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLAFederateHandle.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516HLAfloat32BE.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLAInteractionClassHandleFactory.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\jlc\OHLAHLAinteger32LE.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13SuppliedParameters.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti\OHLASuppliedAttributes.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516RegionHandleSet.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516DataElement.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLARegionHandleSet.java" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/RoutingSpace.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/RoutingSpace.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\jlc\OHLAHLAinteger16BE.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/jlc/HLA13RtiFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ObjectClassHandle.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\jlc\OHLADataElement.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ObjectClassHandleFactory.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/hla/rti1516/jlc/omt/OMTEncoderFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/hla/rti1516/jlc/omt/OMTEncoderFactory.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLAFederateHandleFactory.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\jlc\OHLAHLAbyte.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13FederateHandleSet.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti\OHLARTIambassador.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ObjectInstanceHandle.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLAAttributeHandleValueMap.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516HLAfloat64LE.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\jlc\OHLAHLAfloat32LE.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLAParameterHandleValueMapFactory.java" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/javacc/FEDParserTokenManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/javacc/FEDParserTokenManager.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateRegionManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateRegionManager.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13SuppliedParametersFactory.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti\OHLAFederateHandleSetFactory.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLAAttributeSetRegionSetPairListFactory.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\jlc\OHLAHLAASCIIchar.java" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/OHLA.iws" afterPath="$PROJECT_DIR$/OHLA.iws" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516HLAinteger64BE.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516HLAinteger32LE.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLAParameterHandleValueMap.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516InteractionClassHandle.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516DimensionHandleSet.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateMessageRetractionManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateMessageRetractionManager.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516HLAASCIIstring.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FederateHandleFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516DimensionHandleFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeSetRegionSetPairListFactory.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLAAttributeHandleFactory.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLAFederateHandleSet.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLAAttributeSetRegionSetPairList.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\jlc\OHLAHLAopaqueData.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLAParameterHandleFactory.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLAObjectClassHandleFactory.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLADimensionHandle.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\jlc\OHLAHLAinteger64BE.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ParameterHandleValueMapFactory.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\jlc\OHLAHLAvariableArray.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516HLAbyte.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionObjectManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionObjectManager.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FederateHandleSet.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti\OHLAReflectedAttributes.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\jlc\OHLAHLAboolean.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti\OHLAAttributeHandleSet.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ObjectInstanceHandleFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FederateHandleSetFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516HLAvariableArray.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLARegionHandle.java" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/ObjectClass.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/ObjectClass.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\jlc\OHLAHLAfloat64BE.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLARegionHandleSetFactory.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti\OHLAAttributeHandleSetFactory.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516HLAinteger16BE.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLAObjectClassHandle.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516HLAoctet.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeHandleSetFactory.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLARTIambassador.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516DimensionHandle.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLAFederateHandleSetFactory.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ParameterHandle.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLAParameterHandle.java" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/Federate.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/Federate.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516/BaseTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516/BaseTestNG.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516HLAoctetPairBE.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\jlc\OHLAHLAoctet.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\jlc\OHLAHLAunicodeString.java" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecution.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecution.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516HLAinteger32BE.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516/TimeManagementTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516/TimeManagementTestNG.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\jlc\OHLAHLAfloat32BE.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\OHLAAttributeHandle.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13EventRetractionHandle.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516RegionHandleSetFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516HLAinteger64LE.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516HLAASCIIchar.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti\OHLASuppliedAttributesFactory.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeHandleSet.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516InteractionClassHandleFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516HLAfloat32LE.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516HLAinteger16LE.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/Attribute.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/Attribute.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/Parameter.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/Parameter.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/Dimension.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/Dimension.java" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti1516\jlc\OHLAHLAlogicalTime.java" afterPath="" />
+      <change type="DELETED" beforePath="D:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\hla\rti\OHLARegion.java" afterPath="" />
     </list>
     <list name="Failed commit: Default" comment="- removed log4j" />
     <list name="Failed commit: Default (2)" comment="- refactoring" />
@@ -287,9 +447,9 @@
       <showMembers />
       <showModules />
       <showLibraryContents />
-      <hideEmptyPackages ProjectPane="true" />
+      <hideEmptyPackages ProjectPane="false" />
       <abbreviatePackageNames />
-      <showStructure PackagesPane="false" ProjectPane="false" Scope="false" Favorites="false" />
+      <showStructure Favorites="false" PackagesPane="false" Scope="false" ProjectPane="false" />
       <autoscrollToSource />
       <autoscrollFromSource />
       <sortByType />
@@ -308,8 +468,8 @@
     <property name="cvs_file_history_flatOrder1" value="1" />
     <property name="cvs_file_history_flatWidth1" value="299" />
     <property name="cvs_file_history_treeWidth1" value="299" />
-    <property name="cvs_file_history_treeWidth3" value="298" />
     <property name="cvs_file_history_treeOrder2" value="2" />
+    <property name="cvs_file_history_treeWidth3" value="298" />
     <property name="GoToClass.includeLibraries" value="false" />
     <property name="cvs_file_history_flatOrder2" value="2" />
     <property name="MemberChooser.showClasses" value="true" />
@@ -318,23 +478,43 @@
     <property name="cvs_file_history_treeWidth2" value="299" />
     <property name="cvs_file_history_flatOrder3" value="3" />
     <property name="GoToClass.toSaveIncludeLibraries" value="false" />
-    <property name="cvs_file_history_treeOrder0" value="0" />
     <property name="RunManagerConfig.showSettingsBeforeRunnig" value="true" />
+    <property name="cvs_file_history_treeOrder0" value="0" />
   </component>
   <component name="ReadonlyStatusHandler">
     <option name="SHOW_DIALOG" value="true" />
   </component>
   <component name="RecentsManager">
     <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
-      <recent name="net.sf.ohla.rti1516.federate" />
-      <recent name="net.sf.ohla.rti1516.federation" />
-      <recent name="net.sf.ohla.rti.impl" />
-      <recent name="net.sf.ohla.rti.jlc.impl" />
-      <recent name="net.sf.ohla.rti1516.jlc.impl" />
+      <recent name="net.sf.ohla.rti" />
+      <recent name="net.sf.ohla.rti.hla.rti1516.jlc" />
+      <recent name="net.sf.ohla.rti.hla.rti1516" />
+      <recent name="net.sf.ohla.rti.hla.rti.jlc" />
+      <recent name="net.sf.ohla.rti.hla.rti" />
     </key>
   </component>
   <component name="RestoreUpdateTree" />
   <component name="RunManager" selected="Application.RTI">
+    <configuration default="true" type="Application" factoryName="Application" enabled="false" merge="false">
+      <option name="MAIN_CLASS_NAME" />
+      <option name="VM_PARAMETERS" />
+      <option name="PROGRAM_PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <module name="" />
+      <method>
+        <option name="Make" value="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="Remote" factoryName="Remote">
+      <option name="USE_SOCKET_TRANSPORT" value="true" />
+      <option name="SERVER_MODE" value="false" />
+      <option name="SHMEM_ADDRESS" value="javadebug" />
+      <option name="HOST" value="localhost" />
+      <option name="PORT" value="5005" />
+    </configuration>
     <configuration default="true" type="Applet" factoryName="Applet">
       <module name="" />
       <option name="MAIN_CLASS_NAME" />
@@ -346,13 +526,6 @@
       <option name="VM_PARAMETERS" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
       <option name="ALTERNATIVE_JRE_PATH" />
-    </configuration>
-    <configuration default="true" type="Remote" factoryName="Remote">
-      <option name="USE_SOCKET_TRANSPORT" value="true" />
-      <option name="SERVER_MODE" value="false" />
-      <option name="SHMEM_ADDRESS" value="javadebug" />
-      <option name="HOST" value="localhost" />
-      <option name="PORT" value="5005" />
     </configuration>
     <configuration default="true" type="JUnit" factoryName="JUnit" enabled="false" merge="false">
       <module name="" />
@@ -373,21 +546,8 @@
         <option name="Make" value="true" />
       </method>
     </configuration>
-    <configuration default="true" type="Application" factoryName="Application" enabled="false" merge="false">
-      <option name="MAIN_CLASS_NAME" />
-      <option name="VM_PARAMETERS" />
-      <option name="PROGRAM_PARAMETERS" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" />
-      <option name="ENABLE_SWING_INSPECTOR" value="false" />
-      <module name="" />
-      <method>
-        <option name="Make" value="true" />
-      </method>
-    </configuration>
     <configuration default="false" name="RTI" type="Application" factoryName="Application" enabled="false" merge="false">
-      <option name="MAIN_CLASS_NAME" value="net.sf.ohla.rti1516.RTI" />
+      <option name="MAIN_CLASS_NAME" value="net.sf.ohla.rti.RTI" />
       <option name="VM_PARAMETERS" value="-ea -server" />
       <option name="PROGRAM_PARAMETERS" value="" />
       <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
@@ -493,10 +653,6 @@
           <option name="myItemId" value="" />
           <option name="myItemType" value="" />
         </PATH_ELEMENT>
-        <PATH_ELEMENT USER_OBJECT="D:\projects\ohla-0.4">
-          <option name="myItemId" value="" />
-          <option name="myItemType" value="" />
-        </PATH_ELEMENT>
       </PATH>
     </subPane>
   </component>
@@ -566,17 +722,17 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-4" y="-4" width="1036" height="780" extended-state="0" />
+    <frame x="-4" y="-4" width="1288" height="998" extended-state="6" />
     <editor active="false" />
     <layout>
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" order="3" />
       <window_info id="CVS" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" order="8" />
       <window_info id="IDEtalk" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" order="3" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32736155" order="7" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.35575944" order="0" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.45092025" order="1" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.37145174" order="0" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.45068806" order="1" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" order="1" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32055214" order="8" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.31954023" order="8" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" order="6" />
       <window_info id="Module Dependencies" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" order="3" />
       <window_info id="Dependency Viewer" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32988507" order="8" />
@@ -627,7 +783,7 @@
     <option name="PERFORM_COMMIT_IN_BACKGROUND" value="false" />
     <option name="PUT_FOCUS_INTO_COMMENT" value="false" />
     <option name="FORCE_NON_EMPTY_COMMENT" value="false" />
-    <option name="LAST_COMMIT_MESSAGE" value="- fixed package locations for default OHLARtiFactory" />
+    <option name="LAST_COMMIT_MESSAGE" value="- refactored the HLA 1.3 FederateAmbassador bridge into the HLA 1.3 RTIambassador" />
     <option name="SAVE_LAST_COMMIT_MESSAGE" value="true" />
     <option name="CHECKIN_DIALOG_SPLITTER_PROPORTION" value="0.8" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="false" />
@@ -640,8 +796,6 @@
     <option name="UPDATE_GROUP_BY_PACKAGES" value="false" />
     <option name="SHOW_FILE_HISTORY_AS_TREE" value="false" />
     <option name="FILE_HISTORY_SPLITTER_PROPORTION" value="0.6" />
-    <MESSAGE value="- [ 1664382 ] NullPointerException in TAR&#10;- when federates join, galt was being initialized at the federate but not at the federate proxy&#10;- will add a test case for this in the future" />
-    <MESSAGE value="- [ 1664378 ] NullPointerException in updateAttributeValues&#10;- there was nothing indicating that a time advance request was not in progress when performing the checks for invalid logical time&#10;- added a NONE enumeration to indicate that there is not time advance request in progress&#10;- will add a test case for this in the future" />
     <MESSAGE value="- removed duplicate SubscriptionManager left over from a refactor" />
     <MESSAGE value="- refactoring" />
     <MESSAGE value="- added @Override annotation" />
@@ -650,6 +804,8 @@
     <MESSAGE value="- added a RESIGNED state for the federate" />
     <MESSAGE value="- optimized imports" />
     <MESSAGE value="- fixed package locations for default OHLARtiFactory" />
+    <MESSAGE value="- refactoring into one rti package" />
+    <MESSAGE value="- refactored the HLA 1.3 FederateAmbassador bridge into the HLA 1.3 RTIambassador" />
   </component>
   <component name="VssConfiguration">
     <option name="CLIENT_PATH" value="" />
@@ -732,51 +888,7 @@
     <option name="myLastEditedConfigurable" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/impl/OHLAFederateHandle.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="24" column="18" selection-start="811" selection-end="811" vertical-scroll-proportion="0.14819427">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/impl/OHLARTIambassador.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="864" column="37" selection-start="24980" selection-end="24980" vertical-scroll-proportion="0.43333334">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/RTI.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="438" column="38" selection-start="11507" selection-end="11507" vertical-scroll-proportion="0.15614036">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../resources/testsuite/ieee-1516-testng.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="-0.08947369">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../resources/testsuite/hla-1.3-testng.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="-0.80526316">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/impl/OHLARTIambassador.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="371" column="0" selection-start="13940" selection-end="13940" vertical-scroll-proportion="0.5072464">
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/messages/callbacks/ObjectInstanceNameReservationSucceeded.java">
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ObjectInstanceNameReservationSucceeded.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="35" column="36" selection-start="1110" selection-end="1110" vertical-scroll-proportion="0.43386245">
           <folding />
@@ -790,7 +902,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/Federate.java">
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/Federate.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="3627" column="42" selection-start="103280" selection-end="103280" vertical-scroll-proportion="0.42572463">
           <folding>
@@ -799,7 +911,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti1516/federate/FederateObjectManager.java">
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateObjectManager.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="879" column="14" selection-start="26821" selection-end="26821" vertical-scroll-proportion="0.24094203">
           <folding />
@@ -834,9 +946,53 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/FederateAmbassadorBridge.java">
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13RTIambassador.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="1628" column="5" selection-start="47703" selection-end="47703" vertical-scroll-proportion="1.1141304">
+        <state line="32" column="18" selection-start="1151" selection-end="1151" vertical-scroll-proportion="0.37965262">
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/javacc/FEDParser.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="271" column="15" selection-start="7731" selection-end="7740" vertical-scroll-proportion="0.33252427">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/javacc/FEDParser.jj">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="322" column="12" selection-start="6620" selection-end="6629" vertical-scroll-proportion="0.33253872">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/FEDFDD.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="49" column="3" selection-start="1456" selection-end="1456" vertical-scroll-proportion="0.4007444">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516DataElement.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/RoutingSpace.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="29" column="13" selection-start="948" selection-end="948" vertical-scroll-proportion="0.06203474">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/jlc/IEEE1516RtiFactory.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="19" column="0" selection-start="706" selection-end="706" vertical-scroll-proportion="0.10353228">
           <folding>
             <element signature="imports" expanded="true" />
           </folding>

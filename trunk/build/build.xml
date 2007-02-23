@@ -351,13 +351,13 @@
       <sysproperty key="ohla.rti.port" value="5000"/>
 
       <sysproperty key="ohla.federate.rti.logicalTimeFactory"
-                   value="net.sf.ohla.rti.impl.Integer64TimeFactory"/>
+                   value="net.sf.ohla.rti.hla.rti.Integer64TimeFactory"/>
       <sysproperty key="ohla.federate.rti.logicalTimeIntervalFactory"
-                   value="net.sf.ohla.rti.impl.Integer64TimeIntervalFactory"/>
+                   value="net.sf.ohla.rti.hla.rti.Integer64TimeIntervalFactory"/>
       <sysproperty key="ohla.federate.rti1516.logicalTimeFactory"
-                   value="net.sf.ohla.rti1516.impl.Integer64TimeFactory"/>
+                   value="net.sf.ohla.rti.hla.rti1516.Integer64TimeFactory"/>
       <sysproperty key="ohla.federate.rti1516.logicalTimeIntervalFactory"
-                   value="net.sf.ohla.rti1516.impl.Integer64TimeIntervalFactory"/>
+                   value="net.sf.ohla.rti.hla.rti1516.Integer64TimeIntervalFactory"/>
     </testng>
   </target>
 
@@ -391,7 +391,7 @@
 
   <target name="start-rti" depends="jar-ohla"
           description="Starts the OHLA RTI.">
-    <java classname="net.sf.ohla.rti1516.RTI" fork="yes">
+    <java classname="net.sf.ohla.rti.RTI" fork="yes">
       <classpath>
         <path refid="javac.classpath"/>
         <pathelement location="${output.lib}/${ieee-1516.jar}"/>

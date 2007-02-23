@@ -20,7 +20,7 @@ import java.io.Serializable;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import net.sf.ohla.rti.hla.rti1516.OHLAParameterHandle;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516ParameterHandle;
 
 import org.dom4j.Element;
 
@@ -39,7 +39,7 @@ public class Parameter
   {
     this.name = name;
 
-    parameterHandle = new OHLAParameterHandle(parameterCount.incrementAndGet());
+    parameterHandle = new IEEE1516ParameterHandle(parameterCount.incrementAndGet());
   }
 
   public Parameter(Element parameter, AtomicInteger parameterCount)

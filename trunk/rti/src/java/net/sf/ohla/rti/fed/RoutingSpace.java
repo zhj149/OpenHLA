@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import net.sf.ohla.rti.hla.rti1516.OHLADimensionHandleSet;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516DimensionHandleSet;
 import net.sf.ohla.rti.fdd.Dimension;
 
 import hla.rti.DimensionNotDefined;
@@ -75,7 +75,7 @@ public class RoutingSpace
   {
     if (dimensionHandles == null)
     {
-      dimensionHandles = new OHLADimensionHandleSet();
+      dimensionHandles = new IEEE1516DimensionHandleSet();
       for (Dimension dimension : dimensions)
       {
         dimensionHandles.add(dimension.getDimensionHandle());

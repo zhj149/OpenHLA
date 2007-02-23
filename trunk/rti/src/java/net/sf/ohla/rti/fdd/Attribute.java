@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import net.sf.ohla.rti.hla.rti1516.OHLAAttributeHandle;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandle;
 
 import org.dom4j.Element;
 
@@ -56,7 +56,7 @@ public class Attribute
   {
     this.name = name;
 
-    attributeHandle = new OHLAAttributeHandle(attributeCount.incrementAndGet());
+    attributeHandle = new IEEE1516AttributeHandle(attributeCount.incrementAndGet());
   }
 
   public Attribute(Element attribute, AtomicInteger attributeCount)
