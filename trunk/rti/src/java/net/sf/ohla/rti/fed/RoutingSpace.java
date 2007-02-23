@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import net.sf.ohla.rti.hla.rti1516.OHLADimensionHandleSet;
-import net.sf.ohla.rti1516.fdd.Dimension;
+import net.sf.ohla.rti.fdd.Dimension;
 
 import hla.rti.DimensionNotDefined;
 import hla.rti.NameNotFound;

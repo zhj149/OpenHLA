@@ -28,11 +28,11 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import net.sf.ohla.rti1516.fdd.FDD;
-import net.sf.ohla.rti1516.federate.Federate;
-import net.sf.ohla.rti1516.filter.RequestResponseFilter;
-import net.sf.ohla.rti1516.messages.CreateFederationExecution;
-import net.sf.ohla.rti1516.messages.DestroyFederationExecution;
+import net.sf.ohla.rti.fdd.FDD;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.filter.RequestResponseFilter;
+import net.sf.ohla.rti.messages.CreateFederationExecution;
+import net.sf.ohla.rti.messages.DestroyFederationExecution;
 
 import org.apache.mina.common.ConnectFuture;
 import org.apache.mina.common.IoHandlerAdapter;

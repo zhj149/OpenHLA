@@ -18,7 +18,7 @@ package net.sf.ohla.rti.hla.rti1516;
 
 import java.util.UUID;
 
-import net.sf.ohla.rti1516.handles.UUIDHandle;
+import net.sf.ohla.rti.handles.UUIDHandle;
 
 import hla.rti1516.CouldNotDecode;
 import hla.rti1516.MessageRetractionHandle;
