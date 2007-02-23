@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import net.sf.ohla.rti1516.impl.OHLAObjectClassHandle;
+import net.sf.ohla.rti.hla.rti1516.OHLAObjectClassHandle;
 
 import org.dom4j.Element;
 

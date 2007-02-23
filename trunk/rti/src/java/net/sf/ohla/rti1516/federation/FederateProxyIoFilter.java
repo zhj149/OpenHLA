@@ -18,8 +18,8 @@ package net.sf.ohla.rti1516.federation;
 
 import java.util.Map;
 
-import net.sf.ohla.rti1516.impl.OHLAAttributeHandleValueMap;
-import net.sf.ohla.rti1516.impl.OHLAParameterHandleValueMap;
+import net.sf.ohla.rti.hla.rti1516.OHLAAttributeHandleValueMap;
+import net.sf.ohla.rti.hla.rti1516.OHLAParameterHandleValueMap;
 import net.sf.ohla.rti1516.SubscriptionManager;
 import net.sf.ohla.rti1516.fdd.InteractionClass;
 import net.sf.ohla.rti1516.messages.AttributeOwnershipAcquisition;

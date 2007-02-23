@@ -18,7 +18,7 @@ package net.sf.ohla.rti1516.fdd;
 
 import java.io.Serializable;
 
-import net.sf.ohla.rti1516.impl.OHLADimensionHandle;
+import net.sf.ohla.rti.hla.rti1516.OHLADimensionHandle;
 
 import org.dom4j.Element;
 

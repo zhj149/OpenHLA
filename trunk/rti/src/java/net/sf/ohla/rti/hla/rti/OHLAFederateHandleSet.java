@@ -19,7 +19,7 @@ package net.sf.ohla.rti.hla.rti;
 import java.util.Collection;
 import java.util.Iterator;
 
-import net.sf.ohla.rti1516.impl.OHLAFederateHandle;
+import net.sf.ohla.rti.hla.rti1516.OHLAFederateHandle;
 
 import hla.rti.FederateHandleSet;
 import hla.rti.HandleIterator;
@@ -27,7 +27,7 @@ import hla.rti.HandleIterator;
 import hla.rti1516.FederateHandle;
 
 public class OHLAFederateHandleSet
-  extends net.sf.ohla.rti1516.impl.OHLAFederateHandleSet
+  extends net.sf.ohla.rti.hla.rti1516.OHLAFederateHandleSet
   implements FederateHandleSet
 {
   public OHLAFederateHandleSet()
