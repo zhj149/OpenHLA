@@ -14,59 +14,59 @@
  * limitations under the License.
  */
 
-package net.sf.ohla.rti.impl;
+package net.sf.ohla.rti.hla.rti;
 
-import java.util.Collection;
 import java.util.Iterator;
+import java.util.Set;
 
-import net.sf.ohla.rti1516.impl.OHLAFederateHandle;
+import net.sf.ohla.rti1516.impl.OHLAAttributeHandle;
 
-import hla.rti.FederateHandleSet;
+import hla.rti.AttributeHandleSet;
 import hla.rti.HandleIterator;
 
-import hla.rti1516.FederateHandle;
+import hla.rti1516.AttributeHandle;
 
-public class OHLAFederateHandleSet
-  extends net.sf.ohla.rti1516.impl.OHLAFederateHandleSet
-  implements FederateHandleSet
+public class OHLAAttributeHandleSet
+  extends net.sf.ohla.rti1516.impl.OHLAAttributeHandleSet
+  implements AttributeHandleSet
 {
-  public OHLAFederateHandleSet()
+  public OHLAAttributeHandleSet()
   {
   }
 
-  public OHLAFederateHandleSet(int initialCapacity)
+  public OHLAAttributeHandleSet(int initialCapacity)
   {
     super(initialCapacity);
   }
 
-  public OHLAFederateHandleSet(Collection<? extends FederateHandle> c)
+  public OHLAAttributeHandleSet(Set<AttributeHandle> attributeHandles)
   {
-    super(c);
+    super(attributeHandles);
   }
 
-  public OHLAFederateHandleSet(hla.rti1516.FederateHandleSet federateHandles)
+  public OHLAAttributeHandleSet(hla.rti1516.AttributeHandleSet attributeHandles)
   {
-    super(federateHandles);
+    super(attributeHandles);
   }
 
   public void add(int handle)
   {
-    add(new OHLAFederateHandle(handle));
+    add(new OHLAAttributeHandle(handle));
   }
 
   public void remove(int handle)
   {
-    remove(new OHLAFederateHandle(handle));
+    remove(new OHLAAttributeHandle(handle));
   }
 
   public boolean isMember(int handle)
   {
-    return contains(new OHLAFederateHandle(handle));
+    return contains(new OHLAAttributeHandle(handle));
   }
 
   public HandleIterator handles()
   {
-    return new FederateHandleIterator();
+    return new AttributeHandleIterator();
   }
 
   public void empty()
@@ -74,10 +74,10 @@ public class OHLAFederateHandleSet
     clear();
   }
 
-  public class FederateHandleIterator
+  public class AttributeHandleIterator
     implements HandleIterator
   {
-    protected Iterator<FederateHandle> i = iterator();
+    protected Iterator i = iterator();
 
     public int first()
     {
@@ -92,7 +92,7 @@ public class OHLAFederateHandleSet
 
     public int next()
     {
-      return i.next().hashCode();
+      return ((OHLAAttributeHandle) i.next()).getHandle();
     }
   }
 }

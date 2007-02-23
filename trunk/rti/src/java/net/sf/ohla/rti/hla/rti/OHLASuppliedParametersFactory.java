@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package net.sf.ohla.rti.impl;
+package net.sf.ohla.rti.hla.rti;
 
-import net.sf.ohla.rti.impl.OHLASuppliedParameters;
+import net.sf.ohla.rti.hla.rti.OHLASuppliedParameters;
 
 import hla.rti.SuppliedParameters;
 import hla.rti.SuppliedParametersFactory;

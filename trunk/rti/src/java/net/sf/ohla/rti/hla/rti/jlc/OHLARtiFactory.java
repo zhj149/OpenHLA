@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package net.sf.ohla.rti.jlc.impl;
+package net.sf.ohla.rti.hla.rti.jlc;
 
-import net.sf.ohla.rti.impl.OHLARTIambassador;
-import net.sf.ohla.rti.impl.OHLAAttributeHandleSet;
-import net.sf.ohla.rti.impl.OHLAFederateHandleSet;
-import net.sf.ohla.rti.impl.OHLASuppliedAttributes;
-import net.sf.ohla.rti.impl.OHLASuppliedParameters;
+import net.sf.ohla.rti.hla.rti.OHLARTIambassador;
+import net.sf.ohla.rti.hla.rti.OHLAAttributeHandleSet;
+import net.sf.ohla.rti.hla.rti.OHLAFederateHandleSet;
+import net.sf.ohla.rti.hla.rti.OHLASuppliedAttributes;
+import net.sf.ohla.rti.hla.rti.OHLASuppliedParameters;
 
 import hla.rti.jlc.RtiFactory;
 import hla.rti.jlc.RTIambassadorEx;

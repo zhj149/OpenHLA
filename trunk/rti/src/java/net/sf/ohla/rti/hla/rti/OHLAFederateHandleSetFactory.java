@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package net.sf.ohla.rti.impl;
+package net.sf.ohla.rti.hla.rti;
 
-import net.sf.ohla.rti.impl.OHLAAttributeHandleSet;
+import net.sf.ohla.rti.hla.rti.OHLAFederateHandleSet;
 
-import hla.rti.AttributeHandleSet;
-import hla.rti.AttributeHandleSetFactory;
+import hla.rti.FederateHandleSet;
+import hla.rti.FederateHandleSetFactory;
 
-public class OHLAAttributeHandleSetFactory
-  implements AttributeHandleSetFactory
+public class OHLAFederateHandleSetFactory
+  implements FederateHandleSetFactory
 {
-  public AttributeHandleSet create()
+  public FederateHandleSet create()
   {
-    return new OHLAAttributeHandleSet();
+    return new OHLAFederateHandleSet();
   }
 }

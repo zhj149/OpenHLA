@@ -24,9 +24,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import net.sf.ohla.rti.impl.OHLARTIambassador;
-import net.sf.ohla.rti.impl.OHLAReceivedInteraction;
-import net.sf.ohla.rti.impl.OHLAReflectedAttributes;
+import net.sf.ohla.rti.hla.rti.OHLARTIambassador;
+import net.sf.ohla.rti.hla.rti.OHLAReceivedInteraction;
+import net.sf.ohla.rti.hla.rti.OHLAReflectedAttributes;
 
 import hla.rti.AttributeNotKnown;
 import hla.rti.CouldNotRestore;
