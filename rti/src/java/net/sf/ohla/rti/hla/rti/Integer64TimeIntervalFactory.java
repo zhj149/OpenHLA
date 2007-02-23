@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.sf.ohla.rti.impl;
+package net.sf.ohla.rti.hla.rti;
 
 import hla.rti.CouldNotDecode;
 import hla.rti.LogicalTimeInterval;
