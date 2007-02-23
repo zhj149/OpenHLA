@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import net.sf.ohla.rti1516.impl.OHLAAttributeHandle;
+import net.sf.ohla.rti.hla.rti1516.OHLAAttributeHandle;
 
 import org.dom4j.Element;
 
