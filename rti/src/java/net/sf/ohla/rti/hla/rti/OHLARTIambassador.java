@@ -21,25 +21,30 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import net.sf.ohla.rti.FederateAmbassadorBridge;
-import net.sf.ohla.rti.hla.rti1516.OHLAParameterHandle;
+import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.fed.FEDFDD;
 import net.sf.ohla.rti.fed.RoutingSpace;
 import net.sf.ohla.rti.fed.javacc.FEDParser;
-import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.federate.Federate;
 import net.sf.ohla.rti.hla.rti1516.OHLAAttributeHandle;
 import net.sf.ohla.rti.hla.rti1516.OHLAAttributeSetRegionSetPairList;
 import net.sf.ohla.rti.hla.rti1516.OHLAFederateHandle;
 import net.sf.ohla.rti.hla.rti1516.OHLAInteractionClassHandle;
 import net.sf.ohla.rti.hla.rti1516.OHLAObjectClassHandle;
-import net.sf.ohla.rti.hla.rti1516.OHLARegionHandleSet;
 import net.sf.ohla.rti.hla.rti1516.OHLAObjectInstanceHandle;
+import net.sf.ohla.rti.hla.rti1516.OHLAParameterHandle;
+import net.sf.ohla.rti.hla.rti1516.OHLARegionHandleSet;
 import net.sf.ohla.rti.messages.callbacks.ObjectInstanceNameReservationFailed;
 import net.sf.ohla.rti.messages.callbacks.ObjectInstanceNameReservationSucceeded;
 
@@ -58,15 +63,20 @@ import hla.rti.AttributeAlreadyBeingDivested;
 import hla.rti.AttributeAlreadyOwned;
 import hla.rti.AttributeDivestitureWasNotRequested;
 import hla.rti.AttributeNotDefined;
+import hla.rti.AttributeNotKnown;
 import hla.rti.AttributeNotOwned;
 import hla.rti.AttributeNotPublished;
 import hla.rti.CouldNotDecode;
 import hla.rti.CouldNotOpenFED;
+import hla.rti.CouldNotRestore;
 import hla.rti.DeletePrivilegeNotHeld;
 import hla.rti.DimensionNotDefined;
 import hla.rti.EnableTimeConstrainedPending;
+import hla.rti.EnableTimeConstrainedWasNotPending;
 import hla.rti.EnableTimeRegulationPending;
+import hla.rti.EnableTimeRegulationWasNotPending;
 import hla.rti.ErrorReadingFED;
+import hla.rti.EventNotKnown;
 import hla.rti.EventRetractionHandle;
 import hla.rti.FederateAlreadyExecutionMember;
 import hla.rti.FederateAmbassador;
@@ -80,9 +90,11 @@ import hla.rti.FederationExecutionAlreadyExists;
 import hla.rti.FederationExecutionDoesNotExist;
 import hla.rti.FederationTimeAlreadyPassed;
 import hla.rti.InteractionClassNotDefined;
+import hla.rti.InteractionClassNotKnown;
 import hla.rti.InteractionClassNotPublished;
 import hla.rti.InteractionClassNotSubscribed;
 import hla.rti.InteractionParameterNotDefined;
+import hla.rti.InteractionParameterNotKnown;
 import hla.rti.InvalidExtents;
 import hla.rti.InvalidFederationTime;
 import hla.rti.InvalidLookahead;
@@ -99,6 +111,7 @@ import hla.rti.MobileFederateServices;
 import hla.rti.NameNotFound;
 import hla.rti.ObjectAlreadyRegistered;
 import hla.rti.ObjectClassNotDefined;
+import hla.rti.ObjectClassNotKnown;
 import hla.rti.ObjectClassNotPublished;
 import hla.rti.ObjectClassNotSubscribed;
 import hla.rti.ObjectNotKnown;
@@ -116,27 +129,39 @@ import hla.rti.SuppliedAttributes;
 import hla.rti.SuppliedParameters;
 import hla.rti.SynchronizationLabelNotAnnounced;
 import hla.rti.TimeAdvanceAlreadyInProgress;
+import hla.rti.TimeAdvanceWasNotInProgress;
 import hla.rti.TimeConstrainedAlreadyEnabled;
 import hla.rti.TimeConstrainedWasNotEnabled;
 import hla.rti.TimeRegulationAlreadyEnabled;
 import hla.rti.TimeRegulationWasNotEnabled;
 import hla.rti.jlc.RTIambassadorEx;
 
+import hla.rti1516.AttributeAcquisitionWasNotCanceled;
 import hla.rti1516.AttributeHandle;
+import hla.rti1516.AttributeHandleSet;
 import hla.rti1516.AttributeHandleValueMap;
+import hla.rti1516.AttributeNotRecognized;
+import hla.rti1516.AttributeNotSubscribed;
 import hla.rti1516.AttributeRegionAssociation;
 import hla.rti1516.AttributeRelevanceAdvisorySwitchIsOff;
 import hla.rti1516.AttributeRelevanceAdvisorySwitchIsOn;
 import hla.rti1516.AttributeScopeAdvisorySwitchIsOff;
 import hla.rti1516.AttributeScopeAdvisorySwitchIsOn;
 import hla.rti1516.AttributeSetRegionSetPairList;
+import hla.rti1516.CouldNotDiscover;
+import hla.rti1516.CouldNotInitiateRestore;
 import hla.rti1516.FederateHandle;
+import hla.rti1516.FederateHandleRestoreStatusPair;
+import hla.rti1516.FederateHandleSaveStatusPair;
 import hla.rti1516.FederateHasNotBegunSave;
+import hla.rti1516.FederateInternalError;
 import hla.rti1516.FederateServiceInvocationsAreBeingReportedViaMOM;
 import hla.rti1516.FederateUnableToUseTime;
 import hla.rti1516.IllegalName;
 import hla.rti1516.InTimeAdvancingState;
 import hla.rti1516.InteractionClassHandle;
+import hla.rti1516.InteractionClassNotRecognized;
+import hla.rti1516.InteractionParameterNotRecognized;
 import hla.rti1516.InteractionRelevanceAdvisorySwitchIsOff;
 import hla.rti1516.InteractionRelevanceAdvisorySwitchIsOn;
 import hla.rti1516.InvalidAttributeHandle;
@@ -152,11 +177,15 @@ import hla.rti1516.InvalidRangeBound;
 import hla.rti1516.InvalidRegion;
 import hla.rti1516.InvalidTransportationName;
 import hla.rti1516.InvalidTransportationType;
+import hla.rti1516.JoinedFederateIsNotInTimeAdvancingState;
 import hla.rti1516.LogicalTimeAlreadyPassed;
 import hla.rti1516.MessageCanNoLongerBeRetracted;
 import hla.rti1516.MessageRetractionHandle;
 import hla.rti1516.MessageRetractionReturn;
+import hla.rti1516.NoRequestToEnableTimeConstrainedWasPending;
+import hla.rti1516.NoRequestToEnableTimeRegulationWasPending;
 import hla.rti1516.ObjectClassHandle;
+import hla.rti1516.ObjectClassNotRecognized;
 import hla.rti1516.ObjectClassRelevanceAdvisorySwitchIsOff;
 import hla.rti1516.ObjectClassRelevanceAdvisorySwitchIsOn;
 import hla.rti1516.ObjectInstanceHandle;
@@ -169,15 +198,22 @@ import hla.rti1516.ParameterHandleValueMap;
 import hla.rti1516.RangeBounds;
 import hla.rti1516.RegionDoesNotContainSpecifiedDimension;
 import hla.rti1516.RegionHandle;
+import hla.rti1516.RegionHandleSet;
 import hla.rti1516.RegionInUseForUpdateOrSubscription;
 import hla.rti1516.RegionNotCreatedByThisFederate;
 import hla.rti1516.RequestForTimeConstrainedPending;
 import hla.rti1516.RequestForTimeRegulationPending;
 import hla.rti1516.ResignAction;
+import hla.rti1516.RestoreFailureReason;
+import hla.rti1516.SaveFailureReason;
+import hla.rti1516.SpecifiedSaveLabelDoesNotExist;
+import hla.rti1516.SynchronizationPointFailureReason;
 import hla.rti1516.TimeConstrainedIsNotEnabled;
 import hla.rti1516.TimeQueryReturn;
 import hla.rti1516.TimeRegulationIsNotEnabled;
 import hla.rti1516.TransportationType;
+import hla.rti1516.UnableToPerformSave;
+import hla.rti1516.UnknownName;
 
 public class OHLARTIambassador
   implements RTIambassadorEx
@@ -222,7 +258,9 @@ public class OHLARTIambassador
   protected LogicalTimeIntervalFactory logicalTimeIntervalFactory;
   protected hla.rti1516.LogicalTimeIntervalFactory ieee1516LogicalTimeIntervalFactory;
 
-  protected FederateAmbassadorBridge federateAmbassadorBridge;
+  protected FederateAmbassador federateAmbassador;
+  protected FederateAmbassadorBridge federateAmbassadorBridge =
+    new FederateAmbassadorBridge();
 
   public Federate getJoinedFederate()
   {
@@ -283,8 +321,7 @@ public class OHLARTIambassador
     ieee1516LogicalTimeIntervalFactory =
       getIEEE1516LogicalTimeIntervalFactory(federateType);
 
-    federateAmbassadorBridge =
-      new FederateAmbassadorBridge(this, federateAmbassador);
+    this.federateAmbassador = federateAmbassador;
 
     try
     {
@@ -359,8 +396,7 @@ public class OHLARTIambassador
     ieee1516LogicalTimeIntervalFactory =
       getIEEE1516LogicalTimeIntervalFactory(federateType);
 
-    federateAmbassadorBridge =
-      new FederateAmbassadorBridge(this, federateAmbassador);
+    this.federateAmbassador = federateAmbassador;
 
     try
     {
@@ -5120,6 +5156,1529 @@ public class OHLARTIambassador
       else
       {
         nextFilter.messageReceived(session, message);
+      }
+    }
+  }
+
+  protected static class ReserveObjectInstanceNameResult
+    implements Future<Boolean>
+  {
+    public final CountDownLatch latch = new CountDownLatch(1);
+
+    public boolean succeeded;
+
+    public void objectInstanceNameReservationSucceeded()
+    {
+      succeeded = true;
+      latch.countDown();
+    }
+
+    public void objectInstanceNameReservationFailed()
+    {
+      latch.countDown();
+    }
+
+    public boolean cancel(boolean mayInterruptIfRunning)
+    {
+      return false;
+    }
+
+    public boolean isCancelled()
+    {
+      return false;
+    }
+
+    public boolean isDone()
+    {
+      return latch.getCount() == 0;
+    }
+
+    public Boolean get()
+      throws InterruptedException, ExecutionException
+    {
+      latch.await();
+
+      return succeeded;
+    }
+
+    public Boolean get(long timeout, TimeUnit unit)
+      throws InterruptedException, ExecutionException, TimeoutException
+    {
+      latch.await(timeout, unit);
+
+      return succeeded;
+    }
+  }
+
+  public class FederateAmbassadorBridge
+    extends hla.rti1516.jlc.NullFederateAmbassador
+  {
+    protected ConcurrentMap<String, ReserveObjectInstanceNameResult> results =
+      new ConcurrentHashMap<String, ReserveObjectInstanceNameResult>();
+
+    public synchronized Future<Boolean> reserveObjectInstanceName(String name)
+      throws IllegalName, hla.rti1516.RestoreInProgress,
+             hla.rti1516.SaveInProgress, hla.rti1516.RTIinternalError
+    {
+      rtiAmbassador.getJoinedFederate().reserveObjectInstanceName(name);
+      ReserveObjectInstanceNameResult roinr =
+        new ReserveObjectInstanceNameResult();
+      results.put(name, roinr);
+      return roinr;
+    }
+
+    @Override
+    public void synchronizationPointRegistrationSucceeded(
+      String synchronizationPointLabel)
+      throws FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.synchronizationPointRegistrationSucceeded(
+          synchronizationPointLabel);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void synchronizationPointRegistrationFailed(
+      String synchronizationPointLabel, SynchronizationPointFailureReason reason)
+      throws FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.synchronizationPointRegistrationFailed(
+          synchronizationPointLabel);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void announceSynchronizationPoint(String synchronizationPointLabel,
+                                             byte[] tag)
+      throws FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.announceSynchronizationPoint(
+          synchronizationPointLabel, tag);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void federationSynchronized(String synchronizationPointLabel)
+      throws FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.federationSynchronized(synchronizationPointLabel);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void initiateFederateSave(String label)
+      throws UnableToPerformSave, FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.initiateFederateSave(label);
+      }
+      catch (hla.rti.UnableToPerformSave utps)
+      {
+        throw new UnableToPerformSave(utps);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void initiateFederateSave(String label, hla.rti1516.LogicalTime time)
+      throws InvalidLogicalTime, UnableToPerformSave, FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.initiateFederateSave(label);
+      }
+      catch (hla.rti.UnableToPerformSave utps)
+      {
+        throw new UnableToPerformSave(utps);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void federationSaved()
+      throws FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.federationSaved();
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void federationNotSaved(SaveFailureReason reason)
+      throws FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.federationNotSaved();
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void federationSaveStatusResponse(
+      FederateHandleSaveStatusPair[] response)
+      throws FederateInternalError
+    {
+    }
+
+    @Override
+    public void requestFederationRestoreSucceeded(String label)
+      throws FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.requestFederationRestoreSucceeded(label);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void requestFederationRestoreFailed(String label)
+      throws FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.requestFederationRestoreFailed(label, "unknown");
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void federationRestoreBegun()
+      throws FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.federationRestoreBegun();
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void initiateFederateRestore(String label,
+                                        FederateHandle federateHandle)
+      throws SpecifiedSaveLabelDoesNotExist, CouldNotInitiateRestore,
+             FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.initiateFederateRestore(
+          label, convert(federateHandle));
+      }
+      catch (hla.rti.SpecifiedSaveLabelDoesNotExist ssldne)
+      {
+        throw new SpecifiedSaveLabelDoesNotExist(ssldne);
+      }
+      catch (CouldNotRestore cnr)
+      {
+        throw new CouldNotInitiateRestore(cnr);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void federationRestored()
+      throws FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.federationRestored();
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void federationNotRestored(RestoreFailureReason reason)
+      throws FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.federationNotRestored();
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void federationRestoreStatusResponse(
+      FederateHandleRestoreStatusPair[] response)
+      throws FederateInternalError
+    {
+    }
+
+    @Override
+    public void startRegistrationForObjectClass(
+      ObjectClassHandle objectClassHandle)
+      throws hla.rti1516.ObjectClassNotPublished, FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.startRegistrationForObjectClass(
+          convert(objectClassHandle));
+      }
+      catch (hla.rti.ObjectClassNotPublished ocnp)
+      {
+        throw new hla.rti1516.ObjectClassNotPublished(ocnp);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void stopRegistrationForObjectClass(
+      ObjectClassHandle objectClassHandle)
+      throws hla.rti1516.ObjectClassNotPublished, FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.stopRegistrationForObjectClass(
+          convert(objectClassHandle));
+      }
+      catch (hla.rti.ObjectClassNotPublished ocnp)
+      {
+        throw new hla.rti1516.ObjectClassNotPublished(ocnp);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void turnInteractionsOn(InteractionClassHandle interactionClassHandle)
+      throws hla.rti1516.InteractionClassNotPublished, FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.turnInteractionsOn(
+          convert(interactionClassHandle));
+      }
+      catch (hla.rti.InteractionClassNotPublished icnp)
+      {
+        throw new hla.rti1516.InteractionClassNotPublished(icnp);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void turnInteractionsOff(InteractionClassHandle interactionClassHandle)
+      throws hla.rti1516.InteractionClassNotPublished, FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.turnInteractionsOff(
+          convert(interactionClassHandle));
+      }
+      catch (hla.rti.InteractionClassNotPublished icnp)
+      {
+        throw new hla.rti1516.InteractionClassNotPublished(icnp);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public synchronized void objectInstanceNameReservationSucceeded(String name)
+      throws UnknownName, FederateInternalError
+    {
+      results.remove(name).objectInstanceNameReservationSucceeded();
+    }
+
+    @Override
+    public synchronized void objectInstanceNameReservationFailed(String name)
+      throws UnknownName, FederateInternalError
+    {
+      results.remove(name).objectInstanceNameReservationFailed();
+    }
+
+    @Override
+    public void discoverObjectInstance(ObjectInstanceHandle objectInstanceHandle,
+                                       ObjectClassHandle objectClassHandle,
+                                       String name)
+      throws CouldNotDiscover, ObjectClassNotRecognized, FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.discoverObjectInstance(
+          convert(objectInstanceHandle), convert(objectClassHandle), name);
+      }
+      catch (hla.rti.CouldNotDiscover cnd)
+      {
+        throw new CouldNotDiscover(cnd);
+      }
+      catch (ObjectClassNotKnown ocnk)
+      {
+        throw new ObjectClassNotRecognized(ocnk);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle,
+                                       AttributeHandleValueMap attributeValues,
+                                       byte[] tag, OrderType sentOrdering,
+                                       TransportationType transportationType)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             AttributeNotSubscribed, FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.reflectAttributeValues(
+          convert(objectInstanceHandle),
+          new OHLAReflectedAttributes(attributeValues, sentOrdering.ordinal(),
+                                      transportationType.ordinal()), tag);
+      }
+      catch (ObjectNotKnown onk)
+      {
+        throw new ObjectInstanceNotKnown(onk);
+      }
+      catch (AttributeNotKnown ank)
+      {
+        throw new AttributeNotRecognized(ank);
+      }
+      catch (FederateOwnsAttributes foa)
+      {
+        throw new AttributeNotSubscribed(foa);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle,
+                                       AttributeHandleValueMap attributeValues,
+                                       byte[] tag, OrderType sentOrdering,
+                                       TransportationType transportationType,
+                                       RegionHandleSet regionHandles)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             AttributeNotSubscribed, FederateInternalError
+    {
+      // TODO: still need to incorporate DDM
+
+      try
+      {
+        federateAmbassador.reflectAttributeValues(
+          convert(objectInstanceHandle),
+          new OHLAReflectedAttributes(attributeValues, sentOrdering.ordinal(),
+                                      transportationType.ordinal()), tag);
+      }
+      catch (ObjectNotKnown onk)
+      {
+        throw new ObjectInstanceNotKnown(onk);
+      }
+      catch (AttributeNotKnown ank)
+      {
+        throw new AttributeNotRecognized(ank);
+      }
+      catch (FederateOwnsAttributes foa)
+      {
+        throw new AttributeNotSubscribed(foa);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle,
+                                       AttributeHandleValueMap attributeValues,
+                                       byte[] tag, OrderType sentOrdering,
+                                       TransportationType transportationType,
+                                       hla.rti1516.LogicalTime updateTime,
+                                       OrderType receivedOrdering)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             AttributeNotSubscribed, FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.reflectAttributeValues(
+          convert(objectInstanceHandle),
+          new OHLAReflectedAttributes(attributeValues, receivedOrdering.ordinal(),
+                                      transportationType.ordinal()), tag);
+      }
+      catch (ObjectNotKnown onk)
+      {
+        throw new ObjectInstanceNotKnown(onk);
+      }
+      catch (AttributeNotKnown ank)
+      {
+        throw new AttributeNotRecognized(ank);
+      }
+      catch (FederateOwnsAttributes foa)
+      {
+        throw new AttributeNotSubscribed(foa);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle,
+                                       AttributeHandleValueMap attributeValues,
+                                       byte[] tag, OrderType sentOrdering,
+                                       TransportationType transportationType,
+                                       hla.rti1516.LogicalTime updateTime,
+                                       OrderType receivedOrdering,
+                                       RegionHandleSet regionHandles)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             AttributeNotSubscribed, FederateInternalError
+    {
+      // TODO: still need to incorporate DDM
+
+      try
+      {
+        federateAmbassador.reflectAttributeValues(
+          convert(objectInstanceHandle),
+          new OHLAReflectedAttributes(attributeValues, receivedOrdering.ordinal(),
+                                      transportationType.ordinal()), tag);
+      }
+      catch (ObjectNotKnown onk)
+      {
+        throw new ObjectInstanceNotKnown(onk);
+      }
+      catch (AttributeNotKnown ank)
+      {
+        throw new AttributeNotRecognized(ank);
+      }
+      catch (FederateOwnsAttributes foa)
+      {
+        throw new AttributeNotSubscribed(foa);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void reflectAttributeValues(
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandleValueMap attributeValues, byte[] tag,
+      OrderType sentOrdering, TransportationType transportationType,
+      hla.rti1516.LogicalTime updateTime, OrderType receivedOrdering,
+      MessageRetractionHandle messageRetractionHandle)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             AttributeNotSubscribed, InvalidLogicalTime, FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.reflectAttributeValues(
+          convert(objectInstanceHandle),
+          new OHLAReflectedAttributes(attributeValues, receivedOrdering.ordinal(),
+                                      transportationType.ordinal()),
+          tag, convert(updateTime), convert(messageRetractionHandle));
+      }
+      catch (ObjectNotKnown onk)
+      {
+        throw new ObjectInstanceNotKnown(onk);
+      }
+      catch (AttributeNotKnown ank)
+      {
+        throw new AttributeNotRecognized(ank);
+      }
+      catch (FederateOwnsAttributes foa)
+      {
+        throw new AttributeNotSubscribed(foa);
+      }
+      catch (InvalidFederationTime ift)
+      {
+        throw new InvalidLogicalTime(ift);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+      catch (RTIinternalError rtiie)
+      {
+        throw new FederateInternalError(rtiie);
+      }
+    }
+
+    @Override
+    public void reflectAttributeValues(
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandleValueMap attributeValues, byte[] tag,
+      OrderType sentOrdering, TransportationType transportationType,
+      hla.rti1516.LogicalTime updateTime, OrderType receivedOrdering,
+      MessageRetractionHandle messageRetractionHandle,
+      RegionHandleSet regionHandles)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             AttributeNotSubscribed, InvalidLogicalTime, FederateInternalError
+    {
+      // TODO: still need to incorporate DDM
+
+      try
+      {
+        federateAmbassador.reflectAttributeValues(
+          convert(objectInstanceHandle),
+          new OHLAReflectedAttributes(attributeValues, receivedOrdering.ordinal(),
+                                      transportationType.ordinal()),
+          tag, convert(updateTime), convert(messageRetractionHandle));
+      }
+      catch (ObjectNotKnown onk)
+      {
+        throw new ObjectInstanceNotKnown(onk);
+      }
+      catch (AttributeNotKnown ank)
+      {
+        throw new AttributeNotRecognized(ank);
+      }
+      catch (FederateOwnsAttributes foa)
+      {
+        throw new AttributeNotSubscribed(foa);
+      }
+      catch (InvalidFederationTime ift)
+      {
+        throw new InvalidLogicalTime(ift);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+      catch (RTIinternalError rtiie)
+      {
+        throw new FederateInternalError(rtiie);
+      }
+    }
+
+    @Override
+    public void receiveInteraction(InteractionClassHandle interactionClassHandle,
+                                   ParameterHandleValueMap parameterValues,
+                                   byte[] tag, OrderType sentOrdering,
+                                   TransportationType transportationType)
+      throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
+             hla.rti1516.InteractionClassNotSubscribed, FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.receiveInteraction(
+          convert(interactionClassHandle),
+          new OHLAReceivedInteraction(parameterValues, sentOrdering.ordinal(),
+                                      transportationType.ordinal()),
+          tag);
+      }
+      catch (InteractionClassNotKnown icnk)
+      {
+        throw new InteractionClassNotRecognized(icnk);
+      }
+      catch (InteractionParameterNotKnown ipnk)
+      {
+        throw new InteractionParameterNotRecognized(ipnk);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void receiveInteraction(InteractionClassHandle interactionClassHandle,
+                                   ParameterHandleValueMap parameterValues,
+                                   byte[] tag, OrderType sentOrdering,
+                                   TransportationType transportationType,
+                                   RegionHandleSet regionHandles)
+      throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
+             hla.rti1516.InteractionClassNotSubscribed, FederateInternalError
+    {
+      // TODO: still need to incorporate DDM
+
+      try
+      {
+        federateAmbassador.receiveInteraction(
+          convert(interactionClassHandle),
+          new OHLAReceivedInteraction(parameterValues, sentOrdering.ordinal(),
+                                      transportationType.ordinal()),
+          tag);
+      }
+      catch (InteractionClassNotKnown icnk)
+      {
+        throw new InteractionClassNotRecognized(icnk);
+      }
+      catch (InteractionParameterNotKnown ipnk)
+      {
+        throw new InteractionParameterNotRecognized(ipnk);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void receiveInteraction(InteractionClassHandle interactionClassHandle,
+                                   ParameterHandleValueMap parameterValues,
+                                   byte[] tag, OrderType sentOrdering,
+                                   TransportationType transportationType,
+                                   hla.rti1516.LogicalTime sentTime,
+                                   OrderType receivedOrdering)
+      throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
+             hla.rti1516.InteractionClassNotSubscribed, FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.receiveInteraction(
+          convert(interactionClassHandle),
+          new OHLAReceivedInteraction(parameterValues, receivedOrdering.ordinal(),
+                                      transportationType.ordinal()),
+          tag);
+      }
+      catch (InteractionClassNotKnown icnk)
+      {
+        throw new InteractionClassNotRecognized(icnk);
+      }
+      catch (InteractionParameterNotKnown ipnk)
+      {
+        throw new InteractionParameterNotRecognized(ipnk);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void receiveInteraction(InteractionClassHandle interactionClassHandle,
+                                   ParameterHandleValueMap parameterValues,
+                                   byte[] tag, OrderType sentOrdering,
+                                   TransportationType transportationType,
+                                   hla.rti1516.LogicalTime sentTime,
+                                   OrderType receivedOrdering,
+                                   RegionHandleSet regionHandles)
+      throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
+             hla.rti1516.InteractionClassNotSubscribed, FederateInternalError
+    {
+      // TODO: still need to incorporate DDM
+
+      try
+      {
+        federateAmbassador.receiveInteraction(
+          convert(interactionClassHandle),
+          new OHLAReceivedInteraction(parameterValues, receivedOrdering.ordinal(),
+                                      transportationType.ordinal()),
+          tag);
+      }
+      catch (InteractionClassNotKnown icnk)
+      {
+        throw new InteractionClassNotRecognized(icnk);
+      }
+      catch (InteractionParameterNotKnown ipnk)
+      {
+        throw new InteractionParameterNotRecognized(ipnk);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void receiveInteraction(InteractionClassHandle interactionClassHandle,
+                                   ParameterHandleValueMap parameterValues,
+                                   byte[] tag, OrderType sentOrdering,
+                                   TransportationType transportationType,
+                                   hla.rti1516.LogicalTime sentTime,
+                                   OrderType receivedOrdering,
+                                   MessageRetractionHandle messageRetractionHandle)
+      throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
+             hla.rti1516.InteractionClassNotSubscribed, InvalidLogicalTime,
+             FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.receiveInteraction(
+          convert(interactionClassHandle),
+          new OHLAReceivedInteraction(parameterValues, receivedOrdering.ordinal(),
+                                      transportationType.ordinal()),
+          tag, convert(sentTime), convert(messageRetractionHandle));
+      }
+      catch (InteractionClassNotKnown icnk)
+      {
+        throw new InteractionClassNotRecognized(icnk);
+      }
+      catch (InteractionParameterNotKnown ipnk)
+      {
+        throw new InteractionParameterNotRecognized(ipnk);
+      }
+      catch (InvalidFederationTime ift)
+      {
+        throw new InvalidLogicalTime(ift);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+      catch (RTIinternalError rtiie)
+      {
+        throw new FederateInternalError(rtiie);
+      }
+    }
+
+    @Override
+    public void receiveInteraction(InteractionClassHandle interactionClassHandle,
+                                   ParameterHandleValueMap parameterValues,
+                                   byte[] tag, OrderType sentOrdering,
+                                   TransportationType transportationType,
+                                   hla.rti1516.LogicalTime sentTime,
+                                   OrderType receivedOrdering,
+                                   MessageRetractionHandle messageRetractionHandle,
+                                   RegionHandleSet regionHandles)
+      throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
+             hla.rti1516.InteractionClassNotSubscribed, InvalidLogicalTime,
+             FederateInternalError
+    {
+      // TODO: still need to incorporate DDM
+
+      try
+      {
+        federateAmbassador.receiveInteraction(
+          convert(interactionClassHandle),
+          new OHLAReceivedInteraction(parameterValues, receivedOrdering.ordinal(),
+                                      transportationType.ordinal()),
+          tag, convert(sentTime), convert(messageRetractionHandle));
+      }
+      catch (InteractionClassNotKnown icnk)
+      {
+        throw new InteractionClassNotRecognized(icnk);
+      }
+      catch (InteractionParameterNotKnown ipnk)
+      {
+        throw new InteractionParameterNotRecognized(ipnk);
+      }
+      catch (InvalidFederationTime ift)
+      {
+        throw new InvalidLogicalTime(ift);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+      catch (RTIinternalError rtiie)
+      {
+        throw new FederateInternalError(rtiie);
+      }
+    }
+
+    @Override
+    public void removeObjectInstance(ObjectInstanceHandle objectInstanceHandle,
+                                     byte[] tag, OrderType sentOrdering)
+      throws ObjectInstanceNotKnown, FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.removeObjectInstance(
+          convert(objectInstanceHandle), tag);
+      }
+      catch (ObjectNotKnown onk)
+      {
+        throw new ObjectInstanceNotKnown(onk);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void removeObjectInstance(ObjectInstanceHandle objectInstanceHandle,
+                                     byte[] tag, OrderType sentOrdering,
+                                     hla.rti1516.LogicalTime deleteTime,
+                                     OrderType receivedOrdering)
+      throws ObjectInstanceNotKnown, FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.removeObjectInstance(
+          convert(objectInstanceHandle), tag);
+      }
+      catch (ObjectNotKnown onk)
+      {
+        throw new ObjectInstanceNotKnown(onk);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void removeObjectInstance(
+      ObjectInstanceHandle objectInstanceHandle, byte[] tag,
+      OrderType sentOrdering, hla.rti1516.LogicalTime deleteTime, OrderType receivedOrdering,
+      MessageRetractionHandle messageRetractionHandle)
+      throws ObjectInstanceNotKnown, InvalidLogicalTime, FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.removeObjectInstance(
+          convert(objectInstanceHandle), tag, convert(deleteTime),
+          convert(messageRetractionHandle));
+      }
+      catch (ObjectNotKnown onk)
+      {
+        throw new ObjectInstanceNotKnown(onk);
+      }
+      catch (InvalidFederationTime ift)
+      {
+        throw new InvalidLogicalTime(ift);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+      catch (RTIinternalError rtiie)
+      {
+        throw new FederateInternalError(rtiie);
+      }
+    }
+
+    @Override
+    public void attributesInScope(ObjectInstanceHandle objectInstanceHandle,
+                                  AttributeHandleSet attributeHandles)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             AttributeNotSubscribed, FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.attributesInScope(
+          convert(objectInstanceHandle), convert(attributeHandles));
+      }
+      catch (ObjectNotKnown onk)
+      {
+        throw new ObjectInstanceNotKnown(onk);
+      }
+      catch (AttributeNotKnown ank)
+      {
+        throw new AttributeNotRecognized(ank);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+      catch (RTIinternalError rtiie)
+      {
+        throw new FederateInternalError(rtiie);
+      }
+    }
+
+    @Override
+    public void attributesOutOfScope(ObjectInstanceHandle objectInstanceHandle,
+                                     AttributeHandleSet attributeHandles)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             AttributeNotSubscribed, FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.attributesOutOfScope(
+          convert(objectInstanceHandle), convert(attributeHandles));
+      }
+      catch (ObjectNotKnown onk)
+      {
+        throw new ObjectInstanceNotKnown(onk);
+      }
+      catch (AttributeNotKnown ank)
+      {
+        throw new AttributeNotRecognized(ank);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+      catch (RTIinternalError rtiie)
+      {
+        throw new FederateInternalError(rtiie);
+      }
+    }
+
+    @Override
+    public void provideAttributeValueUpdate(
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandleSet attributeHandles, byte[] tag)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized, hla.rti1516.AttributeNotOwned,
+             FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.provideAttributeValueUpdate(
+          convert(objectInstanceHandle), convert(attributeHandles));
+      }
+      catch (ObjectNotKnown onk)
+      {
+        throw new ObjectInstanceNotKnown(onk);
+      }
+      catch (AttributeNotKnown ank)
+      {
+        throw new AttributeNotRecognized(ank);
+      }
+      catch (hla.rti.AttributeNotOwned ano)
+      {
+        throw new hla.rti1516.AttributeNotOwned(ano);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+      catch (RTIinternalError rtiie)
+      {
+        throw new FederateInternalError(rtiie);
+      }
+    }
+
+    @Override
+    public void turnUpdatesOnForObjectInstance(
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandleSet attributeHandles)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized, hla.rti1516.AttributeNotOwned,
+             FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.turnUpdatesOnForObjectInstance(
+          convert(objectInstanceHandle), convert(attributeHandles));
+      }
+      catch (ObjectNotKnown onk)
+      {
+        throw new ObjectInstanceNotKnown(onk);
+      }
+      catch (hla.rti.AttributeNotOwned ano)
+      {
+        throw new hla.rti1516.AttributeNotOwned(ano);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+      catch (RTIinternalError rtiie)
+      {
+        throw new FederateInternalError(rtiie);
+      }
+    }
+
+    @Override
+    public void turnUpdatesOffForObjectInstance(
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandleSet attributeHandles)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized, hla.rti1516.AttributeNotOwned,
+             FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.turnUpdatesOffForObjectInstance(
+          convert(objectInstanceHandle), convert(attributeHandles));
+      }
+      catch (ObjectNotKnown onk)
+      {
+        throw new ObjectInstanceNotKnown(onk);
+      }
+      catch (hla.rti.AttributeNotOwned ano)
+      {
+        throw new hla.rti1516.AttributeNotOwned(ano);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+      catch (RTIinternalError rtiie)
+      {
+        throw new FederateInternalError(rtiie);
+      }
+    }
+
+    @Override
+    public void requestAttributeOwnershipAssumption(
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandleSet attributeHandles, byte[] tag)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             hla.rti1516.AttributeAlreadyOwned, hla.rti1516.AttributeNotPublished,
+             FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.requestAttributeOwnershipAssumption(
+          convert(objectInstanceHandle), convert(attributeHandles), tag);
+      }
+      catch (ObjectNotKnown onk)
+      {
+        throw new ObjectInstanceNotKnown(onk);
+      }
+      catch (AttributeNotKnown ank)
+      {
+        throw new AttributeNotRecognized(ank);
+      }
+      catch (hla.rti.AttributeAlreadyOwned aao)
+      {
+        throw new hla.rti1516.AttributeAlreadyOwned(aao);
+      }
+      catch (hla.rti.AttributeNotPublished anp)
+      {
+        throw new hla.rti1516.AttributeNotPublished(anp);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+      catch (RTIinternalError rtiie)
+      {
+        throw new FederateInternalError(rtiie);
+      }
+    }
+
+    @Override
+    public void requestDivestitureConfirmation(
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandleSet attributeHandles)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized, hla.rti1516.AttributeNotOwned,
+             hla.rti1516.AttributeDivestitureWasNotRequested, FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.attributeOwnershipDivestitureNotification(
+          convert(objectInstanceHandle), convert(attributeHandles));
+
+        try
+        {
+          rtiAmbassador.getJoinedFederate().confirmDivestiture(
+            objectInstanceHandle, attributeHandles, null);
+        }
+        catch (hla.rti1516.RestoreInProgress rip)
+        {
+          throw new FederateInternalError(rip);
+        }
+        catch (hla.rti1516.SaveInProgress sip)
+        {
+          throw new FederateInternalError(sip);
+        }
+        catch (hla.rti1516.AttributeNotDefined and)
+        {
+          throw new FederateInternalError(and);
+        }
+        catch (hla.rti1516.RTIinternalError rtiie)
+        {
+          throw new FederateInternalError(rtiie);
+        }
+      }
+      catch (ObjectNotKnown onk)
+      {
+        throw new ObjectInstanceNotKnown(onk);
+      }
+      catch (AttributeNotKnown ank)
+      {
+        throw new AttributeNotRecognized(ank);
+      }
+      catch (hla.rti.AttributeNotOwned ano)
+      {
+        throw new hla.rti1516.AttributeNotOwned(ano);
+      }
+      catch (hla.rti.AttributeDivestitureWasNotRequested adwnr)
+      {
+        throw new hla.rti1516.AttributeDivestitureWasNotRequested(adwnr);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+      catch (RTIinternalError rtiie)
+      {
+        throw new FederateInternalError(rtiie);
+      }
+    }
+
+    @Override
+    public void attributeOwnershipAcquisitionNotification(
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandleSet attributeHandles, byte[] tag)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             hla.rti1516.AttributeAcquisitionWasNotRequested, hla.rti1516.AttributeAlreadyOwned,
+             hla.rti1516.AttributeNotPublished, FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.attributeOwnershipAcquisitionNotification(
+          convert(objectInstanceHandle), convert(attributeHandles));
+      }
+      catch (ObjectNotKnown onk)
+      {
+        throw new ObjectInstanceNotKnown(onk);
+      }
+      catch (AttributeNotKnown ank)
+      {
+        throw new AttributeNotRecognized(ank);
+      }
+      catch (hla.rti.AttributeAcquisitionWasNotRequested aawnr)
+      {
+        throw new hla.rti1516.AttributeAcquisitionWasNotRequested(aawnr);
+      }
+      catch (hla.rti.AttributeAlreadyOwned aao)
+      {
+        throw new hla.rti1516.AttributeAlreadyOwned(aao);
+      }
+      catch (hla.rti.AttributeNotPublished anp)
+      {
+        throw new hla.rti1516.AttributeNotPublished(anp);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+      catch (RTIinternalError rtiie)
+      {
+        throw new FederateInternalError(rtiie);
+      }
+    }
+
+    @Override
+    public void attributeOwnershipUnavailable(
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandleSet attributeHandles)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             hla.rti1516.AttributeAlreadyOwned, hla.rti1516.AttributeAcquisitionWasNotRequested,
+             FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.attributeOwnershipUnavailable(
+          convert(objectInstanceHandle), convert(attributeHandles));
+      }
+      catch (ObjectNotKnown onk)
+      {
+        throw new ObjectInstanceNotKnown(onk);
+      }
+      catch (AttributeNotKnown ank)
+      {
+        throw new AttributeNotRecognized(ank);
+      }
+      catch (hla.rti.AttributeAlreadyOwned aao)
+      {
+        throw new hla.rti1516.AttributeAlreadyOwned(aao);
+      }
+      catch (hla.rti.AttributeAcquisitionWasNotRequested aawnr)
+      {
+        throw new hla.rti1516.AttributeAcquisitionWasNotRequested(aawnr);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+      catch (RTIinternalError rtiie)
+      {
+        throw new FederateInternalError(rtiie);
+      }
+    }
+
+    @Override
+    public void requestAttributeOwnershipRelease(
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandleSet attributeHandles, byte[] tag)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized, hla.rti1516.AttributeNotOwned,
+             FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.requestAttributeOwnershipRelease(
+          convert(objectInstanceHandle), convert(attributeHandles), tag);
+      }
+      catch (ObjectNotKnown onk)
+      {
+        throw new ObjectInstanceNotKnown(onk);
+      }
+      catch (AttributeNotKnown ank)
+      {
+        throw new AttributeNotRecognized(ank);
+      }
+      catch (hla.rti.AttributeNotOwned ano)
+      {
+        throw new hla.rti1516.AttributeNotOwned(ano);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+      catch (RTIinternalError rtiie)
+      {
+        throw new FederateInternalError(rtiie);
+      }
+    }
+
+    @Override
+    public void confirmAttributeOwnershipAcquisitionCancellation(
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandleSet attributeHandles)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized,
+             hla.rti1516.AttributeAlreadyOwned, AttributeAcquisitionWasNotCanceled,
+             FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.confirmAttributeOwnershipAcquisitionCancellation(
+          convert(objectInstanceHandle), convert(attributeHandles));
+      }
+      catch (ObjectNotKnown onk)
+      {
+        throw new ObjectInstanceNotKnown(onk);
+      }
+      catch (AttributeNotKnown ank)
+      {
+        throw new AttributeNotRecognized(ank);
+      }
+      catch (hla.rti.AttributeAlreadyOwned aao)
+      {
+        throw new hla.rti1516.AttributeAlreadyOwned(aao);
+      }
+      catch (hla.rti.AttributeAcquisitionWasNotCanceled aawnc)
+      {
+        throw new AttributeAcquisitionWasNotCanceled(aawnc);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+      catch (RTIinternalError rtiie)
+      {
+        throw new FederateInternalError(rtiie);
+      }
+    }
+
+    @Override
+    public void informAttributeOwnership(
+      ObjectInstanceHandle objectInstanceHandle,
+      AttributeHandle attributeHandle,
+      FederateHandle federateHandle)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized, FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.informAttributeOwnership(
+          convert(objectInstanceHandle), convert(attributeHandle),
+          convert(federateHandle));
+      }
+      catch (ObjectNotKnown onk)
+      {
+        throw new ObjectInstanceNotKnown(onk);
+      }
+      catch (AttributeNotKnown ank)
+      {
+        throw new AttributeNotRecognized(ank);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void attributeIsNotOwned(ObjectInstanceHandle objectInstanceHandle,
+                                    AttributeHandle attributeHandle)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized, FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.attributeIsNotOwned(
+          convert(objectInstanceHandle), convert(attributeHandle));
+      }
+      catch (ObjectNotKnown onk)
+      {
+        throw new ObjectInstanceNotKnown(onk);
+      }
+      catch (AttributeNotKnown ank)
+      {
+        throw new AttributeNotRecognized(ank);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void attributeIsOwnedByRTI(ObjectInstanceHandle objectInstanceHandle,
+                                      AttributeHandle attributeHandle)
+      throws ObjectInstanceNotKnown, AttributeNotRecognized, FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.attributeOwnedByRTI(
+          convert(objectInstanceHandle), convert(attributeHandle));
+      }
+      catch (ObjectNotKnown onk)
+      {
+        throw new ObjectInstanceNotKnown(onk);
+      }
+      catch (AttributeNotKnown ank)
+      {
+        throw new AttributeNotRecognized(ank);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+    }
+
+    @Override
+    public void timeRegulationEnabled(hla.rti1516.LogicalTime time)
+      throws InvalidLogicalTime, NoRequestToEnableTimeRegulationWasPending,
+             FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.timeRegulationEnabled(convert(time));
+      }
+      catch (InvalidFederationTime ift)
+      {
+        throw new InvalidLogicalTime(ift);
+      }
+      catch (EnableTimeRegulationWasNotPending etrwnp)
+      {
+        throw new NoRequestToEnableTimeRegulationWasPending(etrwnp);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+      catch (RTIinternalError rtiie)
+      {
+        throw new FederateInternalError(rtiie);
+      }
+    }
+
+    @Override
+    public void timeConstrainedEnabled(hla.rti1516.LogicalTime time)
+      throws InvalidLogicalTime, NoRequestToEnableTimeConstrainedWasPending,
+             FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.timeConstrainedEnabled(convert(time));
+      }
+      catch (InvalidFederationTime ift)
+      {
+        throw new InvalidLogicalTime(ift);
+      }
+      catch (EnableTimeConstrainedWasNotPending etcwnp)
+      {
+        throw new NoRequestToEnableTimeConstrainedWasPending(etcwnp);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+      catch (RTIinternalError rtiie)
+      {
+        throw new FederateInternalError(rtiie);
+      }
+    }
+
+    @Override
+    public void timeAdvanceGrant(hla.rti1516.LogicalTime time)
+      throws InvalidLogicalTime, JoinedFederateIsNotInTimeAdvancingState,
+             FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.timeAdvanceGrant(convert(time));
+      }
+      catch (InvalidFederationTime ift)
+      {
+        throw new InvalidLogicalTime(ift);
+      }
+      catch (TimeAdvanceWasNotInProgress tawnip)
+      {
+        throw new JoinedFederateIsNotInTimeAdvancingState(tawnip);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
+      }
+      catch (RTIinternalError rtiie)
+      {
+        throw new FederateInternalError(rtiie);
+      }
+    }
+
+    @Override
+    public void requestRetraction(MessageRetractionHandle messageRetractionHandle)
+      throws FederateInternalError
+    {
+      try
+      {
+        federateAmbassador.requestRetraction(convert(messageRetractionHandle));
+      }
+      catch (EventNotKnown enk)
+      {
+        throw new FederateInternalError(enk);
+      }
+      catch (hla.rti.FederateInternalError fie)
+      {
+        throw new FederateInternalError(fie);
       }
     }
   }
