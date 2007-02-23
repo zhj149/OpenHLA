@@ -17,15 +17,18 @@
 package net.sf.ohla.rti.fed;
 
 import java.io.Serializable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import net.sf.ohla.rti.hla.rti1516.IEEE1516DimensionHandleSet;
 import net.sf.ohla.rti.fdd.Dimension;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516DimensionHandleSet;
 
 import hla.rti.DimensionNotDefined;
 import hla.rti.NameNotFound;
+
+import hla.rti1516.DimensionHandleSet;
 
 public class RoutingSpace
   implements Serializable
@@ -38,7 +41,7 @@ public class RoutingSpace
   protected List<Dimension> dimensions = new ArrayList<Dimension>();
   protected List<String> dimensionHandlesByName = new ArrayList<String>();
 
-  protected transient hla.rti1516.DimensionHandleSet dimensionHandles;
+  protected transient DimensionHandleSet dimensionHandles;
 
   public RoutingSpace(String name, AtomicInteger routingSpaceCount)
   {
@@ -71,7 +74,7 @@ public class RoutingSpace
     return dimensions;
   }
 
-  public synchronized hla.rti1516.DimensionHandleSet getDimensionHandles()
+  public synchronized DimensionHandleSet getDimensionHandles()
   {
     if (dimensionHandles == null)
     {
