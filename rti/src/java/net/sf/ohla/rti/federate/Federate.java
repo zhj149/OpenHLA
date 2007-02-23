@@ -30,20 +30,20 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.sf.ohla.rti.fdd.FDD;
-import net.sf.ohla.rti.hla.rti1516.OHLAAttributeHandleFactory;
-import net.sf.ohla.rti.hla.rti1516.OHLAAttributeHandleSetFactory;
-import net.sf.ohla.rti.hla.rti1516.OHLAAttributeHandleValueMapFactory;
-import net.sf.ohla.rti.hla.rti1516.OHLAAttributeSetRegionSetPairListFactory;
-import net.sf.ohla.rti.hla.rti1516.OHLADimensionHandleFactory;
-import net.sf.ohla.rti.hla.rti1516.OHLADimensionHandleSetFactory;
-import net.sf.ohla.rti.hla.rti1516.OHLAFederateHandleFactory;
-import net.sf.ohla.rti.hla.rti1516.OHLAFederateHandleSetFactory;
-import net.sf.ohla.rti.hla.rti1516.OHLAInteractionClassHandleFactory;
-import net.sf.ohla.rti.hla.rti1516.OHLAObjectClassHandleFactory;
-import net.sf.ohla.rti.hla.rti1516.OHLAObjectInstanceHandleFactory;
-import net.sf.ohla.rti.hla.rti1516.OHLAParameterHandleFactory;
-import net.sf.ohla.rti.hla.rti1516.OHLAParameterHandleValueMapFactory;
-import net.sf.ohla.rti.hla.rti1516.OHLARegionHandleSetFactory;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandleFactory;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandleSetFactory;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandleValueMapFactory;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeSetRegionSetPairListFactory;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516DimensionHandleFactory;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516DimensionHandleSetFactory;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516FederateHandleFactory;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516FederateHandleSetFactory;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516InteractionClassHandleFactory;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516ObjectClassHandleFactory;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516ObjectInstanceHandleFactory;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516ParameterHandleFactory;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516ParameterHandleValueMapFactory;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516RegionHandleSetFactory;
 import net.sf.ohla.rti.messages.FederateRestoreComplete;
 import net.sf.ohla.rti.messages.FederateRestoreNotComplete;
 import net.sf.ohla.rti.messages.FederateSaveBegun;
@@ -270,33 +270,33 @@ public class Federate
     new PriorityQueue<TimestampedFutureTask>();
 
   protected AttributeHandleFactory attributeHandleFactory =
-    new OHLAAttributeHandleFactory();
+    new IEEE1516AttributeHandleFactory();
   protected AttributeHandleSetFactory attributeHandleSetFactory =
-    new OHLAAttributeHandleSetFactory();
+    new IEEE1516AttributeHandleSetFactory();
   protected AttributeHandleValueMapFactory attributeHandleValueMapFactory =
-    new OHLAAttributeHandleValueMapFactory();
+    new IEEE1516AttributeHandleValueMapFactory();
   protected AttributeSetRegionSetPairListFactory attributeSetRegionSetPairListFactory =
-    new OHLAAttributeSetRegionSetPairListFactory();
+    new IEEE1516AttributeSetRegionSetPairListFactory();
   protected DimensionHandleFactory dimensionHandleFactory =
-    new OHLADimensionHandleFactory();
+    new IEEE1516DimensionHandleFactory();
   protected DimensionHandleSetFactory dimensionHandleSetFactory =
-    new OHLADimensionHandleSetFactory();
+    new IEEE1516DimensionHandleSetFactory();
   protected FederateHandleFactory federateHandleFactory =
-    new OHLAFederateHandleFactory();
+    new IEEE1516FederateHandleFactory();
   protected FederateHandleSetFactory federateHandleSetFactory =
-    new OHLAFederateHandleSetFactory();
+    new IEEE1516FederateHandleSetFactory();
   protected InteractionClassHandleFactory interactionClassHandleFactory =
-    new OHLAInteractionClassHandleFactory();
+    new IEEE1516InteractionClassHandleFactory();
   protected ObjectClassHandleFactory objectClassHandleFactory =
-    new OHLAObjectClassHandleFactory();
+    new IEEE1516ObjectClassHandleFactory();
   protected ObjectInstanceHandleFactory objectInstanceHandleFactory =
-    new OHLAObjectInstanceHandleFactory();
+    new IEEE1516ObjectInstanceHandleFactory();
   protected ParameterHandleFactory parameterHandleFactory =
-    new OHLAParameterHandleFactory();
+    new IEEE1516ParameterHandleFactory();
   protected ParameterHandleValueMapFactory parameterHandleValueMapFactory =
-    new OHLAParameterHandleValueMapFactory();
+    new IEEE1516ParameterHandleValueMapFactory();
   protected RegionHandleSetFactory regionHandleSetFactory =
-    new OHLARegionHandleSetFactory();
+    new IEEE1516RegionHandleSetFactory();
 
   /**
    * The session with the RTI.

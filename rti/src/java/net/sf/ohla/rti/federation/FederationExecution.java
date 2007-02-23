@@ -31,9 +31,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import net.sf.ohla.rti.fdd.Dimension;
 import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.fdd.ObjectClass;
-import net.sf.ohla.rti.hla.rti1516.OHLAAttributeHandleSet;
-import net.sf.ohla.rti.hla.rti1516.OHLAFederateHandle;
-import net.sf.ohla.rti.hla.rti1516.OHLARegionHandle;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandleSet;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516FederateHandle;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516RegionHandle;
 import net.sf.ohla.rti.messages.AttributeOwnershipAcquisition;
 import net.sf.ohla.rti.messages.AttributeOwnershipAcquisitionIfAvailable;
 import net.sf.ohla.rti.messages.AttributeOwnershipDivestitureIfWanted;
@@ -1198,7 +1198,7 @@ public class FederationExecution
       AttributeOwnershipDivestitureIfWantedResponse
         attributeOwnershipDivestitureIfWantedResponse =
         new AttributeOwnershipDivestitureIfWantedResponse(
-          new OHLAAttributeHandleSet(newOwners.keySet()));
+          new IEEE1516AttributeHandleSet(newOwners.keySet()));
 
       RequestResponse requestResponse = new RequestResponse(
         attributeOwnershipDivestitureIfWanted.getId(),
@@ -1233,7 +1233,7 @@ public class FederationExecution
           newOwnerAcquisitions.get(entry.getValue());
         if (acquiredAttributeHandles == null)
         {
-          acquiredAttributeHandles = new OHLAAttributeHandleSet();
+          acquiredAttributeHandles = new IEEE1516AttributeHandleSet();
           newOwnerAcquisitions.put(entry.getValue(), acquiredAttributeHandles);
         }
         acquiredAttributeHandles.add(entry.getKey());
@@ -1525,11 +1525,11 @@ public class FederationExecution
 
   protected FederateHandle nextFederateHandle()
   {
-    return new OHLAFederateHandle(federateCount.incrementAndGet());
+    return new IEEE1516FederateHandle(federateCount.incrementAndGet());
   }
 
   protected RegionHandle nextRegionHandle()
   {
-    return new OHLARegionHandle(regionCount.incrementAndGet());
+    return new IEEE1516RegionHandle(regionCount.incrementAndGet());
   }
 }

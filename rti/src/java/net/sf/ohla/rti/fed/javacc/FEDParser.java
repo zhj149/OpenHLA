@@ -18,6 +18,7 @@
 package net.sf.ohla.rti.fed.javacc;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 
 import java.net.URL;

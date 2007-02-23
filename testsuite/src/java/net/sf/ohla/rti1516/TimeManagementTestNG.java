@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
-import net.sf.ohla.rti1516.impl.Integer64Time;
-import net.sf.ohla.rti1516.impl.Integer64TimeInterval;
+import net.sf.ohla.rti.hla.rti1516.Integer64Time;
+import net.sf.ohla.rti.hla.rti1516.Integer64TimeInterval;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;

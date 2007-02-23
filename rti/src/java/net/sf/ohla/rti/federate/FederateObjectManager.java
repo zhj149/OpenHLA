@@ -34,8 +34,8 @@ import net.sf.ohla.rti.SubscriptionManager;
 import net.sf.ohla.rti.fdd.Attribute;
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.fdd.ObjectClass;
-import net.sf.ohla.rti.hla.rti1516.OHLAAttributeHandleSet;
-import net.sf.ohla.rti.hla.rti1516.OHLARegionHandleSet;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandleSet;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516RegionHandleSet;
 import net.sf.ohla.rti.messages.AttributeOwnershipAcquisition;
 import net.sf.ohla.rti.messages.AttributeOwnershipAcquisitionIfAvailable;
 import net.sf.ohla.rti.messages.AttributeOwnershipDivestitureIfWanted;
@@ -1639,9 +1639,9 @@ public class FederateObjectManager
         subscribedObjectClasses.entrySet())
       {
         AttributeHandleSet passiveDefaultRegionAttributeHandles =
-          new OHLAAttributeHandleSet();
+          new IEEE1516AttributeHandleSet();
         AttributeHandleSet defaultRegionAttributeHandles =
-          new OHLAAttributeHandleSet();
+          new IEEE1516AttributeHandleSet();
 
         for (Map.Entry<AttributeHandle, AttributeSubscription> entry2 :
           entry.getValue().entrySet())
@@ -1771,7 +1771,7 @@ public class FederateObjectManager
       {
         checkIfAttributeNotOwned(attributeValues.keySet());
 
-        RegionHandleSet sentRegionHandles = new OHLARegionHandleSet();
+        RegionHandleSet sentRegionHandles = new IEEE1516RegionHandleSet();
         for (AttributeHandle attributeHandle : attributeValues.keySet())
         {
           sentRegionHandles.addAll(
@@ -1802,7 +1802,7 @@ public class FederateObjectManager
           // TODO: divide attributes by order type
         }
 
-        RegionHandleSet sentRegionHandles = new OHLARegionHandleSet();
+        RegionHandleSet sentRegionHandles = new IEEE1516RegionHandleSet();
         for (AttributeHandle attributeHandle : attributeValues.keySet())
         {
           sentRegionHandles.addAll(
@@ -2316,7 +2316,7 @@ public class FederateObjectManager
     {
       objectClass.checkIfAttributeNotDefined(attributeHandles);
 
-      attributeHandles = new OHLAAttributeHandleSet(attributeHandles);
+      attributeHandles = new IEEE1516AttributeHandleSet(attributeHandles);
 
       objectLock.readLock().lock();
       try
@@ -2418,7 +2418,7 @@ public class FederateObjectManager
             !attributeHandlesBeingAcquiredIfAvailable.isEmpty())
         {
           AttributeHandleSet allAttributeHandlesBeingAcquired =
-            new OHLAAttributeHandleSet(attributeHandlesBeingAcquired);
+            new IEEE1516AttributeHandleSet(attributeHandlesBeingAcquired);
           allAttributeHandlesBeingAcquired.addAll(
             attributeHandlesBeingAcquiredIfAvailable);
           throw new OwnershipAcquisitionPending(
@@ -2439,7 +2439,7 @@ public class FederateObjectManager
       try
       {
         AttributeHandleSet allAttributeHandlesBeingAcquired =
-          new OHLAAttributeHandleSet();
+          new IEEE1516AttributeHandleSet();
         for (AttributeHandle attributeHandle : attributeHandles)
         {
           if (attributeHandlesBeingAcquired.contains(attributeHandle) ||
@@ -2740,7 +2740,7 @@ public class FederateObjectManager
       protected TransportationType transportationType;
       protected OrderType orderType;
 
-      protected RegionHandleSet associatedRegions = new OHLARegionHandleSet();
+      protected RegionHandleSet associatedRegions = new IEEE1516RegionHandleSet();
 
       public AttributeInstance(Attribute attribute)
       {

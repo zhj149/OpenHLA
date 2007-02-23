@@ -18,8 +18,8 @@ package net.sf.ohla.rti.federation;
 
 import java.util.Map;
 
-import net.sf.ohla.rti.hla.rti1516.OHLAAttributeHandleValueMap;
-import net.sf.ohla.rti.hla.rti1516.OHLAParameterHandleValueMap;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandleValueMap;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516ParameterHandleValueMap;
 import net.sf.ohla.rti.SubscriptionManager;
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.messages.AttributeOwnershipAcquisition;
@@ -466,7 +466,7 @@ System.out.printf("subscriptions for %s: %s\n", reflectAttributeValues.getObject
       else
       {
         AttributeHandleValueMap trimmedAttributeValues =
-          new OHLAAttributeHandleValueMap(
+          new IEEE1516AttributeHandleValueMap(
             reflectAttributeValues.getAttributeValues());
         trimmedAttributeValues.keySet().retainAll(subscriptions.keySet());
 
@@ -503,7 +503,7 @@ System.out.printf("subscriptions for %s: %s\n", reflectAttributeValues.getObject
       else
       {
         ParameterHandleValueMap trimmedParameterValues =
-          new OHLAParameterHandleValueMap(
+          new IEEE1516ParameterHandleValueMap(
             receiveInteraction.getParameterValues());
         trimmedParameterValues.keySet().retainAll(
           interactionClass.getParameters().keySet());
