@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import net.sf.ohla.rti.hla.rti1516.IEEE1516FederateHandle;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516FederateHandleSet;
 
 import hla.rti.FederateHandleSet;
 import hla.rti.HandleIterator;
@@ -27,7 +28,7 @@ import hla.rti.HandleIterator;
 import hla.rti1516.FederateHandle;
 
 public class HLA13FederateHandleSet
-  extends net.sf.ohla.rti.hla.rti1516.IEEE1516FederateHandleSet
+  extends IEEE1516FederateHandleSet
   implements FederateHandleSet
 {
   public HLA13FederateHandleSet()

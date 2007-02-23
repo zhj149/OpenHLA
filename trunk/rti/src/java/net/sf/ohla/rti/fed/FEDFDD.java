@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import net.sf.ohla.rti.fdd.FDD;
+import net.sf.ohla.rti.fdd.Attribute;
+import net.sf.ohla.rti.fdd.InteractionClass;
 
 import hla.rti.AttributeNotDefined;
 import hla.rti.DimensionNotDefined;
@@ -134,8 +136,7 @@ public class FEDFDD
   {
     try
     {
-      net.sf.ohla.rti.fdd.Attribute attribute =
-        getAttribute(objectClassHandle, attributeHandle);
+      Attribute attribute = getAttribute(objectClassHandle, attributeHandle);
 
       if (attribute instanceof FEDAttribute)
       {
@@ -163,7 +164,7 @@ public class FEDFDD
   {
     try
     {
-      net.sf.ohla.rti.fdd.InteractionClass interactionClass =
+      InteractionClass interactionClass =
         getInteractionClass(interactionClassHandle);
 
       if (interactionClass instanceof FEDInteractionClass)

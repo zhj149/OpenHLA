@@ -45,6 +45,7 @@ import net.sf.ohla.rti.hla.rti1516.IEEE1516ObjectClassHandle;
 import net.sf.ohla.rti.hla.rti1516.IEEE1516ObjectInstanceHandle;
 import net.sf.ohla.rti.hla.rti1516.IEEE1516ParameterHandle;
 import net.sf.ohla.rti.hla.rti1516.IEEE1516RegionHandleSet;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516RTIambassador;
 import net.sf.ohla.rti.messages.callbacks.ObjectInstanceNameReservationFailed;
 import net.sf.ohla.rti.messages.callbacks.ObjectInstanceNameReservationSucceeded;
 
@@ -241,8 +242,8 @@ public class HLA13RTIambassador
   public static final String DEFAULT_OHLA_FEDERATE_RTI_1516_LOGICAL_TIME_INTERVAL_FACTORY_PROPERTY =
     "ohla.federate.rti1516.logicalTimeIntervalFactory";
 
-  protected net.sf.ohla.rti.hla.rti1516.IEEE1516RTIambassador rtiAmbassador =
-    new net.sf.ohla.rti.hla.rti1516.IEEE1516RTIambassador();
+  protected IEEE1516RTIambassador rtiAmbassador =
+    new IEEE1516RTIambassador();
 
   protected FEDFDD fedFDD;
 
