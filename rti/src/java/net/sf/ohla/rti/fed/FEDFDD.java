@@ -19,7 +19,7 @@ package net.sf.ohla.rti.fed;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.sf.ohla.rti1516.fdd.FDD;
+import net.sf.ohla.rti.fdd.FDD;
 
 import hla.rti.AttributeNotDefined;
 import hla.rti.DimensionNotDefined;
@@ -134,7 +134,7 @@ public class FEDFDD
   {
     try
     {
-      net.sf.ohla.rti1516.fdd.Attribute attribute =
+      net.sf.ohla.rti.fdd.Attribute attribute =
         getAttribute(objectClassHandle, attributeHandle);
 
       if (attribute instanceof FEDAttribute)
@@ -163,7 +163,7 @@ public class FEDFDD
   {
     try
     {
-      net.sf.ohla.rti1516.fdd.InteractionClass interactionClass =
+      net.sf.ohla.rti.fdd.InteractionClass interactionClass =
         getInteractionClass(interactionClassHandle);
 
       if (interactionClass instanceof FEDInteractionClass)

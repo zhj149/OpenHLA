@@ -18,7 +18,7 @@ package net.sf.ohla.rti.fed;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import net.sf.ohla.rti1516.fdd.ObjectClass;
+import net.sf.ohla.rti.fdd.ObjectClass;
 
 public class FEDObjectClass
   extends ObjectClass

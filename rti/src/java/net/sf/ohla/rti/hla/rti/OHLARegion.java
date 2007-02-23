@@ -21,7 +21,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sf.ohla.rti1516.fdd.Dimension;
+import net.sf.ohla.rti.fdd.Dimension;
 import net.sf.ohla.rti.hla.rti1516.OHLARegionHandleSet;
 
 import hla.rti.ArrayIndexOutOfBounds;

@@ -16,7 +16,7 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
-import net.sf.ohla.rti1516.handles.ShortHandle;
+import net.sf.ohla.rti.handles.ShortHandle;
 
 import hla.rti1516.CouldNotDecode;
 import hla.rti1516.FederateHandle;

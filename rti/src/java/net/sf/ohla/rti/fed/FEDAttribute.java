@@ -18,7 +18,7 @@ package net.sf.ohla.rti.fed;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import net.sf.ohla.rti1516.fdd.Attribute;
+import net.sf.ohla.rti.fdd.Attribute;
 
 public class FEDAttribute
   extends Attribute

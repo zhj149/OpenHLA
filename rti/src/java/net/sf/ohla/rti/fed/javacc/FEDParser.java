@@ -18,7 +18,6 @@
 package net.sf.ohla.rti.fed.javacc;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 
 import java.net.URL;
@@ -31,12 +30,12 @@ import net.sf.ohla.rti.fed.FEDInteractionClass;
 import net.sf.ohla.rti.fed.FEDObjectClass;
 import net.sf.ohla.rti.fed.RoutingSpace;
 
-import net.sf.ohla.rti1516.fdd.Attribute;
-import net.sf.ohla.rti1516.fdd.Dimension;
-import net.sf.ohla.rti1516.fdd.FDD;
-import net.sf.ohla.rti1516.fdd.InteractionClass;
-import net.sf.ohla.rti1516.fdd.ObjectClass;
-import net.sf.ohla.rti1516.fdd.Parameter;
+import net.sf.ohla.rti.fdd.Attribute;
+import net.sf.ohla.rti.fdd.Dimension;
+import net.sf.ohla.rti.fdd.FDD;
+import net.sf.ohla.rti.fdd.InteractionClass;
+import net.sf.ohla.rti.fdd.ObjectClass;
+import net.sf.ohla.rti.fdd.Parameter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
