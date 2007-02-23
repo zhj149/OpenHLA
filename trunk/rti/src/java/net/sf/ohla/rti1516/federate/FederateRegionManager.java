@@ -43,6 +43,9 @@ public class FederateRegionManager
   protected Map<RegionHandle, Region> regions =
     new HashMap<RegionHandle, Region>();
 
+  protected Map<RegionHandle, Set<RegionHandle>> intersectingRegions =
+    new HashMap<RegionHandle, Set<RegionHandle>>();
+
   public FederateRegionManager(Federate federate)
   {
     this.federate = federate;
