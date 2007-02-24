@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, Michael Newcomb
+ * Copyright (c) 2006-2007, Michael Newcomb
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,31 +18,31 @@ package net.sf.ohla.rti1516;
 
 import java.net.URL;
 
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import net.sf.ohla.rti.hla.rti1516.Integer64TimeFactory;
 
-import org.testng.annotations.Test;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 import hla.rti1516.CouldNotOpenFDD;
 import hla.rti1516.ErrorReadingFDD;
 import hla.rti1516.FederateAlreadyExecutionMember;
+import hla.rti1516.FederateInternalError;
 import hla.rti1516.FederateNotExecutionMember;
 import hla.rti1516.FederationExecutionAlreadyExists;
 import hla.rti1516.FederationExecutionDoesNotExist;
+import hla.rti1516.MobileFederateServices;
 import hla.rti1516.RTIambassador;
-import hla.rti1516.FederateInternalError;
+import hla.rti1516.RTIinternalError;
+import hla.rti1516.ResignAction;
 import hla.rti1516.SynchronizationPointFailureReason;
 import hla.rti1516.SynchronizationPointLabelNotAnnounced;
-import hla.rti1516.ResignAction;
-import hla.rti1516.RTIinternalError;
-import hla.rti1516.MobileFederateServices;
 import hla.rti1516.jlc.NullFederateAmbassador;
 
 @Test(groups = {"Federation Managmenet"})

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, Michael Newcomb
+ * Copyright (c) 2006-2007, Michael Newcomb
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,9 @@
 package net.sf.ohla.rti1516;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 
 import net.sf.ohla.rti.hla.rti1516.Integer64Time;
 import net.sf.ohla.rti.hla.rti1516.Integer64TimeInterval;
@@ -28,14 +28,31 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import hla.rti1516.AttributeHandle;
+import hla.rti1516.AttributeHandleSet;
+import hla.rti1516.AttributeHandleValueMap;
+import hla.rti1516.AttributeNotRecognized;
+import hla.rti1516.AttributeNotSubscribed;
 import hla.rti1516.FederateInternalError;
+import hla.rti1516.InTimeAdvancingState;
+import hla.rti1516.InteractionClassHandle;
 import hla.rti1516.InvalidLogicalTime;
 import hla.rti1516.InvalidLookahead;
+import hla.rti1516.JoinedFederateIsNotInTimeAdvancingState;
 import hla.rti1516.LogicalTime;
+import hla.rti1516.LogicalTimeAlreadyPassed;
 import hla.rti1516.LogicalTimeInterval;
+import hla.rti1516.MessageRetractionHandle;
 import hla.rti1516.NoRequestToEnableTimeConstrainedWasPending;
 import hla.rti1516.NoRequestToEnableTimeRegulationWasPending;
+import hla.rti1516.ObjectClassHandle;
+import hla.rti1516.ObjectInstanceHandle;
+import hla.rti1516.ObjectInstanceNotKnown;
+import hla.rti1516.OrderType;
+import hla.rti1516.ParameterHandle;
+import hla.rti1516.ParameterHandleValueMap;
 import hla.rti1516.RTIambassador;
+import hla.rti1516.RegionHandleSet;
 import hla.rti1516.RequestForTimeConstrainedPending;
 import hla.rti1516.RequestForTimeRegulationPending;
 import hla.rti1516.ResignAction;
@@ -43,24 +60,7 @@ import hla.rti1516.TimeConstrainedAlreadyEnabled;
 import hla.rti1516.TimeConstrainedIsNotEnabled;
 import hla.rti1516.TimeRegulationAlreadyEnabled;
 import hla.rti1516.TimeRegulationIsNotEnabled;
-import hla.rti1516.JoinedFederateIsNotInTimeAdvancingState;
-import hla.rti1516.InTimeAdvancingState;
-import hla.rti1516.LogicalTimeAlreadyPassed;
-import hla.rti1516.ObjectClassHandle;
-import hla.rti1516.AttributeHandle;
-import hla.rti1516.AttributeHandleSet;
-import hla.rti1516.InteractionClassHandle;
-import hla.rti1516.ParameterHandle;
-import hla.rti1516.ObjectInstanceHandle;
-import hla.rti1516.AttributeHandleValueMap;
-import hla.rti1516.OrderType;
 import hla.rti1516.TransportationType;
-import hla.rti1516.ParameterHandleValueMap;
-import hla.rti1516.ObjectInstanceNotKnown;
-import hla.rti1516.AttributeNotRecognized;
-import hla.rti1516.AttributeNotSubscribed;
-import hla.rti1516.RegionHandleSet;
-import hla.rti1516.MessageRetractionHandle;
 import hla.rti1516.jlc.NullFederateAmbassador;
 
 public class TimeManagementTestNG
