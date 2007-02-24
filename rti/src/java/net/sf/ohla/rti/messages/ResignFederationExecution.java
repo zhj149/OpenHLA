@@ -16,10 +16,13 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federation.FederateProxy;
+
 import hla.rti1516.ResignAction;
 
 public class ResignFederationExecution
-  implements Message
+  implements FederationExecutionMessage
 {
   protected ResignAction resignAction;
 
@@ -31,5 +34,11 @@ public class ResignFederationExecution
   public ResignAction getResignAction()
   {
     return resignAction;
+  }
+
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
+  {
+    federationExecution.resignFederationExecution(federateProxy, this);
   }
 }

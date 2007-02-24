@@ -16,11 +16,14 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federation.FederateProxy;
+
 import hla.rti1516.AttributeHandleSet;
 import hla.rti1516.ObjectInstanceHandle;
 
 public class ConfirmDivestiture
-  implements Message
+  implements FederationExecutionMessage
 {
   protected ObjectInstanceHandle objectInstanceHandle;
   protected AttributeHandleSet attributeHandles;
@@ -47,5 +50,11 @@ public class ConfirmDivestiture
   public byte[] getTag()
   {
     return tag;
+  }
+
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
+  {
+    federationExecution.confirmDivestiture(federateProxy, this);
   }
 }

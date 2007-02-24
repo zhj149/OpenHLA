@@ -16,10 +16,14 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federation.FederateProxy;
+
 import hla.rti1516.MessageRetractionHandle;
 
 public class Retract
   extends AbstractRequest
+  implements FederationExecutionMessage
 {
   protected MessageRetractionHandle messageRetractionHandle;
 
@@ -31,5 +35,11 @@ public class Retract
   public MessageRetractionHandle getMessageRetractionHandle()
   {
     return messageRetractionHandle;
+  }
+
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
+  {
+    federationExecution.retract(federateProxy, this);
   }
 }

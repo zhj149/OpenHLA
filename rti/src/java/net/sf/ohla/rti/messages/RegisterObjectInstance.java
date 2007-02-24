@@ -18,11 +18,15 @@ package net.sf.ohla.rti.messages;
 
 import java.util.Set;
 
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federation.FederateProxy;
+
 import hla.rti1516.AttributeHandle;
 import hla.rti1516.ObjectClassHandle;
 
 public class RegisterObjectInstance
   extends AbstractRequest
+  implements FederationExecutionMessage
 {
   protected ObjectClassHandle objectClassHandle;
   protected Set<AttributeHandle> publishedAttributeHandles;
@@ -57,5 +61,11 @@ public class RegisterObjectInstance
   public String getName()
   {
     return name;
+  }
+
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
+  {
+    federationExecution.registerObjectInstance(federateProxy, this);
   }
 }

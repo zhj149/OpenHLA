@@ -16,8 +16,11 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federation.FederateProxy;
+
 public class ReserveObjectInstanceName
-  implements Message
+  implements FederationExecutionMessage
 {
   protected String name;
 
@@ -29,5 +32,11 @@ public class ReserveObjectInstanceName
   public String getName()
   {
     return name;
+  }
+
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
+  {
+    federationExecution.reserveObjectInstanceName(federateProxy, this);
   }
 }

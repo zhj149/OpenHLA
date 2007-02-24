@@ -23,6 +23,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
 
 import hla.rti1516.IllegalTimeArithmetic;
 import hla.rti1516.LogicalTime;
@@ -31,9 +32,6 @@ import hla.rti1516.MobileFederateServices;
 
 public class FederationExecutionTimeManager
 {
-  private static final Logger log = LoggerFactory.getLogger(
-    FederationExecutionTimeManager.class);
-
   protected FederationExecution federationExecution;
 
   protected MobileFederateServices mobileFederateServices;
@@ -47,6 +45,9 @@ public class FederationExecutionTimeManager
   protected Set<FederateProxy> timeConstrainedFederates =
     new HashSet<FederateProxy>();
 
+  protected final Logger log = LoggerFactory.getLogger(getClass());
+  protected final Marker marker;
+
   public FederationExecutionTimeManager(
     FederationExecution federationExecution,
     MobileFederateServices mobileFederateServices)
@@ -55,6 +56,8 @@ public class FederationExecutionTimeManager
     this.mobileFederateServices = mobileFederateServices;
 
     galt = mobileFederateServices.timeFactory.makeInitial();
+
+    marker = federationExecution.getMarker();
   }
 
   public ReadWriteLock getTimeLock()
@@ -125,6 +128,22 @@ public class FederationExecutionTimeManager
       timeConstrainedFederates.remove(federateProxy);
 
       federateProxy.disableTimeConstrained();
+    }
+    finally
+    {
+      timeLock.writeLock().unlock();
+    }
+  }
+
+  public void modifyLookahead(FederateProxy federateProxy,
+                              LogicalTimeInterval lookahead)
+  {
+    timeLock.writeLock().lock();
+    try
+    {
+      timeRegulatingFederates.add(federateProxy);
+
+      federateProxy.modifyLookahead(lookahead);
     }
     finally
     {

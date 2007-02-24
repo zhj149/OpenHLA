@@ -16,11 +16,14 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federation.FederateProxy;
+
 import hla.rti1516.AttributeHandle;
 import hla.rti1516.ObjectInstanceHandle;
 
 public class QueryAttributeOwnership
-  implements Message
+  implements FederationExecutionMessage
 {
   protected ObjectInstanceHandle objectInstanceHandle;
   protected AttributeHandle attributeHandle;
@@ -40,5 +43,11 @@ public class QueryAttributeOwnership
   public AttributeHandle getAttributeHandle()
   {
     return attributeHandle;
+  }
+
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
+  {
+    federationExecution.queryAttributeOwnership(federateProxy, this);
   }
 }

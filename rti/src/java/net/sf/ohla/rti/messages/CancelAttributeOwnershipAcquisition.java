@@ -16,11 +16,14 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federation.FederateProxy;
+
 import hla.rti1516.AttributeHandleSet;
 import hla.rti1516.ObjectInstanceHandle;
 
 public class CancelAttributeOwnershipAcquisition
-  implements Message
+  implements FederationExecutionMessage
 {
   protected ObjectInstanceHandle objectInstanceHandle;
   protected AttributeHandleSet attributeHandles;
@@ -41,5 +44,12 @@ public class CancelAttributeOwnershipAcquisition
   public AttributeHandleSet getAttributeHandles()
   {
     return attributeHandles;
+  }
+
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
+  {
+    federationExecution.cancelAttributeOwnershipAcquisition(
+      federateProxy, this);
   }
 }

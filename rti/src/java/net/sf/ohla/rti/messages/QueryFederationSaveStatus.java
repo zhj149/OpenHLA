@@ -16,7 +16,15 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federation.FederateProxy;
+
 public class QueryFederationSaveStatus
-  implements Message
+  implements FederationExecutionMessage
 {
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
+  {
+    federationExecution.queryFederationSaveStatus(federateProxy, this);
+  }
 }

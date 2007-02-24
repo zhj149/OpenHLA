@@ -16,11 +16,15 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federation.FederateProxy;
+
 import hla.rti1516.RegionHandle;
 import hla.rti1516.DimensionHandle;
 
 public class GetRangeBounds
   extends AbstractRequest
+  implements FederationExecutionMessage
 {
   protected RegionHandle regionHandle;
   protected DimensionHandle dimensionHandle;
@@ -39,5 +43,11 @@ public class GetRangeBounds
   public DimensionHandle getDimensionHandle()
   {
     return dimensionHandle;
+  }
+
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
+  {
+    federationExecution.getRangeBounds(federateProxy, this);
   }
 }

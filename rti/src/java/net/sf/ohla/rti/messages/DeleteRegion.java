@@ -16,10 +16,14 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federation.FederateProxy;
+
 import hla.rti1516.RegionHandle;
 
 public class DeleteRegion
   extends AbstractRequest
+  implements FederationExecutionMessage
 {
   protected RegionHandle regionHandle;
 
@@ -31,5 +35,11 @@ public class DeleteRegion
   public RegionHandle getRegionHandle()
   {
     return regionHandle;
+  }
+
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
+  {
+    federationExecution.deleteRegion(federateProxy, this);
   }
 }

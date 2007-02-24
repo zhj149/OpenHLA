@@ -16,10 +16,13 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federation.FederateProxy;
+
 import hla.rti1516.FederateHandleSet;
 
 public class RegisterFederationSynchronizationPoint
-  implements Message
+  implements FederationExecutionMessage
 {
   protected String label;
   protected byte[] tag;
@@ -45,5 +48,12 @@ public class RegisterFederationSynchronizationPoint
   public FederateHandleSet getFederateHandles()
   {
     return federateHandles;
+  }
+
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
+  {
+    federationExecution.registerFederationSynchronizationPoint(
+      federateProxy, this);
   }
 }

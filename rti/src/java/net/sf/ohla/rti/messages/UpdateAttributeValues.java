@@ -16,6 +16,9 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federation.FederateProxy;
+
 import hla.rti1516.AttributeHandleValueMap;
 import hla.rti1516.LogicalTime;
 import hla.rti1516.MessageRetractionHandle;
@@ -25,7 +28,7 @@ import hla.rti1516.RegionHandleSet;
 import hla.rti1516.TransportationType;
 
 public class UpdateAttributeValues
-  implements Message
+  implements FederationExecutionMessage
 {
   protected ObjectInstanceHandle objectInstanceHandle;
   protected AttributeHandleValueMap attributeValues;
@@ -104,5 +107,11 @@ public class UpdateAttributeValues
   public MessageRetractionHandle getMessageRetractionHandle()
   {
     return messageRetractionHandle;
+  }
+
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
+  {
+    federationExecution.updateAttributeValues(federateProxy, this);
   }
 }

@@ -16,10 +16,13 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federation.FederateProxy;
+
 import hla.rti1516.LogicalTimeInterval;
 
 public class ModifyLookahead
-  implements Message
+  implements FederationExecutionMessage
 {
   protected LogicalTimeInterval lookahead;
 
@@ -31,5 +34,11 @@ public class ModifyLookahead
   public LogicalTimeInterval getLookahead()
   {
     return lookahead;
+  }
+
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
+  {
+    federationExecution.modifyLookahead(federateProxy, this);
   }
 }

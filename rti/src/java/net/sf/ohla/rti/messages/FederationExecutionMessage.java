@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, Michael Newcomb
+ * Copyright (c) 2006-2007, Michael Newcomb
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,12 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.federation.FederationExecution;
 import net.sf.ohla.rti.federation.FederateProxy;
+import net.sf.ohla.rti.federation.FederationExecution;
 
-public class FederateSaveInitiated
-  implements FederationExecutionMessage
+public interface FederationExecutionMessage
+  extends Message
 {
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
-  {
-    federationExecution.federateSaveInitiated(federateProxy, this);
-  }
+  void execute(FederationExecution federationExecution,
+               FederateProxy federateProxy);
 }

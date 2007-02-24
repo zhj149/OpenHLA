@@ -571,7 +571,6 @@ public class FederationExecutionObjectManager
               newOwners.put(newOwner, acquiredAttributes);
             }
             acquiredAttributes.add(attributeHandle);
-            System.out.printf("%s - %s\n", newOwner, acquiredAttributes);
           }
         }
 
