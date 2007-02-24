@@ -16,8 +16,8 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.federation.FederationExecution;
 import net.sf.ohla.rti.federation.FederateProxy;
+import net.sf.ohla.rti.federation.FederationExecution;
 
 public class EnableTimeConstrained
   implements FederationExecutionMessage

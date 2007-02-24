@@ -16,8 +16,6 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
-import net.sf.ohla.rti.hla.rti1516.Integer64TimeInterval;
-
 import hla.rti1516.CouldNotDecode;
 import hla.rti1516.LogicalTimeInterval;
 import hla.rti1516.LogicalTimeIntervalFactory;

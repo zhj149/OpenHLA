@@ -16,8 +16,6 @@
 
 package net.sf.ohla.rti.hla.rti;
 
-import net.sf.ohla.rti.hla.rti.HLA13FederateHandleSet;
-
 import hla.rti.FederateHandleSet;
 import hla.rti.FederateHandleSetFactory;
 

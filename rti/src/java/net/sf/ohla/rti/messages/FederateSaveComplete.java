@@ -17,8 +17,8 @@
 package net.sf.ohla.rti.messages;
 
 import net.sf.ohla.rti.federate.FederateSave;
-import net.sf.ohla.rti.federation.FederationExecution;
 import net.sf.ohla.rti.federation.FederateProxy;
+import net.sf.ohla.rti.federation.FederationExecution;
 
 public class FederateSaveComplete
   implements FederationExecutionMessage

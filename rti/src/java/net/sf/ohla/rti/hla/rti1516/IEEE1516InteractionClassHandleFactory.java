@@ -16,8 +16,6 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
-import net.sf.ohla.rti.hla.rti1516.IEEE1516InteractionClassHandle;
-
 import hla.rti1516.CouldNotDecode;
 import hla.rti1516.FederateNotExecutionMember;
 import hla.rti1516.InteractionClassHandle;

@@ -17,9 +17,9 @@
 package net.sf.ohla.rti.messages;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.ExecutionException;
 
 public abstract class AbstractRequest
   implements Request

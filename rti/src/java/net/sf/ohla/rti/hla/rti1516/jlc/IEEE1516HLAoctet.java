@@ -1,10 +1,8 @@
 package net.sf.ohla.rti.hla.rti1516.jlc;
 
-import net.sf.ohla.rti.hla.rti1516.jlc.IEEE1516DataElement;
-
 import hla.rti1516.jlc.ByteWrapper;
-import hla.rti1516.jlc.HLAoctet;
 import hla.rti1516.jlc.HLAbyte;
+import hla.rti1516.jlc.HLAoctet;
 
 public class IEEE1516HLAoctet
   extends IEEE1516DataElement

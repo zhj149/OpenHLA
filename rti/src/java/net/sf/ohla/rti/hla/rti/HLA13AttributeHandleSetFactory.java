@@ -16,8 +16,6 @@
 
 package net.sf.ohla.rti.hla.rti;
 
-import net.sf.ohla.rti.hla.rti.HLA13AttributeHandleSet;
-
 import hla.rti.AttributeHandleSet;
 import hla.rti.AttributeHandleSetFactory;
 

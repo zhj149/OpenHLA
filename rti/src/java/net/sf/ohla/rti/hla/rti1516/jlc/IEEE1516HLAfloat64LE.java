@@ -1,7 +1,5 @@
 package net.sf.ohla.rti.hla.rti1516.jlc;
 
-import net.sf.ohla.rti.hla.rti1516.jlc.IEEE1516DataElement;
-
 import hla.rti1516.jlc.ByteWrapper;
 import hla.rti1516.jlc.HLAfloat64LE;
 

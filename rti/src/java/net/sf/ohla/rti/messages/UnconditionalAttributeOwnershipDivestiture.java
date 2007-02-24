@@ -18,8 +18,8 @@ package net.sf.ohla.rti.messages;
 
 import java.util.Collection;
 
-import net.sf.ohla.rti.federation.FederationExecution;
 import net.sf.ohla.rti.federation.FederateProxy;
+import net.sf.ohla.rti.federation.FederationExecution;
 
 import hla.rti1516.AttributeHandleSet;
 import hla.rti1516.ObjectInstanceHandle;

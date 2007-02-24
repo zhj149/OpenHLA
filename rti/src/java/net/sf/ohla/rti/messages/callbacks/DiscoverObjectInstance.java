@@ -16,12 +16,12 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.ObjectClassHandle;
-import hla.rti1516.ObjectInstanceHandle;
-import hla.rti1516.ObjectClassNotRecognized;
 import hla.rti1516.CouldNotDiscover;
+import hla.rti1516.FederateAmbassador;
 import hla.rti1516.FederateInternalError;
+import hla.rti1516.ObjectClassHandle;
+import hla.rti1516.ObjectClassNotRecognized;
+import hla.rti1516.ObjectInstanceHandle;
 
 public class DiscoverObjectInstance
   implements Callback

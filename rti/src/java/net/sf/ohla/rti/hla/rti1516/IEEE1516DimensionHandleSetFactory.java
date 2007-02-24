@@ -16,8 +16,6 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
-import net.sf.ohla.rti.hla.rti1516.IEEE1516DimensionHandleSet;
-
 import hla.rti1516.DimensionHandleSet;
 import hla.rti1516.DimensionHandleSetFactory;
 

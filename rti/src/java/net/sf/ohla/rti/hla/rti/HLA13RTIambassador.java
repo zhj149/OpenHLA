@@ -44,8 +44,8 @@ import net.sf.ohla.rti.hla.rti1516.IEEE1516InteractionClassHandle;
 import net.sf.ohla.rti.hla.rti1516.IEEE1516ObjectClassHandle;
 import net.sf.ohla.rti.hla.rti1516.IEEE1516ObjectInstanceHandle;
 import net.sf.ohla.rti.hla.rti1516.IEEE1516ParameterHandle;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516RegionHandleSet;
 import net.sf.ohla.rti.hla.rti1516.IEEE1516RTIambassador;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516RegionHandleSet;
 import net.sf.ohla.rti.messages.callbacks.ObjectInstanceNameReservationFailed;
 import net.sf.ohla.rti.messages.callbacks.ObjectInstanceNameReservationSucceeded;
 

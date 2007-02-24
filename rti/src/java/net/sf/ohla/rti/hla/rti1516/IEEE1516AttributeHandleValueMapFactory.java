@@ -16,8 +16,6 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
-import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandleValueMap;
-
 import hla.rti1516.AttributeHandleValueMap;
 import hla.rti1516.AttributeHandleValueMapFactory;
 
