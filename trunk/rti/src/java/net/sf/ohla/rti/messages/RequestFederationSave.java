@@ -16,10 +16,14 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federation.FederateProxy;
+
 import hla.rti1516.LogicalTime;
 
 public class RequestFederationSave
   extends AbstractRequest
+  implements FederationExecutionMessage
 {
   protected String label;
   protected LogicalTime time;
@@ -44,5 +48,11 @@ public class RequestFederationSave
   public LogicalTime getTime()
   {
     return time;
+  }
+
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
+  {
+    federationExecution.requestFederationSave(federateProxy, this);
   }
 }

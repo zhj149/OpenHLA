@@ -16,7 +16,15 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.federation.FederateProxy;
+import net.sf.ohla.rti.federation.FederationExecution;
+
 public class FederateRestoreComplete
-  implements Message
+  implements FederationExecutionMessage
 {
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
+  {
+    federationExecution.federateRestoreComplete(federateProxy, this);
+  }
 }

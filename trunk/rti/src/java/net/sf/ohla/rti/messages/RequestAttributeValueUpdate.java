@@ -16,13 +16,16 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federation.FederateProxy;
+
 import hla.rti1516.AttributeHandleSet;
 import hla.rti1516.AttributeSetRegionSetPairList;
 import hla.rti1516.ObjectClassHandle;
 import hla.rti1516.ObjectInstanceHandle;
 
 public class RequestAttributeValueUpdate
-  implements Message
+  implements FederationExecutionMessage
 {
   protected ObjectInstanceHandle objectInstanceHandle;
   protected ObjectClassHandle objectClassHandle;
@@ -62,5 +65,11 @@ public class RequestAttributeValueUpdate
   {
     this.attributeHandles = attributeHandles;
     this.tag = tag;
+  }
+
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
+  {
+    federationExecution.requestAttributeValueUpdate(federateProxy, this);
   }
 }

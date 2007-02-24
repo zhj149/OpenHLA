@@ -18,12 +18,16 @@ package net.sf.ohla.rti.messages;
 
 import java.util.Map;
 
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federation.FederateProxy;
+
 import hla.rti1516.DimensionHandle;
 import hla.rti1516.RangeBounds;
 import hla.rti1516.RegionHandle;
 
 public class CommitRegionModifications
   extends AbstractRequest
+  implements FederationExecutionMessage
 {
   protected Map<RegionHandle, Map<DimensionHandle, RangeBounds>> regionModifications;
 
@@ -36,5 +40,11 @@ public class CommitRegionModifications
   public Map<RegionHandle, Map<DimensionHandle, RangeBounds>> getRegionModifications()
   {
     return regionModifications;
+  }
+
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
+  {
+    federationExecution.commitRegionModifications(federateProxy, this);
   }
 }

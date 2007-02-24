@@ -18,11 +18,14 @@ package net.sf.ohla.rti.messages;
 
 import java.util.Collection;
 
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federation.FederateProxy;
+
 import hla.rti1516.AttributeHandleSet;
 import hla.rti1516.ObjectInstanceHandle;
 
 public class UnconditionalAttributeOwnershipDivestiture
-  implements Message
+  implements FederationExecutionMessage
 {
   protected ObjectInstanceHandle objectInstanceHandle;
   protected Collection<ObjectInstanceHandle> objectInstanceHandles;
@@ -63,5 +66,12 @@ public class UnconditionalAttributeOwnershipDivestiture
   public AttributeHandleSet getAttributeHandles()
   {
     return attributeHandles;
+  }
+
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
+  {
+    federationExecution.unconditionalAttributeOwnershipDivestiture(
+      federateProxy, this);
   }
 }

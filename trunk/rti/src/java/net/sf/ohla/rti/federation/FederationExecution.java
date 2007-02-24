@@ -80,6 +80,7 @@ import net.sf.ohla.rti.messages.TimeAdvanceRequest;
 import net.sf.ohla.rti.messages.TimeAdvanceRequestAvailable;
 import net.sf.ohla.rti.messages.UnconditionalAttributeOwnershipDivestiture;
 import net.sf.ohla.rti.messages.UpdateAttributeValues;
+import net.sf.ohla.rti.messages.ModifyLookahead;
 import net.sf.ohla.rti.messages.callbacks.AnnounceSynchronizationPoint;
 import net.sf.ohla.rti.messages.callbacks.AttributeOwnershipAcquisitionNotification;
 import net.sf.ohla.rti.messages.callbacks.DiscoverObjectInstance;
@@ -1357,6 +1358,21 @@ public class FederationExecution
     try
     {
       timeManager.disableTimeConstrained(federateProxy);
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
+  public void modifyLookahead(
+    FederateProxy federateProxy, ModifyLookahead modifyLookahead)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+      timeManager.modifyLookahead(
+        federateProxy, modifyLookahead.getLookahead());
     }
     finally
     {

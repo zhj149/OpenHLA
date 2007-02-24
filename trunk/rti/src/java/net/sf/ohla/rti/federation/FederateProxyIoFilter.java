@@ -66,6 +66,7 @@ import net.sf.ohla.rti.messages.UnsubscribeInteractionClass;
 import net.sf.ohla.rti.messages.UnsubscribeObjectClassAttributes;
 import net.sf.ohla.rti.messages.UpdateAttributeValues;
 import net.sf.ohla.rti.messages.SendInteraction;
+import net.sf.ohla.rti.messages.FederationExecutionMessage;
 import net.sf.ohla.rti.messages.callbacks.ReceiveInteraction;
 import net.sf.ohla.rti.messages.callbacks.ReflectAttributeValues;
 
@@ -106,39 +107,10 @@ public class FederateProxyIoFilter
                               Object message)
     throws Exception
   {
-    if (message instanceof UpdateAttributeValues)
+    if (message instanceof FederationExecutionMessage)
     {
-      federationExecution.updateAttributeValues(
-        federateProxy, (UpdateAttributeValues) message);
-    }
-    else if (message instanceof SendInteraction)
-    {
-      federationExecution.sendInteraction(
-        federateProxy, (SendInteraction) message);
-    }
-    else if (message instanceof RegisterObjectInstance)
-    {
-      federationExecution.registerObjectInstance(
-        federateProxy, (RegisterObjectInstance) message);
-    }
-    else if (message instanceof ReserveObjectInstanceName)
-    {
-      federationExecution.reserveObjectInstanceName(
-        federateProxy, (ReserveObjectInstanceName) message);
-    }
-    else if (message instanceof DeleteObjectInstance)
-    {
-      federationExecution.deleteObjectInstance(
-        federateProxy, (DeleteObjectInstance) message);
-    }
-    else if (message instanceof RequestAttributeValueUpdate)
-    {
-      federationExecution.requestAttributeValueUpdate(
-        federateProxy, (RequestAttributeValueUpdate) message);
-    }
-    else if (message instanceof Retract)
-    {
-      federationExecution.retract(federateProxy, (Retract) message);
+      ((FederationExecutionMessage) message).execute(
+        federationExecution, federateProxy);
     }
     else if (message instanceof SubscribeObjectClassAttributes)
     {
@@ -234,171 +206,6 @@ public class FederateProxyIoFilter
         // TODO: notify the PublicationManager that subsciption interests have changed
       }
     }
-    else if (message instanceof RegisterFederationSynchronizationPoint)
-    {
-      federationExecution.registerFederationSynchronizationPoint(
-        federateProxy, (RegisterFederationSynchronizationPoint) message);
-    }
-    else if (message instanceof SynchronizationPointAchieved)
-    {
-      federationExecution.synchronizationPointAchieved(
-        federateProxy, (SynchronizationPointAchieved) message);
-    }
-    else if (message instanceof RequestFederationSave)
-    {
-      federationExecution.requestFederationSave(
-        federateProxy, (RequestFederationSave) message);
-    }
-    else if (message instanceof FederateSaveInitiated)
-    {
-      federationExecution.federateSaveInitiated(
-        federateProxy, (FederateSaveInitiated) message);
-    }
-    else if (message instanceof FederateSaveInitiatedFailed)
-    {
-      federationExecution.federateSaveInitiatedFailed(
-        federateProxy, (FederateSaveInitiatedFailed) message);
-    }
-    else if (message instanceof FederateSaveBegun)
-    {
-      federationExecution.federateSaveBegun(
-        federateProxy, (FederateSaveBegun) message);
-    }
-    else if (message instanceof FederateSaveComplete)
-    {
-      federationExecution.federateSaveComplete(
-        federateProxy, (FederateSaveComplete) message);
-    }
-    else if (message instanceof FederateSaveNotComplete)
-    {
-      federationExecution.federateSaveNotComplete(
-        federateProxy, (FederateSaveNotComplete) message);
-    }
-    else if (message instanceof QueryFederationSaveStatus)
-    {
-      federationExecution.queryFederationSaveStatus(
-        federateProxy, (QueryFederationSaveStatus) message);
-    }
-    else if (message instanceof RequestFederationRestore)
-    {
-      federationExecution.requestFederationRestore(
-        federateProxy, (RequestFederationRestore) message);
-    }
-    else if (message instanceof FederateRestoreComplete)
-    {
-      federationExecution.federateRestoreComplete(
-        federateProxy, (FederateRestoreComplete) message);
-    }
-    else if (message instanceof FederateRestoreNotComplete)
-    {
-      federationExecution.federateRestoreNotComplete(
-        federateProxy, (FederateRestoreNotComplete) message);
-    }
-    else if (message instanceof QueryFederationRestoreStatus)
-    {
-      federationExecution.queryFederationRestoreStatus(
-        federateProxy, (QueryFederationRestoreStatus) message);
-    }
-    else if (message instanceof UnconditionalAttributeOwnershipDivestiture)
-    {
-      federationExecution.unconditionalAttributeOwnershipDivestiture(
-        federateProxy, (UnconditionalAttributeOwnershipDivestiture) message);
-    }
-    else if (message instanceof NegotiatedAttributeOwnershipDivestiture)
-    {
-      federationExecution.negotiatedAttributeOwnershipDivestiture(
-        federateProxy, (NegotiatedAttributeOwnershipDivestiture) message);
-    }
-    else if (message instanceof ConfirmDivestiture)
-    {
-      federationExecution.confirmDivestiture(
-        federateProxy, (ConfirmDivestiture) message);
-    }
-    else if (message instanceof AttributeOwnershipAcquisition)
-    {
-      federationExecution.attributeOwnershipAcquisition(
-        federateProxy, (AttributeOwnershipAcquisition) message);
-    }
-    else if (message instanceof AttributeOwnershipAcquisitionIfAvailable)
-    {
-      federationExecution.attributeOwnershipAcquisitionIfAvailable(
-        federateProxy, (AttributeOwnershipAcquisitionIfAvailable) message);
-    }
-    else if (message instanceof AttributeOwnershipDivestitureIfWanted)
-    {
-      federationExecution.attributeOwnershipDivestitureIfWanted(
-        federateProxy, (AttributeOwnershipDivestitureIfWanted) message);
-    }
-    else if (message instanceof CancelNegotiatedAttributeOwnershipDivestiture)
-    {
-      federationExecution.cancelNegotiatedAttributeOwnershipDivestiture(
-        federateProxy, (CancelNegotiatedAttributeOwnershipDivestiture) message);
-    }
-    else if (message instanceof CancelAttributeOwnershipAcquisition)
-    {
-      federationExecution.cancelAttributeOwnershipAcquisition(
-        federateProxy, (CancelAttributeOwnershipAcquisition) message);
-    }
-    else if (message instanceof QueryAttributeOwnership)
-    {
-      federationExecution.queryAttributeOwnership(
-        federateProxy, (QueryAttributeOwnership) message);
-    }
-    else if (message instanceof EnableTimeRegulation)
-    {
-      federationExecution.enableTimeRegulation(
-        federateProxy, (EnableTimeRegulation) message);
-    }
-    else if (message instanceof DisableTimeRegulation)
-    {
-      federationExecution.disableTimeRegulation(
-        federateProxy, (DisableTimeRegulation) message);
-    }
-    else if (message instanceof EnableTimeConstrained)
-    {
-      federationExecution.enableTimeConstrained(
-        federateProxy, (EnableTimeConstrained) message);
-    }
-    else if (message instanceof DisableTimeConstrained)
-    {
-      federationExecution.disableTimeConstrained(
-        federateProxy, (DisableTimeConstrained) message);
-    }
-    else if (message instanceof TimeAdvanceRequest)
-    {
-      federationExecution.timeAdvanceRequest(
-        federateProxy, (TimeAdvanceRequest) message);
-    }
-    else if (message instanceof TimeAdvanceRequestAvailable)
-    {
-      federationExecution.timeAdvanceRequestAvailable(
-        federateProxy, (TimeAdvanceRequestAvailable) message);
-    }
-    else if (message instanceof CommitRegionModifications)
-    {
-      federationExecution.commitRegionModifications(
-        federateProxy, (CommitRegionModifications) message);
-    }
-    else if (message instanceof GetRangeBounds)
-    {
-      federationExecution.getRangeBounds(
-        federateProxy, (GetRangeBounds) message);
-    }
-    else if (message instanceof CreateRegion)
-    {
-      federationExecution.createRegion(
-        federateProxy, (CreateRegion) message);
-    }
-    else if (message instanceof DeleteRegion)
-    {
-      federationExecution.deleteRegion(
-        federateProxy, (DeleteRegion) message);
-    }
-    else if (message instanceof ResignFederationExecution)
-    {
-      federationExecution.resignFederationExecution(
-        federateProxy, (ResignFederationExecution) message);
-    }
     else
     {
       // pass on to the next filter
@@ -458,7 +265,6 @@ public class FederateProxyIoFilter
       Map<AttributeHandle, AttributeSubscription> subscriptions =
         getSubscribedAttributeSubscriptions(
           reflectAttributeValues.getObjectClass());
-System.out.printf("subscriptions for %s: %s\n", reflectAttributeValues.getObjectClass(), subscriptions);
       if (subscriptions == null)
       {
         reflectAttributeValues = null;

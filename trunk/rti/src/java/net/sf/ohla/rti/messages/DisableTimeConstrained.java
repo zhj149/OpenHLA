@@ -16,7 +16,16 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federation.FederateProxy;
+
 public class DisableTimeConstrained
   extends AbstractRequest
+  implements FederationExecutionMessage
 {
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
+  {
+    federationExecution.disableTimeConstrained(federateProxy, this);
+  }
 }

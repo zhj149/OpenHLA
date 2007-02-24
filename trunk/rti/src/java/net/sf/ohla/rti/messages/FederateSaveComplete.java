@@ -17,9 +17,11 @@
 package net.sf.ohla.rti.messages;
 
 import net.sf.ohla.rti.federate.FederateSave;
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federation.FederateProxy;
 
 public class FederateSaveComplete
-  implements Message
+  implements FederationExecutionMessage
 {
   protected FederateSave federateSave;
 
@@ -31,5 +33,11 @@ public class FederateSaveComplete
   public FederateSave getFederateSave()
   {
     return federateSave;
+  }
+
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
+  {
+    federationExecution.federateSaveComplete(federateProxy, this);
   }
 }

@@ -18,10 +18,13 @@ package net.sf.ohla.rti.messages;
 
 import java.util.Set;
 
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federation.FederateProxy;
+
 import hla.rti1516.FederateHandle;
 
 public class FederateSaveInitiatedFailed
-  implements Message
+  implements FederationExecutionMessage
 {
   protected Throwable cause;
   protected Set<FederateHandle> participants;
@@ -41,5 +44,11 @@ public class FederateSaveInitiatedFailed
   public Set<FederateHandle> getParticipants()
   {
     return participants;
+  }
+
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
+  {
+    federationExecution.federateSaveInitiatedFailed(federateProxy, this);
   }
 }

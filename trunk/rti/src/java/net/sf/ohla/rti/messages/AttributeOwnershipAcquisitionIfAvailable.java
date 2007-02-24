@@ -16,17 +16,21 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federation.FederateProxy;
+
 import hla.rti1516.AttributeHandleSet;
 import hla.rti1516.ObjectInstanceHandle;
 
 public class AttributeOwnershipAcquisitionIfAvailable
-  implements Message
+  implements FederationExecutionMessage
 {
   protected ObjectInstanceHandle objectInstanceHandle;
   protected AttributeHandleSet attributeHandles;
 
-  public AttributeOwnershipAcquisitionIfAvailable(ObjectInstanceHandle objectInstanceHandle,
-                                                  AttributeHandleSet attributeHandles)
+  public AttributeOwnershipAcquisitionIfAvailable(
+    ObjectInstanceHandle objectInstanceHandle,
+    AttributeHandleSet attributeHandles)
   {
     this.objectInstanceHandle = objectInstanceHandle;
     this.attributeHandles = attributeHandles;
@@ -40,5 +44,12 @@ public class AttributeOwnershipAcquisitionIfAvailable
   public AttributeHandleSet getAttributeHandles()
   {
     return attributeHandles;
+  }
+
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
+  {
+    federationExecution.attributeOwnershipAcquisitionIfAvailable(
+      federateProxy, this);
   }
 }

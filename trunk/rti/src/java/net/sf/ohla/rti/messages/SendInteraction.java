@@ -16,6 +16,9 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federation.FederateProxy;
+
 import hla.rti1516.InteractionClassHandle;
 import hla.rti1516.LogicalTime;
 import hla.rti1516.MessageRetractionHandle;
@@ -25,7 +28,7 @@ import hla.rti1516.RegionHandleSet;
 import hla.rti1516.TransportationType;
 
 public class SendInteraction
-  implements Message
+  implements FederationExecutionMessage
 {
   protected InteractionClassHandle interactionClassHandle;
   protected ParameterHandleValueMap parameterValues;
@@ -125,5 +128,11 @@ public class SendInteraction
   public RegionHandleSet getSentRegionHandles()
   {
     return sentRegionHandles;
+  }
+
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
+  {
+    federationExecution.sendInteraction(federateProxy, this);
   }
 }

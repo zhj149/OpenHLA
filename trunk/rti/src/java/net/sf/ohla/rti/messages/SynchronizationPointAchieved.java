@@ -16,8 +16,11 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federation.FederateProxy;
+
 public class SynchronizationPointAchieved
-  implements Message
+  implements FederationExecutionMessage
 {
   protected String label;
 
@@ -29,5 +32,11 @@ public class SynchronizationPointAchieved
   public String getLabel()
   {
     return label;
+  }
+
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
+  {
+    federationExecution.synchronizationPointAchieved(federateProxy, this);
   }
 }

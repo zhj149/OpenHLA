@@ -16,13 +16,16 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federation.FederateProxy;
+
 import hla.rti1516.LogicalTime;
 import hla.rti1516.MessageRetractionHandle;
 import hla.rti1516.ObjectInstanceHandle;
 import hla.rti1516.OrderType;
 
 public class DeleteObjectInstance
-  implements Message
+  implements FederationExecutionMessage
 {
   protected ObjectInstanceHandle objectInstanceHandle;
   protected byte[] tag;
@@ -72,5 +75,11 @@ public class DeleteObjectInstance
   public MessageRetractionHandle getMessageRetractionHandle()
   {
     return messageRetractionHandle;
+  }
+
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
+  {
+    federationExecution.deleteObjectInstance(federateProxy, this);
   }
 }

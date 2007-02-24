@@ -16,10 +16,13 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federation.FederateProxy;
+
 import hla.rti1516.LogicalTime;
 
 public class TimeAdvanceRequestAvailable
-  implements Message
+  implements FederationExecutionMessage
 {
   protected LogicalTime time;
 
@@ -37,5 +40,11 @@ public class TimeAdvanceRequestAvailable
   public String toString()
   {
     return String.format("Time Advance Request Available: %s", time);
+  }
+
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
+  {
+    federationExecution.timeAdvanceRequestAvailable(federateProxy, this);
   }
 }

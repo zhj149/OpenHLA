@@ -16,8 +16,12 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federation.FederateProxy;
+
 public class RequestFederationRestore
   extends AbstractRequest
+  implements FederationExecutionMessage
 {
   protected String label;
 
@@ -29,5 +33,11 @@ public class RequestFederationRestore
   public String getLabel()
   {
     return label;
+  }
+
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
+  {
+    federationExecution.requestFederationRestore(federateProxy, this);
   }
 }
