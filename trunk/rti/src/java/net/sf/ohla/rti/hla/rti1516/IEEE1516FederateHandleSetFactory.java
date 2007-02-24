@@ -16,8 +16,6 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
-import net.sf.ohla.rti.hla.rti1516.IEEE1516FederateHandleSet;
-
 import hla.rti1516.FederateHandleSet;
 import hla.rti1516.FederateHandleSetFactory;
 

@@ -5,8 +5,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import net.sf.ohla.rti.hla.rti1516.jlc.IEEE1516DataElement;
-
 import hla.rti1516.jlc.ByteWrapper;
 import hla.rti1516.jlc.DataElement;
 import hla.rti1516.jlc.DataElementFactory;

@@ -19,8 +19,8 @@ package net.sf.ohla.rti.fed;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.fdd.Attribute;
+import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.fdd.InteractionClass;
 
 import hla.rti.AttributeNotDefined;

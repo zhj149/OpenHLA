@@ -35,8 +35,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.sf.ohla.rti.fdd.Attribute;
 import net.sf.ohla.rti.fdd.ObjectClass;
-import net.sf.ohla.rti.federation.FederateProxy;
-import net.sf.ohla.rti.federation.FederationExecution;
 import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandleSet;
 import net.sf.ohla.rti.hla.rti1516.IEEE1516ObjectInstanceHandle;
 import net.sf.ohla.rti.hla.rti1516.IEEE1516RegionHandleSet;

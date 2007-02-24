@@ -16,8 +16,6 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
-import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandleSet;
-
 import hla.rti1516.AttributeHandleSet;
 import hla.rti1516.AttributeHandleSetFactory;
 

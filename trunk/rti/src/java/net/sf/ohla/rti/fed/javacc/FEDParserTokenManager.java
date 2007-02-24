@@ -16,28 +16,6 @@
  */
 
 package net.sf.ohla.rti.fed.javacc;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.concurrent.atomic.AtomicInteger;
-import net.sf.ohla.rti.fed.FEDAttribute;
-import net.sf.ohla.rti.fed.FEDFDD;
-import net.sf.ohla.rti.fed.FEDInteractionClass;
-import net.sf.ohla.rti.fed.FEDObjectClass;
-import net.sf.ohla.rti.fed.RoutingSpace;
-import net.sf.ohla.rti.fdd.Attribute;
-import net.sf.ohla.rti.fdd.Dimension;
-import net.sf.ohla.rti.fdd.FDD;
-import net.sf.ohla.rti.fdd.InteractionClass;
-import net.sf.ohla.rti.fdd.ObjectClass;
-import net.sf.ohla.rti.fdd.Parameter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import hla.rti.CouldNotOpenFED;
-import hla.rti.ErrorReadingFED;
-import hla.rti.NameNotFound;
-import hla.rti1516.ErrorReadingFDD;
 
 public class FEDParserTokenManager implements FEDParserConstants
 {

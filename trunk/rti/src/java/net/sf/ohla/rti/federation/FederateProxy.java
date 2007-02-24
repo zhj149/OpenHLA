@@ -16,27 +16,27 @@
 
 package net.sf.ohla.rti.federation;
 
-import net.sf.ohla.rti.messages.callbacks.InitiateFederateSave;
-import net.sf.ohla.rti.messages.callbacks.FederationSaved;
-import net.sf.ohla.rti.messages.callbacks.FederationNotSaved;
-import net.sf.ohla.rti.messages.callbacks.DiscoverObjectInstance;
-import net.sf.ohla.rti.messages.callbacks.ReflectAttributeValues;
-import net.sf.ohla.rti.messages.callbacks.ReceiveInteraction;
-import net.sf.ohla.rti.messages.callbacks.RemoveObjectInstance;
-import net.sf.ohla.rti.messages.callbacks.AnnounceSynchronizationPoint;
-import net.sf.ohla.rti.messages.callbacks.TimeRegulationEnabled;
-import net.sf.ohla.rti.messages.callbacks.TimeConstrainedEnabled;
-import net.sf.ohla.rti.messages.callbacks.TimeAdvanceGrant;
-import net.sf.ohla.rti.messages.FederateSaveInitiated;
-import net.sf.ohla.rti.messages.FederateSaveInitiatedFailed;
-import net.sf.ohla.rti.messages.FederateSaveBegun;
-import net.sf.ohla.rti.messages.FederateSaveComplete;
-import net.sf.ohla.rti.messages.FederateSaveNotComplete;
 import net.sf.ohla.rti.messages.FederateRestoreComplete;
 import net.sf.ohla.rti.messages.FederateRestoreNotComplete;
+import net.sf.ohla.rti.messages.FederateSaveBegun;
+import net.sf.ohla.rti.messages.FederateSaveComplete;
+import net.sf.ohla.rti.messages.FederateSaveInitiated;
+import net.sf.ohla.rti.messages.FederateSaveInitiatedFailed;
+import net.sf.ohla.rti.messages.FederateSaveNotComplete;
+import net.sf.ohla.rti.messages.GALTAdvanced;
 import net.sf.ohla.rti.messages.RequestAttributeValueUpdate;
 import net.sf.ohla.rti.messages.Retract;
-import net.sf.ohla.rti.messages.GALTAdvanced;
+import net.sf.ohla.rti.messages.callbacks.AnnounceSynchronizationPoint;
+import net.sf.ohla.rti.messages.callbacks.DiscoverObjectInstance;
+import net.sf.ohla.rti.messages.callbacks.FederationNotSaved;
+import net.sf.ohla.rti.messages.callbacks.FederationSaved;
+import net.sf.ohla.rti.messages.callbacks.InitiateFederateSave;
+import net.sf.ohla.rti.messages.callbacks.ReceiveInteraction;
+import net.sf.ohla.rti.messages.callbacks.ReflectAttributeValues;
+import net.sf.ohla.rti.messages.callbacks.RemoveObjectInstance;
+import net.sf.ohla.rti.messages.callbacks.TimeAdvanceGrant;
+import net.sf.ohla.rti.messages.callbacks.TimeConstrainedEnabled;
+import net.sf.ohla.rti.messages.callbacks.TimeRegulationEnabled;
 
 import org.apache.mina.common.IoSession;
 import org.apache.mina.common.WriteFuture;
@@ -47,12 +47,12 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
 import hla.rti1516.FederateHandle;
-import hla.rti1516.RestoreStatus;
-import hla.rti1516.SaveStatus;
+import hla.rti1516.IllegalTimeArithmetic;
 import hla.rti1516.LogicalTime;
 import hla.rti1516.LogicalTimeInterval;
-import hla.rti1516.IllegalTimeArithmetic;
 import hla.rti1516.ResignAction;
+import hla.rti1516.RestoreStatus;
+import hla.rti1516.SaveStatus;
 
 public class FederateProxy
 {

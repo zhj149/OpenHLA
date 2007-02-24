@@ -25,13 +25,13 @@ import net.sf.ohla.rti.fdd.ObjectClass;
 
 import hla.rti1516.AttributeHandle;
 import hla.rti1516.AttributeHandleSet;
+import hla.rti1516.AttributeHandleValueMap;
 import hla.rti1516.AttributeRegionAssociation;
 import hla.rti1516.AttributeSetRegionSetPairList;
 import hla.rti1516.InteractionClassHandle;
 import hla.rti1516.ObjectClassHandle;
 import hla.rti1516.RegionHandle;
 import hla.rti1516.RegionHandleSet;
-import hla.rti1516.AttributeHandleValueMap;
 
 public class SubscriptionManager
 {

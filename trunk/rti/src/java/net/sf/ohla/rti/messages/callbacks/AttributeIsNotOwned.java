@@ -18,10 +18,10 @@ package net.sf.ohla.rti.messages.callbacks;
 
 import hla.rti1516.AttributeHandle;
 import hla.rti1516.AttributeNotRecognized;
+import hla.rti1516.FederateAmbassador;
 import hla.rti1516.FederateInternalError;
 import hla.rti1516.ObjectInstanceHandle;
 import hla.rti1516.ObjectInstanceNotKnown;
-import hla.rti1516.FederateAmbassador;
 
 public class AttributeIsNotOwned
   implements Callback

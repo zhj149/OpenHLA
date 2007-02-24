@@ -17,10 +17,10 @@
 package net.sf.ohla.rti.messages.callbacks;
 
 import hla.rti1516.FederateAmbassador;
-import hla.rti1516.LogicalTime;
-import hla.rti1516.UnableToPerformSave;
 import hla.rti1516.FederateInternalError;
 import hla.rti1516.InvalidLogicalTime;
+import hla.rti1516.LogicalTime;
+import hla.rti1516.UnableToPerformSave;
 
 public class InitiateFederateSave
   implements Callback

@@ -16,19 +16,19 @@
 
 package net.sf.ohla.rti.hla.rti.jlc;
 
-import net.sf.ohla.rti.hla.rti.HLA13RTIambassador;
 import net.sf.ohla.rti.hla.rti.HLA13AttributeHandleSet;
 import net.sf.ohla.rti.hla.rti.HLA13FederateHandleSet;
+import net.sf.ohla.rti.hla.rti.HLA13RTIambassador;
 import net.sf.ohla.rti.hla.rti.HLA13SuppliedAttributes;
 import net.sf.ohla.rti.hla.rti.HLA13SuppliedParameters;
 
-import hla.rti.jlc.RtiFactory;
-import hla.rti.jlc.RTIambassadorEx;
-import hla.rti.RTIinternalError;
 import hla.rti.AttributeHandleSet;
 import hla.rti.FederateHandleSet;
+import hla.rti.RTIinternalError;
 import hla.rti.SuppliedAttributes;
 import hla.rti.SuppliedParameters;
+import hla.rti.jlc.RTIambassadorEx;
+import hla.rti.jlc.RtiFactory;
 
 public class HLA13RtiFactory
   implements RtiFactory

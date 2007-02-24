@@ -16,8 +16,6 @@
 
 package net.sf.ohla.rti.hla.rti;
 
-import net.sf.ohla.rti.hla.rti.HLA13SuppliedParameters;
-
 import hla.rti.SuppliedParameters;
 import hla.rti.SuppliedParametersFactory;
 
