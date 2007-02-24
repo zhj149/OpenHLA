@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, Michael Newcomb
+ * Copyright (c) 2006-2007, Michael Newcomb
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,17 @@
 
 package net.sf.ohla.rti1516;
 
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import hla.rti1516.jlc.NullFederateAmbassador;
-import hla.rti1516.DimensionHandleSet;
 import hla.rti1516.DimensionHandle;
-import hla.rti1516.RegionHandle;
+import hla.rti1516.DimensionHandleSet;
 import hla.rti1516.RangeBounds;
+import hla.rti1516.RegionHandle;
 import hla.rti1516.RegionHandleSet;
 import hla.rti1516.ResignAction;
+import hla.rti1516.jlc.NullFederateAmbassador;
 
 public class DataDistributionManagementTestNG
   extends BaseTestNG

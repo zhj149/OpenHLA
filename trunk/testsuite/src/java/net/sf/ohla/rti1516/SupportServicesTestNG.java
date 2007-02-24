@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, Michael Newcomb
+ * Copyright (c) 2006-2007, Michael Newcomb
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,8 +36,8 @@ import hla.rti1516.NameNotFound;
 import hla.rti1516.ObjectClassHandle;
 import hla.rti1516.OrderType;
 import hla.rti1516.ParameterHandle;
-import hla.rti1516.TransportationType;
 import hla.rti1516.ResignAction;
+import hla.rti1516.TransportationType;
 import hla.rti1516.jlc.NullFederateAmbassador;
 
 @Test(groups = {"Support Services"})

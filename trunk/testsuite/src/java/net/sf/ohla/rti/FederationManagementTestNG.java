@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, Michael Newcomb
+ * Copyright (c) 2006-2007, Michael Newcomb
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,22 +18,22 @@ package net.sf.ohla.rti;
 
 import java.net.URL;
 
-import java.util.List;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
-import org.testng.annotations.Test;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 import hla.rti.CouldNotOpenFED;
 import hla.rti.ErrorReadingFED;
 import hla.rti.FederateAlreadyExecutionMember;
+import hla.rti.FederateInternalError;
 import hla.rti.FederateNotExecutionMember;
 import hla.rti.FederationExecutionAlreadyExists;
 import hla.rti.FederationExecutionDoesNotExist;
 import hla.rti.ResignAction;
-import hla.rti.FederateInternalError;
 import hla.rti.SynchronizationLabelNotAnnounced;
 import hla.rti.jlc.NullFederateAmbassador;
 import hla.rti.jlc.RTIambassadorEx;

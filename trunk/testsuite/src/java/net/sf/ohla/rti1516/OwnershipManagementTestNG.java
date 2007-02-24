@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, Michael Newcomb
+ * Copyright (c) 2006-2007, Michael Newcomb
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,8 +41,8 @@ import hla.rti1516.ObjectInstanceHandle;
 import hla.rti1516.ObjectInstanceNotKnown;
 import hla.rti1516.OrderType;
 import hla.rti1516.RTIambassador;
-import hla.rti1516.TransportationType;
 import hla.rti1516.ResignAction;
+import hla.rti1516.TransportationType;
 import hla.rti1516.jlc.NullFederateAmbassador;
 
 @Test(groups = {"Ownership Management"})

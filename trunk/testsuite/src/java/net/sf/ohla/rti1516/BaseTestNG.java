@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, Michael Newcomb
+ * Copyright (c) 2006-2007, Michael Newcomb
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,15 +21,15 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sf.ohla.rti.hla.rti1516.Integer64TimeIntervalFactory;
 import net.sf.ohla.rti.hla.rti1516.Integer64TimeFactory;
+import net.sf.ohla.rti.hla.rti1516.Integer64TimeIntervalFactory;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import hla.rti1516.RTIambassador;
 import hla.rti1516.MobileFederateServices;
+import hla.rti1516.RTIambassador;
 import hla.rti1516.jlc.RtiFactory;
 import hla.rti1516.jlc.RtiFactoryFactory;
 
