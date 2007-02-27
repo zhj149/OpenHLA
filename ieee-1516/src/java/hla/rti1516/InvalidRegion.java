@@ -5,7 +5,7 @@ public final class InvalidRegion
 {
   public InvalidRegion(RegionHandle regionHandle)
   {
-    this(regionHandle.toString());
+    this(String.format("%s", regionHandle));
   }
 
   public InvalidRegion(String message)
