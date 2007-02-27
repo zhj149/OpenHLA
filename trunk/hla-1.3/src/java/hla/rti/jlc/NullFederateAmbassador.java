@@ -34,12 +34,12 @@ import hla.rti.UnableToPerformSave;
 public class NullFederateAmbassador
   implements FederateAmbassador
 {
-  public void synchronizationPointRegistrationFailed(String label)
+  public void synchronizationPointRegistrationSucceeded(String label)
     throws FederateInternalError
   {
   }
 
-  public void synchronizationPointRegistrationSucceeded(String label)
+  public void synchronizationPointRegistrationFailed(String label)
     throws FederateInternalError
   {
   }
