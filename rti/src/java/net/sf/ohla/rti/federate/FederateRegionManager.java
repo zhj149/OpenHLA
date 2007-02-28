@@ -520,8 +520,7 @@ public class FederateRegionManager
         RangeBounds rangeBounds = this.rangeBounds.get(dimensionHandle);
         if (rangeBounds == null)
         {
-          throw new RegionDoesNotContainSpecifiedDimension(
-            String.format("%s", dimensionHandle));
+          throw new RegionDoesNotContainSpecifiedDimension(dimensionHandle);
         }
         return clone(rangeBounds);
       }

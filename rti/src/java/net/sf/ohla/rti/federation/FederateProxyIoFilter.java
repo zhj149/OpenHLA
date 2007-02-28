@@ -20,6 +20,7 @@ import java.util.Map;
 
 import net.sf.ohla.rti.SubscriptionManager;
 import net.sf.ohla.rti.fdd.InteractionClass;
+import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandleValueMap;
 import net.sf.ohla.rti.hla.rti1516.IEEE1516ParameterHandleValueMap;
 import net.sf.ohla.rti.messages.FederationExecutionMessage;
@@ -29,6 +30,7 @@ import net.sf.ohla.rti.messages.UnsubscribeInteractionClass;
 import net.sf.ohla.rti.messages.UnsubscribeObjectClassAttributes;
 import net.sf.ohla.rti.messages.callbacks.ReceiveInteraction;
 import net.sf.ohla.rti.messages.callbacks.ReflectAttributeValues;
+import net.sf.ohla.rti.messages.callbacks.DiscoverObjectInstance;
 
 import org.apache.mina.common.IoFilterAdapter;
 import org.apache.mina.common.IoSession;
@@ -179,43 +181,96 @@ public class FederateProxyIoFilter
                           WriteRequest writeRequest)
     throws Exception
   {
-    if (writeRequest.getMessage() instanceof ReflectAttributeValues)
+//    federationExecution.getFederatesLock().readLock().lock();
+    try
     {
-      ReflectAttributeValues reflectAttributeValues =
-        subscriptionManager.transform(
-          (ReflectAttributeValues) writeRequest.getMessage());
-
-      if (reflectAttributeValues != null)
+      if (writeRequest.getMessage() instanceof ReflectAttributeValues)
       {
-        writeRequest = reflectAttributeValues == writeRequest.getMessage() ?
-          writeRequest : new WriteRequest(reflectAttributeValues);
+        ReflectAttributeValues reflectAttributeValues =
+          subscriptionManager.transform(
+            (ReflectAttributeValues) writeRequest.getMessage());
+
+        if (reflectAttributeValues == null)
+        {
+          writeRequest.getFuture().setWritten(true);
+        }
+        else
+        {
+          writeRequest = reflectAttributeValues == writeRequest.getMessage() ?
+            writeRequest : new WriteRequest(reflectAttributeValues);
+          nextFilter.filterWrite(session, writeRequest);
+        }
+      }
+      else if (writeRequest.getMessage() instanceof ReceiveInteraction)
+      {
+        ReceiveInteraction receiveInteraction =
+          subscriptionManager.transform(
+            (ReceiveInteraction) writeRequest.getMessage());
+
+        if (receiveInteraction == null)
+        {
+          writeRequest.getFuture().setWritten(true);
+        }
+        else
+        {
+          writeRequest = receiveInteraction == writeRequest.getMessage() ?
+            writeRequest : new WriteRequest(receiveInteraction);
+          nextFilter.filterWrite(session, writeRequest);
+        }
+      }
+      else if (writeRequest.getMessage() instanceof DiscoverObjectInstance)
+      {
+        DiscoverObjectInstance discoverObjectInstance =
+          subscriptionManager.transform(
+            (DiscoverObjectInstance) writeRequest.getMessage());
+
+        if (discoverObjectInstance == null)
+        {
+          writeRequest.getFuture().setWritten(true);
+          nextFilter.filterWrite(session, writeRequest);
+        }
+        else
+        {
+          writeRequest = discoverObjectInstance == writeRequest.getMessage() ?
+            writeRequest : new WriteRequest(discoverObjectInstance, writeRequest.getFuture());
+          nextFilter.filterWrite(session, writeRequest);
+        }
+      }
+      else
+      {
+        // pass on to the next filter
+        //
         nextFilter.filterWrite(session, writeRequest);
       }
     }
-    else if (writeRequest.getMessage() instanceof ReceiveInteraction)
+    finally
     {
-      ReceiveInteraction receiveInteraction =
-        subscriptionManager.transform(
-          (ReceiveInteraction) writeRequest.getMessage());
-
-      if (receiveInteraction != null)
-      {
-        writeRequest = receiveInteraction == writeRequest.getMessage() ?
-          writeRequest : new WriteRequest(receiveInteraction);
-        nextFilter.filterWrite(session, writeRequest);
-      }
-    }
-    else
-    {
-      // pass on to the next filter
-      //
-      nextFilter.filterWrite(session, writeRequest);
+//      federationExecution.getFederatesLock().readLock().unlock();
     }
   }
 
   protected class FederateIoFilterSubscriptionManager
     extends SubscriptionManager
   {
+    public DiscoverObjectInstance transform(
+      DiscoverObjectInstance discoverObjectInstance)
+    {
+      ObjectClass subscribedObjectClass =
+        getSubscribedObjectClass(discoverObjectInstance.getObjectClass());
+      if (subscribedObjectClass == null)
+      {
+        discoverObjectInstance = null;
+      }
+      else
+      {
+        discoverObjectInstance = new DiscoverObjectInstance(
+          discoverObjectInstance.getObjectInstanceHandle(),
+          subscribedObjectClass, discoverObjectInstance.getName());
+      }
+
+      return discoverObjectInstance;
+    }
+
     public ReflectAttributeValues transform(
       ReflectAttributeValues reflectAttributeValues)
     {

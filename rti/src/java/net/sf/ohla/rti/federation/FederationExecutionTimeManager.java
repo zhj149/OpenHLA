@@ -198,7 +198,7 @@ public class FederationExecutionTimeManager
 
       if (galtAdvanced)
       {
-        federationExecution.getFederatesLock().lock();
+        federationExecution.getFederatesLock().writeLock().lock();
         try
         {
           for (FederateProxy f : federationExecution.getFederates().values())
@@ -208,7 +208,7 @@ public class FederationExecutionTimeManager
         }
         finally
         {
-          federationExecution.getFederatesLock().unlock();
+          federationExecution.getFederatesLock().writeLock().unlock();
         }
       }
     }

@@ -16,6 +16,8 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import net.sf.ohla.rti.fdd.ObjectClass;
+
 import hla.rti1516.CouldNotDiscover;
 import hla.rti1516.FederateAmbassador;
 import hla.rti1516.FederateInternalError;
@@ -30,13 +32,16 @@ public class DiscoverObjectInstance
   protected ObjectClassHandle objectClassHandle;
   protected String name;
 
+  protected transient ObjectClass objectClass;
+
   public DiscoverObjectInstance(ObjectInstanceHandle objectInstanceHandle,
-                                ObjectClassHandle objectClassHandle,
-                                String name)
+                                ObjectClass objectClass, String name)
   {
     this.objectInstanceHandle = objectInstanceHandle;
-    this.objectClassHandle = objectClassHandle;
+    this.objectClass = objectClass;
     this.name = name;
+
+    objectClassHandle = objectClass.getObjectClassHandle();
   }
 
   public ObjectInstanceHandle getObjectInstanceHandle()
@@ -52,6 +57,11 @@ public class DiscoverObjectInstance
   public String getName()
   {
     return name;
+  }
+
+  public ObjectClass getObjectClass()
+  {
+    return objectClass;
   }
 
   public void execute(FederateAmbassador federateAmbassador)

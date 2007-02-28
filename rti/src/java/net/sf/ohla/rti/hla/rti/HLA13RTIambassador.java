@@ -322,8 +322,6 @@ public class HLA13RTIambassador
     ieee1516LogicalTimeIntervalFactory =
       getIEEE1516LogicalTimeIntervalFactory(federateType);
 
-    this.federateAmbassador = federateAmbassador;
-
     try
     {
       FederateHandle federateHandle = rtiAmbassador.joinFederationExecution(
@@ -336,6 +334,8 @@ public class HLA13RTIambassador
         new ReserveObjectInstanceNameIoFilter());
 
       setFEDFDD();
+
+      this.federateAmbassador = federateAmbassador;
 
       return ((IEEE1516FederateHandle) federateHandle).getHandle();
     }
@@ -397,8 +397,6 @@ public class HLA13RTIambassador
     ieee1516LogicalTimeIntervalFactory =
       getIEEE1516LogicalTimeIntervalFactory(federateType);
 
-    this.federateAmbassador = federateAmbassador;
-
     try
     {
       FederateHandle federateHandle = rtiAmbassador.joinFederationExecution(
@@ -411,6 +409,8 @@ public class HLA13RTIambassador
         new ReserveObjectInstanceNameIoFilter());
 
       setFEDFDD();
+
+      this.federateAmbassador = federateAmbassador;
 
       return ((IEEE1516FederateHandle) federateHandle).getHandle();
     }
@@ -2811,7 +2811,7 @@ public class HLA13RTIambassador
   {
     if (numberOfExtents <= 0)
     {
-      throw new InvalidExtents(Integer.toString(numberOfExtents));
+      throw new InvalidExtents(String.format("%d <= 0", numberOfExtents));
     }
 
     RoutingSpace routingSpace = fedFDD.getRoutingSpace(routingSpaceHandle);
@@ -2821,7 +2821,7 @@ public class HLA13RTIambassador
 
     // create an IEEE 1516 region for each extent
     //
-    hla.rti1516.RegionHandleSet regionHandles = new IEEE1516RegionHandleSet();
+    RegionHandleSet regionHandles = new IEEE1516RegionHandleSet();
 
     try
     {
@@ -3012,7 +3012,7 @@ public class HLA13RTIambassador
            FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
-    hla.rti1516.RegionHandleSet regionHandles = new IEEE1516RegionHandleSet();
+    RegionHandleSet regionHandles = new IEEE1516RegionHandleSet();
     for (Region region : regions)
     {
       if (region == null)
@@ -3102,7 +3102,7 @@ public class HLA13RTIambassador
            ObjectAlreadyRegistered, FederateNotExecutionMember,
            SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    hla.rti1516.RegionHandleSet regionHandles = new IEEE1516RegionHandleSet();
+    RegionHandleSet regionHandles = new IEEE1516RegionHandleSet();
     for (Region region : regions)
     {
       if (region == null)
