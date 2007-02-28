@@ -181,7 +181,7 @@ public class FederateProxyIoFilter
                           WriteRequest writeRequest)
     throws Exception
   {
-//    federationExecution.getFederatesLock().readLock().lock();
+    federationExecution.getFederatesLock().readLock().lock();
     try
     {
       if (writeRequest.getMessage() instanceof ReflectAttributeValues)
@@ -197,7 +197,8 @@ public class FederateProxyIoFilter
         else
         {
           writeRequest = reflectAttributeValues == writeRequest.getMessage() ?
-            writeRequest : new WriteRequest(reflectAttributeValues);
+            writeRequest :
+            new WriteRequest(reflectAttributeValues, writeRequest.getFuture());
           nextFilter.filterWrite(session, writeRequest);
         }
       }
@@ -214,7 +215,8 @@ public class FederateProxyIoFilter
         else
         {
           writeRequest = receiveInteraction == writeRequest.getMessage() ?
-            writeRequest : new WriteRequest(receiveInteraction);
+            writeRequest :
+            new WriteRequest(receiveInteraction, writeRequest.getFuture());
           nextFilter.filterWrite(session, writeRequest);
         }
       }
@@ -227,12 +229,12 @@ public class FederateProxyIoFilter
         if (discoverObjectInstance == null)
         {
           writeRequest.getFuture().setWritten(true);
-          nextFilter.filterWrite(session, writeRequest);
         }
         else
         {
           writeRequest = discoverObjectInstance == writeRequest.getMessage() ?
-            writeRequest : new WriteRequest(discoverObjectInstance, writeRequest.getFuture());
+            writeRequest :
+            new WriteRequest(discoverObjectInstance, writeRequest.getFuture());
           nextFilter.filterWrite(session, writeRequest);
         }
       }
@@ -245,7 +247,7 @@ public class FederateProxyIoFilter
     }
     finally
     {
-//      federationExecution.getFederatesLock().readLock().unlock();
+      federationExecution.getFederatesLock().readLock().unlock();
     }
   }
 
