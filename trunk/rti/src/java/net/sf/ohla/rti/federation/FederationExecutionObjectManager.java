@@ -123,7 +123,7 @@ public class FederationExecutionObjectManager
           lastWriteFuture = federateProxy.discoverObjectInstance(
             new DiscoverObjectInstance(
               objectInstance.getObjectInstanceHandle(),
-              objectClass.getObjectClassHandle(), objectInstance.getName()));
+              objectClass, objectInstance.getName()));
         }
       }
     }
@@ -216,7 +216,7 @@ public class FederationExecutionObjectManager
             updateTime, messageRetractionHandle,
             objectInstance.getObjectClass());
 
-        federationExecution.getFederatesLock().lock();
+        federationExecution.getFederatesLock().writeLock().lock();
         try
         {
           for (FederateProxy f : federationExecution.getFederates().values())
@@ -229,7 +229,7 @@ public class FederationExecutionObjectManager
         }
         finally
         {
-          federationExecution.getFederatesLock().unlock();
+          federationExecution.getFederatesLock().writeLock().unlock();
         }
       }
     }

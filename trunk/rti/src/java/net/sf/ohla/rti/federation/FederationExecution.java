@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
@@ -28,12 +27,10 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import net.sf.ohla.rti.fdd.Dimension;
 import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandleSet;
 import net.sf.ohla.rti.hla.rti1516.IEEE1516FederateHandle;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516RegionHandle;
 import net.sf.ohla.rti.messages.AttributeOwnershipAcquisition;
 import net.sf.ohla.rti.messages.AttributeOwnershipAcquisitionIfAvailable;
 import net.sf.ohla.rti.messages.AttributeOwnershipDivestitureIfWanted;
@@ -105,15 +102,12 @@ import org.slf4j.MarkerFactory;
 
 import hla.rti1516.AttributeHandle;
 import hla.rti1516.AttributeHandleSet;
-import hla.rti1516.DimensionHandle;
 import hla.rti1516.FederateHandle;
 import hla.rti1516.FederateHandleRestoreStatusPair;
 import hla.rti1516.FederateHandleSaveStatusPair;
 import hla.rti1516.FederatesCurrentlyJoined;
 import hla.rti1516.ObjectInstanceHandle;
 import hla.rti1516.OrderType;
-import hla.rti1516.RangeBounds;
-import hla.rti1516.RegionHandle;
 import hla.rti1516.RestoreInProgress;
 import hla.rti1516.RestoreStatus;
 import hla.rti1516.SaveInProgress;
@@ -133,7 +127,8 @@ public class FederationExecution
   protected FederationExecutionSave federationExecutionSave;
   protected FederationExecutionRestore federationExecutionRestore;
 
-  protected Lock federatesLock = new ReentrantLock(true);
+  // TODO: federates need to get read lock when writing to their session
+  protected ReadWriteLock federatesLock = new ReentrantReadWriteLock(true);
   protected Map<FederateHandle, FederateProxy> federates =
     new HashMap<FederateHandle, FederateProxy>();
 
@@ -141,19 +136,15 @@ public class FederationExecution
   protected Map<String, FederationExecutionSynchronizationPoint> synchronizationPoints =
     new HashMap<String, FederationExecutionSynchronizationPoint>();
 
-  protected ReadWriteLock regionsLock = new ReentrantReadWriteLock(true);
-  protected Map<RegionHandle, Map<DimensionHandle, RangeBounds>> regions =
-    new HashMap<RegionHandle, Map<DimensionHandle, RangeBounds>>();
-
   protected FederationExecutionObjectManager objectManager =
     new FederationExecutionObjectManager(this);
 
+  protected FederationExecutionRegionManager regionManager =
+    new FederationExecutionRegionManager(this);
+
   protected FederationExecutionTimeManager timeManager;
 
-  protected AtomicInteger objectInstanceCount =
-    new AtomicInteger(Integer.MIN_VALUE);
   protected AtomicInteger federateCount = new AtomicInteger(Short.MIN_VALUE);
-  protected AtomicInteger regionCount = new AtomicInteger(Short.MIN_VALUE);
 
   protected final Logger log = LoggerFactory.getLogger(getClass());
   protected final Marker marker;
@@ -181,7 +172,7 @@ public class FederationExecution
     return marker;
   }
 
-  public Lock getFederatesLock()
+  public ReadWriteLock getFederatesLock()
   {
     return federatesLock;
   }
@@ -194,19 +185,6 @@ public class FederationExecution
   public void destroy()
     throws FederatesCurrentlyJoined
   {
-  }
-
-  public FederateProxy getFederate(FederateHandle federateHandle)
-  {
-    federatesLock.lock();
-    try
-    {
-      return federates.get(federateHandle);
-    }
-    finally
-    {
-      federatesLock.unlock();
-    }
   }
 
   public void joinFederationExecution(
@@ -224,7 +202,7 @@ public class FederationExecution
       //
       FederateHandle federateHandle = nextFederateHandle();
 
-      federatesLock.lock();
+      federatesLock.writeLock().lock();
       try
       {
         if (timeManager != null)
@@ -256,7 +234,7 @@ public class FederationExecution
       }
       finally
       {
-        federatesLock.unlock();
+        federatesLock.writeLock().unlock();
       }
     }
     catch (SaveInProgress sip)
@@ -282,7 +260,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      federatesLock.lock();
+      federatesLock.writeLock().lock();
       try
       {
         federateProxy.resignFederationExecution(
@@ -292,7 +270,7 @@ public class FederationExecution
       }
       finally
       {
-        federatesLock.unlock();
+        federatesLock.writeLock().unlock();
       }
     }
     finally
@@ -326,7 +304,7 @@ public class FederationExecution
           Set<FederateHandle> federateHandles =
             registerFederationSynchronizationPoint.getFederateHandles();
 
-          federatesLock.lock();
+          federatesLock.writeLock().lock();
           try
           {
             if (federateHandles == null || federateHandles.isEmpty())
@@ -370,7 +348,7 @@ public class FederationExecution
           }
           finally
           {
-            federatesLock.unlock();
+            federatesLock.writeLock().unlock();
           }
         }
       }
@@ -405,7 +383,7 @@ public class FederationExecution
           FederationSynchronized federationSynchronized =
             new FederationSynchronized(
               federationExecutionSynchronizationPoint.getLabel());
-          federatesLock.lock();
+          federatesLock.writeLock().lock();
           try
           {
             for (FederateProxy f : federates.values())
@@ -415,7 +393,7 @@ public class FederationExecution
           }
           finally
           {
-            federatesLock.unlock();
+            federatesLock.writeLock().unlock();
           }
         }
       }
@@ -472,7 +450,7 @@ public class FederationExecution
         InitiateFederateSave initiateFederateSave =
           new InitiateFederateSave(requestFederationSave.getLabel());
 
-        federatesLock.lock();
+        federatesLock.writeLock().lock();
         try
         {
           // track who was instructed to save
@@ -488,7 +466,7 @@ public class FederationExecution
         }
         finally
         {
-          federatesLock.unlock();
+          federatesLock.writeLock().unlock();
         }
       }
     }
@@ -585,7 +563,7 @@ public class FederationExecution
         {
           FederationSaved federationSaved = new FederationSaved();
 
-          federatesLock.lock();
+          federatesLock.writeLock().lock();
           try
           {
             for (FederateProxy f : federates.values())
@@ -597,7 +575,7 @@ public class FederationExecution
           }
           finally
           {
-            federatesLock.unlock();
+            federatesLock.writeLock().unlock();
           }
         }
         finally
@@ -637,7 +615,7 @@ public class FederationExecution
           FederationNotSaved federationNotSaved = new FederationNotSaved(
             federationExecutionSave.getSaveFailureReason());
 
-          federatesLock.lock();
+          federatesLock.writeLock().lock();
           try
           {
             for (FederateProxy f : federates.values())
@@ -649,7 +627,7 @@ public class FederationExecution
           }
           finally
           {
-            federatesLock.unlock();
+            federatesLock.writeLock().unlock();
           }
         }
         finally
@@ -680,7 +658,7 @@ public class FederationExecution
       }
       else
       {
-        federatesLock.lock();
+        federatesLock.writeLock().lock();
         try
         {
           FederateHandleSaveStatusPair[] federationSaveStatus =
@@ -697,7 +675,7 @@ public class FederationExecution
         }
         finally
         {
-          federatesLock.unlock();
+          federatesLock.writeLock().unlock();
         }
       }
     }
@@ -718,7 +696,7 @@ public class FederationExecution
 
       // TODO: locate the saved information
 
-      federatesLock.lock();
+      federatesLock.writeLock().lock();
       try
       {
         Set<FederateHandle> federateHandles =
@@ -743,7 +721,7 @@ public class FederationExecution
       }
       finally
       {
-        federatesLock.unlock();
+        federatesLock.writeLock().unlock();
       }
 
       federateProxy.getSession().write(
@@ -823,7 +801,7 @@ public class FederationExecution
       }
       else
       {
-        federatesLock.lock();
+        federatesLock.writeLock().lock();
         try
         {
           FederateHandleRestoreStatusPair[] federationRestoreStatus =
@@ -839,7 +817,7 @@ public class FederationExecution
         }
         finally
         {
-          federatesLock.unlock();
+          federatesLock.writeLock().unlock();
         }
       }
     }
@@ -881,12 +859,15 @@ public class FederationExecution
       federateProxy.getSession().write(new DefaultResponse(
         registerObjectInstance.getId(), objectInstanceHandle));
 
+      ObjectClass objectClass = fdd.getObjectClasses().get(
+        registerObjectInstance.getObjectClassHandle());
+      assert objectClass != null;
+
       DiscoverObjectInstance discoverObjectInstance =
         new DiscoverObjectInstance(
-          objectInstanceHandle, registerObjectInstance.getObjectClassHandle(),
-          registerObjectInstance.getName());
+          objectInstanceHandle, objectClass, registerObjectInstance.getName());
 
-      federatesLock.lock();
+      federatesLock.writeLock().lock();
       try
       {
         for (FederateProxy f : federates.values())
@@ -899,7 +880,7 @@ public class FederationExecution
       }
       finally
       {
-        federatesLock.unlock();
+        federatesLock.writeLock().unlock();
       }
     }
     finally
@@ -951,7 +932,7 @@ public class FederationExecution
           sendInteraction.getMessageRetractionHandle(),
           sendInteraction.getSentRegionHandles());
 
-      federatesLock.lock();
+      federatesLock.writeLock().lock();
       try
       {
         for (FederateProxy f : federates.values())
@@ -964,7 +945,7 @@ public class FederationExecution
       }
       finally
       {
-        federatesLock.unlock();
+        federatesLock.writeLock().unlock();
       }
     }
     finally
@@ -992,7 +973,7 @@ public class FederationExecution
           deleteObjectInstance.getDeleteTime(),
           deleteObjectInstance.getMessageRetractionHandle());
 
-      federatesLock.lock();
+      federatesLock.writeLock().lock();
       try
       {
         for (FederateProxy f : federates.values())
@@ -1005,7 +986,7 @@ public class FederationExecution
       }
       finally
       {
-        federatesLock.unlock();
+        federatesLock.writeLock().unlock();
       }
     }
     finally
@@ -1020,7 +1001,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      federatesLock.lock();
+      federatesLock.writeLock().lock();
       try
       {
         for (FederateProxy f : federates.values())
@@ -1033,7 +1014,7 @@ public class FederationExecution
       }
       finally
       {
-        federatesLock.unlock();
+        federatesLock.writeLock().unlock();
       }
     }
     finally
@@ -1047,7 +1028,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      federatesLock.lock();
+      federatesLock.writeLock().lock();
       try
       {
         for (FederateProxy f : federates.values())
@@ -1060,7 +1041,7 @@ public class FederationExecution
       }
       finally
       {
-        federatesLock.unlock();
+        federatesLock.writeLock().unlock();
       }
     }
     finally
@@ -1408,28 +1389,12 @@ public class FederationExecution
       federationExecutionStateLock.readLock().unlock();
     }
   }
-
-  public void commitRegionModifications(
-    FederateProxy federateProxy, CommitRegionModifications commitRegionModifications)
+  public void createRegion(FederateProxy federateProxy, CreateRegion createRegion)
   {
     federationExecutionStateLock.readLock().lock();
     try
     {
-      regionsLock.readLock().lock();
-      try
-      {
-        for (Map.Entry<RegionHandle, Map<DimensionHandle, RangeBounds>> entry :
-          commitRegionModifications.getRegionModifications().entrySet())
-        {
-          regions.get(entry.getKey()).putAll(entry.getValue());
-        }
-      }
-      finally
-      {
-        regionsLock.readLock().unlock();
-      }
-
-      federateProxy.getSession().write(new DefaultResponse(commitRegionModifications.getId()));
+      regionManager.createRegion(federateProxy, createRegion);
     }
     finally
     {
@@ -1442,20 +1407,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      RangeBounds rangeBounds;
-
-      regionsLock.readLock().lock();
-      try
-      {
-        rangeBounds = regions.get(getRangeBounds.getRegionHandle()).get(
-          getRangeBounds.getDimensionHandle());
-      }
-      finally
-      {
-        regionsLock.readLock().unlock();
-      }
-
-      federateProxy.getSession().write(new DefaultResponse(getRangeBounds.getId(), rangeBounds));
+      regionManager.getRangeBounds(federateProxy, getRangeBounds);
     }
     finally
     {
@@ -1463,33 +1415,15 @@ public class FederationExecution
     }
   }
 
-  public void createRegion(FederateProxy federateProxy, CreateRegion createRegion)
+  public void commitRegionModifications(
+    FederateProxy federateProxy,
+    CommitRegionModifications commitRegionModifications)
   {
     federationExecutionStateLock.readLock().lock();
     try
     {
-      RegionHandle regionHandle = nextRegionHandle();
-
-      regionsLock.writeLock().lock();
-      try
-      {
-        Map<DimensionHandle, RangeBounds> rangeBounds =
-          new ConcurrentHashMap<DimensionHandle, RangeBounds>();
-        for (DimensionHandle dimensionHandle : createRegion.getDimensionHandles())
-        {
-          Dimension dimension = fdd.getDimensions().get(dimensionHandle);
-          assert dimension != null;
-
-          rangeBounds.put(dimensionHandle, dimension.getRangeBounds());
-        }
-        regions.put(regionHandle, rangeBounds);
-      }
-      finally
-      {
-        regionsLock.writeLock().unlock();
-      }
-
-      federateProxy.getSession().write(new DefaultResponse(createRegion.getId(), regionHandle));
+      regionManager.commitRegionModifications(
+        federateProxy, commitRegionModifications);
     }
     finally
     {
@@ -1497,22 +1431,13 @@ public class FederationExecution
     }
   }
 
-  public void deleteRegion(FederateProxy federateProxy, DeleteRegion deleteRegion)
+  public void deleteRegion(FederateProxy federateProxy,
+                           DeleteRegion deleteRegion)
   {
     federationExecutionStateLock.readLock().lock();
     try
     {
-      regionsLock.writeLock().lock();
-      try
-      {
-        regions.remove(deleteRegion.getRegionHandle());
-      }
-      finally
-      {
-        regionsLock.writeLock().unlock();
-      }
-
-      federateProxy.getSession().write(new DefaultResponse(deleteRegion.getId()));
+      regionManager.deleteRegion(federateProxy, deleteRegion);
     }
     finally
     {
@@ -1542,10 +1467,5 @@ public class FederationExecution
   protected FederateHandle nextFederateHandle()
   {
     return new IEEE1516FederateHandle(federateCount.incrementAndGet());
-  }
-
-  protected RegionHandle nextRegionHandle()
-  {
-    return new IEEE1516RegionHandle(regionCount.incrementAndGet());
   }
 }
