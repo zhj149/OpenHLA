@@ -186,8 +186,10 @@ public class ReflectAttributeValues
     }
   }
 
+  @Override
   public String toString()
   {
-    return String.format("%s - %s", objectInstanceHandle, attributeValues);
+    return new StringBuilder().append(objectInstanceHandle).append(
+      " - ").append(attributeValues).toString();
   }
 }
