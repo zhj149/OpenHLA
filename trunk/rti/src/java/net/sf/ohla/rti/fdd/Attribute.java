@@ -56,7 +56,8 @@ public class Attribute
   {
     this.name = name;
 
-    attributeHandle = new IEEE1516AttributeHandle(attributeCount.incrementAndGet());
+    attributeHandle =
+      new IEEE1516AttributeHandle(attributeCount.incrementAndGet());
   }
 
   public Attribute(Element attribute, AtomicInteger attributeCount)
