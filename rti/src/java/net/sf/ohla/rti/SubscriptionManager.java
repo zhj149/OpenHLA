@@ -19,6 +19,8 @@ package net.sf.ohla.rti;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.Collection;
+import java.util.Iterator;
 
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.fdd.ObjectClass;
@@ -317,6 +319,51 @@ public class SubscriptionManager
     return attributeSubscriptions;
   }
 
+  protected InteractionClassSubscription getSubscribedInteractionClassSubscription(
+    InteractionClass interactionClass)
+  {
+    InteractionClassSubscription subscription =
+      subscribedInteractionClasses.get(
+        interactionClass.getInteractionClassHandle());
+    if (subscription == null && interactionClass.hasSuperInteractionClass())
+    {
+      // see if an anscestor of the interaction class is subscribed
+
+      do
+      {
+        interactionClass = interactionClass.getSuperInteractionClass();
+
+        subscription = subscribedInteractionClasses.get(
+          interactionClass.getInteractionClassHandle());
+
+      } while (subscription == null &&
+               interactionClass.hasSuperInteractionClass());
+    }
+    return subscription;
+  }
+
+  protected boolean containsAny(final Collection lhs, final Collection rhs)
+  {
+    boolean containsAny = false;
+
+    if (lhs.size() < rhs.size())
+    {
+      for (Iterator i = lhs.iterator(); !containsAny && i.hasNext();)
+      {
+        containsAny = rhs.contains(i.next());
+      }
+    }
+    else
+    {
+      for (Iterator i = rhs.iterator(); !containsAny && i.hasNext();)
+      {
+        containsAny = lhs.contains(i.next());
+      }
+    }
+
+    return containsAny;
+  }
+
   protected abstract class AbstractSubscription
   {
     protected boolean defaultRegionSubscribed;
@@ -398,6 +445,11 @@ public class SubscriptionManager
 
       this.attributeHandle = attributeHandle;
     }
+
+    public AttributeHandle getAttributeHandle()
+    {
+      return attributeHandle;
+    }
   }
 
   protected class InteractionClassSubscription
@@ -420,6 +472,11 @@ public class SubscriptionManager
       super(regionHandles, passive);
 
       this.interactionClassHandle = interactionClassHandle;
+    }
+
+    public InteractionClassHandle getInteractionClassHandle()
+    {
+      return interactionClassHandle;
     }
   }
 }

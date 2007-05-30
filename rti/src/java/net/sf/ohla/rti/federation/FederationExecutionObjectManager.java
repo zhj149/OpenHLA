@@ -50,6 +50,7 @@ import net.sf.ohla.rti.messages.callbacks.ObjectInstanceNameReservationSucceeded
 import net.sf.ohla.rti.messages.callbacks.ReflectAttributeValues;
 import net.sf.ohla.rti.messages.callbacks.RequestAttributeOwnershipRelease;
 import net.sf.ohla.rti.messages.callbacks.RequestDivestitureConfirmation;
+import net.sf.ohla.rti.messages.UpdateAttributeValues;
 
 import org.apache.mina.common.WriteFuture;
 
@@ -193,44 +194,22 @@ public class FederationExecutionObjectManager
   }
 
   public void updateAttributeValues(
-    FederateProxy federateProxy, ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleValueMap attributeValues, byte[] tag,
-    RegionHandleSet sentRegionHandles, OrderType sentOrderType,
-    TransportationType transportationType, LogicalTime updateTime,
-    MessageRetractionHandle messageRetractionHandle)
+    FederateProxy federateProxy, UpdateAttributeValues updateAttributeValues)
   {
     objectsLock.readLock().lock();
     try
     {
-      ObjectInstance objectInstance = objects.get(objectInstanceHandle);
+      ObjectInstance objectInstance =
+        objects.get(updateAttributeValues.getObjectInstanceHandle());
       if (objectInstance != null)
       {
-        if (sentOrderType == OrderType.TIMESTAMP)
+        if (updateAttributeValues.getSentOrderType() == OrderType.TIMESTAMP)
         {
           // TODO: track for future federates
         }
 
-        ReflectAttributeValues reflectAttributeValues =
-          new ReflectAttributeValues(objectInstanceHandle, attributeValues,
-            tag, sentRegionHandles, sentOrderType, transportationType,
-            updateTime, messageRetractionHandle,
-            objectInstance.getObjectClass());
-
-        federationExecution.getFederatesLock().writeLock().lock();
-        try
-        {
-          for (FederateProxy f : federationExecution.getFederates().values())
-          {
-            if (f != federateProxy)
-            {
-              f.reflectAttributeValues(reflectAttributeValues);
-            }
-          }
-        }
-        finally
-        {
-          federationExecution.getFederatesLock().writeLock().unlock();
-        }
+        objectInstance.updateAttributeValues(
+          federationExecution, federateProxy, updateAttributeValues);
       }
     }
     finally
@@ -477,6 +456,33 @@ public class FederationExecutionObjectManager
     public FederateProxy getOwner(AttributeHandle attributeHandle)
     {
       return attributes.get(attributeHandle).getOwner();
+    }
+
+    public void updateAttributeValues(
+      FederationExecution federationExecution, FederateProxy federateProxy,
+      UpdateAttributeValues updateAttributeValues)
+    {
+      updateAttributeValues.setObjectInstance(this);
+      ReflectAttributeValues reflectAttributeValues =
+        new ReflectAttributeValues(objectInstanceHandle, attributeValues,
+          tag, sentRegionHandles, sentOrderType, transportationType,
+          updateTime, messageRetractionHandle, objectClass);
+
+      federationExecution.getFederatesLock().writeLock().lock();
+      try
+      {
+        for (FederateProxy f : federationExecution.getFederates().values())
+        {
+          if (f != federateProxy)
+          {
+            f.reflectAttributeValues(updateAttributeValues);
+          }
+        }
+      }
+      finally
+      {
+        federationExecution.getFederatesLock().writeLock().unlock();
+      }
     }
 
     public void unconditionalAttributeOwnershipDivestiture(

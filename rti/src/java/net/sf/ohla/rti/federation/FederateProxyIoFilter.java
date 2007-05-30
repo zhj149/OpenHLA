@@ -16,6 +16,7 @@
 
 package net.sf.ohla.rti.federation;
 
+import java.util.Iterator;
 import java.util.Map;
 
 import net.sf.ohla.rti.SubscriptionManager;
@@ -28,9 +29,10 @@ import net.sf.ohla.rti.messages.SubscribeInteractionClass;
 import net.sf.ohla.rti.messages.SubscribeObjectClassAttributes;
 import net.sf.ohla.rti.messages.UnsubscribeInteractionClass;
 import net.sf.ohla.rti.messages.UnsubscribeObjectClassAttributes;
+import net.sf.ohla.rti.messages.UpdateAttributeValues;
+import net.sf.ohla.rti.messages.callbacks.DiscoverObjectInstance;
 import net.sf.ohla.rti.messages.callbacks.ReceiveInteraction;
 import net.sf.ohla.rti.messages.callbacks.ReflectAttributeValues;
-import net.sf.ohla.rti.messages.callbacks.DiscoverObjectInstance;
 
 import org.apache.mina.common.IoFilterAdapter;
 import org.apache.mina.common.IoSession;
@@ -38,7 +40,6 @@ import org.apache.mina.common.IoSession;
 import hla.rti1516.AttributeHandle;
 import hla.rti1516.AttributeHandleValueMap;
 import hla.rti1516.InteractionClassHandle;
-import hla.rti1516.ObjectInstanceHandle;
 import hla.rti1516.ParameterHandleValueMap;
 
 public class FederateProxyIoFilter
@@ -184,11 +185,11 @@ public class FederateProxyIoFilter
     federationExecution.getFederatesLock().readLock().lock();
     try
     {
-      if (writeRequest.getMessage() instanceof ReflectAttributeValues)
+      if (writeRequest.getMessage() instanceof UpdateAttributeValues)
       {
         ReflectAttributeValues reflectAttributeValues =
           subscriptionManager.transform(
-            (ReflectAttributeValues) writeRequest.getMessage());
+            (UpdateAttributeValues) writeRequest.getMessage());
 
         if (reflectAttributeValues == null)
         {
@@ -263,7 +264,8 @@ public class FederateProxyIoFilter
       {
         discoverObjectInstance = null;
       }
-      else
+      else if (!subscribedObjectClass.equals(
+        discoverObjectInstance.getObjectClass()))
       {
         discoverObjectInstance = new DiscoverObjectInstance(
           discoverObjectInstance.getObjectInstanceHandle(),
@@ -274,35 +276,47 @@ public class FederateProxyIoFilter
     }
 
     public ReflectAttributeValues transform(
-      ReflectAttributeValues reflectAttributeValues)
+      UpdateAttributeValues updateAttributeValues)
     {
-      ObjectInstanceHandle objectInstanceHandle =
-        reflectAttributeValues.getObjectInstanceHandle();
+      ReflectAttributeValues reflectAttributeValues = null;
 
       Map<AttributeHandle, AttributeSubscription> subscriptions =
         getSubscribedAttributeSubscriptions(
-          reflectAttributeValues.getObjectClass());
-      if (subscriptions == null)
-      {
-        reflectAttributeValues = null;
-      }
-      else
+          updateAttributeValues.getObjectInstance().getObjectClass());
+      if (subscriptions != null)
       {
         AttributeHandleValueMap trimmedAttributeValues =
           new IEEE1516AttributeHandleValueMap(
-            reflectAttributeValues.getAttributeValues());
-        trimmedAttributeValues.keySet().retainAll(subscriptions.keySet());
+            updateAttributeValues.getAttributeValues());
 
-        // TODO: DDM
+        for (Iterator<AttributeHandle> i =
+             trimmedAttributeValues.keySet().iterator(); i.hasNext();)
+        {
+          AttributeHandle attributeHandle = i.next();
 
-        reflectAttributeValues = new ReflectAttributeValues(
-          objectInstanceHandle, trimmedAttributeValues,
-          reflectAttributeValues.getTag(),
-          reflectAttributeValues.getSentRegionHandles(),
-          reflectAttributeValues.getSentOrderType(),
-          reflectAttributeValues.getTransportationType(),
-          reflectAttributeValues.getUpdateTime(),
-          reflectAttributeValues.getMessageRetractionHandle());
+          AttributeSubscription attributeSubscription =
+            subscriptions.get(attributeHandle);
+          if (attributeSubscription == null ||
+              (!attributeSubscription.getSubscribedRegionHandles().isEmpty() &&
+               !updateAttributeValues.getObjectInstance().regionsIntersect(
+                 attributeSubscription.getSubscribedRegionHandles())))
+          {
+            i.remove();
+          }
+        }
+
+        if (!trimmedAttributeValues.isEmpty())
+        {
+          reflectAttributeValues = new ReflectAttributeValues(
+            updateAttributeValues.getObjectInstanceHandle(),
+            trimmedAttributeValues,
+            updateAttributeValues.getTag(),
+            updateAttributeValues.getSentRegionHandles(),
+            updateAttributeValues.getSentOrderType(),
+            updateAttributeValues.getTransportationType(),
+            updateAttributeValues.getUpdateTime(),
+            updateAttributeValues.getMessageRetractionHandle());
+        }
       }
 
       return reflectAttributeValues;
@@ -317,30 +331,39 @@ public class FederateProxyIoFilter
         federationExecution.getFDD().getInteractionClasses().get(interactionClassHandle);
       assert interactionClass != null;
 
-      interactionClass = getSubscribedInteractionClass(interactionClass);
+      InteractionClassSubscription subscription =
+        getSubscribedInteractionClassSubscription(interactionClass);
 
-      if (interactionClass == null)
+      if (subscription == null)
+      {
+        receiveInteraction = null;
+      }
+      else if (!federationExecution.getRegionManager().intersect(
+        subscription.getSubscribedRegionHandles(),
+        receiveInteraction.getSentRegionHandles()))
       {
         receiveInteraction = null;
       }
       else
       {
-        ParameterHandleValueMap trimmedParameterValues =
-          new IEEE1516ParameterHandleValueMap(
-            receiveInteraction.getParameterValues());
-        trimmedParameterValues.keySet().retainAll(
-          interactionClass.getParameters().keySet());
+        if (!subscription.getInteractionClassHandle().equals(
+          interactionClassHandle))
+        {
+          ParameterHandleValueMap trimmedParameterValues =
+            new IEEE1516ParameterHandleValueMap(
+              receiveInteraction.getParameterValues());
+          trimmedParameterValues.keySet().retainAll(
+            interactionClass.getParameters().keySet());
 
-        // TODO: DDM
-
-        receiveInteraction = new ReceiveInteraction(
-          interactionClass.getInteractionClassHandle(),
-          trimmedParameterValues, receiveInteraction.getTag(),
-          receiveInteraction.getSentOrderType(),
-          receiveInteraction.getTransportationType(),
-          receiveInteraction.getSendTime(),
-          receiveInteraction.getMessageRetractionHandle(),
-          receiveInteraction.getSentRegionHandles());
+          receiveInteraction = new ReceiveInteraction(
+            interactionClass.getInteractionClassHandle(),
+            trimmedParameterValues, receiveInteraction.getTag(),
+            receiveInteraction.getSentOrderType(),
+            receiveInteraction.getTransportationType(),
+            receiveInteraction.getSendTime(),
+            receiveInteraction.getMessageRetractionHandle(),
+            receiveInteraction.getSentRegionHandles());
+        }
       }
 
       return receiveInteraction;
