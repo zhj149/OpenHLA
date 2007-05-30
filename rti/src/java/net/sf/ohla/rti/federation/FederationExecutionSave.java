@@ -66,14 +66,14 @@ public class FederationExecutionSave
     return label;
   }
 
-  public Map<FederateHandle, FederateSave> getFederateSaves()
-  {
-    return federateSaves;
-  }
-
   public LogicalTime getSaveTime()
   {
     return saveTime;
+  }
+
+  public Map<FederateHandle, FederateSave> getFederateSaves()
+  {
+    return federateSaves;
   }
 
   public boolean hasFailed()
