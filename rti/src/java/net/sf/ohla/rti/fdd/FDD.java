@@ -210,7 +210,7 @@ public class FDD
 
   public void add(Dimension dimension)
   {
-    this.dimensions.put(dimension.getDimensionHandle(), dimension);
+    dimensions.put(dimension.getDimensionHandle(), dimension);
     dimensionsByName.put(dimension.getName(), dimension);
   }
 
