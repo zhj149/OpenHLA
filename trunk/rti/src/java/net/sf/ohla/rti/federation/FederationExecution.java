@@ -182,6 +182,11 @@ public class FederationExecution
     return federates;
   }
 
+  public FederationExecutionRegionManager getRegionManager()
+  {
+    return regionManager;
+  }
+
   public void destroy()
     throws FederatesCurrentlyJoined
   {
@@ -895,15 +900,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      objectManager.updateAttributeValues(
-        federateProxy, updateAttributeValues.getObjectInstanceHandle(),
-          updateAttributeValues.getAttributeValues(),
-          updateAttributeValues.getTag(),
-          updateAttributeValues.getSentRegionHandles(),
-          updateAttributeValues.getSentOrderType(),
-          updateAttributeValues.getTransportationType(),
-          updateAttributeValues.getUpdateTime(),
-          updateAttributeValues.getMessageRetractionHandle());
+      objectManager.updateAttributeValues(federateProxy, updateAttributeValues);
     }
     finally
     {

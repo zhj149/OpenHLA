@@ -18,6 +18,7 @@ package net.sf.ohla.rti.messages;
 
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federation.FederationExecutionObjectManager;
 
 import hla.rti1516.AttributeHandleValueMap;
 import hla.rti1516.LogicalTime;
@@ -38,6 +39,8 @@ public class UpdateAttributeValues
   protected TransportationType transportationType;
   protected LogicalTime updateTime;
   protected MessageRetractionHandle messageRetractionHandle;
+
+  protected transient FederationExecutionObjectManager.ObjectInstance objectInstance;
 
   public UpdateAttributeValues(ObjectInstanceHandle objectInstanceHandle,
                                AttributeHandleValueMap attributeValues,
@@ -107,6 +110,17 @@ public class UpdateAttributeValues
   public MessageRetractionHandle getMessageRetractionHandle()
   {
     return messageRetractionHandle;
+  }
+
+  public FederationExecutionObjectManager.ObjectInstance getObjectInstance()
+  {
+    return objectInstance;
+  }
+
+  public void setObjectInstance(
+    FederationExecutionObjectManager.ObjectInstance objectInstance)
+  {
+    this.objectInstance = objectInstance;
   }
 
   public void execute(FederationExecution federationExecution,
