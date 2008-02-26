@@ -19,10 +19,8 @@ package net.sf.ohla.rti.fdd;
 import java.io.Serializable;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -30,6 +28,7 @@ import net.sf.ohla.rti.hla.rti1516.IEEE1516InteractionClassHandle;
 
 import org.dom4j.Element;
 
+import hla.rti1516.DimensionHandle;
 import hla.rti1516.ErrorReadingFDD;
 import hla.rti1516.InteractionClassHandle;
 import hla.rti1516.InteractionParameterNotDefined;
@@ -59,7 +58,8 @@ public class InteractionClass
   protected TransportationType transportationType =
     TransportationType.HLA_RELIABLE;
 
-  protected Set<String> dimensions = new HashSet<String>();
+  protected Map<DimensionHandle, Dimension> dimensions =
+    new HashMap<DimensionHandle, Dimension>();
 
   protected Map<ParameterHandle, Parameter> parameters =
     new HashMap<ParameterHandle, Parameter>();
@@ -101,16 +101,17 @@ public class InteractionClass
 
   public InteractionClass(Element interactionClass,
                           AtomicInteger interactionClassCount,
-                          AtomicInteger parameterCount)
+                          AtomicInteger parameterCount, FDD fdd)
     throws ErrorReadingFDD
   {
-    this(interactionClass, null, interactionClassCount, parameterCount);
+    this(interactionClass, null, interactionClassCount, parameterCount, fdd);
   }
 
+  @SuppressWarnings("unchecked")
   public InteractionClass(Element interactionClass,
                           InteractionClass superClass,
                           AtomicInteger interactionClassCount,
-                          AtomicInteger parameterCount)
+                          AtomicInteger parameterCount, FDD fdd)
     throws ErrorReadingFDD
   {
     this(((org.dom4j.Attribute) interactionClass.selectSingleNode(
@@ -135,7 +136,7 @@ public class InteractionClass
       (org.dom4j.Attribute) interactionClass.selectSingleNode("@dimensions");
     if (dimensions != null)
     {
-      setDimensions(dimensions.getValue());
+      setDimensions(dimensions.getValue(), fdd);
     }
 
     List<Element> parameters = interactionClass.selectNodes("parameter");
@@ -148,7 +149,8 @@ public class InteractionClass
       interactionClass.selectNodes("interactionClass");
     for (Element e : subInteractions)
     {
-      add(new InteractionClass(e, this, interactionClassCount, parameterCount));
+      add(new InteractionClass(
+        e, this, interactionClassCount, parameterCount, fdd));
     }
   }
 
@@ -264,7 +266,7 @@ public class InteractionClass
     this.transportationType = transportationType;
   }
 
-  public Set<String> getDimensions()
+  public Map<DimensionHandle, Dimension> getDimensions()
   {
     return dimensions;
   }
@@ -344,16 +346,22 @@ public class InteractionClass
     return name;
   }
 
-  protected void setDimensions(String dimensions)
+  protected void setDimensions(String dimensions, FDD fdd)
     throws ErrorReadingFDD
   {
     for (StringTokenizer tokenizer = new StringTokenizer(dimensions, ",");
          tokenizer.hasMoreTokens();)
     {
-      String dimension = tokenizer.nextToken().trim();
-      if (dimension.length() > 0 && !"NA".equals(dimension))
+      String dimensionName = tokenizer.nextToken().trim();
+      if (dimensionName.length() > 0 && !"NA".equals(dimensionName))
       {
-        this.dimensions.add(dimension);
+        Dimension dimension = fdd.getDimensionsByName().get(dimensionName);
+        if (dimension == null)
+        {
+          throw new ErrorReadingFDD(String.format(
+            "unknown dimension: %s", dimensionName));
+        }
+        this.dimensions.put(dimension.getDimensionHandle(), dimension);
       }
     }
   }

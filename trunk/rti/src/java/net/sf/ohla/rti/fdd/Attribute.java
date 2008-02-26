@@ -18,8 +18,8 @@ package net.sf.ohla.rti.fdd;
 
 import java.io.Serializable;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -28,6 +28,7 @@ import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandle;
 import org.dom4j.Element;
 
 import hla.rti1516.AttributeHandle;
+import hla.rti1516.DimensionHandle;
 import hla.rti1516.ErrorReadingFDD;
 import hla.rti1516.OrderType;
 import hla.rti1516.TransportationType;
@@ -48,7 +49,8 @@ public class Attribute
   protected TransportationType transportationType =
     TransportationType.HLA_RELIABLE;
 
-  protected Set<String> dimensions = new HashSet<String>();
+  protected Map<DimensionHandle, Dimension> dimensions =
+    new HashMap<DimensionHandle, Dimension>();
 
   protected boolean mom;
 
@@ -60,7 +62,7 @@ public class Attribute
       new IEEE1516AttributeHandle(attributeCount.incrementAndGet());
   }
 
-  public Attribute(Element attribute, AtomicInteger attributeCount)
+  public Attribute(Element attribute, AtomicInteger attributeCount, FDD fdd)
     throws ErrorReadingFDD
   {
     this(((org.dom4j.Attribute) attribute.selectSingleNode(
@@ -84,7 +86,7 @@ public class Attribute
       (org.dom4j.Attribute) attribute.selectSingleNode("@dimensions");
     if (dimensions != null)
     {
-      setDimensions(dimensions.getValue());
+      setDimensions(dimensions.getValue(), fdd);
     }
   }
 
@@ -157,7 +159,8 @@ public class Attribute
     return transportationType;
   }
 
-  public Set<String> getDimensions()
+
+  public Map<DimensionHandle, Dimension> getDimensions()
   {
     return dimensions;
   }
@@ -186,16 +189,22 @@ public class Attribute
     return name;
   }
 
-  protected void setDimensions(String dimensions)
+  protected void setDimensions(String dimensions, FDD fdd)
     throws ErrorReadingFDD
   {
     for (StringTokenizer tokenizer = new StringTokenizer(dimensions, ",");
          tokenizer.hasMoreTokens();)
     {
-      String dimension = tokenizer.nextToken().trim();
-      if (dimension.length() > 0 && !"NA".equals(dimension))
+      String dimensionName = tokenizer.nextToken().trim();
+      if (dimensionName.length() > 0 && !"NA".equals(dimensionName))
       {
-        this.dimensions.add(dimension);
+        Dimension dimension = fdd.getDimensionsByName().get(dimensionName);
+        if (dimension == null)
+        {
+          throw new ErrorReadingFDD(String.format(
+            "unknown dimension: %s", dimensionName));
+        }
+        this.dimensions.put(dimension.getDimensionHandle(), dimension);
       }
     }
   }

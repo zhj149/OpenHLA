@@ -28,6 +28,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.sf.ohla.rti.fdd.FDD;
+import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandleSet;
 import net.sf.ohla.rti.hla.rti1516.IEEE1516FederateHandle;
@@ -87,7 +88,6 @@ import net.sf.ohla.rti.messages.callbacks.FederationSaveStatusResponse;
 import net.sf.ohla.rti.messages.callbacks.FederationSaved;
 import net.sf.ohla.rti.messages.callbacks.FederationSynchronized;
 import net.sf.ohla.rti.messages.callbacks.InitiateFederateSave;
-import net.sf.ohla.rti.messages.callbacks.ReceiveInteraction;
 import net.sf.ohla.rti.messages.callbacks.RemoveObjectInstance;
 import net.sf.ohla.rti.messages.callbacks.SynchronizationPointRegistrationFailed;
 import net.sf.ohla.rti.messages.callbacks.SynchronizationPointRegistrationSucceeded;
@@ -914,20 +914,16 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
+      InteractionClass interactionClass = fdd.getInteractionClasses().get(
+        sendInteraction.getInteractionClassHandle());
+      assert interactionClass != null;
+
+      sendInteraction.setInteractionClass(interactionClass);
+
       if (sendInteraction.getSentOrderType() == OrderType.TIMESTAMP)
       {
         // TODO: track for future federates
       }
-
-      ReceiveInteraction receiveInteraction =
-        new ReceiveInteraction(
-          sendInteraction.getInteractionClassHandle(),
-          sendInteraction.getParameterValues(), sendInteraction.getTag(),
-          sendInteraction.getSentOrderType(),
-          sendInteraction.getTransportationType(),
-          sendInteraction.getSendTime(),
-          sendInteraction.getMessageRetractionHandle(),
-          sendInteraction.getSentRegionHandles());
 
       federatesLock.writeLock().lock();
       try
@@ -936,7 +932,7 @@ public class FederationExecution
         {
           if (f != federateProxy)
           {
-            f.receiveInteraction(receiveInteraction);
+            f.receiveInteraction(sendInteraction);
           }
         }
       }

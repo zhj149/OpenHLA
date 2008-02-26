@@ -86,14 +86,16 @@ public class ObjectClass
   }
 
   public ObjectClass(Element objectClass, AtomicInteger objectCount,
-                     AtomicInteger attributeCount)
+                     AtomicInteger attributeCount, FDD fdd)
     throws ErrorReadingFDD
   {
-    this(objectClass, null, objectCount, attributeCount);
+    this(objectClass, null, objectCount, attributeCount, fdd);
   }
 
+  @SuppressWarnings("unchecked")
   public ObjectClass(Element objectClass, ObjectClass superClass,
-                     AtomicInteger objectCount, AtomicInteger attributeCount)
+                     AtomicInteger objectCount, AtomicInteger attributeCount,
+                     FDD fdd)
     throws ErrorReadingFDD
   {
     this(((org.dom4j.Attribute) objectClass.selectSingleNode(
@@ -102,13 +104,13 @@ public class ObjectClass
     List<Element> attributes = objectClass.selectNodes("attribute");
     for (Element e : attributes)
     {
-      add(new Attribute(e, attributeCount));
+      add(new Attribute(e, attributeCount, fdd));
     }
 
     List<Element> subClasses = objectClass.selectNodes("objectClass");
     for (Element e : subClasses)
     {
-      add(new ObjectClass(e, this, objectCount, attributeCount));
+      add(new ObjectClass(e, this, objectCount, attributeCount, fdd));
     }
   }
 
