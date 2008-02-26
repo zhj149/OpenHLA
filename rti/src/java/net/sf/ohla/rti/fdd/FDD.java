@@ -307,7 +307,7 @@ public class FDD
     catch (AttributeNotDefined and)
     {
       throw new InvalidAttributeHandle(
-        String.format("invalid attribute handle: ", attributeHandle), and);
+        String.format("invalid attribute handle: %s", attributeHandle), and);
     }
     catch (ObjectClassNotDefined ocnd)
     {
@@ -419,7 +419,7 @@ public class FDD
     catch (InteractionClassNotDefined icnd)
     {
       throw new InvalidInteractionClassHandle(
-        String.format("invalid interaction class handle: ",
+        String.format("invalid interaction class handle: %s",
                       interactionClassHandle), icnd);
     }
   }
@@ -493,16 +493,10 @@ public class FDD
   {
     try
     {
-      for (String dimension :
-        getAttribute(objectClassHandle, attributeHandle).getDimensions())
+      for (Dimension dimension : getAttribute(
+        objectClassHandle, attributeHandle).getDimensions().values())
       {
-        try
-        {
-          dimensionHandles.add(getDimensionHandle(dimension));
-        }
-        catch (NameNotFound nnf)
-        {
-        }
+        dimensionHandles.add(dimension.getDimensionHandle());
       }
 
       return dimensionHandles;
@@ -510,7 +504,7 @@ public class FDD
     catch (ObjectClassNotDefined ocnd)
     {
       throw new InvalidObjectClassHandle(
-        String.format("invalid object class handle: ", objectClassHandle),
+        String.format("invalid object class handle: %s", objectClassHandle),
         ocnd);
     }
   }
@@ -522,16 +516,10 @@ public class FDD
   {
     try
     {
-      for (String dimension :
-        getInteractionClass(interactionClassHandle).getDimensions())
+      for (Dimension dimension : getInteractionClass(
+        interactionClassHandle).getDimensions().values())
       {
-        try
-        {
-          dimensionHandles.add(getDimensionHandle(dimension));
-        }
-        catch (NameNotFound nnf)
-        {
-        }
+        dimensionHandles.add(dimension.getDimensionHandle());
       }
 
       return dimensionHandles;
@@ -673,9 +661,19 @@ public class FDD
     }
   }
 
+  @SuppressWarnings("unchecked")
   protected void process(Document fdd)
     throws ErrorReadingFDD
   {
+    // add dimensions first, object and interaction classes depend on them
+    //
+    List<Element> dimensions =
+      fdd.selectNodes("//objectModel/dimensions/dimension");
+    for (Element dimension : dimensions)
+    {
+      add(new Dimension(dimension));
+    }
+
     AtomicInteger objectClassCount = new AtomicInteger();
     AtomicInteger attributeCount = new AtomicInteger();
 
@@ -700,7 +698,7 @@ public class FDD
       // the HLA object root is specified in the FDD
       //
       hlaObjectRoot = new ObjectClass(
-        hlaObjectRoots.get(0), objectClassCount, attributeCount);
+        hlaObjectRoots.get(0), objectClassCount, attributeCount, this);
     }
     else
     {
@@ -719,7 +717,7 @@ public class FDD
       // to the HLA object root
       //
       add(new ObjectClass(
-        objectClass, hlaObjectRoot, objectClassCount, attributeCount));
+        objectClass, hlaObjectRoot, objectClassCount, attributeCount, this));
     }
 
     AtomicInteger interactionClassCount = new AtomicInteger();
@@ -744,7 +742,8 @@ public class FDD
       // the HLA interaction root is specified in the FDD
       //
       hlaInteractionRoot = new InteractionClass(
-        hlaInteractionRoots.get(0), interactionClassCount, parameterCount);
+        hlaInteractionRoots.get(0), interactionClassCount,
+        parameterCount, this);
     }
     else
     {
@@ -763,14 +762,7 @@ public class FDD
       // subclassed to the HLA interaction root
       //
       add(new InteractionClass(interactionClass, hlaInteractionRoot,
-                               interactionClassCount, parameterCount));
-    }
-
-    List<Element> dimensions =
-      fdd.selectNodes("//objectModel/dimensions/dimension");
-    for (Element dimension : dimensions)
-    {
-      add(new Dimension(dimension));
+                               interactionClassCount, parameterCount, this));
     }
   }
 }

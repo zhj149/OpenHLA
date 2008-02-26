@@ -20,15 +20,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.Iterator;
-import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import net.sf.ohla.rti.fdd.Attribute;
-import net.sf.ohla.rti.fdd.Dimension;
-import net.sf.ohla.rti.fdd.FDD;
-import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.hla.rti1516.IEEE1516RegionHandle;
 import net.sf.ohla.rti.messages.CommitRegionModifications;
 import net.sf.ohla.rti.messages.CreateRegion;
@@ -36,16 +31,14 @@ import net.sf.ohla.rti.messages.DefaultResponse;
 import net.sf.ohla.rti.messages.DeleteRegion;
 import net.sf.ohla.rti.messages.GetRangeBounds;
 
+import hla.rti1516.AttributeHandle;
 import hla.rti1516.DimensionHandle;
-import hla.rti1516.DimensionHandleSet;
 import hla.rti1516.InvalidRegion;
 import hla.rti1516.RangeBounds;
 import hla.rti1516.RegionDoesNotContainSpecifiedDimension;
 import hla.rti1516.RegionHandle;
 import hla.rti1516.RegionNotCreatedByThisFederate;
-import hla.rti1516.AttributeHandle;
 import hla.rti1516.InteractionClassHandle;
-import hla.rti1516.AttributeHandleSet;
 
 public class FederationExecutionRegionManager
 {
@@ -54,16 +47,18 @@ public class FederationExecutionRegionManager
   protected AtomicInteger regionCount = new AtomicInteger(Short.MIN_VALUE);
 
   protected ReadWriteLock regionsLock = new ReentrantReadWriteLock(true);
-  protected Map<RegionHandle, Region> regions =
-    new HashMap<RegionHandle, Region>();
-
-  protected Map<RegionHandle, Set<RegionHandle>> intersectingRegions =
-    new HashMap<RegionHandle, Set<RegionHandle>>();
+  protected Map<RegionHandle, FederationExecutionRegion> regions =
+    new HashMap<RegionHandle, FederationExecutionRegion>();
 
   public FederationExecutionRegionManager(
     FederationExecution federationExecution)
   {
     this.federationExecution = federationExecution;
+  }
+
+  public FederationExecution getFederationExecution()
+  {
+    return federationExecution;
   }
 
   public void createRegion(FederateProxy federateProxy,
@@ -74,9 +69,8 @@ public class FederationExecutionRegionManager
     regionsLock.writeLock().lock();
     try
     {
-      regions.put(regionHandle, new Region(
-        regionHandle, createRegion.getDimensionHandles(),
-        federationExecution.getFDD()));
+      regions.put(regionHandle, new FederationExecutionRegion(
+        regionHandle, createRegion.getDimensionHandles(), this));
     }
     finally
     {
@@ -95,7 +89,8 @@ public class FederationExecutionRegionManager
     {
       Object response;
 
-      Region region = regions.get(getRangeBounds.getRegionHandle());
+      FederationExecutionRegion region =
+        regions.get(getRangeBounds.getRegionHandle());
       if (region == null)
       {
         // region was deleted
@@ -139,10 +134,12 @@ public class FederationExecutionRegionManager
         regions.get(entry.getKey()).commitRegionModifications(entry.getValue());
       }
 
-      for (Region region : regions.values())
+      for (FederationExecutionRegion region : regions.values())
       {
-        region.intersects(
-          commitRegionModifications.getRegionModifications().keySet());
+        // TODO: implement
+
+        //region.intersects(
+        //  commitRegionModifications.getRegionModifications().keySet());
       }
     }
     finally
@@ -170,20 +167,25 @@ public class FederationExecutionRegionManager
     federateProxy.getSession().write(new DefaultResponse(deleteRegion.getId()));
   }
 
-  public boolean intersects(Set<RegionHandle> regionHandles,
-                            AttributeHandle attributeHandle,
-                            Set<RegionHandle> regionHandles)
+  public boolean intersects(Set<RegionHandle> subscribedRegionHandles,
+                            InteractionClassHandle interactionClassHandle,
+                            Set<RegionHandle> sentRegionHandles)
   {
     boolean intersects = false;
 
     regionsLock.readLock().lock();
     try
     {
-        Region region = regions.get(i.next());
+      for (Iterator<RegionHandle> i = subscribedRegionHandles.iterator();
+           !intersects && i.hasNext();)
+      {
+        FederationExecutionRegion region = regions.get(i.next());
         if (region != null)
         {
-          intersects = region.intersects(rhs);
+          intersects =
+            region.intersects(interactionClassHandle, sentRegionHandles);
         }
+      }
     }
     finally
     {
@@ -198,161 +200,15 @@ public class FederationExecutionRegionManager
     return new IEEE1516RegionHandle(regionCount.incrementAndGet());
   }
 
-  protected Region getRegion(RegionHandle regionHandle)
+  protected FederationExecutionRegion getRegion(RegionHandle regionHandle)
     throws RegionNotCreatedByThisFederate
   {
-    Region region = regions.get(regionHandle);
+    FederationExecutionRegion region = regions.get(regionHandle);
     if (region == null)
     {
       throw new RegionNotCreatedByThisFederate(
         String.format("%s", regionHandle));
     }
     return region;
-  }
-
-  protected class Region
-  {
-    protected final RegionHandle regionHandle;
-    protected final DimensionHandleSet dimensionHandles;
-
-    protected Map<DimensionHandle, RangeBounds> rangeBounds =
-      new HashMap<DimensionHandle, RangeBounds>();
-
-    protected Map<AttributeHandle, AttributeRegionRealization> attributeRegionRealizations =
-      new HashMap<AttributeHandle, AttributeRegionRealization>();
-    protected Map<InteractionClassHandle, InteractionClassRegionRealization> interactionClassRegionRealizations =
-      new HashMap<InteractionClassHandle, InteractionClassRegionRealization>();
-
-    public Region(RegionHandle regionHandle,
-                  DimensionHandleSet dimensionHandles, FDD fdd)
-    {
-      this.regionHandle = regionHandle;
-      this.dimensionHandles = dimensionHandles;
-
-      // initialize our range bounds to the dimension defaults
-      //
-      for (DimensionHandle dimensionHandle : dimensionHandles)
-      {
-        Dimension dimension = fdd.getDimensions().get(dimensionHandle);
-        assert dimension != null;
-
-        rangeBounds.put(dimensionHandle, dimension.getRangeBounds());
-      }
-    }
-
-    public RegionHandle getRegionHandle()
-    {
-      return regionHandle;
-    }
-
-    public DimensionHandleSet getDimensionHandles()
-    {
-      return dimensionHandles;
-    }
-
-    public RangeBounds getRangeBounds(DimensionHandle dimensionHandle)
-      throws RegionDoesNotContainSpecifiedDimension
-    {
-      RangeBounds rangeBounds = this.rangeBounds.get(dimensionHandle);
-      if (rangeBounds == null)
-      {
-        throw new RegionDoesNotContainSpecifiedDimension(dimensionHandle);
-      }
-      return rangeBounds;
-    }
-
-    public void commitRegionModifications(
-      Map<DimensionHandle, RangeBounds> rangeBounds)
-    {
-      this.rangeBounds.putAll(rangeBounds);
-    }
-
-    public void delete()
-    {
-    }
-
-    public void intersects(Set<RegionHandle> regionHandles)
-    {
-      for (RegionHandle regionHandle : regionHandles)
-      {
-        Region region = regions.get(regionHandle);
-        if (region != null)
-        {
-
-        }
-      }
-    }
-
-    public boolean intersects(AttributeHandle attributeHandle,
-                              Set<RegionHandle> regionHandles)
-    {
-      boolean intersects = false;
-
-      AttributeRegionRealization attributeRegionRealization =
-        attributeRegionRealizations.get(attributeHandle);
-      if (attributeRegionRealization != null)
-      {
-        for (Iterator<RegionHandle> i = regionHandles.iterator();
-             i.hasNext() && !intersects;)
-        {
-          intersects =
-            attributeRegionRealization.intersectingRegions.contains(i.next());
-        }
-      }
-
-      return intersects;
-    }
-
-    public boolean intersects(InteractionClassHandle interactionClassHandle,
-                              Set<RegionHandle> regionHandles)
-    {
-      boolean intersects = false;
-
-      InteractionClassRegionRealization interactionClassRegionRealization =
-        interactionClassRegionRealizations.get(interactionClassHandle);
-      if (interactionClassRegionRealization != null)
-      {
-        for (Iterator<RegionHandle> i = regionHandles.iterator();
-             i.hasNext() && !intersects;)
-        {
-          intersects =
-            interactionClassRegionRealization.intersectingRegions.contains(i.next());
-        }
-      }
-
-      return intersects;
-    }
-
-    protected boolean intersects(RangeBounds lhs, RangeBounds rhs)
-    {
-      return (lhs.lower < rhs.upper && rhs.lower < lhs.upper) ||
-             lhs.lower == rhs.lower;
-    }
-
-    protected class AttributeRegionRealization
-    {
-      protected final Attribute attribute;
-
-      protected Set<RegionHandle> intersectingRegions =
-        new HashSet<RegionHandle>();
-
-      public AttributeRegionRealization(Attribute attribute)
-      {
-        this.attribute = attribute;
-      }
-    }
-
-    protected class InteractionClassRegionRealization
-    {
-      protected final InteractionClass interactionClass;
-
-      protected Set<RegionHandle> intersectingRegions =
-        new HashSet<RegionHandle>();
-
-      public InteractionClassRegionRealization(InteractionClass interactionClass)
-      {
-        this.interactionClass = interactionClass;
-      }
-    }
   }
 }

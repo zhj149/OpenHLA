@@ -26,14 +26,13 @@ import net.sf.ohla.rti.messages.FederateSaveNotComplete;
 import net.sf.ohla.rti.messages.GALTAdvanced;
 import net.sf.ohla.rti.messages.RequestAttributeValueUpdate;
 import net.sf.ohla.rti.messages.Retract;
+import net.sf.ohla.rti.messages.SendInteraction;
 import net.sf.ohla.rti.messages.UpdateAttributeValues;
 import net.sf.ohla.rti.messages.callbacks.AnnounceSynchronizationPoint;
 import net.sf.ohla.rti.messages.callbacks.DiscoverObjectInstance;
 import net.sf.ohla.rti.messages.callbacks.FederationNotSaved;
 import net.sf.ohla.rti.messages.callbacks.FederationSaved;
 import net.sf.ohla.rti.messages.callbacks.InitiateFederateSave;
-import net.sf.ohla.rti.messages.callbacks.ReceiveInteraction;
-import net.sf.ohla.rti.messages.callbacks.ReflectAttributeValues;
 import net.sf.ohla.rti.messages.callbacks.RemoveObjectInstance;
 import net.sf.ohla.rti.messages.callbacks.TimeAdvanceGrant;
 import net.sf.ohla.rti.messages.callbacks.TimeConstrainedEnabled;
@@ -232,9 +231,9 @@ public class FederateProxy
     return session.write(updateAttributeValues);
   }
 
-  public WriteFuture receiveInteraction(ReceiveInteraction receiveInteraction)
+  public WriteFuture receiveInteraction(SendInteraction sendInteraction)
   {
-    return session.write(receiveInteraction);
+    return session.write(sendInteraction);
   }
 
   public WriteFuture removeObjectInstance(RemoveObjectInstance removeObjectInstance)
