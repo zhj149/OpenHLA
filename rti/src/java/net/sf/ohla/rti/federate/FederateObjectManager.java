@@ -134,10 +134,10 @@ public class FederateObjectManager
   protected Set<String> retiredObjectInstanceNames = new HashSet<String>();
 
   protected ReadWriteLock objectsLock = new ReentrantReadWriteLock(true);
-  protected Map<ObjectInstanceHandle, ObjectInstance> objects =
-    new HashMap<ObjectInstanceHandle, ObjectInstance>();
-  protected Map<String, ObjectInstance> objectsByName =
-    new HashMap<String, ObjectInstance>();
+  protected Map<ObjectInstanceHandle, FederateObjectInstance> objects =
+    new HashMap<ObjectInstanceHandle, FederateObjectInstance>();
+  protected Map<String, FederateObjectInstance> objectsByName =
+    new HashMap<String, FederateObjectInstance>();
   protected Map<ObjectClassHandle, Set<ObjectInstanceHandle>> objectsByObjectClassHandle =
     new HashMap<ObjectClassHandle, Set<ObjectInstanceHandle>>();
   protected Set<ObjectInstanceHandle> removedObjects =
@@ -173,7 +173,7 @@ public class FederateObjectManager
     objectsLock.readLock().lock();
     try
     {
-      for (ObjectInstance objectInstance : objects.values())
+      for (FederateObjectInstance objectInstance : objects.values())
       {
         objectInstance.checkIfOwnershipAcquisitionPending();
         objectInstance.checkIfFederateOwnsAttributes();
@@ -236,7 +236,7 @@ public class FederateObjectManager
             //
             for (ObjectInstanceHandle objectInstanceHandle : objectInstanceHandlesToUnpublish)
             {
-              ObjectInstance objectInstance = objects.get(objectInstanceHandle);
+              FederateObjectInstance objectInstance = objects.get(objectInstanceHandle);
               assert objectInstance != null;
 
               objectInstance.checkIfOwnershipAcquisitionPending();
@@ -310,7 +310,7 @@ public class FederateObjectManager
             //
             for (ObjectInstanceHandle objectInstanceHandle : objectInstanceHandlesToUnpublishAttributes)
             {
-              ObjectInstance objectInstance = objects.get(objectInstanceHandle);
+              FederateObjectInstance objectInstance = objects.get(objectInstanceHandle);
               assert objectInstance != null;
 
               objectInstance.checkIfOwnershipAcquisitionPending(
@@ -319,7 +319,7 @@ public class FederateObjectManager
 
             for (ObjectInstanceHandle objectInstanceHandle : objectInstanceHandlesToUnpublishAttributes)
             {
-              ObjectInstance objectInstance = objects.get(objectInstanceHandle);
+              FederateObjectInstance objectInstance = objects.get(objectInstanceHandle);
               assert objectInstance != null;
 
               objectInstance.unpublishObjectClassAttributes(
@@ -612,8 +612,8 @@ public class FederateObjectManager
     //
     String name = String.format("HLA-%s", objectInstanceHandle);
 
-    ObjectInstance objectInstance =
-      new ObjectInstance(objectInstanceHandle, objectClass, name,
+    FederateObjectInstance objectInstance =
+      new FederateObjectInstance(objectInstanceHandle, objectClass, name,
                          publishedAttributeHandles);
 
     objectsLock.writeLock().lock();
@@ -709,8 +709,8 @@ public class FederateObjectManager
 
     ObjectInstanceHandle objectInstanceHandle = (ObjectInstanceHandle) response;
 
-    ObjectInstance objectInstance =
-      new ObjectInstance(objectInstanceHandle, objectClass, name,
+    FederateObjectInstance objectInstance =
+      new FederateObjectInstance(objectInstanceHandle, objectClass, name,
                          publishedAttributeHandles);
 
     objectsLock.writeLock().lock();
@@ -816,7 +816,7 @@ public class FederateObjectManager
     objectsLock.writeLock().lock();
     try
     {
-      ObjectInstance objectInstance = getObjectInstance(objectInstanceHandle);
+      FederateObjectInstance objectInstance = getObjectInstance(objectInstanceHandle);
       objectInstance.deleteObjectInstance(tag);
 
       removeObjectInstance(objectInstance);
@@ -839,7 +839,7 @@ public class FederateObjectManager
     objectsLock.writeLock().lock();
     try
     {
-      ObjectInstance objectInstance = getObjectInstance(objectInstanceHandle);
+      FederateObjectInstance objectInstance = getObjectInstance(objectInstanceHandle);
       objectInstance.deleteObjectInstance(tag);
 
       if (sentOrderType == OrderType.RECEIVE)
@@ -865,7 +865,7 @@ public class FederateObjectManager
     objectsLock.writeLock().lock();
     try
     {
-      ObjectInstance objectInstance = getObjectInstance(objectInstanceHandle);
+      FederateObjectInstance objectInstance = getObjectInstance(objectInstanceHandle);
       objectInstance.localDeleteObjectInstance();
 
       objects.remove(objectInstanceHandle);
@@ -918,8 +918,8 @@ public class FederateObjectManager
 
       if (objectClass != null)
       {
-        ObjectInstance objectInstance =
-          new ObjectInstance(objectInstanceHandle, objectClass, name);
+        FederateObjectInstance objectInstance =
+          new FederateObjectInstance(objectInstanceHandle, objectClass, name);
 
         objectsLock.writeLock().lock();
         try
@@ -963,7 +963,7 @@ public class FederateObjectManager
       objectsLock.readLock().lock();
       try
       {
-        ObjectInstance objectInstance = objects.get(objectInstanceHandle);
+        FederateObjectInstance objectInstance = objects.get(objectInstanceHandle);
         if (objectInstance != null)
         {
           ObjectClass objectClass = objectInstance.getObjectClass();
@@ -1102,7 +1102,7 @@ public class FederateObjectManager
     objectsLock.writeLock().lock();
     try
     {
-      ObjectInstance objectInstance = objects.remove(objectInstanceHandle);
+      FederateObjectInstance objectInstance = objects.remove(objectInstanceHandle);
       if (objectInstance != null)
       {
         removeObjectInstance(objectInstance);
@@ -1132,7 +1132,7 @@ public class FederateObjectManager
     objectsLock.readLock().lock();
     try
     {
-      ObjectInstance objectInstance = objects.get(objectInstanceHandle);
+      FederateObjectInstance objectInstance = objects.get(objectInstanceHandle);
       if (objectInstance != null)
       {
         objectInstance.attributeOwnershipAcquisitionNotification(
@@ -1358,7 +1358,7 @@ public class FederateObjectManager
       publicationLock.readLock().lock();
       try
       {
-        ObjectInstance objectInstance = getObjectInstance(objectInstanceHandle);
+        FederateObjectInstance objectInstance = getObjectInstance(objectInstanceHandle);
 
         checkIfAttributeNotPublished(
           objectInstance.getObjectClassHandle(), attributeHandles);
@@ -1387,7 +1387,7 @@ public class FederateObjectManager
     objectsLock.readLock().lock();
     try
     {
-      ObjectInstance objectInstance = getObjectInstance(objectInstanceHandle);
+      FederateObjectInstance objectInstance = getObjectInstance(objectInstanceHandle);
 
       publicationLock.readLock().lock();
       try
@@ -1492,11 +1492,11 @@ public class FederateObjectManager
     return publishedAttributeHandles;
   }
 
-  protected ObjectInstance getObjectInstance(
+  protected FederateObjectInstance getObjectInstance(
     ObjectInstanceHandle objectInstanceHandle)
     throws ObjectInstanceNotKnown
   {
-    ObjectInstance objectInstance = objects.get(objectInstanceHandle);
+    FederateObjectInstance objectInstance = objects.get(objectInstanceHandle);
     if (objectInstance == null)
     {
       throw new ObjectInstanceNotKnown(
@@ -1505,10 +1505,10 @@ public class FederateObjectManager
     return objectInstance;
   }
 
-  protected ObjectInstance getObjectInstance(String name)
+  protected FederateObjectInstance getObjectInstance(String name)
     throws ObjectInstanceNotKnown
   {
-    ObjectInstance objectInstance = objectsByName.get(name);
+    FederateObjectInstance objectInstance = objectsByName.get(name);
     if (objectInstance == null)
     {
       throw new ObjectInstanceNotKnown(name);
@@ -1600,7 +1600,7 @@ public class FederateObjectManager
     }
   }
 
-  protected void removeObjectInstance(ObjectInstance objectInstance)
+  protected void removeObjectInstance(FederateObjectInstance objectInstance)
   {
     objects.remove(objectInstance.getObjectInstanceHandle());
     objectsByName.remove(objectInstance.getName());
@@ -1684,1143 +1684,6 @@ public class FederateObjectManager
         }
 
         // TODO: DDM
-      }
-    }
-  }
-
-  public static class ObjectInstance
-    implements Serializable
-  {
-    protected final ObjectInstanceHandle objectInstanceHandle;
-    protected final ObjectClass objectClass;
-    protected final String name;
-
-    protected Map<AttributeHandle, AttributeInstance> attributes =
-      new HashMap<AttributeHandle, AttributeInstance>();
-
-    protected Set<AttributeHandle> attributeHandlesBeingAcquired =
-      new HashSet<AttributeHandle>();
-    protected Set<AttributeHandle> attributeHandlesBeingAcquiredIfAvailable =
-      new HashSet<AttributeHandle>();
-
-    protected ReadWriteLock objectLock = new ReentrantReadWriteLock(true);
-
-    public ObjectInstance(ObjectInstanceHandle objectInstanceHandle,
-                          ObjectClass objectClass, String name)
-    {
-      this.objectInstanceHandle = objectInstanceHandle;
-      this.objectClass = objectClass;
-      this.name = name;
-    }
-
-    public ObjectInstance(ObjectInstanceHandle objectInstanceHandle,
-                          ObjectClass objectClass, String name,
-                          Set<AttributeHandle> publishedAttributeHandles)
-    {
-      this(objectInstanceHandle, objectClass, name);
-
-      for (AttributeHandle attributeHandle : publishedAttributeHandles)
-      {
-        Attribute attribute = objectClass.getAttributes().get(attributeHandle);
-        assert attribute != null;
-
-        // create an attribute instance for each of the published attributes
-        //
-        attributes.put(attributeHandle, new AttributeInstance(attribute));
-      }
-
-      Attribute attribute = objectClass.getAttributesByName().get(
-        Attribute.HLA_PRIVILEGE_TO_DELETE_OBJECT);
-      assert attribute != null;
-      if (!attributes.containsKey(attribute.getAttributeHandle()))
-      {
-        // create an attribute instance for the HLA privilege to delete
-        // object attribute
-        //
-        attributes.put(attribute.getAttributeHandle(),
-                       new AttributeInstance(attribute));
-      }
-    }
-
-    public ObjectInstanceHandle getObjectInstanceHandle()
-    {
-      return objectInstanceHandle;
-    }
-
-    public ObjectClassHandle getObjectClassHandle()
-    {
-      return objectClass.getObjectClassHandle();
-    }
-
-    public ObjectClass getObjectClass()
-    {
-      return objectClass;
-    }
-
-    public String getName()
-    {
-      return name;
-    }
-
-    public WriteFuture updateAttributeValues(
-      AttributeHandleValueMap attributeValues, byte[] tag, IoSession rtiSession)
-      throws AttributeNotDefined, AttributeNotOwned
-    {
-      objectLock.readLock().lock();
-      try
-      {
-        checkIfAttributeNotOwned(attributeValues.keySet());
-
-        RegionHandleSet sentRegionHandles = new IEEE1516RegionHandleSet();
-        for (AttributeHandle attributeHandle : attributeValues.keySet())
-        {
-          sentRegionHandles.addAll(
-            getAttributeInstance(attributeHandle).getAssociatedRegions());
-        }
-
-        return rtiSession.write(new UpdateAttributeValues(
-          objectInstanceHandle, attributeValues, tag, sentRegionHandles,
-          OrderType.RECEIVE, TransportationType.HLA_RELIABLE));
-      }
-      finally
-      {
-        objectLock.readLock().unlock();
-      }
-    }
-
-    public WriteFuture updateAttributeValues(
-      AttributeHandleValueMap attributeValues, byte[] tag,
-      LogicalTime updateTime, MessageRetractionHandle messageRetractionHandle,
-      OrderType sentOrderType, IoSession rtiSession)
-      throws AttributeNotDefined, AttributeNotOwned
-    {
-      objectLock.readLock().lock();
-      try
-      {
-        if (sentOrderType == OrderType.TIMESTAMP)
-        {
-          // TODO: divide attributes by order type
-        }
-
-        RegionHandleSet sentRegionHandles = new IEEE1516RegionHandleSet();
-        for (AttributeHandle attributeHandle : attributeValues.keySet())
-        {
-          sentRegionHandles.addAll(
-            getAttributeInstance(attributeHandle).getAssociatedRegions());
-        }
-
-        return rtiSession.write(new UpdateAttributeValues(
-          objectInstanceHandle, attributeValues, tag, sentRegionHandles,
-          sentOrderType, TransportationType.HLA_RELIABLE, updateTime,
-          messageRetractionHandle));
-      }
-      finally
-      {
-        objectLock.readLock().unlock();
-      }
-    }
-
-    public void deleteObjectInstance(byte[] tag)
-      throws DeletePrivilegeNotHeld
-    {
-      objectLock.readLock().lock();
-      try
-      {
-        Attribute attribute = objectClass.getAttributesByName().get(
-          Attribute.HLA_PRIVILEGE_TO_DELETE_OBJECT);
-        assert attribute != null;
-        if (!attributes.containsKey(attribute.getAttributeHandle()))
-        {
-          throw new DeletePrivilegeNotHeld(objectInstanceHandle.toString());
-        }
-      }
-      finally
-      {
-        objectLock.readLock().unlock();
-      }
-    }
-
-    public void localDeleteObjectInstance()
-      throws FederateOwnsAttributes
-    {
-      objectLock.readLock().lock();
-      try
-      {
-        if (!attributes.isEmpty())
-        {
-          throw new FederateOwnsAttributes(String.format(
-            "%s - %s", objectInstanceHandle, attributes.keySet()));
-        }
-      }
-      finally
-      {
-        objectLock.readLock().unlock();
-      }
-    }
-
-    public void unconditionalAttributeOwnershipDivestiture(
-      AttributeHandleSet attributeHandles, IoSession rtiSession)
-      throws AttributeNotDefined, AttributeNotOwned, RTIinternalError
-    {
-      WriteFuture writeFuture;
-
-      objectLock.writeLock().lock();
-      try
-      {
-        checkIfAttributeNotOwned(attributeHandles);
-
-        attributes.keySet().removeAll(attributeHandles);
-
-        writeFuture = rtiSession.write(
-          new UnconditionalAttributeOwnershipDivestiture(
-            objectInstanceHandle, attributeHandles));
-      }
-      finally
-      {
-        objectLock.writeLock().unlock();
-      }
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
-    }
-
-    public void negotiatedAttributeOwnershipDivestiture(
-      AttributeHandleSet attributeHandles, byte[] tag, IoSession rtiSession)
-      throws AttributeNotDefined, AttributeNotOwned,
-             AttributeAlreadyBeingDivested, RTIinternalError
-    {
-      WriteFuture writeFuture;
-
-      objectLock.writeLock().lock();
-      try
-      {
-        checkIfAttributeAlreadyBeingDivested(attributeHandles);
-
-        for (AttributeHandle attributeHandle : attributeHandles)
-        {
-          getAttributeInstance(
-            attributeHandle).negotiatedAttributeOwnershipDivestiture();
-        }
-
-        writeFuture = rtiSession.write(
-          new NegotiatedAttributeOwnershipDivestiture(
-            objectInstanceHandle, attributeHandles, tag));
-      }
-      finally
-      {
-        objectLock.writeLock().unlock();
-      }
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
-    }
-
-    public void confirmDivestiture(AttributeHandleSet attributeHandles,
-                                   byte[] tag, IoSession rtiSession)
-      throws AttributeNotDefined, AttributeNotOwned,
-             AttributeDivestitureWasNotRequested, RTIinternalError
-    {
-      WriteFuture writeFuture;
-
-      objectLock.writeLock().lock();
-      try
-      {
-        checkIfAttributeDivestitureWasNotRequested(attributeHandles);
-
-        for (AttributeHandle attributeHandle : attributeHandles)
-        {
-          getAttributeInstance(attributeHandle).confirmDivestiture();
-          attributes.remove(attributeHandle);
-        }
-
-        writeFuture = rtiSession.write(
-          new ConfirmDivestiture(objectInstanceHandle, attributeHandles, tag));
-      }
-      finally
-      {
-        objectLock.writeLock().unlock();
-      }
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
-    }
-
-    public void attributeOwnershipAcquisition(
-      AttributeHandleSet attributeHandles, byte[] tag, IoSession rtiSession)
-      throws FederateOwnsAttributes, RTIinternalError
-    {
-      WriteFuture writeFuture;
-
-      objectLock.writeLock().lock();
-      try
-      {
-        checkIfFederateOwnsAttributes(attributeHandles);
-
-        attributeHandlesBeingAcquired.addAll(attributeHandles);
-
-        writeFuture =
-          rtiSession.write(new AttributeOwnershipAcquisition(
-            objectInstanceHandle, attributeHandles, tag));
-      }
-      finally
-      {
-        objectLock.writeLock().unlock();
-      }
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
-    }
-
-    public void attributeOwnershipAcquisitionIfAvailable(
-      AttributeHandleSet attributeHandles, IoSession rtiSession)
-      throws AttributeNotDefined, FederateOwnsAttributes,
-             AttributeAlreadyBeingAcquired, RTIinternalError
-    {
-      WriteFuture writeFuture;
-
-      objectLock.writeLock().lock();
-      try
-      {
-        Set<AttributeHandle> ownedAttributeHandles =
-          new HashSet<AttributeHandle>();
-        Set<AttributeHandle> attributeHandlesAlreadyBeingAcquired =
-          new HashSet<AttributeHandle>();
-
-        for (AttributeHandle attributeHandle : attributeHandles)
-        {
-          objectClass.checkIfAttributeNotDefined(attributeHandle);
-
-          if (attributes.containsKey(attributeHandle))
-          {
-            ownedAttributeHandles.add(attributeHandle);
-          }
-          else if (attributeHandlesBeingAcquiredIfAvailable.contains(
-            attributeHandle))
-          {
-            attributeHandlesAlreadyBeingAcquired.add(attributeHandle);
-          }
-        }
-
-        if (!ownedAttributeHandles.isEmpty())
-        {
-          throw new FederateOwnsAttributes(String.format(
-            "%s - %s", objectInstanceHandle, ownedAttributeHandles));
-        }
-        else if (!attributeHandlesAlreadyBeingAcquired.isEmpty())
-        {
-          throw new AttributeAlreadyBeingAcquired(
-            attributeHandlesAlreadyBeingAcquired.toString());
-        }
-
-        attributeHandlesBeingAcquiredIfAvailable.addAll(attributeHandles);
-
-        writeFuture =
-          rtiSession.write(new AttributeOwnershipAcquisitionIfAvailable(
-            objectInstanceHandle, attributeHandles));
-      }
-      finally
-      {
-        objectLock.writeLock().unlock();
-      }
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
-    }
-
-    public AttributeHandleSet attributeOwnershipDivestitureIfWanted(
-      AttributeHandleSet attributeHandles, IoSession rtiSession)
-      throws AttributeNotDefined, AttributeNotOwned, RTIinternalError
-    {
-      objectLock.writeLock().lock();
-      try
-      {
-        checkIfAttributeNotOwned(attributeHandles);
-
-        AttributeOwnershipDivestitureIfWanted
-          attributeOwnershipDivestitureIfWanted =
-          new AttributeOwnershipDivestitureIfWanted(
-            objectInstanceHandle, attributeHandles);
-        WriteFuture writeFuture =
-          rtiSession.write(attributeOwnershipDivestitureIfWanted);
-
-        // TODO: set timeout
-        //
-        writeFuture.join();
-
-        if (!writeFuture.isWritten())
-        {
-          throw new RTIinternalError("error communicating with RTI");
-        }
-
-        try
-        {
-          // TODO: set timeout
-          //
-          Object response = attributeOwnershipDivestitureIfWanted.getResponse();
-
-          assert response instanceof AttributeOwnershipDivestitureIfWantedResponse :
-            String.format("unexpected response: %s", response);
-
-          AttributeOwnershipDivestitureIfWantedResponse
-            attributeOwnershipDivestitureIfWantedResponse =
-            (AttributeOwnershipDivestitureIfWantedResponse) response;
-
-          AttributeHandleSet divestedAttributeHandles =
-            attributeOwnershipDivestitureIfWantedResponse.getAttributeHandles();
-
-          attributes.keySet().removeAll(divestedAttributeHandles);
-
-          // confirm that the attributes have been divested
-          //
-          writeFuture = rtiSession.write(new DefaultResponse(
-            attributeOwnershipDivestitureIfWantedResponse.getId()));
-
-          if (!writeFuture.isWritten())
-          {
-            throw new RTIinternalError("error communicating with RTI");
-          }
-
-          return divestedAttributeHandles;
-        }
-        catch (InterruptedException ie)
-        {
-          throw new RTIinternalError("interrupted awaitng response", ie);
-        }
-        catch (ExecutionException ee)
-        {
-          throw new RTIinternalError("unable to get response", ee);
-        }
-      }
-      finally
-      {
-        objectLock.writeLock().unlock();
-      }
-    }
-
-    public void cancelNegotiatedAttributeOwnershipDivestiture(
-      AttributeHandleSet attributeHandles, IoSession rtiSession)
-      throws AttributeNotDefined, AttributeNotOwned,
-             AttributeDivestitureWasNotRequested, RTIinternalError
-    {
-      WriteFuture writeFuture;
-
-      objectLock.readLock().lock();
-      try
-      {
-        for (AttributeHandle attributeHandle : attributeHandles)
-        {
-          getAttributeInstance(
-            attributeHandle).checkIfAttributeDivestitureWasNotRequested();
-        }
-
-        for (AttributeHandle attributeHandle : attributeHandles)
-        {
-          getAttributeInstance(
-            attributeHandle).cancelNegotiatedAttributeOwnershipDivestiture();
-        }
-
-        writeFuture = rtiSession.write(
-          new CancelNegotiatedAttributeOwnershipDivestiture(
-            objectInstanceHandle, attributeHandles));
-      }
-      finally
-      {
-        objectLock.readLock().unlock();
-      }
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
-    }
-
-    public void cancelAttributeOwnershipAcquisition(
-      AttributeHandleSet attributeHandles, IoSession rtiSession)
-      throws AttributeNotDefined, AttributeAlreadyOwned,
-             AttributeAcquisitionWasNotRequested, RTIinternalError
-    {
-      WriteFuture writeFuture;
-
-      objectLock.readLock().lock();
-      try
-      {
-        for (AttributeHandle attributeHandle : attributeHandles)
-        {
-          AttributeInstance attributeInstance = attributes.get(attributeHandle);
-          if (attributeInstance != null)
-          {
-            throw new AttributeAlreadyOwned(String.format("%s", attributeHandle));
-          }
-          else if (!attributeHandlesBeingAcquired.contains(attributeHandle))
-          {
-            throw new AttributeAcquisitionWasNotRequested(
-              String.format("%s", attributeHandle));
-          }
-          else
-          {
-            objectClass.checkIfAttributeNotDefined(attributeHandle);
-          }
-        }
-
-        for (AttributeHandle attributeHandle : attributeHandles)
-        {
-          attributes.get(attributeHandle).cancelAttributeOwnershipAcquisition();
-        }
-
-        writeFuture = rtiSession.write(
-          new CancelAttributeOwnershipAcquisition(
-            objectInstanceHandle, attributeHandles));
-      }
-      finally
-      {
-        objectLock.readLock().unlock();
-      }
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
-    }
-
-    public void queryAttributeOwnership(AttributeHandle attributeHandle,
-                                        IoSession rtiSession)
-      throws AttributeNotDefined, RTIinternalError
-    {
-      objectClass.checkIfAttributeNotDefined(attributeHandle);
-
-      WriteFuture writeFuture;
-
-      objectLock.readLock().lock();
-      try
-      {
-        writeFuture = rtiSession.write(
-          new QueryAttributeOwnership(objectInstanceHandle, attributeHandle));
-      }
-      finally
-      {
-        objectLock.readLock().unlock();
-      }
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
-    }
-
-    public boolean isAttributeOwnedByFederate(AttributeHandle attributeHandle)
-      throws AttributeNotDefined
-    {
-      boolean owned;
-
-      objectLock.readLock().lock();
-      try
-      {
-        owned = attributes.get(attributeHandle) != null;
-      }
-      finally
-      {
-        objectLock.readLock().unlock();
-      }
-
-      if (!owned)
-      {
-        objectClass.checkIfAttributeNotDefined(attributeHandle);
-      }
-
-      return owned;
-    }
-
-    public void changeAttributeOrderType(Set<AttributeHandle> attributeHandles,
-                                         OrderType orderType)
-      throws AttributeNotDefined, AttributeNotOwned
-    {
-      objectLock.readLock().lock();
-      try
-      {
-        for (AttributeHandle attributeHandle : attributeHandles)
-        {
-          getAttributeInstance(attributeHandle).setOrderType(orderType);
-        }
-      }
-      finally
-      {
-        objectLock.readLock().unlock();
-      }
-    }
-
-    public void changeAttributeTransportationType(
-      Set<AttributeHandle> attributeHandles,
-      TransportationType transportationType)
-      throws AttributeNotDefined, AttributeNotOwned
-    {
-      objectLock.readLock().lock();
-      try
-      {
-        for (AttributeHandle attributeHandle : attributeHandles)
-        {
-          getAttributeInstance(attributeHandle).setTransportationType(
-            transportationType);
-        }
-      }
-      finally
-      {
-        objectLock.readLock().unlock();
-      }
-    }
-
-    public WriteFuture requestAttributeValueUpdate(
-      AttributeHandleSet attributeHandles, byte[] tag, IoSession rtiSession)
-      throws AttributeNotDefined
-    {
-      objectClass.checkIfAttributeNotDefined(attributeHandles);
-
-      attributeHandles = new IEEE1516AttributeHandleSet(attributeHandles);
-
-      objectLock.readLock().lock();
-      try
-      {
-        // only request updates for un-owned attributes
-        //
-        attributeHandles.removeAll(attributes.keySet());
-
-        return rtiSession.write(new RequestAttributeValueUpdate(
-          objectInstanceHandle, attributeHandles, tag));
-      }
-      finally
-      {
-        objectLock.readLock().unlock();
-      }
-    }
-
-    public void associateRegionsForUpdates(
-      AttributeRegionAssociation attributeRegionAssociation)
-    {
-      objectLock.readLock().lock();
-      try
-      {
-        for (AttributeHandle attributeHandle : attributeRegionAssociation.attributes)
-        {
-          AttributeInstance attribute = attributes.get(attributeHandle);
-          if (attribute != null)
-          {
-            attribute.associateRegionsForUpdates(
-              attributeRegionAssociation.regions);
-          }
-        }
-      }
-      finally
-      {
-        objectLock.readLock().unlock();
-      }
-    }
-
-    public void unassociateRegionsForUpdates(
-      AttributeRegionAssociation attributeRegionAssociation)
-    {
-      objectLock.readLock().lock();
-      try
-      {
-        for (AttributeHandle attributeHandle : attributeRegionAssociation.attributes)
-        {
-          AttributeInstance attribute = attributes.get(attributeHandle);
-          if (attribute != null)
-          {
-            attribute.unassociateRegionsForUpdates(
-              attributeRegionAssociation.regions);
-          }
-        }
-      }
-      finally
-      {
-        objectLock.readLock().unlock();
-      }
-    }
-
-    public void unpublishObjectClassAttributes(
-      AttributeHandleSet attributeHandles, IoSession rtiSession)
-      throws RTIinternalError
-    {
-      WriteFuture writeFuture;
-
-      objectLock.writeLock().lock();
-      try
-      {
-        attributes.keySet().removeAll(attributeHandles);
-
-        writeFuture = rtiSession.write(
-          new UnconditionalAttributeOwnershipDivestiture(
-            objectInstanceHandle, attributeHandles));
-      }
-      finally
-      {
-        objectLock.writeLock().unlock();
-      }
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
-    }
-
-    public void checkIfOwnershipAcquisitionPending()
-      throws OwnershipAcquisitionPending
-    {
-      objectLock.writeLock().lock();
-      try
-      {
-        if (!attributeHandlesBeingAcquired.isEmpty() ||
-            !attributeHandlesBeingAcquiredIfAvailable.isEmpty())
-        {
-          AttributeHandleSet allAttributeHandlesBeingAcquired =
-            new IEEE1516AttributeHandleSet(attributeHandlesBeingAcquired);
-          allAttributeHandlesBeingAcquired.addAll(
-            attributeHandlesBeingAcquiredIfAvailable);
-          throw new OwnershipAcquisitionPending(
-            allAttributeHandlesBeingAcquired.toString());
-        }
-      }
-      finally
-      {
-        objectLock.writeLock().unlock();
-      }
-    }
-
-    public void checkIfOwnershipAcquisitionPending(
-      Set<AttributeHandle> attributeHandles)
-      throws OwnershipAcquisitionPending
-    {
-      objectLock.writeLock().lock();
-      try
-      {
-        AttributeHandleSet allAttributeHandlesBeingAcquired =
-          new IEEE1516AttributeHandleSet();
-        for (AttributeHandle attributeHandle : attributeHandles)
-        {
-          if (attributeHandlesBeingAcquired.contains(attributeHandle) ||
-              attributeHandlesBeingAcquiredIfAvailable.contains(attributeHandle))
-          {
-            allAttributeHandlesBeingAcquired.add(attributeHandle);
-          }
-        }
-
-        if (!allAttributeHandlesBeingAcquired.isEmpty())
-        {
-          throw new OwnershipAcquisitionPending(
-            allAttributeHandlesBeingAcquired.toString());
-        }
-      }
-      finally
-      {
-        objectLock.writeLock().unlock();
-      }
-    }
-
-    public void checkIfFederateOwnsAttributes()
-      throws FederateOwnsAttributes
-    {
-      objectLock.readLock().lock();
-      try
-      {
-        if (!attributes.isEmpty())
-        {
-          throw new FederateOwnsAttributes(String.format(
-            "%s - %s", objectInstanceHandle, attributes.keySet()));
-        }
-      }
-      finally
-      {
-        objectLock.readLock().unlock();
-      }
-    }
-
-    public int hashCode()
-    {
-      return objectInstanceHandle.hashCode();
-    }
-
-    public boolean equals(Object rhs)
-    {
-      return rhs instanceof ObjectInstance && equals((ObjectInstance) rhs);
-    }
-
-    public boolean equals(ObjectInstance rhs)
-    {
-      return rhs != null && objectInstanceHandle.equals(rhs.objectInstanceHandle);
-    }
-
-    public String toString()
-    {
-      return String.format("%s (%s, %s)", objectInstanceHandle, name,
-                           objectClass);
-    }
-
-    protected AttributeInstance getAttributeInstance(
-      AttributeHandle attributeHandle)
-      throws AttributeNotDefined, AttributeNotOwned
-    {
-      AttributeInstance attributeInstance = attributes.get(attributeHandle);
-      if (attributeInstance == null)
-      {
-        // it might not be defined
-        //
-        objectClass.checkIfAttributeNotDefined(attributeHandle);
-
-        throw new AttributeNotOwned(String.format("%s", attributeHandle));
-      }
-      return attributeInstance;
-    }
-
-    protected void checkIfAttributeNotOwned(Set<AttributeHandle> attributeHandles)
-      throws AttributeNotDefined, AttributeNotOwned
-    {
-      for (AttributeHandle attributeHandle : attributeHandles)
-      {
-        if (!attributes.containsKey(attributeHandle))
-        {
-          // it might not be defined
-          //
-          objectClass.checkIfAttributeNotDefined(attributeHandle);
-
-          throw new AttributeNotOwned(String.format("%s", attributeHandle));
-        }
-      }
-    }
-
-    protected void checkIfAttributeAlreadyBeingDivested(
-      Set<AttributeHandle> attributeHandles)
-      throws AttributeNotDefined, AttributeNotOwned, AttributeAlreadyBeingDivested
-    {
-      for (AttributeHandle attributeHandle : attributeHandles)
-      {
-        getAttributeInstance(
-          attributeHandle).checkIfAttributeAlreadyBeingDivested();
-      }
-    }
-
-    protected void checkIfAttributeDivestitureWasNotRequested(
-      Set<AttributeHandle> attributeHandles)
-      throws AttributeNotDefined, AttributeNotOwned,
-             AttributeDivestitureWasNotRequested
-    {
-      for (AttributeHandle attributeHandle : attributeHandles)
-      {
-        getAttributeInstance(
-          attributeHandle).checkIfAttributeDivestitureWasNotRequested();
-      }
-    }
-
-    protected void checkIfFederateOwnsAttributes(
-      Set<AttributeHandle> attributeHandles)
-      throws FederateOwnsAttributes
-    {
-      Set<AttributeHandle> ownedAttributeHandles = null;
-      for (AttributeHandle attributeHandle : attributeHandles)
-      {
-        if (attributes.containsKey(attributeHandle))
-        {
-          if (ownedAttributeHandles == null)
-          {
-            ownedAttributeHandles = new HashSet<AttributeHandle>();
-          }
-          ownedAttributeHandles.add(attributeHandle);
-        }
-      }
-      if (ownedAttributeHandles != null)
-      {
-        throw new FederateOwnsAttributes(String.format(
-          "%s - %s", objectInstanceHandle, ownedAttributeHandles));
-      }
-    }
-
-    public void discoverObjectInstance(ObjectInstanceHandle objectInstanceHandle,
-                                       ObjectClassHandle objectClassHandle,
-                                       String name,
-                                       FederateAmbassador federateAmbassador)
-      throws ObjectClassNotRecognized, CouldNotDiscover, FederateInternalError
-    {
-      objectLock.readLock().lock();
-      try
-      {
-        federateAmbassador.discoverObjectInstance(
-          objectInstanceHandle, objectClassHandle, name);
-      }
-      finally
-      {
-        objectLock.readLock().unlock();
-      }
-    }
-
-    public void reflectAttributeValues(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleValueMap attributeValues, byte[] tag,
-      OrderType sentOrderType, TransportationType transportationType,
-      LogicalTime updateTime, OrderType receivedOrderType,
-      MessageRetractionHandle messageRetractionHandle,
-      RegionHandleSet sentRegionHandles, FederateAmbassador federateAmbassador)
-      throws AttributeNotSubscribed, InvalidLogicalTime, FederateInternalError,
-             AttributeNotRecognized, ObjectInstanceNotKnown
-    {
-      objectLock.readLock().lock();
-      try
-      {
-        if (updateTime == null)
-        {
-          if (sentRegionHandles == null)
-          {
-            federateAmbassador.reflectAttributeValues(
-              objectInstanceHandle, attributeValues, tag, sentOrderType,
-              transportationType);
-          }
-          else
-          {
-            federateAmbassador.reflectAttributeValues(
-              objectInstanceHandle, attributeValues, tag, sentOrderType,
-              transportationType, sentRegionHandles);
-          }
-        }
-        else if (messageRetractionHandle == null)
-        {
-          if (sentRegionHandles == null)
-          {
-            federateAmbassador.reflectAttributeValues(
-              objectInstanceHandle, attributeValues, tag, sentOrderType,
-              transportationType, updateTime, receivedOrderType);
-          }
-          else
-          {
-            federateAmbassador.reflectAttributeValues(
-              objectInstanceHandle, attributeValues, tag, sentOrderType,
-              transportationType, updateTime, receivedOrderType, sentRegionHandles);
-          }
-        }
-        else if (sentRegionHandles == null)
-        {
-          federateAmbassador.reflectAttributeValues(
-            objectInstanceHandle, attributeValues, tag, sentOrderType,
-            transportationType, updateTime, receivedOrderType,
-            messageRetractionHandle);
-        }
-        else
-        {
-          federateAmbassador.reflectAttributeValues(
-            objectInstanceHandle, attributeValues, tag, sentOrderType,
-            transportationType, updateTime, receivedOrderType,
-            messageRetractionHandle, sentRegionHandles);
-        }
-      }
-      finally
-      {
-        objectLock.readLock().unlock();
-      }
-    }
-
-    public void removeObjectInstance(
-      ObjectInstanceHandle objectInstanceHandle, byte[] tag,
-      OrderType sentOrderType, LogicalTime deleteTime,
-      OrderType receivedOrderType,
-      MessageRetractionHandle messageRetractionHandle,
-      FederateAmbassador federateAmbassador)
-      throws InvalidLogicalTime, FederateInternalError, ObjectInstanceNotKnown
-    {
-      objectLock.readLock().lock();
-      try
-      {
-        Attribute attribute = objectClass.getAttributesByName().get(
-          Attribute.HLA_PRIVILEGE_TO_DELETE_OBJECT);
-        assert attribute != null;
-        if (!attributes.containsKey(attribute.getAttributeHandle()))
-        {
-          if (deleteTime == null)
-          {
-            federateAmbassador.removeObjectInstance(
-              objectInstanceHandle, tag, sentOrderType);
-          }
-          else if (messageRetractionHandle == null)
-          {
-            federateAmbassador.removeObjectInstance(
-              objectInstanceHandle, tag, sentOrderType, deleteTime,
-              receivedOrderType);
-          }
-          else
-          {
-            federateAmbassador.removeObjectInstance(
-              objectInstanceHandle, tag, sentOrderType, deleteTime,
-              receivedOrderType, messageRetractionHandle);
-          }
-        }
-      }
-      finally
-      {
-        objectLock.readLock().unlock();
-      }
-    }
-
-    public void attributeOwnershipAcquisitionNotification(
-      AttributeHandleSet attributeHandles, byte[] tag,
-      FederateAmbassador federateAmbassador)
-      throws AttributeAlreadyOwned, FederateInternalError,
-             AttributeNotRecognized, ObjectInstanceNotKnown,
-             AttributeNotPublished, AttributeAcquisitionWasNotRequested
-    {
-      objectLock.writeLock().lock();
-      try
-      {
-        attributeHandlesBeingAcquired.removeAll(attributeHandles);
-
-        for (AttributeHandle attributeHandle : attributeHandles)
-        {
-          Attribute attribute = objectClass.getAttributes().get(attributeHandle);
-          assert attribute != null;
-
-          // create an attribute instance for each of the published attributes
-          //
-          attributes.put(attributeHandle, new AttributeInstance(attribute));
-        }
-
-        federateAmbassador.attributeOwnershipAcquisitionNotification(
-          objectInstanceHandle, attributeHandles, tag);
-      }
-      finally
-      {
-        objectLock.writeLock().unlock();
-      }
-    }
-
-    public static class AttributeInstance
-      implements Serializable
-    {
-      protected final Attribute attribute;
-
-      protected TransportationType transportationType;
-      protected OrderType orderType;
-
-      protected RegionHandleSet associatedRegions = new IEEE1516RegionHandleSet();
-
-      public AttributeInstance(Attribute attribute)
-      {
-        this.attribute = attribute;
-
-        transportationType = attribute.getTransportationType();
-        orderType = attribute.getOrderType();
-      }
-
-      public Attribute getAttribute()
-      {
-        return attribute;
-      }
-
-      public AttributeHandle getAttributeHandle()
-      {
-        return attribute.getAttributeHandle();
-      }
-
-      public TransportationType getTransportationType()
-      {
-        return transportationType;
-      }
-
-      public void setTransportationType(TransportationType transportationType)
-      {
-        this.transportationType = transportationType;
-      }
-
-      public OrderType getOrderType()
-      {
-        return orderType;
-      }
-
-      public void setOrderType(OrderType orderType)
-      {
-        this.orderType = orderType;
-      }
-
-      public RegionHandleSet getAssociatedRegions()
-      {
-        return associatedRegions;
-      }
-
-      public void associateRegionsForUpdates(RegionHandleSet regionHandles)
-      {
-        associatedRegions.addAll(regionHandles);
-      }
-
-      public void unassociateRegionsForUpdates(RegionHandleSet regionHandles)
-      {
-        associatedRegions.removeAll(regionHandles);
-      }
-
-      public void negotiatedAttributeOwnershipDivestiture()
-      {
-      }
-
-      public void confirmDivestiture()
-      {
-      }
-
-      public void cancelNegotiatedAttributeOwnershipDivestiture()
-      {
-      }
-
-      public void cancelAttributeOwnershipAcquisition()
-      {
-      }
-
-      public void checkIfAttributeDivestitureWasNotRequested()
-        throws AttributeDivestitureWasNotRequested
-      {
-        // TODO: check status
-      }
-
-      public void checkIfAttributeAlreadyBeingDivested()
-        throws AttributeAlreadyBeingDivested
-      {
-        // TODO: check status
       }
     }
   }
