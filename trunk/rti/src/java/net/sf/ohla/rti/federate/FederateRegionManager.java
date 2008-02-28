@@ -17,15 +17,12 @@
 package net.sf.ohla.rti.federate;
 
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.hla.rti1516.IEEE1516RegionHandleSet;
 import net.sf.ohla.rti.messages.CommitRegionModifications;
 import net.sf.ohla.rti.messages.CreateRegion;
@@ -34,12 +31,10 @@ import net.sf.ohla.rti.messages.GetRangeBounds;
 
 import org.apache.mina.common.WriteFuture;
 
-import hla.rti1516.AttributeHandleSet;
 import hla.rti1516.AttributeRegionAssociation;
 import hla.rti1516.DimensionHandle;
 import hla.rti1516.DimensionHandleSet;
 import hla.rti1516.InteractionClassHandle;
-import hla.rti1516.InvalidDimensionHandle;
 import hla.rti1516.InvalidRegion;
 import hla.rti1516.ObjectClassHandle;
 import hla.rti1516.ObjectInstanceHandle;
@@ -56,8 +51,8 @@ public class FederateRegionManager
   protected Federate federate;
 
   protected ReadWriteLock regionsLock = new ReentrantReadWriteLock(true);
-  protected Map<RegionHandle, Region> regions =
-    new HashMap<RegionHandle, Region>();
+  protected Map<RegionHandle, FederateRegion> regions =
+    new HashMap<RegionHandle, FederateRegion>();
 
   protected Map<RegionHandle, Set<RegionHandle>> intersectingRegions =
     new HashMap<RegionHandle, Set<RegionHandle>>();
@@ -94,8 +89,9 @@ public class FederateRegionManager
       regionsLock.writeLock().lock();
       try
       {
-        regions.put(regionHandle, new Region(
-          regionHandle, dimensionHandles, federate.getFDD()));
+        regions.put(regionHandle, new FederateRegion(
+          regionHandle, dimensionHandles, federate.getFDD(),
+          federate.getAttributeHandleSetFactory()));
       }
       finally
       {
@@ -122,7 +118,7 @@ public class FederateRegionManager
     regionsLock.readLock().lock();
     try
     {
-      for (Region region : regions.values())
+      for (FederateRegion region : regions.values())
       {
         for (Map<DimensionHandle, RangeBounds> value : rangeBounds.values())
         {
@@ -150,7 +146,7 @@ public class FederateRegionManager
     regionsLock.readLock().lock();
     try
     {
-      Region region = regions.get(regionHandle);
+      FederateRegion region = regions.get(regionHandle);
       if (region != null)
       {
         rangeBounds = region.getRangeBounds(dimensionHandle);
@@ -289,7 +285,7 @@ public class FederateRegionManager
     regionsLock.writeLock().lock();
     try
     {
-      Region region = getRegion(regionHandle);
+      FederateRegion region = getRegion(regionHandle);
       region.checkIfInUse();
 
       DeleteRegion deleteRegion = new DeleteRegion(regionHandle);
@@ -416,10 +412,10 @@ public class FederateRegionManager
     }
   }
 
-  protected Region getRegion(RegionHandle regionHandle)
+  protected FederateRegion getRegion(RegionHandle regionHandle)
     throws RegionNotCreatedByThisFederate
   {
-    Region region = regions.get(regionHandle);
+    FederateRegion region = regions.get(regionHandle);
     if (region == null)
     {
       throw new RegionNotCreatedByThisFederate(
@@ -450,242 +446,6 @@ public class FederateRegionManager
         throw new RegionNotCreatedByThisFederate(
           String.format("%s", regionHandle));
       }
-    }
-  }
-
-  protected class Region
-  {
-    protected RegionHandle regionHandle;
-    protected DimensionHandleSet dimensionHandles;
-
-    protected ReadWriteLock rangeBoundsLock = new ReentrantReadWriteLock(true);
-    protected Map<DimensionHandle, RangeBounds> rangeBounds =
-      new HashMap<DimensionHandle, RangeBounds>();
-    protected Map<DimensionHandle, RangeBounds> uncommittedRangeBounds =
-      new HashMap<DimensionHandle, RangeBounds>();
-
-    protected ReadWriteLock associatedObjectsLock =
-      new ReentrantReadWriteLock(true);
-    protected Map<ObjectInstanceHandle, AttributeHandleSet> associatedObjects =
-      new HashMap<ObjectInstanceHandle, AttributeHandleSet>();
-
-    protected ReadWriteLock subscriptionLock = new ReentrantReadWriteLock(true);
-
-    protected Map<ObjectClassHandle, AttributeHandleSet> subscribedObjectClasses =
-      new HashMap<ObjectClassHandle, AttributeHandleSet>();
-
-    protected Set<InteractionClassHandle> subscribedInteractionClasses =
-      new HashSet<InteractionClassHandle>();
-
-    public Region(RegionHandle regionHandle,
-                  DimensionHandleSet dimensionHandles, FDD fdd)
-      throws RTIinternalError
-    {
-      this.regionHandle = regionHandle;
-      this.dimensionHandles = dimensionHandles;
-
-      // initialize our range bounds to the dimension defaults
-      //
-      for (DimensionHandle dimensionHandle : dimensionHandles)
-      {
-        try
-        {
-          rangeBounds.put(dimensionHandle, fdd.getRangeBounds(dimensionHandle));
-        }
-        catch (InvalidDimensionHandle idh)
-        {
-          // should never occur
-          //
-          throw new RTIinternalError("unexpected exception", idh);
-        }
-      }
-    }
-
-    public RegionHandle getRegionHandle()
-    {
-      return regionHandle;
-    }
-
-    public DimensionHandleSet getDimensionHandles()
-    {
-      return dimensionHandles;
-    }
-
-    public RangeBounds getRangeBounds(DimensionHandle dimensionHandle)
-      throws RegionDoesNotContainSpecifiedDimension
-    {
-      rangeBoundsLock.readLock().lock();
-      try
-      {
-        RangeBounds rangeBounds = this.rangeBounds.get(dimensionHandle);
-        if (rangeBounds == null)
-        {
-          throw new RegionDoesNotContainSpecifiedDimension(dimensionHandle);
-        }
-        return clone(rangeBounds);
-      }
-      finally
-      {
-        rangeBoundsLock.readLock().unlock();
-      }
-    }
-
-    public void setRangeBounds(DimensionHandle dimensionHandle,
-                               RangeBounds rangeBounds)
-      throws RegionDoesNotContainSpecifiedDimension
-    {
-      // make sure we have this range bound
-      //
-      getRangeBounds(dimensionHandle);
-
-      // hold onto it until a commit occurs
-      //
-      uncommittedRangeBounds.put(dimensionHandle, clone(rangeBounds));
-    }
-
-    public AttributeHandleSet getAssociatedAttributeHandles(
-      ObjectInstanceHandle objectInstanceHandle)
-    {
-      return associatedObjects.get(objectInstanceHandle);
-    }
-
-    public Map<DimensionHandle, RangeBounds> commit()
-    {
-      Map<DimensionHandle, RangeBounds> committedRangeBounds =
-        uncommittedRangeBounds;
-
-      update(uncommittedRangeBounds);
-
-      // start fresh
-      //
-      uncommittedRangeBounds = new HashMap<DimensionHandle, RangeBounds>();
-
-      return committedRangeBounds;
-    }
-
-    public void update(Map<DimensionHandle, RangeBounds> rangeBounds)
-    {
-      this.rangeBounds.putAll(rangeBounds);
-    }
-
-    public void checkIfInUse()
-      throws RegionInUseForUpdateOrSubscription
-    {
-      if (!associatedObjects.isEmpty() || !subscribedObjectClasses.isEmpty() ||
-          !subscribedInteractionClasses.isEmpty())
-      {
-        throw new RegionInUseForUpdateOrSubscription(String.format(
-          "associated objects(%d), subscribed object classes(%d), subscribed interaction classes(%d)",
-          associatedObjects.size(), subscribedObjectClasses.size(),
-          subscribedInteractionClasses.size()));
-      }
-    }
-
-    public void associateRegionsForUpdates(ObjectInstanceHandle objectInstanceHandle,
-                                           AttributeHandleSet attributeHandles)
-    {
-      AttributeHandleSet existingAttributeHandles =
-        associatedObjects.get(objectInstanceHandle);
-      if (existingAttributeHandles == null)
-      {
-        existingAttributeHandles =
-          federate.getAttributeHandleSetFactory().create();
-        associatedObjects.put(objectInstanceHandle, existingAttributeHandles);
-      }
-
-      existingAttributeHandles.addAll(attributeHandles);
-    }
-
-    public void unassociateRegionsForUpdates(ObjectInstanceHandle objectInstanceHandle,
-                                             AttributeHandleSet attributeHandles)
-    {
-      AttributeHandleSet existingAttributeHandles =
-        associatedObjects.get(objectInstanceHandle);
-      if (existingAttributeHandles != null)
-      {
-        existingAttributeHandles.removeAll(attributeHandles);
-
-        if (existingAttributeHandles.isEmpty())
-        {
-          associatedObjects.remove(objectInstanceHandle);
-        }
-      }
-    }
-
-    public void subscribe(ObjectClassHandle objectClassHandle,
-                          AttributeHandleSet attributeHandles)
-      throws RegionNotCreatedByThisFederate
-    {
-      AttributeHandleSet existingAttributeHandles =
-        subscribedObjectClasses.get(objectClassHandle);
-      if (existingAttributeHandles == null)
-      {
-        existingAttributeHandles =
-          federate.getAttributeHandleSetFactory().create();
-        subscribedObjectClasses.put(objectClassHandle,
-                                    existingAttributeHandles);
-      }
-
-      existingAttributeHandles.addAll(attributeHandles);
-    }
-
-    public void unsubscribe(ObjectClassHandle objectClassHandle,
-                            AttributeHandleSet attributeHandles)
-      throws RegionNotCreatedByThisFederate
-    {
-      AttributeHandleSet existingAttributeHandles =
-        subscribedObjectClasses.get(objectClassHandle);
-      if (existingAttributeHandles != null)
-      {
-        existingAttributeHandles.removeAll(attributeHandles);
-
-        if (existingAttributeHandles.isEmpty())
-        {
-          subscribedObjectClasses.remove(objectClassHandle);
-        }
-      }
-    }
-
-    public void subscribe(InteractionClassHandle interactionClassHandle)
-      throws RegionNotCreatedByThisFederate
-    {
-      subscribedInteractionClasses.add(interactionClassHandle);
-    }
-
-    public void unsubscribe(InteractionClassHandle interactionClassHandle)
-      throws RegionNotCreatedByThisFederate
-    {
-      subscribedInteractionClasses.remove(interactionClassHandle);
-    }
-
-    public boolean intersects(Map<DimensionHandle, RangeBounds> rangeBounds)
-    {
-      boolean intersect = false;
-
-      for (Iterator<Map.Entry<DimensionHandle, RangeBounds>> i =
-        rangeBounds.entrySet().iterator(); i.hasNext() && !intersect;)
-      {
-        Map.Entry<DimensionHandle, RangeBounds> entry = i.next();
-
-        RangeBounds rb = this.rangeBounds.get(entry.getKey());
-        intersect = rb != null && intersects(rb, entry.getValue());
-      }
-
-      return intersect;
-    }
-
-    protected boolean intersects(RangeBounds lhs, RangeBounds rhs)
-    {
-      return (lhs.lower < rhs.upper && rhs.lower < lhs.upper) ||
-             lhs.lower == rhs.lower;
-    }
-
-    protected RangeBounds clone(RangeBounds rangeBounds)
-    {
-      RangeBounds newRangeBounds = new RangeBounds();
-      newRangeBounds.lower = rangeBounds.lower;
-      newRangeBounds.upper = rangeBounds.upper;
-      return newRangeBounds;
     }
   }
 }

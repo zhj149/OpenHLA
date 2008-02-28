@@ -222,11 +222,6 @@ public class Federate
   public static final String OHLA_FEDERATE_PORT_PROPERTY =
     "ohla.federate.%s.port";
 
-  public enum FederateState
-  {
-    ACTIVE, SAVE_IN_PROGRESS, RESTORE_IN_PROGRESS, RESIGNED
-  }
-
   protected final String federateType;
   protected final String federationExecutionName;
   protected final FederateAmbassador federateAmbassador;
