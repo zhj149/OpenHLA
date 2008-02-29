@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Collections;
 
 import net.sf.ohla.rti.fdd.Attribute;
 
@@ -41,8 +42,7 @@ public class FederationExecutionAttributeInstance
   protected TransportationType transportationType;
   protected OrderType orderType;
 
-  protected final Map<RegionHandle, FederationExecutionRegion> associatedRegions =
-    new HashMap<RegionHandle, FederationExecutionRegion>();
+  protected final FederationExecutionObjectInstance objectInstance;
 
   protected FederateProxy owner;
 
@@ -59,7 +59,11 @@ public class FederationExecutionAttributeInstance
   protected final LinkedHashSet<FederateProxy> requestingOwnerships =
     new LinkedHashSet<FederateProxy>();
 
-  protected final FederationExecutionObjectInstance objectInstance;
+  protected final Map<RegionHandle, FederationExecutionRegion> associatedRegions =
+    new HashMap<RegionHandle, FederationExecutionRegion>();
+
+  protected final Map<FederateProxy, Map<RegionHandle, FederationExecutionRegion>> pendingAssociatedRegions =
+    new HashMap<FederateProxy, Map<RegionHandle, FederationExecutionRegion>>();
 
   public FederationExecutionAttributeInstance(
     Attribute attribute, FederationExecutionObjectInstance objectInstance)
@@ -102,13 +106,43 @@ public class FederationExecutionAttributeInstance
     this.orderType = orderType;
   }
 
-  public void associateRegionForUpdate(FederationExecutionRegion region)
+  public void associateRegionForUpdate(
+    FederateProxy federate, FederationExecutionRegion region)
   {
+    Map<RegionHandle, FederationExecutionRegion> associatedRegions;
+    if (federate.equals(owner))
+    {
+      associatedRegions = this.associatedRegions;
+    }
+    else
+    {
+      associatedRegions = pendingAssociatedRegions.get(federate);
+      if (associatedRegions == null)
+      {
+        associatedRegions =
+          new HashMap<RegionHandle, FederationExecutionRegion>();
+        pendingAssociatedRegions.put(federate, associatedRegions);
+      }
+    }
     associatedRegions.put(region.getRegionHandle(), region);
   }
 
-  public void unassociateRegionsForUpdates(RegionHandleSet regionHandles)
+  public void unassociateRegionsForUpdates(
+    FederateProxy federate, RegionHandleSet regionHandles)
   {
+    Map<RegionHandle, FederationExecutionRegion> associatedRegions;
+    if (federate.equals(owner))
+    {
+      associatedRegions = this.associatedRegions;
+    }
+    else
+    {
+      associatedRegions = pendingAssociatedRegions.get(federate);
+      if (associatedRegions == null)
+      {
+        associatedRegions = Collections.emptyMap();
+      }
+    }
     associatedRegions.keySet().removeAll(regionHandles);
   }
 
@@ -153,19 +187,9 @@ public class FederationExecutionAttributeInstance
 
   public FederateProxy unconditionalAttributeOwnershipDivestiture()
   {
-    owner = null;
-    wantsToDivest = false;
-
-    // give ownership to the next in line
+    // same behavior
     //
-    if (!requestingOwnerships.isEmpty())
-    {
-      Iterator<FederateProxy> i = requestingOwnerships.iterator();
-      owner = i.next();
-      i.remove();
-    }
-
-    return owner;
+    return confirmDivestiture();
   }
 
   public boolean negotiatedAttributeOwnershipDivestiture(byte[] tag)
@@ -179,6 +203,7 @@ public class FederationExecutionAttributeInstance
   {
     owner = null;
     wantsToDivest = false;
+    associatedRegions.clear();
 
     // give ownership to the next in line
     //
@@ -187,6 +212,8 @@ public class FederationExecutionAttributeInstance
       Iterator<FederateProxy> i = requestingOwnerships.iterator();
       owner = i.next();
       i.remove();
+
+      newOwner();
     }
 
     return owner;
@@ -201,6 +228,8 @@ public class FederationExecutionAttributeInstance
       //
       owner = acquiree;
       wantsToDivest = false;
+
+      newOwner();
     }
     return owner == acquiree;
   }
@@ -230,6 +259,8 @@ public class FederationExecutionAttributeInstance
       i.remove();
 
       wantsToDivest = false;
+
+      newOwner();
     }
 
     return divested ? owner : null;
@@ -246,6 +277,21 @@ public class FederationExecutionAttributeInstance
     if (owner.equals(this.owner))
     {
       wantsToDivest = false;
+    }
+  }
+
+  /**
+   * Fired when the attribute gets a new owner.
+   */
+  protected void newOwner()
+  {
+    // associate any pending regions
+    //
+    Map<RegionHandle, FederationExecutionRegion> associatedRegions =
+      pendingAssociatedRegions.get(owner);
+    if (associatedRegions != null)
+    {
+      this.associatedRegions.putAll(associatedRegions);
     }
   }
 }
