@@ -211,9 +211,11 @@ public class FederateObjectManager
           {
             // see if any objects are acquiring attributes
             //
-            for (ObjectInstanceHandle objectInstanceHandle : objectInstanceHandlesToUnpublish)
+            for (ObjectInstanceHandle objectInstanceHandle :
+              objectInstanceHandlesToUnpublish)
             {
-              FederateObjectInstance objectInstance = objects.get(objectInstanceHandle);
+              FederateObjectInstance objectInstance =
+                objects.get(objectInstanceHandle);
               assert objectInstance != null;
 
               objectInstance.checkIfOwnershipAcquisitionPending();
@@ -285,18 +287,22 @@ public class FederateObjectManager
             // see if any objects are acquiring any attributes that are being
             // unpublished
             //
-            for (ObjectInstanceHandle objectInstanceHandle : objectInstanceHandlesToUnpublishAttributes)
+            for (ObjectInstanceHandle objectInstanceHandle :
+              objectInstanceHandlesToUnpublishAttributes)
             {
-              FederateObjectInstance objectInstance = objects.get(objectInstanceHandle);
+              FederateObjectInstance objectInstance =
+                objects.get(objectInstanceHandle);
               assert objectInstance != null;
 
               objectInstance.checkIfOwnershipAcquisitionPending(
                 attributeHandles);
             }
 
-            for (ObjectInstanceHandle objectInstanceHandle : objectInstanceHandlesToUnpublishAttributes)
+            for (ObjectInstanceHandle objectInstanceHandle :
+              objectInstanceHandlesToUnpublishAttributes)
             {
-              FederateObjectInstance objectInstance = objects.get(objectInstanceHandle);
+              FederateObjectInstance objectInstance =
+                objects.get(objectInstanceHandle);
               assert objectInstance != null;
 
               objectInstance.unpublishObjectClassAttributes(
@@ -793,7 +799,8 @@ public class FederateObjectManager
     objectsLock.writeLock().lock();
     try
     {
-      FederateObjectInstance objectInstance = getObjectInstance(objectInstanceHandle);
+      FederateObjectInstance objectInstance =
+        getObjectInstance(objectInstanceHandle);
       objectInstance.deleteObjectInstance(tag);
 
       removeObjectInstance(objectInstance);
@@ -816,7 +823,8 @@ public class FederateObjectManager
     objectsLock.writeLock().lock();
     try
     {
-      FederateObjectInstance objectInstance = getObjectInstance(objectInstanceHandle);
+      FederateObjectInstance objectInstance =
+        getObjectInstance(objectInstanceHandle);
       objectInstance.deleteObjectInstance(tag);
 
       if (sentOrderType == OrderType.RECEIVE)
@@ -842,7 +850,8 @@ public class FederateObjectManager
     objectsLock.writeLock().lock();
     try
     {
-      FederateObjectInstance objectInstance = getObjectInstance(objectInstanceHandle);
+      FederateObjectInstance objectInstance =
+        getObjectInstance(objectInstanceHandle);
       objectInstance.localDeleteObjectInstance();
 
       objects.remove(objectInstanceHandle);
@@ -940,7 +949,8 @@ public class FederateObjectManager
       objectsLock.readLock().lock();
       try
       {
-        FederateObjectInstance objectInstance = objects.get(objectInstanceHandle);
+        FederateObjectInstance objectInstance =
+          objects.get(objectInstanceHandle);
         if (objectInstance != null)
         {
           ObjectClass objectClass = objectInstance.getObjectClass();
@@ -1079,7 +1089,8 @@ public class FederateObjectManager
     objectsLock.writeLock().lock();
     try
     {
-      FederateObjectInstance objectInstance = objects.remove(objectInstanceHandle);
+      FederateObjectInstance objectInstance =
+        objects.remove(objectInstanceHandle);
       if (objectInstance != null)
       {
         removeObjectInstance(objectInstance);
@@ -1335,7 +1346,8 @@ public class FederateObjectManager
       publicationLock.readLock().lock();
       try
       {
-        FederateObjectInstance objectInstance = getObjectInstance(objectInstanceHandle);
+        FederateObjectInstance objectInstance =
+          getObjectInstance(objectInstanceHandle);
 
         checkIfAttributeNotPublished(
           objectInstance.getObjectClassHandle(), attributeHandles);
@@ -1364,7 +1376,8 @@ public class FederateObjectManager
     objectsLock.readLock().lock();
     try
     {
-      FederateObjectInstance objectInstance = getObjectInstance(objectInstanceHandle);
+      FederateObjectInstance objectInstance =
+        getObjectInstance(objectInstanceHandle);
 
       publicationLock.readLock().lock();
       try
