@@ -63,7 +63,7 @@ public class Dimension
       catch (NumberFormatException nfe)
       {
         throw new ErrorReadingFDD(String.format(
-          "invalid upper bound: %d", upperBound), nfe);
+          "invalid upper bound: %s", upperBound), nfe);
       }
     }
   }
