@@ -16,8 +16,6 @@
 
 package net.sf.ohla.rti.federate;
 
-import java.io.Serializable;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -31,24 +29,11 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.sf.ohla.rti.SubscriptionManager;
-import net.sf.ohla.rti.fdd.Attribute;
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandleSet;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516RegionHandleSet;
-import net.sf.ohla.rti.messages.AttributeOwnershipAcquisition;
-import net.sf.ohla.rti.messages.AttributeOwnershipAcquisitionIfAvailable;
-import net.sf.ohla.rti.messages.AttributeOwnershipDivestitureIfWanted;
-import net.sf.ohla.rti.messages.AttributeOwnershipDivestitureIfWantedResponse;
-import net.sf.ohla.rti.messages.CancelAttributeOwnershipAcquisition;
-import net.sf.ohla.rti.messages.CancelNegotiatedAttributeOwnershipDivestiture;
-import net.sf.ohla.rti.messages.ConfirmDivestiture;
-import net.sf.ohla.rti.messages.DefaultResponse;
 import net.sf.ohla.rti.messages.DeleteObjectInstance;
-import net.sf.ohla.rti.messages.NegotiatedAttributeOwnershipDivestiture;
-import net.sf.ohla.rti.messages.QueryAttributeOwnership;
 import net.sf.ohla.rti.messages.RegisterObjectInstance;
-import net.sf.ohla.rti.messages.RequestAttributeValueUpdate;
 import net.sf.ohla.rti.messages.ReserveObjectInstanceName;
 import net.sf.ohla.rti.messages.ResignFederationExecution;
 import net.sf.ohla.rti.messages.SendInteraction;
@@ -57,8 +42,6 @@ import net.sf.ohla.rti.messages.SubscribeObjectClassAttributes;
 import net.sf.ohla.rti.messages.UnconditionalAttributeOwnershipDivestiture;
 import net.sf.ohla.rti.messages.UnsubscribeInteractionClass;
 import net.sf.ohla.rti.messages.UnsubscribeObjectClassAttributes;
-import net.sf.ohla.rti.messages.UpdateAttributeValues;
-import net.sf.ohla.rti.messages.callbacks.RemoveObjectInstance;
 
 import org.apache.mina.common.IoSession;
 import org.apache.mina.common.WriteFuture;
@@ -78,25 +61,19 @@ import hla.rti1516.AttributeHandleValueMap;
 import hla.rti1516.AttributeNotDefined;
 import hla.rti1516.AttributeNotOwned;
 import hla.rti1516.AttributeNotPublished;
-import hla.rti1516.AttributeNotRecognized;
-import hla.rti1516.AttributeNotSubscribed;
 import hla.rti1516.AttributeRegionAssociation;
-import hla.rti1516.CouldNotDiscover;
 import hla.rti1516.DeletePrivilegeNotHeld;
 import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateInternalError;
 import hla.rti1516.FederateOwnsAttributes;
 import hla.rti1516.IllegalName;
 import hla.rti1516.InteractionClassHandle;
 import hla.rti1516.InteractionClassNotDefined;
 import hla.rti1516.InteractionClassNotPublished;
-import hla.rti1516.InvalidLogicalTime;
 import hla.rti1516.LogicalTime;
 import hla.rti1516.MessageRetractionHandle;
 import hla.rti1516.ObjectClassHandle;
 import hla.rti1516.ObjectClassNotDefined;
 import hla.rti1516.ObjectClassNotPublished;
-import hla.rti1516.ObjectClassNotRecognized;
 import hla.rti1516.ObjectInstanceHandle;
 import hla.rti1516.ObjectInstanceNameInUse;
 import hla.rti1516.ObjectInstanceNameNotReserved;
@@ -848,7 +825,7 @@ public class FederateObjectManager
       }
 
       return federate.getRTISession().write(
-        new RemoveObjectInstance(
+        new DeleteObjectInstance(
           objectInstanceHandle, tag, sentOrderType, deleteTime,
           messageRetractionHandle));
     }
