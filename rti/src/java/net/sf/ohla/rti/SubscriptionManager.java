@@ -199,7 +199,8 @@ public class SubscriptionManager
     {
       subscribedInteractionClasses.put(
         interactionClassHandle,
-        new InteractionClassSubscription(interactionClassHandle, passive));
+        new InteractionClassSubscription(
+          interactionClassHandle, regionHandles, passive));
     }
     else
     {
