@@ -62,6 +62,7 @@ import hla.rti1516.AttributeNotDefined;
 import hla.rti1516.AttributeNotOwned;
 import hla.rti1516.AttributeNotPublished;
 import hla.rti1516.AttributeRegionAssociation;
+import hla.rti1516.AttributeSetRegionSetPairList;
 import hla.rti1516.DeletePrivilegeNotHeld;
 import hla.rti1516.FederateAmbassador;
 import hla.rti1516.FederateOwnsAttributes;
@@ -87,6 +88,7 @@ import hla.rti1516.ResignAction;
 import hla.rti1516.RestoreInProgress;
 import hla.rti1516.SaveInProgress;
 import hla.rti1516.TransportationType;
+import hla.rti1516.RegionNotCreatedByThisFederate;
 
 public class FederateObjectManager
 {
@@ -1246,35 +1248,65 @@ public class FederateObjectManager
 
   public void associateRegionsForUpdates(
     ObjectInstanceHandle objectInstanceHandle,
-    AttributeRegionAssociation attributeRegionAssociation)
-    throws ObjectInstanceNotKnown, AttributeNotDefined
+    AttributeSetRegionSetPairList attributesAndRegions)
+    throws ObjectInstanceNotKnown, AttributeNotDefined,
+           RegionNotCreatedByThisFederate
   {
-    objectsLock.readLock().lock();
+    federate.getRegionManager().getRegionsLock().readLock().lock();
     try
     {
-      getObjectInstance(objectInstanceHandle).associateRegionsForUpdates(
-        attributeRegionAssociation);
+      objectsLock.readLock().lock();
+      try
+      {
+        FederateObjectInstance objectInstance =
+          getObjectInstance(objectInstanceHandle);
+
+        checkIfAttributeNotDefinedOrRegionNotCreatedByThisFederate(
+          objectInstance.getObjectClass(), attributesAndRegions);
+
+        objectInstance.associateRegionsForUpdates(
+          attributesAndRegions, federate.getRegionManager());
+      }
+      finally
+      {
+        objectsLock.readLock().unlock();
+      }
     }
     finally
     {
-      objectsLock.readLock().unlock();
+      federate.getRegionManager().getRegionsLock().readLock().unlock();
     }
   }
 
   public void unassociateRegionsForUpdates(
     ObjectInstanceHandle objectInstanceHandle,
-    AttributeRegionAssociation attributeRegionAssociation)
-    throws ObjectInstanceNotKnown, AttributeNotDefined
+    AttributeSetRegionSetPairList attributesAndRegions)
+    throws ObjectInstanceNotKnown, AttributeNotDefined,
+           RegionNotCreatedByThisFederate
   {
-    objectsLock.readLock().lock();
+    federate.getRegionManager().getRegionsLock().readLock().lock();
     try
     {
-      getObjectInstance(objectInstanceHandle).unassociateRegionsForUpdates(
-        attributeRegionAssociation);
+      objectsLock.readLock().lock();
+      try
+      {
+        FederateObjectInstance objectInstance =
+          getObjectInstance(objectInstanceHandle);
+
+        checkIfAttributeNotDefinedOrRegionNotCreatedByThisFederate(
+          objectInstance.getObjectClass(), attributesAndRegions);
+
+        objectInstance.unassociateRegionsForUpdates(
+          attributesAndRegions, federate.getRegionManager());
+      }
+      finally
+      {
+        objectsLock.readLock().unlock();
+      }
     }
     finally
     {
-      objectsLock.readLock().unlock();
+      federate.getRegionManager().getRegionsLock().readLock().unlock();
     }
   }
 
@@ -1587,6 +1619,18 @@ public class FederateObjectManager
     finally
     {
       retiredObjectInstanceNamesLock.unlock();
+    }
+  }
+
+  protected void checkIfAttributeNotDefinedOrRegionNotCreatedByThisFederate(
+    ObjectClass objectClass, AttributeSetRegionSetPairList attributesAndRegions)
+  throws AttributeNotDefined, RegionNotCreatedByThisFederate
+  {
+    for (AttributeRegionAssociation attributeRegionAssociation :
+      attributesAndRegions)
+    {
+      federate.getRegionManager().checkIfRegionNotCreatedByThisFederate(
+        attributeRegionAssociation.regions);
     }
   }
 
