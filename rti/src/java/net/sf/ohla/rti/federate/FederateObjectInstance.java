@@ -61,6 +61,7 @@ import hla.rti1516.AttributeNotPublished;
 import hla.rti1516.AttributeNotRecognized;
 import hla.rti1516.AttributeNotSubscribed;
 import hla.rti1516.AttributeRegionAssociation;
+import hla.rti1516.AttributeSetRegionSetPairList;
 import hla.rti1516.CouldNotDiscover;
 import hla.rti1516.DeletePrivilegeNotHeld;
 import hla.rti1516.FederateAmbassador;
@@ -76,6 +77,7 @@ import hla.rti1516.ObjectInstanceNotKnown;
 import hla.rti1516.OrderType;
 import hla.rti1516.OwnershipAcquisitionPending;
 import hla.rti1516.RTIinternalError;
+import hla.rti1516.RegionHandle;
 import hla.rti1516.RegionHandleSet;
 import hla.rti1516.TransportationType;
 
@@ -726,40 +728,70 @@ public class FederateObjectInstance
   }
 
   public void associateRegionsForUpdates(
-    AttributeRegionAssociation attributeRegionAssociation)
+    AttributeSetRegionSetPairList attributesAndRegions,
+    FederateRegionManager regionManager)
   {
-    objectLock.readLock().lock();
+    objectLock.writeLock().lock();
     try
     {
-      for (AttributeHandle attributeHandle : attributeRegionAssociation.attributes)
+      for (AttributeRegionAssociation attributeRegionAssociation :
+        attributesAndRegions)
       {
-        FederateAttributeInstance attribute = attributes.get(attributeHandle);
-        if (attribute != null)
+        for (AttributeHandle attributeHandle :
+          attributeRegionAssociation.attributes)
         {
-          attribute.associateRegionsForUpdates(
-            attributeRegionAssociation.regions);
+          FederateAttributeInstance attribute = attributes.get(attributeHandle);
+          if (attribute != null)
+          {
+            attribute.associateRegionsForUpdates(
+              attributeRegionAssociation.regions);
+          }
+        }
+
+        for (RegionHandle regionHandle : attributeRegionAssociation.regions)
+        {
+          FederateRegion region = regionManager.regions.get(regionHandle);
+          assert region != null;
+
+          region.associateRegionsForUpdates(
+            objectInstanceHandle, attributeRegionAssociation.attributes);
         }
       }
     }
     finally
     {
-      objectLock.readLock().unlock();
+      objectLock.writeLock().unlock();
     }
   }
 
   public void unassociateRegionsForUpdates(
-    AttributeRegionAssociation attributeRegionAssociation)
+    AttributeSetRegionSetPairList attributesAndRegions,
+    FederateRegionManager regionManager)
   {
     objectLock.readLock().lock();
     try
     {
-      for (AttributeHandle attributeHandle : attributeRegionAssociation.attributes)
+      for (AttributeRegionAssociation attributeRegionAssociation :
+        attributesAndRegions)
       {
-        FederateAttributeInstance attribute = attributes.get(attributeHandle);
-        if (attribute != null)
+        for (AttributeHandle attributeHandle :
+          attributeRegionAssociation.attributes)
         {
-          attribute.unassociateRegionsForUpdates(
-            attributeRegionAssociation.regions);
+          FederateAttributeInstance attribute = attributes.get(attributeHandle);
+          if (attribute != null)
+          {
+            attribute.unassociateRegionsForUpdates(
+              attributeRegionAssociation.regions);
+          }
+        }
+
+        for (RegionHandle regionHandle : attributeRegionAssociation.regions)
+        {
+          FederateRegion region = regionManager.regions.get(regionHandle);
+          assert region != null;
+
+          region.unassociateRegionsForUpdates(
+            objectInstanceHandle, attributeRegionAssociation.attributes);
         }
       }
     }

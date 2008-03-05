@@ -32,6 +32,7 @@ import net.sf.ohla.rti.messages.GetRangeBounds;
 import org.apache.mina.common.WriteFuture;
 
 import hla.rti1516.AttributeRegionAssociation;
+import hla.rti1516.AttributeSetRegionSetPairList;
 import hla.rti1516.DimensionHandle;
 import hla.rti1516.DimensionHandleSet;
 import hla.rti1516.InteractionClassHandle;
@@ -60,6 +61,11 @@ public class FederateRegionManager
   public FederateRegionManager(Federate federate)
   {
     this.federate = federate;
+  }
+
+  public ReadWriteLock getRegionsLock()
+  {
+    return regionsLock;
   }
 
   public RegionHandle createRegion(DimensionHandleSet dimensionHandles)
@@ -320,28 +326,6 @@ public class FederateRegionManager
     }
   }
 
-  public void associateRegionsForUpdates(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeRegionAssociation attributeRegionAssociation)
-    throws RegionNotCreatedByThisFederate
-  {
-    regionsLock.readLock().lock();
-    try
-    {
-      checkIfRegionNotCreatedByThisFederate(attributeRegionAssociation.regions);
-
-      for (RegionHandle regionHandle : attributeRegionAssociation.regions)
-      {
-        regions.get(regionHandle).associateRegionsForUpdates(
-          objectInstanceHandle, attributeRegionAssociation.attributes);
-      }
-    }
-    finally
-    {
-      regionsLock.readLock().unlock();
-    }
-  }
-
   public void unassociateRegionsForUpdates(
     ObjectInstanceHandle objectInstanceHandle,
     AttributeRegionAssociation attributeRegionAssociation)
@@ -441,11 +425,7 @@ public class FederateRegionManager
   {
     for (RegionHandle regionHandle : regionHandles)
     {
-      if (!regions.containsKey(regionHandle))
-      {
-        throw new RegionNotCreatedByThisFederate(
-          String.format("%s", regionHandle));
-      }
+      checkIfRegionNotCreatedByThisFederate(regionHandle);
     }
   }
 }

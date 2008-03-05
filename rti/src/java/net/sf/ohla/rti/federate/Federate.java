@@ -2460,13 +2460,8 @@ public class Federate
     {
       checkIfActive();
 
-      for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
-      {
-        objectManager.associateRegionsForUpdates(
-          objectInstanceHandle, attributeRegionAssociation);
-        regionManager.associateRegionsForUpdates(
-          objectInstanceHandle, attributeRegionAssociation);
-      }
+      objectManager.associateRegionsForUpdates(
+        objectInstanceHandle, attributesAndRegions);
     }
     finally
     {
@@ -2486,13 +2481,8 @@ public class Federate
     {
       checkIfActive();
 
-      for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
-      {
-        objectManager.unassociateRegionsForUpdates(
-          objectInstanceHandle, attributeRegionAssociation);
-        regionManager.unassociateRegionsForUpdates(
-          objectInstanceHandle, attributeRegionAssociation);
-      }
+      objectManager.unassociateRegionsForUpdates(
+        objectInstanceHandle, attributesAndRegions);
     }
     finally
     {
