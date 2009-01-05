@@ -400,6 +400,10 @@ public class FederateTimeManager
       }
       else
       {
+        LogicalTime nextMessageTime = federate.getNextMessageTime();
+        time = nextMessageTime == null ? time :
+          nextMessageTime.compareTo(time) > 1 ? time : nextMessageTime;
+
         WriteFuture writeFuture =
           federate.getRTISession().write(new TimeAdvanceRequest(time));
 
