@@ -3229,6 +3229,21 @@ public class Federate
     return "1516.1.5";
   }
 
+  public LogicalTime getNextMessageTime()
+  {
+    futureTasksLock.lock();
+    try
+    {
+      TimestampedFutureTask timestampedFutureTask = futureTasks.peek();
+      return timestampedFutureTask == null ?
+        null : timestampedFutureTask.getTime();
+    }
+    finally
+    {
+      futureTasksLock.unlock();
+    }
+  }
+
   protected void checkIfAlreadyExecutionMember()
     throws FederateAlreadyExecutionMember
   {
@@ -3289,7 +3304,7 @@ public class Federate
 
   protected class TimestampedFutureTask
     extends FutureTask<Object>
-    implements Comparable
+    implements Comparable<TimestampedFutureTask>
   {
     protected LogicalTime time;
 
@@ -3305,9 +3320,9 @@ public class Federate
       return time;
     }
 
-    public int compareTo(Object rhs)
+    public int compareTo(TimestampedFutureTask rhs)
     {
-      return time.compareTo(((TimestampedFutureTask) rhs).time);
+      return time.compareTo(rhs.time);
     }
   }
 
