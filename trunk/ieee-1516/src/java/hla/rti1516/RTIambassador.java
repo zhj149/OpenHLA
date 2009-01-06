@@ -567,8 +567,7 @@ public interface RTIambassador
 
   ObjectInstanceHandle registerObjectInstanceWithRegions(
     ObjectClassHandle objectClassHandle,
-    AttributeSetRegionSetPairList attributesAndRegions,
-    String objectInstanceHandle)
+    AttributeSetRegionSetPairList attributesAndRegions, String name)
     throws ObjectClassNotDefined, ObjectClassNotPublished, AttributeNotDefined,
            AttributeNotPublished, InvalidRegion,
            RegionNotCreatedByThisFederate, InvalidRegionContext,
