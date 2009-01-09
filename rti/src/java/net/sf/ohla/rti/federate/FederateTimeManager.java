@@ -388,6 +388,10 @@ public class FederateTimeManager
       checkIfRequestForTimeRegulationPending();
       checkIfRequestForTimeConstrainedPending();
 
+      LogicalTime nextMessageTime = federate.getNextMessageTime();
+      time = nextMessageTime == null ? time :
+        nextMessageTime.compareTo(time) > 1 ? time : nextMessageTime;
+
       advanceRequestTime = time;
       advanceRequestTimeType = TimeAdvanceType.NEXT_MESSAGE_REQUEST;
 
@@ -400,10 +404,6 @@ public class FederateTimeManager
       }
       else
       {
-        LogicalTime nextMessageTime = federate.getNextMessageTime();
-        time = nextMessageTime == null ? time :
-          nextMessageTime.compareTo(time) > 1 ? time : nextMessageTime;
-
         WriteFuture writeFuture =
           federate.getRTISession().write(new TimeAdvanceRequest(time));
 
