@@ -349,7 +349,7 @@ public class InteractionClass
   protected void setDimensions(String dimensions, FDD fdd)
     throws ErrorReadingFDD
   {
-    for (StringTokenizer tokenizer = new StringTokenizer(dimensions, ",");
+    for (StringTokenizer tokenizer = new StringTokenizer(dimensions, " ");
          tokenizer.hasMoreTokens();)
     {
       String dimensionName = tokenizer.nextToken().trim();

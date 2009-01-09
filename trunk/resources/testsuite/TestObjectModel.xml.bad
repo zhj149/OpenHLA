@@ -19,7 +19,7 @@ objectModel>
                    transportation="HLAreliable"
                    order="TimeStamp"/>
         <attribute name="Attribute3"
-                   dimensions="Dimension1,Dimension2"
+                   dimensions="Dimension1 Dimension2"
                    transportation="HLAreliable"
                    order="TimeStamp"/>
         <attribute name="BestEffortReceiveAttribute"
