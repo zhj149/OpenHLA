@@ -19,7 +19,7 @@
                    transportation="HLAreliable"
                    order="TimeStamp"/>
         <attribute name="Attribute3"
-                   dimensions="Dimension1,Dimension2"
+                   dimensions="Dimension1 Dimension2"
                    transportation="HLAreliable"
                    order="TimeStamp"/>
         <attribute name="BestEffortReceiveAttribute"
@@ -49,7 +49,7 @@
                      transportation="HLAreliable"
                      order="TimeStamp"/>
           <attribute name="Attribute6"
-                     dimensions="Dimension1,Dimension2"
+                     dimensions="Dimension1 Dimension2"
                      transportation="HLAreliable"
                      order="TimeStamp"/>
         </objectClass>
@@ -64,7 +64,7 @@
                       order="Receive">
 
       <interactionClass name="TestInteraction"
-                        dimensions="Dimension3,Dimension4"
+                        dimensions="Dimension3 Dimension4"
                         transportation="HLAreliable"
                         order="TimeStamp">
         <parameter name="Parameter1"/>
@@ -72,7 +72,7 @@
         <parameter name="Parameter3"/>
 
         <interactionClass name="TestInteraction2"
-                          dimensions="Dimension3,Dimension4"
+                          dimensions="Dimension3 Dimension4"
                           transportation="HLAreliable"
                           order="TimeStamp">
           <parameter name="Parameter4"/>
