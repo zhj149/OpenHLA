@@ -32,7 +32,6 @@ import net.sf.ohla.rti.messages.GetRangeBounds;
 import org.apache.mina.common.WriteFuture;
 
 import hla.rti1516.AttributeRegionAssociation;
-import hla.rti1516.AttributeSetRegionSetPairList;
 import hla.rti1516.DimensionHandle;
 import hla.rti1516.DimensionHandleSet;
 import hla.rti1516.InteractionClassHandle;
@@ -66,6 +65,11 @@ public class FederateRegionManager
   public ReadWriteLock getRegionsLock()
   {
     return regionsLock;
+  }
+
+  public Map<RegionHandle, FederateRegion> getRegions()
+  {
+    return regions;
   }
 
   public RegionHandle createRegion(DimensionHandleSet dimensionHandles)

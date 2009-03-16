@@ -32,6 +32,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.hla.rti1516.IEEE1516ObjectInstanceHandle;
 import net.sf.ohla.rti.messages.UpdateAttributeValues;
+import net.sf.ohla.rti.messages.AssociateRegionsForUpdates;
+import net.sf.ohla.rti.messages.UnassociateRegionsForUpdates;
+import net.sf.ohla.rti.messages.DefaultResponse;
 import net.sf.ohla.rti.messages.callbacks.DiscoverObjectInstance;
 import net.sf.ohla.rti.messages.callbacks.ObjectInstanceNameReservationFailed;
 import net.sf.ohla.rti.messages.callbacks.ObjectInstanceNameReservationSucceeded;
@@ -48,6 +51,7 @@ import hla.rti1516.AttributeSetRegionSetPairList;
 import hla.rti1516.ObjectClassHandle;
 import hla.rti1516.ObjectInstanceHandle;
 import hla.rti1516.OrderType;
+import hla.rti1516.ObjectInstanceNotKnown;
 
 public class FederationExecutionObjectManager
 {
@@ -384,6 +388,68 @@ public class FederationExecutionObjectManager
       else
       {
         objectInstance.queryAttributeOwnership(federateProxy, attributeHandle);
+      }
+    }
+    finally
+    {
+      objectsLock.readLock().unlock();
+    }
+  }
+
+  public void associateRegionsForUpdates(
+    FederateProxy federateProxy,
+    AssociateRegionsForUpdates associateRegionsForUpdates)
+  {
+    objectsLock.readLock().lock();
+    try
+    {
+      FederationExecutionObjectInstance objectInstance =
+        objects.get(associateRegionsForUpdates.getObjectInstanceHandle());
+      if (objectInstance == null)
+      {
+        // the object was deleted after an associate was issued...
+
+        federateProxy.getSession().write(
+          new DefaultResponse(
+            associateRegionsForUpdates.getId(),
+            new ObjectInstanceNotKnown(String.format(
+              "%s", associateRegionsForUpdates.getObjectInstanceHandle()))));
+      }
+      else
+      {
+        objectInstance.associateRegionsForUpdates(
+          federateProxy, associateRegionsForUpdates);
+      }
+    }
+    finally
+    {
+      objectsLock.readLock().unlock();
+    }
+  }
+
+  public void unassociateRegionsForUpdates(
+    FederateProxy federateProxy,
+    UnassociateRegionsForUpdates unassociateRegionsForUpdates)
+  {
+    objectsLock.readLock().lock();
+    try
+    {
+      FederationExecutionObjectInstance objectInstance =
+        objects.get(unassociateRegionsForUpdates.getObjectInstanceHandle());
+      if (objectInstance == null)
+      {
+        // the object was deleted after an associate was issued...
+
+        federateProxy.getSession().write(
+          new DefaultResponse(
+            unassociateRegionsForUpdates.getId(),
+            new ObjectInstanceNotKnown(String.format(
+              "%s", unassociateRegionsForUpdates.getObjectInstanceHandle()))));
+      }
+      else
+      {
+        objectInstance.unassociateRegionsForUpdates(
+          federateProxy, unassociateRegionsForUpdates);
       }
     }
     finally

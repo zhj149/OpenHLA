@@ -19,26 +19,37 @@ package net.sf.ohla.rti.messages;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
 
-import hla.rti1516.LogicalTimeInterval;
+import hla.rti1516.AttributeSetRegionSetPairList;
+import hla.rti1516.ObjectInstanceHandle;
 
-public class EnableTimeRegulation
+public class UnassociateRegionsForUpdates
+  extends AbstractRequest
   implements FederationExecutionMessage
 {
-  protected final LogicalTimeInterval lookahead;
+  protected final ObjectInstanceHandle objectInstanceHandle;
+  protected final AttributeSetRegionSetPairList attributesAndRegions;
 
-  public EnableTimeRegulation(LogicalTimeInterval lookahead)
+  public UnassociateRegionsForUpdates(
+    ObjectInstanceHandle objectInstanceHandle,
+    AttributeSetRegionSetPairList attributesAndRegions)
   {
-    this.lookahead = lookahead;
+    this.objectInstanceHandle = objectInstanceHandle;
+    this.attributesAndRegions = attributesAndRegions;
   }
 
-  public LogicalTimeInterval getLookahead()
+  public ObjectInstanceHandle getObjectInstanceHandle()
   {
-    return lookahead;
+    return objectInstanceHandle;
+  }
+
+  public AttributeSetRegionSetPairList getAttributesAndRegions()
+  {
+    return attributesAndRegions;
   }
 
   public void execute(FederationExecution federationExecution,
                       FederateProxy federateProxy)
   {
-    federationExecution.enableTimeRegulation(federateProxy, this);
+    federationExecution.unassociateRegionsForUpdates(federateProxy, this);
   }
 }

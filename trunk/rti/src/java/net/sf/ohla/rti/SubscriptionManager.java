@@ -16,14 +16,15 @@
 
 package net.sf.ohla.rti;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.Collection;
-import java.util.Iterator;
 
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.fdd.ObjectClass;
+import net.sf.ohla.rti.hla.rti1516.IEEE1516ParameterHandleValueMap;
 
 import hla.rti1516.AttributeHandle;
 import hla.rti1516.AttributeHandleSet;
@@ -32,6 +33,7 @@ import hla.rti1516.AttributeRegionAssociation;
 import hla.rti1516.AttributeSetRegionSetPairList;
 import hla.rti1516.InteractionClassHandle;
 import hla.rti1516.ObjectClassHandle;
+import hla.rti1516.ParameterHandleValueMap;
 import hla.rti1516.RegionHandle;
 import hla.rti1516.RegionHandleSet;
 
@@ -370,7 +372,7 @@ public class SubscriptionManager
     protected boolean defaultRegionSubscribed;
     protected boolean defaultRegionPassive;
 
-    protected Map<RegionHandle, Boolean> subscribedRegionHandles =
+    protected final Map<RegionHandle, Boolean> subscribedRegionHandles =
       new HashMap<RegionHandle, Boolean>();
 
     public AbstractSubscription(boolean passive)
@@ -407,6 +409,9 @@ public class SubscriptionManager
     public void unsubscribe()
     {
       defaultRegionSubscribed = false;
+      defaultRegionPassive = false;
+
+      subscribedRegionHandles.clear();
     }
 
     public void subscribe(RegionHandleSet regionHandles, boolean passive)
@@ -478,6 +483,27 @@ public class SubscriptionManager
     public InteractionClassHandle getInteractionClassHandle()
     {
       return interactionClassHandle;
+    }
+
+    public ParameterHandleValueMap trim(
+      InteractionClass interactionClass,
+      ParameterHandleValueMap parameterValues)
+    {
+      ParameterHandleValueMap trimmedParameterValues = parameterValues;
+
+      if (!interactionClassHandle.equals(
+        interactionClass.getInteractionClassHandle()))
+      {
+        trimmedParameterValues =
+          new IEEE1516ParameterHandleValueMap(parameterValues);
+
+        // keep the parameters only at the interaction level that is subscribed
+        //
+        trimmedParameterValues.keySet().retainAll(
+          interactionClass.getParameters().keySet());
+      }
+
+      return trimmedParameterValues;
     }
   }
 }

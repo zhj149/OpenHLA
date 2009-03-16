@@ -35,25 +35,24 @@ import hla.rti1516.TransportationType;
 public class ReflectAttributeValues
   implements Callback
 {
-  protected ObjectInstanceHandle objectInstanceHandle;
-  protected AttributeHandleValueMap attributeValues;
-  protected byte[] tag;
-  protected RegionHandleSet sentRegionHandles;
-  protected OrderType sentOrderType;
-  protected TransportationType transportationType;
-  protected LogicalTime updateTime;
-  protected MessageRetractionHandle messageRetractionHandle;
+  protected final ObjectInstanceHandle objectInstanceHandle;
+  protected final AttributeHandleValueMap attributeValues;
+  protected final byte[] tag;
+  protected final RegionHandleSet sentRegionHandles;
+  protected final OrderType sentOrderType;
+  protected final TransportationType transportationType;
+  protected final LogicalTime updateTime;
+  protected final MessageRetractionHandle messageRetractionHandle;
 
   protected transient ObjectClass objectClass;
   protected transient OrderType receivedOrderType;
 
-  public ReflectAttributeValues(ObjectInstanceHandle objectInstanceHandle,
-                                AttributeHandleValueMap attributeValues,
-                                byte[] tag,
-                                RegionHandleSet sentRegionHandles, OrderType sentOrderType,
-                                TransportationType transportationType,
-                                LogicalTime updateTime,
-                                MessageRetractionHandle messageRetractionHandle)
+  public ReflectAttributeValues(
+    ObjectInstanceHandle objectInstanceHandle,
+    AttributeHandleValueMap attributeValues, byte[] tag,
+    RegionHandleSet sentRegionHandles, OrderType sentOrderType,
+    TransportationType transportationType, LogicalTime updateTime,
+    MessageRetractionHandle messageRetractionHandle)
   {
     this.objectInstanceHandle = objectInstanceHandle;
     this.attributeValues = attributeValues;

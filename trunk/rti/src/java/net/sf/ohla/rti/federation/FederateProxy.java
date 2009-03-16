@@ -16,6 +16,7 @@
 
 package net.sf.ohla.rti.federation;
 
+import net.sf.ohla.rti.federate.TimeAdvanceType;
 import net.sf.ohla.rti.messages.FederateRestoreComplete;
 import net.sf.ohla.rti.messages.FederateRestoreNotComplete;
 import net.sf.ohla.rti.messages.FederateSaveBegun;
@@ -24,6 +25,7 @@ import net.sf.ohla.rti.messages.FederateSaveInitiated;
 import net.sf.ohla.rti.messages.FederateSaveInitiatedFailed;
 import net.sf.ohla.rti.messages.FederateSaveNotComplete;
 import net.sf.ohla.rti.messages.GALTAdvanced;
+import net.sf.ohla.rti.messages.GALTUndefined;
 import net.sf.ohla.rti.messages.RequestAttributeValueUpdate;
 import net.sf.ohla.rti.messages.Retract;
 import net.sf.ohla.rti.messages.SendInteraction;
@@ -63,17 +65,29 @@ public class FederateProxy
   protected final IoSession session;
   protected final FederationExecution federationExecution;
 
+  protected final LogicalTimeInterval zero;
+  protected final LogicalTimeInterval epsilon;
+
   protected SaveStatus saveStatus = SaveStatus.NO_SAVE_IN_PROGRESS;
   protected RestoreStatus restoreStatus = RestoreStatus.NO_RESTORE_IN_PROGRESS;
 
   protected boolean timeRegulationEnabled;
+
   protected boolean timeConstrainedEnabled;
+  protected boolean timeConstrainedPending;
 
   protected LogicalTime federateTime;
   protected LogicalTimeInterval lookahead;
-  protected LogicalTime timeAdvanceRequest;
-  protected LogicalTime lits;
+
+  protected LogicalTime advanceRequestTime;
+  protected TimeAdvanceType advanceRequestType = TimeAdvanceType.NONE;
+
   protected LogicalTime galt;
+
+  /**
+   * Least Outgoing Time Stamp.
+   */
+  protected LogicalTime lots;
 
   protected final Logger log = LoggerFactory.getLogger(getClass());
   protected final Marker marker;
@@ -87,6 +101,14 @@ public class FederateProxy
     this.session = session;
     this.federationExecution = federationExecution;
     this.galt = galt;
+
+    zero = federationExecution.getTimeManager().getMobileFederateServices().
+      intervalFactory.makeZero();
+    epsilon = federationExecution.getTimeManager().getMobileFederateServices().
+      intervalFactory.makeEpsilon();
+
+    federateTime = federationExecution.getTimeManager().
+      getMobileFederateServices().timeFactory.makeInitial();
 
     session.getFilterChain().addLast(
       FEDERATE_IO_FILTER, new FederateProxyIoFilter(this, federationExecution));
@@ -136,14 +158,24 @@ public class FederateProxy
     this.lookahead = lookahead;
   }
 
-  public LogicalTime getTimeAdvanceRequest()
+  public LogicalTime getAdvanceRequestTime()
   {
-    return timeAdvanceRequest;
+    return advanceRequestTime;
   }
 
-  public LogicalTime getLITS()
+  public TimeAdvanceType getAdvanceRequestType()
   {
-    return lits;
+    return advanceRequestType;
+  }
+
+  public LogicalTime getGALT()
+  {
+    return galt;
+  }
+
+  public LogicalTime getLOTS()
+  {
+    return lots;
   }
 
   public void resignFederationExecution(ResignAction resignAction)
@@ -252,64 +284,69 @@ public class FederateProxy
     return session.write(retract);
   }
 
-  public void enableTimeRegulation(LogicalTime galt,
-                                   LogicalTimeInterval lookahead)
+  public void enableTimeRegulation(
+    LogicalTimeInterval lookahead, LogicalTime federateTime)
     throws IllegalTimeArithmetic
   {
-    // keep existing time
-    //
-    federateTime = federateTime != null ? federateTime : galt;
-
-    // federate time should always be less than galt
-    //
-    assert federateTime.compareTo(galt) <= 0;
+    assert !timeConstrainedEnabled || galt == null ||
+           federateTime.compareTo(galt) <= 0;
 
     this.lookahead = lookahead;
+    this.federateTime = federateTime;
 
-    lits = this.federateTime.add(lookahead);
+    if (galt == null)
+    {
+      galt = federateTime.add(lookahead);
+    }
 
-    log.debug(marker, "time regulation enabled: {} - {}",
-              galt, lookahead);
+    advanceRequestType = TimeAdvanceType.TIME_ADVANCE_REQUEST_AVAILABLE;
+
+    // set the Least Outgoing Time Stamp
+    //
+    lots = federateTime.add(lookahead);
 
     timeRegulationEnabled = true;
 
-    session.write(new TimeRegulationEnabled(galt));
+    log.debug(marker, "time regulation enabled: {}", this);
+
+    session.write(new TimeRegulationEnabled(federateTime));
   }
 
   public void disableTimeRegulation()
   {
-    federateTime = timeConstrainedEnabled ? federateTime : null;
-    lookahead = null;
-
     timeRegulationEnabled = false;
 
-    log.debug(marker, "time regulation disabled");
+    lookahead = null;
+    lots = null;
+
+    log.debug(marker, "time regulation disabled: {}");
   }
 
-  public void enableTimeConstrained(LogicalTime galt)
+  public void enableTimeConstrained()
   {
-    // keep existing time
-    //
-    federateTime = federateTime != null ? federateTime : galt;
+    if (galt == null || federateTime.compareTo(galt) <= 0)
+    {
+      // GALT is undefined or federate time <= GALT
 
-    // federate time should always be less than galt
-    //
-    assert federateTime.compareTo(galt) <= 0;
+      timeConstrainedEnabled = true;
 
-    timeConstrainedEnabled = true;
+      log.debug(marker, "time constrained enabled: {}", this);
 
-    log.debug(marker, "time constrained enabled: {}", galt);
+      session.write(new TimeConstrainedEnabled(federateTime));
+    }
+    else
+    {
+      timeConstrainedPending = true;
 
-    session.write(new TimeConstrainedEnabled(galt));
+      log.debug(marker, "enable time constrained pending: {}", this);
+    }
   }
 
   public void disableTimeConstrained()
   {
-    federateTime = timeRegulationEnabled ? federateTime : null;
-
     timeConstrainedEnabled = false;
 
-    log.debug(marker, "time constrained disabled");
+    log.debug(marker, "time constrained disabled: {}", this);
   }
 
   public void timeAdvanceRequest(LogicalTime time)
@@ -317,41 +354,207 @@ public class FederateProxy
   {
     log.debug(marker, "time advance request: {}", time);
 
-    timeAdvanceRequest = time;
+    advanceRequestTime = time;
+    advanceRequestType = TimeAdvanceType.TIME_ADVANCE_REQUEST;
 
     if (timeRegulationEnabled)
     {
-      lits = timeAdvanceRequest.add(lookahead);
+      if (lookahead.isZero())
+      {
+        lots = advanceRequestTime.add(epsilon);
+      }
+      else
+      {
+        lots = advanceRequestTime.add(lookahead);
+      }
 
-      log.debug(marker, "lits: {}", lits);
+      log.debug(marker, "LOTS: {}", lots);
     }
 
-    if (!timeConstrainedEnabled || timeAdvanceRequest.compareTo(galt) <= 0)
+    if (!timeConstrainedEnabled || advanceRequestTime.compareTo(galt) < 0)
     {
       // immediately grant the request
 
-      federateTime = timeAdvanceRequest;
-      timeAdvanceRequest = null;
+      federateTime = advanceRequestTime;
+      advanceRequestTime = null;
 
       session.write(new TimeAdvanceGrant(federateTime));
     }
   }
 
-  public WriteFuture galtAdvanced(LogicalTime galt)
+  public void timeAdvanceRequestAvailable(LogicalTime time)
+    throws IllegalTimeArithmetic
   {
-    this.galt = galt;
+    log.debug(marker, "time advance request available: {}", time);
 
-    WriteFuture writeFuture = session.write(new GALTAdvanced(galt));
+    advanceRequestTime = time;
+    advanceRequestType = TimeAdvanceType.TIME_ADVANCE_REQUEST_AVAILABLE;
 
-    if (timeAdvanceRequest != null && timeAdvanceRequest.compareTo(galt) <= 0)
+    if (timeRegulationEnabled)
     {
-      federateTime = timeAdvanceRequest;
-      timeAdvanceRequest = null;
+      lots = advanceRequestTime.add(lookahead);
 
-      writeFuture = session.write(new TimeAdvanceGrant(federateTime));
+      log.debug(marker, "LOTS: {}", lots);
     }
 
-    return writeFuture;
+    if (!timeConstrainedEnabled || advanceRequestTime.compareTo(galt) <= 0)
+    {
+      // immediately grant the request
+
+      federateTime = advanceRequestTime;
+      advanceRequestTime = null;
+
+      session.write(new TimeAdvanceGrant(federateTime));
+    }
+  }
+
+  public void nextMessageRequest(LogicalTime time)
+    throws IllegalTimeArithmetic
+  {
+    log.debug(marker, "next message request: {}", time);
+
+    advanceRequestTime = time;
+    advanceRequestType = TimeAdvanceType.NEXT_MESSAGE_REQUEST;
+
+    if (timeRegulationEnabled)
+    {
+      if (lookahead.isZero())
+      {
+        lots = advanceRequestTime.add(epsilon);
+      }
+      else
+      {
+        lots = advanceRequestTime.add(lookahead);
+      }
+
+      log.debug(marker, "LOTS: {}", lots);
+    }
+
+    if (!timeConstrainedEnabled)
+    {
+      // immediately grant the request
+
+      federateTime = advanceRequestTime;
+      advanceRequestTime = null;
+
+      session.write(new TimeAdvanceGrant(federateTime));
+    }
+  }
+
+  public void nextMessageRequestAvailable(LogicalTime time)
+    throws IllegalTimeArithmetic
+  {
+    log.debug(marker, "next message request: {}", time);
+
+    advanceRequestTime = time;
+    advanceRequestType = TimeAdvanceType.NEXT_MESSAGE_REQUEST_AVAILABLE;
+
+    if (timeRegulationEnabled)
+    {
+      lots = advanceRequestTime.add(lookahead);
+
+      log.debug(marker, "LOTS: {}", lots);
+    }
+
+    if (!timeConstrainedEnabled)
+    {
+      // immediately grant the request
+
+      federateTime = advanceRequestTime;
+      advanceRequestTime = null;
+
+      session.write(new TimeAdvanceGrant(federateTime));
+    }
+  }
+
+  public void nextMessageRequestTimeAdvanceGrant(LogicalTime time)
+    throws IllegalTimeArithmetic
+  {
+    log.debug(marker, "next message request time advance grant: {}", time);
+
+    if (timeRegulationEnabled)
+    {
+      if (lookahead.isZero())
+      {
+        lots = time.add(epsilon);
+      }
+      else
+      {
+        lots = time.add(lookahead);
+      }
+
+      log.debug(marker, "LOTS: {}", lots);
+    }
+
+    federateTime = time;
+    advanceRequestTime = null;
+
+    session.write(new TimeAdvanceGrant(federateTime));
+  }
+
+  public void nextMessageRequestAvailableTimeAdvanceGrant(LogicalTime time)
+    throws IllegalTimeArithmetic
+  {
+    log.debug(marker, "next message request available time advance grant: {}",
+              time);
+
+    if (timeRegulationEnabled)
+    {
+      lots = advanceRequestTime.add(lookahead);
+
+      log.debug(marker, "LOTS: {}", lots);
+    }
+
+    federateTime = time;
+    advanceRequestTime = null;
+
+    session.write(new TimeAdvanceGrant(federateTime));
+  }
+
+  public void galtAdvanced(LogicalTime galt)
+  {
+    if (this.galt == null)
+    {
+      log.debug(marker, "GALT defined: {}", galt);
+    }
+    else
+    {
+      assert this.galt.compareTo(galt) < 0;
+
+      log.debug(marker, "GALT advanced: {} to {}", this.galt, galt);
+    }
+
+    this.galt = galt;
+
+    session.write(new GALTAdvanced(galt));
+
+    if (timeConstrainedPending && federateTime.compareTo(galt) < 0)
+    {
+      timeConstrainedPending = false;
+      timeConstrainedEnabled = true;
+
+      log.debug(marker, "time constrained enabled: {}", federateTime);
+
+      session.write(new TimeConstrainedEnabled(federateTime));
+    }
+    else if (advanceRequestTime != null &&
+             (advanceRequestType == TimeAdvanceType.TIME_ADVANCE_REQUEST ?
+               advanceRequestTime.compareTo(galt) < 0 :
+               advanceRequestTime.compareTo(galt) <= 0))
+    {
+      federateTime = advanceRequestTime;
+
+      advanceRequestTime = null;
+
+      session.write(new TimeAdvanceGrant(federateTime));
+    }
+  }
+
+  public void galtUndefined()
+  {
+    galt = null;
+
+    session.write(new GALTUndefined());
   }
 
   @Override
@@ -363,8 +566,9 @@ public class FederateProxy
   @Override
   public boolean equals(Object rhs)
   {
-    return rhs instanceof FederateProxy &&
-           federateHandle.equals(((FederateProxy) rhs).federateHandle);
+    return this == rhs ||
+           (rhs instanceof FederateProxy &&
+            federateHandle.equals(((FederateProxy) rhs).federateHandle));
   }
 
   @Override

@@ -17,9 +17,9 @@
 package net.sf.ohla.rti.federation;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -31,14 +31,12 @@ import net.sf.ohla.rti.messages.DefaultResponse;
 import net.sf.ohla.rti.messages.DeleteRegion;
 import net.sf.ohla.rti.messages.GetRangeBounds;
 
-import hla.rti1516.AttributeHandle;
 import hla.rti1516.DimensionHandle;
+import hla.rti1516.InteractionClassHandle;
 import hla.rti1516.InvalidRegion;
 import hla.rti1516.RangeBounds;
 import hla.rti1516.RegionDoesNotContainSpecifiedDimension;
 import hla.rti1516.RegionHandle;
-import hla.rti1516.RegionNotCreatedByThisFederate;
-import hla.rti1516.InteractionClassHandle;
 
 public class FederationExecutionRegionManager
 {
@@ -59,6 +57,11 @@ public class FederationExecutionRegionManager
   public FederationExecution getFederationExecution()
   {
     return federationExecution;
+  }
+
+  public Map<RegionHandle, FederationExecutionRegion> getRegions()
+  {
+    return regions;
   }
 
   public void createRegion(FederateProxy federateProxy,
@@ -133,14 +136,6 @@ public class FederationExecutionRegionManager
       {
         regions.get(entry.getKey()).commitRegionModifications(entry.getValue());
       }
-
-      for (FederationExecutionRegion region : regions.values())
-      {
-        // TODO: implement
-
-        //region.intersects(
-        //  commitRegionModifications.getRegionModifications().keySet());
-      }
     }
     finally
     {
@@ -167,48 +162,55 @@ public class FederationExecutionRegionManager
     federateProxy.getSession().write(new DefaultResponse(deleteRegion.getId()));
   }
 
-  public boolean intersects(Set<RegionHandle> subscribedRegionHandles,
-                            InteractionClassHandle interactionClassHandle,
-                            Set<RegionHandle> sentRegionHandles)
+  public boolean intersects(Set<RegionHandle> lhs, Set<RegionHandle> rhs,
+                            InteractionClassHandle interactionClassHandle)
+  {
+    return intersects(
+      lhs, rhs, federationExecution.getFDD().getInteractionClasses().get(
+      interactionClassHandle).getDimensions().keySet());
+  }
+
+  public boolean intersects(Set<RegionHandle> lhs, Set<RegionHandle> rhs,
+                            Set<DimensionHandle> dimensionHandles)
   {
     boolean intersects = false;
-
-    regionsLock.readLock().lock();
-    try
+    if (lhs.isEmpty())
     {
-      for (Iterator<RegionHandle> i = subscribedRegionHandles.iterator();
-           !intersects && i.hasNext();)
+      intersects = rhs.isEmpty();
+    }
+    else if (rhs.size() > 0)
+    {
+      regionsLock.readLock().lock();
+      try
       {
-        FederationExecutionRegion region = regions.get(i.next());
-        if (region != null)
+        for (Iterator<RegionHandle> i = lhs.iterator();
+             !intersects && i.hasNext();)
         {
-          intersects =
-            region.intersects(interactionClassHandle, sentRegionHandles);
+          FederationExecutionRegion lhsRegion = regions.get(i.next());
+          if (lhsRegion != null)
+          {
+            for (Iterator<RegionHandle> j = rhs.iterator();
+                 !intersects && i.hasNext();)
+            {
+              FederationExecutionRegion rhsRegion = regions.get(i.next());
+              if (rhsRegion != null)
+              {
+                intersects = lhsRegion.intersects(rhsRegion, dimensionHandles);
+              }
+            }
+          }
         }
       }
+      finally
+      {
+        regionsLock.readLock().unlock();
+      }
     }
-    finally
-    {
-      regionsLock.readLock().unlock();
-    }
-
     return intersects;
   }
 
   protected RegionHandle nextRegionHandle()
   {
     return new IEEE1516RegionHandle(regionCount.incrementAndGet());
-  }
-
-  protected FederationExecutionRegion getRegion(RegionHandle regionHandle)
-    throws RegionNotCreatedByThisFederate
-  {
-    FederationExecutionRegion region = regions.get(regionHandle);
-    if (region == null)
-    {
-      throw new RegionNotCreatedByThisFederate(
-        String.format("%s", regionHandle));
-    }
-    return region;
   }
 }
