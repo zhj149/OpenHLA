@@ -16,38 +16,35 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.fdd.FDD;
+import net.sf.ohla.rti.federation.FederateProxy;
+import net.sf.ohla.rti.federation.FederationExecution;
 
-import hla.rti1516.FederateHandle;
 import hla.rti1516.LogicalTime;
 
-public class JoinFederationExecutionResponse
-  implements Message
+public class NextMessageRequest
+  implements FederationExecutionMessage
 {
-  protected FederateHandle federateHandle;
-  protected FDD fdd;
-  protected LogicalTime galt;
+  protected LogicalTime time;
 
-  public JoinFederationExecutionResponse(
-    FederateHandle federateHandle, FDD fdd, LogicalTime galt)
+  public NextMessageRequest(LogicalTime time)
   {
-    this.federateHandle = federateHandle;
-    this.fdd = fdd;
-    this.galt = galt;
+    this.time = time;
   }
 
-  public FederateHandle getFederateHandle()
+  public LogicalTime getTime()
   {
-    return federateHandle;
+    return time;
   }
 
-  public FDD getFDD()
+  public void execute(FederationExecution federationExecution,
+                      FederateProxy federateProxy)
   {
-    return fdd;
+    federationExecution.nextMessageRequest(federateProxy, this);
   }
 
-  public LogicalTime getGALT()
+  @Override
+  public String toString()
   {
-    return galt;
+    return String.format("Time Advance Request: %s", time);
   }
 }

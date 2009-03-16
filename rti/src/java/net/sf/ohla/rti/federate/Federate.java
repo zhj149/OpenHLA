@@ -50,6 +50,7 @@ import net.sf.ohla.rti.messages.FederateSaveBegun;
 import net.sf.ohla.rti.messages.FederateSaveComplete;
 import net.sf.ohla.rti.messages.FederateSaveNotComplete;
 import net.sf.ohla.rti.messages.GALTAdvanced;
+import net.sf.ohla.rti.messages.GALTUndefined;
 import net.sf.ohla.rti.messages.JoinFederationExecution;
 import net.sf.ohla.rti.messages.JoinFederationExecutionResponse;
 import net.sf.ohla.rti.messages.QueryFederationRestoreStatus;
@@ -341,7 +342,7 @@ public class Federate
           (JoinFederationExecutionResponse) response;
 
         federateHandle = joinFederationExecutionResponse.getFederateHandle();
-        fdd = joinFederationExecutionResponse.getFdd();
+        fdd = joinFederationExecutionResponse.getFDD();
 
         LogicalTime galt = joinFederationExecutionResponse.getGALT();
         timeManager = new FederateTimeManager(this, mobileFederateServices, galt);
@@ -465,6 +466,37 @@ public class Federate
     }
   }
 
+  public void clearFutureTasks()
+  {
+    futureTasksLock.lock();
+    try
+    {
+      log.debug(marker, "clearing future tasks");
+
+      for (TimestampedFutureTask timestampedFutureTask = futureTasks.poll();
+           timestampedFutureTask != null;
+           timestampedFutureTask = futureTasks.poll())
+      {
+        log.debug(marker, "processing future task: {}", timestampedFutureTask);
+
+        try
+        {
+          timestampedFutureTask.run();
+        }
+        catch (Throwable t)
+        {
+          log.error(marker, "unable to execute scheduled task: {}",
+                    timestampedFutureTask);
+          log.error(marker, "", t);
+        }
+      }
+    }
+    finally
+    {
+      futureTasksLock.unlock();
+    }
+  }
+
   public boolean messageReceived(IoSession session, Object message)
   {
     log.debug(marker, "processing: {}", message);
@@ -482,8 +514,8 @@ public class Federate
         {
           OrderType receivedOrderType =
             reflectAttributeValues.getSentOrderType() == OrderType.TIMESTAMP &&
-            timeManager.isTimeConstrained() ? OrderType.TIMESTAMP :
-              OrderType.RECEIVE;
+            timeManager.isTimeConstrained() && timeManager.galtDefined() ?
+              OrderType.TIMESTAMP : OrderType.RECEIVE;
           reflectAttributeValues.setReceivedOrderType(receivedOrderType);
 
           if (receivedOrderType == OrderType.RECEIVE)
@@ -623,6 +655,10 @@ public class Federate
       LogicalTime galt = galtAdvanced.getGALT();
 
       timeManager.galtAdvanced(galt);
+    }
+    else if (message instanceof GALTUndefined)
+    {
+      timeManager.galtUndefined();
     }
     else
     {

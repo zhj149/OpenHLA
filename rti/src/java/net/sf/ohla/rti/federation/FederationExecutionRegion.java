@@ -25,10 +25,8 @@ import net.sf.ohla.rti.fdd.Attribute;
 import net.sf.ohla.rti.fdd.Dimension;
 import net.sf.ohla.rti.fdd.InteractionClass;
 
-import hla.rti1516.AttributeHandle;
 import hla.rti1516.DimensionHandle;
 import hla.rti1516.DimensionHandleSet;
-import hla.rti1516.InteractionClassHandle;
 import hla.rti1516.RangeBounds;
 import hla.rti1516.RegionDoesNotContainSpecifiedDimension;
 import hla.rti1516.RegionHandle;
@@ -40,11 +38,6 @@ public class FederationExecutionRegion
 
   protected final Map<DimensionHandle, RangeBounds> rangeBounds =
     new HashMap<DimensionHandle, RangeBounds>();
-
-  protected final Map<AttributeHandle, AttributeRegionRealization> attributeRegionRealizations =
-    new HashMap<AttributeHandle, AttributeRegionRealization>();
-  protected final Map<InteractionClassHandle, InteractionClassRegionRealization> interactionClassRegionRealizations =
-    new HashMap<InteractionClassHandle, InteractionClassRegionRealization>();
 
   protected final FederationExecutionRegionManager regionManager;
 
@@ -108,7 +101,7 @@ public class FederationExecutionRegion
   }
 
   public boolean intersects(FederationExecutionRegion region,
-                            Set<DimensionHandle> dimensionhandles)
+                            Set<DimensionHandle> dimensionHandles)
   {
     boolean intersects = false;
 
@@ -129,21 +122,6 @@ public class FederationExecutionRegion
     return intersects;
   }
 
-  public boolean intersects(InteractionClassHandle interactionClassHandle,
-                            Set<RegionHandle> regionHandles)
-  {
-    boolean intersects = false;
-
-    InteractionClassRegionRealization interactionClassRegionRealization =
-      interactionClassRegionRealizations.get(interactionClassHandle);
-    if (interactionClassRegionRealization != null)
-    {
-      intersects = interactionClassRegionRealization.intersects(regionHandles);
-    }
-
-    return intersects;
-  }
-
   protected boolean intersects(RangeBounds lhs, RangeBounds rhs)
   {
     return (lhs.lower < rhs.upper && rhs.lower < lhs.upper) ||
@@ -152,8 +130,22 @@ public class FederationExecutionRegion
 
   protected abstract class RegionRealization
   {
-    protected Map<RegionHandle, FederationExecutionRegion> intersectingRegions =
+    protected final Map<RegionHandle, FederationExecutionRegion> intersectingRegions =
       new HashMap<RegionHandle, FederationExecutionRegion>();
+
+    public void determineIntersectingRegions(
+      Map<RegionHandle, FederationExecutionRegion> regions)
+    {
+      intersectingRegions.clear();
+
+      for (Map.Entry<RegionHandle, FederationExecutionRegion> entry :
+        regions.entrySet())
+      {
+        if (!regionHandle.equals(entry.getKey()))
+        {
+        }
+      }
+    }
 
     public boolean intersects(Set<RegionHandle> regionHandles)
     {

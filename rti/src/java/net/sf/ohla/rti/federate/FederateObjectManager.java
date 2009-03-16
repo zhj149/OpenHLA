@@ -1250,7 +1250,7 @@ public class FederateObjectManager
     ObjectInstanceHandle objectInstanceHandle,
     AttributeSetRegionSetPairList attributesAndRegions)
     throws ObjectInstanceNotKnown, AttributeNotDefined,
-           RegionNotCreatedByThisFederate
+           RegionNotCreatedByThisFederate, RTIinternalError
   {
     federate.getRegionManager().getRegionsLock().readLock().lock();
     try
@@ -1265,7 +1265,7 @@ public class FederateObjectManager
           objectInstance.getObjectClass(), attributesAndRegions);
 
         objectInstance.associateRegionsForUpdates(
-          attributesAndRegions, federate.getRegionManager());
+          attributesAndRegions, federate);
       }
       finally
       {
@@ -1282,7 +1282,7 @@ public class FederateObjectManager
     ObjectInstanceHandle objectInstanceHandle,
     AttributeSetRegionSetPairList attributesAndRegions)
     throws ObjectInstanceNotKnown, AttributeNotDefined,
-           RegionNotCreatedByThisFederate
+           RegionNotCreatedByThisFederate, RTIinternalError
   {
     federate.getRegionManager().getRegionsLock().readLock().lock();
     try
@@ -1297,7 +1297,7 @@ public class FederateObjectManager
           objectInstance.getObjectClass(), attributesAndRegions);
 
         objectInstance.unassociateRegionsForUpdates(
-          attributesAndRegions, federate.getRegionManager());
+          attributesAndRegions, federate);
       }
       finally
       {

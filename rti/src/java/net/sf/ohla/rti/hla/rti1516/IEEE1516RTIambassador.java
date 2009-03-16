@@ -2959,6 +2959,8 @@ public class IEEE1516RTIambassador
             String.format("unable to connect to RTI: %s", rtiConnectionInfo),
             rioe);
         }
+
+        rtiSession.setAttribute("ConveyRegionDesignatorSets", Boolean.TRUE);
       }
       catch (NumberFormatException nfe)
       {

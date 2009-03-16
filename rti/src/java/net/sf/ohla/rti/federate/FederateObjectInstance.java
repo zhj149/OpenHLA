@@ -29,7 +29,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import net.sf.ohla.rti.fdd.Attribute;
 import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandleSet;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516RegionHandleSet;
+import net.sf.ohla.rti.messages.AssociateRegionsForUpdates;
 import net.sf.ohla.rti.messages.AttributeOwnershipAcquisition;
 import net.sf.ohla.rti.messages.AttributeOwnershipAcquisitionIfAvailable;
 import net.sf.ohla.rti.messages.AttributeOwnershipDivestitureIfWanted;
@@ -41,6 +41,7 @@ import net.sf.ohla.rti.messages.DefaultResponse;
 import net.sf.ohla.rti.messages.NegotiatedAttributeOwnershipDivestiture;
 import net.sf.ohla.rti.messages.QueryAttributeOwnership;
 import net.sf.ohla.rti.messages.RequestAttributeValueUpdate;
+import net.sf.ohla.rti.messages.UnassociateRegionsForUpdates;
 import net.sf.ohla.rti.messages.UnconditionalAttributeOwnershipDivestiture;
 import net.sf.ohla.rti.messages.UpdateAttributeValues;
 
@@ -164,16 +165,24 @@ public class FederateObjectInstance
     {
       checkIfAttributeNotOwned(attributeValues.keySet());
 
-      RegionHandleSet sentRegionHandles = new IEEE1516RegionHandleSet();
-      for (AttributeHandle attributeHandle : attributeValues.keySet())
+      Map<AttributeHandle, RegionHandleSet> attributeUpdateRegionHandles = null;
+      if (Boolean.TRUE.equals(
+        rtiSession.getAttribute("ConveyRegionDesignatorSets")))
       {
-        sentRegionHandles.addAll(
-          getAttributeInstance(attributeHandle).getAssociatedRegions());
+        attributeUpdateRegionHandles =
+          new HashMap<AttributeHandle, RegionHandleSet>();
+        for (AttributeHandle attributeHandle : attributeValues.keySet())
+        {
+          FederateAttributeInstance attributeInstance =
+            attributes.get(attributeHandle);
+          attributeUpdateRegionHandles.put(
+            attributeHandle, attributeInstance.getAssociatedRegions());
+        }
       }
 
       return rtiSession.write(new UpdateAttributeValues(
-        objectInstanceHandle, attributeValues, tag, sentRegionHandles,
-        OrderType.RECEIVE, TransportationType.HLA_RELIABLE));
+        objectInstanceHandle, attributeValues, tag, OrderType.RECEIVE,
+        TransportationType.HLA_RELIABLE, attributeUpdateRegionHandles));
     }
     finally
     {
@@ -195,17 +204,25 @@ public class FederateObjectInstance
         // TODO: divide attributes by order type
       }
 
-      RegionHandleSet sentRegionHandles = new IEEE1516RegionHandleSet();
-      for (AttributeHandle attributeHandle : attributeValues.keySet())
+      Map<AttributeHandle, RegionHandleSet> attributeUpdateRegionHandles = null;
+      if (Boolean.TRUE.equals(
+        rtiSession.getAttribute("ConveyRegionDesignatorSets")))
       {
-        sentRegionHandles.addAll(
-          getAttributeInstance(attributeHandle).getAssociatedRegions());
+        attributeUpdateRegionHandles =
+          new HashMap<AttributeHandle, RegionHandleSet>();
+        for (AttributeHandle attributeHandle : attributeValues.keySet())
+        {
+          FederateAttributeInstance attributeInstance =
+            attributes.get(attributeHandle);
+          attributeUpdateRegionHandles.put(
+            attributeHandle, attributeInstance.getAssociatedRegions());
+        }
       }
 
       return rtiSession.write(new UpdateAttributeValues(
-        objectInstanceHandle, attributeValues, tag, sentRegionHandles,
-        sentOrderType, TransportationType.HLA_RELIABLE, updateTime,
-        messageRetractionHandle));
+        objectInstanceHandle, attributeValues, tag, sentOrderType,
+        TransportationType.HLA_RELIABLE, attributeUpdateRegionHandles,
+        updateTime, messageRetractionHandle));
     }
     finally
     {
@@ -728,9 +745,13 @@ public class FederateObjectInstance
   }
 
   public void associateRegionsForUpdates(
-    AttributeSetRegionSetPairList attributesAndRegions,
-    FederateRegionManager regionManager)
+    AttributeSetRegionSetPairList attributesAndRegions, Federate federate)
+    throws ObjectInstanceNotKnown, RTIinternalError
   {
+    AssociateRegionsForUpdates associateRegionsForUpdates =
+      new AssociateRegionsForUpdates(
+        objectInstanceHandle, attributesAndRegions);
+
     objectLock.writeLock().lock();
     try
     {
@@ -750,12 +771,46 @@ public class FederateObjectInstance
 
         for (RegionHandle regionHandle : attributeRegionAssociation.regions)
         {
-          FederateRegion region = regionManager.regions.get(regionHandle);
+          FederateRegion region =
+            federate.getRegionManager().getRegions().get(regionHandle);
           assert region != null;
 
           region.associateRegionsForUpdates(
             objectInstanceHandle, attributeRegionAssociation.attributes);
         }
+      }
+
+      WriteFuture writeFuture =
+        federate.getRTISession().write(associateRegionsForUpdates);
+
+      // TODO: set timeout
+      //
+      writeFuture.join();
+
+      if (!writeFuture.isWritten())
+      {
+        throw new RTIinternalError("error communicating with RTI");
+      }
+
+      Object response;
+      try
+      {
+        // TODO: set timeout
+        //
+        response = associateRegionsForUpdates.getResponse();
+      }
+      catch (InterruptedException ie)
+      {
+        throw new RTIinternalError("interrupted awaiting timeout", ie);
+      }
+      catch (ExecutionException ee)
+      {
+        throw new RTIinternalError("unable to get response", ee);
+      }
+
+      if (response instanceof ObjectInstanceNotKnown)
+      {
+        throw (ObjectInstanceNotKnown) response;
       }
     }
     finally
@@ -765,9 +820,13 @@ public class FederateObjectInstance
   }
 
   public void unassociateRegionsForUpdates(
-    AttributeSetRegionSetPairList attributesAndRegions,
-    FederateRegionManager regionManager)
+    AttributeSetRegionSetPairList attributesAndRegions, Federate federate)
+    throws ObjectInstanceNotKnown, RTIinternalError
   {
+    UnassociateRegionsForUpdates unassociateRegionsForUpdates =
+      new UnassociateRegionsForUpdates(
+        objectInstanceHandle, attributesAndRegions);
+
     objectLock.readLock().lock();
     try
     {
@@ -787,12 +846,46 @@ public class FederateObjectInstance
 
         for (RegionHandle regionHandle : attributeRegionAssociation.regions)
         {
-          FederateRegion region = regionManager.regions.get(regionHandle);
+          FederateRegion region =
+            federate.getRegionManager().getRegions().get(regionHandle);
           assert region != null;
 
           region.unassociateRegionsForUpdates(
             objectInstanceHandle, attributeRegionAssociation.attributes);
         }
+      }
+
+      WriteFuture writeFuture =
+        federate.getRTISession().write(unassociateRegionsForUpdates);
+
+      // TODO: set timeout
+      //
+      writeFuture.join();
+
+      if (!writeFuture.isWritten())
+      {
+        throw new RTIinternalError("error communicating with RTI");
+      }
+
+      Object response;
+      try
+      {
+        // TODO: set timeout
+        //
+        response = unassociateRegionsForUpdates.getResponse();
+      }
+      catch (InterruptedException ie)
+      {
+        throw new RTIinternalError("interrupted awaiting timeout", ie);
+      }
+      catch (ExecutionException ee)
+      {
+        throw new RTIinternalError("unable to get response", ee);
+      }
+
+      if (response instanceof ObjectInstanceNotKnown)
+      {
+        throw (ObjectInstanceNotKnown) response;
       }
     }
     finally

@@ -16,10 +16,13 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.util.Map;
+
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
 import net.sf.ohla.rti.federation.FederationExecutionObjectInstance;
 
+import hla.rti1516.AttributeHandle;
 import hla.rti1516.AttributeHandleValueMap;
 import hla.rti1516.LogicalTime;
 import hla.rti1516.MessageRetractionHandle;
@@ -31,44 +34,40 @@ import hla.rti1516.TransportationType;
 public class UpdateAttributeValues
   implements FederationExecutionMessage
 {
-  protected ObjectInstanceHandle objectInstanceHandle;
-  protected AttributeHandleValueMap attributeValues;
-  protected byte[] tag;
-  protected RegionHandleSet sentRegionHandles;
-  protected OrderType sentOrderType;
-  protected TransportationType transportationType;
-  protected LogicalTime updateTime;
-  protected MessageRetractionHandle messageRetractionHandle;
+  protected final ObjectInstanceHandle objectInstanceHandle;
+  protected final AttributeHandleValueMap attributeValues;
+  protected final byte[] tag;
+  protected final OrderType sentOrderType;
+  protected final TransportationType transportationType;
+  protected final Map<AttributeHandle, RegionHandleSet> attributeUpdateRegionHandles;
+  protected final LogicalTime updateTime;
+  protected final MessageRetractionHandle messageRetractionHandle;
 
   protected transient FederationExecutionObjectInstance objectInstance;
 
-  public UpdateAttributeValues(ObjectInstanceHandle objectInstanceHandle,
-                               AttributeHandleValueMap attributeValues,
-                               byte[] tag, RegionHandleSet sentRegionHandles,
-                               OrderType sentOrderType,
-                               TransportationType transportationType)
+  public UpdateAttributeValues(
+    ObjectInstanceHandle objectInstanceHandle,
+    AttributeHandleValueMap attributeValues, byte[] tag,
+    OrderType sentOrderType, TransportationType transportationType,
+    Map<AttributeHandle, RegionHandleSet> attributeUpdateRegionHandles)
+  {
+    this(objectInstanceHandle, attributeValues, tag, sentOrderType,
+         transportationType, attributeUpdateRegionHandles, null, null);
+  }
+
+  public UpdateAttributeValues(
+    ObjectInstanceHandle objectInstanceHandle,
+    AttributeHandleValueMap attributeValues, byte[] tag,
+    OrderType sentOrderType, TransportationType transportationType,
+    Map<AttributeHandle, RegionHandleSet> attributeUpdateRegionHandles,
+    LogicalTime updateTime, MessageRetractionHandle messageRetractionHandle)
   {
     this.objectInstanceHandle = objectInstanceHandle;
     this.attributeValues = attributeValues;
     this.tag = tag;
-    this.sentRegionHandles = sentRegionHandles;
     this.sentOrderType = sentOrderType;
     this.transportationType = transportationType;
-  }
-
-
-  public UpdateAttributeValues(ObjectInstanceHandle objectInstanceHandle,
-                               AttributeHandleValueMap attributeValues,
-                               byte[] tag,
-                               RegionHandleSet sentRegionHandles,
-                               OrderType sentOrderType,
-                               TransportationType transportationType,
-                               LogicalTime updateTime,
-                               MessageRetractionHandle messageRetractionHandle)
-  {
-    this(objectInstanceHandle, attributeValues, tag, sentRegionHandles,
-         sentOrderType, transportationType);
-
+    this.attributeUpdateRegionHandles = attributeUpdateRegionHandles;
     this.updateTime = updateTime;
     this.messageRetractionHandle = messageRetractionHandle;
   }
@@ -88,11 +87,6 @@ public class UpdateAttributeValues
     return tag;
   }
 
-  public RegionHandleSet getSentRegionHandles()
-  {
-    return sentRegionHandles;
-  }
-
   public OrderType getSentOrderType()
   {
     return sentOrderType;
@@ -101,6 +95,11 @@ public class UpdateAttributeValues
   public TransportationType getTransportationType()
   {
     return transportationType;
+  }
+
+  public Map<AttributeHandle, RegionHandleSet> getAttributeUpdateRegionHandles()
+  {
+    return attributeUpdateRegionHandles;
   }
 
   public LogicalTime getUpdateTime()

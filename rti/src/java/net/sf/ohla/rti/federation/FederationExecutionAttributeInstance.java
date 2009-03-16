@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Collections;
+import java.util.Set;
 
 import net.sf.ohla.rti.fdd.Attribute;
 
@@ -59,10 +60,10 @@ public class FederationExecutionAttributeInstance
   protected final LinkedHashSet<FederateProxy> requestingOwnerships =
     new LinkedHashSet<FederateProxy>();
 
-  protected final Map<RegionHandle, FederationExecutionRegion> associatedRegions =
+  protected final Map<RegionHandle, FederationExecutionRegion> regionRealizations =
     new HashMap<RegionHandle, FederationExecutionRegion>();
 
-  protected final Map<FederateProxy, Map<RegionHandle, FederationExecutionRegion>> pendingAssociatedRegions =
+  protected final Map<FederateProxy, Map<RegionHandle, FederationExecutionRegion>> pendingRegionAssociations =
     new HashMap<FederateProxy, Map<RegionHandle, FederationExecutionRegion>>();
 
   public FederationExecutionAttributeInstance(
@@ -106,25 +107,30 @@ public class FederationExecutionAttributeInstance
     this.orderType = orderType;
   }
 
+  public Map<RegionHandle, FederationExecutionRegion> getRegionRealizations()
+  {
+    return regionRealizations;
+  }
+
   public void associateRegionForUpdate(
     FederateProxy federate, FederationExecutionRegion region)
   {
-    Map<RegionHandle, FederationExecutionRegion> associatedRegions;
     if (federate.equals(owner))
     {
-      associatedRegions = this.associatedRegions;
+      regionRealizations.put(region.getRegionHandle(), region);
     }
     else
     {
-      associatedRegions = pendingAssociatedRegions.get(federate);
-      if (associatedRegions == null)
+      Map<RegionHandle, FederationExecutionRegion> pendingRegionAssociations =
+        this.pendingRegionAssociations.get(federate);
+      if (pendingRegionAssociations == null)
       {
-        associatedRegions =
+        pendingRegionAssociations =
           new HashMap<RegionHandle, FederationExecutionRegion>();
-        pendingAssociatedRegions.put(federate, associatedRegions);
+        this.pendingRegionAssociations.put(federate, pendingRegionAssociations);
       }
+      pendingRegionAssociations.put(region.getRegionHandle(), region);
     }
-    associatedRegions.put(region.getRegionHandle(), region);
   }
 
   public void unassociateRegionsForUpdates(
@@ -133,11 +139,11 @@ public class FederationExecutionAttributeInstance
     Map<RegionHandle, FederationExecutionRegion> associatedRegions;
     if (federate.equals(owner))
     {
-      associatedRegions = this.associatedRegions;
+      associatedRegions = this.regionRealizations;
     }
     else
     {
-      associatedRegions = pendingAssociatedRegions.get(federate);
+      associatedRegions = pendingRegionAssociations.get(federate);
       if (associatedRegions == null)
       {
         associatedRegions = Collections.emptyMap();
@@ -146,16 +152,13 @@ public class FederationExecutionAttributeInstance
     associatedRegions.keySet().removeAll(regionHandles);
   }
 
-  public boolean regionIntersects(FederationExecutionRegion region)
+  public boolean regionIntersects(
+    FederationExecutionRegionManager regionManager,
+    Set<RegionHandle> regionHandles)
   {
-    boolean intersects = false;
-    for (Iterator<FederationExecutionRegion> i =
-      associatedRegions.values().iterator(); !intersects && i.hasNext();)
-    {
-      intersects = i.next().intersects(
-        region, attribute.getDimensions().keySet());
-    }
-    return intersects;
+    return regionManager.intersects(
+      regionHandles, regionRealizations.keySet(),
+      attribute.getDimensions().keySet());
   }
 
   public FederateProxy getOwner()
@@ -203,7 +206,7 @@ public class FederationExecutionAttributeInstance
   {
     owner = null;
     wantsToDivest = false;
-    associatedRegions.clear();
+    regionRealizations.clear();
 
     // give ownership to the next in line
     //
@@ -288,10 +291,10 @@ public class FederationExecutionAttributeInstance
     // associate any pending regions
     //
     Map<RegionHandle, FederationExecutionRegion> associatedRegions =
-      pendingAssociatedRegions.get(owner);
+      pendingRegionAssociations.get(owner);
     if (associatedRegions != null)
     {
-      this.associatedRegions.putAll(associatedRegions);
+      this.regionRealizations.putAll(associatedRegions);
     }
   }
 }

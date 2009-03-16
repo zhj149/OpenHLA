@@ -21,12 +21,15 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.sf.ohla.rti.fdd.Attribute;
 import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandleSet;
+import net.sf.ohla.rti.messages.AssociateRegionsForUpdates;
+import net.sf.ohla.rti.messages.DefaultResponse;
+import net.sf.ohla.rti.messages.UnassociateRegionsForUpdates;
 import net.sf.ohla.rti.messages.UpdateAttributeValues;
 import net.sf.ohla.rti.messages.callbacks.AttributeIsNotOwned;
 import net.sf.ohla.rti.messages.callbacks.AttributeIsOwnedByRTI;
@@ -39,6 +42,7 @@ import net.sf.ohla.rti.messages.callbacks.RequestDivestitureConfirmation;
 
 import hla.rti1516.AttributeHandle;
 import hla.rti1516.AttributeHandleSet;
+import hla.rti1516.AttributeRegionAssociation;
 import hla.rti1516.ObjectInstanceHandle;
 import hla.rti1516.RegionHandle;
 
@@ -50,7 +54,7 @@ public class FederationExecutionObjectInstance
 
   protected final String name;
 
-  protected final Lock objectLock = new ReentrantLock(true);
+  protected final ReadWriteLock objectLock = new ReentrantReadWriteLock(true);
 
   protected final Map<AttributeHandle, FederationExecutionAttributeInstance> attributes =
     new HashMap<AttributeHandle, FederationExecutionAttributeInstance>();
@@ -111,27 +115,19 @@ public class FederationExecutionObjectInstance
   {
     updateAttributeValues.setObjectInstance(this);
 
-    federationExecution.getFederatesLock().writeLock().lock();
-    try
+    for (FederateProxy f : federationExecution.getFederates().values())
     {
-      for (FederateProxy f : federationExecution.getFederates().values())
+      if (f != federateProxy)
       {
-        if (f != federateProxy)
-        {
-          f.reflectAttributeValues(updateAttributeValues);
-        }
+        f.reflectAttributeValues(updateAttributeValues);
       }
-    }
-    finally
-    {
-      federationExecution.getFederatesLock().writeLock().unlock();
     }
   }
 
   public void unconditionalAttributeOwnershipDivestiture(
     FederateProxy owner, AttributeHandleSet attributeHandles)
   {
-    objectLock.lock();
+    objectLock.readLock().lock();
     try
     {
       Map<FederateProxy, AttributeHandleSet> newOwners =
@@ -164,14 +160,14 @@ public class FederationExecutionObjectInstance
     }
     finally
     {
-      objectLock.unlock();
+      objectLock.readLock().unlock();
     }
   }
 
   public void negotiatedAttributeOwnershipDivestiture(
     FederateProxy owner, AttributeHandleSet attributeHandles, byte[] tag)
   {
-    objectLock.lock();
+    objectLock.readLock().lock();
     try
     {
       AttributeHandleSet divestableAttributeHandles =
@@ -193,14 +189,14 @@ public class FederationExecutionObjectInstance
     }
     finally
     {
-      objectLock.unlock();
+      objectLock.readLock().unlock();
     }
   }
 
   public void confirmDivestiture(
     FederateProxy owner, AttributeHandleSet attributeHandles)
   {
-    objectLock.lock();
+    objectLock.readLock().lock();
     try
     {
       Map<FederateProxy, AttributeHandleSet> newOwners =
@@ -232,14 +228,14 @@ public class FederationExecutionObjectInstance
     }
     finally
     {
-      objectLock.unlock();
+      objectLock.readLock().unlock();
     }
   }
 
   public void attributeOwnershipAcquisition(
     FederateProxy acquiree, AttributeHandleSet attributeHandles, byte[] tag)
   {
-    objectLock.lock();
+    objectLock.readLock().lock();
     try
     {
       AttributeHandleSet acquiredAttributeHandles =
@@ -314,14 +310,14 @@ public class FederationExecutionObjectInstance
     }
     finally
     {
-      objectLock.unlock();
+      objectLock.readLock().unlock();
     }
   }
 
   public void attributeOwnershipAcquisitionIfAvailable(
     FederateProxy acquiree, AttributeHandleSet attributeHandles)
   {
-    objectLock.lock();
+    objectLock.readLock().lock();
     try
     {
       AttributeHandleSet acquiredAttributeHandles =
@@ -354,14 +350,14 @@ public class FederationExecutionObjectInstance
     }
     finally
     {
-      objectLock.unlock();
+      objectLock.readLock().unlock();
     }
   }
 
   public Map<AttributeHandle, FederateProxy> attributeOwnershipDivestitureIfWanted(
     FederateProxy owner, AttributeHandleSet attributeHandles)
   {
-    objectLock.lock();
+    objectLock.readLock().lock();
     try
     {
       Map<AttributeHandle, FederateProxy> newOwners =
@@ -380,14 +376,14 @@ public class FederationExecutionObjectInstance
     }
     finally
     {
-      objectLock.unlock();
+      objectLock.readLock().unlock();
     }
   }
 
   public void cancelNegotiatedAttributeOwnershipDivestiture(
     FederateProxy owner, AttributeHandleSet attributeHandles)
   {
-    objectLock.lock();
+    objectLock.readLock().lock();
     try
     {
       for (AttributeHandle attributeHandle : attributeHandles)
@@ -398,14 +394,14 @@ public class FederationExecutionObjectInstance
     }
     finally
     {
-      objectLock.unlock();
+      objectLock.readLock().unlock();
     }
   }
 
   public void cancelAttributeOwnershipAcquisition(
     FederateProxy acquiree, AttributeHandleSet attributeHandles)
   {
-    objectLock.lock();
+    objectLock.readLock().lock();
     try
     {
       AttributeHandleSet canceledAcquisitionAttributeHandles =
@@ -428,14 +424,14 @@ public class FederationExecutionObjectInstance
     }
     finally
     {
-      objectLock.unlock();
+      objectLock.readLock().unlock();
     }
   }
 
   public void queryAttributeOwnership(
     FederateProxy federateProxy, AttributeHandle attributeHandle)
   {
-    objectLock.lock();
+    objectLock.readLock().lock();
     try
     {
       FederationExecutionAttributeInstance FederationExecutionAttributeInstance =
@@ -461,22 +457,93 @@ public class FederationExecutionObjectInstance
     }
     finally
     {
-      objectLock.unlock();
+      objectLock.readLock().unlock();
     }
   }
 
-  public boolean regionsIntersect(Set<RegionHandle> regionHandles,
-                                  AttributeHandle attributeHandle)
+  public void associateRegionsForUpdates(
+    FederateProxy federateProxy,
+    AssociateRegionsForUpdates associateRegionsForUpdates)
   {
-    boolean intersects = true;
+    Map<RegionHandle, FederationExecutionRegion> regions =
+      objectManager.getFederationExecution().getRegionManager().getRegions();
 
-    FederationExecutionAttributeInstance attributeInstance =
-      attributes.get(attributeHandle);
-    if (attributeInstance != null)
+    objectLock.writeLock().lock();
+    try
     {
-      // TODO; implement
+      for (AttributeRegionAssociation attributeRegionAssociation :
+        associateRegionsForUpdates.getAttributesAndRegions())
+      {
+        for (AttributeHandle attributeHandle :
+          attributeRegionAssociation.attributes)
+        {
+          FederationExecutionAttributeInstance attribute =
+            attributes.get(attributeHandle);
+          for (RegionHandle regionHandle : attributeRegionAssociation.regions)
+          {
+            attribute.associateRegionForUpdate(
+              federateProxy, regions.get(regionHandle));
+          }
+        }
+      }
 
-      // intersects = attributeInstance.regionIntersects(regionHandles);
+      federateProxy.getSession().write(
+        new DefaultResponse(associateRegionsForUpdates.getId()));
+    }
+    finally
+    {
+      objectLock.writeLock().unlock();
+    }
+  }
+
+  public void unassociateRegionsForUpdates(
+    FederateProxy federateProxy,
+    UnassociateRegionsForUpdates unassociateRegionsForUpdates)
+  {
+    objectLock.writeLock().lock();
+    try
+    {
+      for (AttributeRegionAssociation attributeRegionAssociation :
+        unassociateRegionsForUpdates.getAttributesAndRegions())
+      {
+        for (AttributeHandle attributeHandle :
+          attributeRegionAssociation.attributes)
+        {
+          attributes.get(attributeHandle).unassociateRegionsForUpdates(
+            federateProxy, attributeRegionAssociation.regions);
+        }
+      }
+
+      federateProxy.getSession().write(
+        new DefaultResponse(unassociateRegionsForUpdates.getId()));
+    }
+    finally
+    {
+      objectLock.writeLock().unlock();
+    }
+  }
+
+  public boolean regionsIntersect(
+    AttributeHandle attributeHandle,
+    FederationExecutionRegionManager regionManager,
+    Set<RegionHandle> regionHandles)
+  {
+    boolean intersects = false;
+
+    objectLock.readLock().lock();
+    try
+    {
+      FederationExecutionAttributeInstance attributeInstance =
+        attributes.get(attributeHandle);
+      if (attributeInstance != null)
+      {
+        intersects = attributeInstance.regionIntersects(
+          regionManager, regionHandles);
+      }
+    }
+    finally
+    {
+      objectLock.readLock().unlock();
     }
 
     return intersects;
