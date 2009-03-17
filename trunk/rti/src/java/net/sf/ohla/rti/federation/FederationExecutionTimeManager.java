@@ -175,48 +175,53 @@ public class FederationExecutionTimeManager
           }
         }
       }
-      else if (federateProxy.getFederateTime().compareTo(galt) > 0)
-      {
-        // the new time regulating federate's time is > GALT
-
-        assert !timeConstrainedFederates.contains(federateProxy);
-
-        federateTime = federateProxy.getFederateTime();
-
-        timeRegulatingFederates.add(federateProxy);
-
-        federateProxy.enableTimeRegulation(lookahead, federateTime);
-      }
-      else if (federateProxy.getFederateTime().equals(galt))
-      {
-        // the new time regulating federate's time is = GALT
-
-        federateTime = federateProxy.getFederateTime();
-
-        timeRegulatingFederates.add(federateProxy);
-
-        federateProxy.enableTimeRegulation(lookahead, federateTime);
-      }
       else
       {
-        LogicalTime lots = federateProxy.getFederateTime().add(lookahead);
-        if (lots.compareTo(galt) >= 0)
+        if (federateProxy.getFederateTime().compareTo(galt) > 0)
         {
-          // the new time regulating federate's time + lookahead is >= GALT
+          // the new time regulating federate's time is > GALT
+
+          assert !timeConstrainedFederates.contains(federateProxy);
 
           federateTime = federateProxy.getFederateTime();
+
+          timeRegulatingFederates.add(federateProxy);
+
+          federateProxy.enableTimeRegulation(lookahead, federateTime);
+        }
+        else if (federateProxy.getFederateTime().equals(galt))
+        {
+          // the new time regulating federate's time is = GALT
+
+          federateTime = federateProxy.getFederateTime();
+
+          timeRegulatingFederates.add(federateProxy);
+
+          federateProxy.enableTimeRegulation(lookahead, federateTime);
         }
         else
         {
-          // subtract the lookahead from the GALT to determine the time
-          // regulating federate's time
-          //
-          federateTime = galt.subtract(lookahead);
+          LogicalTime lots = federateProxy.getFederateTime().add(lookahead);
+          if (lots.compareTo(galt) >= 0)
+          {
+            // the new time regulating federate's time + lookahead is >= GALT
+
+            federateTime = federateProxy.getFederateTime();
+          }
+          else
+          {
+            // subtract the lookahead from the GALT to determine the time
+            // regulating federate's time
+            //
+            federateTime = galt.subtract(lookahead);
+          }
+
+          timeRegulatingFederates.add(federateProxy);
+
+          federateProxy.enableTimeRegulation(lookahead, federateTime);
         }
 
-        timeRegulatingFederates.add(federateProxy);
-
-        federateProxy.enableTimeRegulation(lookahead, federateTime);
+        recalculateGALT(federateProxy);
       }
     }
     catch (IllegalTimeArithmetic ita)
