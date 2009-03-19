@@ -2930,7 +2930,7 @@ public class IEEE1516RTIambassador
         connector.getFilterChain().addLast(
           "ProtocolCodecFilter", new ProtocolCodecFilter(codec));
 
-        connector.getFilterChain().addLast("LoggingFilter", new LoggingFilter());
+        // connector.getFilterChain().addLast("LoggingFilter", new LoggingFilter());
 
         // handles request/response pairs
         //
