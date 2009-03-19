@@ -294,17 +294,15 @@ public class FederateProxy
     this.lookahead = lookahead;
     this.federateTime = federateTime;
 
-    if (galt == null)
-    {
-      galt = federateTime.add(lookahead);
-    }
-
     advanceRequestType = TimeAdvanceType.TIME_ADVANCE_REQUEST_AVAILABLE;
 
     // set the Least Outgoing Time Stamp
     //
     lots = federateTime.add(lookahead);
+  }
 
+  public void timeRegulationEnabled()
+  {
     timeRegulationEnabled = true;
 
     log.debug(marker, "time regulation enabled: {}", this);

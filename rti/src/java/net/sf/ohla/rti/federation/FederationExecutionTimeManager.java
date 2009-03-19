@@ -184,20 +184,12 @@ public class FederationExecutionTimeManager
           assert !timeConstrainedFederates.contains(federateProxy);
 
           federateTime = federateProxy.getFederateTime();
-
-          timeRegulatingFederates.add(federateProxy);
-
-          federateProxy.enableTimeRegulation(lookahead, federateTime);
         }
         else if (federateProxy.getFederateTime().equals(galt))
         {
           // the new time regulating federate's time is = GALT
 
           federateTime = federateProxy.getFederateTime();
-
-          timeRegulatingFederates.add(federateProxy);
-
-          federateProxy.enableTimeRegulation(lookahead, federateTime);
         }
         else
         {
@@ -215,14 +207,16 @@ public class FederationExecutionTimeManager
             //
             federateTime = galt.subtract(lookahead);
           }
-
-          timeRegulatingFederates.add(federateProxy);
-
-          federateProxy.enableTimeRegulation(lookahead, federateTime);
         }
+
+        timeRegulatingFederates.add(federateProxy);
+
+        federateProxy.enableTimeRegulation(lookahead, federateTime);
 
         recalculateGALT(federateProxy);
       }
+
+      federateProxy.timeRegulationEnabled();
     }
     catch (IllegalTimeArithmetic ita)
     {
@@ -568,7 +562,8 @@ public class FederationExecutionTimeManager
             newLocalGALT = min(newLocalGALT, timeRegulatingFederate.getLOTS());
           }
         }
-        if (newLocalGALT.compareTo(timeRegulatingFederate.getGALT()) > 0)
+        if (timeRegulatingFederate.getGALT() == null ||
+            newLocalGALT.compareTo(timeRegulatingFederate.getGALT()) > 0)
         {
           timeRegulatingFederate.galtAdvanced(newLocalGALT);
         }
