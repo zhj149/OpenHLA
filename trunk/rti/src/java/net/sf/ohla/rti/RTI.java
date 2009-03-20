@@ -187,8 +187,7 @@ public class RTI
     String federationExecutionName =
       destroyFederationExecution.getFederationExecutionName();
 
-    log.info("destroying federation execution: {}",
-             federationExecutionName);
+    log.info("destroying federation execution: {}", federationExecutionName);
 
     Object response = null;
 
