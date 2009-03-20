@@ -15,40 +15,58 @@
   -->
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
-<suite name="OHLA IEEE 1516 Testsuite" parallel="false" verbose="5">
-  <!--<test name="IEEE 1516 - Federation Management">-->
-    <!--<classes>-->
-      <!--<class name="net.sf.ohla.rti1516.FederationManagementTestNG"/>-->
-    <!--</classes>-->
-  <!--</test>-->
+<suite name="OHLA IEEE 1516 Testsuite" verbose="5">
+  <test name="IEEE 1516 - Federation Management">
+    <classes>
+      <class name="net.sf.ohla.rti1516.FederationManagementTestNG"/>
+    </classes>
+  </test>
 
-  <!--<test name="IEEE 1516 - Support Services">-->
-    <!--<classes>-->
-      <!--<class name="net.sf.ohla.rti1516.SupportServicesTestNG"/>-->
-    <!--</classes>-->
-  <!--</test>-->
+  <test name="IEEE 1516 - Support Services">
+    <classes>
+      <class name="net.sf.ohla.rti1516.SupportServicesTestNG"/>
+    </classes>
+  </test>
 
-  <!--<test name="IEEE 1516 - Declaration Management">-->
-    <!--<classes>-->
-      <!--<class name="net.sf.ohla.rti1516.DeclarationManagementTestNG"/>-->
-    <!--</classes>-->
-  <!--</test>-->
+  <test name="IEEE 1516 - Declaration Management">
+    <classes>
+      <class name="net.sf.ohla.rti1516.DeclarationManagementTestNG"/>
+    </classes>
+  </test>
 
-  <!--<test name="IEEE 1516 - Object Management">-->
-    <!--<classes>-->
-      <!--<class name="net.sf.ohla.rti1516.ObjectManagementTestNG"/>-->
-    <!--</classes>-->
-  <!--</test>-->
+  <test name="IEEE 1516 - Object Management">
+    <classes>
+      <class name="net.sf.ohla.rti1516.ObjectManagementTestNG"/>
+    </classes>
+  </test>
 
-  <!--<test name="IEEE 1516 - Ownership Management">-->
-    <!--<classes>-->
-      <!--<class name="net.sf.ohla.rti1516.OwnershipManagementTestNG"/>-->
-    <!--</classes>-->
-  <!--</test>-->
+  <test name="IEEE 1516 - Ownership Management">
+    <classes>
+      <class name="net.sf.ohla.rti1516.OwnershipManagementTestNG"/>
+    </classes>
+  </test>
 
   <test name="IEEE 1516 - Time Management">
     <classes>
-      <class name="net.sf.ohla.rti1516.TimeManagementTestNG"/>
+      <class name="net.sf.ohla.rti1516.time.TimeManagementTestNG"/>
+    </classes>
+  </test>
+
+  <test name="IEEE 1516 - Time Management - Time Regulation">
+    <classes>
+      <class name="net.sf.ohla.rti1516.time.TimeRegulationTestNG"/>
+    </classes>
+  </test>
+
+  <test name="IEEE 1516 - Time Management - Time Constrained">
+    <classes>
+      <class name="net.sf.ohla.rti1516.time.TimeConstrainedTestNG"/>
+    </classes>
+  </test>
+
+  <test name="IEEE 1516 - Full Time Management">
+    <classes>
+      <class name="net.sf.ohla.rti1516.time.FullTimeManagementTestNG"/>
     </classes>
   </test>
 

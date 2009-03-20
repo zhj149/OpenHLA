@@ -559,7 +559,7 @@ public class FederationExecutionTimeManager
         {
           if (timeRegulatingFederate != timeRegulatingFederate2)
           {
-            newLocalGALT = min(newLocalGALT, timeRegulatingFederate.getLOTS());
+            newLocalGALT = min(newLocalGALT, timeRegulatingFederate2.getLOTS());
           }
         }
         if (timeRegulatingFederate.getGALT() == null ||

@@ -72,7 +72,7 @@ public abstract class BaseTestNG
     assert badFDD != null : "could not locate: " + BAD_FDD;
 
     RtiFactory rtiFactory = RtiFactoryFactory.getRtiFactory();
-    for (int count = rtiAmbassadorCount; count >= 1; count--)
+    for (int count = rtiAmbassadorCount; count > 0; count--)
     {
       rtiAmbassadors.add(rtiFactory.getRtiAmbassador());
     }
