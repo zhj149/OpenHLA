@@ -54,6 +54,7 @@ import net.sf.ohla.rti.messages.FederateSaveComplete;
 import net.sf.ohla.rti.messages.FederateSaveInitiated;
 import net.sf.ohla.rti.messages.FederateSaveInitiatedFailed;
 import net.sf.ohla.rti.messages.FederateSaveNotComplete;
+import net.sf.ohla.rti.messages.FlushQueueRequest;
 import net.sf.ohla.rti.messages.GetRangeBounds;
 import net.sf.ohla.rti.messages.JoinFederationExecution;
 import net.sf.ohla.rti.messages.JoinFederationExecutionResponse;
@@ -83,6 +84,7 @@ import net.sf.ohla.rti.messages.TimeAdvanceRequestAvailable;
 import net.sf.ohla.rti.messages.UnassociateRegionsForUpdates;
 import net.sf.ohla.rti.messages.UnconditionalAttributeOwnershipDivestiture;
 import net.sf.ohla.rti.messages.UpdateAttributeValues;
+import net.sf.ohla.rti.messages.UpdateLITS;
 import net.sf.ohla.rti.messages.callbacks.AnnounceSynchronizationPoint;
 import net.sf.ohla.rti.messages.callbacks.AttributeOwnershipAcquisitionNotification;
 import net.sf.ohla.rti.messages.callbacks.DiscoverObjectInstance;
@@ -1289,6 +1291,34 @@ public class FederationExecution
     {
       timeManager.nextMessageRequestAvailableTimeAdvanceGrant(
         federateProxy, nextMessageRequestAvailableTimeAdvanceGrant.getTime());
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
+  public void flushQueueRequest(
+    FederateProxy federateProxy, FlushQueueRequest flushQueueRequest)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+      timeManager.flushQueueRequest(
+        federateProxy, flushQueueRequest.getTime());
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
+  public void updateLITS(FederateProxy federateProxy, UpdateLITS updateLITS)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+      federateProxy.updateLITS(updateLITS.getLITS());
     }
     finally
     {

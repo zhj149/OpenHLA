@@ -18,8 +18,11 @@ package net.sf.ohla.rti.federation;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Iterator;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import net.sf.ohla.rti.federate.TimeAdvanceType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -341,6 +344,10 @@ public class FederationExecutionTimeManager
 
       federateProxy.disableTimeRegulation();
     }
+    catch (IllegalTimeArithmetic ita)
+    {
+      log.error(marker, "unable to disable time regulation", ita);
+    }
     finally
     {
       timeLock.writeLock().unlock();
@@ -398,7 +405,6 @@ public class FederationExecutionTimeManager
     {
       federateProxy.timeAdvanceRequest(time);
 
-      log.debug("time regulating federates: {}", timeRegulatingFederates);
       if (timeRegulatingFederates.contains(federateProxy))
       {
         recalculateGALT(federateProxy);
@@ -528,7 +534,30 @@ public class FederationExecutionTimeManager
     }
   }
 
+  public void flushQueueRequest(FederateProxy federateProxy, LogicalTime time)
+  {
+    timeLock.writeLock().lock();
+    try
+    {
+      federateProxy.flushQueueRequest(time);
+
+      if (timeRegulatingFederates.contains(federateProxy))
+      {
+        recalculateGALT(federateProxy);
+      }
+    }
+    catch (IllegalTimeArithmetic ita)
+    {
+      log.error(marker, "unable to request time advance", ita);
+    }
+    finally
+    {
+      timeLock.writeLock().unlock();
+    }
+  }
+
   protected void recalculateGALT(FederateProxy federateProxy)
+    throws IllegalTimeArithmetic
   {
     if (timeRegulatingFederates.size() == 1)
     {

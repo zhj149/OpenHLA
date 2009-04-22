@@ -43,6 +43,7 @@ import hla.rti1516.AttributeHandle;
 import hla.rti1516.AttributeHandleValueMap;
 import hla.rti1516.ParameterHandleValueMap;
 import hla.rti1516.RegionHandleSet;
+import hla.rti1516.OrderType;
 
 public class FederateProxyIoFilter
   extends IoFilterAdapter
@@ -196,6 +197,11 @@ public class FederateProxyIoFilter
       }
       else
       {
+        if (reflectAttributeValues.getSentOrderType() == OrderType.TIMESTAMP)
+        {
+          federateProxy.updateLITS(reflectAttributeValues.getUpdateTime());
+        }
+
         writeRequest = reflectAttributeValues == writeRequest.getMessage() ?
           writeRequest :
           new WriteRequest(reflectAttributeValues, writeRequest.getFuture());
