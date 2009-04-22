@@ -83,6 +83,7 @@ public class FederateProxy
   protected TimeAdvanceType advanceRequestType = TimeAdvanceType.NONE;
 
   protected LogicalTime galt;
+  protected LogicalTime lits;
 
   /**
    * Least Outgoing Time Stamp.
@@ -343,6 +344,7 @@ public class FederateProxy
   public void disableTimeConstrained()
   {
     timeConstrainedEnabled = false;
+    lits = null;
 
     log.debug(marker, "time constrained disabled: {}", this);
   }
@@ -357,19 +359,13 @@ public class FederateProxy
 
     if (timeRegulationEnabled)
     {
-      if (lookahead.isZero())
-      {
-        lots = advanceRequestTime.add(epsilon);
-      }
-      else
-      {
-        lots = advanceRequestTime.add(lookahead);
-      }
+      lots = advanceRequestTime.add(lookahead.isZero() ? epsilon : lookahead);
 
       log.debug(marker, "LOTS: {}", lots);
     }
 
-    if (!timeConstrainedEnabled || advanceRequestTime.compareTo(galt) < 0)
+    if (!timeConstrainedEnabled || galt == null ||
+        advanceRequestTime.compareTo(galt) < 0)
     {
       // immediately grant the request
 
@@ -395,7 +391,8 @@ public class FederateProxy
       log.debug(marker, "LOTS: {}", lots);
     }
 
-    if (!timeConstrainedEnabled || advanceRequestTime.compareTo(galt) <= 0)
+    if (!timeConstrainedEnabled || galt == null ||
+        advanceRequestTime.compareTo(galt) <= 0)
     {
       // immediately grant the request
 
@@ -411,105 +408,176 @@ public class FederateProxy
   {
     log.debug(marker, "next message request: {}", time);
 
-    advanceRequestTime = time;
     advanceRequestType = TimeAdvanceType.NEXT_MESSAGE_REQUEST;
 
-    if (timeRegulationEnabled)
+    if (!timeConstrainedEnabled || galt == null)
     {
-      if (lookahead.isZero())
+      assert lits == null;
+
+      if (timeRegulationEnabled)
       {
-        lots = advanceRequestTime.add(epsilon);
-      }
-      else
-      {
-        lots = advanceRequestTime.add(lookahead);
+        lots = time.add(lookahead.isZero() ? epsilon : lookahead);
+
+        log.debug(marker, "LOTS: {}", lots);
       }
 
-      log.debug(marker, "LOTS: {}", lots);
-    }
-
-    if (!timeConstrainedEnabled)
-    {
       // immediately grant the request
 
-      federateTime = advanceRequestTime;
-      advanceRequestTime = null;
+      federateTime = time;
 
       session.write(new TimeAdvanceGrant(federateTime));
+    }
+    else if (time.compareTo(galt) < 0)
+    {
+      // the specified time is < GALT
+
+      // use LITS if it is defined and < the specified time
+      //
+      time = lits == null || time.compareTo(lits) < 0 ? time : lits;
+
+      if (timeRegulationEnabled)
+      {
+        lots = time.add(lookahead.isZero() ? epsilon : lookahead);
+
+        log.debug(marker, "LOTS: {}", lots);
+      }
+
+      // immediately grant the request
+
+      federateTime = time;
+
+      session.write(new TimeAdvanceGrant(federateTime));
+    }
+    else if (lits.compareTo(galt) < 0)
+    {
+      // LITS < GALT
+
+      if (timeRegulationEnabled)
+      {
+        lots = lits.add(lookahead.isZero() ? epsilon : lookahead);
+
+        log.debug(marker, "LOTS: {}", lots);
+      }
+
+      // immediately grant the request
+
+      federateTime = lits;
+
+      session.write(new TimeAdvanceGrant(federateTime));
+    }
+    else
+    {
+      advanceRequestTime = time;
+
+      if (timeRegulationEnabled)
+      {
+        // LOTS can only advance as GALT advances
+
+        lots = galt.add(lookahead.isZero() ? epsilon : lookahead);
+
+        log.debug(marker, "LOTS: {}", lots);
+      }
     }
   }
 
   public void nextMessageRequestAvailable(LogicalTime time)
     throws IllegalTimeArithmetic
   {
-    log.debug(marker, "next message request: {}", time);
+    log.debug(marker, "next message request available: {}", time);
 
-    advanceRequestTime = time;
     advanceRequestType = TimeAdvanceType.NEXT_MESSAGE_REQUEST_AVAILABLE;
 
-    if (timeRegulationEnabled)
+    if (!timeConstrainedEnabled || galt == null)
     {
-      lots = advanceRequestTime.add(lookahead);
+      assert lits == null;
 
-      log.debug(marker, "LOTS: {}", lots);
-    }
+      if (timeRegulationEnabled)
+      {
+        lots = time.add(lookahead);
 
-    if (!timeConstrainedEnabled)
-    {
+        log.debug(marker, "LOTS: {}", lots);
+      }
+
       // immediately grant the request
 
-      federateTime = advanceRequestTime;
-      advanceRequestTime = null;
+      federateTime = time;
 
       session.write(new TimeAdvanceGrant(federateTime));
     }
-  }
-
-  public void nextMessageRequestTimeAdvanceGrant(LogicalTime time)
-    throws IllegalTimeArithmetic
-  {
-    log.debug(marker, "next message request time advance grant: {}", time);
-
-    if (timeRegulationEnabled)
+    else if (time.compareTo(galt) <= 0)
     {
-      if (lookahead.isZero())
-      {
-        lots = time.add(epsilon);
-      }
-      else
+      // the specified time is < GALT
+
+      // use LITS if it is defined and < the specified time
+      //
+      time = lits == null || time.compareTo(lits) < 0 ? time : lits;
+
+      if (timeRegulationEnabled)
       {
         lots = time.add(lookahead);
+
+        log.debug(marker, "LOTS: {}", lots);
       }
 
-      log.debug(marker, "LOTS: {}", lots);
+      // immediately grant the request
+
+      federateTime = time;
+
+      session.write(new TimeAdvanceGrant(federateTime));
     }
+    else if (lits.compareTo(galt) <= 0)
+    {
+      // LITS < GALT
 
-    federateTime = time;
-    advanceRequestTime = null;
+      if (timeRegulationEnabled)
+      {
+        lots = lits.add(lookahead);
 
-    session.write(new TimeAdvanceGrant(federateTime));
+        log.debug(marker, "LOTS: {}", lots);
+      }
+
+      // immediately grant the request
+
+      federateTime = lits;
+
+      session.write(new TimeAdvanceGrant(federateTime));
+    }
+    else
+    {
+      advanceRequestTime = time;
+
+      if (timeRegulationEnabled)
+      {
+        // LOTS can only advance as GALT advances
+
+        lots = galt.add(lookahead);
+
+        log.debug(marker, "LOTS: {}", lots);
+      }
+    }
   }
 
-  public void nextMessageRequestAvailableTimeAdvanceGrant(LogicalTime time)
+  public void flushQueueRequest(LogicalTime time)
     throws IllegalTimeArithmetic
   {
-    log.debug(marker, "next message request available time advance grant: {}",
-              time);
+    log.debug(marker, "flush queue request: {}", time);
+
+    advanceRequestType = TimeAdvanceType.FLUSH_QUEUE_REQUEST;
+
+    federateTime = galt == null || time.compareTo(galt) < 0 ? time : galt;
 
     if (timeRegulationEnabled)
     {
-      lots = advanceRequestTime.add(lookahead);
+      lots = federateTime.add(lookahead);
 
       log.debug(marker, "LOTS: {}", lots);
     }
-
-    federateTime = time;
-    advanceRequestTime = null;
 
     session.write(new TimeAdvanceGrant(federateTime));
   }
 
   public void galtAdvanced(LogicalTime galt)
+    throws IllegalTimeArithmetic
   {
     if (this.galt == null)
     {
@@ -535,24 +603,128 @@ public class FederateProxy
 
       session.write(new TimeConstrainedEnabled(federateTime));
     }
-    else if (advanceRequestTime != null &&
-             (advanceRequestType == TimeAdvanceType.TIME_ADVANCE_REQUEST ?
-               advanceRequestTime.compareTo(galt) < 0 :
-               advanceRequestTime.compareTo(galt) <= 0))
+    else if (advanceRequestTime != null)
     {
-      federateTime = advanceRequestTime;
+      switch (advanceRequestType)
+      {
+        case TIME_ADVANCE_REQUEST:
+        {
+          if (advanceRequestTime.compareTo(galt) < 0)
+          {
+            federateTime = advanceRequestTime;
 
-      advanceRequestTime = null;
+            advanceRequestTime = null;
+            lits = null;
 
-      session.write(new TimeAdvanceGrant(federateTime));
+            session.write(new TimeAdvanceGrant(federateTime));
+          }
+          break;
+        }
+        case TIME_ADVANCE_REQUEST_AVAILABLE:
+        {
+          if (advanceRequestTime.compareTo(galt) <= 0)
+          {
+            federateTime = advanceRequestTime;
+
+            advanceRequestTime = null;
+            lits = null;
+
+            session.write(new TimeAdvanceGrant(federateTime));
+          }
+          break;
+        }
+        case NEXT_MESSAGE_REQUEST:
+        {
+          if (advanceRequestTime.compareTo(galt) < 0)
+          {
+            if (lits == null || advanceRequestTime.compareTo(lits) < 0)
+            {
+              federateTime = advanceRequestTime;
+            }
+            else
+            {
+              federateTime = lits;
+            }
+
+            advanceRequestTime = null;
+            lits = null;
+
+            session.write(new TimeAdvanceGrant(federateTime));
+          }
+          else if (lits.compareTo(galt) < 0)
+          {
+            federateTime = lits;
+            lits = null;
+
+            advanceRequestTime = null;
+            lits = null;
+
+            session.write(new TimeAdvanceGrant(federateTime));
+          }
+          break;
+        }
+        case NEXT_MESSAGE_REQUEST_AVAILABLE:
+        {
+          if (advanceRequestTime.compareTo(galt) <= 0)
+          {
+            if (lits == null || advanceRequestTime.compareTo(lits) < 0)
+            {
+              federateTime = advanceRequestTime;
+            }
+            else
+            {
+              federateTime = lits;
+            }
+
+            advanceRequestTime = null;
+            lits = null;
+
+            session.write(new TimeAdvanceGrant(federateTime));
+          }
+          else if (lits.compareTo(galt) <= 0)
+          {
+            federateTime = lits;
+
+            advanceRequestTime = null;
+            lits = null;
+
+            session.write(new TimeAdvanceGrant(federateTime));
+          }
+          break;
+        }
+        default:
+          assert false;
+      }
     }
   }
 
   public void galtUndefined()
   {
     galt = null;
+    lits = null;
 
     session.write(new GALTUndefined());
+  }
+
+  public void updateLITS(LogicalTime time)
+  {
+    federationExecution.getTimeManager().getTimeLock().writeLock().lock();
+    try
+    {
+      if (timeConstrainedEnabled)
+      {
+        if (lits == null || time.compareTo(lits) < 0)
+        {
+          lits = time;
+
+          log.trace(marker, "LITS: {}", lits);
+        }
+      }
+    }
+    finally
+    {
+      federationExecution.getTimeManager().getTimeLock().writeLock().unlock();
+    }
   }
 
   @Override

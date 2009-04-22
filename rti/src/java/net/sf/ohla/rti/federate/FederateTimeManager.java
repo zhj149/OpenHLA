@@ -23,12 +23,15 @@ import net.sf.ohla.rti.messages.DisableTimeConstrained;
 import net.sf.ohla.rti.messages.DisableTimeRegulation;
 import net.sf.ohla.rti.messages.EnableTimeConstrained;
 import net.sf.ohla.rti.messages.EnableTimeRegulation;
+import net.sf.ohla.rti.messages.FlushQueueRequest;
 import net.sf.ohla.rti.messages.ModifyLookahead;
 import net.sf.ohla.rti.messages.NextMessageRequest;
 import net.sf.ohla.rti.messages.NextMessageRequestAvailable;
+import net.sf.ohla.rti.messages.NextMessageRequestAvailableTimeAdvanceGrant;
 import net.sf.ohla.rti.messages.NextMessageRequestTimeAdvanceGrant;
 import net.sf.ohla.rti.messages.TimeAdvanceRequest;
 import net.sf.ohla.rti.messages.TimeAdvanceRequestAvailable;
+import net.sf.ohla.rti.messages.UpdateLITS;
 
 import org.apache.mina.common.WriteFuture;
 
@@ -508,7 +511,7 @@ public class FederateTimeManager
       checkIfRequestForTimeConstrainedPending();
 
       WriteFuture writeFuture =
-        federate.getRTISession().write(new TimeAdvanceRequest(time));
+        federate.getRTISession().write(new FlushQueueRequest(time));
 
       // TODO: set timeout
       //
@@ -725,6 +728,17 @@ public class FederateTimeManager
       temporalState = TemporalState.TIME_GRANTED;
       advanceRequestType = TimeAdvanceType.NONE;
 
+      if (isTimeConstrained())
+      {
+        LogicalTime lits = federate.getNextMessageTime();
+        if (lits != null)
+        {
+          // notify the RTI of the new LITS
+
+          federate.getRTISession().write(new UpdateLITS(lits));
+        }
+      }
+
       federateAmbassador.timeAdvanceGrant(time);
     }
     catch (Throwable t)
@@ -788,9 +802,9 @@ public class FederateTimeManager
     timeLock.writeLock().lock();
     try
     {
-      galt = null;
+      log.debug(federate.getMarker(), "GALT undefined");
 
-      log.debug(federate.getMarker(), "GALT undefined: {}", galt);
+      galt = null;
 
       federate.clearFutureTasks();
     }
@@ -985,7 +999,7 @@ public class FederateTimeManager
         maxFutureTaskTimestamp = advanceRequestTime;
 
         WriteFuture writeFuture = federate.getRTISession().write(
-          new NextMessageRequestTimeAdvanceGrant(advanceRequestTime));
+          new NextMessageRequestAvailableTimeAdvanceGrant(advanceRequestTime));
 
         // TODO: set timeout
         //
