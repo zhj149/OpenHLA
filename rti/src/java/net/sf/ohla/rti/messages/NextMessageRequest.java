@@ -45,6 +45,6 @@ public class NextMessageRequest
   @Override
   public String toString()
   {
-    return String.format("Time Advance Request: %s", time);
+    return String.format("Next Message Request: %s", time);
   }
 }
