@@ -677,6 +677,7 @@ public class FederateTimeManager
     try
     {
       federateTime = time;
+      lots = time.add(lookahead);
 
       timeRegulatingState = TimeRegulatingState.TIME_REGULATING;
 
