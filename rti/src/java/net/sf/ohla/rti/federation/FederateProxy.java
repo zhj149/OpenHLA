@@ -651,7 +651,7 @@ public class FederateProxy
 
             session.write(new TimeAdvanceGrant(federateTime));
           }
-          else if (lits.compareTo(galt) < 0)
+          else if (lits != null && lits.compareTo(galt) < 0)
           {
             federateTime = lits;
             lits = null;
@@ -681,7 +681,7 @@ public class FederateProxy
 
             session.write(new TimeAdvanceGrant(federateTime));
           }
-          else if (lits.compareTo(galt) <= 0)
+          else if (lits != null && lits.compareTo(galt) <= 0)
           {
             federateTime = lits;
 
