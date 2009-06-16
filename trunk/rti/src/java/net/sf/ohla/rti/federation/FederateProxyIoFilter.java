@@ -220,6 +220,11 @@ public class FederateProxyIoFilter
       }
       else
       {
+        if (receiveInteraction.getSentOrderType() == OrderType.TIMESTAMP)
+        {
+          federateProxy.updateLITS(receiveInteraction.getSendTime());
+        }
+
         writeRequest = receiveInteraction == writeRequest.getMessage() ?
           writeRequest :
           new WriteRequest(receiveInteraction, writeRequest.getFuture());
