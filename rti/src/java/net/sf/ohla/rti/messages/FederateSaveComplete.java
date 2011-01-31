@@ -20,14 +20,30 @@ import net.sf.ohla.rti.federate.FederateSave;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
 
+import org.jboss.netty.buffer.ChannelBuffer;
+
 public class FederateSaveComplete
+  extends AbstractMessage
   implements FederationExecutionMessage
 {
-  protected FederateSave federateSave;
+  private final FederateSave federateSave;
 
   public FederateSaveComplete(FederateSave federateSave)
   {
+    super(MessageType.FEDERATE_SAVE_COMPLETE);
+
     this.federateSave = federateSave;
+
+    federateSave.encode(buffer);
+
+    encodingFinished();
+  }
+
+  public FederateSaveComplete(ChannelBuffer buffer)
+  {
+    super(buffer);
+
+    federateSave = new FederateSave(buffer);
   }
 
   public FederateSave getFederateSave()
@@ -35,8 +51,12 @@ public class FederateSaveComplete
     return federateSave;
   }
 
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public MessageType getType()
+  {
+    return MessageType.FEDERATE_SAVE_COMPLETE;
+  }
+
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.federateSaveComplete(federateProxy, this);
   }

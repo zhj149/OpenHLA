@@ -16,23 +16,24 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
-import net.sf.ohla.rti.handles.ShortHandle;
+import net.sf.ohla.rti.IntegerHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
 
 import hla.rti1516.CouldNotDecode;
 import hla.rti1516.FederateHandle;
 
 public class IEEE1516FederateHandle
-  extends ShortHandle
+  extends IntegerHandle
   implements FederateHandle
 {
-  public IEEE1516FederateHandle(int handle)
-  {
-    super(handle);
-  }
-
   public IEEE1516FederateHandle(byte[] buffer, int offset)
     throws CouldNotDecode
   {
     super(buffer, offset);
+  }
+
+  public IEEE1516FederateHandle(hla.rti1516e.FederateHandle federateHandle)
+  {
+    super((IEEE1516eFederateHandle) federateHandle);
   }
 }

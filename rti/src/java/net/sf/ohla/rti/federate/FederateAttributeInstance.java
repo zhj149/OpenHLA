@@ -19,30 +19,31 @@ package net.sf.ohla.rti.federate;
 import java.io.Serializable;
 
 import net.sf.ohla.rti.fdd.Attribute;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516RegionHandleSet;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandleSet;
 
-import hla.rti1516.AttributeAlreadyBeingDivested;
-import hla.rti1516.AttributeDivestitureWasNotRequested;
-import hla.rti1516.AttributeHandle;
-import hla.rti1516.OrderType;
-import hla.rti1516.RegionHandleSet;
-import hla.rti1516.TransportationType;
+import hla.rti1516e.AttributeHandle;
+import hla.rti1516e.OrderType;
+import hla.rti1516e.RegionHandleSet;
+import hla.rti1516e.TransportationTypeHandle;
+import hla.rti1516e.exceptions.AttributeAlreadyBeingChanged;
+import hla.rti1516e.exceptions.AttributeAlreadyBeingDivested;
+import hla.rti1516e.exceptions.AttributeDivestitureWasNotRequested;
 
 public class FederateAttributeInstance
   implements Serializable
 {
-  protected final Attribute attribute;
+  private final Attribute attribute;
 
-  protected TransportationType transportationType;
-  protected OrderType orderType;
+  private final RegionHandleSet associatedRegions = new IEEE1516eRegionHandleSet();
 
-  protected RegionHandleSet associatedRegions = new IEEE1516RegionHandleSet();
+  private TransportationTypeHandle transportationTypeHandle;
+  private OrderType orderType;
 
   public FederateAttributeInstance(Attribute attribute)
   {
     this.attribute = attribute;
 
-    transportationType = attribute.getTransportationType();
+    transportationTypeHandle = attribute.getTransportationTypeHandle();
     orderType = attribute.getOrderType();
   }
 
@@ -56,14 +57,14 @@ public class FederateAttributeInstance
     return attribute.getAttributeHandle();
   }
 
-  public TransportationType getTransportationType()
+  public TransportationTypeHandle getTransportationTypeHandle()
   {
-    return transportationType;
+    return transportationTypeHandle;
   }
 
-  public void setTransportationType(TransportationType transportationType)
+  public void setTransportationTypeHandle(TransportationTypeHandle transportationTypeHandle)
   {
-    this.transportationType = transportationType;
+    this.transportationTypeHandle = transportationTypeHandle;
   }
 
   public OrderType getOrderType()
@@ -93,18 +94,22 @@ public class FederateAttributeInstance
 
   public void negotiatedAttributeOwnershipDivestiture()
   {
+    // TODO
   }
 
   public void confirmDivestiture()
   {
+    // TODO
   }
 
   public void cancelNegotiatedAttributeOwnershipDivestiture()
   {
+    // TODO
   }
 
   public void cancelAttributeOwnershipAcquisition()
   {
+    // TODO
   }
 
   public void checkIfAttributeDivestitureWasNotRequested()
@@ -115,6 +120,12 @@ public class FederateAttributeInstance
 
   public void checkIfAttributeAlreadyBeingDivested()
     throws AttributeAlreadyBeingDivested
+  {
+    // TODO: check status
+  }
+
+  public void checkIfAttributeAlreadyBeingChanged()
+    throws AttributeAlreadyBeingChanged
   {
     // TODO: check status
   }

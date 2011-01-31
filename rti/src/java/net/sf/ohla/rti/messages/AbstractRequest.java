@@ -17,18 +17,50 @@
 package net.sf.ohla.rti.messages;
 
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
-public abstract class AbstractRequest
-  implements Request
+import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.channel.ChannelFuture;
+
+import hla.rti1516e.exceptions.RTIinternalError;
+
+public abstract class AbstractRequest<R>
+  extends AbstractMessage
+  implements Request<R>
 {
   protected long id;
 
-  protected transient Object response;
-  protected transient Throwable cause;
-  protected transient CountDownLatch responseLatch = new CountDownLatch(1);
+  protected R response;
+  protected Throwable cause;
+
+  protected final CountDownLatch responseLatch = new CountDownLatch(1);
+
+  protected AbstractRequest(MessageType messageType)
+  {
+    super(messageType);
+
+    buffer.writerIndex(buffer.writerIndex() + 8);
+  }
+
+  protected AbstractRequest(MessageType messageType, int capacity, boolean dynamic)
+  {
+    super(messageType, capacity, dynamic);
+
+    buffer.writerIndex(buffer.writerIndex() + 8);
+  }
+
+  protected AbstractRequest(MessageType messageType, ChannelBuffer buffer)
+  {
+    super(messageType, buffer);
+
+    buffer.writerIndex(buffer.writerIndex() + 8);
+  }
+
+  protected AbstractRequest(ChannelBuffer buffer)
+  {
+    super(buffer);
+
+    id = buffer.readLong();
+  }
 
   public long getId()
   {
@@ -37,24 +69,11 @@ public abstract class AbstractRequest
 
   public void setId(long id)
   {
-    this.id = id;
+    buffer.setLong(6, id);
   }
 
-  public Object getResponse()
-    throws InterruptedException, ExecutionException
-  {
-    responseLatch.await();
-
-    if (cause != null)
-    {
-      throw new ExecutionException(cause);
-    }
-
-    return response;
-  }
-
-  public Object getResponseUninterruptibly()
-    throws ExecutionException
+  public R getResponse()
+    throws RTIinternalError
   {
     boolean done = false;
     do
@@ -69,92 +88,29 @@ public abstract class AbstractRequest
       }
     } while (!done);
 
-    if (cause != null)
+    if (response == null)
     {
-      throw new ExecutionException(cause);
+      throw new RTIinternalError("connection closed", cause);
     }
-
     return response;
   }
 
-  public Object getResponse(long timeout, TimeUnit unit)
-    throws InterruptedException, ExecutionException, TimeoutException
-  {
-    if (responseLatch.await(timeout, unit))
-    {
-      if (cause != null)
-      {
-        throw new ExecutionException(cause);
-      }
-    }
-    else
-    {
-      throw new TimeoutException();
-    }
-
-    return response;
-  }
-
+  @SuppressWarnings("unchecked")
   public void setResponse(Object response)
   {
-    this.response = response;
+    this.response = (R) response;
 
     responseLatch.countDown();
   }
 
-  public void setResponseFailed(Throwable cause)
+  public void operationComplete(ChannelFuture future)
+    throws Exception
   {
-    this.cause = cause;
-
-    responseLatch.countDown();
-  }
-
-  public void await()
-    throws InterruptedException, ExecutionException
-  {
-    responseLatch.await();
-
-    if (cause != null)
+    if (!future.isSuccess())
     {
-      throw new ExecutionException(cause);
-    }
-  }
+      cause = future.getCause();
 
-  public void awaitUninterruptibly()
-    throws ExecutionException
-  {
-    boolean done = false;
-    do
-    {
-      try
-      {
-        responseLatch.await();
-        done = true;
-      }
-      catch (InterruptedException ie)
-      {
-      }
-    } while (!done);
-
-    if (cause != null)
-    {
-      throw new ExecutionException(cause);
-    }
-  }
-
-  public void await(long timeout, TimeUnit unit)
-    throws InterruptedException, ExecutionException, TimeoutException
-  {
-    if (responseLatch.await(timeout, unit))
-    {
-      if (cause != null)
-      {
-        throw new ExecutionException(cause);
-      }
-    }
-    else
-    {
-      throw new TimeoutException();
+      responseLatch.countDown();
     }
   }
 }

@@ -49,12 +49,7 @@ import java.io.IOException;
 
 import java.net.URL;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
-import net.sf.ohla.rti.fed.FEDAttribute;
-import net.sf.ohla.rti.fed.FEDFDD;
-import net.sf.ohla.rti.fed.FEDInteractionClass;
-import net.sf.ohla.rti.fed.FEDObjectClass;
+import net.sf.ohla.rti.fed.FED;
 import net.sf.ohla.rti.fed.RoutingSpace;
 
 import net.sf.ohla.rti.fdd.Attribute;
@@ -77,36 +72,33 @@ public class FEDParser
 {
   private static Logger log = LoggerFactory.getLogger(FEDParser.class);
 
-  protected FEDFDD fedFDD = new FEDFDD();
+  private FED fed;
 
-  public FEDParser(URL url)
+  public FEDParser(URL source)
+    throws IOException, ParseException, ErrorReadingFED
+  {
+    this(source.openStream(), "UTF-8");
+
+    fed = new FED(source);
+
+    parse();
+  }
+
+  public static FED parseFED(URL source)
     throws CouldNotOpenFED, ErrorReadingFED
   {
-    this(new ByteArrayInputStream(new byte[0]));
-
-    if (url == null)
-    {
-      throw new CouldNotOpenFED("null");
-    }
-
     try
     {
-      ReInit(url.openStream(), "UTF-8");
-      parse();
+      return new FEDParser(source).fed;
     }
     catch (IOException ioe)
     {
-      throw new CouldNotOpenFED(url.toString(), ioe);
+      throw new CouldNotOpenFED(source.toString(), ioe);
     }
     catch (ParseException pe)
     {
-      throw new ErrorReadingFED(url.toString(), pe);
+      throw new ErrorReadingFED(source.toString(), pe);
     }
-  }
-
-  public FDD getFDD()
-  {
-    return fedFDD;
   }
 }
 PARSER_END(FEDParser)
@@ -166,7 +158,7 @@ void FEDname() :
 {
   fedName=NameString()
   {
-    fedFDD.setFEDName(fedName);
+    fed.setFEDName(fedName);
   }
 }
 
@@ -182,26 +174,17 @@ String FEDDIFversionNumber() :
 {
   t=<VERSION>
   {
-    fedFDD.setFEDDIFVersionNumber(t.image);
     return t.image;
   }
 }
 
 void Spaces()
-  throws ErrorReadingFED :
+  throws ErrorReadingFED : {}
 {
-  AtomicInteger routingSpaceCount = new AtomicInteger();
-  RoutingSpace routingSpace;
-}
-{
-  <SPACES>
-  ( routingSpace=Space(routingSpaceCount)
-    { fedFDD.add(routingSpace); }
-  )*
-  <RPAREN>
+  <SPACES> ( Space() )* <RPAREN>
 }
 
-RoutingSpace Space(AtomicInteger routingSpaceCount)
+void Space()
   throws ErrorReadingFED :
 {
   RoutingSpace routingSpace;
@@ -214,23 +197,13 @@ RoutingSpace Space(AtomicInteger routingSpaceCount)
   {
     if (routingSpaceName.startsWith("HLA"))
     {
-      throw new ErrorReadingFED(String.format(
-        "routing space begins with 'HLA': ", routingSpaceName));
+      throw new ErrorReadingFED("routing space begins with 'HLA': " + routingSpaceName);
     }
 
-    routingSpace = new RoutingSpace(routingSpaceName, routingSpaceCount);
+    routingSpace = fed.addRoutingSpace(routingSpaceName);
   }
-  ( dimensionName=Dimension()
-    {
-      Dimension dimension =
-        new Dimension(String.format("%s.%s", routingSpaceName, dimensionName));
-      fedFDD.add(dimension);
-      routingSpace.add(dimensionName, dimension);
-    }
-  )*
+  ( Dimension(routingSpace) )*
   <RPAREN>
-
-  { return routingSpace; }
 }
 
 String SpaceName() :
@@ -241,14 +214,14 @@ String SpaceName() :
   spaceName=NameString() { return spaceName; }
 }
 
-String Dimension() :
+void Dimension(RoutingSpace routingSpace) :
 {
   String dimensionName;
 }
 {
   <DIMENSION> dimensionName=DimensionName() <RPAREN>
   {
-    return dimensionName;
+    fed.addRoutingSpaceDimension(routingSpace, dimensionName);
   }
 }
 
@@ -261,57 +234,31 @@ String DimensionName() :
 }
 
 void ObjectClasses()
-  throws ErrorReadingFED :
+  throws ErrorReadingFED : {}
 {
-  FEDObjectClass objectRoot;
-}
-{
-  <OBJECTS>
-    objectRoot=ObjectRoot()
-    { fedFDD.add(objectRoot); }
-  <RPAREN>
+  <OBJECTS> ObjectRoot() <RPAREN>
 }
 
-FEDObjectClass ObjectRoot()
+void ObjectRoot()
   throws ErrorReadingFED :
 {
-  AtomicInteger objectClassCount = new AtomicInteger();
-  AtomicInteger attributeCount = new AtomicInteger();
-
-  FEDObjectClass objectRoot;
   String objectClassName;
-
-  FEDAttribute attribute;
-  FEDObjectClass subObject;
 }
 {
   <CLASS> objectClassName=ObjectClassName()
   {
-    if (!FEDObjectClass.OBJECT_ROOT.equals(objectClassName))
+    if (!net.sf.ohla.rti.fed.FED.OBJECT_ROOT.equals(objectClassName))
     {
-      throw new ErrorReadingFED(String.format(
-        "invalid root object: %s (must be %s)", objectClassName,
-        FEDObjectClass.OBJECT_ROOT));
+      throw new ErrorReadingFED("invalid root object: " + objectClassName + " (must be " + net.sf.ohla.rti.fed.FED.OBJECT_ROOT + ")");
     }
-
-    objectRoot = new FEDObjectClass(
-      ObjectClass.HLA_OBJECT_ROOT, objectClassCount);
   }
-
-  attribute=PriviledgeToDeleteAttribute(attributeCount)
-  {
-    objectRoot.add(attribute);
-  }
-
-  ( subObject=ObjectClass(objectRoot, objectClassCount, attributeCount)
-    { objectRoot.add(subObject); }
-  )*
+  PriviledgeToDeleteAttribute()
+  RTIprivateObject()
+  ( ObjectClass(ObjectClass.HLA_OBJECT_ROOT) )*
   <RPAREN>
-
-  { return objectRoot; }
 }
 
-FEDAttribute PriviledgeToDeleteAttribute(AtomicInteger attributeCount)
+void PriviledgeToDeleteAttribute()
   throws ErrorReadingFED :
 {
   String attributeName;
@@ -320,70 +267,58 @@ FEDAttribute PriviledgeToDeleteAttribute(AtomicInteger attributeCount)
   String spaceName = null;
 }
 {
-  <ATTRIBUTE> attributeName=AttributeName() transport=Transport()
-  order=Order() [ spaceName=SpaceName() ] <RPAREN>
-
+  <ATTRIBUTE> attributeName=AttributeName() transport=Transport() order=Order() [ spaceName=SpaceName() ] <RPAREN>
   {
-    if (!FEDAttribute.PRIVILEGE_TO_DELETE.equals(attributeName))
+    if (!net.sf.ohla.rti.fed.FED.PRIVILEGE_TO_DELETE.equals(attributeName))
     {
-      throw new ErrorReadingFED(String.format(
-        "invalid attribute: %s (must be %s)", attributeName,
-        FEDAttribute.PRIVILEGE_TO_DELETE));
+      throw new ErrorReadingFED("invalid attribute: " + attributeName + " (must be " + net.sf.ohla.rti.fed.FED.PRIVILEGE_TO_DELETE + ")");
     }
 
-    FEDAttribute attribute = new FEDAttribute(
-      Attribute.HLA_PRIVILEGE_TO_DELETE_OBJECT, attributeCount);
-    try
-    {
-      attribute.setOrder(order);
-      attribute.setTransportation(transport);
+    fed.setTransport(Attribute.HLA_PRIVILEGE_TO_DELETE_OBJECT, transport);
+    fed.setOrder(Attribute.HLA_PRIVILEGE_TO_DELETE_OBJECT, order);
 
-      if (spaceName != null)
-      {
-        attribute.setRoutingSpace(fedFDD.getRoutingSpace(spaceName));
-      }
-    }
-    catch (ErrorReadingFDD erfdd)
+    if (spaceName != null)
     {
-      throw new ErrorReadingFED(erfdd);
+      fed.setRoutingSpace(Attribute.HLA_PRIVILEGE_TO_DELETE_OBJECT, spaceName);
     }
-    catch (NameNotFound nnf)
-    {
-      throw new ErrorReadingFED(nnf);
-    }
-
-    return attribute;
   }
 }
 
-FEDObjectClass ObjectClass(FEDObjectClass parent,
-                           AtomicInteger objectClassCount,
-                           AtomicInteger attributeCount)
+void RTIprivateObject()
   throws ErrorReadingFED :
 {
-  FEDObjectClass objectClass;
+  String objectClassName;
+}
+{
+  <CLASS> objectClassName=ObjectClassName() <RPAREN>
+  {
+    if (!net.sf.ohla.rti.fed.FED.RTI_PRIVATE.equals(objectClassName))
+    {
+      throw new ErrorReadingFED("invalid object: " + objectClassName + " (must be " + net.sf.ohla.rti.fed.FED.RTI_PRIVATE + ")");
+    }
+
+    fed.getFDD().addObjectClass(objectClassName, ObjectClass.HLA_OBJECT_ROOT);
+  }
+}
+
+void ObjectClass(ObjectClass parent)
+  throws ErrorReadingFED :
+{
   String objectClassName;
 
-  FEDAttribute attribute;
-  FEDObjectClass subObject;
+  ObjectClass objectClass;
 }
 {
   <CLASS> objectClassName=ObjectClassName()
   {
-    objectClass = new FEDObjectClass(objectClassName, parent, objectClassCount);
+    objectClass = fed.getFDD().addObjectClass(objectClassName, parent);
   }
-  ( attribute=Attribute(attributeCount)
-    { objectClass.add(attribute); }
-  )*
-  ( subObject=ObjectClass(objectClass, objectClassCount, attributeCount)
-    { objectClass.add(subObject); }
-  )*
+  ( Attribute(objectClass) )*
+  ( ObjectClass(objectClass) )*
   <RPAREN>
-
-  { return objectClass; }
 }
 
-FEDAttribute Attribute(AtomicInteger attributeCount)
+void Attribute(ObjectClass objectClass)
   throws ErrorReadingFED :
 {
   String attributeName;
@@ -392,209 +327,90 @@ FEDAttribute Attribute(AtomicInteger attributeCount)
   String spaceName = null;
 }
 {
-  <ATTRIBUTE> attributeName=AttributeName() transport=Transport()
-  order=Order() [ spaceName=SpaceName() ] <RPAREN>
-
+  <ATTRIBUTE> attributeName=AttributeName() transport=Transport() order=Order() [ spaceName=SpaceName() ] <RPAREN>
   {
-    FEDAttribute attribute = new FEDAttribute(attributeName, attributeCount);
-    try
-    {
-      attribute.setOrder(order);
-      attribute.setTransportation(transport);
-
-      if (spaceName != null)
-      {
-        attribute.setRoutingSpace(fedFDD.getRoutingSpace(spaceName));
-      }
-    }
-    catch (ErrorReadingFDD erfdd)
-    {
-      throw new ErrorReadingFED(erfdd);
-    }
-    catch (NameNotFound nnf)
-    {
-      throw new ErrorReadingFED(nnf);
-    }
-
-    return attribute;
+    fed.addAttribute(objectClass, attributeName, transport, order, spaceName);
   }
 }
 
 void InteractionClasses()
+  throws ErrorReadingFED : {}
+{
+  <INTERACTIONS> InteractionRoot() <RPAREN>
+}
+
+void InteractionRoot()
   throws ErrorReadingFED :
 {
-  FEDInteractionClass interactionClass;
-}
-{
-  <INTERACTIONS>
-    interactionClass=InteractionRoot()
-    { fedFDD.add(interactionClass); }
-  <RPAREN>
-}
-
-FEDInteractionClass InteractionRoot()
-  throws ErrorReadingFED :
-{
-  AtomicInteger interactionClassCount = new AtomicInteger();
-  AtomicInteger parameterCount = new AtomicInteger();
-
-  FEDInteractionClass interactionRoot;
-  String interactionClassName;
-  String transport;
-  String order;
-  String spaceName = null;
-
-  FEDInteractionClass rtiPrivateInteraction;
-  FEDInteractionClass subInteraction;
-}
-{
-  <CLASS> interactionClassName=InteractionClassName() transport=Transport()
-  order=Order() [ spaceName=SpaceName() ]
-
-  {
-    if (!FEDInteractionClass.INTERACTION_ROOT.equals(interactionClassName))
-    {
-      throw new ErrorReadingFED(String.format(
-        "invalid root interaction: %s (must be %s)", interactionClassName,
-        FEDInteractionClass.INTERACTION_ROOT));
-    }
-
-    interactionRoot = new FEDInteractionClass(
-      InteractionClass.HLA_INTERACTION_ROOT, interactionClassCount);
-
-    try
-    {
-      interactionRoot.setOrder(order);
-      interactionRoot.setTransportation(transport);
-
-      if (spaceName != null)
-      {
-        interactionRoot.setRoutingSpace(fedFDD.getRoutingSpace(spaceName));
-      }
-    }
-    catch (ErrorReadingFDD erfdd)
-    {
-      throw new ErrorReadingFED(erfdd);
-    }
-    catch (NameNotFound nnf)
-    {
-      throw new ErrorReadingFED(nnf);
-    }
-  }
-
-  rtiPrivateInteraction=RTIprivateInteraction(
-    interactionRoot, interactionClassCount, parameterCount)
-  { interactionRoot.add(rtiPrivateInteraction); }
-
-  ( subInteraction=InteractionClass(interactionRoot, interactionClassCount,
-                                    parameterCount)
-    { interactionRoot.add(subInteraction); }
-  )*
-  <RPAREN>
-
-  { return interactionRoot; }
-}
-
-FEDInteractionClass RTIprivateInteraction(FEDInteractionClass parent,
-                                          AtomicInteger interactionClassCount,
-                                          AtomicInteger parameterCount)
-  throws ErrorReadingFED :
-{
-  FEDInteractionClass rtiPrivateInteraction;
   String interactionClassName;
   String transport;
   String order;
   String spaceName = null;
 }
 {
-  <CLASS> interactionClassName=InteractionClassName() transport=Transport()
-  order=Order() [ spaceName=SpaceName() ]
-
+  <CLASS> interactionClassName=InteractionClassName() transport=Transport() order=Order() [ spaceName=SpaceName() ]
   {
-    rtiPrivateInteraction = new FEDInteractionClass(
-      interactionClassName, parent, interactionClassCount);
-
-    try
+    if (!net.sf.ohla.rti.fed.FED.INTERACTION_ROOT.equals(interactionClassName))
     {
-      rtiPrivateInteraction.setOrder(order);
-      rtiPrivateInteraction.setTransportation(transport);
-
-      if (spaceName != null)
-      {
-        rtiPrivateInteraction.setRoutingSpace(
-          fedFDD.getRoutingSpace(spaceName));
-      }
+      throw new ErrorReadingFED(
+        "invalid root interaction: " + interactionClassName + " (must be " + net.sf.ohla.rti.fed.FED.INTERACTION_ROOT + ")");
     }
-    catch (ErrorReadingFDD erfdd)
+
+    fed.setTransport(InteractionClass.HLA_INTERACTION_ROOT, transport);
+    fed.setOrder(InteractionClass.HLA_INTERACTION_ROOT, order);
+
+    if (spaceName != null)
     {
-      throw new ErrorReadingFED(erfdd);
-    }
-    catch (NameNotFound nnf)
-    {
-      throw new ErrorReadingFED(nnf);
+      fed.setRoutingSpace(InteractionClass.HLA_INTERACTION_ROOT, spaceName);
     }
   }
-
+  RTIprivateInteraction()
+  ( InteractionClass(InteractionClass.HLA_INTERACTION_ROOT) )*
   <RPAREN>
-
-  { return rtiPrivateInteraction; }
 }
 
-FEDInteractionClass InteractionClass(FEDInteractionClass parent,
-                                     AtomicInteger interactionClassCount,
-                                     AtomicInteger parameterCount)
+void RTIprivateInteraction()
   throws ErrorReadingFED :
 {
-  FEDInteractionClass interactionClass;
+  String interactionClassName;
+  String transport;
+  String order;
+  String spaceName = null;
+}
+{
+  <CLASS> interactionClassName=InteractionClassName() transport=Transport() order=Order() [ spaceName=SpaceName() ] <RPAREN>
+  {
+    if (!net.sf.ohla.rti.fed.FED.RTI_PRIVATE.equals(interactionClassName))
+    {
+      throw new ErrorReadingFED(
+        "invalid interaction: " + interactionClassName + " (must be " + net.sf.ohla.rti.fed.FED.RTI_PRIVATE + ")");
+    }
+
+    fed.addInteractionClass(InteractionClass.HLA_INTERACTION_ROOT, interactionClassName, transport, order, spaceName);
+  }
+}
+
+void InteractionClass(InteractionClass parent)
+  throws ErrorReadingFED :
+{
   String interactionClassName;
   String transport;
   String order;
   String spaceName = null;
 
-  Parameter parameter;
-  FEDInteractionClass subInteraction;
+  InteractionClass interactionClass;
 }
 {
-  <CLASS> interactionClassName=InteractionClassName() transport=Transport()
-  order=Order() [ spaceName=SpaceName() ]
-
+  <CLASS> interactionClassName=InteractionClassName() transport=Transport() order=Order() [ spaceName=SpaceName() ]
   {
-    interactionClass = new FEDInteractionClass(interactionClassName, parent,
-                                               interactionClassCount);
-
-    try
-    {
-      interactionClass.setOrder(order);
-      interactionClass.setTransportation(transport);
-
-      if (spaceName != null)
-      {
-        interactionClass.setRoutingSpace(fedFDD.getRoutingSpace(spaceName));
-      }
-    }
-    catch (ErrorReadingFDD erfdd)
-    {
-      throw new ErrorReadingFED(erfdd);
-    }
-    catch (NameNotFound nnf)
-    {
-      throw new ErrorReadingFED(nnf);
-    }
+    interactionClass = fed.addInteractionClass(parent, interactionClassName, transport, order, spaceName);
   }
-
-  ( parameter=Parameter(parameterCount)
-    { interactionClass.add(parameter); }
-  )*
-  ( subInteraction=InteractionClass(interactionClass, interactionClassCount,
-                                    parameterCount)
-    { interactionClass.add(subInteraction); }
-  )*
+  ( Parameter(interactionClass) )*
+  ( InteractionClass(interactionClass) )*
   <RPAREN>
-
-  { return interactionClass; }
 }
 
-Parameter Parameter(AtomicInteger parameterCount)
+void Parameter(InteractionClass interactionClass)
   throws ErrorReadingFED :
 {
   String parameterName;
@@ -602,7 +418,7 @@ Parameter Parameter(AtomicInteger parameterCount)
 {
   <PARAMETER> parameterName=ParameterName() <RPAREN>
   {
-    return new Parameter(parameterName, parameterCount);
+    fed.getFDD().addParameter(interactionClass, parameterName);
   }
 }
 

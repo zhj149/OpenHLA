@@ -16,107 +16,142 @@
 
 package net.sf.ohla.rti.federation;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import net.sf.ohla.rti.RTIChannelUpstreamHandler;
+import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.federate.TimeAdvanceType;
 import net.sf.ohla.rti.messages.FederateRestoreComplete;
 import net.sf.ohla.rti.messages.FederateRestoreNotComplete;
 import net.sf.ohla.rti.messages.FederateSaveBegun;
 import net.sf.ohla.rti.messages.FederateSaveComplete;
-import net.sf.ohla.rti.messages.FederateSaveInitiated;
-import net.sf.ohla.rti.messages.FederateSaveInitiatedFailed;
 import net.sf.ohla.rti.messages.FederateSaveNotComplete;
 import net.sf.ohla.rti.messages.GALTAdvanced;
 import net.sf.ohla.rti.messages.GALTUndefined;
-import net.sf.ohla.rti.messages.RequestAttributeValueUpdate;
+import net.sf.ohla.rti.messages.QueryInteractionTransportationType;
 import net.sf.ohla.rti.messages.Retract;
 import net.sf.ohla.rti.messages.SendInteraction;
+import net.sf.ohla.rti.messages.SubscribeInteractionClass;
+import net.sf.ohla.rti.messages.SubscribeInteractionClassWithRegions;
+import net.sf.ohla.rti.messages.SubscribeObjectClassAttributes;
+import net.sf.ohla.rti.messages.SubscribeObjectClassAttributesWithRegions;
+import net.sf.ohla.rti.messages.UnsubscribeInteractionClass;
+import net.sf.ohla.rti.messages.UnsubscribeInteractionClassWithRegions;
+import net.sf.ohla.rti.messages.UnsubscribeObjectClassAttributes;
+import net.sf.ohla.rti.messages.UnsubscribeObjectClassAttributesWithRegions;
 import net.sf.ohla.rti.messages.UpdateAttributeValues;
 import net.sf.ohla.rti.messages.callbacks.AnnounceSynchronizationPoint;
 import net.sf.ohla.rti.messages.callbacks.DiscoverObjectInstance;
 import net.sf.ohla.rti.messages.callbacks.FederationNotSaved;
 import net.sf.ohla.rti.messages.callbacks.FederationSaved;
 import net.sf.ohla.rti.messages.callbacks.InitiateFederateSave;
+import net.sf.ohla.rti.messages.callbacks.ProvideAttributeValueUpdate;
+import net.sf.ohla.rti.messages.callbacks.ReceiveInteraction;
+import net.sf.ohla.rti.messages.callbacks.ReflectAttributeValues;
 import net.sf.ohla.rti.messages.callbacks.RemoveObjectInstance;
+import net.sf.ohla.rti.messages.callbacks.ReportInteractionTransportationType;
 import net.sf.ohla.rti.messages.callbacks.TimeAdvanceGrant;
 import net.sf.ohla.rti.messages.callbacks.TimeConstrainedEnabled;
 import net.sf.ohla.rti.messages.callbacks.TimeRegulationEnabled;
 
-import org.apache.mina.common.IoSession;
-import org.apache.mina.common.WriteFuture;
-
+import org.jboss.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-import hla.rti1516.FederateHandle;
-import hla.rti1516.IllegalTimeArithmetic;
-import hla.rti1516.LogicalTime;
-import hla.rti1516.LogicalTimeInterval;
-import hla.rti1516.ResignAction;
-import hla.rti1516.RestoreStatus;
-import hla.rti1516.SaveStatus;
+import hla.rti1516e.FederateHandle;
+import hla.rti1516e.InteractionClassHandle;
+import hla.rti1516e.LogicalTime;
+import hla.rti1516e.LogicalTimeInterval;
+import hla.rti1516e.OrderType;
+import hla.rti1516e.ResignAction;
+import hla.rti1516e.RestoreStatus;
+import hla.rti1516e.SaveStatus;
+import hla.rti1516e.TransportationTypeHandle;
+import hla.rti1516e.exceptions.IllegalTimeArithmetic;
+import hla.rti1516e.exceptions.InvalidLogicalTimeInterval;
 
 public class FederateProxy
 {
-  private static final String FEDERATE_IO_FILTER = "FederateProxyIoFilter";
+  private static final Logger log = LoggerFactory.getLogger(FederateProxy.class);
 
-  protected final FederateHandle federateHandle;
-  protected final String federateName;
-  protected final IoSession session;
-  protected final FederationExecution federationExecution;
+  private final FederationExecution federationExecution;
+  private final FederateHandle federateHandle;
+  private final String federateName;
+  private final String federateType;
 
-  protected final LogicalTimeInterval zero;
-  protected final LogicalTimeInterval epsilon;
+  /**
+   * The {@code Channel} back to the Federate.
+   */
+  private final Channel federateChannel;
 
-  protected SaveStatus saveStatus = SaveStatus.NO_SAVE_IN_PROGRESS;
-  protected RestoreStatus restoreStatus = RestoreStatus.NO_RESTORE_IN_PROGRESS;
+  private final ReadWriteLock subscriptionLock = new ReentrantReadWriteLock(true);
+  private final FederateProxySubscriptionManager subscriptionManager = new FederateProxySubscriptionManager();
 
-  protected boolean timeRegulationEnabled;
+  private final Map<InteractionClassHandle, TransportationTypeHandle> interactionClassTransportationTypeHandles =
+    new HashMap<InteractionClassHandle, TransportationTypeHandle>();
 
-  protected boolean timeConstrainedEnabled;
-  protected boolean timeConstrainedPending;
+  private final LogicalTimeInterval zero;
+  private final LogicalTimeInterval epsilon;
 
-  protected LogicalTime federateTime;
-  protected LogicalTimeInterval lookahead;
+  private SaveStatus saveStatus = SaveStatus.NO_SAVE_IN_PROGRESS;
+  private RestoreStatus restoreStatus = RestoreStatus.NO_RESTORE_IN_PROGRESS;
 
-  protected LogicalTime advanceRequestTime;
-  protected TimeAdvanceType advanceRequestType = TimeAdvanceType.NONE;
+  private boolean timeRegulationEnabled;
 
-  protected LogicalTime galt;
-  protected LogicalTime lits;
+  private boolean timeConstrainedEnabled;
+  private boolean timeConstrainedPending;
+
+  private LogicalTime federateTime;
+  private LogicalTimeInterval lookahead;
+
+  private LogicalTime advanceRequestTime;
+  private TimeAdvanceType advanceRequestType = TimeAdvanceType.NONE;
+
+  private LogicalTime galt;
+  private LogicalTime lits;
 
   /**
    * Least Outgoing Time Stamp.
    */
-  protected LogicalTime lots;
+  private LogicalTime lots;
 
-  protected final Logger log = LoggerFactory.getLogger(getClass());
-  protected final Marker marker;
+  private boolean conveyRegionDesignatorSets;
+  private boolean conveyProducingFederate;
+
+  private final Marker marker;
 
   public FederateProxy(
-    FederateHandle federateHandle, String federateName, IoSession session,
-    FederationExecution federationExecution, LogicalTime galt)
+    FederationExecution federationExecution, FederateHandle federateHandle, String federateName, String federateType,
+    Channel federateChannel, LogicalTime galt)
   {
+    this.federationExecution = federationExecution;
     this.federateHandle = federateHandle;
     this.federateName = federateName;
-    this.session = session;
-    this.federationExecution = federationExecution;
+    this.federateType = federateType;
+    this.federateChannel = federateChannel;
     this.galt = galt;
 
-    zero = federationExecution.getTimeManager().getMobileFederateServices().
-      intervalFactory.makeZero();
-    epsilon = federationExecution.getTimeManager().getMobileFederateServices().
-      intervalFactory.makeEpsilon();
+    zero = federationExecution.getTimeManager().getLogicalTimeFactory().makeZero();
+    epsilon = federationExecution.getTimeManager().getLogicalTimeFactory().makeEpsilon();
 
-    federateTime = federationExecution.getTimeManager().
-      getMobileFederateServices().timeFactory.makeInitial();
+    federateTime = federationExecution.getTimeManager().getLogicalTimeFactory().makeInitial();
 
-    session.getFilterChain().addLast(
-      FEDERATE_IO_FILTER, new FederateProxyIoFilter(this, federationExecution));
+    federateChannel.getPipeline().addBefore(
+      RTIChannelUpstreamHandler.NAME, FederateProxyChannelHandler.NAME, new FederateProxyChannelHandler(this));
 
-    marker = MarkerFactory.getMarker(federateName);
+    marker = MarkerFactory.getMarker(federationExecution.getName() + "." + federateName);
 
-    log.debug(marker, "joined: {}", federateName);
+    log.debug(marker, "federate joined: {}", federateName);
+  }
+
+  public FederationExecution getFederationExecution()
+  {
+    return federationExecution;
   }
 
   public FederateHandle getFederateHandle()
@@ -129,9 +164,14 @@ public class FederateProxy
     return federateName;
   }
 
-  public IoSession getSession()
+  public String getFederateType()
   {
-    return session;
+    return federateType;
+  }
+
+  public Channel getFederateChannel()
+  {
+    return federateChannel;
   }
 
   public SaveStatus getSaveStatus()
@@ -152,6 +192,16 @@ public class FederateProxy
   public LogicalTimeInterval getLookahead()
   {
     return lookahead;
+  }
+
+  public boolean isConveyRegionDesignatorSets()
+  {
+    return conveyRegionDesignatorSets;
+  }
+
+  public boolean isConveyProducingFederate()
+  {
+    return conveyProducingFederate;
   }
 
   public void modifyLookahead(LogicalTimeInterval lookahead)
@@ -181,31 +231,24 @@ public class FederateProxy
 
   public void resignFederationExecution(ResignAction resignAction)
   {
-    session.getFilterChain().remove(FEDERATE_IO_FILTER);
+    federateChannel.getPipeline().remove(FederateProxyChannelHandler.NAME);
 
-    log.debug(marker, "resigned: {}", resignAction);
+    log.debug(marker, "federate resigned: {} ({})", federateName, resignAction);
   }
 
-  public WriteFuture announceSynchronizationPoint(
-    AnnounceSynchronizationPoint announceSynchronizationPoint)
+  public void announceSynchronizationPoint(AnnounceSynchronizationPoint announceSynchronizationPoint)
   {
-    return session.write(announceSynchronizationPoint);
+    federateChannel.write(announceSynchronizationPoint);
   }
 
-  public WriteFuture initiateFederateSave(
-    InitiateFederateSave initiateFederateSave)
+  public void initiateFederateSave(InitiateFederateSave initiateFederateSave)
   {
     saveStatus = SaveStatus.FEDERATE_INSTRUCTED_TO_SAVE;
 
-    return session.write(initiateFederateSave);
+    federateChannel.write(initiateFederateSave);
   }
 
-  public void federateSaveInitiated(FederateSaveInitiated federateSaveInitiated)
-  {
-  }
-
-  public void federateSaveInitiatedFailed(
-    FederateSaveInitiatedFailed federateSaveInitiatedFailed)
+  public void federateSaveInitiatedFailed()
   {
     saveStatus = SaveStatus.NO_SAVE_IN_PROGRESS;
   }
@@ -220,77 +263,235 @@ public class FederateProxy
     saveStatus = SaveStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_SAVE;
   }
 
-  public void federateSaveNotComplete(
-    FederateSaveNotComplete federateSaveNotComplete)
+  public void federateSaveNotComplete(FederateSaveNotComplete federateSaveNotComplete)
   {
     saveStatus = SaveStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_SAVE;
   }
 
-  public WriteFuture federationSaved(FederationSaved federationSaved)
+  public void federationSaved(FederationSaved federationSaved)
   {
     saveStatus = SaveStatus.NO_SAVE_IN_PROGRESS;
 
-    return session.write(federationSaved);
+    federateChannel.write(federationSaved);
   }
 
-  public WriteFuture federationNotSaved(FederationNotSaved federationNotSaved)
+  public void federationNotSaved(FederationNotSaved federationNotSaved)
   {
     saveStatus = SaveStatus.NO_SAVE_IN_PROGRESS;
 
-    return session.write(federationNotSaved);
+    federateChannel.write(federationNotSaved);
   }
 
-  public void federateRestoreComplete(
-    FederateRestoreComplete federateRestoreComplete)
+  public void federateRestoreComplete(FederateRestoreComplete federateRestoreComplete)
   {
     restoreStatus = RestoreStatus.NO_RESTORE_IN_PROGRESS;
   }
 
-  public void federateRestoreNotComplete(
-    FederateRestoreNotComplete federateRestoreNotComplete)
+  public void federateRestoreNotComplete(FederateRestoreNotComplete federateRestoreNotComplete)
   {
     restoreStatus = RestoreStatus.NO_RESTORE_IN_PROGRESS;
   }
 
-  public WriteFuture discoverObjectInstance(
-    DiscoverObjectInstance discoverObjectInstance)
+  public void discoverObjectInstance(DiscoverObjectInstance discoverObjectInstance)
   {
-    return session.write(discoverObjectInstance);
+    federateChannel.write(discoverObjectInstance);
   }
 
-  public WriteFuture reflectAttributeValues(
+  public void reflectAttributeValues(
+    FederateProxy federateProxy, FederationExecutionObjectInstance objectInstance,
     UpdateAttributeValues updateAttributeValues)
   {
-    return session.write(updateAttributeValues);
+    ReflectAttributeValues reflectAttributeValues;
+
+    subscriptionLock.readLock().lock();
+    try
+    {
+      reflectAttributeValues = subscriptionManager.transform(federateProxy, objectInstance, updateAttributeValues);
+    }
+    finally
+    {
+      subscriptionLock.readLock().unlock();
+    }
+
+    if (reflectAttributeValues != null)
+    {
+      if (reflectAttributeValues.getSentOrderType() == OrderType.TIMESTAMP)
+      {
+        updateLITS(reflectAttributeValues.getTime());
+      }
+
+      federateChannel.write(reflectAttributeValues);
+    }
   }
 
-  public WriteFuture receiveInteraction(SendInteraction sendInteraction)
+  public void receiveInteraction(
+    FederateProxy federateProxy, InteractionClass interactionClass, SendInteraction sendInteraction)
   {
-    return session.write(sendInteraction);
+    ReceiveInteraction receiveInteraction;
+
+    subscriptionLock.readLock().lock();
+    try
+    {
+      receiveInteraction = subscriptionManager.transform(federateProxy, interactionClass, sendInteraction);
+    }
+    finally
+    {
+      subscriptionLock.readLock().unlock();
+    }
+
+    if (receiveInteraction != null)
+    {
+      if (receiveInteraction.getSentOrderType() == OrderType.TIMESTAMP)
+      {
+        updateLITS(receiveInteraction.getTime());
+      }
+
+      federateChannel.write(receiveInteraction);
+    }
   }
 
-  public WriteFuture removeObjectInstance(RemoveObjectInstance removeObjectInstance)
+  public void removeObjectInstance(RemoveObjectInstance removeObjectInstance)
   {
-    return session.write(removeObjectInstance);
+    federateChannel.write(removeObjectInstance);
   }
 
-  public WriteFuture requestAttributeValueUpdate(
-    RequestAttributeValueUpdate requestAttributeValueUpdate)
+  public void provideAttributeValueUpdate(ProvideAttributeValueUpdate provideAttributeValueUpdate)
   {
-    return session.write(requestAttributeValueUpdate);
+    federateChannel.write(provideAttributeValueUpdate);
   }
 
-  public WriteFuture retract(Retract retract)
+  public void retract(Retract retract)
   {
-    return session.write(retract);
+    federateChannel.write(retract);
   }
 
-  public void enableTimeRegulation(
-    LogicalTimeInterval lookahead, LogicalTime federateTime)
-    throws IllegalTimeArithmetic
+  public void subscribeObjectClassAttributes(SubscribeObjectClassAttributes subscribeObjectClassAttributes)
   {
-    assert !timeConstrainedEnabled || galt == null ||
-           federateTime.compareTo(galt) <= 0;
+    subscriptionLock.writeLock().lock();
+    try
+    {
+      subscriptionManager.subscribeObjectClassAttributes(
+        federationExecution.getFDD().getObjectClassSafely(subscribeObjectClassAttributes.getObjectClassHandle()),
+        subscribeObjectClassAttributes.getAttributeHandles(), subscribeObjectClassAttributes.isPassive());
+    }
+    finally
+    {
+      subscriptionLock.writeLock().unlock();
+    }
+  }
+
+  public void unsubscribeObjectClassAttributes(UnsubscribeObjectClassAttributes unsubscribeObjectClassAttributes)
+  {
+    subscriptionLock.writeLock().lock();
+    try
+    {
+      subscriptionManager.unsubscribeObjectClassAttributes(
+        unsubscribeObjectClassAttributes.getObjectClassHandle(), unsubscribeObjectClassAttributes.getAttributeHandles());
+    }
+    finally
+    {
+      subscriptionLock.writeLock().unlock();
+    }
+  }
+
+  public void subscribeObjectClassAttributesWithRegions(
+    SubscribeObjectClassAttributesWithRegions subscribeObjectClassAttributesWithRegions)
+  {
+    subscriptionLock.writeLock().lock();
+    try
+    {
+      subscriptionManager.subscribeObjectClassAttributes(
+        subscribeObjectClassAttributesWithRegions.getObjectClassHandle(),
+        subscribeObjectClassAttributesWithRegions.getAttributesAndRegions(),
+        subscribeObjectClassAttributesWithRegions.isPassive());
+    }
+    finally
+    {
+      subscriptionLock.writeLock().unlock();
+    }
+  }
+
+  public void unsubscribeObjectClassAttributesWithRegions(
+    UnsubscribeObjectClassAttributesWithRegions unsubscribeObjectClassAttributesWithRegions)
+  {
+    subscriptionLock.writeLock().lock();
+    try
+    {
+      subscriptionManager.unsubscribeObjectClassAttributes(
+        unsubscribeObjectClassAttributesWithRegions.getObjectClassHandle(),
+        unsubscribeObjectClassAttributesWithRegions.getAttributesAndRegions());
+    }
+    finally
+    {
+      subscriptionLock.writeLock().unlock();
+    }
+  }
+
+  public void subscribeInteractionClass(SubscribeInteractionClass subscribeInteractionClass)
+  {
+    subscriptionLock.writeLock().lock();
+    try
+    {
+      subscriptionManager.subscribeInteractionClass(
+        federationExecution.getFDD().getInteractionClassSafely(subscribeInteractionClass.getInteractionClassHandle()),
+        subscribeInteractionClass.isPassive());
+    }
+    finally
+    {
+      subscriptionLock.writeLock().unlock();
+    }
+  }
+
+  public void unsubscribeInteractionClass(UnsubscribeInteractionClass unsubscribeInteractionClass)
+  {
+    subscriptionLock.writeLock().lock();
+    try
+    {
+      subscriptionManager.unsubscribeInteractionClass(unsubscribeInteractionClass.getInteractionClassHandle());
+    }
+    finally
+    {
+      subscriptionLock.writeLock().unlock();
+    }
+  }
+
+  public void subscribeInteractionClassWithRegions(
+    SubscribeInteractionClassWithRegions subscribeInteractionClassWithRegions)
+  {
+    subscriptionLock.writeLock().lock();
+    try
+    {
+      subscriptionManager.subscribeInteractionClass(
+        federationExecution.getFDD().getInteractionClassSafely(
+          subscribeInteractionClassWithRegions.getInteractionClassHandle()),
+        subscribeInteractionClassWithRegions.getRegionHandles(), subscribeInteractionClassWithRegions.isPassive());
+    }
+    finally
+    {
+      subscriptionLock.writeLock().unlock();
+    }
+  }
+
+  public void unsubscribeInteractionClassWithRegions(
+    UnsubscribeInteractionClassWithRegions unsubscribeInteractionClassWithRegions)
+  {
+    subscriptionLock.writeLock().lock();
+    try
+    {
+      subscriptionManager.unsubscribeInteractionClass(
+        unsubscribeInteractionClassWithRegions.getInteractionClassHandle(),
+        unsubscribeInteractionClassWithRegions.getRegionHandles());
+    }
+    finally
+    {
+      subscriptionLock.writeLock().unlock();
+    }
+  }
+
+  public void enableTimeRegulation(LogicalTimeInterval lookahead, LogicalTime federateTime)
+    throws IllegalTimeArithmetic, InvalidLogicalTimeInterval
+  {
+    assert !timeConstrainedEnabled || galt == null || federateTime.compareTo(galt) <= 0;
 
     this.lookahead = lookahead;
     this.federateTime = federateTime;
@@ -308,7 +509,7 @@ public class FederateProxy
 
     log.debug(marker, "time regulation enabled: {}", this);
 
-    session.write(new TimeRegulationEnabled(federateTime));
+    federateChannel.write(new TimeRegulationEnabled(federateTime));
   }
 
   public void disableTimeRegulation()
@@ -331,7 +532,7 @@ public class FederateProxy
 
       log.debug(marker, "time constrained enabled: {}", this);
 
-      session.write(new TimeConstrainedEnabled(federateTime));
+      federateChannel.write(new TimeConstrainedEnabled(federateTime));
     }
     else
     {
@@ -350,7 +551,7 @@ public class FederateProxy
   }
 
   public void timeAdvanceRequest(LogicalTime time)
-    throws IllegalTimeArithmetic
+    throws IllegalTimeArithmetic, InvalidLogicalTimeInterval
   {
     log.debug(marker, "time advance request: {}", time);
 
@@ -364,20 +565,19 @@ public class FederateProxy
       log.debug(marker, "LOTS: {}", lots);
     }
 
-    if (!timeConstrainedEnabled || galt == null ||
-        advanceRequestTime.compareTo(galt) < 0)
+    if (!timeConstrainedEnabled || galt == null || advanceRequestTime.compareTo(galt) < 0)
     {
       // immediately grant the request
 
       federateTime = advanceRequestTime;
       advanceRequestTime = null;
 
-      session.write(new TimeAdvanceGrant(federateTime));
+      federateChannel.write(new TimeAdvanceGrant(federateTime));
     }
   }
 
   public void timeAdvanceRequestAvailable(LogicalTime time)
-    throws IllegalTimeArithmetic
+    throws IllegalTimeArithmetic, InvalidLogicalTimeInterval
   {
     log.debug(marker, "time advance request available: {}", time);
 
@@ -391,20 +591,19 @@ public class FederateProxy
       log.debug(marker, "LOTS: {}", lots);
     }
 
-    if (!timeConstrainedEnabled || galt == null ||
-        advanceRequestTime.compareTo(galt) <= 0)
+    if (!timeConstrainedEnabled || galt == null || advanceRequestTime.compareTo(galt) <= 0)
     {
       // immediately grant the request
 
       federateTime = advanceRequestTime;
       advanceRequestTime = null;
 
-      session.write(new TimeAdvanceGrant(federateTime));
+      federateChannel.write(new TimeAdvanceGrant(federateTime));
     }
   }
 
   public void nextMessageRequest(LogicalTime time)
-    throws IllegalTimeArithmetic
+    throws IllegalTimeArithmetic, InvalidLogicalTimeInterval
   {
     log.debug(marker, "next message request: {}", time);
 
@@ -425,7 +624,7 @@ public class FederateProxy
 
       federateTime = time;
 
-      session.write(new TimeAdvanceGrant(federateTime));
+      federateChannel.write(new TimeAdvanceGrant(federateTime));
     }
     else if (time.compareTo(galt) < 0)
     {
@@ -446,7 +645,7 @@ public class FederateProxy
 
       federateTime = time;
 
-      session.write(new TimeAdvanceGrant(federateTime));
+      federateChannel.write(new TimeAdvanceGrant(federateTime));
     }
     else if (lits != null && lits.compareTo(galt) < 0)
     {
@@ -463,7 +662,7 @@ public class FederateProxy
 
       federateTime = lits;
 
-      session.write(new TimeAdvanceGrant(federateTime));
+      federateChannel.write(new TimeAdvanceGrant(federateTime));
     }
     else
     {
@@ -481,7 +680,7 @@ public class FederateProxy
   }
 
   public void nextMessageRequestAvailable(LogicalTime time)
-    throws IllegalTimeArithmetic
+    throws IllegalTimeArithmetic, InvalidLogicalTimeInterval
   {
     log.debug(marker, "next message request available: {}", time);
 
@@ -502,7 +701,7 @@ public class FederateProxy
 
       federateTime = time;
 
-      session.write(new TimeAdvanceGrant(federateTime));
+      federateChannel.write(new TimeAdvanceGrant(federateTime));
     }
     else if (time.compareTo(galt) <= 0)
     {
@@ -523,7 +722,7 @@ public class FederateProxy
 
       federateTime = time;
 
-      session.write(new TimeAdvanceGrant(federateTime));
+      federateChannel.write(new TimeAdvanceGrant(federateTime));
     }
     else if (lits != null && lits.compareTo(galt) <= 0)
     {
@@ -540,7 +739,7 @@ public class FederateProxy
 
       federateTime = lits;
 
-      session.write(new TimeAdvanceGrant(federateTime));
+      federateChannel.write(new TimeAdvanceGrant(federateTime));
     }
     else
     {
@@ -558,7 +757,7 @@ public class FederateProxy
   }
 
   public void flushQueueRequest(LogicalTime time)
-    throws IllegalTimeArithmetic
+    throws IllegalTimeArithmetic, InvalidLogicalTimeInterval
   {
     log.debug(marker, "flush queue request: {}", time);
 
@@ -573,7 +772,7 @@ public class FederateProxy
       log.debug(marker, "LOTS: {}", lots);
     }
 
-    session.write(new TimeAdvanceGrant(federateTime));
+    federateChannel.write(new TimeAdvanceGrant(federateTime));
   }
 
   public void galtAdvanced(LogicalTime galt)
@@ -592,7 +791,7 @@ public class FederateProxy
 
     this.galt = galt;
 
-    session.write(new GALTAdvanced(galt));
+    federateChannel.write(new GALTAdvanced(galt));
 
     if (timeConstrainedPending && federateTime.compareTo(galt) < 0)
     {
@@ -601,7 +800,7 @@ public class FederateProxy
 
       log.debug(marker, "time constrained enabled: {}", federateTime);
 
-      session.write(new TimeConstrainedEnabled(federateTime));
+      federateChannel.write(new TimeConstrainedEnabled(federateTime));
     }
     else if (advanceRequestTime != null)
     {
@@ -616,7 +815,7 @@ public class FederateProxy
             advanceRequestTime = null;
             lits = null;
 
-            session.write(new TimeAdvanceGrant(federateTime));
+            federateChannel.write(new TimeAdvanceGrant(federateTime));
           }
           break;
         }
@@ -629,7 +828,7 @@ public class FederateProxy
             advanceRequestTime = null;
             lits = null;
 
-            session.write(new TimeAdvanceGrant(federateTime));
+            federateChannel.write(new TimeAdvanceGrant(federateTime));
           }
           break;
         }
@@ -649,7 +848,7 @@ public class FederateProxy
             advanceRequestTime = null;
             lits = null;
 
-            session.write(new TimeAdvanceGrant(federateTime));
+            federateChannel.write(new TimeAdvanceGrant(federateTime));
           }
           else if (lits != null && lits.compareTo(galt) < 0)
           {
@@ -659,7 +858,7 @@ public class FederateProxy
             advanceRequestTime = null;
             lits = null;
 
-            session.write(new TimeAdvanceGrant(federateTime));
+            federateChannel.write(new TimeAdvanceGrant(federateTime));
           }
           break;
         }
@@ -679,7 +878,7 @@ public class FederateProxy
             advanceRequestTime = null;
             lits = null;
 
-            session.write(new TimeAdvanceGrant(federateTime));
+            federateChannel.write(new TimeAdvanceGrant(federateTime));
           }
           else if (lits != null && lits.compareTo(galt) <= 0)
           {
@@ -688,7 +887,7 @@ public class FederateProxy
             advanceRequestTime = null;
             lits = null;
 
-            session.write(new TimeAdvanceGrant(federateTime));
+            federateChannel.write(new TimeAdvanceGrant(federateTime));
           }
           break;
         }
@@ -703,7 +902,7 @@ public class FederateProxy
     galt = null;
     lits = null;
 
-    session.write(new GALTUndefined());
+    federateChannel.write(new GALTUndefined());
   }
 
   public void updateLITS(LogicalTime time)
@@ -727,6 +926,30 @@ public class FederateProxy
     }
   }
 
+  public void queryInteractionTransportationType(
+    FederateProxy federateProxy, QueryInteractionTransportationType queryInteractionTransportationType)
+  {
+    InteractionClassHandle interactionClassHandle = queryInteractionTransportationType.getInteractionClassHandle();
+
+    TransportationTypeHandle transportationTypeHandle =
+      interactionClassTransportationTypeHandles.get(interactionClassHandle);
+
+    if (transportationTypeHandle == null)
+    {
+      InteractionClass interactionClass =
+        federationExecution.getFDD().getInteractionClasses().get(interactionClassHandle);
+      assert interactionClass != null;
+
+      federateProxy.getFederateChannel().write(new ReportInteractionTransportationType(
+        interactionClassHandle, federateHandle, interactionClass.getTransportationTypeHandle()));
+    }
+    else
+    {
+      federateProxy.getFederateChannel().write(new ReportInteractionTransportationType(
+        interactionClassHandle, federateHandle, transportationTypeHandle));
+    }
+  }
+
   @Override
   public int hashCode()
   {
@@ -734,17 +957,8 @@ public class FederateProxy
   }
 
   @Override
-  public boolean equals(Object rhs)
-  {
-    return this == rhs ||
-           (rhs instanceof FederateProxy &&
-            federateHandle.equals(((FederateProxy) rhs).federateHandle));
-  }
-
-  @Override
   public String toString()
   {
-    return String.format("%s,%s,%s", federateHandle,
-                         session.getLocalAddress(), federateName);
+    return String.format("%s,%s,%s", federateHandle, federateChannel.getLocalAddress(), federateName);
   }
 }

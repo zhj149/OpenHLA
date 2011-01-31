@@ -16,28 +16,46 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandleSet;
 
-import hla.rti1516.FederateHandleSet;
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.FederateHandleSet;
 
 public class RegisterFederationSynchronizationPoint
+  extends StringMessage
   implements FederationExecutionMessage
 {
-  protected String label;
-  protected byte[] tag;
-  protected FederateHandleSet federateHandles;
+  private final byte[] tag;
+  private final FederateHandleSet federateHandles;
 
   public RegisterFederationSynchronizationPoint(String label, byte[] tag, FederateHandleSet federateHandles)
   {
-    this.label = label;
+    super(MessageType.REGISTER_FEDERATION_SYNCHRONIZATION_POINT, label);
+
     this.tag = tag;
     this.federateHandles = federateHandles;
+
+    Protocol.encodeBytes(buffer, tag);
+    IEEE1516eFederateHandleSet.encode(buffer, federateHandles);
+
+    encodingFinished();
+  }
+
+  public RegisterFederationSynchronizationPoint(ChannelBuffer buffer)
+  {
+    super(buffer);
+
+    tag = Protocol.decodeBytes(buffer);
+    federateHandles = IEEE1516eFederateHandleSet.decode(buffer);
   }
 
   public String getLabel()
   {
-    return label;
+    return s;
   }
 
   public byte[] getTag()
@@ -50,10 +68,13 @@ public class RegisterFederationSynchronizationPoint
     return federateHandles;
   }
 
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public MessageType getType()
   {
-    federationExecution.registerFederationSynchronizationPoint(
-      federateProxy, this);
+    return MessageType.REGISTER_FEDERATION_SYNCHRONIZATION_POINT;
+  }
+
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
+  {
+    federationExecution.registerFederationSynchronizationPoint(federateProxy, this);
   }
 }

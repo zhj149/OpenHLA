@@ -16,24 +16,48 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateInternalError;
-import hla.rti1516.ObjectClassHandle;
-import hla.rti1516.ObjectClassNotPublished;
+import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.FederateMessage;
+import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.ObjectClassMessage;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.ObjectClassHandle;
+import hla.rti1516e.exceptions.FederateInternalError;
 
 public class StartRegistrationForObjectClass
-  implements Callback
+  extends ObjectClassMessage
+  implements Callback, FederateMessage
 {
-  protected ObjectClassHandle objectClassHandle;
 
   public StartRegistrationForObjectClass(ObjectClassHandle objectClassHandle)
   {
-    this.objectClassHandle = objectClassHandle;
+    super(MessageType.START_REGISTRATION_FOR_OBJECT_CLASS, objectClassHandle);
+
+    encodingFinished();
+  }
+
+  public StartRegistrationForObjectClass(ChannelBuffer buffer)
+  {
+    super(buffer);
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.START_REGISTRATION_FOR_OBJECT_CLASS;
   }
 
   public void execute(FederateAmbassador federateAmbassador)
-    throws ObjectClassNotPublished, FederateInternalError
+    throws FederateInternalError
   {
     federateAmbassador.startRegistrationForObjectClass(objectClassHandle);
+  }
+
+  public void execute(Federate federate)
+  {
+    federate.callbackReceived(this);
   }
 }

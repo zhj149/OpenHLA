@@ -18,23 +18,41 @@ package net.sf.ohla.rti.messages;
 
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeSetRegionSetPairList;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectInstanceHandle;
 
-import hla.rti1516.AttributeSetRegionSetPairList;
-import hla.rti1516.ObjectInstanceHandle;
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.AttributeSetRegionSetPairList;
+import hla.rti1516e.ObjectInstanceHandle;
 
 public class UnassociateRegionsForUpdates
-  extends AbstractRequest
+  extends AbstractRequest<UnassociateRegionsForUpdatesResponse>
   implements FederationExecutionMessage
 {
-  protected final ObjectInstanceHandle objectInstanceHandle;
-  protected final AttributeSetRegionSetPairList attributesAndRegions;
+  private final ObjectInstanceHandle objectInstanceHandle;
+  private final AttributeSetRegionSetPairList attributesAndRegions;
 
   public UnassociateRegionsForUpdates(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeSetRegionSetPairList attributesAndRegions)
+    ObjectInstanceHandle objectInstanceHandle, AttributeSetRegionSetPairList attributesAndRegions)
   {
+    super(MessageType.UNASSOCIATE_REGIONS_FOR_UPDATES);
+
     this.objectInstanceHandle = objectInstanceHandle;
     this.attributesAndRegions = attributesAndRegions;
+
+    IEEE1516eObjectInstanceHandle.encode(buffer, objectInstanceHandle);
+    IEEE1516eAttributeSetRegionSetPairList.encode(buffer, attributesAndRegions);
+
+    encodingFinished();
+  }
+
+  public UnassociateRegionsForUpdates(ChannelBuffer buffer)
+  {
+    super(buffer);
+
+    objectInstanceHandle = IEEE1516eObjectInstanceHandle.decode(buffer);
+    attributesAndRegions = IEEE1516eAttributeSetRegionSetPairList.decode(buffer);
   }
 
   public ObjectInstanceHandle getObjectInstanceHandle()
@@ -47,8 +65,12 @@ public class UnassociateRegionsForUpdates
     return attributesAndRegions;
   }
 
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public MessageType getType()
+  {
+    return MessageType.UNASSOCIATE_REGIONS_FOR_UPDATES;
+  }
+
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.unassociateRegionsForUpdates(federateProxy, this);
   }

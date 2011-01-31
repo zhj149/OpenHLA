@@ -24,9 +24,20 @@ import hla.rti1516.InteractionClassHandleFactory;
 public class IEEE1516InteractionClassHandleFactory
   implements InteractionClassHandleFactory
 {
+  public static final IEEE1516InteractionClassHandleFactory INSTANCE = new IEEE1516InteractionClassHandleFactory();
+
+  private IEEE1516InteractionClassHandleFactory()
+  {
+  }
+
   public InteractionClassHandle decode(byte[] buffer, int offset)
     throws CouldNotDecode, FederateNotExecutionMember
   {
     return new IEEE1516InteractionClassHandle(buffer, offset);
+  }
+
+  private Object readResolve()
+  {
+    return INSTANCE;
   }
 }

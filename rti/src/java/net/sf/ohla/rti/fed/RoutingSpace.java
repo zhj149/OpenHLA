@@ -20,15 +20,14 @@ import java.io.Serializable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import net.sf.ohla.rti.fdd.Dimension;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516DimensionHandleSet;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSet;
 
 import hla.rti.DimensionNotDefined;
 import hla.rti.NameNotFound;
 
-import hla.rti1516.DimensionHandleSet;
+import hla.rti1516e.DimensionHandleSet;
 
 public class RoutingSpace
   implements Serializable
@@ -36,17 +35,12 @@ public class RoutingSpace
   public static final RoutingSpace DEFAULT =
     new RoutingSpace("HLAdefaultRoutingSpace", Integer.MIN_VALUE);
 
-  protected String name;
-  protected int routingSpaceHandle;
-  protected List<Dimension> dimensions = new ArrayList<Dimension>();
-  protected List<String> dimensionHandlesByName = new ArrayList<String>();
+  private final String name;
+  private int routingSpaceHandle;
+  private final List<Dimension> dimensions = new ArrayList<Dimension>();
+  private final List<String> dimensionHandlesByName = new ArrayList<String>();
 
   protected transient DimensionHandleSet dimensionHandles;
-
-  public RoutingSpace(String name, AtomicInteger routingSpaceCount)
-  {
-    this(name, routingSpaceCount.incrementAndGet());
-  }
 
   protected RoutingSpace(String name, int routingSpaceHandle)
   {
@@ -56,7 +50,7 @@ public class RoutingSpace
 
   public boolean isDefault()
   {
-    return routingSpaceHandle == DEFAULT.routingSpaceHandle;
+    return this == DEFAULT;
   }
 
   public String getName()
@@ -78,7 +72,7 @@ public class RoutingSpace
   {
     if (dimensionHandles == null)
     {
-      dimensionHandles = new IEEE1516DimensionHandleSet();
+      dimensionHandles = new IEEE1516eDimensionHandleSet();
       for (Dimension dimension : dimensions)
       {
         dimensionHandles.add(dimension.getDimensionHandle());
@@ -87,7 +81,7 @@ public class RoutingSpace
     return dimensionHandles;
   }
 
-  public void add(String name, Dimension dimension)
+  public void addDimension(String name, Dimension dimension)
   {
     dimensions.add(dimension);
     dimensionHandlesByName.add(name);

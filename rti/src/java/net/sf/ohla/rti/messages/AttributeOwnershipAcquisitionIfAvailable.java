@@ -19,37 +19,35 @@ package net.sf.ohla.rti.messages;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
 
-import hla.rti1516.AttributeHandleSet;
-import hla.rti1516.ObjectInstanceHandle;
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.AttributeHandleSet;
+import hla.rti1516e.ObjectInstanceHandle;
 
 public class AttributeOwnershipAcquisitionIfAvailable
+  extends ObjectInstanceAttributesMessage
   implements FederationExecutionMessage
 {
-  protected ObjectInstanceHandle objectInstanceHandle;
-  protected AttributeHandleSet attributeHandles;
-
   public AttributeOwnershipAcquisitionIfAvailable(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles)
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
   {
-    this.objectInstanceHandle = objectInstanceHandle;
-    this.attributeHandles = attributeHandles;
+    super(MessageType.ATTRIBUTE_OWNERSHIP_ACQUISITION_IF_AVAILABLE, objectInstanceHandle, attributeHandles);
+
+    encodingFinished();
   }
 
-  public ObjectInstanceHandle getObjectInstanceHandle()
+  public AttributeOwnershipAcquisitionIfAvailable(ChannelBuffer buffer)
   {
-    return objectInstanceHandle;
+    super(buffer);
   }
 
-  public AttributeHandleSet getAttributeHandles()
+  public MessageType getType()
   {
-    return attributeHandles;
+    return MessageType.ATTRIBUTE_OWNERSHIP_ACQUISITION_IF_AVAILABLE;
   }
 
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
-    federationExecution.attributeOwnershipAcquisitionIfAvailable(
-      federateProxy, this);
+    federationExecution.attributeOwnershipAcquisitionIfAvailable(federateProxy, this);
   }
 }

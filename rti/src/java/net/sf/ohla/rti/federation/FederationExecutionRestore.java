@@ -19,17 +19,16 @@ package net.sf.ohla.rti.federation;
 import java.util.HashSet;
 import java.util.Set;
 
-import hla.rti1516.FederateHandle;
-import hla.rti1516.FederateHandleRestoreStatusPair;
+import hla.rti1516e.FederateHandle;
+import hla.rti1516e.FederateRestoreStatus;
 
 public class FederationExecutionRestore
 {
-  protected String label;
+  private final String label;
 
-  protected Set<FederateHandle> preparedToRestore;
-  protected Set<FederateHandle> restoring = new HashSet<FederateHandle>();
-  protected Set<FederateHandle> waitingForFederationToRestore =
-    new HashSet<FederateHandle>();
+  private final Set<FederateHandle> preparedToRestore;
+  private final Set<FederateHandle> restoring = new HashSet<FederateHandle>();
+  private final Set<FederateHandle> waitingForFederationToRestore = new HashSet<FederateHandle>();
 
   public FederationExecutionRestore(String label, Set<FederateHandle> preparedToRestore)
   {
@@ -42,9 +41,9 @@ public class FederationExecutionRestore
     return label;
   }
 
-  public FederateHandleRestoreStatusPair[] getFederationRestoreStatus()
+  public FederateRestoreStatus[] getFederationRestoreStatus()
   {
-    return new FederateHandleRestoreStatusPair[0];
+    return new FederateRestoreStatus[0];
   }
 
   public boolean federateRestoreComplete(FederateHandle federateHandle)

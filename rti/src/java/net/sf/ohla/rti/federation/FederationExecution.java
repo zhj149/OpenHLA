@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -28,8 +27,11 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.fdd.ObjectClass;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandleSet;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516FederateHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSet;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandleSet;
+import net.sf.ohla.rti.messages.AbortFederationRestore;
+import net.sf.ohla.rti.messages.AbortFederationSave;
 import net.sf.ohla.rti.messages.AssociateRegionsForUpdates;
 import net.sf.ohla.rti.messages.AttributeOwnershipAcquisition;
 import net.sf.ohla.rti.messages.AttributeOwnershipAcquisitionIfAvailable;
@@ -40,9 +42,10 @@ import net.sf.ohla.rti.messages.CancelNegotiatedAttributeOwnershipDivestiture;
 import net.sf.ohla.rti.messages.CommitRegionModifications;
 import net.sf.ohla.rti.messages.ConfirmDivestiture;
 import net.sf.ohla.rti.messages.CreateRegion;
-import net.sf.ohla.rti.messages.DefaultResponse;
 import net.sf.ohla.rti.messages.DeleteObjectInstance;
 import net.sf.ohla.rti.messages.DeleteRegion;
+import net.sf.ohla.rti.messages.DestroyFederationExecution;
+import net.sf.ohla.rti.messages.DestroyFederationExecutionResponse;
 import net.sf.ohla.rti.messages.DisableTimeConstrained;
 import net.sf.ohla.rti.messages.DisableTimeRegulation;
 import net.sf.ohla.rti.messages.EnableTimeConstrained;
@@ -51,13 +54,16 @@ import net.sf.ohla.rti.messages.FederateRestoreComplete;
 import net.sf.ohla.rti.messages.FederateRestoreNotComplete;
 import net.sf.ohla.rti.messages.FederateSaveBegun;
 import net.sf.ohla.rti.messages.FederateSaveComplete;
-import net.sf.ohla.rti.messages.FederateSaveInitiated;
-import net.sf.ohla.rti.messages.FederateSaveInitiatedFailed;
 import net.sf.ohla.rti.messages.FederateSaveNotComplete;
 import net.sf.ohla.rti.messages.FlushQueueRequest;
-import net.sf.ohla.rti.messages.GetRangeBounds;
+import net.sf.ohla.rti.messages.GALTAdvanced;
+import net.sf.ohla.rti.messages.GetFederateHandle;
+import net.sf.ohla.rti.messages.GetFederateHandleResponse;
+import net.sf.ohla.rti.messages.GetFederateName;
+import net.sf.ohla.rti.messages.GetFederateNameResponse;
 import net.sf.ohla.rti.messages.JoinFederationExecution;
 import net.sf.ohla.rti.messages.JoinFederationExecutionResponse;
+import net.sf.ohla.rti.messages.Message;
 import net.sf.ohla.rti.messages.ModifyLookahead;
 import net.sf.ohla.rti.messages.NegotiatedAttributeOwnershipDivestiture;
 import net.sf.ohla.rti.messages.NextMessageRequest;
@@ -67,22 +73,39 @@ import net.sf.ohla.rti.messages.NextMessageRequestTimeAdvanceGrant;
 import net.sf.ohla.rti.messages.QueryAttributeOwnership;
 import net.sf.ohla.rti.messages.QueryFederationRestoreStatus;
 import net.sf.ohla.rti.messages.QueryFederationSaveStatus;
+import net.sf.ohla.rti.messages.QueryInteractionTransportationType;
 import net.sf.ohla.rti.messages.RegisterFederationSynchronizationPoint;
 import net.sf.ohla.rti.messages.RegisterObjectInstance;
-import net.sf.ohla.rti.messages.RequestAttributeValueUpdate;
+import net.sf.ohla.rti.messages.ReleaseMultipleObjectInstanceName;
+import net.sf.ohla.rti.messages.ReleaseObjectInstanceName;
 import net.sf.ohla.rti.messages.RequestFederationRestore;
+import net.sf.ohla.rti.messages.RequestFederationRestoreResponse;
 import net.sf.ohla.rti.messages.RequestFederationSave;
-import net.sf.ohla.rti.messages.RequestResponse;
+import net.sf.ohla.rti.messages.RequestFederationSaveResponse;
+import net.sf.ohla.rti.messages.RequestObjectClassAttributeValueUpdate;
+import net.sf.ohla.rti.messages.RequestObjectClassAttributeValueUpdateWithRegions;
+import net.sf.ohla.rti.messages.RequestObjectInstanceAttributeValueUpdate;
+import net.sf.ohla.rti.messages.ReserveMultipleObjectInstanceName;
 import net.sf.ohla.rti.messages.ReserveObjectInstanceName;
 import net.sf.ohla.rti.messages.ResignFederationExecution;
 import net.sf.ohla.rti.messages.Retract;
 import net.sf.ohla.rti.messages.SendInteraction;
+import net.sf.ohla.rti.messages.SetAutomaticResignDirective;
+import net.sf.ohla.rti.messages.SubscribeInteractionClass;
+import net.sf.ohla.rti.messages.SubscribeInteractionClassWithRegions;
 import net.sf.ohla.rti.messages.SubscribeObjectClassAttributes;
+import net.sf.ohla.rti.messages.SubscribeObjectClassAttributesWithRegions;
 import net.sf.ohla.rti.messages.SynchronizationPointAchieved;
 import net.sf.ohla.rti.messages.TimeAdvanceRequest;
 import net.sf.ohla.rti.messages.TimeAdvanceRequestAvailable;
 import net.sf.ohla.rti.messages.UnassociateRegionsForUpdates;
 import net.sf.ohla.rti.messages.UnconditionalAttributeOwnershipDivestiture;
+import net.sf.ohla.rti.messages.UnpublishObjectClass;
+import net.sf.ohla.rti.messages.UnpublishObjectClassAttributes;
+import net.sf.ohla.rti.messages.UnsubscribeInteractionClass;
+import net.sf.ohla.rti.messages.UnsubscribeInteractionClassWithRegions;
+import net.sf.ohla.rti.messages.UnsubscribeObjectClassAttributes;
+import net.sf.ohla.rti.messages.UnsubscribeObjectClassAttributesWithRegions;
 import net.sf.ohla.rti.messages.UpdateAttributeValues;
 import net.sf.ohla.rti.messages.UpdateLITS;
 import net.sf.ohla.rti.messages.callbacks.AnnounceSynchronizationPoint;
@@ -95,71 +118,77 @@ import net.sf.ohla.rti.messages.callbacks.FederationSaved;
 import net.sf.ohla.rti.messages.callbacks.FederationSynchronized;
 import net.sf.ohla.rti.messages.callbacks.InitiateFederateSave;
 import net.sf.ohla.rti.messages.callbacks.RemoveObjectInstance;
+import net.sf.ohla.rti.messages.callbacks.ReportInteractionTransportationType;
 import net.sf.ohla.rti.messages.callbacks.SynchronizationPointRegistrationFailed;
 import net.sf.ohla.rti.messages.callbacks.SynchronizationPointRegistrationSucceeded;
 
-import org.apache.mina.common.IoSession;
-import org.apache.mina.common.WriteFuture;
-
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.MessageEvent;
+import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-import hla.rti1516.AttributeHandle;
-import hla.rti1516.AttributeHandleSet;
-import hla.rti1516.FederateHandle;
-import hla.rti1516.FederateHandleRestoreStatusPair;
-import hla.rti1516.FederateHandleSaveStatusPair;
-import hla.rti1516.FederatesCurrentlyJoined;
-import hla.rti1516.ObjectInstanceHandle;
-import hla.rti1516.OrderType;
-import hla.rti1516.RestoreInProgress;
-import hla.rti1516.RestoreStatus;
-import hla.rti1516.SaveInProgress;
-import hla.rti1516.SaveStatus;
-import hla.rti1516.SynchronizationPointFailureReason;
+import hla.rti1516e.AttributeHandle;
+import hla.rti1516e.AttributeHandleSet;
+import hla.rti1516e.FederateHandle;
+import hla.rti1516e.FederateHandleSaveStatusPair;
+import hla.rti1516e.FederateHandleSet;
+import hla.rti1516e.FederateRestoreStatus;
+import hla.rti1516e.FederationExecutionInformation;
+import hla.rti1516e.InteractionClassHandle;
+import hla.rti1516e.LogicalTime;
+import hla.rti1516e.LogicalTimeFactory;
+import hla.rti1516e.OrderType;
+import hla.rti1516e.RestoreStatus;
+import hla.rti1516e.SaveStatus;
+import hla.rti1516e.SynchronizationPointFailureReason;
 
 public class FederationExecution
 {
-  protected final String name;
-  protected final FDD fdd;
+  private static final Logger log = LoggerFactory.getLogger(FederationExecution.class);
 
-  protected ReadWriteLock federationExecutionStateLock =
-    new ReentrantReadWriteLock(true);
-  protected FederationExecutionState federationExecutionState =
-    FederationExecutionState.ACTIVE;
+  private final String name;
+  private final FDD fdd;
 
-  protected FederationExecutionSave federationExecutionSave;
-  protected FederationExecutionRestore federationExecutionRestore;
+  private final ReadWriteLock federationExecutionStateLock = new ReentrantReadWriteLock(true);
+  private FederationExecutionState federationExecutionState = FederationExecutionState.ACTIVE;
 
-  protected Map<FederateHandle, FederateProxy> federates =
-    new HashMap<FederateHandle, FederateProxy>();
+  private FederationExecutionSave federationExecutionSave;
+  private FederationExecutionRestore federationExecutionRestore;
 
-  protected Map<String, FederationExecutionSynchronizationPoint> synchronizationPoints =
+  private final Map<FederateHandle, FederateProxy> federates = new HashMap<FederateHandle, FederateProxy>();
+  private final Map<String, FederateProxy> federatesByName = new HashMap<String, FederateProxy>();
+
+  private final Map<FederateHandle, ResignedFederate> resignedFederates =
+    new HashMap<FederateHandle, ResignedFederate>();
+
+  private final Map<String, FederationExecutionSynchronizationPoint> synchronizationPoints =
     new HashMap<String, FederationExecutionSynchronizationPoint>();
 
-  protected FederationExecutionObjectManager objectManager =
+  private final FederationExecutionObjectManager objectManager =
     new FederationExecutionObjectManager(this);
 
-  protected FederationExecutionRegionManager regionManager =
+  private final FederationExecutionRegionManager regionManager =
     new FederationExecutionRegionManager(this);
 
-  protected FederationExecutionTimeManager timeManager;
+  private final FederationExecutionTimeManager timeManager;
 
-  protected AtomicInteger federateCount = new AtomicInteger(Short.MIN_VALUE);
+  private final AtomicInteger federateCount = new AtomicInteger();
 
-  protected boolean conveyRegionDesignatorSets = true;
+  private final Marker marker;
 
-  protected final Logger log = LoggerFactory.getLogger(getClass());
-  protected final Marker marker;
-
-  public FederationExecution(String name, FDD fdd)
+  public FederationExecution(String name, FDD fdd, LogicalTimeFactory logicalTimeFactory)
   {
     this.name = name;
     this.fdd = fdd;
 
+    timeManager = new FederationExecutionTimeManager(this, logicalTimeFactory);
+
     marker = MarkerFactory.getMarker(name);
+
+    log.debug(marker, "federation execution created");
   }
 
   public String getName()
@@ -177,6 +206,13 @@ public class FederationExecution
     return marker;
   }
 
+  /**
+   * Returns the current {@link FederateProxy}s joined to this {@code FederationExecution}.
+   * <p/><b>WARNING:</b> Use of this method is dangerous and can only be safely accessed when
+   * {@link FederationExecution#federationExecutionStateLock} is held.
+   *
+   * @return the current {@link FederateProxy}s joined to this {@code FederationExecution}
+   */
   public Map<FederateHandle, FederateProxy> getFederates()
   {
     return federates;
@@ -192,65 +228,87 @@ public class FederationExecution
     return timeManager;
   }
 
-  public boolean isConveyRegionDesignatorSets()
+  public FederationExecutionInformation getFederationExecutionInformation()
   {
-    return conveyRegionDesignatorSets;
+    return new FederationExecutionInformation(name, timeManager.getLogicalTimeFactory().getName());
   }
 
-  public void destroy()
-    throws FederatesCurrentlyJoined
+  public DestroyFederationExecutionResponse destroy(DestroyFederationExecution destroyFederationExecution)
   {
-  }
-
-  public void joinFederationExecution(
-    IoSession session, JoinFederationExecution joinFederationExecution)
-  {
-    log.debug(marker, "client joining: {}", session.getRemoteAddress());
+    DestroyFederationExecutionResponse response;
 
     federationExecutionStateLock.writeLock().lock();
     try
     {
-      checkIfSaveInProgress();
-      checkIfRestoreInProgress();
-
-      // get the next federate handle
-      //
-      FederateHandle federateHandle = nextFederateHandle();
-
-      if (timeManager != null)
+      if (federates.isEmpty())
       {
-        // TODO: ensure each federate has the same mobile federate services
+        log.debug(marker, "federation execution destroyed");
+
+        response = new DestroyFederationExecutionResponse(
+          destroyFederationExecution.getId(), DestroyFederationExecutionResponse.Response.SUCCESS);
       }
       else
       {
-        // use the first federate's mobile services
-        //
-        timeManager = new FederationExecutionTimeManager(
-          this, joinFederationExecution.getMobileFederateServices());
+        Set<String> currentlyJoinedFederates = new HashSet<String>();
+        for (FederateProxy federate : federates.values())
+        {
+          currentlyJoinedFederates.add(federate.getFederateName());
+        }
+
+        log.debug(marker, "destroy federation execution failed, federates currently joined: {}",
+                  currentlyJoinedFederates);
+
+        response = new DestroyFederationExecutionResponse(destroyFederationExecution.getId(), currentlyJoinedFederates);
       }
-
-      FederateProxy federateProxy = new FederateProxy(
-        federateHandle, joinFederationExecution.getFederateType(),
-        session, this, timeManager.getGALT());
-
-      federates.put(federateHandle, federateProxy);
-
-      WriteFuture writeFuture = session.write(new DefaultResponse(
-        joinFederationExecution.getId(),
-        new JoinFederationExecutionResponse(
-          federateHandle, fdd, timeManager.getGALT())));
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
     }
-    catch (SaveInProgress sip)
+    finally
     {
-      session.write(new DefaultResponse(joinFederationExecution.getId(), sip));
+      federationExecutionStateLock.writeLock().unlock();
     }
-    catch (RestoreInProgress rip)
+
+    return response;
+  }
+
+  public void joinFederationExecution(ChannelHandlerContext context, JoinFederationExecution joinFederationExecution)
+  {
+    String federateName = joinFederationExecution.getFederateName();
+    String federateType = joinFederationExecution.getFederateType();
+
+    log.debug(marker, "join federation execution: {}", federateName);
+
+    federationExecutionStateLock.writeLock().lock();
+    try
     {
-      session.write(new DefaultResponse(joinFederationExecution.getId(), rip));
+      if (saveInProgress())
+      {
+        log.debug(marker, "join federation execution failed, save in progress: {}", federateName);
+
+        context.getChannel().write(new JoinFederationExecutionResponse(
+          joinFederationExecution.getId(), JoinFederationExecutionResponse.Response.SAVE_IN_PROGRESS));
+      }
+      else if (restoreInProgress())
+      {
+        log.debug(marker, "join federation execution failed, restore in progress: {}", federateName);
+
+        context.getChannel().write(new JoinFederationExecutionResponse(
+          joinFederationExecution.getId(), JoinFederationExecutionResponse.Response.RESTORE_IN_PROGRESS));
+      }
+      else
+      {
+        // get the next federate handle
+        //
+        FederateHandle federateHandle = nextFederateHandle();
+
+        FederateProxy federateProxy = new FederateProxy(
+          this, federateHandle, federateName, federateType, context.getChannel(), timeManager.getGALT());
+
+        federates.put(federateHandle, federateProxy);
+        federatesByName.put(federateName, federateProxy);
+
+        context.getChannel().write(new JoinFederationExecutionResponse(
+          joinFederationExecution.getId(), federateHandle, fdd, timeManager.getLogicalTimeFactory().getName()));
+        context.getChannel().write(new GALTAdvanced(timeManager.getGALT()));
+      }
     }
     finally
     {
@@ -261,16 +319,17 @@ public class FederationExecution
   public void resignFederationExecution(
     FederateProxy federateProxy, ResignFederationExecution resignFederationExecution)
   {
-    log.debug(marker, "federate resigning: {} - {}", federateProxy,
-              resignFederationExecution.getResignAction());
-
     federationExecutionStateLock.writeLock().lock();
     try
     {
-      federateProxy.resignFederationExecution(
-        resignFederationExecution.getResignAction());
-
       federates.remove(federateProxy.getFederateHandle());
+      federatesByName.remove(federateProxy.getFederateName());
+
+      resignedFederates.put(federateProxy.getFederateHandle(), new ResignedFederate(federateProxy));
+
+      // TODO: take appropriate resign action
+
+      federateProxy.resignFederationExecution(resignFederationExecution.getResignAction());
     }
     finally
     {
@@ -279,64 +338,50 @@ public class FederationExecution
   }
 
   public void registerFederationSynchronizationPoint(
-    FederateProxy federateProxy,
-    RegisterFederationSynchronizationPoint registerFederationSynchronizationPoint)
+    FederateProxy federateProxy, RegisterFederationSynchronizationPoint registerFederationSynchronizationPoint)
   {
+    String label = registerFederationSynchronizationPoint.getLabel();
+    byte[] tag = registerFederationSynchronizationPoint.getTag();
+    FederateHandleSet federateHandles = registerFederationSynchronizationPoint.getFederateHandles();
+
     federationExecutionStateLock.writeLock().lock();
     try
     {
-      FederationExecutionSynchronizationPoint
-        federationExecutionSynchronizationPoint =
-        synchronizationPoints.get(
-          registerFederationSynchronizationPoint.getLabel());
+      FederationExecutionSynchronizationPoint federationExecutionSynchronizationPoint =
+        synchronizationPoints.get(label);
       if (federationExecutionSynchronizationPoint != null)
       {
-        federateProxy.getSession().write(
-          new SynchronizationPointRegistrationFailed(
-            registerFederationSynchronizationPoint.getLabel(),
-            SynchronizationPointFailureReason.SYNCHRONIZATION_POINT_LABEL_NOT_UNIQUE));
+        federateProxy.getFederateChannel().write(new SynchronizationPointRegistrationFailed(
+          label, SynchronizationPointFailureReason.SYNCHRONIZATION_POINT_LABEL_NOT_UNIQUE));
       }
       else
       {
-        Set<FederateHandle> federateHandles =
-          registerFederationSynchronizationPoint.getFederateHandles();
-
-        if (federateHandles == null || federateHandles.isEmpty())
+        boolean federateHandlesValid;
+        if (federateHandlesValid = (federateHandles == null || federateHandles.isEmpty()))
         {
           // assign the currently joined federates
           //
-          federateHandles = new HashSet<FederateHandle>(federates.keySet());
+          federateHandles = new IEEE1516eFederateHandleSet(federates.keySet());
         }
 
         // verify all the federates in the set are joined
         //
-        if (!federates.keySet().containsAll(federateHandles))
+        if (!federateHandlesValid  && !federates.keySet().containsAll(federateHandles))
         {
-          federateProxy.getSession().write(
-            new SynchronizationPointRegistrationFailed(
-              registerFederationSynchronizationPoint.getLabel(),
-              SynchronizationPointFailureReason.SYNCHRONIZATION_SET_MEMBER_NOT_JOINED));
+          federateProxy.getFederateChannel().write(new SynchronizationPointRegistrationFailed(
+            label, SynchronizationPointFailureReason.SYNCHRONIZATION_SET_MEMBER_NOT_JOINED));
         }
         else
         {
           synchronizationPoints.put(
-            registerFederationSynchronizationPoint.getLabel(),
-            new FederationExecutionSynchronizationPoint(
-              registerFederationSynchronizationPoint.getLabel(),
-              registerFederationSynchronizationPoint.getTag(),
-              federateHandles));
+            label, new FederationExecutionSynchronizationPoint(label, tag, federateHandles));
 
-          federateProxy.getSession().write(
-            new SynchronizationPointRegistrationSucceeded(
-              registerFederationSynchronizationPoint.getLabel()));
+          federateProxy.getFederateChannel().write(new SynchronizationPointRegistrationSucceeded(label));
 
-          AnnounceSynchronizationPoint announceSynchronizationPoint =
-            new AnnounceSynchronizationPoint(
-              registerFederationSynchronizationPoint.getLabel(),
-              registerFederationSynchronizationPoint.getTag());
-          for (FederateProxy f : federates.values())
+          AnnounceSynchronizationPoint announceSynchronizationPoint = new AnnounceSynchronizationPoint(label, tag);
+          for (FederateHandle federateHandle : federateHandles)
           {
-            f.announceSynchronizationPoint(announceSynchronizationPoint);
+            federates.get(federateHandle).announceSynchronizationPoint(announceSynchronizationPoint);
           }
         }
       }
@@ -348,25 +393,34 @@ public class FederationExecution
   }
 
   public void synchronizationPointAchieved(
-    FederateProxy federateProxy,
-    SynchronizationPointAchieved synchronizationPointAchieved)
+    FederateProxy federateProxy, SynchronizationPointAchieved synchronizationPointAchieved)
   {
+    String label = synchronizationPointAchieved.getLabel();
+    boolean success = synchronizationPointAchieved.isSuccess();
+
     federationExecutionStateLock.writeLock().lock();
     try
     {
       FederationExecutionSynchronizationPoint federationExecutionSynchronizationPoint =
-        synchronizationPoints.get(synchronizationPointAchieved.getLabel());
-      assert federationExecutionSynchronizationPoint != null;
+        synchronizationPoints.get(label);
 
       if (federationExecutionSynchronizationPoint.synchronizationPointAchieved(
-        federateProxy.getFederateHandle()))
+        federateProxy.getFederateHandle(), success))
       {
-        FederationSynchronized federationSynchronized =
-          new FederationSynchronized(
-            federationExecutionSynchronizationPoint.getLabel());
-        for (FederateProxy f : federates.values())
+        FederationSynchronized federationSynchronized = new FederationSynchronized(
+          label, federationExecutionSynchronizationPoint.getFailedToSynchronize());
+        for (FederateHandle federateHandle : federationExecutionSynchronizationPoint.getFederateHandles())
         {
-          f.getSession().write(federationSynchronized);
+          FederateProxy synchronizedFederateProxy = federates.get(federateHandle);
+          if (synchronizedFederateProxy == null)
+          {
+            log.warn(marker, "federate unable to complete synchronization, federate has resigned: {}",
+                     resignedFederates.get(federateHandle));
+          }
+          else
+          {
+            synchronizedFederateProxy.getFederateChannel().write(federationSynchronized);
+          }
         }
       }
     }
@@ -376,49 +430,50 @@ public class FederationExecution
     }
   }
 
-  public void requestFederationSave(FederateProxy federateProxy,
-                                    RequestFederationSave requestFederationSave)
+  public void requestFederationSave(FederateProxy federateProxy, RequestFederationSave requestFederationSave)
   {
+    String label = requestFederationSave.getLabel();
+    LogicalTime time = requestFederationSave.getTime();
+
     federationExecutionStateLock.writeLock().lock();
     try
     {
-      checkIfSaveInProgress();
-      checkIfRestoreInProgress();
+      if (saveInProgress())
+      {
+        federateProxy.getFederateChannel().write(new RequestFederationSaveResponse(
+          requestFederationSave.getId(), RequestFederationSaveResponse.Response.SAVE_IN_PROGRESS));
+      }
+      else if (restoreInProgress())
+      {
+        federateProxy.getFederateChannel().write(new RequestFederationSaveResponse(
+          requestFederationSave.getId(), RequestFederationSaveResponse.Response.RESTORE_IN_PROGRESS));
+      }
 
       if (federationExecutionSave != null)
       {
-        log.info("replacing federation execution save: {}",
-                 federationExecutionSave.getLabel());
+        log.info("replacing federation execution save: {}", federationExecutionSave.getLabel());
       }
 
-      federationExecutionSave = new FederationExecutionSave(
-        requestFederationSave.getLabel(), requestFederationSave.getTime());
+      federationExecutionSave = new FederationExecutionSave(label, time);
 
-      if (requestFederationSave.getTime() != null)
+      // tell the federate that the request is going to be honored
+      //
+      federateProxy.getFederateChannel().write(new RequestFederationSaveResponse(requestFederationSave.getId()));
+
+      if (time != null)
       {
         // TODO: check time
-
-        // tell the federate that the request is going to be honored
-        //
-        federateProxy.getSession().write(
-          new DefaultResponse(requestFederationSave.getId()));
 
         // TODO: schedule save
       }
       else
       {
-        // tell the federate that the request is going to be honored
-        //
-        federateProxy.getSession().write(
-          new DefaultResponse(requestFederationSave.getId()));
-
         // this is a psuedo save-in-progress... it will only prevent joins
         // and new requests to save/restore
         //
         federationExecutionState = FederationExecutionState.SAVE_IN_PROGRESS;
 
-        InitiateFederateSave initiateFederateSave =
-          new InitiateFederateSave(requestFederationSave.getLabel());
+        InitiateFederateSave initiateFederateSave = new InitiateFederateSave(label);
 
         // track who was instructed to save
         //
@@ -432,62 +487,13 @@ public class FederationExecution
         }
       }
     }
-    catch (SaveInProgress sip)
-    {
-      federateProxy.getSession().write(
-        new DefaultResponse(requestFederationSave.getId(), sip));
-    }
-    catch (RestoreInProgress rip)
-    {
-      federateProxy.getSession().write(
-        new DefaultResponse(requestFederationSave.getId(), rip));
-    }
     finally
     {
       federationExecutionStateLock.writeLock().unlock();
     }
   }
 
-  public void federateSaveInitiated(
-    FederateProxy federateProxy, FederateSaveInitiated federateSaveInitiated)
-  {
-    federationExecutionStateLock.writeLock().lock();
-    try
-    {
-      assert federationExecutionSave != null;
-
-      federationExecutionSave.federateSaveInitiated(
-        federateProxy.getFederateHandle());
-
-      federateProxy.federateSaveInitiated(federateSaveInitiated);
-    }
-    finally
-    {
-      federationExecutionStateLock.writeLock().unlock();
-    }
-  }
-
-  public void federateSaveInitiatedFailed(
-    FederateProxy federateProxy, FederateSaveInitiatedFailed federateSaveInitiatedFailed)
-  {
-    federationExecutionStateLock.writeLock().lock();
-    try
-    {
-      assert federationExecutionSave != null;
-
-      federationExecutionSave.federateSaveInitiatedFailed(
-        federateProxy.getFederateHandle(), federateSaveInitiatedFailed.getCause());
-
-      federateProxy.federateSaveInitiatedFailed(federateSaveInitiatedFailed);
-    }
-    finally
-    {
-      federationExecutionStateLock.writeLock().unlock();
-    }
-  }
-
-  public void federateSaveBegun(
-    FederateProxy federateProxy, FederateSaveBegun federateSaveBegun)
+  public void federateSaveBegun(FederateProxy federateProxy, FederateSaveBegun federateSaveBegun)
   {
     federationExecutionStateLock.writeLock().lock();
     try
@@ -504,8 +510,7 @@ public class FederationExecution
     }
   }
 
-  public void federateSaveComplete(
-    FederateProxy federateProxy, FederateSaveComplete federateSaveComplete)
+  public void federateSaveComplete(FederateProxy federateProxy, FederateSaveComplete federateSaveComplete)
   {
     federationExecutionStateLock.writeLock().lock();
     try
@@ -533,8 +538,7 @@ public class FederationExecution
     }
   }
 
-  public void federateSaveNotComplete(
-    FederateProxy federateProxy, FederateSaveNotComplete federateSaveNotComplete)
+  public void federateSaveNotComplete(FederateProxy federateProxy, FederateSaveNotComplete federateSaveNotComplete)
   {
     federationExecutionStateLock.writeLock().lock();
     try
@@ -543,11 +547,9 @@ public class FederationExecution
 
       federateProxy.federateSaveNotComplete(federateSaveNotComplete);
 
-      if (federationExecutionSave.federateSaveNotComplete(
-        federateProxy.getFederateHandle()))
+      if (federationExecutionSave.federateSaveNotComplete(federateProxy.getFederateHandle()))
       {
-        FederationNotSaved federationNotSaved = new FederationNotSaved(
-          federationExecutionSave.getSaveFailureReason());
+        FederationNotSaved federationNotSaved = new FederationNotSaved(federationExecutionSave.getSaveFailureReason());
 
         for (FederateProxy f : federates.values())
         {
@@ -563,6 +565,18 @@ public class FederationExecution
     }
   }
 
+  public void abortFederationSave(FederateProxy federateProxy, AbortFederationSave abortFederationSave)
+  {
+    federationExecutionStateLock.writeLock().lock();
+    try
+    {
+    }
+    finally
+    {
+      federationExecutionStateLock.writeLock().unlock();
+    }
+  }
+
   public void queryFederationSaveStatus(
     FederateProxy federateProxy, QueryFederationSaveStatus queryFederationSaveStatus)
   {
@@ -571,22 +585,19 @@ public class FederationExecution
     {
       if (federationExecutionSave != null)
       {
-        federateProxy.getSession().write(new FederationSaveStatusResponse(
+        federateProxy.getFederateChannel().write(new FederationSaveStatusResponse(
           federationExecutionSave.getFederationSaveStatus()));
       }
       else
       {
-        FederateHandleSaveStatusPair[] federationSaveStatus =
-          new FederateHandleSaveStatusPair[federates.size()];
+        FederateHandleSaveStatusPair[] federationSaveStatus = new FederateHandleSaveStatusPair[federates.size()];
         int i = 0;
         for (FederateHandle federateHandle : federates.keySet())
         {
-          federationSaveStatus[i++] = new FederateHandleSaveStatusPair(
-            federateHandle, SaveStatus.NO_SAVE_IN_PROGRESS);
+          federationSaveStatus[i++] = new FederateHandleSaveStatusPair(federateHandle, SaveStatus.NO_SAVE_IN_PROGRESS);
         }
 
-        federateProxy.getSession().write(
-          new FederationSaveStatusResponse(federationSaveStatus));
+        federateProxy.getFederateChannel().write(new FederationSaveStatusResponse(federationSaveStatus));
       }
     }
     finally
@@ -595,49 +606,45 @@ public class FederationExecution
     }
   }
 
-  public void requestFederationRestore(
-    FederateProxy federateProxy, RequestFederationRestore requestFederationRestore)
+  public void requestFederationRestore(FederateProxy federateProxy, RequestFederationRestore requestFederationRestore)
   {
+    String label = requestFederationRestore.getLabel();
+
     federationExecutionStateLock.writeLock().lock();
     try
     {
-      checkIfSaveInProgress();
-      checkIfRestoreInProgress();
+      if (saveInProgress())
+      {
+        federateProxy.getFederateChannel().write(new RequestFederationRestoreResponse(
+          requestFederationRestore.getId(), RequestFederationRestoreResponse.Response.SAVE_IN_PROGRESS));
+      }
+      else if (restoreInProgress())
+      {
+        federateProxy.getFederateChannel().write(new RequestFederationRestoreResponse(
+          requestFederationRestore.getId(), RequestFederationRestoreResponse.Response.RESTORE_IN_PROGRESS));
+      }
 
       // TODO: locate the saved information
 
-      Set<FederateHandle> federateHandles =
-        new HashSet<FederateHandle>(federates.keySet());
+      Set<FederateHandle> federateHandles = new HashSet<FederateHandle>(federates.keySet());
 
       // TODO: determine if the same number of federate types are joined
 
-      federationExecutionRestore = new FederationExecutionRestore(
-        requestFederationRestore.getLabel(), federateHandles);
+      federationExecutionRestore = new FederationExecutionRestore(requestFederationRestore.getLabel(), federateHandles);
 
       // this is a psuedo restore-in-progress... it will only prevent joins
       // and new requests to save/restore
       //
       federationExecutionState = FederationExecutionState.RESTORE_IN_PROGRESS;
 
+      federateProxy.getFederateChannel().write(new RequestFederationRestoreResponse(requestFederationRestore.getId()));
+
       // notify all federates to initiate restore
       //
       for (FederateProxy f : federates.values())
       {
-//          f.initiateFederateRestore(initiateFederateSave);
+//        f.initiateFederateRestore(new InitiateFederateRestore(label));
       }
-
-      federateProxy.getSession().write(
-        new DefaultResponse(requestFederationRestore.getId()));
-    }
-    catch (SaveInProgress sip)
-    {
-      federateProxy.getSession().write(
-        new DefaultResponse(requestFederationRestore.getId(), sip));
-    }
-    catch (RestoreInProgress rip)
-    {
-      federateProxy.getSession().write(
-        new DefaultResponse(requestFederationRestore.getId(), rip));
     }
     finally
     {
@@ -645,16 +652,14 @@ public class FederationExecution
     }
   }
 
-  public void federateRestoreComplete(
-    FederateProxy federateProxy, FederateRestoreComplete federateRestoreComplete)
+  public void federateRestoreComplete(FederateProxy federateProxy, FederateRestoreComplete federateRestoreComplete)
   {
     federationExecutionStateLock.writeLock().lock();
     try
     {
       federateProxy.federateRestoreComplete(federateRestoreComplete);
 
-      if (federationExecutionRestore.federateRestoreComplete(
-        federateProxy.getFederateHandle()))
+      if (federationExecutionRestore.federateRestoreComplete(federateProxy.getFederateHandle()))
       {
         federationExecutionState = FederationExecutionState.ACTIVE;
 
@@ -668,16 +673,14 @@ public class FederationExecution
   }
 
   public void federateRestoreNotComplete(
-    FederateProxy federateProxy,
-    FederateRestoreNotComplete federateRestoreNotComplete)
+    FederateProxy federateProxy, FederateRestoreNotComplete federateRestoreNotComplete)
   {
     federationExecutionStateLock.writeLock().lock();
     try
     {
       federateProxy.federateRestoreNotComplete(federateRestoreNotComplete);
 
-      if (federationExecutionRestore.federateRestoreNotComplete(
-        federateProxy.getFederateHandle()))
+      if (federationExecutionRestore.federateRestoreNotComplete(federateProxy.getFederateHandle()))
       {
         federationExecutionState = FederationExecutionState.ACTIVE;
 
@@ -690,35 +693,71 @@ public class FederationExecution
     }
   }
 
+  public void abortFederationRestore(FederateProxy federateProxy, AbortFederationRestore abortFederationRestore)
+  {
+    federationExecutionStateLock.writeLock().lock();
+    try
+    {
+    }
+    finally
+    {
+      federationExecutionStateLock.writeLock().unlock();
+    }
+  }
+
   public void queryFederationRestoreStatus(
-    FederateProxy federateProxy,
-    QueryFederationRestoreStatus queryFederationRestoreStatus)
+    FederateProxy federateProxy, QueryFederationRestoreStatus queryFederationRestoreStatus)
   {
     federationExecutionStateLock.writeLock().lock();
     try
     {
       if (federationExecutionRestore != null)
       {
-        federateProxy.getSession().write(new FederationRestoreStatusResponse(
+        federateProxy.getFederateChannel().write(new FederationRestoreStatusResponse(
           federationExecutionRestore.getFederationRestoreStatus()));
       }
       else
       {
-        FederateHandleRestoreStatusPair[] federationRestoreStatus =
-          new FederateHandleRestoreStatusPair[federates.size()];
+        FederateRestoreStatus[] federationRestoreStatus = new FederateRestoreStatus[federates.size()];
         int i = 0;
         for (FederateHandle federateHandle : federates.keySet())
         {
-          federationRestoreStatus[i++] = new FederateHandleRestoreStatusPair(
-            federateHandle, RestoreStatus.NO_RESTORE_IN_PROGRESS);
+          // TODO: not implemented correctly
+          //
+          federationRestoreStatus[i++] = new FederateRestoreStatus(
+            federateHandle, federateHandle, RestoreStatus.NO_RESTORE_IN_PROGRESS);
         }
-        federateProxy.getSession().write(new FederationRestoreStatusResponse(
-          federationRestoreStatus));
+        federateProxy.getFederateChannel().write(new FederationRestoreStatusResponse(federationRestoreStatus));
       }
     }
     finally
     {
       federationExecutionStateLock.writeLock().unlock();
+    }
+  }
+
+  public void unpublishObjectClass(FederateProxy federateProxy, UnpublishObjectClass unpublishObjectClass)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
+  public void unpublishObjectClassAttributes(
+    FederateProxy federateProxy, UnpublishObjectClassAttributes unpublishObjectClassAttributes)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
     }
   }
 
@@ -728,8 +767,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      objectManager.reserveObjectInstanceName(
-        federateProxy, reserveObjectInstanceName.getName());
+      objectManager.reserveObjectInstanceName(federateProxy, reserveObjectInstanceName.getObjectInstanceName());
     }
     finally
     {
@@ -737,30 +775,65 @@ public class FederationExecution
     }
   }
 
-  public void registerObjectInstance(
-    FederateProxy federateProxy, RegisterObjectInstance registerObjectInstance)
+  public void releaseObjectInstanceName(
+    FederateProxy federateProxy, ReleaseObjectInstanceName releaseObjectInstanceName)
   {
     federationExecutionStateLock.readLock().lock();
     try
     {
-      ObjectInstanceHandle objectInstanceHandle =
-        objectManager.registerObjectInstance(
-          federateProxy, registerObjectInstance.getObjectClassHandle(),
-          registerObjectInstance.getPublishedAttributeHandles(),
-          registerObjectInstance.getName());
+      objectManager.releaseObjectInstanceName(federateProxy, releaseObjectInstanceName.getObjectInstanceName());
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
 
-      // notify the registering federate of the new object instance handle
-      //
-      federateProxy.getSession().write(new DefaultResponse(
-        registerObjectInstance.getId(), objectInstanceHandle));
+  public void reserveMultipleObjectInstanceName(
+    FederateProxy federateProxy, ReserveMultipleObjectInstanceName reserveMultipleObjectInstanceName)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+      objectManager.reserveMultipleObjectInstanceName(
+        federateProxy, reserveMultipleObjectInstanceName.getObjectInstanceNames());
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
 
-      ObjectClass objectClass = fdd.getObjectClasses().get(
-        registerObjectInstance.getObjectClassHandle());
+  public void releaseMultipleObjectInstanceName(
+    FederateProxy federateProxy, ReleaseMultipleObjectInstanceName releaseMultipleObjectInstanceName)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+      objectManager.releaseMultipleObjectInstanceName(
+        federateProxy, releaseMultipleObjectInstanceName.getObjectInstanceNames());
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
+  public void registerObjectInstance(FederateProxy federateProxy, RegisterObjectInstance registerObjectInstance)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+      objectManager.registerObjectInstance(
+        federateProxy, registerObjectInstance.getObjectInstanceHandle(), registerObjectInstance.getObjectClassHandle(),
+        registerObjectInstance.getObjectInstanceName(), registerObjectInstance.getPublishedAttributeHandles());
+
+      ObjectClass objectClass = fdd.getObjectClasses().get(registerObjectInstance.getObjectClassHandle());
       assert objectClass != null;
 
-      DiscoverObjectInstance discoverObjectInstance =
-        new DiscoverObjectInstance(
-          objectInstanceHandle, objectClass, registerObjectInstance.getName());
+      DiscoverObjectInstance discoverObjectInstance = new DiscoverObjectInstance(
+        registerObjectInstance.getObjectInstanceHandle(), registerObjectInstance.getObjectClassHandle(),
+        registerObjectInstance.getObjectInstanceName(), federateProxy.getFederateHandle());
 
       for (FederateProxy f : federates.values())
       {
@@ -776,8 +849,7 @@ public class FederationExecution
     }
   }
 
-  public void updateAttributeValues(
-    FederateProxy federateProxy, UpdateAttributeValues updateAttributeValues)
+  public void updateAttributeValues(FederateProxy federateProxy, UpdateAttributeValues updateAttributeValues)
   {
     federationExecutionStateLock.readLock().lock();
     try
@@ -790,39 +862,34 @@ public class FederationExecution
     }
   }
 
-  public void sendInteraction(
-    FederateProxy federateProxy, SendInteraction sendInteraction)
+  public void sendInteraction(FederateProxy federateProxy, SendInteraction sendInteraction)
   {
     federationExecutionStateLock.readLock().lock();
+    regionManager.getRegionsLock().readLock().lock();
     try
     {
-      InteractionClass interactionClass = fdd.getInteractionClasses().get(
-        sendInteraction.getInteractionClassHandle());
-      assert interactionClass != null;
-
-      sendInteraction.setInteractionClass(interactionClass);
-
       if (sendInteraction.getSentOrderType() == OrderType.TIMESTAMP)
       {
         // TODO: track for future federates
       }
 
+      InteractionClass interactionClass = fdd.getInteractionClassSafely(sendInteraction.getInteractionClassHandle());
       for (FederateProxy f : federates.values())
       {
         if (f != federateProxy)
         {
-          f.receiveInteraction(sendInteraction);
+          f.receiveInteraction(federateProxy, interactionClass, sendInteraction);
         }
       }
     }
     finally
     {
+      regionManager.getRegionsLock().readLock().unlock();
       federationExecutionStateLock.readLock().unlock();
     }
   }
 
-  public void deleteObjectInstance(
-    FederateProxy federateProxy, DeleteObjectInstance deleteObjectInstance)
+  public void deleteObjectInstance(FederateProxy federateProxy, DeleteObjectInstance deleteObjectInstance)
   {
     federationExecutionStateLock.readLock().lock();
     try
@@ -832,12 +899,9 @@ public class FederationExecution
         // TODO: track for future federates
       }
 
-      RemoveObjectInstance removeObjectInstance =
-        new RemoveObjectInstance(
-          deleteObjectInstance.getObjectInstanceHandle(),
-          deleteObjectInstance.getTag(),
-          deleteObjectInstance.getSentOrderType(),
-          deleteObjectInstance.getDeleteTime(),
+      RemoveObjectInstance removeObjectInstance = new RemoveObjectInstance(
+          deleteObjectInstance.getObjectInstanceHandle(), deleteObjectInstance.getTag(),
+          deleteObjectInstance.getSentOrderType(), deleteObjectInstance.getDeleteTime(),
           deleteObjectInstance.getMessageRetractionHandle());
 
       for (FederateProxy f : federates.values())
@@ -854,19 +918,43 @@ public class FederationExecution
     }
   }
 
-  public void requestAttributeValueUpdate(
-    FederateProxy federateProxy, RequestAttributeValueUpdate requestAttributeValueUpdate)
+  public void requestObjectInstanceAttributeValueUpdate(
+    FederateProxy federateProxy, RequestObjectInstanceAttributeValueUpdate requestObjectInstanceAttributeValueUpdate)
   {
     federationExecutionStateLock.readLock().lock();
     try
     {
-      for (FederateProxy f : federates.values())
-      {
-        if (f != federateProxy)
-        {
-          f.requestAttributeValueUpdate(requestAttributeValueUpdate);
-        }
-      }
+      objectManager.requestObjectInstanceAttributeValueUpdate(federateProxy, requestObjectInstanceAttributeValueUpdate);
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
+  public void requestObjectClassAttributeValueUpdate(
+    FederateProxy federateProxy, RequestObjectClassAttributeValueUpdate requestObjectClassAttributeValueUpdate)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+      objectManager.requestObjectClassAttributeValueUpdate(federateProxy, requestObjectClassAttributeValueUpdate);
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
+  public void requestObjectClassAttributeValueUpdateWithRegions(
+    FederateProxy federateProxy,
+    RequestObjectClassAttributeValueUpdateWithRegions requestObjectClassAttributeValueUpdateWithRegions)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+      objectManager.requestObjectClassAttributeValueUpdateWithRegions(
+        federateProxy, requestObjectClassAttributeValueUpdateWithRegions);
     }
     finally
     {
@@ -894,21 +982,118 @@ public class FederationExecution
   }
 
   public void subscribeObjectClassAttributes(
-    FederateProxy federateProxy,
-    SubscribeObjectClassAttributes subscribeObjectClassAttributes)
+    FederateProxy federateProxy, SubscribeObjectClassAttributes subscribeObjectClassAttributes)
   {
     federationExecutionStateLock.readLock().lock();
     try
     {
-      ObjectClass objectClass =
-        fdd.getObjectClasses().get(
-          subscribeObjectClassAttributes.getObjectClassHandle());
-      assert objectClass != null;
+      ObjectClass objectClass = fdd.getObjectClassSafely(subscribeObjectClassAttributes.getObjectClassHandle());
 
-      objectManager.subscribeObjectClassAttributes(
-        federateProxy, objectClass,
-        subscribeObjectClassAttributes.getAttributeHandles(),
-        subscribeObjectClassAttributes.getAttributesAndRegions());
+      federateProxy.subscribeObjectClassAttributes(subscribeObjectClassAttributes);
+
+      objectManager.subscribeObjectClassAttributes(federateProxy, objectClass);
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
+  public void unsubscribeObjectClassAttributes(
+    FederateProxy federateProxy, UnsubscribeObjectClassAttributes unsubscribeObjectClassAttributes)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+      federateProxy.unsubscribeObjectClassAttributes(unsubscribeObjectClassAttributes);
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
+  public void subscribeObjectClassAttributesWithRegions(
+    FederateProxy federateProxy, SubscribeObjectClassAttributesWithRegions subscribeObjectClassAttributesWithRegions)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+      ObjectClass objectClass = fdd.getObjectClassSafely(
+        subscribeObjectClassAttributesWithRegions.getObjectClassHandle());
+
+      federateProxy.subscribeObjectClassAttributesWithRegions(subscribeObjectClassAttributesWithRegions);
+
+      objectManager.subscribeObjectClassAttributesWithRegions(
+        federateProxy, objectClass, subscribeObjectClassAttributesWithRegions.getAttributesAndRegions());
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
+  public void unsubscribeObjectClassAttributesWithRegions(
+    FederateProxy federateProxy,
+    UnsubscribeObjectClassAttributesWithRegions unsubscribeObjectClassAttributesWithRegions)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+      federateProxy.unsubscribeObjectClassAttributesWithRegions(unsubscribeObjectClassAttributesWithRegions);
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
+  public void subscribeInteractionClass(
+    FederateProxy federateProxy, SubscribeInteractionClass subscribeInteractionClass)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+      federateProxy.subscribeInteractionClass(subscribeInteractionClass);
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
+  public void unsubscribeInteractionClass(
+    FederateProxy federateProxy, UnsubscribeInteractionClass unsubscribeInteractionClass)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
+  public void unsubscribeInteractionClassWithRegions(
+    FederateProxy federateProxy, UnsubscribeInteractionClassWithRegions unsubscribeInteractionClassWithRegions)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
+  public void subscribeInteractionClassWithRegions(
+    FederateProxy federateProxy, SubscribeInteractionClassWithRegions subscribeInteractionClassWithRegions)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
     }
     finally
     {
@@ -917,8 +1102,7 @@ public class FederationExecution
   }
 
   public void unconditionalAttributeOwnershipDivestiture(
-    FederateProxy federateProxy,
-    UnconditionalAttributeOwnershipDivestiture unconditionalAttributeOwnershipDivestiture)
+    FederateProxy federateProxy, UnconditionalAttributeOwnershipDivestiture unconditionalAttributeOwnershipDivestiture)
   {
     federationExecutionStateLock.readLock().lock();
     try
@@ -953,15 +1137,13 @@ public class FederationExecution
     }
   }
 
-  public void confirmDivestiture(
-    FederateProxy federateProxy, ConfirmDivestiture confirmDivestiture)
+  public void confirmDivestiture(FederateProxy federateProxy, ConfirmDivestiture confirmDivestiture)
   {
     federationExecutionStateLock.readLock().lock();
     try
     {
       objectManager.confirmDivestiture(
-        federateProxy, confirmDivestiture.getObjectInstanceHandle(),
-        confirmDivestiture.getAttributeHandles());
+        federateProxy, confirmDivestiture.getObjectInstanceHandle(), confirmDivestiture.getAttributeHandles());
     }
     finally
     {
@@ -970,16 +1152,14 @@ public class FederationExecution
   }
 
   public void attributeOwnershipAcquisition(
-    FederateProxy federateProxy,
-    AttributeOwnershipAcquisition attributeOwnershipAcquisition)
+    FederateProxy federateProxy, AttributeOwnershipAcquisition attributeOwnershipAcquisition)
   {
     federationExecutionStateLock.readLock().lock();
     try
     {
       objectManager.attributeOwnershipAcquisition(
         federateProxy, attributeOwnershipAcquisition.getObjectInstanceHandle(),
-        attributeOwnershipAcquisition.getAttributeHandles(),
-        attributeOwnershipAcquisition.getTag());
+        attributeOwnershipAcquisition.getAttributeHandles(), attributeOwnershipAcquisition.getTag());
     }
     finally
     {
@@ -988,15 +1168,13 @@ public class FederationExecution
   }
 
   public void attributeOwnershipAcquisitionIfAvailable(
-    FederateProxy federateProxy,
-    AttributeOwnershipAcquisitionIfAvailable attributeOwnershipAcquisitionIfAvailable)
+    FederateProxy federateProxy, AttributeOwnershipAcquisitionIfAvailable attributeOwnershipAcquisitionIfAvailable)
   {
     federationExecutionStateLock.readLock().lock();
     try
     {
       objectManager.attributeOwnershipAcquisitionIfAvailable(
-        federateProxy,
-        attributeOwnershipAcquisitionIfAvailable.getObjectInstanceHandle(),
+        federateProxy, attributeOwnershipAcquisitionIfAvailable.getObjectInstanceHandle(),
         attributeOwnershipAcquisitionIfAvailable.getAttributeHandles());
     }
     finally
@@ -1006,59 +1184,29 @@ public class FederationExecution
   }
 
   public void attributeOwnershipDivestitureIfWanted(
-    FederateProxy federateProxy,
-    AttributeOwnershipDivestitureIfWanted attributeOwnershipDivestitureIfWanted)
+    FederateProxy federateProxy, AttributeOwnershipDivestitureIfWanted attributeOwnershipDivestitureIfWanted)
   {
     federationExecutionStateLock.readLock().lock();
     try
     {
-      Map<AttributeHandle, FederateProxy> newOwners =
-        objectManager.attributeOwnershipDivestitureIfWanted(
-          federateProxy,
-          attributeOwnershipDivestitureIfWanted.getObjectInstanceHandle(),
-          attributeOwnershipDivestitureIfWanted.getAttributeHandles());
+      Map<AttributeHandle, FederateProxy> newOwners = objectManager.attributeOwnershipDivestitureIfWanted(
+        federateProxy, attributeOwnershipDivestitureIfWanted.getObjectInstanceHandle(),
+        attributeOwnershipDivestitureIfWanted.getAttributeHandles());
 
       // notify the divestee what attributes were divested
       //
-      AttributeOwnershipDivestitureIfWantedResponse
-        attributeOwnershipDivestitureIfWantedResponse =
-        new AttributeOwnershipDivestitureIfWantedResponse(
-          new IEEE1516AttributeHandleSet(newOwners.keySet()));
-
-      RequestResponse requestResponse = new RequestResponse(
-        attributeOwnershipDivestitureIfWanted.getId(),
-        attributeOwnershipDivestitureIfWantedResponse);
-      WriteFuture writeFuture = federateProxy.getSession().write(requestResponse);
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (writeFuture.isWritten())
-      {
-        try
-        {
-          // TODO: set timeout
-          //
-          attributeOwnershipDivestitureIfWantedResponse.awaitUninterruptibly();
-        }
-        catch (ExecutionException ee)
-        {
-          log.warn("did not receive reply", ee);
-        }
-      }
+      federateProxy.getFederateChannel().write(new AttributeOwnershipDivestitureIfWantedResponse(
+        attributeOwnershipDivestitureIfWanted.getId(), new IEEE1516eAttributeHandleSet(newOwners.keySet())));
 
       // divide up the divested attributes by owner
       //
-      Map<FederateProxy, AttributeHandleSet> newOwnerAcquisitions =
-        new HashMap<FederateProxy, AttributeHandleSet>();
+      Map<FederateProxy, AttributeHandleSet> newOwnerAcquisitions = new HashMap<FederateProxy, AttributeHandleSet>();
       for (Map.Entry<AttributeHandle, FederateProxy> entry : newOwners.entrySet())
       {
-        AttributeHandleSet acquiredAttributeHandles =
-          newOwnerAcquisitions.get(entry.getValue());
+        AttributeHandleSet acquiredAttributeHandles = newOwnerAcquisitions.get(entry.getValue());
         if (acquiredAttributeHandles == null)
         {
-          acquiredAttributeHandles = new IEEE1516AttributeHandleSet();
+          acquiredAttributeHandles = new IEEE1516eAttributeHandleSet();
           newOwnerAcquisitions.put(entry.getValue(), acquiredAttributeHandles);
         }
         acquiredAttributeHandles.add(entry.getKey());
@@ -1066,13 +1214,10 @@ public class FederationExecution
 
       // notify the new owners
       //
-      for (Map.Entry<FederateProxy, AttributeHandleSet> entry :
-        newOwnerAcquisitions.entrySet())
+      for (Map.Entry<FederateProxy, AttributeHandleSet> entry : newOwnerAcquisitions.entrySet())
       {
-        entry.getKey().getSession().write(
-          new AttributeOwnershipAcquisitionNotification(
-            attributeOwnershipDivestitureIfWanted.getObjectInstanceHandle(),
-            entry.getValue()));
+        entry.getKey().getFederateChannel().write(new AttributeOwnershipAcquisitionNotification(
+          attributeOwnershipDivestitureIfWanted.getObjectInstanceHandle(), entry.getValue()));
       }
     }
     finally
@@ -1089,8 +1234,7 @@ public class FederationExecution
     try
     {
       objectManager.cancelNegotiatedAttributeOwnershipDivestiture(
-        federateProxy,
-        cancelNegotiatedAttributeOwnershipDivestiture.getObjectInstanceHandle(),
+        federateProxy, cancelNegotiatedAttributeOwnershipDivestiture.getObjectInstanceHandle(),
         cancelNegotiatedAttributeOwnershipDivestiture.getAttributeHandles());
     }
     finally
@@ -1100,8 +1244,7 @@ public class FederationExecution
   }
 
   public void cancelAttributeOwnershipAcquisition(
-    FederateProxy federateProxy,
-    CancelAttributeOwnershipAcquisition cancelAttributeOwnershipAcquisition)
+    FederateProxy federateProxy, CancelAttributeOwnershipAcquisition cancelAttributeOwnershipAcquisition)
   {
     federationExecutionStateLock.readLock().lock();
     try
@@ -1116,15 +1259,13 @@ public class FederationExecution
     }
   }
 
-  public void queryAttributeOwnership(
-    FederateProxy federateProxy, QueryAttributeOwnership queryAttributeOwnership)
+  public void queryAttributeOwnership(FederateProxy federateProxy, QueryAttributeOwnership queryAttributeOwnership)
   {
     federationExecutionStateLock.readLock().lock();
     try
     {
       objectManager.queryAttributeOwnership(
-        federateProxy, queryAttributeOwnership.getObjectInstanceHandle(),
-        queryAttributeOwnership.getAttributeHandle());
+        federateProxy, queryAttributeOwnership.getObjectInstanceHandle(), queryAttributeOwnership.getAttributeHandle());
     }
     finally
     {
@@ -1132,14 +1273,12 @@ public class FederationExecution
     }
   }
 
-  public void enableTimeRegulation(
-    FederateProxy federateProxy, EnableTimeRegulation enableTimeRegulation)
+  public void enableTimeRegulation(FederateProxy federateProxy, EnableTimeRegulation enableTimeRegulation)
   {
     federationExecutionStateLock.readLock().lock();
     try
     {
-      timeManager.enableTimeRegulation(
-        federateProxy, enableTimeRegulation.getLookahead());
+      timeManager.enableTimeRegulation(federateProxy, enableTimeRegulation.getLookahead());
     }
     finally
     {
@@ -1147,8 +1286,7 @@ public class FederationExecution
     }
   }
 
-  public void disableTimeRegulation(
-    FederateProxy federateProxy, DisableTimeRegulation disableTimeRegulation)
+  public void disableTimeRegulation(FederateProxy federateProxy, DisableTimeRegulation disableTimeRegulation)
   {
     federationExecutionStateLock.readLock().lock();
     try
@@ -1161,8 +1299,7 @@ public class FederationExecution
     }
   }
 
-  public void enableTimeConstrained(
-    FederateProxy federateProxy, EnableTimeConstrained enableTimeConstrained)
+  public void enableTimeConstrained(FederateProxy federateProxy, EnableTimeConstrained enableTimeConstrained)
   {
     federationExecutionStateLock.readLock().lock();
     try
@@ -1175,8 +1312,7 @@ public class FederationExecution
     }
   }
 
-  public void disableTimeConstrained(
-    FederateProxy federateProxy, DisableTimeConstrained disableTimeConstrained)
+  public void disableTimeConstrained(FederateProxy federateProxy, DisableTimeConstrained disableTimeConstrained)
   {
     federationExecutionStateLock.readLock().lock();
     try
@@ -1189,14 +1325,12 @@ public class FederationExecution
     }
   }
 
-  public void modifyLookahead(
-    FederateProxy federateProxy, ModifyLookahead modifyLookahead)
+  public void modifyLookahead(FederateProxy federateProxy, ModifyLookahead modifyLookahead)
   {
     federationExecutionStateLock.readLock().lock();
     try
     {
-      timeManager.modifyLookahead(
-        federateProxy, modifyLookahead.getLookahead());
+      timeManager.modifyLookahead(federateProxy, modifyLookahead.getLookahead());
     }
     finally
     {
@@ -1204,14 +1338,12 @@ public class FederationExecution
     }
   }
 
-  public void timeAdvanceRequest(
-    FederateProxy federateProxy, TimeAdvanceRequest timeAdvanceRequest)
+  public void timeAdvanceRequest(FederateProxy federateProxy, TimeAdvanceRequest timeAdvanceRequest)
   {
     federationExecutionStateLock.readLock().lock();
     try
     {
-      timeManager.timeAdvanceRequest(
-        federateProxy, timeAdvanceRequest.getTime());
+      timeManager.timeAdvanceRequest(federateProxy, timeAdvanceRequest.getTime());
     }
     finally
     {
@@ -1220,14 +1352,12 @@ public class FederationExecution
   }
 
   public void timeAdvanceRequestAvailable(
-    FederateProxy federateProxy,
-    TimeAdvanceRequestAvailable timeAdvanceRequestAvailable)
+    FederateProxy federateProxy, TimeAdvanceRequestAvailable timeAdvanceRequestAvailable)
   {
     federationExecutionStateLock.readLock().lock();
     try
     {
-      timeManager.timeAdvanceRequestAvailable(
-        federateProxy, timeAdvanceRequestAvailable.getTime());
+      timeManager.timeAdvanceRequestAvailable(federateProxy, timeAdvanceRequestAvailable.getTime());
     }
     finally
     {
@@ -1235,14 +1365,12 @@ public class FederationExecution
     }
   }
 
-  public void nextMessageRequest(
-    FederateProxy federateProxy, NextMessageRequest nextMessageRequest)
+  public void nextMessageRequest(FederateProxy federateProxy, NextMessageRequest nextMessageRequest)
   {
     federationExecutionStateLock.readLock().lock();
     try
     {
-      timeManager.nextMessageRequest(
-        federateProxy, nextMessageRequest.getTime());
+      timeManager.nextMessageRequest(federateProxy, nextMessageRequest.getTime());
     }
     finally
     {
@@ -1251,14 +1379,12 @@ public class FederationExecution
   }
 
   public void nextMessageRequestAvailable(
-    FederateProxy federateProxy,
-    NextMessageRequestAvailable nextMessageRequestAvailable)
+    FederateProxy federateProxy, NextMessageRequestAvailable nextMessageRequestAvailable)
   {
     federationExecutionStateLock.readLock().lock();
     try
     {
-      timeManager.nextMessageRequestAvailable(
-        federateProxy, nextMessageRequestAvailable.getTime());
+      timeManager.nextMessageRequestAvailable(federateProxy, nextMessageRequestAvailable.getTime());
     }
     finally
     {
@@ -1267,14 +1393,12 @@ public class FederationExecution
   }
 
   public void nextMessageRequestTimeAdvanceGrant(
-    FederateProxy federateProxy,
-    NextMessageRequestTimeAdvanceGrant nextMessageRequestTimeAdvanceGrant)
+    FederateProxy federateProxy, NextMessageRequestTimeAdvanceGrant nextMessageRequestTimeAdvanceGrant)
   {
     federationExecutionStateLock.readLock().lock();
     try
     {
-      timeManager.nextMessageRequestTimeAdvanceGrant(
-        federateProxy, nextMessageRequestTimeAdvanceGrant.getTime());
+      timeManager.nextMessageRequestTimeAdvanceGrant(federateProxy, nextMessageRequestTimeAdvanceGrant.getTime());
     }
     finally
     {
@@ -1298,14 +1422,12 @@ public class FederationExecution
     }
   }
 
-  public void flushQueueRequest(
-    FederateProxy federateProxy, FlushQueueRequest flushQueueRequest)
+  public void flushQueueRequest(FederateProxy federateProxy, FlushQueueRequest flushQueueRequest)
   {
     federationExecutionStateLock.readLock().lock();
     try
     {
-      timeManager.flushQueueRequest(
-        federateProxy, flushQueueRequest.getTime());
+      timeManager.flushQueueRequest(federateProxy, flushQueueRequest.getTime());
     }
     finally
     {
@@ -1318,7 +1440,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      federateProxy.updateLITS(updateLITS.getLITS());
+      federateProxy.updateLITS(updateLITS.getTime());
     }
     finally
     {
@@ -1339,28 +1461,13 @@ public class FederationExecution
     }
   }
 
-  public void getRangeBounds(FederateProxy federateProxy, GetRangeBounds getRangeBounds)
-  {
-    federationExecutionStateLock.readLock().lock();
-    try
-    {
-      regionManager.getRangeBounds(federateProxy, getRangeBounds);
-    }
-    finally
-    {
-      federationExecutionStateLock.readLock().unlock();
-    }
-  }
-
   public void commitRegionModifications(
-    FederateProxy federateProxy,
-    CommitRegionModifications commitRegionModifications)
+    FederateProxy federateProxy, CommitRegionModifications commitRegionModifications)
   {
     federationExecutionStateLock.readLock().lock();
     try
     {
-      regionManager.commitRegionModifications(
-        federateProxy, commitRegionModifications);
+      regionManager.commitRegionModifications(federateProxy, commitRegionModifications);
     }
     finally
     {
@@ -1368,8 +1475,7 @@ public class FederationExecution
     }
   }
 
-  public void deleteRegion(FederateProxy federateProxy,
-                           DeleteRegion deleteRegion)
+  public void deleteRegion(FederateProxy federateProxy, DeleteRegion deleteRegion)
   {
     federationExecutionStateLock.readLock().lock();
     try
@@ -1383,14 +1489,12 @@ public class FederationExecution
   }
 
   public void associateRegionsForUpdates(
-    FederateProxy federateProxy,
-    AssociateRegionsForUpdates associateRegionsForUpdates)
+    FederateProxy federateProxy, AssociateRegionsForUpdates associateRegionsForUpdates)
   {
     federationExecutionStateLock.readLock().lock();
     try
     {
-      objectManager.associateRegionsForUpdates(
-        federateProxy, associateRegionsForUpdates);
+      objectManager.associateRegionsForUpdates(federateProxy, associateRegionsForUpdates);
     }
     finally
     {
@@ -1399,14 +1503,12 @@ public class FederationExecution
   }
 
   public void unassociateRegionsForUpdates(
-    FederateProxy federateProxy,
-    UnassociateRegionsForUpdates unassociateRegionsForUpdates)
+    FederateProxy federateProxy, UnassociateRegionsForUpdates unassociateRegionsForUpdates)
   {
     federationExecutionStateLock.readLock().lock();
     try
     {
-      objectManager.unassociateRegionsForUpdates(
-        federateProxy, unassociateRegionsForUpdates);
+      objectManager.unassociateRegionsForUpdates(federateProxy, unassociateRegionsForUpdates);
     }
     finally
     {
@@ -1414,27 +1516,128 @@ public class FederationExecution
     }
   }
 
-  protected void checkIfSaveInProgress()
-    throws SaveInProgress
+  public void queryInteractionTransportationType(
+    FederateProxy federateProxy, QueryInteractionTransportationType queryInteractionTransportationType)
   {
-    if (federationExecutionState == FederationExecutionState.SAVE_IN_PROGRESS)
+    FederateHandle federateHandle = queryInteractionTransportationType.getFederateHandle();
+
+    federationExecutionStateLock.readLock().lock();
+    try
     {
-      throw new SaveInProgress();
+      FederateProxy f = federates.get(federateHandle);
+      if (f == null)
+      {
+        InteractionClassHandle interactionClassHandle = queryInteractionTransportationType.getInteractionClassHandle();
+
+        InteractionClass interactionClass = fdd.getInteractionClasses().get(interactionClassHandle);
+        assert interactionClass != null;
+
+        federateProxy.getFederateChannel().write(new ReportInteractionTransportationType(
+          interactionClassHandle, federateHandle, interactionClass.getTransportationTypeHandle()));
+      }
+      else
+      {
+        federateProxy.queryInteractionTransportationType(federateProxy, queryInteractionTransportationType);
+      }
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
     }
   }
 
-  protected void checkIfRestoreInProgress()
-    throws RestoreInProgress
+  public void getFederateHandle(FederateProxy federateProxy, GetFederateHandle getFederateHandle)
   {
-    if (federationExecutionState == FederationExecutionState
-      .RESTORE_IN_PROGRESS)
+    federationExecutionStateLock.readLock().lock();
+    try
     {
-      throw new RestoreInProgress();
+      FederateProxy f = federatesByName.get(getFederateHandle.getFederateName());
+      if (f == null)
+      {
+        federateProxy.getFederateChannel().write(new GetFederateHandleResponse(
+          getFederateHandle.getId(), GetFederateHandleResponse.Response.NAME_NOT_FOUND));
+      }
+      else
+      {
+        federateProxy.getFederateChannel().write(new GetFederateHandleResponse(
+          getFederateHandle.getId(), f.getFederateHandle()));
+      }
     }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
+  public void getFederateName(FederateProxy federateProxy, GetFederateName getFederateName)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+      FederateProxy f = federates.get(getFederateName.getFederateHandle());
+      if (f == null)
+      {
+        federateProxy.getFederateChannel().write(new GetFederateNameResponse(
+          getFederateName.getId(), GetFederateNameResponse.Response.FEDERATE_HANDLE_NOT_KNOWN));
+      }
+      else
+      {
+        federateProxy.getFederateChannel().write(new GetFederateNameResponse(
+          getFederateName.getId(), f.getFederateName()));
+      }
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
+  public void setAutomaticResignDirective(
+    FederateProxy federateProxy, SetAutomaticResignDirective setautomaticResignDirective)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
+  protected boolean saveInProgress()
+  {
+    return federationExecutionState == FederationExecutionState.SAVE_IN_PROGRESS;
+  }
+
+  protected boolean restoreInProgress()
+  {
+    return federationExecutionState == FederationExecutionState.RESTORE_IN_PROGRESS;
   }
 
   protected FederateHandle nextFederateHandle()
   {
-    return new IEEE1516FederateHandle(federateCount.incrementAndGet());
+    return new IEEE1516eFederateHandle(federateCount.incrementAndGet());
+  }
+
+  private class FederationExecutionHandler
+    extends SimpleChannelUpstreamHandler
+  {
+    @Override
+    public void messageReceived(ChannelHandlerContext context, MessageEvent event)
+      throws Exception
+    {
+      assert event.getMessage() instanceof Message;
+
+      Message message = (Message) event.getMessage();
+
+      switch (message.getType())
+      {
+        case UPDATE_ATTRIBUTE_VALUES:
+          break;
+        default:
+          context.sendUpstream(event);
+      }
+    }
   }
 }

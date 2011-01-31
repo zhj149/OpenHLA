@@ -33,33 +33,32 @@ import net.sf.ohla.rti.messages.TimeAdvanceRequest;
 import net.sf.ohla.rti.messages.TimeAdvanceRequestAvailable;
 import net.sf.ohla.rti.messages.UpdateLITS;
 
-import org.apache.mina.common.WriteFuture;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.IllegalTimeArithmetic;
-import hla.rti1516.InTimeAdvancingState;
-import hla.rti1516.InvalidLogicalTime;
-import hla.rti1516.InvalidLookahead;
-import hla.rti1516.LogicalTime;
-import hla.rti1516.LogicalTimeAlreadyPassed;
-import hla.rti1516.LogicalTimeInterval;
-import hla.rti1516.MobileFederateServices;
-import hla.rti1516.RTIinternalError;
-import hla.rti1516.RequestForTimeConstrainedPending;
-import hla.rti1516.RequestForTimeRegulationPending;
-import hla.rti1516.TimeConstrainedAlreadyEnabled;
-import hla.rti1516.TimeConstrainedIsNotEnabled;
-import hla.rti1516.TimeQueryReturn;
-import hla.rti1516.TimeRegulationAlreadyEnabled;
-import hla.rti1516.TimeRegulationIsNotEnabled;
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.LogicalTime;
+import hla.rti1516e.LogicalTimeFactory;
+import hla.rti1516e.LogicalTimeInterval;
+import hla.rti1516e.TimeQueryReturn;
+import hla.rti1516e.exceptions.FederateInternalError;
+import hla.rti1516e.exceptions.IllegalTimeArithmetic;
+import hla.rti1516e.exceptions.InTimeAdvancingState;
+import hla.rti1516e.exceptions.InvalidLogicalTime;
+import hla.rti1516e.exceptions.InvalidLogicalTimeInterval;
+import hla.rti1516e.exceptions.InvalidLookahead;
+import hla.rti1516e.exceptions.LogicalTimeAlreadyPassed;
+import hla.rti1516e.exceptions.RTIinternalError;
+import hla.rti1516e.exceptions.RequestForTimeConstrainedPending;
+import hla.rti1516e.exceptions.RequestForTimeRegulationPending;
+import hla.rti1516e.exceptions.TimeConstrainedAlreadyEnabled;
+import hla.rti1516e.exceptions.TimeConstrainedIsNotEnabled;
+import hla.rti1516e.exceptions.TimeRegulationAlreadyEnabled;
+import hla.rti1516e.exceptions.TimeRegulationIsNotEnabled;
 
 public class FederateTimeManager
 {
-  private static final Logger log =
-    LoggerFactory.getLogger(FederateTimeManager.class);
+  private static final Logger log = LoggerFactory.getLogger(FederateTimeManager.class);
 
   protected enum TemporalState
   {
@@ -76,18 +75,16 @@ public class FederateTimeManager
     TIME_CONSTRAINED, BECOMING_TIME_CONSTRAINED, NOT_TIME_CONSTRAINED
   }
 
-  protected final Federate federate;
-  protected final MobileFederateServices mobileFederateServices;
+  private final Federate federate;
+  private final LogicalTimeFactory logicalTimeFactory;
 
-  protected final LogicalTimeInterval epsilon;
+  private final LogicalTimeInterval epsilon;
 
-  protected final ReadWriteLock timeLock = new ReentrantReadWriteLock(true);
+  private final ReadWriteLock timeLock = new ReentrantReadWriteLock(true);
 
   protected TemporalState temporalState = TemporalState.TIME_GRANTED;
-  protected TimeRegulatingState timeRegulatingState =
-    TimeRegulatingState.NOT_TIME_REGULATING;
-  protected TimeConstrainedState timeConstrainedState =
-    TimeConstrainedState.NOT_TIME_CONSTRAINED;
+  protected TimeRegulatingState timeRegulatingState = TimeRegulatingState.NOT_TIME_REGULATING;
+  protected TimeConstrainedState timeConstrainedState = TimeConstrainedState.NOT_TIME_CONSTRAINED;
 
   protected LogicalTime federateTime;
   protected LogicalTime galt;
@@ -102,17 +99,15 @@ public class FederateTimeManager
   protected LogicalTime advanceRequestTime;
   protected TimeAdvanceType advanceRequestType = TimeAdvanceType.NONE;
 
-  public FederateTimeManager(Federate federate,
-                             MobileFederateServices mobileFederateServices,
-                             LogicalTime galt)
+  public FederateTimeManager(Federate federate, LogicalTimeFactory logicalTimeFactory)
   {
     this.federate = federate;
-    this.mobileFederateServices = mobileFederateServices;
-    this.galt = galt;
+    this.logicalTimeFactory = logicalTimeFactory;
 
-    epsilon = mobileFederateServices.intervalFactory.makeEpsilon();
+    epsilon = logicalTimeFactory.makeEpsilon();
 
-    federateTime = mobileFederateServices.timeFactory.makeInitial();
+    federateTime = logicalTimeFactory.makeInitial();
+    galt = logicalTimeFactory.makeInitial();
   }
 
   public ReadWriteLock getTimeLock()
@@ -151,32 +146,22 @@ public class FederateTimeManager
   }
 
   public void enableTimeRegulation(LogicalTimeInterval lookahead)
-    throws TimeRegulationAlreadyEnabled, InvalidLookahead, InTimeAdvancingState,
-           RequestForTimeRegulationPending, RTIinternalError
+    throws TimeRegulationAlreadyEnabled, InvalidLookahead, InTimeAdvancingState, RequestForTimeRegulationPending,
+           RTIinternalError
   {
     timeLock.writeLock().lock();
     try
     {
       if (timeRegulatingState == TimeRegulatingState.TIME_REGULATING)
       {
-        throw new TimeRegulationAlreadyEnabled();
+        throw new TimeRegulationAlreadyEnabled("");
       }
 
       checkIfInvalidLookahead(lookahead);
       checkIfInTimeAdvancingState();
       checkIfRequestForTimeRegulationPending();
 
-      WriteFuture writeFuture =
-        federate.getRTISession().write(new EnableTimeRegulation(lookahead));
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
+      federate.getRTIChannel().write(new EnableTimeRegulation(lookahead));
 
       this.lookahead = lookahead;
 
@@ -196,17 +181,7 @@ public class FederateTimeManager
     {
       checkIfTimeRegulationIsNotEnabled();
 
-      WriteFuture writeFuture =
-        federate.getRTISession().write(new DisableTimeRegulation());
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
+      federate.getRTIChannel().write(new DisableTimeRegulation());
 
       timeRegulatingState = TimeRegulatingState.NOT_TIME_REGULATING;
 
@@ -220,31 +195,20 @@ public class FederateTimeManager
   }
 
   public void enableTimeConstrained()
-    throws TimeConstrainedAlreadyEnabled, InTimeAdvancingState,
-           RequestForTimeConstrainedPending, RTIinternalError
+    throws TimeConstrainedAlreadyEnabled, InTimeAdvancingState, RequestForTimeConstrainedPending, RTIinternalError
   {
     timeLock.writeLock().lock();
     try
     {
       if (timeConstrainedState == TimeConstrainedState.TIME_CONSTRAINED)
       {
-        throw new TimeConstrainedAlreadyEnabled();
+        throw new TimeConstrainedAlreadyEnabled("");
       }
 
       checkIfInTimeAdvancingState();
       checkIfRequestForTimeConstrainedPending();
 
-      WriteFuture writeFuture =
-        federate.getRTISession().write(new EnableTimeConstrained());
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
+      federate.getRTIChannel().write(new EnableTimeConstrained());
 
       timeConstrainedState = TimeConstrainedState.BECOMING_TIME_CONSTRAINED;
     }
@@ -262,17 +226,7 @@ public class FederateTimeManager
     {
       checkIfTimeConstrainedIsNotEnabled();
 
-      WriteFuture writeFuture =
-        federate.getRTISession().write(new DisableTimeConstrained());
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
+      federate.getRTIChannel().write(new DisableTimeConstrained());
 
       timeConstrainedState = TimeConstrainedState.NOT_TIME_CONSTRAINED;
 
@@ -285,9 +239,8 @@ public class FederateTimeManager
   }
 
   public void timeAdvanceRequest(LogicalTime time)
-    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState,
-           RequestForTimeRegulationPending, RequestForTimeConstrainedPending,
-           RTIinternalError
+    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState, RequestForTimeRegulationPending,
+           RequestForTimeConstrainedPending, RTIinternalError
   {
     timeLock.writeLock().lock();
     try
@@ -298,17 +251,7 @@ public class FederateTimeManager
       checkIfRequestForTimeRegulationPending();
       checkIfRequestForTimeConstrainedPending();
 
-      WriteFuture writeFuture =
-        federate.getRTISession().write(new TimeAdvanceRequest(time));
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
+      federate.getRTIChannel().write(new TimeAdvanceRequest(time));
 
       if (isTimeRegulating())
       {
@@ -318,7 +261,11 @@ public class FederateTimeManager
         }
         catch (IllegalTimeArithmetic ita)
         {
-          throw new InvalidLogicalTime(ita);
+          throw new InvalidLogicalTime("", ita);
+        }
+        catch (InvalidLogicalTimeInterval ilti)
+        {
+          throw new InvalidLogicalTime("", ilti);
         }
       }
 
@@ -338,9 +285,8 @@ public class FederateTimeManager
   }
 
   public void timeAdvanceRequestAvailable(LogicalTime time)
-    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState,
-           RequestForTimeRegulationPending, RequestForTimeConstrainedPending,
-           RTIinternalError
+    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState, RequestForTimeRegulationPending,
+           RequestForTimeConstrainedPending, RTIinternalError
   {
     timeLock.writeLock().lock();
     try
@@ -351,17 +297,7 @@ public class FederateTimeManager
       checkIfRequestForTimeRegulationPending();
       checkIfRequestForTimeConstrainedPending();
 
-      WriteFuture writeFuture =
-        federate.getRTISession().write(new TimeAdvanceRequestAvailable(time));
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
+      federate.getRTIChannel().write(new TimeAdvanceRequestAvailable(time));
 
       if (isTimeRegulating())
       {
@@ -371,7 +307,11 @@ public class FederateTimeManager
         }
         catch (IllegalTimeArithmetic ita)
         {
-          throw new InvalidLogicalTime(ita);
+          throw new InvalidLogicalTime("", ita);
+        }
+        catch (InvalidLogicalTimeInterval ilti)
+        {
+          throw new InvalidLogicalTime("", ilti);
         }
       }
 
@@ -391,9 +331,8 @@ public class FederateTimeManager
   }
 
   public void nextMessageRequest(LogicalTime time)
-    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState,
-           RequestForTimeRegulationPending, RequestForTimeConstrainedPending,
-           RTIinternalError
+    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState, RequestForTimeRegulationPending,
+           RequestForTimeConstrainedPending, RTIinternalError
   {
     timeLock.writeLock().lock();
     try
@@ -404,17 +343,7 @@ public class FederateTimeManager
       checkIfRequestForTimeRegulationPending();
       checkIfRequestForTimeConstrainedPending();
 
-      WriteFuture writeFuture =
-        federate.getRTISession().write(new NextMessageRequest(time));
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
+      federate.getRTIChannel().write(new NextMessageRequest(time));
 
       if (isTimeRegulating())
       {
@@ -424,7 +353,11 @@ public class FederateTimeManager
         }
         catch (IllegalTimeArithmetic ita)
         {
-          throw new InvalidLogicalTime(ita);
+          throw new InvalidLogicalTime("", ita);
+        }
+        catch (InvalidLogicalTimeInterval ilti)
+        {
+          throw new InvalidLogicalTime("", ilti);
         }
       }
 
@@ -444,9 +377,8 @@ public class FederateTimeManager
   }
 
   public void nextMessageRequestAvailable(LogicalTime time)
-    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState,
-           RequestForTimeRegulationPending, RequestForTimeConstrainedPending,
-           RTIinternalError
+    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState, RequestForTimeRegulationPending,
+           RequestForTimeConstrainedPending, RTIinternalError
   {
     timeLock.writeLock().lock();
     try
@@ -457,17 +389,7 @@ public class FederateTimeManager
       checkIfRequestForTimeConstrainedPending();
       checkIfRequestForTimeRegulationPending();
 
-      WriteFuture writeFuture =
-        federate.getRTISession().write(new NextMessageRequestAvailable(time));
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
+      federate.getRTIChannel().write(new NextMessageRequestAvailable(time));
 
       if (isTimeRegulating())
       {
@@ -477,7 +399,11 @@ public class FederateTimeManager
         }
         catch (IllegalTimeArithmetic ita)
         {
-          throw new InvalidLogicalTime(ita);
+          throw new InvalidLogicalTime("", ita);
+        }
+        catch (InvalidLogicalTimeInterval ilti)
+        {
+          throw new InvalidLogicalTime("", ilti);
         }
       }
 
@@ -497,9 +423,8 @@ public class FederateTimeManager
   }
 
   public void flushQueueRequest(LogicalTime time)
-    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState,
-           RequestForTimeRegulationPending, RequestForTimeConstrainedPending,
-           RTIinternalError
+    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState, RequestForTimeRegulationPending,
+           RequestForTimeConstrainedPending, RTIinternalError
   {
     timeLock.writeLock().lock();
     try
@@ -510,17 +435,7 @@ public class FederateTimeManager
       checkIfRequestForTimeRegulationPending();
       checkIfRequestForTimeConstrainedPending();
 
-      WriteFuture writeFuture =
-        federate.getRTISession().write(new FlushQueueRequest(time));
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
+      federate.getRTIChannel().write(new FlushQueueRequest(time));
 
       if (isTimeRegulating())
       {
@@ -530,7 +445,11 @@ public class FederateTimeManager
         }
         catch (IllegalTimeArithmetic ita)
         {
-          throw new InvalidLogicalTime(ita);
+          throw new InvalidLogicalTime("", ita);
+        }
+        catch (InvalidLogicalTimeInterval ilti)
+        {
+          throw new InvalidLogicalTime("", ilti);
         }
       }
 
@@ -552,20 +471,15 @@ public class FederateTimeManager
   public TimeQueryReturn queryGALT()
     throws RTIinternalError
   {
-    TimeQueryReturn timeQueryReturn = new TimeQueryReturn();
-
     timeLock.readLock().lock();
     try
     {
-      timeQueryReturn.timeIsValid = galt != null;
-      timeQueryReturn.time = galt;
+      return new TimeQueryReturn(galt != null, galt);
     }
     finally
     {
       timeLock.readLock().unlock();
     }
-
-    return timeQueryReturn;
   }
 
   public LogicalTime queryLogicalTime()
@@ -585,7 +499,7 @@ public class FederateTimeManager
   public TimeQueryReturn queryLITS()
     throws RTIinternalError
   {
-    TimeQueryReturn timeQueryReturn = new TimeQueryReturn();
+    TimeQueryReturn timeQueryReturn;
 
     timeLock.readLock().lock();
     try
@@ -595,23 +509,20 @@ public class FederateTimeManager
       {
         // no TSO messages in the queue, LITS is GALT (if GALT is defined)
 
-        timeQueryReturn.timeIsValid = galt != null;
-        timeQueryReturn.time = galt;
+        timeQueryReturn = new TimeQueryReturn(galt != null, galt);
       }
       else
       {
-        timeQueryReturn.timeIsValid = true;
-
         if (galt == null || nextMessageTime.compareTo(galt) < 0)
         {
           // GALT is undefined (no more time regulating federates) but there is
           // still a TSO message in the queue or the next TSO message is < GALT
 
-          timeQueryReturn.time = nextMessageTime;
+          timeQueryReturn = new TimeQueryReturn(true, nextMessageTime);
         }
         else
         {
-          timeQueryReturn.time = galt;
+          timeQueryReturn = new TimeQueryReturn(true, galt);
         }
       }
     }
@@ -624,8 +535,7 @@ public class FederateTimeManager
   }
 
   public void modifyLookahead(LogicalTimeInterval lookahead)
-    throws TimeRegulationIsNotEnabled, InvalidLookahead, InTimeAdvancingState,
-           RTIinternalError
+    throws TimeRegulationIsNotEnabled, InvalidLookahead, InTimeAdvancingState, RTIinternalError
   {
     timeLock.writeLock().lock();
     try
@@ -634,17 +544,7 @@ public class FederateTimeManager
       checkIfInvalidLookahead(lookahead);
       checkIfInTimeAdvancingState();
 
-      WriteFuture writeFuture =
-        federate.getRTISession().write(new ModifyLookahead(lookahead));
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
+      federate.getRTIChannel().write(new ModifyLookahead(lookahead));
 
       this.lookahead = lookahead;
     }
@@ -670,8 +570,8 @@ public class FederateTimeManager
     }
   }
 
-  public void timeRegulationEnabled(LogicalTime time,
-                                    FederateAmbassador federateAmbassador)
+  public void timeRegulationEnabled(LogicalTime time, FederateAmbassador federateAmbassador)
+    throws FederateInternalError
   {
     timeLock.writeLock().lock();
     try
@@ -683,10 +583,13 @@ public class FederateTimeManager
 
       federateAmbassador.timeRegulationEnabled(time);
     }
-    catch (Throwable t)
+    catch (IllegalTimeArithmetic ilta)
     {
-      log.warn(federate.getMarker(), String.format(
-        "federate unable to enable time regulation to: %s", time), t);
+      throw new RuntimeException(ilta);
+    }
+    catch (InvalidLogicalTimeInterval ilti)
+    {
+      throw new RuntimeException(ilti);
     }
     finally
     {
@@ -694,8 +597,8 @@ public class FederateTimeManager
     }
   }
 
-  public void timeConstrainedEnabled(LogicalTime time,
-                                     FederateAmbassador federateAmbassador)
+  public void timeConstrainedEnabled(LogicalTime time, FederateAmbassador federateAmbassador)
+    throws FederateInternalError
   {
     timeLock.writeLock().lock();
     try
@@ -706,20 +609,14 @@ public class FederateTimeManager
 
       federateAmbassador.timeConstrainedEnabled(time);
     }
-    catch (Throwable t)
-    {
-      log.warn(federate.getMarker(),
-               "federate unable to enable time constrained to: {}", time);
-      log.warn(federate.getMarker(), "", t);
-    }
     finally
     {
       timeLock.writeLock().unlock();
     }
   }
 
-  public void timeAdvanceGrant(
-    LogicalTime time, FederateAmbassador federateAmbassador)
+  public void timeAdvanceGrant(LogicalTime time, FederateAmbassador federateAmbassador)
+    throws FederateInternalError
   {
     timeLock.writeLock().lock();
     try
@@ -736,16 +633,11 @@ public class FederateTimeManager
         {
           // notify the RTI of the new LITS
 
-          federate.getRTISession().write(new UpdateLITS(lits));
+          federate.getRTIChannel().write(new UpdateLITS(lits));
         }
       }
 
       federateAmbassador.timeAdvanceGrant(time);
-    }
-    catch (Throwable t)
-    {
-      log.warn(federate.getMarker(), "federate unable to advance to: {}", time);
-      log.warn(federate.getMarker(), "", t);
     }
     finally
     {
@@ -775,19 +667,16 @@ public class FederateTimeManager
           }
           case NEXT_MESSAGE_REQUEST_AVAILABLE:
           {
-            maxFutureTaskTimestamp =
-              handleNextMessageRequestAvailableGALTAdvanced(galt);
+            maxFutureTaskTimestamp = handleNextMessageRequestAvailableGALTAdvanced(galt);
             break;
           }
           default:
-            maxFutureTaskTimestamp = galt.compareTo(advanceRequestTime) > 0 ?
-              advanceRequestTime : galt;
+            maxFutureTaskTimestamp = galt.compareTo(advanceRequestTime) > 0 ? advanceRequestTime : galt;
         }
       }
       else
       {
-        maxFutureTaskTimestamp =
-          galt.compareTo(federateTime) > 0 ? federateTime : galt;
+        maxFutureTaskTimestamp = galt.compareTo(federateTime) > 0 ? federateTime : galt;
       }
 
       federate.processFutureTasks(maxFutureTaskTimestamp);
@@ -820,7 +709,7 @@ public class FederateTimeManager
   {
     if (isTimeAdvancing())
     {
-      throw new InTimeAdvancingState();
+      throw new InTimeAdvancingState("");
     }
   }
 
@@ -829,7 +718,7 @@ public class FederateTimeManager
   {
     if (!isTimeRegulating())
     {
-      throw new TimeRegulationIsNotEnabled();
+      throw new TimeRegulationIsNotEnabled("");
     }
   }
 
@@ -838,7 +727,7 @@ public class FederateTimeManager
   {
     if (timeRegulatingState == TimeRegulatingState.BECOMING_TIME_REGULATING)
     {
-      throw new RequestForTimeRegulationPending();
+      throw new RequestForTimeRegulationPending("");
     }
   }
 
@@ -847,7 +736,7 @@ public class FederateTimeManager
   {
     if (!isTimeConstrained())
     {
-      throw new TimeConstrainedIsNotEnabled();
+      throw new TimeConstrainedIsNotEnabled("");
     }
   }
 
@@ -856,7 +745,7 @@ public class FederateTimeManager
   {
     if (timeConstrainedState == TimeConstrainedState.BECOMING_TIME_CONSTRAINED)
     {
-      throw new RequestForTimeConstrainedPending();
+      throw new RequestForTimeConstrainedPending("");
     }
   }
 
@@ -865,8 +754,7 @@ public class FederateTimeManager
   {
     if (time.compareTo(federateTime) < 0)
     {
-      throw new LogicalTimeAlreadyPassed(
-        String.format("%s < %s", time, federateTime));
+      throw new LogicalTimeAlreadyPassed(String.format("%s < %s", time, federateTime));
     }
   }
 
@@ -925,17 +813,7 @@ public class FederateTimeManager
 
         maxFutureTaskTimestamp = advanceRequestTime;
 
-        WriteFuture writeFuture = federate.getRTISession().write(
-          new NextMessageRequestTimeAdvanceGrant(advanceRequestTime));
-
-        // TODO: set timeout
-        //
-        writeFuture.join();
-
-        if (!writeFuture.isWritten())
-        {
-          // TODO: what to do if an error occurs
-        }
+        federate.getRTIChannel().write(new NextMessageRequestTimeAdvanceGrant(advanceRequestTime));
       }
       else
       {
@@ -948,17 +826,7 @@ public class FederateTimeManager
 
       maxFutureTaskTimestamp = advanceRequestTime;
 
-      WriteFuture writeFuture = federate.getRTISession().write(
-        new NextMessageRequestTimeAdvanceGrant(advanceRequestTime));
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        // TODO: what to do if an error occurs
-      }
+      federate.getRTIChannel().write(new NextMessageRequestTimeAdvanceGrant(advanceRequestTime));
     }
     else
     {
@@ -967,24 +835,13 @@ public class FederateTimeManager
       advanceRequestTime = nextMessageTime;
       maxFutureTaskTimestamp = nextMessageTime;
 
-      WriteFuture writeFuture = federate.getRTISession().write(
-        new NextMessageRequestTimeAdvanceGrant(nextMessageTime));
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        // TODO: what to do if an error occurs
-      }
+      federate.getRTIChannel().write(new NextMessageRequestTimeAdvanceGrant(nextMessageTime));
     }
 
     return maxFutureTaskTimestamp;
   }
 
-  protected LogicalTime handleNextMessageRequestAvailableGALTAdvanced(
-    LogicalTime galt)
+  protected LogicalTime handleNextMessageRequestAvailableGALTAdvanced(LogicalTime galt)
   {
     LogicalTime maxFutureTaskTimestamp;
 
@@ -999,17 +856,7 @@ public class FederateTimeManager
 
         maxFutureTaskTimestamp = advanceRequestTime;
 
-        WriteFuture writeFuture = federate.getRTISession().write(
-          new NextMessageRequestAvailableTimeAdvanceGrant(advanceRequestTime));
-
-        // TODO: set timeout
-        //
-        writeFuture.join();
-
-        if (!writeFuture.isWritten())
-        {
-          // TODO: what to do if an error occurs
-        }
+        federate.getRTIChannel().write(new NextMessageRequestAvailableTimeAdvanceGrant(advanceRequestTime));
       }
       else
       {
@@ -1022,17 +869,7 @@ public class FederateTimeManager
 
       maxFutureTaskTimestamp = advanceRequestTime;
 
-      WriteFuture writeFuture = federate.getRTISession().write(
-        new NextMessageRequestTimeAdvanceGrant(advanceRequestTime));
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        // TODO: what to do if an error occurs
-      }
+      federate.getRTIChannel().write(new NextMessageRequestTimeAdvanceGrant(advanceRequestTime));
     }
     else
     {
@@ -1041,17 +878,7 @@ public class FederateTimeManager
       advanceRequestTime = nextMessageTime;
       maxFutureTaskTimestamp = nextMessageTime;
 
-      WriteFuture writeFuture = federate.getRTISession().write(
-        new NextMessageRequestTimeAdvanceGrant(nextMessageTime));
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        // TODO: what to do if an error occurs
-      }
+      federate.getRTIChannel().write(new NextMessageRequestTimeAdvanceGrant(nextMessageTime));
     }
 
     return maxFutureTaskTimestamp;
@@ -1073,12 +900,10 @@ public class FederateTimeManager
     {
       // TODO: is validating the timestamp required for non time regulating
 
-      LogicalTime minimumTime =
-        isTimeAdvancing() ? advanceRequestTime : federateTime;
+      LogicalTime minimumTime = isTimeAdvancing() ? advanceRequestTime : federateTime;
       if (time.compareTo(minimumTime) <= 0)
       {
-        throw new InvalidLogicalTime(
-          String.format("%s <= %s", time, minimumTime));
+        throw new InvalidLogicalTime(String.format("%s <= %s", time, minimumTime));
       }
     }
   }

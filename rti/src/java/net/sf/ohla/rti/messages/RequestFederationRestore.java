@@ -19,24 +19,35 @@ package net.sf.ohla.rti.messages;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
 
+import org.jboss.netty.buffer.ChannelBuffer;
+
 public class RequestFederationRestore
-  extends AbstractRequest
+  extends StringRequest<RequestFederationRestoreResponse>
   implements FederationExecutionMessage
 {
-  protected String label;
-
   public RequestFederationRestore(String label)
   {
-    this.label = label;
+    super(MessageType.REQUEST_FEDERATION_RESTORE, label);
+
+    encodingFinished();
+  }
+
+  public RequestFederationRestore(ChannelBuffer buffer)
+  {
+    super(buffer);
   }
 
   public String getLabel()
   {
-    return label;
+    return s;
   }
 
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public MessageType getType()
+  {
+    return MessageType.REQUEST_FEDERATION_RESTORE;
+  }
+
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.requestFederationRestore(federateProxy, this);
   }

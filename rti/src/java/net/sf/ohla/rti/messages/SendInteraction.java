@@ -16,86 +16,153 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
-import net.sf.ohla.rti.fdd.InteractionClass;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eMessageRetractionHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandleValueMap;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandleSet;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandle;
 
-import hla.rti1516.InteractionClassHandle;
-import hla.rti1516.LogicalTime;
-import hla.rti1516.MessageRetractionHandle;
-import hla.rti1516.OrderType;
-import hla.rti1516.ParameterHandleValueMap;
-import hla.rti1516.RegionHandleSet;
-import hla.rti1516.TransportationType;
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.InteractionClassHandle;
+import hla.rti1516e.LogicalTime;
+import hla.rti1516e.LogicalTimeFactory;
+import hla.rti1516e.MessageRetractionHandle;
+import hla.rti1516e.OrderType;
+import hla.rti1516e.ParameterHandleValueMap;
+import hla.rti1516e.RegionHandleSet;
+import hla.rti1516e.TransportationTypeHandle;
 
 public class SendInteraction
+  extends InteractionClassMessage
   implements FederationExecutionMessage
 {
-  protected InteractionClassHandle interactionClassHandle;
-  protected ParameterHandleValueMap parameterValues;
-  protected byte[] tag;
-  protected OrderType sentOrderType;
-  protected TransportationType transportationType;
-  protected LogicalTime sendTime;
-  protected MessageRetractionHandle messageRetractionHandle;
-  protected RegionHandleSet sentRegionHandles;
+  private final ParameterHandleValueMap parameterValues;
+  private final byte[] tag;
+  private final OrderType sentOrderType;
+  private final TransportationTypeHandle transportationTypeHandle;
+  private final LogicalTime time;
+  private final MessageRetractionHandle messageRetractionHandle;
+  private final RegionHandleSet sentRegionHandles;
 
-  protected transient InteractionClass interactionClass;
-
-  public SendInteraction(InteractionClassHandle interactionClassHandle,
-                         ParameterHandleValueMap parameterValues, byte[] tag,
-                         OrderType sentOrderType,
-                         TransportationType transportationType)
+  public SendInteraction(
+    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues, byte[] tag,
+    TransportationTypeHandle transportationTypeHandle)
   {
-    this.interactionClassHandle = interactionClassHandle;
+    super(MessageType.SEND_INTERACTION, interactionClassHandle);
+
     this.parameterValues = parameterValues;
     this.tag = tag;
-    this.sentOrderType = sentOrderType;
-    this.transportationType = transportationType;
-  }
+    this.transportationTypeHandle = transportationTypeHandle;
 
-  public SendInteraction(InteractionClassHandle interactionClassHandle,
-                         ParameterHandleValueMap parameterValues, byte[] tag,
-                         OrderType sentOrderType,
-                         TransportationType transportationType,
-                         LogicalTime sendTime,
-                         MessageRetractionHandle messageRetractionHandle)
-  {
-    this(interactionClassHandle, parameterValues, tag, sentOrderType,
-         transportationType);
+    sentOrderType = OrderType.RECEIVE;
+    time = null;
+    messageRetractionHandle = null;
+    sentRegionHandles = null;
 
-    this.sendTime = sendTime;
-    this.messageRetractionHandle = messageRetractionHandle;
-  }
+    IEEE1516eParameterHandleValueMap.encode(buffer, parameterValues);
+    Protocol.encodeBytes(buffer, tag);
+    Protocol.encodeEnum(buffer, sentOrderType);
+    IEEE1516eTransportationTypeHandle.encode(buffer, transportationTypeHandle);
+    Protocol.encodeNullTime(buffer);
+    IEEE1516eMessageRetractionHandle.encode(buffer, messageRetractionHandle);
+    IEEE1516eRegionHandleSet.encode(buffer, sentRegionHandles);
 
-  public SendInteraction(InteractionClassHandle interactionClassHandle,
-                         ParameterHandleValueMap parameterValues, byte[] tag,
-                         OrderType sentOrderType,
-                         TransportationType transportationType,
-                         RegionHandleSet sentRegionHandles)
-  {
-    this(interactionClassHandle, parameterValues, tag, sentOrderType,
-         transportationType);
-
-    this.sentRegionHandles = sentRegionHandles;
+    encodingFinished();
   }
 
   public SendInteraction(
-    InteractionClassHandle interactionClassHandle,
-    ParameterHandleValueMap parameterValues, byte[] tag,
-    OrderType sentOrderType, TransportationType transportationType,
-    LogicalTime sendTime, MessageRetractionHandle messageRetractionHandle,
-    RegionHandleSet regionHandles)
+    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues, byte[] tag,
+    OrderType sentOrderType, TransportationTypeHandle transportationTypeHandle, LogicalTime time,
+    MessageRetractionHandle messageRetractionHandle)
   {
-    this(interactionClassHandle, parameterValues, tag, sentOrderType,
-         transportationType, sendTime, messageRetractionHandle);
+    super(MessageType.SEND_INTERACTION, interactionClassHandle);
 
-    this.sentRegionHandles = regionHandles;
+    this.parameterValues = parameterValues;
+    this.tag = tag;
+    this.sentOrderType = sentOrderType;
+    this.transportationTypeHandle = transportationTypeHandle;
+    this.time = time;
+    this.messageRetractionHandle = messageRetractionHandle;
+
+    sentRegionHandles = null;
+
+    IEEE1516eParameterHandleValueMap.encode(buffer, parameterValues);
+    Protocol.encodeBytes(buffer, tag);
+    Protocol.encodeEnum(buffer, sentOrderType);
+    IEEE1516eTransportationTypeHandle.encode(buffer, transportationTypeHandle);
+    Protocol.encodeTime(buffer, time);
+    IEEE1516eMessageRetractionHandle.encode(buffer, messageRetractionHandle);
+    IEEE1516eRegionHandleSet.encode(buffer, sentRegionHandles);
+
+    encodingFinished();
   }
 
-  public InteractionClassHandle getInteractionClassHandle()
+  public SendInteraction(
+    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues, byte[] tag,
+    TransportationTypeHandle transportationTypeHandle, RegionHandleSet sentRegionHandles)
   {
-    return interactionClassHandle;
+    super(MessageType.SEND_INTERACTION, interactionClassHandle);
+
+    this.parameterValues = parameterValues;
+    this.tag = tag;
+    this.transportationTypeHandle = transportationTypeHandle;
+    this.sentRegionHandles = sentRegionHandles;
+
+    sentOrderType = OrderType.RECEIVE;
+    time = null;
+    messageRetractionHandle = null;
+
+    IEEE1516eParameterHandleValueMap.encode(buffer, parameterValues);
+    Protocol.encodeBytes(buffer, tag);
+    Protocol.encodeEnum(buffer, sentOrderType);
+    IEEE1516eTransportationTypeHandle.encode(buffer, transportationTypeHandle);
+    Protocol.encodeNullTime(buffer);
+    IEEE1516eMessageRetractionHandle.encode(buffer, messageRetractionHandle);
+    IEEE1516eRegionHandleSet.encode(buffer, sentRegionHandles);
+
+    encodingFinished();
+  }
+
+  public SendInteraction(
+    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues, byte[] tag,
+    OrderType sentOrderType, TransportationTypeHandle transportationTypeHandle, LogicalTime time,
+    MessageRetractionHandle messageRetractionHandle, RegionHandleSet sentRegionHandles)
+  {
+    super(MessageType.SEND_INTERACTION, interactionClassHandle);
+
+    this.parameterValues = parameterValues;
+    this.tag = tag;
+    this.sentOrderType = sentOrderType;
+    this.transportationTypeHandle = transportationTypeHandle;
+    this.time = time;
+    this.messageRetractionHandle = messageRetractionHandle;
+    this.sentRegionHandles = sentRegionHandles;
+
+    IEEE1516eParameterHandleValueMap.encode(buffer, parameterValues);
+    Protocol.encodeBytes(buffer, tag);
+    Protocol.encodeEnum(buffer, sentOrderType);
+    IEEE1516eTransportationTypeHandle.encode(buffer, transportationTypeHandle);
+    Protocol.encodeTime(buffer, time);
+    IEEE1516eMessageRetractionHandle.encode(buffer, messageRetractionHandle);
+    IEEE1516eRegionHandleSet.encode(buffer, sentRegionHandles);
+
+    encodingFinished();
+  }
+
+  public SendInteraction(ChannelBuffer buffer, LogicalTimeFactory timeFactory)
+  {
+    super(buffer);
+
+    parameterValues = IEEE1516eParameterHandleValueMap.decode(buffer);
+    tag = Protocol.decodeBytes(buffer);
+    sentOrderType = Protocol.decodeEnum(buffer, OrderType.values());
+    transportationTypeHandle = IEEE1516eTransportationTypeHandle.decode(buffer);
+    time = Protocol.decodeTime(buffer, timeFactory);
+    messageRetractionHandle = IEEE1516eMessageRetractionHandle.decode(buffer);
+    sentRegionHandles = IEEE1516eRegionHandleSet.decode(buffer);
   }
 
   public ParameterHandleValueMap getParameterValues()
@@ -113,14 +180,14 @@ public class SendInteraction
     return sentOrderType;
   }
 
-  public TransportationType getTransportationType()
+  public TransportationTypeHandle getTransportationTypeHandle()
   {
-    return transportationType;
+    return transportationTypeHandle;
   }
 
-  public LogicalTime getSendTime()
+  public LogicalTime getTime()
   {
-    return sendTime;
+    return time;
   }
 
   public MessageRetractionHandle getMessageRetractionHandle()
@@ -133,18 +200,12 @@ public class SendInteraction
     return sentRegionHandles;
   }
 
-  public InteractionClass getInteractionClass()
+  public MessageType getType()
   {
-    return interactionClass;
+    return MessageType.SEND_INTERACTION;
   }
 
-  public void setInteractionClass(InteractionClass interactionClass)
-  {
-    this.interactionClass = interactionClass;
-  }
-
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.sendInteraction(federateProxy, this);
   }

@@ -8,12 +8,17 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="HLA 1.3" />
-    <orderEntry type="module" module-name="IEEE 1516" />
     <orderEntry type="module" module-name="RTI" />
-    <orderEntry type="library" name="slf4j" level="project" />
-    <orderEntry type="library" name="logback" level="project" />
     <orderEntry type="library" name="testng" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/../../resources/testsuite" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
   <component name="copyright">
     <Base>

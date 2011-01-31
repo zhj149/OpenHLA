@@ -16,26 +16,36 @@
 
 package net.sf.ohla.rti.messages;
 
-import hla.rti1516.LogicalTime;
+import net.sf.ohla.rti.federate.Federate;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.LogicalTime;
+import hla.rti1516e.LogicalTimeFactory;
 
 public class GALTAdvanced
-  implements Message
+  extends LogicalTimeMessage
+  implements FederateMessage
 {
-  protected LogicalTime galt;
-
-  public GALTAdvanced(LogicalTime galt)
+  public GALTAdvanced(LogicalTime time)
   {
-    this.galt = galt;
+    super(MessageType.GALT_ADVANCED, time);
+
+    encodingFinished();
   }
 
-  public LogicalTime getGALT()
+  public GALTAdvanced(ChannelBuffer buffer, LogicalTimeFactory factory)
   {
-    return galt;
+    super(buffer, factory);
   }
 
-  @Override
-  public String toString()
+  public MessageType getType()
   {
-    return String.format("GALT advanced: %s", galt);
+    return MessageType.GALT_ADVANCED;
+  }
+
+  public void execute(Federate federate)
+  {
+    federate.galtAdvanced(this);
   }
 }

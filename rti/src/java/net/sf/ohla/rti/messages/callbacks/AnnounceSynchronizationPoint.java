@@ -16,24 +16,59 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateInternalError;
+import net.sf.ohla.rti.Protocol;
+import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.FederateMessage;
+import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.StringMessage;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.exceptions.FederateInternalError;
 
 public class AnnounceSynchronizationPoint
-  implements Callback
+  extends StringMessage
+  implements Callback, FederateMessage
 {
-  protected String label;
-  protected byte[] tag;
+  private final byte[] tag;
+
+  private Federate federate;
 
   public AnnounceSynchronizationPoint(String label, byte[] tag)
   {
-    this.label = label;
+    super(MessageType.ANNOUNCE_SYNCHRONIZATION_POINT, label);
+
     this.tag = tag;
+
+    Protocol.encodeBytes(buffer, tag);
+
+    encodingFinished();
+  }
+
+  public AnnounceSynchronizationPoint(ChannelBuffer buffer)
+  {
+    super(buffer);
+
+    tag = Protocol.decodeBytes(buffer);
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.ANNOUNCE_SYNCHRONIZATION_POINT;
   }
 
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.announceSynchronizationPoint(label, tag);
+    federate.announceSynchronizationPoint(s, tag);
+  }
+
+  public void execute(Federate federate)
+  {
+    this.federate = federate;
+
+    federate.callbackReceived(this);
   }
 }

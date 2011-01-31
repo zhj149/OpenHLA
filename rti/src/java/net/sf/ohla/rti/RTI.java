@@ -16,208 +16,157 @@
 
 package net.sf.ohla.rti;
 
-import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
+import java.net.SocketException;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.federation.FederationExecution;
-import net.sf.ohla.rti.filter.RequestResponseFilter;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederationExecutionInformationSet;
 import net.sf.ohla.rti.messages.CreateFederationExecution;
-import net.sf.ohla.rti.messages.DefaultResponse;
+import net.sf.ohla.rti.messages.CreateFederationExecutionResponse;
 import net.sf.ohla.rti.messages.DestroyFederationExecution;
+import net.sf.ohla.rti.messages.DestroyFederationExecutionResponse;
 import net.sf.ohla.rti.messages.JoinFederationExecution;
+import net.sf.ohla.rti.messages.JoinFederationExecutionResponse;
+import net.sf.ohla.rti.messages.ListFederationExecutions;
+import net.sf.ohla.rti.messages.callbacks.ReportFederationExecutions;
 
-import org.apache.mina.common.IoHandlerAdapter;
-import org.apache.mina.common.IoSession;
-import org.apache.mina.filter.LoggingFilter;
-import org.apache.mina.filter.codec.ProtocolCodecFactory;
-import org.apache.mina.filter.codec.ProtocolCodecFilter;
-import org.apache.mina.filter.codec.serialization.ObjectSerializationCodecFactory;
-import org.apache.mina.transport.socket.nio.SocketAcceptor;
-
+import org.jboss.netty.bootstrap.ServerBootstrap;
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import hla.rti1516.FederatesCurrentlyJoined;
-import hla.rti1516.FederationExecutionAlreadyExists;
-import hla.rti1516.FederationExecutionDoesNotExist;
+import hla.rti1516e.FederationExecutionInformationSet;
+import hla.rti1516e.LogicalTimeFactory;
+import hla.rti1516e.LogicalTimeFactoryFactory;
 
 public class RTI
 {
+  public static final String NAME = "OHLA";
+  public static final String VERSION = "0.5";
+
+  public static final String FULL_VERSION = NAME + " " + VERSION;
+
+  public static final int DEFAULT_PORT = 15000;
+
   private static final Logger log = LoggerFactory.getLogger(RTI.class);
 
-  public static final String OHLA_RTI_ACCEPTOR_PATTERN =
-    "ohla\\.rti\\.acceptor\\.(\\w)\\.(bind_addr|port|backlog|reuse|codec|log)";
+  private final Map<String, ServerBootstrap> serverBootstraps = new HashMap<String, ServerBootstrap>();
 
-  protected Map<String, SocketAcceptor> socketAcceptors =
-    new HashMap<String, SocketAcceptor>();
-
-  protected RTIIoHandler rtiIoHandler = new RTIIoHandler();
-
-  protected Lock federationsLock = new ReentrantLock(true);
-  protected SortedMap<String, FederationExecution> federationExecutions =
+  private final Lock federationsLock = new ReentrantLock(true);
+  private final SortedMap<String, FederationExecution> federationExecutions =
     new TreeMap<String, FederationExecution>();
 
   public RTI()
+    throws SocketException
   {
-    Pattern pattern = Pattern.compile(OHLA_RTI_ACCEPTOR_PATTERN);
+    // TODO: read from configuration file
 
-    Map<String, SocketAcceptorProfile> socketAcceptorProfiles =
-      new HashMap<String, SocketAcceptorProfile>();
-
-    for (Map.Entry entry : System.getProperties().entrySet())
+    if (serverBootstraps.isEmpty())
     {
-      String key = (String) entry.getKey();
-      if (key.startsWith("ohla.rti"))
-      {
-        String value = (String) entry.getValue();
+      ServerBootstrap serverBootstrap = new ServerBootstrap(
+        new NioServerSocketChannelFactory(Executors.newCachedThreadPool(), Executors.newCachedThreadPool()));
 
-        Matcher matcher = pattern.matcher(key);
-        if (matcher.matches())
-        {
-          String name = matcher.group(1);
-          String property = matcher.group(2);
+      serverBootstrap.setOption("localAddress", new InetSocketAddress(DEFAULT_PORT));
 
-          SocketAcceptorProfile socketAcceptorProfile =
-            socketAcceptorProfiles.get(name);
-          if (socketAcceptorProfile == null)
-          {
-            socketAcceptorProfile = new SocketAcceptorProfile(name);
-            socketAcceptorProfiles.put(name, socketAcceptorProfile);
-          }
+      serverBootstrap.setPipelineFactory(new RTIChannelPipelineFactory(this));
 
-          try
-          {
-            socketAcceptorProfile.setProperty(property, value);
-          }
-          catch (Exception e)
-          {
-            log.warn(String.format("invalid property: %s - %s", key, value), e);
-          }
-        }
-      }
+      serverBootstraps.put("default", serverBootstrap);
     }
 
-    if (socketAcceptorProfiles.isEmpty())
+    for (ServerBootstrap serverBootstrap : serverBootstraps.values())
     {
-      // add default socket acceptor profile
-
-      SocketAcceptorProfile defaultSocketAcceptorProfile =
-        new SocketAcceptorProfile("localhost");
-      defaultSocketAcceptorProfile.setPort(5000);
-      defaultSocketAcceptorProfile.setLogging(true);
-      socketAcceptorProfiles.put(
-        defaultSocketAcceptorProfile.getName(), defaultSocketAcceptorProfile);
+      serverBootstrap.bind();
     }
+  }
 
-    log.debug("creating {} socket acceptor(s)", socketAcceptorProfiles.size());
+  public void createFederationExecution(
+    ChannelHandlerContext context, CreateFederationExecution createFederationExecution)
+  {
+    CreateFederationExecutionResponse.Response response;
 
-    for (SocketAcceptorProfile socketAcceptorProfile : socketAcceptorProfiles.values())
+    String federationExecutionName = createFederationExecution.getFederationExecutionName();
+    log.debug("create federation execution: {}", federationExecutionName);
+
+    String logicalTimeImplementationName = createFederationExecution.getLogicalTimeImplementationName();
+
+    LogicalTimeFactory logicalTimeFactory =
+      LogicalTimeFactoryFactory.getLogicalTimeFactory(logicalTimeImplementationName);
+    if (logicalTimeFactory == null || !Protocol.testLogicalTimeFactory(logicalTimeFactory))
     {
+      log.debug("create federation execution failed, could not obtain logical time factory: {} - {}",
+                federationExecutionName, logicalTimeImplementationName);
+
+      response = CreateFederationExecutionResponse.Response.COULD_NOT_CREATE_LOGICAL_TIME_FACTORY;
+    }
+    else
+    {
+      // do a quick check
+
+      federationsLock.lock();
       try
       {
-        socketAcceptors.put(socketAcceptorProfile.getName(),
-                            socketAcceptorProfile.createSocketAcceptor());
-      }
-      catch (Exception e)
-      {
-        log.error(String.format(
-          "unable to create socket acceptor: %s",
-          socketAcceptorProfile.getName()), e);
-      }
+        if (federationExecutions.containsKey(federationExecutionName))
+        {
+          log.debug("create federation execution failed, federation execution already exists: {}",
+                    federationExecutionName);
 
-      if (socketAcceptors.isEmpty())
+          response = CreateFederationExecutionResponse.Response.FEDERATION_EXECUTION_ALREADY_EXISTS;
+        }
+        else
+        {
+          federationExecutions.put(
+            federationExecutionName,
+            new FederationExecution(federationExecutionName, createFederationExecution.getFDD(), logicalTimeFactory));
+
+          response = CreateFederationExecutionResponse.Response.SUCCESS;
+        }
+      }
+      finally
       {
-        log.error("no socket acceptors configured");
+        federationsLock.unlock();
       }
     }
+
+    context.getChannel().write(new CreateFederationExecutionResponse(createFederationExecution.getId(), response));
   }
 
-  protected void createFederationExecution(
-    IoSession session, CreateFederationExecution createFederationExecution)
+  public void destroyFederationExecution(
+    ChannelHandlerContext context, DestroyFederationExecution destroyFederationExecution)
   {
-    String federationExecutionName =
-      createFederationExecution.getFederationExecutionName();
-    FDD fdd = createFederationExecution.getFDD();
+    String federationExecutionName = destroyFederationExecution.getFederationExecutionName();
+    log.debug("destroy federation execution: {}", federationExecutionName);
 
-    log.info("creating federation execution: {}", federationExecutionName);
-
-    Object response = null;
+    DestroyFederationExecutionResponse response;
 
     federationsLock.lock();
     try
     {
-      if (federationExecutions.containsKey(federationExecutionName))
-      {
-        log.info("federation execution already exists: {}",
-                 federationExecutionName);
-
-        response =
-          new FederationExecutionAlreadyExists(federationExecutionName);
-      }
-      else
-      {
-        federationExecutions.put(federationExecutionName,
-                        new FederationExecution(federationExecutionName, fdd));
-      }
-    }
-    finally
-    {
-      federationsLock.unlock();
-    }
-
-    session.write(new DefaultResponse(
-      createFederationExecution.getId(), response));
-  }
-
-  protected void destroyFederationExecution(
-    IoSession session, DestroyFederationExecution destroyFederationExecution)
-  {
-    String federationExecutionName =
-      destroyFederationExecution.getFederationExecutionName();
-
-    log.info("destroying federation execution: {}", federationExecutionName);
-
-    Object response = null;
-
-    federationsLock.lock();
-    try
-    {
-      // optimistically remove the federation
-      //
-      FederationExecution federationExecution =
-        federationExecutions.remove(federationExecutionName);
+      FederationExecution federationExecution = federationExecutions.get(federationExecutionName);
       if (federationExecution == null)
       {
-        log.info("federation execution does not exist: {}",
-                 federationExecutionName);
+        log.debug("destroy federation execution failed, federation execution does not exist: {}",
+                  federationExecutionName);
 
-        response = new FederationExecutionDoesNotExist(federationExecutionName);
+        response = new DestroyFederationExecutionResponse(
+          destroyFederationExecution.getId(),
+          DestroyFederationExecutionResponse.Response.FEDERATION_EXECUTION_DOES_NOT_EXIST);
       }
       else
       {
-        try
-        {
-          federationExecution.destroy();
-        }
-        catch (FederatesCurrentlyJoined fcj)
-        {
-          // put it back
-          //
-          federationExecutions.put(federationExecutionName, federationExecution);
+        response = federationExecution.destroy(destroyFederationExecution);
 
-          response = fcj;
+        if (response.getResponse() == DestroyFederationExecutionResponse.Response.SUCCESS)
+        {
+          federationExecutions.remove(federationExecutionName);
         }
       }
     }
@@ -226,34 +175,28 @@ public class RTI
       federationsLock.unlock();
     }
 
-    session.write(new DefaultResponse(
-      destroyFederationExecution.getId(), response));
+    context.getChannel().write(response);
   }
 
-  protected void joinFederationExecution(
-    IoSession session, JoinFederationExecution joinFederationExecution)
+  public void joinFederationExecution(ChannelHandlerContext context, JoinFederationExecution joinFederationExecution)
   {
-    String federationExecutionName =
-      joinFederationExecution.getFederationExecutionName();
+    String federationExecutionName = joinFederationExecution.getFederationExecutionName();
 
     federationsLock.lock();
     try
     {
-      FederationExecution federationExecution =
-        federationExecutions.get(federationExecutionName);
-      if (federationExecution != null)
+      FederationExecution federationExecution = federationExecutions.get(federationExecutionName);
+      if (federationExecution == null)
       {
-        federationExecution.joinFederationExecution(
-          session, joinFederationExecution);
+        log.info("join federation execution failed, federation execution does not exist: {}", federationExecutionName);
+
+        context.getChannel().write(new JoinFederationExecutionResponse(
+          joinFederationExecution.getId(),
+          JoinFederationExecutionResponse.Response.FEDERATION_EXECUTION_DOES_NOT_EXIST));
       }
       else
       {
-        log.info("federation execution does not exist: {}",
-                 federationExecutionName);
-
-        session.write(new DefaultResponse(
-          joinFederationExecution.getId(),
-          new FederationExecutionDoesNotExist(federationExecutionName)));
+        federationExecution.joinFederationExecution(context, joinFederationExecution);
       }
     }
     finally
@@ -262,230 +205,24 @@ public class RTI
     }
   }
 
-  protected class RTIIoHandler
-    extends IoHandlerAdapter
+  public void listFederationExecutions(ChannelHandlerContext context, ListFederationExecutions listFederationExecutions)
   {
-    @Override
-    public void exceptionCaught(IoSession session, Throwable throwable)
-      throws Exception
+    federationsLock.lock();
+    try
     {
-      // close the session if an unexpected exception occurs
-      //
-      session.close();
-    }
+      FederationExecutionInformationSet federationExecutionInformations =
+        new IEEE1516eFederationExecutionInformationSet();
 
-    @Override
-    public void messageReceived(IoSession session, Object message)
-      throws Exception
-    {
-      if (message instanceof CreateFederationExecution)
+      for (FederationExecution federationExecution : federationExecutions.values())
       {
-        createFederationExecution(session, (CreateFederationExecution) message);
-      }
-      else if (message instanceof DestroyFederationExecution)
-      {
-        destroyFederationExecution(
-          session, (DestroyFederationExecution) message);
-      }
-      else if (message instanceof JoinFederationExecution)
-      {
-        joinFederationExecution(session, (JoinFederationExecution) message);
-      }
-      else
-      {
-        assert false : String.format("unexpected message: %s", message);
-      }
-    }
-  }
-
-  protected class SocketAcceptorProfile
-  {
-    protected final String name;
-
-    protected InetAddress bindAddress;
-    protected Integer port;
-    protected Boolean reuseAddress;
-    protected Integer backlog;
-    protected Class codec;
-    protected Boolean logging;
-
-    public SocketAcceptorProfile(String name)
-    {
-      this.name = name;
-    }
-
-    public String getName()
-    {
-      return name;
-    }
-
-    public InetAddress getBindAddress()
-    {
-      return bindAddress;
-    }
-
-    public void setBindAddress(InetAddress bindAddress)
-    {
-      this.bindAddress = bindAddress;
-    }
-
-    public Integer getPort()
-    {
-      return port;
-    }
-
-    public void setPort(Integer port)
-    {
-      this.port = port;
-    }
-
-    public Boolean getReuseAddress()
-    {
-      return reuseAddress;
-    }
-
-    public void setReuseAddress(Boolean reuseAddress)
-    {
-      this.reuseAddress = reuseAddress;
-    }
-
-    public Integer getBacklog()
-    {
-      return backlog;
-    }
-
-    public void setBacklog(Integer backlog)
-    {
-      this.backlog = backlog;
-    }
-
-    public Class getCodec()
-    {
-      return codec;
-    }
-
-    public void setCodec(Class codec)
-    {
-      this.codec = codec;
-    }
-
-    public Boolean getLogging()
-    {
-      return logging;
-    }
-
-    public void setLogging(Boolean logging)
-    {
-      this.logging = logging;
-    }
-
-    public void setProperty(String property, String value)
-      throws Exception
-    {
-      if ("bind_addr".equals(property))
-      {
-        setBindAddress(InetAddress.getByName(value));
-      }
-      else if ("port".equals(property))
-      {
-        setPort(Integer.parseInt(value));
-      }
-      else if ("reuse".equals(property))
-      {
-        setReuseAddress(Boolean.valueOf(value));
-      }
-      else if ("backlog".equals(property))
-      {
-        setPort(Integer.parseInt(value));
-      }
-      else if ("codec".equals(property))
-      {
-        setCodec(
-          Thread.currentThread().getContextClassLoader().loadClass(value));
-      }
-      else if ("log".equals(property))
-      {
-        setLogging(Boolean.valueOf(value));
-      }
-    }
-
-    public SocketAcceptor createSocketAcceptor()
-      throws Exception
-    {
-      SocketAcceptor socketAcceptor = new SocketAcceptor();
-
-      socketAcceptor.setHandler(rtiIoHandler);
-
-      if (reuseAddress != null)
-      {
-        socketAcceptor.setReuseAddress(reuseAddress);
+        federationExecutionInformations.add(federationExecution.getFederationExecutionInformation());
       }
 
-      if (backlog != null)
-      {
-        socketAcceptor.setBacklog(backlog);
-      }
-
-      ProtocolCodecFactory protocolCodecFactory;
-      if (codec != null)
-      {
-        try
-        {
-          protocolCodecFactory = (ProtocolCodecFactory) codec.newInstance();
-        }
-        catch (InstantiationException ie)
-        {
-          log.error("unable to instantiate: {}", codec);
-          throw ie;
-        }
-        catch (IllegalAccessException iae)
-        {
-          log.error("illegal access: {}", codec);
-          throw iae;
-        }
-      }
-      else
-      {
-        protocolCodecFactory = new ObjectSerializationCodecFactory();
-      }
-
-      // handles messages to/from bytes
-      //
-      socketAcceptor.getFilterChain().addLast(
-        "ProtocolCodecFilter", new ProtocolCodecFilter(protocolCodecFactory));
-
-      if (Boolean.TRUE.equals(logging))
-      {
-        socketAcceptor.getFilterChain().addLast(
-          "LoggingFilter", new LoggingFilter());
-      }
-
-      // handles request/response pairs
-      //
-      socketAcceptor.getFilterChain().addLast(
-        "RequestResponseFilter", new RequestResponseFilter());
-
-      SocketAddress socketAddress =
-        new InetSocketAddress(bindAddress == null ? null : bindAddress,
-                              port == null ? 0 : port);
-
-      log.info("binding to {}", socketAddress);
-
-      socketAcceptor.setLocalAddress(socketAddress);
-
-      try
-      {
-        socketAcceptor.bind();
-      }
-      catch (IOException ioe)
-      {
-        log.error("unable to bind acceptor to: {}", socketAddress);
-        throw ioe;
-      }
-
-      log.info("bound to {}", socketAcceptor.getLocalAddress());
-
-      return socketAcceptor;
+      context.getChannel().write(new ReportFederationExecutions(federationExecutionInformations));
+    }
+    finally
+    {
+      federationsLock.unlock();
     }
   }
 

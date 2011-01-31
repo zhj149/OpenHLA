@@ -16,41 +16,42 @@
 
 package net.sf.ohla.rti.messages;
 
-import hla.rti1516.AttributeHandleSet;
-import hla.rti1516.AttributeSetRegionSetPairList;
-import hla.rti1516.ObjectClassHandle;
+import net.sf.ohla.rti.federation.FederateProxy;
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSet;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.AttributeHandleSet;
+import hla.rti1516e.ObjectClassHandle;
 
 public class UnsubscribeObjectClassAttributes
-  implements Message
+  extends ObjectClassMessage
+  implements FederationExecutionMessage
 {
-  protected ObjectClassHandle objectClassHandle;
-  protected AttributeHandleSet attributeHandles;
-  protected AttributeSetRegionSetPairList attributesAndRegions;
+  private final AttributeHandleSet attributeHandles;
 
   public UnsubscribeObjectClassAttributes(ObjectClassHandle objectClassHandle)
   {
-    this.objectClassHandle = objectClassHandle;
+    this(objectClassHandle, null);
   }
 
-  public UnsubscribeObjectClassAttributes(ObjectClassHandle objectClassHandle,
-                                          AttributeHandleSet attributeHandles)
+  public UnsubscribeObjectClassAttributes(ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles)
   {
-    this(objectClassHandle);
+    super(MessageType.UNSUBSCRIBE_OBJECT_CLASS_ATTRIBUTES, objectClassHandle);
 
     this.attributeHandles = attributeHandles;
+
+    IEEE1516eAttributeHandleSet.encode(buffer, attributeHandles);
+
+    encodingFinished();
   }
 
-  public UnsubscribeObjectClassAttributes(ObjectClassHandle objectClassHandle,
-                                          AttributeSetRegionSetPairList attributesAndRegions)
+  public UnsubscribeObjectClassAttributes(ChannelBuffer buffer)
   {
-    this(objectClassHandle);
+    super(buffer);
 
-    this.attributesAndRegions = attributesAndRegions;
-  }
-
-  public ObjectClassHandle getObjectClassHandle()
-  {
-    return objectClassHandle;
+    attributeHandles = IEEE1516eAttributeHandleSet.decode(buffer);
   }
 
   public AttributeHandleSet getAttributeHandles()
@@ -58,8 +59,13 @@ public class UnsubscribeObjectClassAttributes
     return attributeHandles;
   }
 
-  public AttributeSetRegionSetPairList getAttributesAndRegions()
+  public MessageType getType()
   {
-    return attributesAndRegions;
+    return MessageType.UNSUBSCRIBE_OBJECT_CLASS_ATTRIBUTES;
+  }
+
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
+  {
+    federationExecution.unsubscribeObjectClassAttributes(federateProxy, this);
   }
 }

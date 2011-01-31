@@ -22,12 +22,19 @@ import hla.rti1516.AttributeHandleSetFactory;
 public class IEEE1516AttributeHandleSetFactory
   implements AttributeHandleSetFactory
 {
-  public IEEE1516AttributeHandleSetFactory()
+  public static final IEEE1516AttributeHandleSetFactory INSTANCE = new IEEE1516AttributeHandleSetFactory();
+
+  private IEEE1516AttributeHandleSetFactory()
   {
   }
 
   public AttributeHandleSet create()
   {
     return new IEEE1516AttributeHandleSet();
+  }
+
+  private Object readResolve()
+  {
+    return INSTANCE;
   }
 }

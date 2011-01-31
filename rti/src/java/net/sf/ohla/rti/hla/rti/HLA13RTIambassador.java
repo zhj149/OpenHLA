@@ -24,33 +24,23 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import net.sf.ohla.rti.fdd.ObjectClass;
-import net.sf.ohla.rti.fed.FEDFDD;
+import net.sf.ohla.rti.fed.FED;
 import net.sf.ohla.rti.fed.RoutingSpace;
 import net.sf.ohla.rti.fed.javacc.FEDParser;
-import net.sf.ohla.rti.federate.Federate;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandle;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeSetRegionSetPairList;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516FederateHandle;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516InteractionClassHandle;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516ObjectClassHandle;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516ObjectInstanceHandle;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516ParameterHandle;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516RTIambassador;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516RegionHandleSet;
-import net.sf.ohla.rti.messages.callbacks.ObjectInstanceNameReservationFailed;
-import net.sf.ohla.rti.messages.callbacks.ObjectInstanceNameReservationSucceeded;
-
-import org.apache.mina.common.IoFilterAdapter;
-import org.apache.mina.common.IoSession;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeSetRegionSetPairList;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eInteractionClassHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRTIambassador;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandleSet;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandle;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,24 +53,21 @@ import hla.rti.AttributeAlreadyBeingAcquired;
 import hla.rti.AttributeAlreadyBeingDivested;
 import hla.rti.AttributeAlreadyOwned;
 import hla.rti.AttributeDivestitureWasNotRequested;
+import hla.rti.AttributeHandleSet;
 import hla.rti.AttributeNotDefined;
-import hla.rti.AttributeNotKnown;
 import hla.rti.AttributeNotOwned;
 import hla.rti.AttributeNotPublished;
 import hla.rti.CouldNotDecode;
 import hla.rti.CouldNotOpenFED;
-import hla.rti.CouldNotRestore;
 import hla.rti.DeletePrivilegeNotHeld;
 import hla.rti.DimensionNotDefined;
 import hla.rti.EnableTimeConstrainedPending;
-import hla.rti.EnableTimeConstrainedWasNotPending;
 import hla.rti.EnableTimeRegulationPending;
-import hla.rti.EnableTimeRegulationWasNotPending;
 import hla.rti.ErrorReadingFED;
-import hla.rti.EventNotKnown;
 import hla.rti.EventRetractionHandle;
 import hla.rti.FederateAlreadyExecutionMember;
 import hla.rti.FederateAmbassador;
+import hla.rti.FederateHandleSet;
 import hla.rti.FederateLoggingServiceCalls;
 import hla.rti.FederateNotExecutionMember;
 import hla.rti.FederateNotSubscribed;
@@ -91,11 +78,9 @@ import hla.rti.FederationExecutionAlreadyExists;
 import hla.rti.FederationExecutionDoesNotExist;
 import hla.rti.FederationTimeAlreadyPassed;
 import hla.rti.InteractionClassNotDefined;
-import hla.rti.InteractionClassNotKnown;
 import hla.rti.InteractionClassNotPublished;
 import hla.rti.InteractionClassNotSubscribed;
 import hla.rti.InteractionParameterNotDefined;
-import hla.rti.InteractionParameterNotKnown;
 import hla.rti.InvalidExtents;
 import hla.rti.InvalidFederationTime;
 import hla.rti.InvalidLookahead;
@@ -112,7 +97,6 @@ import hla.rti.MobileFederateServices;
 import hla.rti.NameNotFound;
 import hla.rti.ObjectAlreadyRegistered;
 import hla.rti.ObjectClassNotDefined;
-import hla.rti.ObjectClassNotKnown;
 import hla.rti.ObjectClassNotPublished;
 import hla.rti.ObjectClassNotSubscribed;
 import hla.rti.ObjectNotKnown;
@@ -130,369 +114,395 @@ import hla.rti.SuppliedAttributes;
 import hla.rti.SuppliedParameters;
 import hla.rti.SynchronizationLabelNotAnnounced;
 import hla.rti.TimeAdvanceAlreadyInProgress;
-import hla.rti.TimeAdvanceWasNotInProgress;
 import hla.rti.TimeConstrainedAlreadyEnabled;
 import hla.rti.TimeConstrainedWasNotEnabled;
 import hla.rti.TimeRegulationAlreadyEnabled;
 import hla.rti.TimeRegulationWasNotEnabled;
 import hla.rti.jlc.RTIambassadorEx;
 
-import hla.rti1516.AttributeAcquisitionWasNotCanceled;
-import hla.rti1516.AttributeHandle;
-import hla.rti1516.AttributeHandleSet;
-import hla.rti1516.AttributeHandleValueMap;
-import hla.rti1516.AttributeNotRecognized;
-import hla.rti1516.AttributeNotSubscribed;
-import hla.rti1516.AttributeRegionAssociation;
-import hla.rti1516.AttributeRelevanceAdvisorySwitchIsOff;
-import hla.rti1516.AttributeRelevanceAdvisorySwitchIsOn;
-import hla.rti1516.AttributeScopeAdvisorySwitchIsOff;
-import hla.rti1516.AttributeScopeAdvisorySwitchIsOn;
-import hla.rti1516.AttributeSetRegionSetPairList;
-import hla.rti1516.CouldNotDiscover;
-import hla.rti1516.CouldNotInitiateRestore;
-import hla.rti1516.FederateHandle;
-import hla.rti1516.FederateHandleRestoreStatusPair;
-import hla.rti1516.FederateHandleSaveStatusPair;
-import hla.rti1516.FederateHasNotBegunSave;
-import hla.rti1516.FederateInternalError;
-import hla.rti1516.FederateServiceInvocationsAreBeingReportedViaMOM;
-import hla.rti1516.FederateUnableToUseTime;
-import hla.rti1516.IllegalName;
-import hla.rti1516.InTimeAdvancingState;
-import hla.rti1516.InteractionClassHandle;
-import hla.rti1516.InteractionClassNotRecognized;
-import hla.rti1516.InteractionParameterNotRecognized;
-import hla.rti1516.InteractionRelevanceAdvisorySwitchIsOff;
-import hla.rti1516.InteractionRelevanceAdvisorySwitchIsOn;
-import hla.rti1516.InvalidAttributeHandle;
-import hla.rti1516.InvalidDimensionHandle;
-import hla.rti1516.InvalidInteractionClassHandle;
-import hla.rti1516.InvalidLogicalTime;
-import hla.rti1516.InvalidMessageRetractionHandle;
-import hla.rti1516.InvalidObjectClassHandle;
-import hla.rti1516.InvalidOrderName;
-import hla.rti1516.InvalidOrderType;
-import hla.rti1516.InvalidParameterHandle;
-import hla.rti1516.InvalidRangeBound;
-import hla.rti1516.InvalidRegion;
-import hla.rti1516.InvalidTransportationName;
-import hla.rti1516.InvalidTransportationType;
-import hla.rti1516.JoinedFederateIsNotInTimeAdvancingState;
-import hla.rti1516.LogicalTimeAlreadyPassed;
-import hla.rti1516.MessageCanNoLongerBeRetracted;
-import hla.rti1516.MessageRetractionHandle;
-import hla.rti1516.MessageRetractionReturn;
-import hla.rti1516.NoRequestToEnableTimeConstrainedWasPending;
-import hla.rti1516.NoRequestToEnableTimeRegulationWasPending;
-import hla.rti1516.ObjectClassHandle;
-import hla.rti1516.ObjectClassNotRecognized;
-import hla.rti1516.ObjectClassRelevanceAdvisorySwitchIsOff;
-import hla.rti1516.ObjectClassRelevanceAdvisorySwitchIsOn;
-import hla.rti1516.ObjectInstanceHandle;
-import hla.rti1516.ObjectInstanceNameInUse;
-import hla.rti1516.ObjectInstanceNameNotReserved;
-import hla.rti1516.ObjectInstanceNotKnown;
-import hla.rti1516.OrderType;
-import hla.rti1516.ParameterHandle;
-import hla.rti1516.ParameterHandleValueMap;
-import hla.rti1516.RangeBounds;
-import hla.rti1516.RegionDoesNotContainSpecifiedDimension;
-import hla.rti1516.RegionHandle;
-import hla.rti1516.RegionHandleSet;
-import hla.rti1516.RegionInUseForUpdateOrSubscription;
-import hla.rti1516.RegionNotCreatedByThisFederate;
-import hla.rti1516.RequestForTimeConstrainedPending;
-import hla.rti1516.RequestForTimeRegulationPending;
-import hla.rti1516.ResignAction;
-import hla.rti1516.RestoreFailureReason;
-import hla.rti1516.SaveFailureReason;
-import hla.rti1516.SpecifiedSaveLabelDoesNotExist;
-import hla.rti1516.SynchronizationPointFailureReason;
-import hla.rti1516.TimeConstrainedIsNotEnabled;
-import hla.rti1516.TimeQueryReturn;
-import hla.rti1516.TimeRegulationIsNotEnabled;
-import hla.rti1516.TransportationType;
-import hla.rti1516.UnableToPerformSave;
-import hla.rti1516.UnknownName;
+import hla.rti1516e.AttributeHandle;
+import hla.rti1516e.AttributeHandleValueMap;
+import hla.rti1516e.AttributeRegionAssociation;
+import hla.rti1516e.AttributeSetRegionSetPairList;
+import hla.rti1516e.CallbackModel;
+import hla.rti1516e.FederateHandle;
+import hla.rti1516e.InteractionClassHandle;
+import hla.rti1516e.MessageRetractionHandle;
+import hla.rti1516e.MessageRetractionReturn;
+import hla.rti1516e.ObjectClassHandle;
+import hla.rti1516e.ObjectInstanceHandle;
+import hla.rti1516e.OrderType;
+import hla.rti1516e.ParameterHandle;
+import hla.rti1516e.ParameterHandleValueMap;
+import hla.rti1516e.RangeBounds;
+import hla.rti1516e.RegionHandle;
+import hla.rti1516e.RegionHandleSet;
+import hla.rti1516e.ResignAction;
+import hla.rti1516e.TimeQueryReturn;
+import hla.rti1516e.TransportationTypeHandle;
+import hla.rti1516e.exceptions.AlreadyConnected;
+import hla.rti1516e.exceptions.AttributeRelevanceAdvisorySwitchIsOff;
+import hla.rti1516e.exceptions.AttributeRelevanceAdvisorySwitchIsOn;
+import hla.rti1516e.exceptions.AttributeScopeAdvisorySwitchIsOff;
+import hla.rti1516e.exceptions.AttributeScopeAdvisorySwitchIsOn;
+import hla.rti1516e.exceptions.CallNotAllowedFromWithinCallback;
+import hla.rti1516e.exceptions.ConnectionFailed;
+import hla.rti1516e.exceptions.CouldNotCreateLogicalTimeFactory;
+import hla.rti1516e.exceptions.CouldNotEncode;
+import hla.rti1516e.exceptions.FederateHasNotBegunSave;
+import hla.rti1516e.exceptions.FederateServiceInvocationsAreBeingReportedViaMOM;
+import hla.rti1516e.exceptions.FederateUnableToUseTime;
+import hla.rti1516e.exceptions.IllegalName;
+import hla.rti1516e.exceptions.InTimeAdvancingState;
+import hla.rti1516e.exceptions.InteractionClassAlreadyBeingChanged;
+import hla.rti1516e.exceptions.InteractionRelevanceAdvisorySwitchIsOff;
+import hla.rti1516e.exceptions.InteractionRelevanceAdvisorySwitchIsOn;
+import hla.rti1516e.exceptions.InvalidAttributeHandle;
+import hla.rti1516e.exceptions.InvalidDimensionHandle;
+import hla.rti1516e.exceptions.InvalidFederateHandle;
+import hla.rti1516e.exceptions.InvalidInteractionClassHandle;
+import hla.rti1516e.exceptions.InvalidLocalSettingsDesignator;
+import hla.rti1516e.exceptions.InvalidLogicalTime;
+import hla.rti1516e.exceptions.InvalidMessageRetractionHandle;
+import hla.rti1516e.exceptions.InvalidObjectClassHandle;
+import hla.rti1516e.exceptions.InvalidOrderName;
+import hla.rti1516e.exceptions.InvalidOrderType;
+import hla.rti1516e.exceptions.InvalidParameterHandle;
+import hla.rti1516e.exceptions.InvalidRangeBound;
+import hla.rti1516e.exceptions.InvalidRegion;
+import hla.rti1516e.exceptions.InvalidTransportationName;
+import hla.rti1516e.exceptions.InvalidTransportationType;
+import hla.rti1516e.exceptions.LogicalTimeAlreadyPassed;
+import hla.rti1516e.exceptions.MessageCanNoLongerBeRetracted;
+import hla.rti1516e.exceptions.NotConnected;
+import hla.rti1516e.exceptions.ObjectClassRelevanceAdvisorySwitchIsOff;
+import hla.rti1516e.exceptions.ObjectClassRelevanceAdvisorySwitchIsOn;
+import hla.rti1516e.exceptions.ObjectInstanceNameInUse;
+import hla.rti1516e.exceptions.ObjectInstanceNameNotReserved;
+import hla.rti1516e.exceptions.ObjectInstanceNotKnown;
+import hla.rti1516e.exceptions.RegionDoesNotContainSpecifiedDimension;
+import hla.rti1516e.exceptions.RegionInUseForUpdateOrSubscription;
+import hla.rti1516e.exceptions.RegionNotCreatedByThisFederate;
+import hla.rti1516e.exceptions.RequestForTimeConstrainedPending;
+import hla.rti1516e.exceptions.RequestForTimeRegulationPending;
+import hla.rti1516e.exceptions.TimeConstrainedIsNotEnabled;
+import hla.rti1516e.exceptions.TimeRegulationIsNotEnabled;
+import hla.rti1516e.exceptions.UnsupportedCallbackModel;
 
 public class HLA13RTIambassador
   implements RTIambassadorEx
 {
-  private static final Logger log =
-    LoggerFactory.getLogger(HLA13RTIambassador.class);
+  private static final Logger log = LoggerFactory.getLogger(HLA13RTIambassador.class);
 
-  public static final String OHLA_FEDERATE_RTI_LOGICAL_TIME_FACTORY_PROPERTY =
-    "ohla.federate.%s.rti.logicalTimeFactory";
-  public static final String DEFAULT_OHLA_FEDERATE_RTI_LOGICAL_TIME_FACTORY_PROPERTY =
-    "ohla.federate.rti.logicalTimeFactory";
+  public static final String OHLA_HLA13_FEDERATION_EXECUTION_LOGICAL_TIME_IMPLEMENTATION_PROPERTY =
+    "ohla.hla13.federationExecution.%s.logicalTimeImplementation";
 
-  public static final String OHLA_FEDERATE_RTI_1516_LOGICAL_TIME_FACTORY_PROPERTY =
-    "ohla.federate.%s.rti1516.logicalTimeFactory";
-  public static final String DEFAULT_OHLA_FEDERATE_RTI_1516_LOGICAL_TIME_FACTORY_PROPERTY =
-    "ohla.federate.rti1516.logicalTimeFactory";
+  public static final String OHLA_FEDERATE_HLA13_LOGICAL_TIME_IMPLEMENTATION_PROPERTY =
+    "ohla.hla13.logicalTimeImplementation.%s";
 
-  public static final String OHLA_FEDERATE_RTI_LOGICAL_TIME_INTERVAL_FACTORY_PROPERTY =
-    "ohla.federate.%s.rti.logicalTimeIntervalFactory";
-  public static final String DEFAULT_OHLA_FEDERATE_RTI_LOGICAL_TIME_INTERVAL_FACTORY_PROPERTY =
-    "ohla.federate.rti.logicalTimeIntervalFactory";
+  private final IEEE1516eRTIambassador rtiAmbassador = new IEEE1516eRTIambassador();
 
-  public static final String OHLA_FEDERATE_RTI_1516_LOGICAL_TIME_INTERVAL_FACTORY_PROPERTY =
-    "ohla.federate.%s.rti1516.logicalTimeIntervalFactory";
-  public static final String DEFAULT_OHLA_FEDERATE_RTI_1516_LOGICAL_TIME_INTERVAL_FACTORY_PROPERTY =
-    "ohla.federate.rti1516.logicalTimeIntervalFactory";
+  private FED fed;
 
-  protected IEEE1516RTIambassador rtiAmbassador =
-    new IEEE1516RTIambassador();
+  private final Lock objectInstanceNameReservationsLock = new ReentrantLock(true);
+  private final Map<String, ReserveObjectInstanceNameResult> objectInstanceNameReservations =
+    new HashMap<String, ReserveObjectInstanceNameResult>();
 
-  protected FEDFDD fedFDD;
+  private AtomicInteger objectInstanceHandleCount = new AtomicInteger();
 
-  protected AtomicInteger regionCount = new AtomicInteger();
+  private final ConcurrentMap<ObjectInstanceHandle, Integer> objectInstanceHandles =
+    new ConcurrentHashMap<ObjectInstanceHandle, Integer>();
+  private final ConcurrentMap<Integer, ObjectInstanceHandle> ieee1516eObjectInstanceHandles =
+    new ConcurrentHashMap<Integer, ObjectInstanceHandle>();
 
-  protected Lock regionsLock = new ReentrantLock(true);
-  protected Map<Integer, HLA13Region> regions =
-    new HashMap<Integer, HLA13Region>();
+  private AtomicInteger regionCount = new AtomicInteger();
 
-  protected LogicalTimeFactory logicalTimeFactory;
-  protected hla.rti1516.LogicalTimeFactory ieee1516LogicalTimeFactory;
+  private final Lock regionsLock = new ReentrantLock(true);
+  private final Map<Integer, HLA13Region> regions = new HashMap<Integer, HLA13Region>();
 
-  protected LogicalTimeIntervalFactory logicalTimeIntervalFactory;
-  protected hla.rti1516.LogicalTimeIntervalFactory ieee1516LogicalTimeIntervalFactory;
+  private LogicalTimeFactory logicalTimeFactory;
+  private LogicalTimeIntervalFactory logicalTimeIntervalFactory;
 
-  protected FederateAmbassador federateAmbassador;
-  protected FederateAmbassadorBridge federateAmbassadorBridge =
-    new FederateAmbassadorBridge();
+  private hla.rti1516e.LogicalTimeFactory ieee1516eLogicalTimeFactory;
 
-  public Federate getJoinedFederate()
-  {
-    return rtiAmbassador.getJoinedFederate();
-  }
+  private FederateAmbassador federateAmbassador;
 
-  public void createFederationExecution(String name, URL fed)
-    throws FederationExecutionAlreadyExists, CouldNotOpenFED, ErrorReadingFED,
-           RTIinternalError
+  public HLA13RTIambassador()
+    throws RTIinternalError
   {
     try
     {
-      rtiAmbassador.createFederationExecution(
-        name, new FEDParser(fed).getFDD());
+      rtiAmbassador.connect(new HLA13FederateAmbassadorBridge(this), CallbackModel.HLA_EVOKED);
     }
-    catch (hla.rti1516.FederationExecutionAlreadyExists feae)
+    catch (ConnectionFailed cf)
+    {
+      throw new RTIinternalError(cf.getMessage(), cf);
+    }
+    catch (InvalidLocalSettingsDesignator ilsd)
+    {
+      throw new RTIinternalError(ilsd.getMessage(), ilsd);
+    }
+    catch (UnsupportedCallbackModel ucm)
+    {
+      throw new RTIinternalError(ucm.getMessage(), ucm);
+    }
+    catch (AlreadyConnected ac)
+    {
+      throw new RTIinternalError(ac.getMessage(), ac);
+    }
+    catch (CallNotAllowedFromWithinCallback cnafwc)
+    {
+      throw new RTIinternalError(cnafwc.getMessage(), cnafwc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie.getMessage(), rtiie);
+    }
+  }
+
+  public IEEE1516eRTIambassador getIEEE1516eRTIambassador()
+  {
+    return rtiAmbassador;
+  }
+
+  public FederateAmbassador getHLA13FederateAmbassador()
+  {
+    return federateAmbassador;
+  }
+
+  public void objectInstanceNameReservationSucceeded(String name)
+  {
+    objectInstanceNameReservations.remove(name).objectInstanceNameReservationSucceeded();
+  }
+
+  public void objectInstanceNameReservationFailed(String name)
+  {
+    objectInstanceNameReservations.remove(name).objectInstanceNameReservationFailed();
+  }
+
+  public void createFederationExecution(String federationExecutionName, URL fed)
+    throws FederationExecutionAlreadyExists, CouldNotOpenFED, ErrorReadingFED, RTIinternalError
+  {
+    String logicalTimeImplementationName = getIEEE1516eLogicalTimeImplementationName(federationExecutionName);
+
+    try
+    {
+      rtiAmbassador.createFederationExecution(federationExecutionName, FEDParser.parseFED(fed).getFDD());
+    }
+    catch (hla.rti1516e.exceptions.FederationExecutionAlreadyExists feae)
     {
       throw new FederationExecutionAlreadyExists(feae);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void destroyFederationExecution(String name)
-    throws FederatesCurrentlyJoined, FederationExecutionDoesNotExist,
-           RTIinternalError
+    throws FederatesCurrentlyJoined, FederationExecutionDoesNotExist, RTIinternalError
   {
     try
     {
       rtiAmbassador.destroyFederationExecution(name);
     }
-    catch (hla.rti1516.FederatesCurrentlyJoined fcj)
+    catch (hla.rti1516e.exceptions.FederatesCurrentlyJoined fcj)
     {
       throw new FederatesCurrentlyJoined(fcj);
     }
-    catch (hla.rti1516.FederationExecutionDoesNotExist fedne)
+    catch (hla.rti1516e.exceptions.FederationExecutionDoesNotExist fedne)
     {
       throw new FederationExecutionDoesNotExist(fedne);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
-    }
-  }
-
-  public int joinFederationExecution(String federateType, String federationName,
-                                     FederateAmbassador federateAmbassador)
-    throws FederateAlreadyExecutionMember, FederationExecutionDoesNotExist,
-           SaveInProgress, RestoreInProgress, RTIinternalError
-  {
-    logicalTimeFactory = getLogicalTimeFactory(federateType);
-    logicalTimeIntervalFactory = getLogicalTimeIntervalFactory(federateType);
-
-    ieee1516LogicalTimeFactory =
-      getIEEE1516LogicalTimeFactory(federateType);
-    ieee1516LogicalTimeIntervalFactory =
-      getIEEE1516LogicalTimeIntervalFactory(federateType);
-
-    try
-    {
-      FederateHandle federateHandle = rtiAmbassador.joinFederationExecution(
-        federateType, federationName, federateAmbassadorBridge,
-        new hla.rti1516.MobileFederateServices(
-          ieee1516LogicalTimeFactory, ieee1516LogicalTimeIntervalFactory));
-
-      rtiAmbassador.getJoinedFederate().getRTISession().getFilterChain().addLast(
-        "ReserveObjectInstanceNameIoFilter",
-        new ReserveObjectInstanceNameIoFilter());
-
-      setFEDFDD();
-
-      this.federateAmbassador = federateAmbassador;
-
-      return ((IEEE1516FederateHandle) federateHandle).getHandle();
-    }
-    catch (hla.rti1516.FederateAlreadyExecutionMember faem)
-    {
-      throw new FederateAlreadyExecutionMember(faem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
-    {
-      throw new SaveInProgress(sip);
-    }
-    catch (hla.rti1516.RestoreInProgress rip)
-    {
-      throw new RestoreInProgress(rip);
-    }
-    catch (hla.rti1516.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
-    }
-    catch (hla.rti1516.FederationExecutionDoesNotExist fedne)
-    {
-      throw new FederationExecutionDoesNotExist(fedne);
     }
   }
 
   public int joinFederationExecution(
-    String federateType, String federationName,
-    FederateAmbassador federateAmbassador,
-    MobileFederateServices mobileFederateServices)
-    throws FederateAlreadyExecutionMember, FederationExecutionDoesNotExist,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    String federateType, String federationExecutionName, FederateAmbassador federateAmbassador)
+    throws FederateAlreadyExecutionMember, FederationExecutionDoesNotExist, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
-    if (mobileFederateServices == null)
-    {
-      mobileFederateServices = new MobileFederateServices(
-        getLogicalTimeFactory(federateType),
-        getLogicalTimeIntervalFactory(federateType));
-    }
-    else
-    {
-      if (mobileFederateServices._timeFactory == null)
-      {
-        mobileFederateServices._timeFactory =
-          getLogicalTimeFactory(federateType);
-      }
-
-      if (mobileFederateServices._intervalFactory == null)
-      {
-        mobileFederateServices._intervalFactory =
-          getLogicalTimeIntervalFactory(federateType);
-      }
-    }
-
-    logicalTimeFactory = mobileFederateServices._timeFactory;
-    logicalTimeIntervalFactory = mobileFederateServices._intervalFactory;
-
-    ieee1516LogicalTimeFactory =
-      getIEEE1516LogicalTimeFactory(federateType);
-    ieee1516LogicalTimeIntervalFactory =
-      getIEEE1516LogicalTimeIntervalFactory(federateType);
-
     try
     {
-      FederateHandle federateHandle = rtiAmbassador.joinFederationExecution(
-        federateType, federationName, federateAmbassadorBridge,
-        new hla.rti1516.MobileFederateServices(
-          ieee1516LogicalTimeFactory, ieee1516LogicalTimeIntervalFactory));
+      FederateHandle federateHandle = rtiAmbassador.joinFederationExecution(federateType, federationExecutionName);
 
-      rtiAmbassador.getJoinedFederate().getRTISession().getFilterChain().addLast(
-        "ReserveObjectInstanceNameIoFilter",
-        new ReserveObjectInstanceNameIoFilter());
+      setIEEE1516eLogicalTimeFactory(rtiAmbassador.getFederate().getLogicalTimeFactory());
 
-      setFEDFDD();
+      fed = rtiAmbassador.getFederate().getFDD().getFED();
+
+      // TODO: resign on any error
 
       this.federateAmbassador = federateAmbassador;
 
-      return ((IEEE1516FederateHandle) federateHandle).getHandle();
+      return convert(federateHandle);
     }
-    catch (hla.rti1516.FederateAlreadyExecutionMember faem)
+    catch (CouldNotCreateLogicalTimeFactory cncltf)
     {
-      throw new FederateAlreadyExecutionMember(faem);
+      throw new RTIinternalError(cncltf);
     }
-    catch (hla.rti1516.FederationExecutionDoesNotExist fedne)
+    catch (hla.rti1516e.exceptions.FederationExecutionDoesNotExist fedne)
     {
       throw new FederationExecutionDoesNotExist(fedne);
     }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateAlreadyExecutionMember faem)
+    {
+      throw new FederateAlreadyExecutionMember(faem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (CallNotAllowedFromWithinCallback cnafwc)
+    {
+      throw new RTIinternalError(cnafwc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
+    }
+  }
+
+  public int joinFederationExecution(
+    String federateType, String federationExecutionName, FederateAmbassador federateAmbassador,
+    MobileFederateServices mobileFederateServices)
+    throws FederateAlreadyExecutionMember, FederationExecutionDoesNotExist, SaveInProgress, RestoreInProgress,
+           RTIinternalError
+  {
+    try
+    {
+      FederateHandle federateHandle = rtiAmbassador.joinFederationExecution(federateType, federationExecutionName);
+
+      setIEEE1516eLogicalTimeFactory(rtiAmbassador.getFederate().getLogicalTimeFactory());
+
+      fed = rtiAmbassador.getFederate().getFDD().getFED();
+
+      // TODO: resign on any error
+
+      this.federateAmbassador = federateAmbassador;
+
+      return convert(federateHandle);
+    }
+    catch (CouldNotCreateLogicalTimeFactory cncltf)
+    {
+      throw new RTIinternalError(cncltf);
+    }
+    catch (hla.rti1516e.exceptions.FederationExecutionDoesNotExist fedne)
+    {
+      throw new FederationExecutionDoesNotExist(fedne);
+    }
+    catch (hla.rti1516e.exceptions.FederateAlreadyExecutionMember faem)
+    {
+      throw new FederateAlreadyExecutionMember(faem);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (CallNotAllowedFromWithinCallback cnafwc)
+    {
+      throw new RTIinternalError(cnafwc);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void resignFederationExecution(int resignAction)
-    throws FederateOwnsAttributes, FederateNotExecutionMember,
-           InvalidResignAction, RTIinternalError
+    throws FederateOwnsAttributes, FederateNotExecutionMember, InvalidResignAction, RTIinternalError
   {
     try
     {
-      rtiAmbassador.resignFederationExecution(
-        getResignAction(resignAction));
+      rtiAmbassador.resignFederationExecution(getResignAction(resignAction));
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.InvalidResignAction ira)
     {
-      throw new FederateNotExecutionMember(fnem);
+      throw new InvalidResignAction(ira);
     }
-    catch (hla.rti1516.FederateOwnsAttributes foa)
+    catch (hla.rti1516e.exceptions.OwnershipAcquisitionPending oap)
+    {
+      throw new FederateOwnsAttributes(oap);
+    }
+    catch (hla.rti1516e.exceptions.FederateOwnsAttributes foa)
     {
       throw new FederateOwnsAttributes(foa);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (CallNotAllowedFromWithinCallback cnafwc)
+    {
+      throw new RTIinternalError(cnafwc);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
-    }
-    catch (hla.rti1516.OwnershipAcquisitionPending oap)
-    {
-      throw new FederateOwnsAttributes(oap);
     }
   }
 
   public void registerFederationSynchronizationPoint(String label, byte[] tag)
-    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
       rtiAmbassador.registerFederationSynchronizationPoint(label, tag);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
-  public void registerFederationSynchronizationPoint(
-    String label, byte[] tag, hla.rti.FederateHandleSet federateHandles)
-    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+  public void registerFederationSynchronizationPoint(String label, byte[] tag, FederateHandleSet federateHandles)
+    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     if (!HLA13FederateHandleSet.class.isInstance(federateHandles))
     {
@@ -502,87 +512,100 @@ public class HLA13RTIambassador
 
     try
     {
-      rtiAmbassador.registerFederationSynchronizationPoint(
-        label, tag, (HLA13FederateHandleSet) federateHandles);
+      rtiAmbassador.registerFederationSynchronizationPoint(label, tag, (HLA13FederateHandleSet) federateHandles);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (InvalidFederateHandle ifh)
     {
-      throw new FederateNotExecutionMember(fnem);
+      throw new RTIinternalError(ifh);
     }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void synchronizationPointAchieved(String label)
-    throws SynchronizationLabelNotAnnounced, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws SynchronizationLabelNotAnnounced, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
     try
     {
       rtiAmbassador.synchronizationPointAchieved(label);
     }
-    catch (hla.rti1516.SynchronizationPointLabelNotAnnounced splna)
+    catch (hla.rti1516e.exceptions.SynchronizationPointLabelNotAnnounced splna)
     {
       throw new SynchronizationLabelNotAnnounced(splna);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void requestFederationSave(String label)
-    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
       rtiAmbassador.requestFederationSave(label);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void requestFederationSave(String label, LogicalTime saveTime)
-    throws FederationTimeAlreadyPassed, InvalidFederationTime,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws FederationTimeAlreadyPassed, InvalidFederationTime, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
     try
     {
@@ -600,53 +623,59 @@ public class HLA13RTIambassador
     {
       throw new RTIinternalError(futut);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void federateSaveBegun()
-    throws SaveNotInitiated, FederateNotExecutionMember, RestoreInProgress,
-           RTIinternalError
+    throws SaveNotInitiated, FederateNotExecutionMember, RestoreInProgress, RTIinternalError
   {
     try
     {
       rtiAmbassador.federateSaveBegun();
     }
-    catch (hla.rti1516.SaveNotInitiated sni)
+    catch (hla.rti1516e.exceptions.SaveNotInitiated sni)
     {
       throw new SaveNotInitiated(sni);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void federateSaveComplete()
-    throws SaveNotInitiated, FederateNotExecutionMember, RestoreInProgress,
-           RTIinternalError
+    throws SaveNotInitiated, FederateNotExecutionMember, RestoreInProgress, RTIinternalError
   {
     try
     {
@@ -656,23 +685,26 @@ public class HLA13RTIambassador
     {
       throw new SaveNotInitiated(fhnbs);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void federateSaveNotComplete()
-    throws SaveNotInitiated, FederateNotExecutionMember, RestoreInProgress,
-           RTIinternalError
+    throws SaveNotInitiated, FederateNotExecutionMember, RestoreInProgress, RTIinternalError
   {
     try
     {
@@ -682,736 +714,788 @@ public class HLA13RTIambassador
     {
       throw new SaveNotInitiated(fhnbs);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void requestFederationRestore(String label)
-    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
       rtiAmbassador.requestFederationRestore(label);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void federateRestoreComplete()
-    throws RestoreNotRequested, FederateNotExecutionMember, SaveInProgress,
-           RTIinternalError
+    throws RestoreNotRequested, FederateNotExecutionMember, SaveInProgress, RTIinternalError
   {
     try
     {
       rtiAmbassador.federateRestoreComplete();
     }
-    catch (hla.rti1516.RestoreNotRequested rnr)
+    catch (hla.rti1516e.exceptions.RestoreNotRequested rnr)
     {
       throw new RestoreNotRequested(rnr);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void federateRestoreNotComplete()
-    throws RestoreNotRequested, FederateNotExecutionMember, SaveInProgress,
-           RTIinternalError
+    throws RestoreNotRequested, FederateNotExecutionMember, SaveInProgress, RTIinternalError
   {
     try
     {
       rtiAmbassador.federateRestoreNotComplete();
     }
-    catch (hla.rti1516.RestoreNotRequested rnr)
+    catch (hla.rti1516e.exceptions.RestoreNotRequested rnr)
     {
       throw new RestoreNotRequested(rnr);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
-  public void publishObjectClass(int objectClassHandle,
-                                 hla.rti.AttributeHandleSet attributeHandles)
-    throws ObjectClassNotDefined, AttributeNotDefined,
-           OwnershipAcquisitionPending, FederateNotExecutionMember,
+  public void publishObjectClass(int objectClassHandle, AttributeHandleSet attributeHandles)
+    throws ObjectClassNotDefined, AttributeNotDefined, OwnershipAcquisitionPending, FederateNotExecutionMember,
            SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
       rtiAmbassador.publishObjectClassAttributes(
-        convertToObjectClassHandle(objectClassHandle),
-        convert(attributeHandles));
+        convertToObjectClassHandle(objectClassHandle), convert(attributeHandles));
     }
-    catch (hla.rti1516.ObjectClassNotDefined ocnd)
-    {
-      throw new ObjectClassNotDefined(ocnd);
-    }
-    catch (hla.rti1516.AttributeNotDefined and)
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
     {
       throw new AttributeNotDefined(and);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
     {
-      throw new FederateNotExecutionMember(fnem);
+      throw new ObjectClassNotDefined(ocnd);
     }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void unpublishObjectClass(int objectClassHandle)
-    throws ObjectClassNotDefined, ObjectClassNotPublished,
-           OwnershipAcquisitionPending, FederateNotExecutionMember,
+    throws ObjectClassNotDefined, ObjectClassNotPublished, OwnershipAcquisitionPending, FederateNotExecutionMember,
            SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
-      rtiAmbassador.unpublishObjectClass(
-        convertToObjectClassHandle(objectClassHandle));
+      rtiAmbassador.unpublishObjectClass(convertToObjectClassHandle(objectClassHandle));
     }
-    catch (hla.rti1516.ObjectClassNotDefined ocnd)
-    {
-      throw new ObjectClassNotDefined(ocnd);
-    }
-    catch (hla.rti1516.OwnershipAcquisitionPending oap)
+    catch (hla.rti1516e.exceptions.OwnershipAcquisitionPending oap)
     {
       throw new OwnershipAcquisitionPending(oap);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
     {
-      throw new FederateNotExecutionMember(fnem);
+      throw new ObjectClassNotDefined(ocnd);
     }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void publishInteractionClass(int interactionClassHandle)
-    throws InteractionClassNotDefined, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws InteractionClassNotDefined, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
-      rtiAmbassador.publishInteractionClass(
-        convertToInteractionClassHandle(interactionClassHandle));
+      rtiAmbassador.publishInteractionClass(convertToInteractionClassHandle(interactionClassHandle));
     }
-    catch (hla.rti1516.InteractionClassNotDefined icnd)
+    catch (hla.rti1516e.exceptions.InteractionClassNotDefined icnd)
     {
       throw new InteractionClassNotDefined(icnd);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void unpublishInteractionClass(int interactionClassHandle)
-    throws InteractionClassNotDefined, InteractionClassNotPublished,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws InteractionClassNotDefined, InteractionClassNotPublished, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
     try
     {
-      rtiAmbassador.unpublishInteractionClass(
-        convertToInteractionClassHandle(interactionClassHandle));
+      rtiAmbassador.unpublishInteractionClass(convertToInteractionClassHandle(interactionClassHandle));
     }
-    catch (hla.rti1516.InteractionClassNotDefined icnd)
+    catch (hla.rti1516e.exceptions.InteractionClassNotDefined icnd)
     {
       throw new InteractionClassNotDefined(icnd);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
-  public void subscribeObjectClassAttributes(int objectClassHandle,
-                                             hla.rti.AttributeHandleSet attributeHandles)
-    throws ObjectClassNotDefined, AttributeNotDefined,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+  public void subscribeObjectClassAttributes(int objectClassHandle, AttributeHandleSet attributeHandles)
+    throws ObjectClassNotDefined, AttributeNotDefined, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
     try
     {
       rtiAmbassador.subscribeObjectClassAttributes(
-        convertToObjectClassHandle(objectClassHandle),
-        convert(attributeHandles));
+        convertToObjectClassHandle(objectClassHandle), convert(attributeHandles));
     }
-    catch (hla.rti1516.ObjectClassNotDefined ocnd)
-    {
-      throw new ObjectClassNotDefined(ocnd);
-    }
-    catch (hla.rti1516.AttributeNotDefined and)
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
     {
       throw new AttributeNotDefined(and);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
     {
-      throw new FederateNotExecutionMember(fnem);
+      throw new ObjectClassNotDefined(ocnd);
     }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
-  public void subscribeObjectClassAttributesPassively(
-    int objectClassHandle, hla.rti.AttributeHandleSet attributeHandles)
-    throws ObjectClassNotDefined, AttributeNotDefined,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+  public void subscribeObjectClassAttributesPassively(int objectClassHandle, AttributeHandleSet attributeHandles)
+    throws ObjectClassNotDefined, AttributeNotDefined, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
     try
     {
       rtiAmbassador.subscribeObjectClassAttributesPassively(
-        convertToObjectClassHandle(objectClassHandle),
-        convert(attributeHandles));
+        convertToObjectClassHandle(objectClassHandle), convert(attributeHandles));
     }
-    catch (hla.rti1516.ObjectClassNotDefined ocnd)
-    {
-      throw new ObjectClassNotDefined(ocnd);
-    }
-    catch (hla.rti1516.AttributeNotDefined and)
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
     {
       throw new AttributeNotDefined(and);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
     {
-      throw new FederateNotExecutionMember(fnem);
+      throw new ObjectClassNotDefined(ocnd);
     }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void unsubscribeObjectClass(int objectClassHandle)
-    throws ObjectClassNotDefined, ObjectClassNotSubscribed,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws ObjectClassNotDefined, ObjectClassNotSubscribed, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
     try
     {
-      rtiAmbassador.unsubscribeObjectClass(
-        convertToObjectClassHandle(objectClassHandle));
+      rtiAmbassador.unsubscribeObjectClass(convertToObjectClassHandle(objectClassHandle));
     }
-    catch (hla.rti1516.ObjectClassNotDefined ocnd)
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
     {
       throw new ObjectClassNotDefined(ocnd);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void subscribeInteractionClass(int interactionClassHandle)
-    throws InteractionClassNotDefined, FederateNotExecutionMember,
-           FederateLoggingServiceCalls, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws InteractionClassNotDefined, FederateNotExecutionMember, FederateLoggingServiceCalls, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
     try
     {
-      rtiAmbassador.subscribeInteractionClass(
-        convertToInteractionClassHandle(interactionClassHandle));
-    }
-    catch (hla.rti1516.InteractionClassNotDefined icnd)
-    {
-      throw new InteractionClassNotDefined(icnd);
+      rtiAmbassador.subscribeInteractionClass(convertToInteractionClassHandle(interactionClassHandle));
     }
     catch (FederateServiceInvocationsAreBeingReportedViaMOM fsiabrvmom)
     {
       throw new FederateLoggingServiceCalls(fsiabrvmom);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.InteractionClassNotDefined icnd)
     {
-      throw new FederateNotExecutionMember(fnem);
+      throw new InteractionClassNotDefined(icnd);
     }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void subscribeInteractionClassPassively(int interactionClassHandle)
-    throws InteractionClassNotDefined, FederateNotExecutionMember,
-           FederateLoggingServiceCalls, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws InteractionClassNotDefined, FederateNotExecutionMember, FederateLoggingServiceCalls, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
     try
     {
-      rtiAmbassador.subscribeInteractionClassPassively(
-        convertToInteractionClassHandle(interactionClassHandle));
-    }
-    catch (hla.rti1516.InteractionClassNotDefined icnd)
-    {
-      throw new InteractionClassNotDefined(icnd);
+      rtiAmbassador.subscribeInteractionClassPassively(convertToInteractionClassHandle(interactionClassHandle));
     }
     catch (FederateServiceInvocationsAreBeingReportedViaMOM fsiabrvmom)
     {
       throw new FederateLoggingServiceCalls(fsiabrvmom);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.InteractionClassNotDefined icnd)
     {
-      throw new FederateNotExecutionMember(fnem);
+      throw new InteractionClassNotDefined(icnd);
     }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void unsubscribeInteractionClass(int interactionClassHandle)
-    throws InteractionClassNotDefined, InteractionClassNotSubscribed,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws InteractionClassNotDefined, InteractionClassNotSubscribed, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
     try
     {
-      rtiAmbassador.unsubscribeInteractionClass(
-        convertToInteractionClassHandle(interactionClassHandle));
+      rtiAmbassador.unsubscribeInteractionClass(convertToInteractionClassHandle(interactionClassHandle));
     }
-    catch (hla.rti1516.InteractionClassNotDefined icnd)
+    catch (hla.rti1516e.exceptions.InteractionClassNotDefined icnd)
     {
       throw new InteractionClassNotDefined(icnd);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public int registerObjectInstance(int objectClassHandle)
-    throws ObjectClassNotDefined, ObjectClassNotPublished,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws ObjectClassNotDefined, ObjectClassNotPublished, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
     try
     {
-      return convert(rtiAmbassador.registerObjectInstance(
-        convertToObjectClassHandle(objectClassHandle)));
+      return add(rtiAmbassador.registerObjectInstance(convertToObjectClassHandle(objectClassHandle)));
     }
-    catch (hla.rti1516.ObjectClassNotDefined ocnd)
-    {
-      throw new ObjectClassNotDefined(ocnd);
-    }
-    catch (hla.rti1516.ObjectClassNotPublished ocnp)
+    catch (hla.rti1516e.exceptions.ObjectClassNotPublished ocnp)
     {
       throw new ObjectClassNotPublished(ocnp);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
     {
-      throw new FederateNotExecutionMember(fnem);
+      throw new ObjectClassNotDefined(ocnd);
     }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
-  public int registerObjectInstance(int objectClassHandle, String name)
-    throws ObjectClassNotDefined, ObjectClassNotPublished,
-           ObjectAlreadyRegistered, FederateNotExecutionMember,
+  public int registerObjectInstance(int objectClassHandle, String objectInstanceName)
+    throws ObjectClassNotDefined, ObjectClassNotPublished, ObjectAlreadyRegistered, FederateNotExecutionMember,
            SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
-      if (!federateAmbassadorBridge.reserveObjectInstanceName(name).get())
+      ReserveObjectInstanceNameResult result;
+
+      objectInstanceNameReservationsLock.lock();
+      try
       {
-        throw new ObjectAlreadyRegistered(name);
+        if (objectInstanceNameReservations.containsKey(objectInstanceName))
+        {
+          throw new ObjectAlreadyRegistered(objectInstanceName);
+        }
+
+        result = new ReserveObjectInstanceNameResult();
+
+        objectInstanceNameReservations.put(objectInstanceName, result);
+      }
+      finally
+      {
+        objectInstanceNameReservationsLock.unlock();
       }
 
-      return convert(rtiAmbassador.registerObjectInstance(
-        convertToObjectClassHandle(objectClassHandle), name));
+      rtiAmbassador.reserveObjectInstanceName(objectInstanceName);
+
+      if (result.wasSuccessful())
+      {
+        return add(rtiAmbassador.registerObjectInstance(
+          convertToObjectClassHandle(objectClassHandle), objectInstanceName));
+      }
+      else
+      {
+        throw new ObjectAlreadyRegistered(objectInstanceName);
+      }
     }
     catch (IllegalName in)
     {
       throw new ObjectAlreadyRegistered(in);
     }
-    catch (hla.rti1516.ObjectClassNotDefined ocnd)
-    {
-      throw new ObjectClassNotDefined(ocnd);
-    }
-    catch (hla.rti1516.ObjectClassNotPublished ocnp)
-    {
-      throw new ObjectClassNotPublished(ocnp);
-    }
-    catch (ObjectInstanceNameNotReserved oinnr)
-    {
-      throw new RTIinternalError(oinnr);
-    }
     catch (ObjectInstanceNameInUse oiniu)
     {
       throw new ObjectAlreadyRegistered(oiniu);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (ObjectInstanceNameNotReserved oinnr)
     {
-      throw new FederateNotExecutionMember(fnem);
+      // should not happen
+
+      throw new RTIinternalError(oinnr);
     }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.ObjectClassNotPublished ocnp)
+    {
+      throw new ObjectClassNotPublished(ocnp);
+    }
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
+    {
+      throw new ObjectClassNotDefined(ocnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
-    catch (ExecutionException ee)
-    {
-      throw new RTIinternalError(ee);
-    }
-    catch (InterruptedException ie)
-    {
-      throw new RTIinternalError(ie);
-    }
   }
 
-  public void updateAttributeValues(int objectInstanceHandle,
-                                    SuppliedAttributes suppliedAttributes,
-                                    byte[] tag)
-    throws ObjectNotKnown, AttributeNotDefined, AttributeNotOwned,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+  public void updateAttributeValues(int objectInstanceHandle, SuppliedAttributes suppliedAttributes, byte[] tag)
+    throws ObjectNotKnown, AttributeNotDefined, AttributeNotOwned, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
     try
     {
       rtiAmbassador.updateAttributeValues(
-        convertToObjectInstanceHandle(objectInstanceHandle),
-        convert(suppliedAttributes), tag);
+        convertToObjectInstanceHandle(objectInstanceHandle), convert(suppliedAttributes), tag);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotOwned ano)
+    {
+      throw new AttributeNotOwned(ano);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
     }
     catch (ObjectInstanceNotKnown oink)
     {
       throw new ObjectNotKnown(oink);
     }
-    catch (hla.rti1516.AttributeNotDefined and)
-    {
-      throw new AttributeNotDefined(and);
-    }
-    catch (hla.rti1516.AttributeNotOwned ano)
-    {
-      throw new AttributeNotOwned(ano);
-    }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public EventRetractionHandle updateAttributeValues(
-    int objectInstanceHandle, SuppliedAttributes suppliedAttributes,
-    byte[] tag, LogicalTime updateTime)
-    throws ObjectNotKnown, AttributeNotDefined, AttributeNotOwned,
-           InvalidFederationTime, FederateNotExecutionMember, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    int objectInstanceHandle, SuppliedAttributes suppliedAttributes, byte[] tag, LogicalTime updateTime)
+    throws ObjectNotKnown, AttributeNotDefined, AttributeNotOwned, InvalidFederationTime, FederateNotExecutionMember,
+           SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
-      return convert(
-        rtiAmbassador.updateAttributeValues(
-          convertToObjectInstanceHandle(objectInstanceHandle),
-          convert(suppliedAttributes), tag, convert(updateTime)));
+      return convert(rtiAmbassador.updateAttributeValues(
+        convertToObjectInstanceHandle(objectInstanceHandle), convert(suppliedAttributes), tag, convert(updateTime)));
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotOwned ano)
+    {
+      throw new AttributeNotOwned(ano);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
     }
     catch (ObjectInstanceNotKnown oink)
     {
       throw new ObjectNotKnown(oink);
     }
-    catch (hla.rti1516.AttributeNotDefined and)
-    {
-      throw new AttributeNotDefined(and);
-    }
-    catch (hla.rti1516.AttributeNotOwned ano)
-    {
-      throw new AttributeNotOwned(ano);
-    }
     catch (InvalidLogicalTime ilt)
     {
       throw new InvalidFederationTime(ilt);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
-  public void sendInteraction(int interactionClassHandle,
-                              SuppliedParameters suppliedParameters,
-                              byte[] tag)
-    throws InteractionClassNotDefined, InteractionClassNotPublished,
-           InteractionParameterNotDefined, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+  public void sendInteraction(int interactionClassHandle, SuppliedParameters suppliedParameters, byte[] tag)
+    throws InteractionClassNotDefined, InteractionClassNotPublished, InteractionParameterNotDefined,
+           FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
       rtiAmbassador.sendInteraction(
-        convertToInteractionClassHandle(interactionClassHandle),
-        convert(suppliedParameters), tag);
+        convertToInteractionClassHandle(interactionClassHandle), convert(suppliedParameters), tag);
     }
-    catch (hla.rti1516.InteractionClassNotPublished icnp)
+    catch (hla.rti1516e.exceptions.InteractionClassNotPublished icnp)
     {
       throw new InteractionClassNotPublished(icnp);
     }
-    catch (hla.rti1516.InteractionClassNotDefined icnd)
-    {
-      throw new InteractionClassNotDefined(icnd);
-    }
-    catch (hla.rti1516.InteractionParameterNotDefined ipnd)
+    catch (hla.rti1516e.exceptions.InteractionParameterNotDefined ipnd)
     {
       throw new InteractionParameterNotDefined(ipnd);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.InteractionClassNotDefined icnd)
     {
-      throw new FederateNotExecutionMember(fnem);
+      throw new InteractionClassNotDefined(icnd);
     }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
-  public hla.rti.EventRetractionHandle sendInteraction(
-    int interactionClassHandle, SuppliedParameters suppliedParameters,
-    byte[] tag, LogicalTime sendTime)
-    throws InteractionClassNotDefined, InteractionClassNotPublished,
-           InteractionParameterNotDefined, InvalidFederationTime,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+  public EventRetractionHandle sendInteraction(
+    int interactionClassHandle, SuppliedParameters suppliedParameters, byte[] tag, LogicalTime time)
+    throws InteractionClassNotDefined, InteractionClassNotPublished, InteractionParameterNotDefined,
+           InvalidFederationTime, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
       return convert(rtiAmbassador.sendInteraction(
-        convertToInteractionClassHandle(interactionClassHandle),
-        convert(suppliedParameters), tag, convert(sendTime)));
-    }
-    catch (hla.rti1516.InteractionClassNotDefined icnd)
-    {
-      throw new InteractionClassNotDefined(icnd);
-    }
-    catch (hla.rti1516.InteractionClassNotPublished icnp)
-    {
-      throw new InteractionClassNotPublished(icnp);
-    }
-    catch (hla.rti1516.InteractionParameterNotDefined ipnd)
-    {
-      throw new InteractionParameterNotDefined(ipnd);
+        convertToInteractionClassHandle(interactionClassHandle), convert(suppliedParameters), tag, convert(time)));
     }
     catch (InvalidLogicalTime ilt)
     {
       throw new InvalidFederationTime(ilt);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.InteractionClassNotPublished icnp)
     {
-      throw new FederateNotExecutionMember(fnem);
+      throw new InteractionClassNotPublished(icnp);
     }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.InteractionClassNotDefined icnd)
+    {
+      throw new InteractionClassNotDefined(icnd);
+    }
+    catch (hla.rti1516e.exceptions.InteractionParameterNotDefined ipnd)
+    {
+      throw new InteractionParameterNotDefined(ipnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void deleteObjectInstance(int objectInstanceHandle, byte[] tag)
-    throws ObjectNotKnown, DeletePrivilegeNotHeld, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws ObjectNotKnown, DeletePrivilegeNotHeld, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
     try
     {
       rtiAmbassador.deleteObjectInstance(
         convertToObjectInstanceHandle(objectInstanceHandle), tag);
     }
-    catch (hla.rti1516.DeletePrivilegeNotHeld dpnh)
+    catch (hla.rti1516e.exceptions.DeletePrivilegeNotHeld dpnh)
     {
       throw new DeletePrivilegeNotHeld(dpnh);
     }
@@ -1419,38 +1503,42 @@ public class HLA13RTIambassador
     {
       throw new ObjectNotKnown(oink);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
-  public hla.rti.EventRetractionHandle deleteObjectInstance(
-    int objectInstanceHandle, byte[] tag, LogicalTime deleteTime)
-    throws ObjectNotKnown, DeletePrivilegeNotHeld, InvalidFederationTime,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+  public EventRetractionHandle deleteObjectInstance(int objectInstanceHandle, byte[] tag, LogicalTime time)
+    throws ObjectNotKnown, DeletePrivilegeNotHeld, InvalidFederationTime, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
     try
     {
-      return convert(
-        rtiAmbassador.deleteObjectInstance(
-          convertToObjectInstanceHandle(objectInstanceHandle),
-          tag, convert(deleteTime)));
+      return convert(rtiAmbassador.deleteObjectInstance(
+        convertToObjectInstanceHandle(objectInstanceHandle), tag, convert(time)));
     }
-    catch (hla.rti1516.DeletePrivilegeNotHeld dpnh)
+    catch (InvalidLogicalTime ilt)
+    {
+      throw new InvalidFederationTime(ilt);
+    }
+    catch (hla.rti1516e.exceptions.DeletePrivilegeNotHeld dpnh)
     {
       throw new DeletePrivilegeNotHeld(dpnh);
     }
@@ -1458,645 +1546,676 @@ public class HLA13RTIambassador
     {
       throw new ObjectNotKnown(oink);
     }
-    catch (InvalidLogicalTime ilt)
-    {
-      throw new InvalidFederationTime(ilt);
-    }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void localDeleteObjectInstance(int objectInstanceHandle)
-    throws ObjectNotKnown, FederateOwnsAttributes, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws ObjectNotKnown, FederateOwnsAttributes, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
     try
     {
-      rtiAmbassador.localDeleteObjectInstance(
-        convertToObjectInstanceHandle(objectInstanceHandle));
+      rtiAmbassador.localDeleteObjectInstance(convertToObjectInstanceHandle(objectInstanceHandle));
+    }
+    catch (hla.rti1516e.exceptions.OwnershipAcquisitionPending oap)
+    {
+      throw new FederateOwnsAttributes(oap);
+    }
+    catch (hla.rti1516e.exceptions.FederateOwnsAttributes foa)
+    {
+      throw new FederateOwnsAttributes(foa);
     }
     catch (ObjectInstanceNotKnown oink)
     {
       throw new ObjectNotKnown(oink);
     }
-    catch (hla.rti1516.FederateOwnsAttributes foa)
-    {
-      throw new FederateOwnsAttributes(foa);
-    }
-    catch (hla.rti1516.OwnershipAcquisitionPending oap)
-    {
-      throw new FederateOwnsAttributes(oap);
-    }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void changeAttributeTransportationType(
-    int objectInstanceHandle, hla.rti.AttributeHandleSet attributeHandles,
-    int transportationTypeHandle)
-    throws ObjectNotKnown, AttributeNotDefined, AttributeNotOwned,
-           InvalidTransportationHandle, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    int objectInstanceHandle, AttributeHandleSet attributeHandles, int transportationTypeHandle)
+    throws ObjectNotKnown, AttributeNotDefined, AttributeNotOwned, InvalidTransportationHandle,
+           FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
-      rtiAmbassador.changeAttributeTransportationType(
-        convertToObjectInstanceHandle(objectInstanceHandle),
-        convert(attributeHandles),
-        getTransportationType(transportationTypeHandle));
+      rtiAmbassador.requestAttributeTransportationTypeChange(
+        convertToObjectInstanceHandle(objectInstanceHandle), convert(attributeHandles),
+        convertToTransportationTypeHandle(transportationTypeHandle));
     }
-    catch (ObjectInstanceNotKnown oink)
+    catch (hla.rti1516e.exceptions.AttributeAlreadyBeingChanged aabc)
     {
-      throw new ObjectNotKnown(oink);
+      throw new RTIinternalError(aabc);
     }
-    catch (hla.rti1516.AttributeNotDefined and)
-    {
-      throw new AttributeNotDefined(and);
-    }
-    catch (hla.rti1516.AttributeNotOwned ano)
+    catch (hla.rti1516e.exceptions.AttributeNotOwned ano)
     {
       throw new AttributeNotOwned(ano);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
     {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
-    {
-      throw new SaveInProgress(sip);
-    }
-    catch (hla.rti1516.RestoreInProgress rip)
-    {
-      throw new RestoreInProgress(rip);
-    }
-    catch (hla.rti1516.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
-    }
-  }
-
-  public void changeInteractionTransportationType(int interactionClassHandle,
-                                                  int transportationTypeHandle)
-    throws InteractionClassNotDefined, InteractionClassNotPublished,
-           InvalidTransportationHandle, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
-  {
-    try
-    {
-      rtiAmbassador.changeInteractionTransportationType(
-        convertToInteractionClassHandle(interactionClassHandle),
-        getTransportationType(transportationTypeHandle));
-    }
-    catch (hla.rti1516.InteractionClassNotDefined icnd)
-    {
-      throw new InteractionClassNotDefined(icnd);
-    }
-    catch (hla.rti1516.InteractionClassNotPublished icnp)
-    {
-      throw new InteractionClassNotPublished(icnp);
-    }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
-    {
-      throw new SaveInProgress(sip);
-    }
-    catch (hla.rti1516.RestoreInProgress rip)
-    {
-      throw new RestoreInProgress(rip);
-    }
-    catch (hla.rti1516.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
-    }
-  }
-
-  public void requestObjectAttributeValueUpdate(
-    int objectInstanceHandle, hla.rti.AttributeHandleSet attributeHandles)
-    throws ObjectNotKnown, AttributeNotDefined, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
-  {
-    try
-    {
-      rtiAmbassador.requestAttributeValueUpdate(
-        convertToObjectInstanceHandle(objectInstanceHandle),
-        convert(attributeHandles), null);
+      throw new AttributeNotDefined(and);
     }
     catch (ObjectInstanceNotKnown oink)
     {
       throw new ObjectNotKnown(oink);
     }
-    catch (hla.rti1516.AttributeNotDefined and)
+    catch (InvalidTransportationType itt)
     {
-      throw new AttributeNotDefined(and);
+      throw new InvalidTransportationHandle(itt);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
-  public void requestClassAttributeValueUpdate(
-    int objectClassHandle, hla.rti.AttributeHandleSet attributeHandles)
-    throws ObjectClassNotDefined, AttributeNotDefined,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+  public void changeInteractionTransportationType(int interactionClassHandle, int transportationTypeHandle)
+    throws InteractionClassNotDefined, InteractionClassNotPublished, InvalidTransportationHandle,
+           FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
+  {
+    try
+    {
+      rtiAmbassador.requestInteractionTransportationTypeChange(
+        convertToInteractionClassHandle(interactionClassHandle),
+        convertToTransportationTypeHandle(transportationTypeHandle));
+    }
+    catch (InteractionClassAlreadyBeingChanged icabc)
+    {
+      // TODO: don't allow this to happen?
+
+      throw new RTIinternalError(icabc.getMessage(), icabc);
+    }
+    catch (hla.rti1516e.exceptions.InteractionClassNotPublished icnp)
+    {
+      throw new InteractionClassNotPublished(icnp);
+    }
+    catch (hla.rti1516e.exceptions.InteractionClassNotDefined icnd)
+    {
+      throw new InteractionClassNotDefined(icnd);
+    }
+    catch (InvalidTransportationType itt)
+    {
+      throw new InvalidTransportationHandle(itt);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
+    }
+  }
+
+  public void requestObjectAttributeValueUpdate(int objectInstanceHandle, AttributeHandleSet attributeHandles)
+    throws ObjectNotKnown, AttributeNotDefined, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
     try
     {
       rtiAmbassador.requestAttributeValueUpdate(
-        convertToObjectClassHandle(objectClassHandle),
-        convert(attributeHandles),
-        null);
+        convertToObjectInstanceHandle(objectInstanceHandle), convert(attributeHandles), null);
     }
-    catch (hla.rti1516.ObjectClassNotDefined ocnd)
-    {
-      throw new ObjectClassNotDefined(ocnd);
-    }
-    catch (hla.rti1516.AttributeNotDefined and)
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
     {
       throw new AttributeNotDefined(and);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (ObjectInstanceNotKnown oink)
     {
-      throw new FederateNotExecutionMember(fnem);
+      throw new ObjectNotKnown(oink);
     }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
-  public void unconditionalAttributeOwnershipDivestiture(
-    int objectInstanceHandle, hla.rti.AttributeHandleSet attributeHandles)
-    throws ObjectNotKnown, AttributeNotDefined, AttributeNotOwned,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+  public void requestClassAttributeValueUpdate(int objectClassHandle, AttributeHandleSet attributeHandles)
+    throws ObjectClassNotDefined, AttributeNotDefined, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
+  {
+    try
+    {
+      rtiAmbassador.requestAttributeValueUpdate(
+        convertToObjectClassHandle(objectClassHandle), convert(attributeHandles), null);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
+    {
+      throw new ObjectClassNotDefined(ocnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
+    }
+  }
+
+  public void unconditionalAttributeOwnershipDivestiture(int objectInstanceHandle, AttributeHandleSet attributeHandles)
+    throws ObjectNotKnown, AttributeNotDefined, AttributeNotOwned, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
     try
     {
       rtiAmbassador.unconditionalAttributeOwnershipDivestiture(
-        convertToObjectInstanceHandle(objectInstanceHandle),
-        convert(attributeHandles));
+        convertToObjectInstanceHandle(objectInstanceHandle), convert(attributeHandles));
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotOwned ano)
+    {
+      throw new AttributeNotOwned(ano);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
     }
     catch (ObjectInstanceNotKnown oink)
     {
       throw new ObjectNotKnown(oink);
     }
-    catch (hla.rti1516.AttributeNotDefined and)
-    {
-      throw new AttributeNotDefined(and);
-    }
-    catch (hla.rti1516.AttributeNotOwned ano)
-    {
-      throw new AttributeNotOwned(ano);
-    }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void negotiatedAttributeOwnershipDivestiture(
-    int objectInstanceHandle, hla.rti.AttributeHandleSet attributeHandles,
-    byte[] tag)
-    throws ObjectNotKnown, AttributeNotDefined, AttributeNotOwned,
-           AttributeAlreadyBeingDivested, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    int objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
+    throws ObjectNotKnown, AttributeNotDefined, AttributeNotOwned, AttributeAlreadyBeingDivested,
+           FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
       rtiAmbassador.negotiatedAttributeOwnershipDivestiture(
-        convertToObjectInstanceHandle(objectInstanceHandle),
-        convert(attributeHandles), tag);
+        convertToObjectInstanceHandle(objectInstanceHandle), convert(attributeHandles), tag);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotOwned ano)
+    {
+      throw new AttributeNotOwned(ano);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
     }
     catch (ObjectInstanceNotKnown oink)
     {
       throw new ObjectNotKnown(oink);
     }
-    catch (hla.rti1516.AttributeNotDefined and)
-    {
-      throw new AttributeNotDefined(and);
-    }
-    catch (hla.rti1516.AttributeNotOwned ano)
-    {
-      throw new AttributeNotOwned(ano);
-    }
-    catch (hla.rti1516.AttributeAlreadyBeingDivested aabd)
+    catch (hla.rti1516e.exceptions.AttributeAlreadyBeingDivested aabd)
     {
       throw new AttributeAlreadyBeingDivested(aabd);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
-  public void attributeOwnershipAcquisition(int objectInstanceHandle,
-                                            hla.rti.AttributeHandleSet attributeHandles,
-                                            byte[] tag)
-    throws ObjectNotKnown, ObjectClassNotPublished, AttributeNotDefined,
-           AttributeNotPublished, FederateOwnsAttributes,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+  public void attributeOwnershipAcquisition(int objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
+    throws ObjectNotKnown, ObjectClassNotPublished, AttributeNotDefined, AttributeNotPublished, FederateOwnsAttributes,
+           FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
       rtiAmbassador.attributeOwnershipAcquisition(
-        convertToObjectInstanceHandle(objectInstanceHandle),
-        convert(attributeHandles), tag);
+        convertToObjectInstanceHandle(objectInstanceHandle), convert(attributeHandles), tag);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotPublished anp)
+    {
+      throw new AttributeNotPublished(anp);
+    }
+    catch (hla.rti1516e.exceptions.ObjectClassNotPublished ocnp)
+    {
+      throw new ObjectClassNotPublished(ocnp);
+    }
+    catch (hla.rti1516e.exceptions.FederateOwnsAttributes foa)
+    {
+      throw new FederateOwnsAttributes(foa);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
     }
     catch (ObjectInstanceNotKnown oink)
     {
       throw new ObjectNotKnown(oink);
     }
-    catch (hla.rti1516.ObjectClassNotPublished ocnp)
-    {
-      throw new ObjectClassNotPublished(ocnp);
-    }
-    catch (hla.rti1516.AttributeNotDefined and)
-    {
-      throw new AttributeNotDefined(and);
-    }
-    catch (hla.rti1516.AttributeNotPublished anp)
-    {
-      throw new AttributeNotPublished(anp);
-    }
-    catch (hla.rti1516.FederateOwnsAttributes foa)
-    {
-      throw new FederateOwnsAttributes(foa);
-    }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
-  public void attributeOwnershipAcquisitionIfAvailable(
-    int objectInstanceHandle, hla.rti.AttributeHandleSet attributeHandles)
-    throws ObjectNotKnown, ObjectClassNotPublished, AttributeNotDefined,
-           AttributeNotPublished, FederateOwnsAttributes,
-           AttributeAlreadyBeingAcquired, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+  public void attributeOwnershipAcquisitionIfAvailable(int objectInstanceHandle, AttributeHandleSet attributeHandles)
+    throws ObjectNotKnown, ObjectClassNotPublished, AttributeNotDefined, AttributeNotPublished, FederateOwnsAttributes,
+           AttributeAlreadyBeingAcquired, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
     try
     {
       rtiAmbassador.attributeOwnershipAcquisitionIfAvailable(
-        convertToObjectInstanceHandle(objectInstanceHandle),
-        convert(attributeHandles));
+        convertToObjectInstanceHandle(objectInstanceHandle), convert(attributeHandles));
+    }
+    catch (hla.rti1516e.exceptions.AttributeAlreadyBeingAcquired aaba)
+    {
+      throw new AttributeAlreadyBeingAcquired(aaba);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotPublished anp)
+    {
+      throw new AttributeNotPublished(anp);
+    }
+    catch (hla.rti1516e.exceptions.ObjectClassNotPublished ocnp)
+    {
+      throw new ObjectClassNotPublished(ocnp);
+    }
+    catch (hla.rti1516e.exceptions.FederateOwnsAttributes foa)
+    {
+      throw new FederateOwnsAttributes(foa);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
     }
     catch (ObjectInstanceNotKnown oink)
     {
       throw new ObjectNotKnown(oink);
     }
-    catch (hla.rti1516.ObjectClassNotPublished ocnp)
-    {
-      throw new ObjectClassNotPublished(ocnp);
-    }
-    catch (hla.rti1516.AttributeNotDefined and)
-    {
-      throw new AttributeNotDefined(and);
-    }
-    catch (hla.rti1516.AttributeNotPublished anp)
-    {
-      throw new AttributeNotPublished(anp);
-    }
-    catch (hla.rti1516.FederateOwnsAttributes foa)
-    {
-      throw new FederateOwnsAttributes(foa);
-    }
-    catch (hla.rti1516.AttributeAlreadyBeingAcquired aaba)
-    {
-      throw new AttributeAlreadyBeingAcquired(aaba);
-    }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
-  public hla.rti.AttributeHandleSet attributeOwnershipReleaseResponse(
-    int objectInstanceHandle, hla.rti.AttributeHandleSet attributeHandles)
-    throws ObjectNotKnown, AttributeNotDefined, AttributeNotOwned,
-           FederateWasNotAskedToReleaseAttribute, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+  public AttributeHandleSet attributeOwnershipReleaseResponse(
+    int objectInstanceHandle, AttributeHandleSet attributeHandles)
+    throws ObjectNotKnown, AttributeNotDefined, AttributeNotOwned, FederateWasNotAskedToReleaseAttribute,
+           FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
       return convert(rtiAmbassador.attributeOwnershipDivestitureIfWanted(
-        convertToObjectInstanceHandle(objectInstanceHandle),
-        convert(attributeHandles)));
+        convertToObjectInstanceHandle(objectInstanceHandle), convert(attributeHandles)));
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotOwned ano)
+    {
+      throw new AttributeNotOwned(ano);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
     }
     catch (ObjectInstanceNotKnown oink)
     {
       throw new ObjectNotKnown(oink);
     }
-    catch (hla.rti1516.AttributeNotDefined and)
-    {
-      throw new AttributeNotDefined(and);
-    }
-    catch (hla.rti1516.AttributeNotOwned ano)
-    {
-      throw new AttributeNotOwned(ano);
-    }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void cancelNegotiatedAttributeOwnershipDivestiture(
-    int objectInstanceHandle, hla.rti.AttributeHandleSet attributeHandles)
-    throws ObjectNotKnown, AttributeNotDefined, AttributeNotOwned,
-           AttributeDivestitureWasNotRequested, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    int objectInstanceHandle, AttributeHandleSet attributeHandles)
+    throws ObjectNotKnown, AttributeNotDefined, AttributeNotOwned, AttributeDivestitureWasNotRequested,
+           FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
       rtiAmbassador.cancelNegotiatedAttributeOwnershipDivestiture(
-        convertToObjectInstanceHandle(objectInstanceHandle),
-        convert(attributeHandles));
+        convertToObjectInstanceHandle(objectInstanceHandle), convert(attributeHandles));
+    }
+    catch (hla.rti1516e.exceptions.AttributeDivestitureWasNotRequested adwnr)
+    {
+      throw new AttributeDivestitureWasNotRequested(adwnr);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotOwned ano)
+    {
+      throw new AttributeNotOwned(ano);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
     }
     catch (ObjectInstanceNotKnown oink)
     {
       throw new ObjectNotKnown(oink);
     }
-    catch (hla.rti1516.AttributeNotDefined and)
-    {
-      throw new AttributeNotDefined(and);
-    }
-    catch (hla.rti1516.AttributeNotOwned ano)
-    {
-      throw new AttributeNotOwned(ano);
-    }
-    catch (hla.rti1516.AttributeDivestitureWasNotRequested adwnr)
-    {
-      throw new AttributeDivestitureWasNotRequested(adwnr);
-    }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
-  public void cancelAttributeOwnershipAcquisition(
-    int objectInstanceHandle, hla.rti.AttributeHandleSet attributeHandles)
-    throws ObjectNotKnown, AttributeNotDefined, AttributeAlreadyOwned,
-           AttributeAcquisitionWasNotRequested, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+  public void cancelAttributeOwnershipAcquisition(int objectInstanceHandle, AttributeHandleSet attributeHandles)
+    throws ObjectNotKnown, AttributeNotDefined, AttributeAlreadyOwned, AttributeAcquisitionWasNotRequested,
+           FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
       rtiAmbassador.cancelAttributeOwnershipAcquisition(
-        convertToObjectInstanceHandle(objectInstanceHandle),
-        convert(attributeHandles));
+        convertToObjectInstanceHandle(objectInstanceHandle), convert(attributeHandles));
+    }
+    catch (hla.rti1516e.exceptions.AttributeAcquisitionWasNotRequested aawnr)
+    {
+      throw new AttributeAcquisitionWasNotRequested(aawnr);
+    }
+    catch (hla.rti1516e.exceptions.AttributeAlreadyOwned aao)
+    {
+      throw new AttributeAlreadyOwned(aao);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
     }
     catch (ObjectInstanceNotKnown oink)
     {
       throw new ObjectNotKnown(oink);
     }
-    catch (hla.rti1516.AttributeNotDefined and)
-    {
-      throw new AttributeNotDefined(and);
-    }
-    catch (hla.rti1516.AttributeAlreadyOwned aao)
-    {
-      throw new AttributeAlreadyOwned(aao);
-    }
-    catch (hla.rti1516.AttributeAcquisitionWasNotRequested aawnr)
-    {
-      throw new AttributeAcquisitionWasNotRequested(aawnr);
-    }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
-  public void queryAttributeOwnership(int objectInstanceHandle,
-                                      int attributeHandle)
-    throws ObjectNotKnown, AttributeNotDefined, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+  public void queryAttributeOwnership(int objectInstanceHandle, int attributeHandle)
+    throws ObjectNotKnown, AttributeNotDefined, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
     try
     {
       rtiAmbassador.queryAttributeOwnership(
-        convertToObjectInstanceHandle(objectInstanceHandle),
-        convertToAttributeHandle(attributeHandle));
+        convertToObjectInstanceHandle(objectInstanceHandle), convertToAttributeHandle(attributeHandle));
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
     }
     catch (ObjectInstanceNotKnown oink)
     {
       throw new ObjectNotKnown(oink);
     }
-    catch (hla.rti1516.AttributeNotDefined and)
-    {
-      throw new AttributeNotDefined(and);
-    }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
-  public boolean isAttributeOwnedByFederate(int objectInstanceHandle,
-                                            int attributeHandle)
-    throws ObjectNotKnown, AttributeNotDefined, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+  public boolean isAttributeOwnedByFederate(int objectInstanceHandle, int attributeHandle)
+    throws ObjectNotKnown, AttributeNotDefined, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
     try
     {
       return rtiAmbassador.isAttributeOwnedByFederate(
-        convertToObjectInstanceHandle(objectInstanceHandle),
-        convertToAttributeHandle(attributeHandle));
+        convertToObjectInstanceHandle(objectInstanceHandle), convertToAttributeHandle(attributeHandle));
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
     }
     catch (ObjectInstanceNotKnown oink)
     {
       throw new ObjectNotKnown(oink);
     }
-    catch (hla.rti1516.AttributeNotDefined and)
-    {
-      throw new AttributeNotDefined(and);
-    }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
-  public void enableTimeRegulation(LogicalTime time,
-                                   LogicalTimeInterval lookahead)
-    throws TimeRegulationAlreadyEnabled, EnableTimeRegulationPending,
-           TimeAdvanceAlreadyInProgress, InvalidFederationTime,
-           InvalidLookahead, FederateNotExecutionMember, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+  public void enableTimeRegulation(LogicalTime time, LogicalTimeInterval lookahead)
+    throws TimeRegulationAlreadyEnabled, EnableTimeRegulationPending, TimeAdvanceAlreadyInProgress,
+           InvalidFederationTime, InvalidLookahead, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
     try
     {
       rtiAmbassador.enableTimeRegulation(convert(lookahead));
     }
-    catch (hla.rti1516.TimeRegulationAlreadyEnabled trae)
-    {
-      throw new TimeRegulationAlreadyEnabled(trae);
-    }
-    catch (hla.rti1516.InvalidLookahead il)
+    catch (hla.rti1516e.exceptions.InvalidLookahead il)
     {
       throw new InvalidLookahead(il);
     }
@@ -2108,27 +2227,34 @@ public class HLA13RTIambassador
     {
       throw new EnableTimeRegulationPending(rftrp);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.TimeRegulationAlreadyEnabled trae)
     {
-      throw new FederateNotExecutionMember(fnem);
+      throw new TimeRegulationAlreadyEnabled(trae);
     }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void disableTimeRegulation()
-    throws TimeRegulationWasNotEnabled, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws TimeRegulationWasNotEnabled, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
@@ -2138,36 +2264,35 @@ public class HLA13RTIambassador
     {
       throw new TimeRegulationWasNotEnabled(trisne);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void enableTimeConstrained()
-    throws TimeConstrainedAlreadyEnabled, EnableTimeConstrainedPending,
-           TimeAdvanceAlreadyInProgress, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws TimeConstrainedAlreadyEnabled, EnableTimeConstrainedPending, TimeAdvanceAlreadyInProgress,
+           FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
       rtiAmbassador.enableTimeConstrained();
-    }
-    catch (hla.rti1516.TimeConstrainedAlreadyEnabled tcae)
-    {
-      throw new TimeConstrainedAlreadyEnabled(tcae);
     }
     catch (InTimeAdvancingState itas)
     {
@@ -2177,27 +2302,34 @@ public class HLA13RTIambassador
     {
       throw new EnableTimeConstrainedPending(rftcp);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.TimeConstrainedAlreadyEnabled tcae)
     {
-      throw new FederateNotExecutionMember(fnem);
+      throw new TimeConstrainedAlreadyEnabled(tcae);
     }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void disableTimeConstrained()
-    throws TimeConstrainedWasNotEnabled, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws TimeConstrainedWasNotEnabled, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
@@ -2207,41 +2339,44 @@ public class HLA13RTIambassador
     {
       throw new TimeConstrainedWasNotEnabled(tcisne);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void timeAdvanceRequest(LogicalTime time)
-    throws InvalidFederationTime, FederationTimeAlreadyPassed,
-           TimeAdvanceAlreadyInProgress, EnableTimeRegulationPending,
-           EnableTimeConstrainedPending, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws InvalidFederationTime, FederationTimeAlreadyPassed, TimeAdvanceAlreadyInProgress,
+           EnableTimeRegulationPending, EnableTimeConstrainedPending, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
     try
     {
       rtiAmbassador.timeAdvanceRequest(convert(time));
     }
-    catch (InvalidLogicalTime ilt)
-    {
-      throw new InvalidFederationTime(ilt);
-    }
     catch (LogicalTimeAlreadyPassed ltap)
     {
       throw new FederationTimeAlreadyPassed(ltap);
+    }
+    catch (InvalidLogicalTime ilt)
+    {
+      throw new InvalidFederationTime(ilt);
     }
     catch (InTimeAdvancingState itas)
     {
@@ -2255,41 +2390,44 @@ public class HLA13RTIambassador
     {
       throw new EnableTimeConstrainedPending(rftcp);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void timeAdvanceRequestAvailable(LogicalTime time)
-    throws InvalidFederationTime, FederationTimeAlreadyPassed,
-           TimeAdvanceAlreadyInProgress, EnableTimeRegulationPending,
-           EnableTimeConstrainedPending, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws InvalidFederationTime, FederationTimeAlreadyPassed, TimeAdvanceAlreadyInProgress,
+           EnableTimeRegulationPending, EnableTimeConstrainedPending, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
     try
     {
       rtiAmbassador.timeAdvanceRequestAvailable(convert(time));
     }
-    catch (InvalidLogicalTime ilt)
-    {
-      throw new InvalidFederationTime(ilt);
-    }
     catch (LogicalTimeAlreadyPassed ltap)
     {
       throw new FederationTimeAlreadyPassed(ltap);
+    }
+    catch (InvalidLogicalTime ilt)
+    {
+      throw new InvalidFederationTime(ilt);
     }
     catch (InTimeAdvancingState itas)
     {
@@ -2303,41 +2441,44 @@ public class HLA13RTIambassador
     {
       throw new EnableTimeConstrainedPending(rftcp);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void nextEventRequest(LogicalTime time)
-    throws InvalidFederationTime, FederationTimeAlreadyPassed,
-           TimeAdvanceAlreadyInProgress, EnableTimeRegulationPending,
-           EnableTimeConstrainedPending, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws InvalidFederationTime, FederationTimeAlreadyPassed, TimeAdvanceAlreadyInProgress,
+           EnableTimeRegulationPending, EnableTimeConstrainedPending, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
     try
     {
       rtiAmbassador.nextMessageRequest(convert(time));
     }
-    catch (InvalidLogicalTime ilt)
-    {
-      throw new InvalidFederationTime(ilt);
-    }
     catch (LogicalTimeAlreadyPassed ltap)
     {
       throw new FederationTimeAlreadyPassed(ltap);
+    }
+    catch (InvalidLogicalTime ilt)
+    {
+      throw new InvalidFederationTime(ilt);
     }
     catch (InTimeAdvancingState itas)
     {
@@ -2351,41 +2492,44 @@ public class HLA13RTIambassador
     {
       throw new EnableTimeConstrainedPending(rftcp);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void nextEventRequestAvailable(LogicalTime time)
-    throws InvalidFederationTime, FederationTimeAlreadyPassed,
-           TimeAdvanceAlreadyInProgress, EnableTimeRegulationPending,
-           EnableTimeConstrainedPending, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws InvalidFederationTime, FederationTimeAlreadyPassed, TimeAdvanceAlreadyInProgress,
+           EnableTimeRegulationPending, EnableTimeConstrainedPending, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
     try
     {
       rtiAmbassador.nextMessageRequestAvailable(convert(time));
     }
-    catch (InvalidLogicalTime ilt)
-    {
-      throw new InvalidFederationTime(ilt);
-    }
     catch (LogicalTimeAlreadyPassed ltap)
     {
       throw new FederationTimeAlreadyPassed(ltap);
+    }
+    catch (InvalidLogicalTime ilt)
+    {
+      throw new InvalidFederationTime(ilt);
     }
     catch (InTimeAdvancingState itas)
     {
@@ -2399,41 +2543,44 @@ public class HLA13RTIambassador
     {
       throw new EnableTimeConstrainedPending(rftcp);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void flushQueueRequest(LogicalTime time)
-    throws InvalidFederationTime, FederationTimeAlreadyPassed,
-           TimeAdvanceAlreadyInProgress, EnableTimeRegulationPending,
-           EnableTimeConstrainedPending, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws InvalidFederationTime, FederationTimeAlreadyPassed, TimeAdvanceAlreadyInProgress,
+           EnableTimeRegulationPending, EnableTimeConstrainedPending, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
     try
     {
       rtiAmbassador.flushQueueRequest(convert(time));
     }
-    catch (InvalidLogicalTime ilt)
-    {
-      throw new InvalidFederationTime(ilt);
-    }
     catch (LogicalTimeAlreadyPassed ltap)
     {
       throw new FederationTimeAlreadyPassed(ltap);
+    }
+    catch (InvalidLogicalTime ilt)
+    {
+      throw new InvalidFederationTime(ilt);
     }
     catch (InTimeAdvancingState itas)
     {
@@ -2447,177 +2594,193 @@ public class HLA13RTIambassador
     {
       throw new EnableTimeConstrainedPending(rftcp);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void enableAsynchronousDelivery()
-    throws AsynchronousDeliveryAlreadyEnabled, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws AsynchronousDeliveryAlreadyEnabled, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
     try
     {
       rtiAmbassador.enableAsynchronousDelivery();
     }
-    catch (hla.rti1516.AsynchronousDeliveryAlreadyEnabled adae)
+    catch (hla.rti1516e.exceptions.AsynchronousDeliveryAlreadyEnabled adae)
     {
       throw new AsynchronousDeliveryAlreadyEnabled(adae);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void disableAsynchronousDelivery()
-    throws AsynchronousDeliveryAlreadyDisabled, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws AsynchronousDeliveryAlreadyDisabled, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
     try
     {
       rtiAmbassador.disableAsynchronousDelivery();
     }
-    catch (hla.rti1516.AsynchronousDeliveryAlreadyDisabled adad)
+    catch (hla.rti1516e.exceptions.AsynchronousDeliveryAlreadyDisabled adad)
     {
       throw new AsynchronousDeliveryAlreadyDisabled(adad);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public LogicalTime queryLBTS()
-    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
       TimeQueryReturn tqr = rtiAmbassador.queryGALT();
       return tqr.timeIsValid ? convert(tqr.time) : null;
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public LogicalTime queryFederateTime()
-    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
       return convert(rtiAmbassador.queryLogicalTime());
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public LogicalTime queryMinNextEventTime()
-    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
       TimeQueryReturn tqr = rtiAmbassador.queryLITS();
       return tqr.timeIsValid ? convert(tqr.time) : null;
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void modifyLookahead(LogicalTimeInterval lookahead)
-    throws InvalidLookahead, FederateNotExecutionMember, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    throws InvalidLookahead, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
       rtiAmbassador.modifyLookahead(convert(lookahead));
     }
-    catch (TimeRegulationIsNotEnabled trine)
-    {
-      throw new RTIinternalError(trine);
-    }
-    catch (hla.rti1516.InvalidLookahead il)
+    catch (hla.rti1516e.exceptions.InvalidLookahead il)
     {
       throw new InvalidLookahead(il);
     }
@@ -2625,27 +2788,34 @@ public class HLA13RTIambassador
     {
       throw new RTIinternalError(itas);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (TimeRegulationIsNotEnabled trine)
     {
-      throw new FederateNotExecutionMember(fnem);
+      throw new RTIinternalError(trine);
     }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public LogicalTimeInterval queryLookahead()
-    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
@@ -2655,27 +2825,30 @@ public class HLA13RTIambassador
     {
       throw new RTIinternalError(trine);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void retract(hla.rti.EventRetractionHandle eventRetractionHandle)
-    throws InvalidRetractionHandle, FederateNotExecutionMember, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    throws InvalidRetractionHandle, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     if (eventRetractionHandle == null)
     {
@@ -2686,8 +2859,11 @@ public class HLA13RTIambassador
       try
       {
         rtiAmbassador.retract(
-          ((HLA13EventRetractionHandle) eventRetractionHandle).
-            getMessageRetractionHandle());
+          ((HLA13EventRetractionHandle) eventRetractionHandle).getMessageRetractionHandle());
+      }
+      catch (MessageCanNoLongerBeRetracted mcnlbr)
+      {
+        throw new InvalidRetractionHandle(mcnlbr);
       }
       catch (InvalidMessageRetractionHandle imrh)
       {
@@ -2697,23 +2873,23 @@ public class HLA13RTIambassador
       {
         throw new InvalidRetractionHandle(trine);
       }
-      catch (MessageCanNoLongerBeRetracted mcnlbr)
-      {
-        throw new InvalidRetractionHandle(mcnlbr);
-      }
-      catch (hla.rti1516.FederateNotExecutionMember fnem)
-      {
-        throw new FederateNotExecutionMember(fnem);
-      }
-      catch (hla.rti1516.SaveInProgress sip)
+      catch (hla.rti1516e.exceptions.SaveInProgress sip)
       {
         throw new SaveInProgress(sip);
       }
-      catch (hla.rti1516.RestoreInProgress rip)
+      catch (hla.rti1516e.exceptions.RestoreInProgress rip)
       {
         throw new RestoreInProgress(rip);
       }
-      catch (hla.rti1516.RTIinternalError rtiie)
+      catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+      {
+        throw new FederateNotExecutionMember(fnem);
+      }
+      catch (NotConnected nc)
+      {
+        throw new RTIinternalError(nc);
+      }
+      catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
       {
         throw new RTIinternalError(rtiie);
       }
@@ -2724,138 +2900,140 @@ public class HLA13RTIambassador
     }
   }
 
-  public void changeAttributeOrderType(int objectInstanceHandle,
-                                       hla.rti.AttributeHandleSet attributeHandles,
-                                       int orderTypeHandle)
-    throws ObjectNotKnown, AttributeNotDefined, AttributeNotOwned,
-           InvalidOrderingHandle, FederateNotExecutionMember, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+  public void changeAttributeOrderType(
+    int objectInstanceHandle, AttributeHandleSet attributeHandles, int orderTypeHandle)
+    throws ObjectNotKnown, AttributeNotDefined, AttributeNotOwned, InvalidOrderingHandle, FederateNotExecutionMember,
+           SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
       rtiAmbassador.changeAttributeOrderType(
-        convertToObjectInstanceHandle(objectInstanceHandle),
-        convert(attributeHandles), getOrderType(orderTypeHandle));
+        convertToObjectInstanceHandle(objectInstanceHandle), convert(attributeHandles), getOrderType(orderTypeHandle));
     }
     catch (ObjectInstanceNotKnown oink)
     {
       throw new ObjectNotKnown(oink);
     }
-    catch (hla.rti1516.AttributeNotDefined and)
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
     {
       throw new AttributeNotDefined(and);
     }
-    catch (hla.rti1516.AttributeNotOwned ano)
+    catch (hla.rti1516e.exceptions.AttributeNotOwned ano)
     {
       throw new AttributeNotOwned(ano);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
-  public void changeInteractionOrderType(int interactionClassHandle,
-                                         int orderTypeHandle)
-    throws InteractionClassNotDefined, InteractionClassNotPublished,
-           InvalidOrderingHandle, FederateNotExecutionMember, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+  public void changeInteractionOrderType(int interactionClassHandle, int orderTypeHandle)
+    throws InteractionClassNotDefined, InteractionClassNotPublished, InvalidOrderingHandle, FederateNotExecutionMember,
+           SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
       rtiAmbassador.changeInteractionOrderType(
-        convertToInteractionClassHandle(interactionClassHandle),
-        getOrderType(orderTypeHandle));
+        convertToInteractionClassHandle(interactionClassHandle), getOrderType(orderTypeHandle));
     }
-    catch (hla.rti1516.InteractionClassNotDefined icnd)
+    catch (hla.rti1516e.exceptions.InteractionClassNotDefined icnd)
     {
       throw new InteractionClassNotDefined(icnd);
     }
-    catch (hla.rti1516.InteractionClassNotPublished icnp)
+    catch (hla.rti1516e.exceptions.InteractionClassNotPublished icnp)
     {
       throw new InteractionClassNotPublished(icnp);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public Region createRegion(int routingSpaceHandle, int numberOfExtents)
-    throws SpaceNotDefined, InvalidExtents, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws SpaceNotDefined, InvalidExtents, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
     if (numberOfExtents <= 0)
     {
       throw new InvalidExtents(String.format("%d <= 0", numberOfExtents));
     }
 
-    RoutingSpace routingSpace = fedFDD.getRoutingSpace(routingSpaceHandle);
+    RoutingSpace routingSpace = fed.getRoutingSpace(routingSpaceHandle);
 
-    log.debug("creating region in {}, with {} extent(s)",
-              routingSpace.getName(), numberOfExtents);
+    log.debug("creating region in {}, with {} extent(s)", routingSpace.getName(), numberOfExtents);
 
-    // create an IEEE 1516 region for each extent
+    // create an IEEE 1516e region for each extent
     //
-    RegionHandleSet regionHandles = new IEEE1516RegionHandleSet();
+    RegionHandleSet regionHandles = new IEEE1516eRegionHandleSet();
 
     try
     {
       for (; numberOfExtents > 0; numberOfExtents--)
       {
-        regionHandles.add(
-          rtiAmbassador.createRegion(routingSpace.getDimensionHandles()));
+        regionHandles.add(rtiAmbassador.createRegion(routingSpace.getDimensionHandles()));
       }
     }
     catch (InvalidDimensionHandle idh)
     {
       throw new RTIinternalError(idh);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
 
-    HLA13Region region =
-      new HLA13Region(regionCount.incrementAndGet(),
-                     routingSpace.getRoutingSpaceHandle(),
-                     routingSpace.getDimensions(), regionHandles);
+    HLA13Region region = new HLA13Region(
+      regionCount.incrementAndGet(), routingSpace.getRoutingSpaceHandle(), routingSpace.getDimensions(), regionHandles);
     regionsLock.lock();
     try
     {
@@ -2870,8 +3048,8 @@ public class HLA13RTIambassador
   }
 
   public void notifyOfRegionModification(Region region)
-    throws RegionNotKnown, InvalidExtents, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws RegionNotKnown, InvalidExtents, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
     if (region == null)
     {
@@ -2879,8 +3057,7 @@ public class HLA13RTIambassador
     }
     else if (!HLA13Region.class.isInstance(region))
     {
-      throw new RegionNotKnown(String.format(
-        "invalid region type: %s", region.getClass()));
+      throw new RegionNotKnown(String.format("invalid region type: %s", region.getClass()));
     }
 
     HLA13Region ohlaRegion = (HLA13Region) region;
@@ -2888,7 +3065,7 @@ public class HLA13RTIambassador
     RoutingSpace routingSpace;
     try
     {
-      routingSpace = fedFDD.getRoutingSpace(region.getSpaceHandle());
+      routingSpace = fed.getRoutingSpace(region.getSpaceHandle());
 
       for (HLA13Region.Extent extent : ohlaRegion.getExtents())
       {
@@ -2898,14 +3075,11 @@ public class HLA13RTIambassador
           int dimensionHandle = i.nextIndex();
           RangeBounds rangeBounds = i.next();
           rtiAmbassador.setRangeBounds(
-            extent.getRegionHandle(),
-            routingSpace.getDimension(dimensionHandle).getDimensionHandle(),
-            rangeBounds);
+            extent.getRegionHandle(), routingSpace.getDimension(dimensionHandle).getDimensionHandle(), rangeBounds);
         }
       }
 
-      rtiAmbassador.commitRegionModifications(
-        ohlaRegion.getRegionHandles());
+      rtiAmbassador.commitRegionModifications(ohlaRegion.getRegionHandles());
     }
     catch (SpaceNotDefined snd)
     {
@@ -2931,27 +3105,30 @@ public class HLA13RTIambassador
     {
       throw new InvalidExtents(irb);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void deleteRegion(Region region)
-    throws RegionNotKnown, RegionInUse, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws RegionNotKnown, RegionInUse, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     if (region == null)
     {
@@ -2986,33 +3163,33 @@ public class HLA13RTIambassador
     {
       throw new RegionInUse(riufuos);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
-  public int registerObjectInstanceWithRegion(int objectClassHandle,
-                                              int[] attributeHandles,
-                                              Region[] regions)
-    throws ObjectClassNotDefined, ObjectClassNotPublished, AttributeNotDefined,
-           AttributeNotPublished, RegionNotKnown, InvalidRegionContext,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+  public int registerObjectInstanceWithRegion(int objectClassHandle, int[] attributeHandles, Region[] regions)
+    throws ObjectClassNotDefined, ObjectClassNotPublished, AttributeNotDefined, AttributeNotPublished, RegionNotKnown,
+           InvalidRegionContext, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    RegionHandleSet regionHandles = new IEEE1516RegionHandleSet();
+    RegionHandleSet regionHandles = new IEEE1516eRegionHandleSet();
     for (Region region : regions)
     {
       if (region == null)
@@ -3028,38 +3205,34 @@ public class HLA13RTIambassador
       regionHandles.addAll(((HLA13Region) region).getRegionHandles());
     }
 
-    hla.rti.AttributeHandleSet attributeHandleSet =
-      new HLA13AttributeHandleSet();
+    AttributeHandleSet attributeHandleSet = new HLA13AttributeHandleSet();
     for (int attributeHandle : attributeHandles)
     {
       attributeHandleSet.add(attributeHandle);
     }
 
-    AttributeSetRegionSetPairList asrspl =
-      new IEEE1516AttributeSetRegionSetPairList();
-    AttributeRegionAssociation asrsp =
-      new AttributeRegionAssociation(convert(attributeHandleSet),
-                                     regionHandles);
+    AttributeSetRegionSetPairList asrspl = new IEEE1516eAttributeSetRegionSetPairList();
+    AttributeRegionAssociation asrsp = new AttributeRegionAssociation(convert(attributeHandleSet), regionHandles);
     asrspl.add(asrsp);
 
     try
     {
-      return convert(rtiAmbassador.registerObjectInstanceWithRegions(
+      return add(rtiAmbassador.registerObjectInstanceWithRegions(
         convertToObjectClassHandle(objectClassHandle), asrspl));
     }
-    catch (hla.rti1516.ObjectClassNotDefined ocnd)
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
     {
       throw new ObjectClassNotDefined(ocnd);
     }
-    catch (hla.rti1516.ObjectClassNotPublished ocnp)
+    catch (hla.rti1516e.exceptions.ObjectClassNotPublished ocnp)
     {
       throw new ObjectClassNotPublished(ocnp);
     }
-    catch (hla.rti1516.AttributeNotDefined and)
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
     {
       throw new AttributeNotDefined(and);
     }
-    catch (hla.rti1516.AttributeNotPublished anp)
+    catch (hla.rti1516e.exceptions.AttributeNotPublished anp)
     {
       throw new AttributeNotPublished(anp);
     }
@@ -3071,38 +3244,39 @@ public class HLA13RTIambassador
     {
       throw new RTIinternalError(rncbtf);
     }
-    catch (hla.rti1516.InvalidRegionContext irc)
+    catch (hla.rti1516e.exceptions.InvalidRegionContext irc)
     {
       throw new InvalidRegionContext(irc);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
-  public int registerObjectInstanceWithRegion(int objectClassHandle,
-                                              String name,
-                                              int[] attributeHandles,
-                                              Region[] regions)
-    throws ObjectClassNotDefined, ObjectClassNotPublished, AttributeNotDefined,
-           AttributeNotPublished, RegionNotKnown, InvalidRegionContext,
-           ObjectAlreadyRegistered, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+  public int registerObjectInstanceWithRegion(
+    int objectClassHandle, String name, int[] attributeHandles, Region[] regions)
+    throws ObjectClassNotDefined, ObjectClassNotPublished, AttributeNotDefined, AttributeNotPublished, RegionNotKnown,
+           InvalidRegionContext, ObjectAlreadyRegistered, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
-    RegionHandleSet regionHandles = new IEEE1516RegionHandleSet();
+    RegionHandleSet regionHandles = new IEEE1516eRegionHandleSet();
     for (Region region : regions)
     {
       if (region == null)
@@ -3118,38 +3292,34 @@ public class HLA13RTIambassador
       regionHandles.addAll(((HLA13Region) region).getRegionHandles());
     }
 
-    hla.rti.AttributeHandleSet attributeHandleSet =
-      new HLA13AttributeHandleSet();
+    AttributeHandleSet attributeHandleSet = new HLA13AttributeHandleSet();
     for (int attributeHandle : attributeHandles)
     {
       attributeHandleSet.add(attributeHandle);
     }
 
-    hla.rti1516.AttributeSetRegionSetPairList asrspl =
-      new IEEE1516AttributeSetRegionSetPairList();
-    AttributeRegionAssociation asrsp =
-      new AttributeRegionAssociation(convert(attributeHandleSet),
-                                     regionHandles);
+    hla.rti1516e.AttributeSetRegionSetPairList asrspl = new IEEE1516eAttributeSetRegionSetPairList();
+    AttributeRegionAssociation asrsp = new AttributeRegionAssociation(convert(attributeHandleSet), regionHandles);
     asrspl.add(asrsp);
 
     try
     {
-      return convert(rtiAmbassador.registerObjectInstanceWithRegions(
+      return add(rtiAmbassador.registerObjectInstanceWithRegions(
         convertToObjectClassHandle(objectClassHandle), asrspl, name));
     }
-    catch (hla.rti1516.ObjectClassNotDefined ocnd)
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
     {
       throw new ObjectClassNotDefined(ocnd);
     }
-    catch (hla.rti1516.ObjectClassNotPublished ocnp)
+    catch (hla.rti1516e.exceptions.ObjectClassNotPublished ocnp)
     {
       throw new ObjectClassNotPublished(ocnp);
     }
-    catch (hla.rti1516.AttributeNotDefined and)
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
     {
       throw new AttributeNotDefined(and);
     }
-    catch (hla.rti1516.AttributeNotPublished anp)
+    catch (hla.rti1516e.exceptions.AttributeNotPublished anp)
     {
       throw new AttributeNotPublished(anp);
     }
@@ -3169,33 +3339,99 @@ public class HLA13RTIambassador
     {
       throw new ObjectAlreadyRegistered(oiniu);
     }
-    catch (hla.rti1516.InvalidRegionContext irc)
+    catch (hla.rti1516e.exceptions.InvalidRegionContext irc)
     {
       throw new InvalidRegionContext(irc);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
-  public void associateRegionForUpdates(Region region,
-                                        int objectInstanceHandle,
-                                        hla.rti.AttributeHandleSet attributeHandles)
-    throws ObjectNotKnown, AttributeNotDefined, InvalidRegionContext,
-           RegionNotKnown, FederateNotExecutionMember, SaveInProgress,
+  public void associateRegionForUpdates(Region region, int objectInstanceHandle, AttributeHandleSet attributeHandles)
+    throws ObjectNotKnown, AttributeNotDefined, InvalidRegionContext, RegionNotKnown, FederateNotExecutionMember,
+           SaveInProgress, RestoreInProgress, RTIinternalError
+  {
+    if (region == null)
+    {
+      throw new RegionNotKnown("null");
+    }
+    else if (!HLA13Region.class.isInstance(region))
+    {
+      throw new RegionNotKnown(String.format(
+        "invalid region type: %s", region.getClass()));
+    }
+
+    hla.rti1516e.AttributeSetRegionSetPairList asrspl = new IEEE1516eAttributeSetRegionSetPairList();
+    AttributeRegionAssociation asrsp = new AttributeRegionAssociation(
+      convert(attributeHandles), ((HLA13Region) region).getRegionHandles());
+    asrspl.add(asrsp);
+
+    try
+    {
+      rtiAmbassador.associateRegionsForUpdates(convertToObjectInstanceHandle(objectInstanceHandle), asrspl);
+    }
+    catch (ObjectInstanceNotKnown oink)
+    {
+      throw new ObjectNotKnown(oink);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
+    }
+    catch (InvalidRegion ir)
+    {
+      throw new RegionNotKnown(ir);
+    }
+    catch (hla.rti1516e.exceptions.InvalidRegionContext irc)
+    {
+      throw new InvalidRegionContext(irc);
+    }
+    catch (RegionNotCreatedByThisFederate rncbtf)
+    {
+      throw new RTIinternalError(rncbtf);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
+    }
+  }
+
+  public void unassociateRegionForUpdates(Region region, int objectInstanceHandle)
+    throws ObjectNotKnown, InvalidRegionContext, RegionNotKnown, FederateNotExecutionMember, SaveInProgress,
            RestoreInProgress, RTIinternalError
   {
     if (region == null)
@@ -3208,98 +3444,27 @@ public class HLA13RTIambassador
         "invalid region type: %s", region.getClass()));
     }
 
-    hla.rti1516.AttributeSetRegionSetPairList asrspl =
-      new IEEE1516AttributeSetRegionSetPairList();
-    AttributeRegionAssociation asrsp =
-      new AttributeRegionAssociation(convert(attributeHandles),
-                                     ((HLA13Region) region).getRegionHandles());
-    asrspl.add(asrsp);
-
     try
     {
-      rtiAmbassador.associateRegionsForUpdates(
-        convertToObjectInstanceHandle(objectInstanceHandle), asrspl);
-    }
-    catch (ObjectInstanceNotKnown oink)
-    {
-      throw new ObjectNotKnown(oink);
-    }
-    catch (hla.rti1516.AttributeNotDefined and)
-    {
-      throw new AttributeNotDefined(and);
-    }
-    catch (InvalidRegion ir)
-    {
-      throw new RegionNotKnown(ir);
-    }
-    catch (hla.rti1516.InvalidRegionContext irc)
-    {
-      throw new InvalidRegionContext(irc);
-    }
-    catch (RegionNotCreatedByThisFederate rncbtf)
-    {
-      throw new RTIinternalError(rncbtf);
-    }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
-    {
-      throw new SaveInProgress(sip);
-    }
-    catch (hla.rti1516.RestoreInProgress rip)
-    {
-      throw new RestoreInProgress(rip);
-    }
-    catch (hla.rti1516.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
-    }
-  }
+      ObjectClass objectClass = fed.getFDD().getObjectClass(
+        rtiAmbassador.getKnownObjectClassHandle(convertToObjectInstanceHandle(objectInstanceHandle)));
 
-  public void unassociateRegionForUpdates(Region region,
-                                          int objectInstanceHandle)
-    throws ObjectNotKnown, InvalidRegionContext, RegionNotKnown,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
-  {
-    if (region == null)
-    {
-      throw new RegionNotKnown("null");
-    }
-    else if (!HLA13Region.class.isInstance(region))
-    {
-      throw new RegionNotKnown(String.format(
-        "invalid region type: %s", region.getClass()));
-    }
-
-    try
-    {
-      ObjectClass objectClass = fedFDD.getObjectClass(
-        rtiAmbassador.getKnownObjectClassHandle(
-          convertToObjectInstanceHandle(objectInstanceHandle)));
-
-      hla.rti1516.AttributeSetRegionSetPairList asrspl =
-        new IEEE1516AttributeSetRegionSetPairList();
-      AttributeRegionAssociation asrsp =
-        new AttributeRegionAssociation(
-          new HLA13AttributeHandleSet(objectClass.getAttributes().keySet()),
-          ((HLA13Region) region).getRegionHandles());
+      hla.rti1516e.AttributeSetRegionSetPairList asrspl = new IEEE1516eAttributeSetRegionSetPairList();
+      AttributeRegionAssociation asrsp = new AttributeRegionAssociation(
+        new HLA13AttributeHandleSet(objectClass.getAttributes().keySet()), ((HLA13Region) region).getRegionHandles());
       asrspl.add(asrsp);
 
-      rtiAmbassador.unassociateRegionsForUpdates(
-        convertToObjectInstanceHandle(objectInstanceHandle), asrspl);
+      rtiAmbassador.unassociateRegionsForUpdates(convertToObjectInstanceHandle(objectInstanceHandle), asrspl);
     }
     catch (ObjectInstanceNotKnown oink)
     {
       throw new ObjectNotKnown(oink);
     }
-    catch (hla.rti1516.ObjectClassNotDefined ocnd)
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
     {
       throw new RTIinternalError(ocnd);
     }
-    catch (hla.rti1516.AttributeNotDefined and)
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
     {
       throw new RTIinternalError(and);
     }
@@ -3311,30 +3476,32 @@ public class HLA13RTIambassador
     {
       throw new RTIinternalError(rncbtf);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void subscribeObjectClassAttributesWithRegion(
-    int objectClassHandle, Region region,
-    hla.rti.AttributeHandleSet attributeHandles)
-    throws ObjectClassNotDefined, AttributeNotDefined, RegionNotKnown,
-           InvalidRegionContext, FederateNotExecutionMember, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    int objectClassHandle, Region region, AttributeHandleSet attributeHandles)
+    throws ObjectClassNotDefined, AttributeNotDefined, RegionNotKnown, InvalidRegionContext, FederateNotExecutionMember,
+           SaveInProgress, RestoreInProgress, RTIinternalError
   {
     if (region == null)
     {
@@ -3348,25 +3515,20 @@ public class HLA13RTIambassador
 
     try
     {
-      ObjectClass objectClass = fedFDD.getObjectClass(
-        convertToObjectClassHandle(objectClassHandle));
+      ObjectClass objectClass = fed.getFDD().getObjectClass(convertToObjectClassHandle(objectClassHandle));
 
-      hla.rti1516.AttributeSetRegionSetPairList asrspl =
-        new IEEE1516AttributeSetRegionSetPairList();
-      AttributeRegionAssociation asrsp =
-        new AttributeRegionAssociation(
-          new HLA13AttributeHandleSet(objectClass.getAttributes().keySet()),
-          ((HLA13Region) region).getRegionHandles());
+      hla.rti1516e.AttributeSetRegionSetPairList asrspl = new IEEE1516eAttributeSetRegionSetPairList();
+      AttributeRegionAssociation asrsp = new AttributeRegionAssociation(
+        new HLA13AttributeHandleSet(objectClass.getAttributes().keySet()), ((HLA13Region) region).getRegionHandles());
       asrspl.add(asrsp);
 
-      rtiAmbassador.subscribeObjectClassAttributesWithRegions(
-        convertToObjectClassHandle(objectClassHandle), asrspl);
+      rtiAmbassador.subscribeObjectClassAttributesWithRegions(convertToObjectClassHandle(objectClassHandle), asrspl);
     }
-    catch (hla.rti1516.ObjectClassNotDefined ocnd)
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
     {
       throw new ObjectClassNotDefined(ocnd);
     }
-    catch (hla.rti1516.AttributeNotDefined and)
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
     {
       throw new AttributeNotDefined(and);
     }
@@ -3378,34 +3540,36 @@ public class HLA13RTIambassador
     {
       throw new RTIinternalError(rncbtf);
     }
-    catch (hla.rti1516.InvalidRegionContext irc)
+    catch (hla.rti1516e.exceptions.InvalidRegionContext irc)
     {
       throw new InvalidRegionContext(irc);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void subscribeObjectClassAttributesPassivelyWithRegion(
-    int objectClassHandle, Region region,
-    hla.rti.AttributeHandleSet attributeHandles)
-    throws ObjectClassNotDefined, AttributeNotDefined, RegionNotKnown,
-           InvalidRegionContext, FederateNotExecutionMember, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    int objectClassHandle, Region region, AttributeHandleSet attributeHandles)
+    throws ObjectClassNotDefined, AttributeNotDefined, RegionNotKnown, InvalidRegionContext, FederateNotExecutionMember,
+           SaveInProgress, RestoreInProgress, RTIinternalError
   {
     if (region == null)
     {
@@ -3413,27 +3577,24 @@ public class HLA13RTIambassador
     }
     else if (!HLA13Region.class.isInstance(region))
     {
-      throw new RegionNotKnown(String.format(
-        "invalid region type: %s", region.getClass()));
+      throw new RegionNotKnown(String.format("invalid region type: %s", region.getClass()));
     }
 
     try
     {
-      hla.rti1516.AttributeSetRegionSetPairList asrspl =
-        new IEEE1516AttributeSetRegionSetPairList();
-      AttributeRegionAssociation asrsp =
-        new AttributeRegionAssociation(convert(attributeHandles),
-                                       ((HLA13Region) region).getRegionHandles());
+      hla.rti1516e.AttributeSetRegionSetPairList asrspl = new IEEE1516eAttributeSetRegionSetPairList();
+      AttributeRegionAssociation asrsp = new AttributeRegionAssociation(
+        convert(attributeHandles), ((HLA13Region) region).getRegionHandles());
       asrspl.add(asrsp);
 
       rtiAmbassador.subscribeObjectClassAttributesPassivelyWithRegions(
         convertToObjectClassHandle(objectClassHandle), asrspl);
     }
-    catch (hla.rti1516.ObjectClassNotDefined ocnd)
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
     {
       throw new ObjectClassNotDefined(ocnd);
     }
-    catch (hla.rti1516.AttributeNotDefined and)
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
     {
       throw new AttributeNotDefined(and);
     }
@@ -3445,33 +3606,35 @@ public class HLA13RTIambassador
     {
       throw new RTIinternalError(rncbtf);
     }
-    catch (hla.rti1516.InvalidRegionContext irc)
+    catch (hla.rti1516e.exceptions.InvalidRegionContext irc)
     {
       throw new InvalidRegionContext(irc);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
-  public void unsubscribeObjectClassWithRegion(int objectClassHandle,
-                                               Region region)
-    throws ObjectClassNotDefined, RegionNotKnown, FederateNotSubscribed,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+  public void unsubscribeObjectClassWithRegion(int objectClassHandle, Region region)
+    throws ObjectClassNotDefined, RegionNotKnown, FederateNotSubscribed, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
     if (region == null)
     {
@@ -3479,39 +3642,33 @@ public class HLA13RTIambassador
     }
     else if (!HLA13Region.class.isInstance(region))
     {
-      throw new RegionNotKnown(String.format(
-        "invalid region type: %s", region.getClass()));
+      throw new RegionNotKnown(String.format("invalid region type: %s", region.getClass()));
     }
 
     ObjectClass objectClass;
     try
     {
-      objectClass = fedFDD.getObjectClass(
-        convertToObjectClassHandle(objectClassHandle));
+      objectClass = fed.getFDD().getObjectClass(convertToObjectClassHandle(objectClassHandle));
     }
-    catch (hla.rti1516.ObjectClassNotDefined ocnd)
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
     {
       throw new ObjectClassNotDefined(ocnd);
     }
 
-    hla.rti1516.AttributeSetRegionSetPairList asrspl =
-      new IEEE1516AttributeSetRegionSetPairList();
-    AttributeRegionAssociation asrsp =
-      new AttributeRegionAssociation(
-        new HLA13AttributeHandleSet(objectClass.getAttributes().keySet()),
-        ((HLA13Region) region).getRegionHandles());
+    hla.rti1516e.AttributeSetRegionSetPairList asrspl = new IEEE1516eAttributeSetRegionSetPairList();
+    AttributeRegionAssociation asrsp = new AttributeRegionAssociation(
+      new HLA13AttributeHandleSet(objectClass.getAttributes().keySet()), ((HLA13Region) region).getRegionHandles());
     asrspl.add(asrsp);
 
     try
     {
-      rtiAmbassador.unsubscribeObjectClassAttributesWithRegions(
-        convertToObjectClassHandle(objectClassHandle), asrspl);
+      rtiAmbassador.unsubscribeObjectClassAttributesWithRegions(convertToObjectClassHandle(objectClassHandle), asrspl);
     }
-    catch (hla.rti1516.ObjectClassNotDefined ocnd)
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
     {
       throw new ObjectClassNotDefined(ocnd);
     }
-    catch (hla.rti1516.AttributeNotDefined and)
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
     {
       throw new RTIinternalError(and);
     }
@@ -3523,29 +3680,31 @@ public class HLA13RTIambassador
     {
       throw new RTIinternalError(rncbtf);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
-  public void subscribeInteractionClassWithRegion(int interactionClassHandle,
-                                                  Region region)
-    throws InteractionClassNotDefined, RegionNotKnown, InvalidRegionContext,
-           FederateLoggingServiceCalls, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+  public void subscribeInteractionClassWithRegion(int interactionClassHandle, Region region)
+    throws InteractionClassNotDefined, RegionNotKnown, InvalidRegionContext, FederateLoggingServiceCalls,
+           FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     if (region == null)
     {
@@ -3553,17 +3712,15 @@ public class HLA13RTIambassador
     }
     else if (!HLA13Region.class.isInstance(region))
     {
-      throw new RegionNotKnown(String.format(
-        "invalid region type: %s", region.getClass()));
+      throw new RegionNotKnown(String.format("invalid region type: %s", region.getClass()));
     }
 
     try
     {
       rtiAmbassador.subscribeInteractionClassWithRegions(
-        convertToInteractionClassHandle(interactionClassHandle),
-        ((HLA13Region) region).getRegionHandles());
+        convertToInteractionClassHandle(interactionClassHandle), ((HLA13Region) region).getRegionHandles());
     }
-    catch (hla.rti1516.InteractionClassNotDefined icnd)
+    catch (hla.rti1516e.exceptions.InteractionClassNotDefined icnd)
     {
       throw new InteractionClassNotDefined(icnd);
     }
@@ -3575,7 +3732,7 @@ public class HLA13RTIambassador
     {
       throw new RTIinternalError(rncbtf);
     }
-    catch (hla.rti1516.InvalidRegionContext irc)
+    catch (hla.rti1516e.exceptions.InvalidRegionContext irc)
     {
       throw new InvalidRegionContext(irc);
     }
@@ -3583,28 +3740,90 @@ public class HLA13RTIambassador
     {
       throw new FederateLoggingServiceCalls(fsiabrvmom);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
-  public void subscribeInteractionClassPassivelyWithRegion(
-    int interactionClassHandle, Region region)
-    throws InteractionClassNotDefined, RegionNotKnown, InvalidRegionContext,
-           FederateLoggingServiceCalls, FederateNotExecutionMember,
+  public void subscribeInteractionClassPassivelyWithRegion(int interactionClassHandle, Region region)
+    throws InteractionClassNotDefined, RegionNotKnown, InvalidRegionContext, FederateLoggingServiceCalls,
+           FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
+  {
+    if (region == null)
+    {
+      throw new RegionNotKnown("null");
+    }
+    else if (!HLA13Region.class.isInstance(region))
+    {
+      throw new RegionNotKnown(String.format("invalid region type: %s", region.getClass()));
+    }
+
+    try
+    {
+      rtiAmbassador.subscribeInteractionClassPassivelyWithRegions(
+        convertToInteractionClassHandle(interactionClassHandle), ((HLA13Region) region).getRegionHandles());
+    }
+    catch (hla.rti1516e.exceptions.InteractionClassNotDefined icnd)
+    {
+      throw new InteractionClassNotDefined(icnd);
+    }
+    catch (InvalidRegion ir)
+    {
+      throw new RegionNotKnown(ir);
+    }
+    catch (RegionNotCreatedByThisFederate rncbtf)
+    {
+      throw new RTIinternalError(rncbtf);
+    }
+    catch (hla.rti1516e.exceptions.InvalidRegionContext irc)
+    {
+      throw new InvalidRegionContext(irc);
+    }
+    catch (FederateServiceInvocationsAreBeingReportedViaMOM fsiabrvmom)
+    {
+      throw new FederateLoggingServiceCalls(fsiabrvmom);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
+    }
+  }
+
+  public void unsubscribeInteractionClassWithRegion(int interactionClassHandle, Region region)
+    throws InteractionClassNotDefined, InteractionClassNotSubscribed, RegionNotKnown, FederateNotExecutionMember,
            SaveInProgress, RestoreInProgress, RTIinternalError
   {
     if (region == null)
@@ -3613,77 +3832,15 @@ public class HLA13RTIambassador
     }
     else if (!HLA13Region.class.isInstance(region))
     {
-      throw new RegionNotKnown(String.format(
-        "invalid region type: %s", region.getClass()));
-    }
-
-    try
-    {
-      rtiAmbassador.subscribeInteractionClassPassivelyWithRegions(
-        convertToInteractionClassHandle(interactionClassHandle),
-        ((HLA13Region) region).getRegionHandles());
-    }
-    catch (hla.rti1516.InteractionClassNotDefined icnd)
-    {
-      throw new InteractionClassNotDefined(icnd);
-    }
-    catch (InvalidRegion ir)
-    {
-      throw new RegionNotKnown(ir);
-    }
-    catch (RegionNotCreatedByThisFederate rncbtf)
-    {
-      throw new RTIinternalError(rncbtf);
-    }
-    catch (hla.rti1516.InvalidRegionContext irc)
-    {
-      throw new InvalidRegionContext(irc);
-    }
-    catch (FederateServiceInvocationsAreBeingReportedViaMOM fsiabrvmom)
-    {
-      throw new FederateLoggingServiceCalls(fsiabrvmom);
-    }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
-    {
-      throw new SaveInProgress(sip);
-    }
-    catch (hla.rti1516.RestoreInProgress rip)
-    {
-      throw new RestoreInProgress(rip);
-    }
-    catch (hla.rti1516.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
-    }
-  }
-
-  public void unsubscribeInteractionClassWithRegion(int interactionClassHandle,
-                                                    Region region)
-    throws InteractionClassNotDefined, InteractionClassNotSubscribed,
-           RegionNotKnown, FederateNotExecutionMember, SaveInProgress,
-           RestoreInProgress, RTIinternalError
-  {
-    if (region == null)
-    {
-      throw new RegionNotKnown("null");
-    }
-    else if (!HLA13Region.class.isInstance(region))
-    {
-      throw new RegionNotKnown(String.format(
-        "invalid region type: %s", region.getClass()));
+      throw new RegionNotKnown(String.format("invalid region type: %s", region.getClass()));
     }
 
     try
     {
       rtiAmbassador.unsubscribeInteractionClassWithRegions(
-        convertToInteractionClassHandle(interactionClassHandle),
-        ((HLA13Region) region).getRegionHandles());
+        convertToInteractionClassHandle(interactionClassHandle), ((HLA13Region) region).getRegionHandles());
     }
-    catch (hla.rti1516.InteractionClassNotDefined icnd)
+    catch (hla.rti1516e.exceptions.InteractionClassNotDefined icnd)
     {
       throw new InteractionClassNotDefined(icnd);
     }
@@ -3695,31 +3852,32 @@ public class HLA13RTIambassador
     {
       throw new RTIinternalError(rncbtf);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
-  public void sendInteractionWithRegion(int interactionClassHandle,
-                                        SuppliedParameters suppliedParameters,
-                                        byte[] tag, Region region)
-    throws InteractionClassNotDefined, InteractionClassNotPublished,
-           InteractionParameterNotDefined, RegionNotKnown,
-           InvalidRegionContext, FederateNotExecutionMember, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+  public void sendInteractionWithRegion(
+    int interactionClassHandle, SuppliedParameters suppliedParameters, byte[] tag, Region region)
+    throws InteractionClassNotDefined, InteractionClassNotPublished, InteractionParameterNotDefined, RegionNotKnown,
+           InvalidRegionContext, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     if (region == null)
     {
@@ -3727,8 +3885,7 @@ public class HLA13RTIambassador
     }
     else if (!HLA13Region.class.isInstance(region))
     {
-      throw new RegionNotKnown(String.format(
-        "invalid region type: %s", region.getClass()));
+      throw new RegionNotKnown(String.format("invalid region type: %s", region.getClass()));
     }
 
     try
@@ -3737,15 +3894,15 @@ public class HLA13RTIambassador
         convertToInteractionClassHandle(interactionClassHandle),
         convert(suppliedParameters), ((HLA13Region) region).getRegionHandles(), tag);
     }
-    catch (hla.rti1516.InteractionClassNotDefined icnd)
+    catch (hla.rti1516e.exceptions.InteractionClassNotDefined icnd)
     {
       throw new InteractionClassNotDefined(icnd);
     }
-    catch (hla.rti1516.InteractionClassNotPublished icnp)
+    catch (hla.rti1516e.exceptions.InteractionClassNotPublished icnp)
     {
       throw new InteractionClassNotPublished(icnp);
     }
-    catch (hla.rti1516.InteractionParameterNotDefined ipnd)
+    catch (hla.rti1516e.exceptions.InteractionParameterNotDefined ipnd)
     {
       throw new InteractionParameterNotDefined(ipnd);
     }
@@ -3757,23 +3914,27 @@ public class HLA13RTIambassador
     {
       throw new RTIinternalError(rncbtf);
     }
-    catch (hla.rti1516.InvalidRegionContext irc)
+    catch (hla.rti1516e.exceptions.InvalidRegionContext irc)
     {
       throw new InvalidRegionContext(irc);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
@@ -3793,27 +3954,25 @@ public class HLA13RTIambassador
     }
     else if (!HLA13Region.class.isInstance(region))
     {
-      throw new RegionNotKnown(String.format(
-        "invalid region type: %s", region.getClass()));
+      throw new RegionNotKnown(String.format("invalid region type: %s", region.getClass()));
     }
 
     try
     {
       return convert(
         rtiAmbassador.sendInteractionWithRegions(
-          convertToInteractionClassHandle(interactionClassHandle),
-          convert(suppliedParameters),
+          convertToInteractionClassHandle(interactionClassHandle), convert(suppliedParameters),
           ((HLA13Region) region).getRegionHandles(), tag, convert(sendTime)));
     }
-    catch (hla.rti1516.InteractionClassNotDefined icnd)
+    catch (hla.rti1516e.exceptions.InteractionClassNotDefined icnd)
     {
       throw new InteractionClassNotDefined(icnd);
     }
-    catch (hla.rti1516.InteractionClassNotPublished icnp)
+    catch (hla.rti1516e.exceptions.InteractionClassNotPublished icnp)
     {
       throw new InteractionClassNotPublished(icnp);
     }
-    catch (hla.rti1516.InteractionParameterNotDefined ipnd)
+    catch (hla.rti1516e.exceptions.InteractionParameterNotDefined ipnd)
     {
       throw new InteractionParameterNotDefined(ipnd);
     }
@@ -3825,7 +3984,7 @@ public class HLA13RTIambassador
     {
       throw new RTIinternalError(rncbtf);
     }
-    catch (hla.rti1516.InvalidRegionContext irc)
+    catch (hla.rti1516e.exceptions.InvalidRegionContext irc)
     {
       throw new InvalidRegionContext(irc);
     }
@@ -3833,30 +3992,32 @@ public class HLA13RTIambassador
     {
       throw new InvalidFederationTime(ilt);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void requestClassAttributeValueUpdateWithRegion(
-    int objectClassHandle, hla.rti.AttributeHandleSet attributeHandles,
-    Region region)
-    throws ObjectClassNotDefined, AttributeNotDefined, RegionNotKnown,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    int objectClassHandle, AttributeHandleSet attributeHandles, Region region)
+    throws ObjectClassNotDefined, AttributeNotDefined, RegionNotKnown, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
     if (region == null)
     {
@@ -3864,27 +4025,23 @@ public class HLA13RTIambassador
     }
     else if (!HLA13Region.class.isInstance(region))
     {
-      throw new RegionNotKnown(String.format(
-        "invalid region type: %s", region.getClass()));
+      throw new RegionNotKnown(String.format("invalid region type: %s", region.getClass()));
     }
 
-    hla.rti1516.AttributeSetRegionSetPairList asrspl =
-      new IEEE1516AttributeSetRegionSetPairList();
-    AttributeRegionAssociation asrsp =
-      new AttributeRegionAssociation(convert(attributeHandles),
-                                     ((HLA13Region) region).getRegionHandles());
+    hla.rti1516e.AttributeSetRegionSetPairList asrspl = new IEEE1516eAttributeSetRegionSetPairList();
+    AttributeRegionAssociation asrsp = new AttributeRegionAssociation(
+      convert(attributeHandles), ((HLA13Region) region).getRegionHandles());
     asrspl.add(asrsp);
 
     try
     {
-      rtiAmbassador.requestAttributeValueUpdateWithRegions(
-        convertToObjectClassHandle(objectClassHandle), asrspl, null);
+      rtiAmbassador.requestAttributeValueUpdateWithRegions(convertToObjectClassHandle(objectClassHandle), asrspl, null);
     }
-    catch (hla.rti1516.ObjectClassNotDefined ocnd)
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
     {
       throw new ObjectClassNotDefined(ocnd);
     }
-    catch (hla.rti1516.AttributeNotDefined and)
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
     {
       throw new AttributeNotDefined(and);
     }
@@ -3896,23 +4053,27 @@ public class HLA13RTIambassador
     {
       throw new RTIinternalError(rncbtf);
     }
-    catch (hla.rti1516.InvalidRegionContext irc)
+    catch (hla.rti1516e.exceptions.InvalidRegionContext irc)
     {
       throw new RegionNotKnown(irc);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
@@ -3925,15 +4086,19 @@ public class HLA13RTIambassador
     {
       return convert(rtiAmbassador.getObjectClassHandle(name));
     }
-    catch (hla.rti1516.NameNotFound nnf)
+    catch (hla.rti1516e.exceptions.NameNotFound nnf)
     {
       throw new NameNotFound(nnf);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
@@ -3944,77 +4109,84 @@ public class HLA13RTIambassador
   {
     try
     {
-      return rtiAmbassador.getObjectClassName(
-        convertToObjectClassHandle(objectClassHandle));
+      return rtiAmbassador.getObjectClassName(convertToObjectClassHandle(objectClassHandle));
     }
     catch (InvalidObjectClassHandle ioch)
     {
       throw new ObjectClassNotDefined(ioch);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public int getAttributeHandle(String name, int objectClassHandle)
-    throws ObjectClassNotDefined, NameNotFound, FederateNotExecutionMember,
-           RTIinternalError
+    throws ObjectClassNotDefined, NameNotFound, FederateNotExecutionMember, RTIinternalError
   {
     try
     {
-      return convert(rtiAmbassador.getAttributeHandle(
-        convertToObjectClassHandle(objectClassHandle), name));
+      return convert(rtiAmbassador.getAttributeHandle(convertToObjectClassHandle(objectClassHandle), name));
+    }
+    catch (hla.rti1516e.exceptions.NameNotFound nnf)
+    {
+      throw new NameNotFound(nnf);
     }
     catch (InvalidObjectClassHandle ioch)
     {
       throw new ObjectClassNotDefined(ioch);
     }
-    catch (hla.rti1516.NameNotFound nnf)
-    {
-      throw new NameNotFound(nnf);
-    }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public String getAttributeName(int attributeHandle, int objectClassHandle)
-    throws ObjectClassNotDefined, AttributeNotDefined,
-           FederateNotExecutionMember, RTIinternalError
+    throws ObjectClassNotDefined, AttributeNotDefined, FederateNotExecutionMember, RTIinternalError
   {
     try
     {
       return rtiAmbassador.getAttributeName(
-        convertToObjectClassHandle(objectClassHandle),
-        convertToAttributeHandle(attributeHandle));
+        convertToObjectClassHandle(objectClassHandle), convertToAttributeHandle(attributeHandle));
     }
-    catch (InvalidObjectClassHandle ioch)
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
     {
-      throw new ObjectClassNotDefined(ioch);
+      throw new AttributeNotDefined(and);
     }
     catch (InvalidAttributeHandle iah)
     {
       throw new AttributeNotDefined(iah);
     }
-    catch (hla.rti1516.AttributeNotDefined and)
+    catch (InvalidObjectClassHandle ioch)
     {
-      throw new AttributeNotDefined(and);
+      throw new ObjectClassNotDefined(ioch);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
@@ -4027,99 +4199,107 @@ public class HLA13RTIambassador
     {
       return convert(rtiAmbassador.getInteractionClassHandle(name));
     }
-    catch (hla.rti1516.NameNotFound nnf)
+    catch (hla.rti1516e.exceptions.NameNotFound nnf)
     {
       throw new NameNotFound(nnf);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public String getInteractionClassName(int interactionClassHandle)
-    throws InteractionClassNotDefined, FederateNotExecutionMember,
-           RTIinternalError
+    throws InteractionClassNotDefined, FederateNotExecutionMember, RTIinternalError
   {
     try
     {
-      return rtiAmbassador.getInteractionClassName(
-        convertToInteractionClassHandle(interactionClassHandle));
+      return rtiAmbassador.getInteractionClassName(convertToInteractionClassHandle(interactionClassHandle));
     }
     catch (InvalidInteractionClassHandle iich)
     {
       throw new InteractionClassNotDefined(iich);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public int getParameterHandle(String name, int interactionClassHandle)
-    throws InteractionClassNotDefined, NameNotFound, FederateNotExecutionMember,
-           RTIinternalError
+    throws InteractionClassNotDefined, NameNotFound, FederateNotExecutionMember, RTIinternalError
   {
     try
     {
-      return convert(rtiAmbassador.getParameterHandle(
-        convertToInteractionClassHandle(interactionClassHandle),
-        name));
+      return convert(rtiAmbassador.getParameterHandle(convertToInteractionClassHandle(interactionClassHandle), name));
+    }
+    catch (hla.rti1516e.exceptions.NameNotFound nnf)
+    {
+      throw new NameNotFound(nnf);
     }
     catch (InvalidInteractionClassHandle iich)
     {
       throw new InteractionClassNotDefined(iich);
     }
-    catch (hla.rti1516.NameNotFound nnf)
-    {
-      throw new NameNotFound(nnf);
-    }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
-  public String getParameterName(int parameterHandle,
-                                 int interactionClassHandle)
-    throws InteractionClassNotDefined, InteractionParameterNotDefined,
-           FederateNotExecutionMember, RTIinternalError
+  public String getParameterName(int parameterHandle, int interactionClassHandle)
+    throws InteractionClassNotDefined, InteractionParameterNotDefined, FederateNotExecutionMember, RTIinternalError
   {
     try
     {
       return rtiAmbassador.getParameterName(
-        convertToInteractionClassHandle(interactionClassHandle),
-        new IEEE1516ParameterHandle(parameterHandle));
+        convertToInteractionClassHandle(interactionClassHandle), convertToParameterHandle(parameterHandle));
     }
-    catch (InvalidInteractionClassHandle iich)
+    catch (hla.rti1516e.exceptions.InteractionParameterNotDefined ipnd)
     {
-      throw new InteractionClassNotDefined(iich);
+      throw new InteractionParameterNotDefined(ipnd);
     }
     catch (InvalidParameterHandle iph)
     {
       throw new InteractionParameterNotDefined(iph);
     }
-    catch (hla.rti1516.InteractionParameterNotDefined ipnd)
+    catch (InvalidInteractionClassHandle iich)
     {
-      throw new InteractionParameterNotDefined(ipnd);
+      throw new InteractionClassNotDefined(iich);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
@@ -4136,11 +4316,15 @@ public class HLA13RTIambassador
     {
       throw new ObjectNotKnown(oink);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
@@ -4151,18 +4335,21 @@ public class HLA13RTIambassador
   {
     try
     {
-      return rtiAmbassador.getObjectInstanceName(
-        convertToObjectInstanceHandle(objectInstanceHandle));
+      return rtiAmbassador.getObjectInstanceName(convertToObjectInstanceHandle(objectInstanceHandle));
     }
     catch (ObjectInstanceNotKnown oink)
     {
       throw new ObjectNotKnown(oink);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
@@ -4171,44 +4358,38 @@ public class HLA13RTIambassador
   public int getRoutingSpaceHandle(String name)
     throws NameNotFound, FederateNotExecutionMember, RTIinternalError
   {
-    return fedFDD.getRoutingSpaceHandle(name);
+    return fed.getRoutingSpaceHandle(name);
   }
 
   public String getRoutingSpaceName(int routingSpaceHandle)
     throws SpaceNotDefined, FederateNotExecutionMember, RTIinternalError
   {
-    return fedFDD.getRoutingSpaceName(routingSpaceHandle);
+    return fed.getRoutingSpaceName(routingSpaceHandle);
   }
 
   public int getDimensionHandle(String name, int routingSpaceHandle)
-    throws SpaceNotDefined, NameNotFound, FederateNotExecutionMember,
-           RTIinternalError
+    throws SpaceNotDefined, NameNotFound, FederateNotExecutionMember, RTIinternalError
   {
-    return fedFDD.getDimensionHandle(name, routingSpaceHandle);
+    return fed.getDimensionHandle(name, routingSpaceHandle);
   }
 
   public String getDimensionName(int dimensionHandle, int routingSpaceHandle)
-    throws SpaceNotDefined, DimensionNotDefined, FederateNotExecutionMember,
-           RTIinternalError
+    throws SpaceNotDefined, DimensionNotDefined, FederateNotExecutionMember, RTIinternalError
   {
-    return fedFDD.getDimensionName(dimensionHandle, routingSpaceHandle);
+    return fed.getDimensionName(dimensionHandle, routingSpaceHandle);
   }
 
-  public int getAttributeRoutingSpaceHandle(int attributeHandle,
-                                            int objectClassHandle)
-    throws ObjectClassNotDefined, AttributeNotDefined,
-           FederateNotExecutionMember, RTIinternalError
+  public int getAttributeRoutingSpaceHandle(int attributeHandle, int objectClassHandle)
+    throws ObjectClassNotDefined, AttributeNotDefined, FederateNotExecutionMember, RTIinternalError
   {
-    return fedFDD.getAttributeRoutingSpaceHandle(
-      convertToAttributeHandle(attributeHandle),
-      convertToObjectClassHandle(objectClassHandle));
+    return fed.getAttributeRoutingSpaceHandle(
+      convertToAttributeHandle(attributeHandle), convertToObjectClassHandle(objectClassHandle));
   }
 
   public int getInteractionRoutingSpaceHandle(int interactionClassHandle)
-    throws InteractionClassNotDefined, FederateNotExecutionMember,
-           RTIinternalError
+    throws InteractionClassNotDefined, FederateNotExecutionMember, RTIinternalError
   {
-    return fedFDD.getInteractionRoutingSpaceHandle(
+    return fed.getInteractionRoutingSpaceHandle(
       convertToInteractionClassHandle(interactionClassHandle));
   }
 
@@ -4217,18 +4398,21 @@ public class HLA13RTIambassador
   {
     try
     {
-      return convert(rtiAmbassador.getKnownObjectClassHandle(
-        convertToObjectInstanceHandle(objectInstanceHandle)));
+      return convert(rtiAmbassador.getKnownObjectClassHandle(convertToObjectInstanceHandle(objectInstanceHandle)));
     }
     catch (ObjectInstanceNotKnown oink)
     {
       throw new ObjectNotKnown(oink);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
@@ -4239,40 +4423,46 @@ public class HLA13RTIambassador
   {
     try
     {
-      return rtiAmbassador.getTransportationType(name).ordinal();
+      return convert(rtiAmbassador.getTransportationTypeHandle(name));
     }
     catch (InvalidTransportationName itn)
     {
       throw new NameNotFound(itn);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public String getTransportationName(int transportationTypeHandle)
-    throws InvalidTransportationHandle, FederateNotExecutionMember,
-           RTIinternalError
+    throws InvalidTransportationHandle, FederateNotExecutionMember, RTIinternalError
   {
     try
     {
-      return rtiAmbassador.getTransportationName(
-        getTransportationType(transportationTypeHandle));
+      return rtiAmbassador.getTransportationTypeName(convertToTransportationTypeHandle(transportationTypeHandle));
     }
     catch (InvalidTransportationType itt)
     {
       throw new InvalidTransportationHandle(itt);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
@@ -4289,11 +4479,15 @@ public class HLA13RTIambassador
     {
       throw new NameNotFound(ion);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
@@ -4310,19 +4504,22 @@ public class HLA13RTIambassador
     {
       throw new InvalidOrderingHandle(iot);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void enableClassRelevanceAdvisorySwitch()
-    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
@@ -4332,27 +4529,30 @@ public class HLA13RTIambassador
     {
       // nothing to do with exception
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void disableClassRelevanceAdvisorySwitch()
-    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
@@ -4362,27 +4562,30 @@ public class HLA13RTIambassador
     {
       // nothing to do with exception
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void enableAttributeRelevanceAdvisorySwitch()
-    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
@@ -4392,27 +4595,30 @@ public class HLA13RTIambassador
     {
       // nothing to do with exception
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void disableAttributeRelevanceAdvisorySwitch()
-    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
@@ -4422,27 +4628,30 @@ public class HLA13RTIambassador
     {
       // nothing to do with exception
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void enableAttributeScopeAdvisorySwitch()
-    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
@@ -4452,19 +4661,23 @@ public class HLA13RTIambassador
     {
       // nothing to do with exception
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
@@ -4482,27 +4695,30 @@ public class HLA13RTIambassador
     {
       // nothing to do with exception
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void enableInteractionRelevanceAdvisorySwitch()
-    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
@@ -4512,27 +4728,30 @@ public class HLA13RTIambassador
     {
       // nothing to do with exception
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
   }
 
   public void disableInteractionRelevanceAdvisorySwitch()
-    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     try
     {
@@ -4542,19 +4761,23 @@ public class HLA13RTIambassador
     {
       // nothing to do with exception
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (hla.rti1516.SaveInProgress sip)
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
       throw new SaveInProgress(sip);
     }
-    catch (hla.rti1516.RestoreInProgress rip)
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
       throw new RestoreInProgress(rip);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
@@ -4575,17 +4798,15 @@ public class HLA13RTIambassador
       try
       {
         RoutingSpace routingSpace =
-          fedFDD.getRoutingSpace(region.getSpaceHandle());
+          fed.getRoutingSpace(region.getSpaceHandle());
 
         HLA13Region snapshot = new HLA13Region(region);
         for (HLA13Region.Extent extent : snapshot.getExtents())
         {
           for (int i = 0; i < extent.getRangeBounds().size(); i++)
           {
-            RangeBounds rangeBounds =
-              rtiAmbassador.getRangeBounds(
-                extent.getRegionHandle(),
-                routingSpace.getDimension(i).getDimensionHandle());
+            RangeBounds rangeBounds = rtiAmbassador.getRangeBounds(
+              extent.getRegionHandle(), routingSpace.getDimension(i).getDimensionHandle());
 
             extent.setRangeLowerBound(i, rangeBounds.lower);
             extent.setRangeUpperBound(i, rangeBounds.upper);
@@ -4598,11 +4819,7 @@ public class HLA13RTIambassador
       {
         throw new RTIinternalError(snd);
       }
-      catch (hla.rti1516.FederateNotExecutionMember fnem)
-      {
-        throw new RTIinternalError(fnem);
-      }
-      catch (hla.rti1516.RestoreInProgress rip)
+      catch (hla.rti1516e.exceptions.RestoreInProgress rip)
       {
         throw new RTIinternalError(rip);
       }
@@ -4610,17 +4827,13 @@ public class HLA13RTIambassador
       {
         throw new RTIinternalError(ir);
       }
-      catch (hla.rti1516.SaveInProgress sip)
+      catch (hla.rti1516e.exceptions.SaveInProgress sip)
       {
         throw new RTIinternalError(sip);
       }
       catch (DimensionNotDefined dnd)
       {
         throw new RTIinternalError(dnd);
-      }
-      catch (hla.rti1516.RTIinternalError rtiie)
-      {
-        throw new RTIinternalError(rtiie);
       }
       catch (RegionDoesNotContainSpecifiedDimension rdncsd)
       {
@@ -4629,6 +4842,18 @@ public class HLA13RTIambassador
       catch (ArrayIndexOutOfBounds aioob)
       {
         throw new RTIinternalError(aioob);
+      }
+      catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+      {
+        throw new FederateNotExecutionMember(fnem);
+      }
+      catch (NotConnected nc)
+      {
+        throw new RTIinternalError(nc);
+      }
+      catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+      {
+        throw new RTIinternalError(rtiie);
       }
     }
     finally
@@ -4646,8 +4871,7 @@ public class HLA13RTIambassador
     }
     else if (!HLA13Region.class.isInstance(region))
     {
-      throw new RegionNotKnown(String.format(
-        "invalid region type: %s", region.getClass()));
+      throw new RegionNotKnown(String.format("invalid region type: %s", region.getClass()));
     }
 
     return ((HLA13Region) region).getToken();
@@ -4660,11 +4884,11 @@ public class HLA13RTIambassador
     {
       rtiAmbassador.evokeCallback(1.0);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (CallNotAllowedFromWithinCallback cnafwc)
     {
-      throw new RTIinternalError(fnem);
+      throw new RTIinternalError(cnafwc);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
@@ -4677,11 +4901,11 @@ public class HLA13RTIambassador
     {
       return rtiAmbassador.evokeMultipleCallbacks(min, max);
     }
-    catch (hla.rti1516.FederateNotExecutionMember fnem)
+    catch (CallNotAllowedFromWithinCallback cnafwc)
     {
-      throw new RTIinternalError(fnem);
+      throw new RTIinternalError(cnafwc);
     }
-    catch (hla.rti1516.RTIinternalError rtiie)
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
       throw new RTIinternalError(rtiie);
     }
@@ -4689,51 +4913,42 @@ public class HLA13RTIambassador
 
   public int convert(FederateHandle federateHandle)
   {
-    return ((IEEE1516FederateHandle) federateHandle).getHandle();
+    return ((IEEE1516eFederateHandle) federateHandle).getHandle();
   }
 
   public FederateHandle convertToFederateHandle(int federateHandle)
   {
-    return new IEEE1516FederateHandle(federateHandle);
+    return new IEEE1516eFederateHandle(federateHandle);
   }
 
-  public hla.rti1516.AttributeHandleSet convert(
-    hla.rti.AttributeHandleSet attributeHandles)
+  public hla.rti1516e.AttributeHandleSet convert(AttributeHandleSet attributeHandles)
     throws RTIinternalError
   {
-    if (attributeHandles != null &&
-        !hla.rti1516.AttributeHandleSet.class.isInstance(attributeHandles))
+    if (attributeHandles != null && !hla.rti1516e.AttributeHandleSet.class.isInstance(attributeHandles))
     {
-      throw new RTIinternalError(String.format(
-        "invalid AttributeHandleSet: %s", attributeHandles.getClass()));
+      throw new RTIinternalError(String.format("invalid AttributeHandleSet: %s", attributeHandles.getClass()));
     }
-    return (hla.rti1516.AttributeHandleSet) attributeHandles;
+    return (hla.rti1516e.AttributeHandleSet) attributeHandles;
   }
 
-  public hla.rti.AttributeHandleSet convert(
-    hla.rti1516.AttributeHandleSet attributeHandles)
+  public AttributeHandleSet convert(hla.rti1516e.AttributeHandleSet attributeHandles)
     throws RTIinternalError
   {
-    return attributeHandles == null ||
-           hla.rti.AttributeHandleSet.class.isInstance(attributeHandles) ?
-      (hla.rti.AttributeHandleSet) attributeHandles :
-      new HLA13AttributeHandleSet(attributeHandles);
+    return attributeHandles == null || AttributeHandleSet.class.isInstance(attributeHandles) ?
+      (AttributeHandleSet) attributeHandles : new HLA13AttributeHandleSet(attributeHandles);
   }
 
-  public hla.rti1516.FederateHandleSet convert(
-    hla.rti.FederateHandleSet federateHandles)
+  public hla.rti1516e.FederateHandleSet convert(hla.rti.FederateHandleSet federateHandles)
     throws RTIinternalError
   {
-    if (federateHandles != null &&
-        !hla.rti1516.FederateHandleSet.class.isInstance(federateHandles))
+    if (federateHandles != null && !hla.rti1516e.FederateHandleSet.class.isInstance(federateHandles))
     {
-      throw new RTIinternalError(String.format(
-        "invalid FederateHandleSet: %s", federateHandles.getClass()));
+      throw new RTIinternalError(String.format("invalid FederateHandleSet: %s", federateHandles.getClass()));
     }
-    return (hla.rti1516.FederateHandleSet) federateHandles;
+    return (hla.rti1516e.FederateHandleSet) federateHandles;
   }
 
-  public hla.rti1516.LogicalTime convert(LogicalTime logicalTime)
+  public hla.rti1516e.LogicalTime convert(LogicalTime logicalTime)
     throws RTIinternalError
   {
     byte[] buffer = new byte[logicalTime.encodedLength()];
@@ -4741,19 +4956,26 @@ public class HLA13RTIambassador
 
     try
     {
-      return ieee1516LogicalTimeFactory.decode(buffer, 0);
+      return ieee1516eLogicalTimeFactory.decodeTime(buffer, 0);
     }
-    catch (hla.rti1516.CouldNotDecode cnd)
+    catch (hla.rti1516e.exceptions.CouldNotDecode cnd)
     {
       throw new RTIinternalError(cnd);
     }
   }
 
-  public LogicalTime convert(hla.rti1516.LogicalTime logicalTime)
+  public LogicalTime convert(hla.rti1516e.LogicalTime logicalTime)
     throws RTIinternalError
   {
     byte[] buffer = new byte[logicalTime.encodedLength()];
-    logicalTime.encode(buffer, 0);
+    try
+    {
+      logicalTime.encode(buffer, 0);
+    }
+    catch (CouldNotEncode cne)
+    {
+      throw new RTIinternalError(cne);
+    }
 
     try
     {
@@ -4765,8 +4987,7 @@ public class HLA13RTIambassador
     }
   }
 
-  public hla.rti1516.LogicalTimeInterval convert(
-    LogicalTimeInterval logicalTimeInterval)
+  public hla.rti1516e.LogicalTimeInterval convert(LogicalTimeInterval logicalTimeInterval)
     throws RTIinternalError
   {
     byte[] buffer = new byte[logicalTimeInterval.encodedLength()];
@@ -4774,20 +4995,26 @@ public class HLA13RTIambassador
 
     try
     {
-      return ieee1516LogicalTimeIntervalFactory.decode(buffer, 0);
+      return ieee1516eLogicalTimeFactory.decodeInterval(buffer, 0);
     }
-    catch (hla.rti1516.CouldNotDecode cnd)
+    catch (hla.rti1516e.exceptions.CouldNotDecode cnd)
     {
       throw new RTIinternalError(cnd);
     }
   }
 
-  public LogicalTimeInterval convert(
-    hla.rti1516.LogicalTimeInterval logicalTimeInterval)
+  public LogicalTimeInterval convert(hla.rti1516e.LogicalTimeInterval logicalTimeInterval)
     throws RTIinternalError
   {
     byte[] buffer = new byte[logicalTimeInterval.encodedLength()];
-    logicalTimeInterval.encode(buffer, 0);
+    try
+    {
+      logicalTimeInterval.encode(buffer, 0);
+    }
+    catch (CouldNotEncode cne)
+    {
+      throw new RTIinternalError(cne);
+    }
 
     try
     {
@@ -4799,67 +5026,80 @@ public class HLA13RTIambassador
     }
   }
 
-  public int convert(ObjectInstanceHandle objectInstanceHandle)
+  public int add(ObjectInstanceHandle objectInstanceHandle)
   {
-    return ((IEEE1516ObjectInstanceHandle) objectInstanceHandle).getHandle();
+    Integer hla13ObjectInstanceHandle = objectInstanceHandleCount.incrementAndGet();
+    objectInstanceHandles.put(objectInstanceHandle, hla13ObjectInstanceHandle);
+    ieee1516eObjectInstanceHandles.put(hla13ObjectInstanceHandle, objectInstanceHandle);
+    return hla13ObjectInstanceHandle;
   }
 
-  public ObjectInstanceHandle convertToObjectInstanceHandle(
-    int objectInstanceHandle)
+  public int convert(ObjectInstanceHandle objectInstanceHandle)
   {
-    return new IEEE1516ObjectInstanceHandle(objectInstanceHandle);
+    return objectInstanceHandles.get(objectInstanceHandle);
+  }
+
+  public ObjectInstanceHandle convertToObjectInstanceHandle(int objectInstanceHandle)
+  {
+    return ieee1516eObjectInstanceHandles.get(objectInstanceHandle);
   }
 
   public int convert(ObjectClassHandle objectClassHandle)
   {
-    return ((IEEE1516ObjectClassHandle) objectClassHandle).getHandle();
+    return ((IEEE1516eObjectClassHandle) objectClassHandle).getHandle();
   }
 
-  public ObjectClassHandle convertToObjectClassHandle(
-    int objectClassHandle)
+  public ObjectClassHandle convertToObjectClassHandle(int objectClassHandle)
   {
-    return new IEEE1516ObjectClassHandle(objectClassHandle);
+    return new IEEE1516eObjectClassHandle(objectClassHandle);
   }
 
   public int convert(AttributeHandle attributeHandle)
   {
-    return ((IEEE1516AttributeHandle) attributeHandle).getHandle();
+    return ((IEEE1516eAttributeHandle) attributeHandle).getHandle();
   }
 
   public AttributeHandle convertToAttributeHandle(int attributeHandle)
   {
-    return new IEEE1516AttributeHandle(attributeHandle);
+    return new IEEE1516eAttributeHandle(attributeHandle);
   }
 
   public int convert(InteractionClassHandle interactionClassHandle)
   {
-    return ((IEEE1516InteractionClassHandle) interactionClassHandle).getHandle();
+    return ((IEEE1516eInteractionClassHandle) interactionClassHandle).getHandle();
   }
 
-  public InteractionClassHandle convertToInteractionClassHandle(
-    int interactionClassHandle)
+  public InteractionClassHandle convertToInteractionClassHandle(int interactionClassHandle)
   {
-    return new IEEE1516InteractionClassHandle(interactionClassHandle);
+    return new IEEE1516eInteractionClassHandle(interactionClassHandle);
   }
 
   public int convert(ParameterHandle parameterHandle)
   {
-    return ((IEEE1516ParameterHandle) parameterHandle).getHandle();
+    return ((IEEE1516eParameterHandle) parameterHandle).getHandle();
   }
 
   public ParameterHandle convertToParameterHandle(int parameterHandle)
   {
-    return new IEEE1516ParameterHandle(parameterHandle);
+    return new IEEE1516eParameterHandle(parameterHandle);
   }
 
-  public EventRetractionHandle convert(
-    MessageRetractionReturn messageRetractionReturn)
+  protected int convert(TransportationTypeHandle transportationTypeHandle)
+  {
+    return ((IEEE1516eTransportationTypeHandle) transportationTypeHandle).getHandle();
+  }
+
+  protected TransportationTypeHandle convertToTransportationTypeHandle(int transportationTypeHandle)
+  {
+    return new IEEE1516eTransportationTypeHandle(transportationTypeHandle);
+  }
+
+  public EventRetractionHandle convert(MessageRetractionReturn messageRetractionReturn)
   {
     return new HLA13EventRetractionHandle(messageRetractionReturn);
   }
 
-  public EventRetractionHandle convert(
-    MessageRetractionHandle messageRetractionHandle)
+  public EventRetractionHandle convert(MessageRetractionHandle messageRetractionHandle)
   {
     return new HLA13EventRetractionHandle(messageRetractionHandle);
   }
@@ -4874,20 +5114,6 @@ public class HLA13RTIambassador
     return (HLA13SuppliedParameters) suppliedParameters;
   }
 
-  protected void setFEDFDD()
-  {
-    if (rtiAmbassador.getJoinedFederate().getFDD() instanceof FEDFDD)
-    {
-      fedFDD = (FEDFDD) rtiAmbassador.getJoinedFederate().getFDD();
-    }
-    else
-    {
-      log.warn("HLA 1.3 routing unavailable: federation was not created from FED file");
-
-      fedFDD = new FEDFDD(rtiAmbassador.getJoinedFederate().getFDD());
-    }
-  }
-
   protected OrderType getOrderType(int orderTypeHandle)
     throws InvalidOrderingHandle
   {
@@ -4897,20 +5123,6 @@ public class HLA13RTIambassador
     }
 
     return OrderType.values()[orderTypeHandle];
-  }
-
-  protected TransportationType getTransportationType(
-    int transportationTypeHandle)
-    throws InvalidTransportationHandle
-  {
-    if (transportationTypeHandle < 0 ||
-        transportationTypeHandle >= TransportationType.values().length)
-    {
-      throw new InvalidTransportationHandle(
-        Integer.toString(transportationTypeHandle));
-    }
-
-    return TransportationType.values()[transportationTypeHandle];
   }
 
   protected ResignAction getResignAction(int resignAction)
@@ -4924,253 +5136,89 @@ public class HLA13RTIambassador
     return ResignAction.values()[resignAction];
   }
 
-  protected LogicalTimeFactory getLogicalTimeFactory(String federateType)
+  @SuppressWarnings("unchecked")
+  public void setIEEE1516eLogicalTimeFactory(hla.rti1516e.LogicalTimeFactory ieee1516eLogicalTimeFactory)
+    throws RTIinternalError
+  {
+    this.ieee1516eLogicalTimeFactory = ieee1516eLogicalTimeFactory;
+
+    String logicalTimeFactoryClassNameProperty = String.format(
+      OHLA_FEDERATE_HLA13_LOGICAL_TIME_IMPLEMENTATION_PROPERTY, ieee1516eLogicalTimeFactory.getName());
+    String value = System.getProperty(logicalTimeFactoryClassNameProperty);
+    if (value == null)
+    {
+      throw new RTIinternalError(String.format(
+        "HLA 1.3 Logical Time Implementation could not be determined for IEEE 1516e Logical Time Implementation: %s",
+        ieee1516eLogicalTimeFactory.getName()));
+    }
+    else
+    {
+      ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+
+      for (String className : value.split(","))
+      {
+        className = className.trim();
+
+        try
+        {
+          Class<?> clazz = classLoader.loadClass(className);
+
+          if (LogicalTimeFactory.class.isAssignableFrom(clazz))
+          {
+            logicalTimeFactory = ((Class<LogicalTimeFactory>) clazz).newInstance();
+          }
+          else if (LogicalTimeIntervalFactory.class.isAssignableFrom(clazz))
+          {
+            logicalTimeIntervalFactory = ((Class<LogicalTimeIntervalFactory>) clazz).newInstance();
+          }
+        }
+        catch (ClassNotFoundException cnfe)
+        {
+          throw new RTIinternalError(String.format("class not found: %s", className), cnfe);
+        }
+        catch (InstantiationException ie)
+        {
+          throw new RTIinternalError(String.format("unable to instantiate: %s", className), ie);
+        }
+        catch (IllegalAccessException iae)
+        {
+          throw new RTIinternalError(String.format("unable to access: %s", className), iae);
+        }
+      }
+
+      if (logicalTimeFactory == null || logicalTimeIntervalFactory == null)
+      {
+        throw new RTIinternalError(String.format(
+          "HLA 1.3 Logical Time Implementation could not be determined for IEEE 1516e Logical Time Implementation: %s",
+          ieee1516eLogicalTimeFactory.getName()));
+      }
+    }
+  }
+
+  private String getIEEE1516eLogicalTimeImplementationName(String federationExecutionName)
     throws RTIinternalError
   {
     String logicalTimeFactoryClassNameProperty = String.format(
-      OHLA_FEDERATE_RTI_LOGICAL_TIME_FACTORY_PROPERTY, federateType);
-    String logicalTimeFactoryClassName =
-      System.getProperty(String.format(
-        OHLA_FEDERATE_RTI_LOGICAL_TIME_FACTORY_PROPERTY, federateType));
-    if (logicalTimeFactoryClassName == null)
-    {
-      logicalTimeFactoryClassName = System.getProperty(
-        DEFAULT_OHLA_FEDERATE_RTI_LOGICAL_TIME_FACTORY_PROPERTY);
-    }
-
-    if (logicalTimeFactoryClassName == null)
+      OHLA_HLA13_FEDERATION_EXECUTION_LOGICAL_TIME_IMPLEMENTATION_PROPERTY, federationExecutionName);
+    String logicalTimeImplementationName = System.getProperty(logicalTimeFactoryClassNameProperty);
+    if (logicalTimeImplementationName == null)
     {
       throw new RTIinternalError(String.format(
-        "must supply either %s or %s properties",
-        logicalTimeFactoryClassNameProperty,
-        DEFAULT_OHLA_FEDERATE_RTI_LOGICAL_TIME_FACTORY_PROPERTY));
+        "IEEE 1516e Logical Time Implementation could not be determined for Federation: %s", federationExecutionName));
     }
-
-    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-    try
-    {
-      return (LogicalTimeFactory) classLoader.loadClass(
-        logicalTimeFactoryClassName).newInstance();
-    }
-    catch (ClassCastException cce)
-    {
-      throw new RTIinternalError(String.format(
-        "invalid class: '%s' (not an %s)", logicalTimeFactoryClassName,
-        LogicalTimeFactory.class), cce);
-    }
-    catch (ClassNotFoundException cnfe)
-    {
-      throw new RTIinternalError(String.format(
-        "class not found: %s", logicalTimeFactoryClassName), cnfe);
-    }
-    catch (InstantiationException ie)
-    {
-      throw new RTIinternalError(String.format(
-        "unable to instantiate: %s", logicalTimeFactoryClassName), ie);
-    }
-    catch (IllegalAccessException iae)
-    {
-      throw new RTIinternalError(String.format(
-        "unable to access: %s", logicalTimeFactoryClassName), iae);
-    }
+    return logicalTimeImplementationName;
   }
 
-  protected hla.rti1516.LogicalTimeFactory getIEEE1516LogicalTimeFactory(
-    String federateType)
-    throws RTIinternalError
+  private static class ReserveObjectInstanceNameResult
   {
-    String logicalTimeFactoryClassNameProperty = String.format(
-      OHLA_FEDERATE_RTI_1516_LOGICAL_TIME_FACTORY_PROPERTY, federateType);
-    String logicalTimeFactoryClassName =
-      System.getProperty(String.format(
-        OHLA_FEDERATE_RTI_1516_LOGICAL_TIME_FACTORY_PROPERTY, federateType));
-    if (logicalTimeFactoryClassName == null)
-    {
-      logicalTimeFactoryClassName = System.getProperty(
-        DEFAULT_OHLA_FEDERATE_RTI_1516_LOGICAL_TIME_FACTORY_PROPERTY);
-    }
+    private final CountDownLatch latch = new CountDownLatch(1);
 
-    if (logicalTimeFactoryClassName == null)
-    {
-      throw new RTIinternalError(String.format(
-        "must supply either %s or %s properties",
-        logicalTimeFactoryClassNameProperty,
-        DEFAULT_OHLA_FEDERATE_RTI_1516_LOGICAL_TIME_FACTORY_PROPERTY));
-    }
-
-    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-    try
-    {
-      return (hla.rti1516.LogicalTimeFactory) classLoader.loadClass(
-        logicalTimeFactoryClassName).newInstance();
-    }
-    catch (ClassCastException cce)
-    {
-      throw new RTIinternalError(String.format(
-        "invalid class: '%s' (not an %s)", logicalTimeFactoryClassName,
-        hla.rti1516.LogicalTimeFactory.class), cce);
-    }
-    catch (ClassNotFoundException cnfe)
-    {
-      throw new RTIinternalError(String.format(
-        "class not found: %s", logicalTimeFactoryClassName), cnfe);
-    }
-    catch (InstantiationException ie)
-    {
-      throw new RTIinternalError(String.format(
-        "unable to instantiate: %s", logicalTimeFactoryClassName), ie);
-    }
-    catch (IllegalAccessException iae)
-    {
-      throw new RTIinternalError(String.format(
-        "unable to access: %s", logicalTimeFactoryClassName), iae);
-    }
-  }
-
-  protected LogicalTimeIntervalFactory getLogicalTimeIntervalFactory(
-    String federateType)
-    throws RTIinternalError
-  {
-    String logicalTimeIntervalFactoryClassNameProperty = String.format(
-      OHLA_FEDERATE_RTI_LOGICAL_TIME_INTERVAL_FACTORY_PROPERTY, federateType);
-    String logicalTimeIntervalFactoryClassName =
-      System.getProperty(logicalTimeIntervalFactoryClassNameProperty);
-    if (logicalTimeIntervalFactoryClassName == null)
-    {
-      logicalTimeIntervalFactoryClassName = System.getProperty(
-        DEFAULT_OHLA_FEDERATE_RTI_LOGICAL_TIME_INTERVAL_FACTORY_PROPERTY);
-    }
-
-    if (logicalTimeIntervalFactoryClassName == null)
-    {
-      throw new RTIinternalError(String.format(
-        "must supply either %s or %s properties",
-        logicalTimeIntervalFactoryClassNameProperty,
-        DEFAULT_OHLA_FEDERATE_RTI_LOGICAL_TIME_INTERVAL_FACTORY_PROPERTY));
-    }
-
-    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-    try
-    {
-      return (LogicalTimeIntervalFactory) classLoader.loadClass(
-        logicalTimeIntervalFactoryClassName).newInstance();
-    }
-    catch (ClassCastException cce)
-    {
-      throw new RTIinternalError(String.format(
-        "invalid class: '%s' (not an %s)", logicalTimeIntervalFactoryClassName,
-        LogicalTimeFactory.class), cce);
-    }
-    catch (ClassNotFoundException cnfe)
-    {
-      throw new RTIinternalError(String.format(
-        "class not found: %s", logicalTimeIntervalFactoryClassName), cnfe);
-    }
-    catch (InstantiationException ie)
-    {
-      throw new RTIinternalError(String.format(
-        "unable to instantiate: %s", logicalTimeIntervalFactoryClassName), ie);
-    }
-    catch (IllegalAccessException iae)
-    {
-      throw new RTIinternalError(String.format(
-        "unable to access: %s", logicalTimeIntervalFactoryClassName), iae);
-    }
-  }
-
-  protected hla.rti1516.LogicalTimeIntervalFactory getIEEE1516LogicalTimeIntervalFactory(
-    String federateType)
-    throws RTIinternalError
-  {
-    String logicalTimeIntervalFactoryClassNameProperty = String.format(
-      OHLA_FEDERATE_RTI_1516_LOGICAL_TIME_INTERVAL_FACTORY_PROPERTY,
-      federateType);
-    String logicalTimeIntervalFactoryClassName =
-      System.getProperty(logicalTimeIntervalFactoryClassNameProperty);
-    if (logicalTimeIntervalFactoryClassName == null)
-    {
-      logicalTimeIntervalFactoryClassName = System.getProperty(
-        DEFAULT_OHLA_FEDERATE_RTI_1516_LOGICAL_TIME_INTERVAL_FACTORY_PROPERTY);
-    }
-
-    if (logicalTimeIntervalFactoryClassName == null)
-    {
-      throw new RTIinternalError(String.format(
-        "must supply either %s or %s properties",
-        logicalTimeIntervalFactoryClassNameProperty,
-        DEFAULT_OHLA_FEDERATE_RTI_1516_LOGICAL_TIME_INTERVAL_FACTORY_PROPERTY));
-    }
-
-    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-    try
-    {
-      return (hla.rti1516.LogicalTimeIntervalFactory) classLoader.loadClass(
-        logicalTimeIntervalFactoryClassName).newInstance();
-    }
-    catch (ClassCastException cce)
-    {
-      throw new RTIinternalError(String.format(
-        "invalid class: '%s' (not an %s)", logicalTimeIntervalFactoryClassName,
-        hla.rti1516.LogicalTimeFactory.class), cce);
-    }
-    catch (ClassNotFoundException cnfe)
-    {
-      throw new RTIinternalError(String.format(
-        "class not found: %s", logicalTimeIntervalFactoryClassName), cnfe);
-    }
-    catch (InstantiationException ie)
-    {
-      throw new RTIinternalError(String.format(
-        "unable to instantiate: %s", logicalTimeIntervalFactoryClassName), ie);
-    }
-    catch (IllegalAccessException iae)
-    {
-      throw new RTIinternalError(String.format(
-        "unable to access: %s", logicalTimeIntervalFactoryClassName), iae);
-    }
-  }
-
-  protected class ReserveObjectInstanceNameIoFilter
-    extends IoFilterAdapter
-  {
-    @Override
-    public void messageReceived(NextFilter nextFilter, IoSession session,
-                                Object message)
-      throws Exception
-    {
-      if (message instanceof ObjectInstanceNameReservationSucceeded)
-      {
-        ObjectInstanceNameReservationSucceeded oinrs =
-          (ObjectInstanceNameReservationSucceeded) message;
-
-        oinrs.execute(
-          rtiAmbassador.getJoinedFederate().getFederateAmbassador());
-      }
-      else if (message instanceof ObjectInstanceNameReservationFailed)
-      {
-        ObjectInstanceNameReservationFailed oinrf =
-          (ObjectInstanceNameReservationFailed) message;
-
-        oinrf.execute(
-          rtiAmbassador.getJoinedFederate().getFederateAmbassador());
-      }
-      else
-      {
-        nextFilter.messageReceived(session, message);
-      }
-    }
-  }
-
-  protected static class ReserveObjectInstanceNameResult
-    implements Future<Boolean>
-  {
-    public final CountDownLatch latch = new CountDownLatch(1);
-
-    public boolean succeeded;
+    private Boolean succeeded;
 
     public void objectInstanceNameReservationSucceeded()
     {
       succeeded = true;
+
       latch.countDown();
     }
 
@@ -5179,1508 +5227,19 @@ public class HLA13RTIambassador
       latch.countDown();
     }
 
-    public boolean cancel(boolean mayInterruptIfRunning)
+    public boolean wasSuccessful()
     {
-      return false;
-    }
-
-    public boolean isCancelled()
-    {
-      return false;
-    }
-
-    public boolean isDone()
-    {
-      return latch.getCount() == 0;
-    }
-
-    public Boolean get()
-      throws InterruptedException, ExecutionException
-    {
-      latch.await();
-
-      return succeeded;
-    }
-
-    public Boolean get(long timeout, TimeUnit unit)
-      throws InterruptedException, ExecutionException, TimeoutException
-    {
-      latch.await(timeout, unit);
-
-      return succeeded;
-    }
-  }
-
-  public class FederateAmbassadorBridge
-    extends hla.rti1516.jlc.NullFederateAmbassador
-  {
-    protected ConcurrentMap<String, ReserveObjectInstanceNameResult> results =
-      new ConcurrentHashMap<String, ReserveObjectInstanceNameResult>();
-
-    public synchronized Future<Boolean> reserveObjectInstanceName(String name)
-      throws IllegalName, hla.rti1516.RestoreInProgress,
-             hla.rti1516.SaveInProgress, hla.rti1516.RTIinternalError
-    {
-      rtiAmbassador.getJoinedFederate().reserveObjectInstanceName(name);
-      ReserveObjectInstanceNameResult roinr =
-        new ReserveObjectInstanceNameResult();
-      results.put(name, roinr);
-      return roinr;
-    }
-
-    @Override
-    public void synchronizationPointRegistrationSucceeded(
-      String synchronizationPointLabel)
-      throws FederateInternalError
-    {
-      try
+      while (succeeded == null)
       {
-        federateAmbassador.synchronizationPointRegistrationSucceeded(
-          synchronizationPointLabel);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void synchronizationPointRegistrationFailed(
-      String synchronizationPointLabel, SynchronizationPointFailureReason reason)
-      throws FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.synchronizationPointRegistrationFailed(
-          synchronizationPointLabel);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void announceSynchronizationPoint(String synchronizationPointLabel,
-                                             byte[] tag)
-      throws FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.announceSynchronizationPoint(
-          synchronizationPointLabel, tag);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void federationSynchronized(String synchronizationPointLabel)
-      throws FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.federationSynchronized(synchronizationPointLabel);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void initiateFederateSave(String label)
-      throws UnableToPerformSave, FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.initiateFederateSave(label);
-      }
-      catch (hla.rti.UnableToPerformSave utps)
-      {
-        throw new UnableToPerformSave(utps);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void initiateFederateSave(String label, hla.rti1516.LogicalTime time)
-      throws InvalidLogicalTime, UnableToPerformSave, FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.initiateFederateSave(label);
-      }
-      catch (hla.rti.UnableToPerformSave utps)
-      {
-        throw new UnableToPerformSave(utps);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void federationSaved()
-      throws FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.federationSaved();
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void federationNotSaved(SaveFailureReason reason)
-      throws FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.federationNotSaved();
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void federationSaveStatusResponse(
-      FederateHandleSaveStatusPair[] response)
-      throws FederateInternalError
-    {
-    }
-
-    @Override
-    public void requestFederationRestoreSucceeded(String label)
-      throws FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.requestFederationRestoreSucceeded(label);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void requestFederationRestoreFailed(String label)
-      throws FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.requestFederationRestoreFailed(label, "unknown");
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void federationRestoreBegun()
-      throws FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.federationRestoreBegun();
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void initiateFederateRestore(String label,
-                                        FederateHandle federateHandle)
-      throws SpecifiedSaveLabelDoesNotExist, CouldNotInitiateRestore,
-             FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.initiateFederateRestore(
-          label, convert(federateHandle));
-      }
-      catch (hla.rti.SpecifiedSaveLabelDoesNotExist ssldne)
-      {
-        throw new SpecifiedSaveLabelDoesNotExist(ssldne);
-      }
-      catch (CouldNotRestore cnr)
-      {
-        throw new CouldNotInitiateRestore(cnr);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void federationRestored()
-      throws FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.federationRestored();
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void federationNotRestored(RestoreFailureReason reason)
-      throws FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.federationNotRestored();
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void federationRestoreStatusResponse(
-      FederateHandleRestoreStatusPair[] response)
-      throws FederateInternalError
-    {
-    }
-
-    @Override
-    public void startRegistrationForObjectClass(
-      ObjectClassHandle objectClassHandle)
-      throws hla.rti1516.ObjectClassNotPublished, FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.startRegistrationForObjectClass(
-          convert(objectClassHandle));
-      }
-      catch (hla.rti.ObjectClassNotPublished ocnp)
-      {
-        throw new hla.rti1516.ObjectClassNotPublished(ocnp);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void stopRegistrationForObjectClass(
-      ObjectClassHandle objectClassHandle)
-      throws hla.rti1516.ObjectClassNotPublished, FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.stopRegistrationForObjectClass(
-          convert(objectClassHandle));
-      }
-      catch (hla.rti.ObjectClassNotPublished ocnp)
-      {
-        throw new hla.rti1516.ObjectClassNotPublished(ocnp);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void turnInteractionsOn(InteractionClassHandle interactionClassHandle)
-      throws hla.rti1516.InteractionClassNotPublished, FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.turnInteractionsOn(
-          convert(interactionClassHandle));
-      }
-      catch (hla.rti.InteractionClassNotPublished icnp)
-      {
-        throw new hla.rti1516.InteractionClassNotPublished(icnp);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void turnInteractionsOff(InteractionClassHandle interactionClassHandle)
-      throws hla.rti1516.InteractionClassNotPublished, FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.turnInteractionsOff(
-          convert(interactionClassHandle));
-      }
-      catch (hla.rti.InteractionClassNotPublished icnp)
-      {
-        throw new hla.rti1516.InteractionClassNotPublished(icnp);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public synchronized void objectInstanceNameReservationSucceeded(String name)
-      throws UnknownName, FederateInternalError
-    {
-      results.remove(name).objectInstanceNameReservationSucceeded();
-    }
-
-    @Override
-    public synchronized void objectInstanceNameReservationFailed(String name)
-      throws UnknownName, FederateInternalError
-    {
-      results.remove(name).objectInstanceNameReservationFailed();
-    }
-
-    @Override
-    public void discoverObjectInstance(ObjectInstanceHandle objectInstanceHandle,
-                                       ObjectClassHandle objectClassHandle,
-                                       String name)
-      throws CouldNotDiscover, ObjectClassNotRecognized, FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.discoverObjectInstance(
-          convert(objectInstanceHandle), convert(objectClassHandle), name);
-      }
-      catch (hla.rti.CouldNotDiscover cnd)
-      {
-        throw new CouldNotDiscover(cnd);
-      }
-      catch (ObjectClassNotKnown ocnk)
-      {
-        throw new ObjectClassNotRecognized(ocnk);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle,
-                                       AttributeHandleValueMap attributeValues,
-                                       byte[] tag, OrderType sentOrdering,
-                                       TransportationType transportationType)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized,
-             AttributeNotSubscribed, FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.reflectAttributeValues(
-          convert(objectInstanceHandle),
-          new HLA13ReflectedAttributes(attributeValues, sentOrdering.ordinal(),
-                                      transportationType.ordinal()), tag);
-      }
-      catch (ObjectNotKnown onk)
-      {
-        throw new ObjectInstanceNotKnown(onk);
-      }
-      catch (AttributeNotKnown ank)
-      {
-        throw new AttributeNotRecognized(ank);
-      }
-      catch (FederateOwnsAttributes foa)
-      {
-        throw new AttributeNotSubscribed(foa);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle,
-                                       AttributeHandleValueMap attributeValues,
-                                       byte[] tag, OrderType sentOrdering,
-                                       TransportationType transportationType,
-                                       RegionHandleSet regionHandles)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized,
-             AttributeNotSubscribed, FederateInternalError
-    {
-      // TODO: still need to incorporate DDM
-
-      try
-      {
-        federateAmbassador.reflectAttributeValues(
-          convert(objectInstanceHandle),
-          new HLA13ReflectedAttributes(attributeValues, sentOrdering.ordinal(),
-                                      transportationType.ordinal()), tag);
-      }
-      catch (ObjectNotKnown onk)
-      {
-        throw new ObjectInstanceNotKnown(onk);
-      }
-      catch (AttributeNotKnown ank)
-      {
-        throw new AttributeNotRecognized(ank);
-      }
-      catch (FederateOwnsAttributes foa)
-      {
-        throw new AttributeNotSubscribed(foa);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle,
-                                       AttributeHandleValueMap attributeValues,
-                                       byte[] tag, OrderType sentOrdering,
-                                       TransportationType transportationType,
-                                       hla.rti1516.LogicalTime updateTime,
-                                       OrderType receivedOrdering)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized,
-             AttributeNotSubscribed, FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.reflectAttributeValues(
-          convert(objectInstanceHandle),
-          new HLA13ReflectedAttributes(attributeValues, receivedOrdering.ordinal(),
-                                      transportationType.ordinal()), tag);
-      }
-      catch (ObjectNotKnown onk)
-      {
-        throw new ObjectInstanceNotKnown(onk);
-      }
-      catch (AttributeNotKnown ank)
-      {
-        throw new AttributeNotRecognized(ank);
-      }
-      catch (FederateOwnsAttributes foa)
-      {
-        throw new AttributeNotSubscribed(foa);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle,
-                                       AttributeHandleValueMap attributeValues,
-                                       byte[] tag, OrderType sentOrdering,
-                                       TransportationType transportationType,
-                                       hla.rti1516.LogicalTime updateTime,
-                                       OrderType receivedOrdering,
-                                       RegionHandleSet regionHandles)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized,
-             AttributeNotSubscribed, FederateInternalError
-    {
-      // TODO: still need to incorporate DDM
-
-      try
-      {
-        federateAmbassador.reflectAttributeValues(
-          convert(objectInstanceHandle),
-          new HLA13ReflectedAttributes(attributeValues, receivedOrdering.ordinal(),
-                                      transportationType.ordinal()), tag);
-      }
-      catch (ObjectNotKnown onk)
-      {
-        throw new ObjectInstanceNotKnown(onk);
-      }
-      catch (AttributeNotKnown ank)
-      {
-        throw new AttributeNotRecognized(ank);
-      }
-      catch (FederateOwnsAttributes foa)
-      {
-        throw new AttributeNotSubscribed(foa);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void reflectAttributeValues(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleValueMap attributeValues, byte[] tag,
-      OrderType sentOrdering, TransportationType transportationType,
-      hla.rti1516.LogicalTime updateTime, OrderType receivedOrdering,
-      MessageRetractionHandle messageRetractionHandle)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized,
-             AttributeNotSubscribed, InvalidLogicalTime, FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.reflectAttributeValues(
-          convert(objectInstanceHandle),
-          new HLA13ReflectedAttributes(attributeValues, receivedOrdering.ordinal(),
-                                      transportationType.ordinal()),
-          tag, convert(updateTime), convert(messageRetractionHandle));
-      }
-      catch (ObjectNotKnown onk)
-      {
-        throw new ObjectInstanceNotKnown(onk);
-      }
-      catch (AttributeNotKnown ank)
-      {
-        throw new AttributeNotRecognized(ank);
-      }
-      catch (FederateOwnsAttributes foa)
-      {
-        throw new AttributeNotSubscribed(foa);
-      }
-      catch (InvalidFederationTime ift)
-      {
-        throw new InvalidLogicalTime(ift);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-      catch (RTIinternalError rtiie)
-      {
-        throw new FederateInternalError(rtiie);
-      }
-    }
-
-    @Override
-    public void reflectAttributeValues(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleValueMap attributeValues, byte[] tag,
-      OrderType sentOrdering, TransportationType transportationType,
-      hla.rti1516.LogicalTime updateTime, OrderType receivedOrdering,
-      MessageRetractionHandle messageRetractionHandle,
-      RegionHandleSet regionHandles)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized,
-             AttributeNotSubscribed, InvalidLogicalTime, FederateInternalError
-    {
-      // TODO: still need to incorporate DDM
-
-      try
-      {
-        federateAmbassador.reflectAttributeValues(
-          convert(objectInstanceHandle),
-          new HLA13ReflectedAttributes(attributeValues, receivedOrdering.ordinal(),
-                                      transportationType.ordinal()),
-          tag, convert(updateTime), convert(messageRetractionHandle));
-      }
-      catch (ObjectNotKnown onk)
-      {
-        throw new ObjectInstanceNotKnown(onk);
-      }
-      catch (AttributeNotKnown ank)
-      {
-        throw new AttributeNotRecognized(ank);
-      }
-      catch (FederateOwnsAttributes foa)
-      {
-        throw new AttributeNotSubscribed(foa);
-      }
-      catch (InvalidFederationTime ift)
-      {
-        throw new InvalidLogicalTime(ift);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-      catch (RTIinternalError rtiie)
-      {
-        throw new FederateInternalError(rtiie);
-      }
-    }
-
-    @Override
-    public void receiveInteraction(InteractionClassHandle interactionClassHandle,
-                                   ParameterHandleValueMap parameterValues,
-                                   byte[] tag, OrderType sentOrdering,
-                                   TransportationType transportationType)
-      throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
-             hla.rti1516.InteractionClassNotSubscribed, FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.receiveInteraction(
-          convert(interactionClassHandle),
-          new HLA13ReceivedInteraction(parameterValues, sentOrdering.ordinal(),
-                                      transportationType.ordinal()),
-          tag);
-      }
-      catch (InteractionClassNotKnown icnk)
-      {
-        throw new InteractionClassNotRecognized(icnk);
-      }
-      catch (InteractionParameterNotKnown ipnk)
-      {
-        throw new InteractionParameterNotRecognized(ipnk);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void receiveInteraction(InteractionClassHandle interactionClassHandle,
-                                   ParameterHandleValueMap parameterValues,
-                                   byte[] tag, OrderType sentOrdering,
-                                   TransportationType transportationType,
-                                   RegionHandleSet regionHandles)
-      throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
-             hla.rti1516.InteractionClassNotSubscribed, FederateInternalError
-    {
-      // TODO: still need to incorporate DDM
-
-      try
-      {
-        federateAmbassador.receiveInteraction(
-          convert(interactionClassHandle),
-          new HLA13ReceivedInteraction(parameterValues, sentOrdering.ordinal(),
-                                      transportationType.ordinal()),
-          tag);
-      }
-      catch (InteractionClassNotKnown icnk)
-      {
-        throw new InteractionClassNotRecognized(icnk);
-      }
-      catch (InteractionParameterNotKnown ipnk)
-      {
-        throw new InteractionParameterNotRecognized(ipnk);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void receiveInteraction(InteractionClassHandle interactionClassHandle,
-                                   ParameterHandleValueMap parameterValues,
-                                   byte[] tag, OrderType sentOrdering,
-                                   TransportationType transportationType,
-                                   hla.rti1516.LogicalTime sentTime,
-                                   OrderType receivedOrdering)
-      throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
-             hla.rti1516.InteractionClassNotSubscribed, FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.receiveInteraction(
-          convert(interactionClassHandle),
-          new HLA13ReceivedInteraction(parameterValues, receivedOrdering.ordinal(),
-                                      transportationType.ordinal()),
-          tag);
-      }
-      catch (InteractionClassNotKnown icnk)
-      {
-        throw new InteractionClassNotRecognized(icnk);
-      }
-      catch (InteractionParameterNotKnown ipnk)
-      {
-        throw new InteractionParameterNotRecognized(ipnk);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void receiveInteraction(InteractionClassHandle interactionClassHandle,
-                                   ParameterHandleValueMap parameterValues,
-                                   byte[] tag, OrderType sentOrdering,
-                                   TransportationType transportationType,
-                                   hla.rti1516.LogicalTime sentTime,
-                                   OrderType receivedOrdering,
-                                   RegionHandleSet regionHandles)
-      throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
-             hla.rti1516.InteractionClassNotSubscribed, FederateInternalError
-    {
-      // TODO: still need to incorporate DDM
-
-      try
-      {
-        federateAmbassador.receiveInteraction(
-          convert(interactionClassHandle),
-          new HLA13ReceivedInteraction(parameterValues, receivedOrdering.ordinal(),
-                                      transportationType.ordinal()),
-          tag);
-      }
-      catch (InteractionClassNotKnown icnk)
-      {
-        throw new InteractionClassNotRecognized(icnk);
-      }
-      catch (InteractionParameterNotKnown ipnk)
-      {
-        throw new InteractionParameterNotRecognized(ipnk);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void receiveInteraction(InteractionClassHandle interactionClassHandle,
-                                   ParameterHandleValueMap parameterValues,
-                                   byte[] tag, OrderType sentOrdering,
-                                   TransportationType transportationType,
-                                   hla.rti1516.LogicalTime sentTime,
-                                   OrderType receivedOrdering,
-                                   MessageRetractionHandle messageRetractionHandle)
-      throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
-             hla.rti1516.InteractionClassNotSubscribed, InvalidLogicalTime,
-             FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.receiveInteraction(
-          convert(interactionClassHandle),
-          new HLA13ReceivedInteraction(parameterValues, receivedOrdering.ordinal(),
-                                      transportationType.ordinal()),
-          tag, convert(sentTime), convert(messageRetractionHandle));
-      }
-      catch (InteractionClassNotKnown icnk)
-      {
-        throw new InteractionClassNotRecognized(icnk);
-      }
-      catch (InteractionParameterNotKnown ipnk)
-      {
-        throw new InteractionParameterNotRecognized(ipnk);
-      }
-      catch (InvalidFederationTime ift)
-      {
-        throw new InvalidLogicalTime(ift);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-      catch (RTIinternalError rtiie)
-      {
-        throw new FederateInternalError(rtiie);
-      }
-    }
-
-    @Override
-    public void receiveInteraction(InteractionClassHandle interactionClassHandle,
-                                   ParameterHandleValueMap parameterValues,
-                                   byte[] tag, OrderType sentOrdering,
-                                   TransportationType transportationType,
-                                   hla.rti1516.LogicalTime sentTime,
-                                   OrderType receivedOrdering,
-                                   MessageRetractionHandle messageRetractionHandle,
-                                   RegionHandleSet regionHandles)
-      throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
-             hla.rti1516.InteractionClassNotSubscribed, InvalidLogicalTime,
-             FederateInternalError
-    {
-      // TODO: still need to incorporate DDM
-
-      try
-      {
-        federateAmbassador.receiveInteraction(
-          convert(interactionClassHandle),
-          new HLA13ReceivedInteraction(parameterValues, receivedOrdering.ordinal(),
-                                      transportationType.ordinal()),
-          tag, convert(sentTime), convert(messageRetractionHandle));
-      }
-      catch (InteractionClassNotKnown icnk)
-      {
-        throw new InteractionClassNotRecognized(icnk);
-      }
-      catch (InteractionParameterNotKnown ipnk)
-      {
-        throw new InteractionParameterNotRecognized(ipnk);
-      }
-      catch (InvalidFederationTime ift)
-      {
-        throw new InvalidLogicalTime(ift);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-      catch (RTIinternalError rtiie)
-      {
-        throw new FederateInternalError(rtiie);
-      }
-    }
-
-    @Override
-    public void removeObjectInstance(ObjectInstanceHandle objectInstanceHandle,
-                                     byte[] tag, OrderType sentOrdering)
-      throws ObjectInstanceNotKnown, FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.removeObjectInstance(
-          convert(objectInstanceHandle), tag);
-      }
-      catch (ObjectNotKnown onk)
-      {
-        throw new ObjectInstanceNotKnown(onk);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void removeObjectInstance(ObjectInstanceHandle objectInstanceHandle,
-                                     byte[] tag, OrderType sentOrdering,
-                                     hla.rti1516.LogicalTime deleteTime,
-                                     OrderType receivedOrdering)
-      throws ObjectInstanceNotKnown, FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.removeObjectInstance(
-          convert(objectInstanceHandle), tag);
-      }
-      catch (ObjectNotKnown onk)
-      {
-        throw new ObjectInstanceNotKnown(onk);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void removeObjectInstance(
-      ObjectInstanceHandle objectInstanceHandle, byte[] tag,
-      OrderType sentOrdering, hla.rti1516.LogicalTime deleteTime, OrderType receivedOrdering,
-      MessageRetractionHandle messageRetractionHandle)
-      throws ObjectInstanceNotKnown, InvalidLogicalTime, FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.removeObjectInstance(
-          convert(objectInstanceHandle), tag, convert(deleteTime),
-          convert(messageRetractionHandle));
-      }
-      catch (ObjectNotKnown onk)
-      {
-        throw new ObjectInstanceNotKnown(onk);
-      }
-      catch (InvalidFederationTime ift)
-      {
-        throw new InvalidLogicalTime(ift);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-      catch (RTIinternalError rtiie)
-      {
-        throw new FederateInternalError(rtiie);
-      }
-    }
-
-    @Override
-    public void attributesInScope(ObjectInstanceHandle objectInstanceHandle,
-                                  AttributeHandleSet attributeHandles)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized,
-             AttributeNotSubscribed, FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.attributesInScope(
-          convert(objectInstanceHandle), convert(attributeHandles));
-      }
-      catch (ObjectNotKnown onk)
-      {
-        throw new ObjectInstanceNotKnown(onk);
-      }
-      catch (AttributeNotKnown ank)
-      {
-        throw new AttributeNotRecognized(ank);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-      catch (RTIinternalError rtiie)
-      {
-        throw new FederateInternalError(rtiie);
-      }
-    }
-
-    @Override
-    public void attributesOutOfScope(ObjectInstanceHandle objectInstanceHandle,
-                                     AttributeHandleSet attributeHandles)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized,
-             AttributeNotSubscribed, FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.attributesOutOfScope(
-          convert(objectInstanceHandle), convert(attributeHandles));
-      }
-      catch (ObjectNotKnown onk)
-      {
-        throw new ObjectInstanceNotKnown(onk);
-      }
-      catch (AttributeNotKnown ank)
-      {
-        throw new AttributeNotRecognized(ank);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-      catch (RTIinternalError rtiie)
-      {
-        throw new FederateInternalError(rtiie);
-      }
-    }
-
-    @Override
-    public void provideAttributeValueUpdate(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleSet attributeHandles, byte[] tag)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized, hla.rti1516.AttributeNotOwned,
-             FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.provideAttributeValueUpdate(
-          convert(objectInstanceHandle), convert(attributeHandles));
-      }
-      catch (ObjectNotKnown onk)
-      {
-        throw new ObjectInstanceNotKnown(onk);
-      }
-      catch (AttributeNotKnown ank)
-      {
-        throw new AttributeNotRecognized(ank);
-      }
-      catch (hla.rti.AttributeNotOwned ano)
-      {
-        throw new hla.rti1516.AttributeNotOwned(ano);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-      catch (RTIinternalError rtiie)
-      {
-        throw new FederateInternalError(rtiie);
-      }
-    }
-
-    @Override
-    public void turnUpdatesOnForObjectInstance(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleSet attributeHandles)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized, hla.rti1516.AttributeNotOwned,
-             FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.turnUpdatesOnForObjectInstance(
-          convert(objectInstanceHandle), convert(attributeHandles));
-      }
-      catch (ObjectNotKnown onk)
-      {
-        throw new ObjectInstanceNotKnown(onk);
-      }
-      catch (hla.rti.AttributeNotOwned ano)
-      {
-        throw new hla.rti1516.AttributeNotOwned(ano);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-      catch (RTIinternalError rtiie)
-      {
-        throw new FederateInternalError(rtiie);
-      }
-    }
-
-    @Override
-    public void turnUpdatesOffForObjectInstance(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleSet attributeHandles)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized, hla.rti1516.AttributeNotOwned,
-             FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.turnUpdatesOffForObjectInstance(
-          convert(objectInstanceHandle), convert(attributeHandles));
-      }
-      catch (ObjectNotKnown onk)
-      {
-        throw new ObjectInstanceNotKnown(onk);
-      }
-      catch (hla.rti.AttributeNotOwned ano)
-      {
-        throw new hla.rti1516.AttributeNotOwned(ano);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-      catch (RTIinternalError rtiie)
-      {
-        throw new FederateInternalError(rtiie);
-      }
-    }
-
-    @Override
-    public void requestAttributeOwnershipAssumption(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleSet attributeHandles, byte[] tag)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized,
-             hla.rti1516.AttributeAlreadyOwned, hla.rti1516.AttributeNotPublished,
-             FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.requestAttributeOwnershipAssumption(
-          convert(objectInstanceHandle), convert(attributeHandles), tag);
-      }
-      catch (ObjectNotKnown onk)
-      {
-        throw new ObjectInstanceNotKnown(onk);
-      }
-      catch (AttributeNotKnown ank)
-      {
-        throw new AttributeNotRecognized(ank);
-      }
-      catch (hla.rti.AttributeAlreadyOwned aao)
-      {
-        throw new hla.rti1516.AttributeAlreadyOwned(aao);
-      }
-      catch (hla.rti.AttributeNotPublished anp)
-      {
-        throw new hla.rti1516.AttributeNotPublished(anp);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-      catch (RTIinternalError rtiie)
-      {
-        throw new FederateInternalError(rtiie);
-      }
-    }
-
-    @Override
-    public void requestDivestitureConfirmation(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleSet attributeHandles)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized, hla.rti1516.AttributeNotOwned,
-             hla.rti1516.AttributeDivestitureWasNotRequested, FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.attributeOwnershipDivestitureNotification(
-          convert(objectInstanceHandle), convert(attributeHandles));
-
         try
         {
-          rtiAmbassador.getJoinedFederate().confirmDivestiture(
-            objectInstanceHandle, attributeHandles, null);
+          latch.await();
         }
-        catch (hla.rti1516.RestoreInProgress rip)
+        catch (InterruptedException ie)
         {
-          throw new FederateInternalError(rip);
-        }
-        catch (hla.rti1516.SaveInProgress sip)
-        {
-          throw new FederateInternalError(sip);
-        }
-        catch (hla.rti1516.AttributeNotDefined and)
-        {
-          throw new FederateInternalError(and);
-        }
-        catch (hla.rti1516.RTIinternalError rtiie)
-        {
-          throw new FederateInternalError(rtiie);
         }
       }
-      catch (ObjectNotKnown onk)
-      {
-        throw new ObjectInstanceNotKnown(onk);
-      }
-      catch (AttributeNotKnown ank)
-      {
-        throw new AttributeNotRecognized(ank);
-      }
-      catch (hla.rti.AttributeNotOwned ano)
-      {
-        throw new hla.rti1516.AttributeNotOwned(ano);
-      }
-      catch (hla.rti.AttributeDivestitureWasNotRequested adwnr)
-      {
-        throw new hla.rti1516.AttributeDivestitureWasNotRequested(adwnr);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-      catch (RTIinternalError rtiie)
-      {
-        throw new FederateInternalError(rtiie);
-      }
-    }
-
-    @Override
-    public void attributeOwnershipAcquisitionNotification(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleSet attributeHandles, byte[] tag)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized,
-             hla.rti1516.AttributeAcquisitionWasNotRequested, hla.rti1516.AttributeAlreadyOwned,
-             hla.rti1516.AttributeNotPublished, FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.attributeOwnershipAcquisitionNotification(
-          convert(objectInstanceHandle), convert(attributeHandles));
-      }
-      catch (ObjectNotKnown onk)
-      {
-        throw new ObjectInstanceNotKnown(onk);
-      }
-      catch (AttributeNotKnown ank)
-      {
-        throw new AttributeNotRecognized(ank);
-      }
-      catch (hla.rti.AttributeAcquisitionWasNotRequested aawnr)
-      {
-        throw new hla.rti1516.AttributeAcquisitionWasNotRequested(aawnr);
-      }
-      catch (hla.rti.AttributeAlreadyOwned aao)
-      {
-        throw new hla.rti1516.AttributeAlreadyOwned(aao);
-      }
-      catch (hla.rti.AttributeNotPublished anp)
-      {
-        throw new hla.rti1516.AttributeNotPublished(anp);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-      catch (RTIinternalError rtiie)
-      {
-        throw new FederateInternalError(rtiie);
-      }
-    }
-
-    @Override
-    public void attributeOwnershipUnavailable(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleSet attributeHandles)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized,
-             hla.rti1516.AttributeAlreadyOwned, hla.rti1516.AttributeAcquisitionWasNotRequested,
-             FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.attributeOwnershipUnavailable(
-          convert(objectInstanceHandle), convert(attributeHandles));
-      }
-      catch (ObjectNotKnown onk)
-      {
-        throw new ObjectInstanceNotKnown(onk);
-      }
-      catch (AttributeNotKnown ank)
-      {
-        throw new AttributeNotRecognized(ank);
-      }
-      catch (hla.rti.AttributeAlreadyOwned aao)
-      {
-        throw new hla.rti1516.AttributeAlreadyOwned(aao);
-      }
-      catch (hla.rti.AttributeAcquisitionWasNotRequested aawnr)
-      {
-        throw new hla.rti1516.AttributeAcquisitionWasNotRequested(aawnr);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-      catch (RTIinternalError rtiie)
-      {
-        throw new FederateInternalError(rtiie);
-      }
-    }
-
-    @Override
-    public void requestAttributeOwnershipRelease(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleSet attributeHandles, byte[] tag)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized, hla.rti1516.AttributeNotOwned,
-             FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.requestAttributeOwnershipRelease(
-          convert(objectInstanceHandle), convert(attributeHandles), tag);
-      }
-      catch (ObjectNotKnown onk)
-      {
-        throw new ObjectInstanceNotKnown(onk);
-      }
-      catch (AttributeNotKnown ank)
-      {
-        throw new AttributeNotRecognized(ank);
-      }
-      catch (hla.rti.AttributeNotOwned ano)
-      {
-        throw new hla.rti1516.AttributeNotOwned(ano);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-      catch (RTIinternalError rtiie)
-      {
-        throw new FederateInternalError(rtiie);
-      }
-    }
-
-    @Override
-    public void confirmAttributeOwnershipAcquisitionCancellation(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleSet attributeHandles)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized,
-             hla.rti1516.AttributeAlreadyOwned, AttributeAcquisitionWasNotCanceled,
-             FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.confirmAttributeOwnershipAcquisitionCancellation(
-          convert(objectInstanceHandle), convert(attributeHandles));
-      }
-      catch (ObjectNotKnown onk)
-      {
-        throw new ObjectInstanceNotKnown(onk);
-      }
-      catch (AttributeNotKnown ank)
-      {
-        throw new AttributeNotRecognized(ank);
-      }
-      catch (hla.rti.AttributeAlreadyOwned aao)
-      {
-        throw new hla.rti1516.AttributeAlreadyOwned(aao);
-      }
-      catch (hla.rti.AttributeAcquisitionWasNotCanceled aawnc)
-      {
-        throw new AttributeAcquisitionWasNotCanceled(aawnc);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-      catch (RTIinternalError rtiie)
-      {
-        throw new FederateInternalError(rtiie);
-      }
-    }
-
-    @Override
-    public void informAttributeOwnership(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandle attributeHandle,
-      FederateHandle federateHandle)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized, FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.informAttributeOwnership(
-          convert(objectInstanceHandle), convert(attributeHandle),
-          convert(federateHandle));
-      }
-      catch (ObjectNotKnown onk)
-      {
-        throw new ObjectInstanceNotKnown(onk);
-      }
-      catch (AttributeNotKnown ank)
-      {
-        throw new AttributeNotRecognized(ank);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void attributeIsNotOwned(ObjectInstanceHandle objectInstanceHandle,
-                                    AttributeHandle attributeHandle)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized, FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.attributeIsNotOwned(
-          convert(objectInstanceHandle), convert(attributeHandle));
-      }
-      catch (ObjectNotKnown onk)
-      {
-        throw new ObjectInstanceNotKnown(onk);
-      }
-      catch (AttributeNotKnown ank)
-      {
-        throw new AttributeNotRecognized(ank);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void attributeIsOwnedByRTI(ObjectInstanceHandle objectInstanceHandle,
-                                      AttributeHandle attributeHandle)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized, FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.attributeOwnedByRTI(
-          convert(objectInstanceHandle), convert(attributeHandle));
-      }
-      catch (ObjectNotKnown onk)
-      {
-        throw new ObjectInstanceNotKnown(onk);
-      }
-      catch (AttributeNotKnown ank)
-      {
-        throw new AttributeNotRecognized(ank);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-    }
-
-    @Override
-    public void timeRegulationEnabled(hla.rti1516.LogicalTime time)
-      throws InvalidLogicalTime, NoRequestToEnableTimeRegulationWasPending,
-             FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.timeRegulationEnabled(convert(time));
-      }
-      catch (InvalidFederationTime ift)
-      {
-        throw new InvalidLogicalTime(ift);
-      }
-      catch (EnableTimeRegulationWasNotPending etrwnp)
-      {
-        throw new NoRequestToEnableTimeRegulationWasPending(etrwnp);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-      catch (RTIinternalError rtiie)
-      {
-        throw new FederateInternalError(rtiie);
-      }
-    }
-
-    @Override
-    public void timeConstrainedEnabled(hla.rti1516.LogicalTime time)
-      throws InvalidLogicalTime, NoRequestToEnableTimeConstrainedWasPending,
-             FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.timeConstrainedEnabled(convert(time));
-      }
-      catch (InvalidFederationTime ift)
-      {
-        throw new InvalidLogicalTime(ift);
-      }
-      catch (EnableTimeConstrainedWasNotPending etcwnp)
-      {
-        throw new NoRequestToEnableTimeConstrainedWasPending(etcwnp);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-      catch (RTIinternalError rtiie)
-      {
-        throw new FederateInternalError(rtiie);
-      }
-    }
-
-    @Override
-    public void timeAdvanceGrant(hla.rti1516.LogicalTime time)
-      throws InvalidLogicalTime, JoinedFederateIsNotInTimeAdvancingState,
-             FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.timeAdvanceGrant(convert(time));
-      }
-      catch (InvalidFederationTime ift)
-      {
-        throw new InvalidLogicalTime(ift);
-      }
-      catch (TimeAdvanceWasNotInProgress tawnip)
-      {
-        throw new JoinedFederateIsNotInTimeAdvancingState(tawnip);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
-      catch (RTIinternalError rtiie)
-      {
-        throw new FederateInternalError(rtiie);
-      }
-    }
-
-    @Override
-    public void requestRetraction(MessageRetractionHandle messageRetractionHandle)
-      throws FederateInternalError
-    {
-      try
-      {
-        federateAmbassador.requestRetraction(convert(messageRetractionHandle));
-      }
-      catch (EventNotKnown enk)
-      {
-        throw new FederateInternalError(enk);
-      }
-      catch (hla.rti.FederateInternalError fie)
-      {
-        throw new FederateInternalError(fie);
-      }
+      return succeeded;
     }
   }
 }

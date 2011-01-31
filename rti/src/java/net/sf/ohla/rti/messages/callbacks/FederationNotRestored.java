@@ -16,23 +16,47 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateInternalError;
-import hla.rti1516.RestoreFailureReason;
+import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.EnumMessage;
+import net.sf.ohla.rti.messages.FederateMessage;
+import net.sf.ohla.rti.messages.MessageType;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.RestoreFailureReason;
+import hla.rti1516e.exceptions.FederateInternalError;
 
 public class FederationNotRestored
-  implements Callback
+  extends EnumMessage<RestoreFailureReason>
+  implements Callback, FederateMessage
 {
-  protected RestoreFailureReason reason;
-
-  public FederationNotRestored(RestoreFailureReason reason)
+  public FederationNotRestored(RestoreFailureReason restoreFailureReason)
   {
-    this.reason = reason;
+    super(MessageType.FEDERATION_NOT_RESTORED, restoreFailureReason);
+
+    encodingFinished();
+  }
+
+  public FederationNotRestored(ChannelBuffer buffer)
+  {
+    super(buffer, RestoreFailureReason.values());
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.FEDERATION_NOT_RESTORED;
   }
 
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.federationNotRestored(reason);
+    federateAmbassador.federationNotRestored(e);
+  }
+
+  public void execute(Federate federate)
+  {
+    federate.callbackReceived(this);
   }
 }

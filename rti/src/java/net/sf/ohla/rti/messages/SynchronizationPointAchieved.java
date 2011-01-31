@@ -16,26 +16,52 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
 
+import org.jboss.netty.buffer.ChannelBuffer;
+
 public class SynchronizationPointAchieved
+  extends StringMessage
   implements FederationExecutionMessage
 {
-  protected String label;
+  private final boolean success;
 
-  public SynchronizationPointAchieved(String label)
+  public SynchronizationPointAchieved(String label, boolean success)
   {
-    this.label = label;
+    super(MessageType.SYNCHRONIZATION_POINT_ACHIEVED, label);
+
+    this.success = success;
+
+    Protocol.encodeBoolean(buffer, success);
+
+    encodingFinished();
+  }
+
+  public SynchronizationPointAchieved(ChannelBuffer buffer)
+  {
+    super(buffer);
+
+    success = Protocol.decodeBoolean(buffer);
   }
 
   public String getLabel()
   {
-    return label;
+    return s;
   }
 
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public boolean isSuccess()
+  {
+    return success;
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.SYNCHRONIZATION_POINT_ACHIEVED;
+  }
+
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.synchronizationPointAchieved(federateProxy, this);
   }

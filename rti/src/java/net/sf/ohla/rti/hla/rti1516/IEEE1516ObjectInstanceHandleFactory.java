@@ -24,9 +24,20 @@ import hla.rti1516.ObjectInstanceHandleFactory;
 public class IEEE1516ObjectInstanceHandleFactory
   implements ObjectInstanceHandleFactory
 {
+  public static final IEEE1516ObjectInstanceHandleFactory INSTANCE = new IEEE1516ObjectInstanceHandleFactory();
+
+  private IEEE1516ObjectInstanceHandleFactory()
+  {
+  }
+
   public ObjectInstanceHandle decode(byte[] buffer, int offset)
     throws CouldNotDecode, FederateNotExecutionMember
   {
     return new IEEE1516ObjectInstanceHandle(buffer, offset);
+  }
+
+  private Object readResolve()
+  {
+    return INSTANCE;
   }
 }

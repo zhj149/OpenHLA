@@ -16,28 +16,76 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import hla.rti1516.CouldNotInitiateRestore;
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateHandle;
-import hla.rti1516.FederateInternalError;
-import hla.rti1516.SpecifiedSaveLabelDoesNotExist;
+import net.sf.ohla.rti.Protocol;
+import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
+import net.sf.ohla.rti.messages.FederateMessage;
+import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.StringMessage;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.FederateHandle;
+import hla.rti1516e.exceptions.FederateInternalError;
 
 public class InitiateFederateRestore
-  implements Callback
+  extends StringMessage
+  implements Callback, FederateMessage
 {
-  protected String label;
-  protected FederateHandle federateHandle;
+  private final String federateName;
+  private final FederateHandle federateHandle;
 
-  public InitiateFederateRestore(String label, FederateHandle federateHandle)
+  public InitiateFederateRestore(String label, String federateName, FederateHandle federateHandle)
   {
-    this.label = label;
+    super(MessageType.INITIATE_FEDERATE_RESTORE, label);
+
+    this.federateName = federateName;
     this.federateHandle = federateHandle;
+
+    Protocol.encodeString(buffer, federateName);
+    IEEE1516eFederateHandle.encode(buffer, federateHandle);
+
+    encodingFinished();
+  }
+
+  public InitiateFederateRestore(ChannelBuffer buffer)
+  {
+    super(buffer);
+
+    federateName = Protocol.decodeString(buffer);
+    federateHandle = IEEE1516eFederateHandle.decode(buffer);
+  }
+
+  public String getLabel()
+  {
+    return s;
+  }
+
+  public String getFederateName()
+  {
+    return federateName;
+  }
+
+  public FederateHandle getFederateHandle()
+  {
+    return federateHandle;
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.INITIATE_FEDERATE_RESTORE;
   }
 
   public void execute(FederateAmbassador federateAmbassador)
-    throws SpecifiedSaveLabelDoesNotExist, CouldNotInitiateRestore,
-           FederateInternalError
+    throws FederateInternalError
   {
-    federateAmbassador.initiateFederateRestore(label, federateHandle);
+    federateAmbassador.initiateFederateRestore(s, federateName, federateHandle);
+  }
+
+  public void execute(Federate federate)
+  {
+    federate.callbackReceived(this);
   }
 }

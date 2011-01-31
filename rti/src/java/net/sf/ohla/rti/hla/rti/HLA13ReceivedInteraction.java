@@ -23,29 +23,27 @@ import hla.rti.ArrayIndexOutOfBounds;
 import hla.rti.ReceivedInteraction;
 import hla.rti.Region;
 
-import hla.rti1516.ParameterHandle;
-import hla.rti1516.ParameterHandleValueMap;
+import hla.rti1516e.ParameterHandle;
+import hla.rti1516e.ParameterHandleValueMap;
 
 public class HLA13ReceivedInteraction
   implements ReceivedInteraction
 {
-  protected ParameterHandleValueMap parameterValues;
-  protected List<ParameterHandle> parameterHandles;
+  private final ParameterHandleValueMap parameterValues;
+  private final List<ParameterHandle> parameterHandles;
 
-  protected int orderType;
-  protected int transportationType;
+  private final int orderType;
+  private final int transportationType;
 
-  protected Region region;
+  private final Region region;
 
-  public HLA13ReceivedInteraction(ParameterHandleValueMap parameterValues,
-                                 int orderType, int transportationType)
+  public HLA13ReceivedInteraction(ParameterHandleValueMap parameterValues, int orderType, int transportationType)
   {
     this(parameterValues, orderType, transportationType, null);
   }
 
-  public HLA13ReceivedInteraction(ParameterHandleValueMap parameterValues,
-                                 int orderType, int transportationType,
-                                 Region region)
+  public HLA13ReceivedInteraction(
+    ParameterHandleValueMap parameterValues, int orderType, int transportationType, Region region)
   {
     this.parameterValues = parameterValues;
 

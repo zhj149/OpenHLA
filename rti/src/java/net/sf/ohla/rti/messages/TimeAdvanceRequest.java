@@ -19,31 +19,33 @@ package net.sf.ohla.rti.messages;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
 
-import hla.rti1516.LogicalTime;
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.LogicalTime;
+import hla.rti1516e.LogicalTimeFactory;
 
 public class TimeAdvanceRequest
+  extends LogicalTimeMessage
   implements FederationExecutionMessage
 {
-  protected LogicalTime time;
-
   public TimeAdvanceRequest(LogicalTime time)
   {
-    this.time = time;
+    super(MessageType.TIME_ADVANCE_REQUEST, time);
+
+    encodingFinished();
   }
 
-  public LogicalTime getTime()
+  public TimeAdvanceRequest(ChannelBuffer buffer, LogicalTimeFactory factory)
   {
-    return time;
+    super(buffer, factory);
   }
 
-  @Override
-  public String toString()
+  public MessageType getType()
   {
-    return String.format("Time Advance Request: %s", time);
+    return MessageType.TIME_ADVANCE_REQUEST;
   }
 
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.timeAdvanceRequest(federateProxy, this);
   }

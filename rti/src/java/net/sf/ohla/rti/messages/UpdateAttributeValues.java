@@ -16,65 +16,92 @@
 
 package net.sf.ohla.rti.messages;
 
-import java.util.Map;
-
+import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
-import net.sf.ohla.rti.federation.FederationExecutionObjectInstance;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleValueMap;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eMessageRetractionHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandle;
 
-import hla.rti1516.AttributeHandle;
-import hla.rti1516.AttributeHandleValueMap;
-import hla.rti1516.LogicalTime;
-import hla.rti1516.MessageRetractionHandle;
-import hla.rti1516.ObjectInstanceHandle;
-import hla.rti1516.OrderType;
-import hla.rti1516.RegionHandleSet;
-import hla.rti1516.TransportationType;
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.AttributeHandleValueMap;
+import hla.rti1516e.LogicalTime;
+import hla.rti1516e.LogicalTimeFactory;
+import hla.rti1516e.MessageRetractionHandle;
+import hla.rti1516e.ObjectInstanceHandle;
+import hla.rti1516e.OrderType;
+import hla.rti1516e.TransportationTypeHandle;
 
 public class UpdateAttributeValues
+  extends ObjectInstanceMessage
   implements FederationExecutionMessage
 {
-  protected final ObjectInstanceHandle objectInstanceHandle;
-  protected final AttributeHandleValueMap attributeValues;
-  protected final byte[] tag;
-  protected final OrderType sentOrderType;
-  protected final TransportationType transportationType;
-  protected final Map<AttributeHandle, RegionHandleSet> attributeUpdateRegionHandles;
-  protected final LogicalTime updateTime;
-  protected final MessageRetractionHandle messageRetractionHandle;
-
-  protected transient FederationExecutionObjectInstance objectInstance;
+  private final AttributeHandleValueMap attributeValues;
+  private final byte[] tag;
+  private final OrderType sentOrderType;
+  private final TransportationTypeHandle transportationTypeHandle;
+  private final LogicalTime time;
+  private final MessageRetractionHandle messageRetractionHandle;
 
   public UpdateAttributeValues(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleValueMap attributeValues, byte[] tag,
-    OrderType sentOrderType, TransportationType transportationType,
-    Map<AttributeHandle, RegionHandleSet> attributeUpdateRegionHandles)
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues, byte[] tag,
+    TransportationTypeHandle transportationTypeHandle)
   {
-    this(objectInstanceHandle, attributeValues, tag, sentOrderType,
-         transportationType, attributeUpdateRegionHandles, null, null);
+    super(MessageType.UPDATE_ATTRIBUTE_VALUES, objectInstanceHandle);
+
+    this.attributeValues = attributeValues;
+    this.tag = tag;
+    this.transportationTypeHandle = transportationTypeHandle;
+
+    sentOrderType = OrderType.RECEIVE;
+    time = null;
+    messageRetractionHandle = null;
+
+    IEEE1516eAttributeHandleValueMap.encode(buffer, attributeValues);
+    Protocol.encodeBytes(buffer, tag);
+    Protocol.encodeEnum(buffer, sentOrderType);
+    IEEE1516eTransportationTypeHandle.encode(buffer, transportationTypeHandle);
+    Protocol.encodeNullTime(buffer);
+    IEEE1516eMessageRetractionHandle.encode(buffer, messageRetractionHandle);
+
+    encodingFinished();
   }
 
   public UpdateAttributeValues(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleValueMap attributeValues, byte[] tag,
-    OrderType sentOrderType, TransportationType transportationType,
-    Map<AttributeHandle, RegionHandleSet> attributeUpdateRegionHandles,
-    LogicalTime updateTime, MessageRetractionHandle messageRetractionHandle)
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues, byte[] tag,
+    OrderType sentOrderType, TransportationTypeHandle transportationTypeHandle, LogicalTime time,
+    MessageRetractionHandle messageRetractionHandle)
   {
-    this.objectInstanceHandle = objectInstanceHandle;
+    super(MessageType.UPDATE_ATTRIBUTE_VALUES, objectInstanceHandle);
+
     this.attributeValues = attributeValues;
     this.tag = tag;
     this.sentOrderType = sentOrderType;
-    this.transportationType = transportationType;
-    this.attributeUpdateRegionHandles = attributeUpdateRegionHandles;
-    this.updateTime = updateTime;
+    this.transportationTypeHandle = transportationTypeHandle;
+    this.time = time;
     this.messageRetractionHandle = messageRetractionHandle;
+
+    IEEE1516eAttributeHandleValueMap.encode(buffer, attributeValues);
+    Protocol.encodeBytes(buffer, tag);
+    Protocol.encodeEnum(buffer, sentOrderType);
+    IEEE1516eTransportationTypeHandle.encode(buffer, transportationTypeHandle);
+    Protocol.encodeTime(buffer, time);
+    IEEE1516eMessageRetractionHandle.encode(buffer, messageRetractionHandle);
+
+    encodingFinished();
   }
 
-  public ObjectInstanceHandle getObjectInstanceHandle()
+  public UpdateAttributeValues(ChannelBuffer buffer, LogicalTimeFactory factory)
   {
-    return objectInstanceHandle;
+    super(buffer);
+
+    attributeValues = IEEE1516eAttributeHandleValueMap.decode(buffer);
+    tag = Protocol.decodeBytes(buffer);
+    sentOrderType = Protocol.decodeEnum(buffer, OrderType.values());
+    transportationTypeHandle = IEEE1516eTransportationTypeHandle.decode(buffer);
+    time = Protocol.decodeTime(buffer, factory);
+    messageRetractionHandle = IEEE1516eMessageRetractionHandle.decode(buffer);
   }
 
   public AttributeHandleValueMap getAttributeValues()
@@ -92,19 +119,14 @@ public class UpdateAttributeValues
     return sentOrderType;
   }
 
-  public TransportationType getTransportationType()
+  public TransportationTypeHandle getTransportationTypeHandle()
   {
-    return transportationType;
+    return transportationTypeHandle;
   }
 
-  public Map<AttributeHandle, RegionHandleSet> getAttributeUpdateRegionHandles()
+  public LogicalTime getTime()
   {
-    return attributeUpdateRegionHandles;
-  }
-
-  public LogicalTime getUpdateTime()
-  {
-    return updateTime;
+    return time;
   }
 
   public MessageRetractionHandle getMessageRetractionHandle()
@@ -112,19 +134,12 @@ public class UpdateAttributeValues
     return messageRetractionHandle;
   }
 
-  public FederationExecutionObjectInstance getObjectInstance()
+  public MessageType getType()
   {
-    return objectInstance;
+    return MessageType.UPDATE_ATTRIBUTE_VALUES;
   }
 
-  public void setObjectInstance(
-    FederationExecutionObjectInstance objectInstance)
-  {
-    this.objectInstance = objectInstance;
-  }
-
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.updateAttributeValues(federateProxy, this);
   }

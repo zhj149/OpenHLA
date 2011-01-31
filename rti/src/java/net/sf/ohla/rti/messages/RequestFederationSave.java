@@ -16,33 +16,51 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
 
-import hla.rti1516.LogicalTime;
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.LogicalTime;
+import hla.rti1516e.LogicalTimeFactory;
 
 public class RequestFederationSave
-  extends AbstractRequest
+  extends StringRequest<RequestFederationSaveResponse>
   implements FederationExecutionMessage
 {
-  protected String label;
-  protected LogicalTime time;
+  private final LogicalTime time;
 
   public RequestFederationSave(String label)
   {
-    this.label = label;
+    super(MessageType.REQUEST_FEDERATION_SAVE, label);
+
+    time = null;
+
+    encodingFinished();
   }
 
   public RequestFederationSave(String label, LogicalTime time)
   {
-    this(label);
+    super(MessageType.REQUEST_FEDERATION_SAVE, label);
 
     this.time = time;
+
+    Protocol.encodeTime(buffer, time);
+
+    encodingFinished();
+  }
+
+  public RequestFederationSave(ChannelBuffer buffer, LogicalTimeFactory factory)
+  {
+    super(buffer);
+
+    time = Protocol.decodeTime(buffer, factory);
   }
 
   public String getLabel()
   {
-    return label;
+    return s;
   }
 
   public LogicalTime getTime()
@@ -50,8 +68,12 @@ public class RequestFederationSave
     return time;
   }
 
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public MessageType getType()
+  {
+    return MessageType.REQUEST_FEDERATION_SAVE;
+  }
+
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.requestFederationSave(federateProxy, this);
   }

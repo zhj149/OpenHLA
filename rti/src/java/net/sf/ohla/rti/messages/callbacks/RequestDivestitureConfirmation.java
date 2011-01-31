@@ -16,35 +16,49 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import hla.rti1516.AttributeDivestitureWasNotRequested;
-import hla.rti1516.AttributeHandleSet;
-import hla.rti1516.AttributeNotOwned;
-import hla.rti1516.AttributeNotRecognized;
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateInternalError;
-import hla.rti1516.ObjectInstanceHandle;
-import hla.rti1516.ObjectInstanceNotKnown;
+import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.FederateMessage;
+import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.ObjectInstanceAttributesMessage;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.AttributeHandleSet;
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.ObjectInstanceHandle;
+import hla.rti1516e.exceptions.FederateInternalError;
 
 public class RequestDivestitureConfirmation
-  implements Callback
+  extends ObjectInstanceAttributesMessage
+  implements Callback, FederateMessage
 {
-  protected ObjectInstanceHandle objectInstanceHandle;
-  protected AttributeHandleSet attributeHandles;
-
   public RequestDivestitureConfirmation(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles)
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
   {
-    this.objectInstanceHandle = objectInstanceHandle;
-    this.attributeHandles = attributeHandles;
+    super(MessageType.REQUEST_DIVESTITURE_CONFIRMATION, objectInstanceHandle, attributeHandles);
+
+    encodingFinished();
+  }
+
+  public RequestDivestitureConfirmation(ChannelBuffer buffer)
+  {
+    super(buffer);
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.REQUEST_DIVESTITURE_CONFIRMATION;
   }
 
   public void execute(FederateAmbassador federateAmbassador)
-    throws ObjectInstanceNotKnown, AttributeNotRecognized,
-           AttributeNotOwned, AttributeDivestitureWasNotRequested,
-           FederateInternalError
+    throws FederateInternalError
   {
-    federateAmbassador.requestDivestitureConfirmation(
-      objectInstanceHandle, attributeHandles);
+    federateAmbassador.requestDivestitureConfirmation(objectInstanceHandle, attributeHandles);
+  }
+
+  public void execute(Federate federate)
+  {
+    federate.callbackReceived(this);
   }
 }

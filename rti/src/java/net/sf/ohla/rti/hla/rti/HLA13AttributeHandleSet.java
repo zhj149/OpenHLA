@@ -19,15 +19,16 @@ package net.sf.ohla.rti.hla.rti;
 import java.util.Iterator;
 import java.util.Set;
 
-import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSet;
 
 import hla.rti.AttributeHandleSet;
 import hla.rti.HandleIterator;
 
-import hla.rti1516.AttributeHandle;
+import hla.rti1516e.AttributeHandle;
 
 public class HLA13AttributeHandleSet
-  extends net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandleSet
+  extends IEEE1516eAttributeHandleSet
   implements AttributeHandleSet
 {
   public HLA13AttributeHandleSet()
@@ -44,24 +45,24 @@ public class HLA13AttributeHandleSet
     super(attributeHandles);
   }
 
-  public HLA13AttributeHandleSet(hla.rti1516.AttributeHandleSet attributeHandles)
+  public HLA13AttributeHandleSet(hla.rti1516e.AttributeHandleSet attributeHandles)
   {
     super(attributeHandles);
   }
 
   public void add(int handle)
   {
-    add(new IEEE1516AttributeHandle(handle));
+    add(new IEEE1516eAttributeHandle(handle));
   }
 
   public void remove(int handle)
   {
-    remove(new IEEE1516AttributeHandle(handle));
+    remove(new IEEE1516eAttributeHandle(handle));
   }
 
   public boolean isMember(int handle)
   {
-    return contains(new IEEE1516AttributeHandle(handle));
+    return contains(new IEEE1516eAttributeHandle(handle));
   }
 
   public HandleIterator handles()
@@ -92,7 +93,7 @@ public class HLA13AttributeHandleSet
 
     public int next()
     {
-      return ((IEEE1516AttributeHandle) i.next()).getHandle();
+      return ((IEEE1516eAttributeHandle) i.next()).getHandle();
     }
   }
 }

@@ -16,20 +16,25 @@
 
 package net.sf.ohla.rti.fed;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import net.sf.ohla.rti.fdd.Attribute;
+
+import hla.rti1516e.AttributeHandle;
+import hla.rti1516e.DimensionHandleSet;
+import hla.rti1516e.OrderType;
+import hla.rti1516e.TransportationTypeHandle;
 
 public class FEDAttribute
   extends Attribute
 {
   public static final String PRIVILEGE_TO_DELETE = "privilegeToDelete";
 
-  protected RoutingSpace routingSpace = RoutingSpace.DEFAULT;
+  private RoutingSpace routingSpace = RoutingSpace.DEFAULT;
 
-  public FEDAttribute(String name, AtomicInteger attributeCount)
+  public FEDAttribute(
+    AttributeHandle attributeHandle, String name, DimensionHandleSet dimensions,
+    TransportationTypeHandle transportationTypeHandle, OrderType orderType)
   {
-    super(name, attributeCount);
+    super(attributeHandle, name, dimensions, transportationTypeHandle, orderType);
   }
 
   public boolean hasRoutingSpace()

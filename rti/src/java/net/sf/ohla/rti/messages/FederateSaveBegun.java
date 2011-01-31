@@ -19,11 +19,30 @@ package net.sf.ohla.rti.messages;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
 
+import org.jboss.netty.buffer.ChannelBuffer;
+
 public class FederateSaveBegun
+  extends AbstractMessage
   implements FederationExecutionMessage
 {
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public FederateSaveBegun()
+  {
+    super(MessageType.FEDERATE_SAVE_BEGUN);
+
+    encodingFinished();
+  }
+
+  public FederateSaveBegun(ChannelBuffer buffer)
+  {
+    super(buffer);
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.FEDERATE_SAVE_BEGUN;
+  }
+
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.federateSaveBegun(federateProxy, this);
   }

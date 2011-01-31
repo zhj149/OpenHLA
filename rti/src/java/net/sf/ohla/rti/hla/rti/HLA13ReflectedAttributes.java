@@ -23,30 +23,27 @@ import hla.rti.ArrayIndexOutOfBounds;
 import hla.rti.ReflectedAttributes;
 import hla.rti.Region;
 
-import hla.rti1516.AttributeHandle;
-import hla.rti1516.AttributeHandleValueMap;
+import hla.rti1516e.AttributeHandle;
+import hla.rti1516e.AttributeHandleValueMap;
 
 public class HLA13ReflectedAttributes
   implements ReflectedAttributes
 {
-  protected AttributeHandleValueMap attributeValues;
-  protected List<AttributeHandle> attributeHandles;
+  private final AttributeHandleValueMap attributeValues;
+  private final List<AttributeHandle> attributeHandles;
 
-  protected int orderType;
-  protected int transportationType;
+  private final int orderType;
+  private final int transportationType;
 
-  protected Region region;
+  private final Region region;
 
-  public HLA13ReflectedAttributes(AttributeHandleValueMap attributeValues,
-                                 int orderType, int transportationType)
+  public HLA13ReflectedAttributes(AttributeHandleValueMap attributeValues, int orderType, int transportationType)
   {
     this(attributeValues, orderType, transportationType, null);
   }
 
   public HLA13ReflectedAttributes(
-    AttributeHandleValueMap attributeValues,
-    int orderType, int transportationType,
-    Region region)
+    AttributeHandleValueMap attributeValues, int orderType, int transportationType, Region region)
   {
     this.attributeValues = attributeValues;
 

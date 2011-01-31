@@ -16,46 +16,54 @@
 
 package net.sf.ohla.rti.messages;
 
-import hla.rti1516.AttributeHandleSet;
-import hla.rti1516.AttributeSetRegionSetPairList;
-import hla.rti1516.ObjectClassHandle;
+import net.sf.ohla.rti.Protocol;
+import net.sf.ohla.rti.federation.FederateProxy;
+import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSet;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.AttributeHandleSet;
+import hla.rti1516e.ObjectClassHandle;
 
 public class SubscribeObjectClassAttributes
-  implements Message
+  extends ObjectClassMessage
+  implements FederationExecutionMessage
 {
-  protected ObjectClassHandle objectClassHandle;
-  protected AttributeHandleSet attributeHandles;
-  protected AttributeSetRegionSetPairList attributesAndRegions;
-  protected boolean passive;
+  private final AttributeHandleSet attributeHandles;
+  private final boolean passive;
+  private final String updateRateDesignator;
 
-  public SubscribeObjectClassAttributes(ObjectClassHandle objectClassHandle,
-                                        AttributeHandleSet attributeHandles,
-                                        boolean passive)
+  public SubscribeObjectClassAttributes(
+    ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles, boolean passive)
   {
-    this(objectClassHandle, passive);
-
-    this.attributeHandles = attributeHandles;
+    this(objectClassHandle, attributeHandles, passive, null);
   }
 
   public SubscribeObjectClassAttributes(
-    ObjectClassHandle objectClassHandle,
-    AttributeSetRegionSetPairList attributesAndRegions, boolean passive)
+    ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles, boolean passive,
+    String updateRateDesignator)
   {
-    this(objectClassHandle, passive);
+    super(MessageType.SUBSCRIBE_OBJECT_CLASS_ATTRIBUTES, objectClassHandle);
 
-    this.attributesAndRegions = attributesAndRegions;
-  }
-
-  protected SubscribeObjectClassAttributes(ObjectClassHandle objectClassHandle,
-                                           boolean passive)
-  {
-    this.objectClassHandle = objectClassHandle;
+    this.attributeHandles = attributeHandles;
     this.passive = passive;
+    this.updateRateDesignator = updateRateDesignator;
+
+    IEEE1516eAttributeHandleSet.encode(buffer, attributeHandles);
+    Protocol.encodeBoolean(buffer, passive);
+    Protocol.encodeOptionalString(buffer, updateRateDesignator);
+
+    encodingFinished();
   }
 
-  public ObjectClassHandle getObjectClassHandle()
+  public SubscribeObjectClassAttributes(ChannelBuffer buffer)
   {
-    return objectClassHandle;
+    super(buffer);
+
+    attributeHandles = IEEE1516eAttributeHandleSet.decode(buffer);
+    passive = Protocol.decodeBoolean(buffer);
+    updateRateDesignator = Protocol.decodeOptionalString(buffer);
   }
 
   public AttributeHandleSet getAttributeHandles()
@@ -63,13 +71,23 @@ public class SubscribeObjectClassAttributes
     return attributeHandles;
   }
 
-  public AttributeSetRegionSetPairList getAttributesAndRegions()
-  {
-    return attributesAndRegions;
-  }
-
   public boolean isPassive()
   {
     return passive;
+  }
+
+  public String getUpdateRateDesignator()
+  {
+    return updateRateDesignator;
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.SUBSCRIBE_OBJECT_CLASS_ATTRIBUTES;
+  }
+
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
+  {
+    federationExecution.subscribeObjectClassAttributes(federateProxy, this);
   }
 }

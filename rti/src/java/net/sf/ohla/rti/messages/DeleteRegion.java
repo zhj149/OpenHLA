@@ -18,18 +18,34 @@ package net.sf.ohla.rti.messages;
 
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandle;
 
-import hla.rti1516.RegionHandle;
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.RegionHandle;
 
 public class DeleteRegion
-  extends AbstractRequest
+  extends AbstractMessage
   implements FederationExecutionMessage
 {
-  protected RegionHandle regionHandle;
+  private final RegionHandle regionHandle;
 
   public DeleteRegion(RegionHandle regionHandle)
   {
+    super(MessageType.DELETE_REGION);
+
     this.regionHandle = regionHandle;
+
+    IEEE1516eRegionHandle.encode(buffer, regionHandle);
+
+    encodingFinished();
+  }
+
+  public DeleteRegion(ChannelBuffer buffer)
+  {
+    super(buffer);
+
+    regionHandle = IEEE1516eRegionHandle.decode(buffer);
   }
 
   public RegionHandle getRegionHandle()
@@ -37,8 +53,12 @@ public class DeleteRegion
     return regionHandle;
   }
 
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public MessageType getType()
+  {
+    return MessageType.DELETE_REGION;
+  }
+
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.deleteRegion(federateProxy, this);
   }

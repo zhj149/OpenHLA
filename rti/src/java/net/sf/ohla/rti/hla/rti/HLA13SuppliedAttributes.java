@@ -19,24 +19,25 @@ package net.sf.ohla.rti.hla.rti;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandle;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandleValueMap;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleValueMap;
 
 import hla.rti.ArrayIndexOutOfBounds;
 import hla.rti.SuppliedAttributes;
 
-import hla.rti1516.AttributeHandle;
+import hla.rti1516e.AttributeHandle;
 
 public class HLA13SuppliedAttributes
-  extends IEEE1516AttributeHandleValueMap
+  extends IEEE1516eAttributeHandleValueMap
   implements SuppliedAttributes
 {
-  protected List<AttributeHandle> attributeHandles =
-    new ArrayList<AttributeHandle>();
+  private final List<AttributeHandle> attributeHandles;
 
   public HLA13SuppliedAttributes()
   {
     super();
+
+    attributeHandles = new ArrayList<AttributeHandle>();
   }
 
   public HLA13SuppliedAttributes(int initialCapacity)
@@ -51,7 +52,7 @@ public class HLA13SuppliedAttributes
   {
     try
     {
-      return attributeHandles.get(index).hashCode();
+      return ((IEEE1516eAttributeHandle) attributeHandles.get(index)).getHandle();
     }
     catch (IndexOutOfBoundsException ioobe)
     {
@@ -86,9 +87,7 @@ public class HLA13SuppliedAttributes
 
   public void add(int attributeHandle, byte[] value)
   {
-    AttributeHandle ohlaAttributeHandle =
-      new IEEE1516AttributeHandle(attributeHandle);
-
+    AttributeHandle ohlaAttributeHandle = new IEEE1516eAttributeHandle(attributeHandle);
     if (put(ohlaAttributeHandle, value) == null)
     {
       attributeHandles.add(ohlaAttributeHandle);

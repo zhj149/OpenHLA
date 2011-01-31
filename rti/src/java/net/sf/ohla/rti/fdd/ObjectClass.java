@@ -19,98 +19,54 @@ package net.sf.ohla.rti.fdd;
 import java.io.Serializable;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import net.sf.ohla.rti.hla.rti1516.IEEE1516ObjectClassHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
 
-import org.dom4j.Element;
-
-import hla.rti1516.AttributeHandle;
-import hla.rti1516.AttributeNotDefined;
-import hla.rti1516.ErrorReadingFDD;
-import hla.rti1516.NameNotFound;
-import hla.rti1516.ObjectClassHandle;
+import hla.rti1516e.AttributeHandle;
+import hla.rti1516e.DimensionHandleSet;
+import hla.rti1516e.ObjectClassHandle;
+import hla.rti1516e.OrderType;
+import hla.rti1516e.TransportationTypeHandle;
+import hla.rti1516e.exceptions.AttributeNotDefined;
+import hla.rti1516e.exceptions.NameNotFound;
 
 public class ObjectClass
   implements Serializable
 {
-  public static final String HLA_OBJECT_ROOT = "HLAobjectRoot";
+  public static final ObjectClass HLA_OBJECT_ROOT =
+    new ObjectClass(new IEEE1516eObjectClassHandle(1), "HLAobjectRoot", null);
 
-  protected ObjectClassHandle objectClassHandle;
-
-  protected String name;
-
-  protected ObjectClass superObjectClass;
-
-  protected Map<String, ObjectClass> subObjectClasses =
-    new HashMap<String, ObjectClass>();
-
-  protected Map<AttributeHandle, Attribute> attributes =
-    new HashMap<AttributeHandle, Attribute>();
-  protected Map<String, Attribute> attributesByName =
-    new HashMap<String, Attribute>();
-
-  protected boolean mom;
-
-  public ObjectClass(String name, AtomicInteger objectCount)
+  static
   {
-    this(name, null, objectCount);
+    HLA_OBJECT_ROOT.attributes.put(
+      Attribute.HLA_PRIVILEGE_TO_DELETE_OBJECT.getAttributeHandle(), Attribute.HLA_PRIVILEGE_TO_DELETE_OBJECT);
+    HLA_OBJECT_ROOT.attributesByName.put(
+      Attribute.HLA_PRIVILEGE_TO_DELETE_OBJECT.getName(), Attribute.HLA_PRIVILEGE_TO_DELETE_OBJECT);
   }
 
-  public ObjectClass(String name, ObjectClass superObjectClass,
-                     AtomicInteger objectCount)
-  {
-    objectClassHandle =
-      new IEEE1516ObjectClassHandle(objectCount.incrementAndGet());
+  private final ObjectClassHandle objectClassHandle;
+  private final String name;
 
+  private final ObjectClass superObjectClass;
+
+  private final Map<AttributeHandle, Attribute> attributes = new HashMap<AttributeHandle, Attribute>();
+  private final Map<String, Attribute> attributesByName = new HashMap<String, Attribute>();
+
+  public ObjectClass(ObjectClassHandle objectClassHandle, String name, ObjectClass superObjectClass)
+  {
+    this.objectClassHandle = objectClassHandle;
     this.name = name;
     this.superObjectClass = superObjectClass;
 
     if (superObjectClass != null)
     {
-      if (!superObjectClass.isHLAobjectRoot())
-      {
-        // fully qualify the name
-        //
-        this.name = String.format("%s.%s", superObjectClass.getName(), name);
-      }
-
       // get a reference to all the super object classes attributes
       //
       attributes.putAll(superObjectClass.attributes);
       attributesByName.putAll(superObjectClass.attributesByName);
-    }
-  }
-
-  public ObjectClass(Element objectClass, AtomicInteger objectCount,
-                     AtomicInteger attributeCount, FDD fdd)
-    throws ErrorReadingFDD
-  {
-    this(objectClass, null, objectCount, attributeCount, fdd);
-  }
-
-  @SuppressWarnings("unchecked")
-  public ObjectClass(Element objectClass, ObjectClass superClass,
-                     AtomicInteger objectCount, AtomicInteger attributeCount,
-                     FDD fdd)
-    throws ErrorReadingFDD
-  {
-    this(((org.dom4j.Attribute) objectClass.selectSingleNode(
-      "@name")).getValue(), superClass, objectCount);
-
-    List<Element> attributes = objectClass.selectNodes("attribute");
-    for (Element e : attributes)
-    {
-      add(new Attribute(e, attributeCount, fdd));
-    }
-
-    List<Element> subClasses = objectClass.selectNodes("objectClass");
-    for (Element e : subClasses)
-    {
-      add(new ObjectClass(e, this, objectCount, attributeCount, fdd));
     }
   }
 
@@ -124,14 +80,9 @@ public class ObjectClass
     return name;
   }
 
-  public boolean isHLAobjectRoot()
-  {
-    return name.equals(HLA_OBJECT_ROOT);
-  }
-
   public boolean hasSuperObjectClass()
   {
-    return getSuperObjectClass() != null;
+    return superObjectClass != null;
   }
 
   public ObjectClass getSuperObjectClass()
@@ -139,37 +90,32 @@ public class ObjectClass
     return superObjectClass;
   }
 
-  public boolean isAssignableFrom(ObjectClass objectClass)
-  {
-    return equals(objectClass) ||
-           (objectClass.hasSuperObjectClass() &&
-            isAssignableFrom(objectClass.getSuperObjectClass()));
-  }
-
-  public void add(ObjectClass subObjectClass)
-  {
-    subObjectClasses.put(subObjectClass.getName(), subObjectClass);
-  }
-
-  public Map<String, ObjectClass> getSubObjectClasses()
-  {
-    return subObjectClasses;
-  }
-
-  public void add(Attribute attribute)
-  {
-    attributes.put(attribute.getAttributeHandle(), attribute);
-    attributesByName.put(attribute.getName(), attribute);
-  }
-
   public Map<AttributeHandle, Attribute> getAttributes()
   {
     return attributes;
   }
 
-  public Map<String, Attribute> getAttributesByName()
+  public boolean isAssignableFrom(ObjectClass objectClass)
   {
-    return attributesByName;
+    return equals(objectClass) || (objectClass.hasSuperObjectClass() &&
+                                   isAssignableFrom(objectClass.getSuperObjectClass()));
+  }
+
+  public Attribute addAttribute(
+    String name, DimensionHandleSet dimensionHandles, TransportationTypeHandle transportationTypeHandle,
+    OrderType orderType)
+  {
+    Attribute attribute = attributesByName.get(name);
+    if (attribute == null)
+    {
+      AttributeHandle attributeHandle = new IEEE1516eAttributeHandle(attributes.size() + 1);
+
+      attribute = new Attribute(attributeHandle, name, dimensionHandles, transportationTypeHandle, orderType);
+
+      attributes.put(attributeHandle, attribute);
+      attributesByName.put(name, attribute);
+    }
+    return attribute;
   }
 
   public boolean hasAttribute(String name)
@@ -188,8 +134,7 @@ public class ObjectClass
     Attribute attribute = attributesByName.get(name);
     if (attribute == null)
     {
-      throw new NameNotFound(
-        String.format("attribute name not found: %s", name));
+      throw new NameNotFound(String.format("attribute name not found: %s (%s)", name, this.name));
     }
     return attribute;
   }
@@ -200,10 +145,28 @@ public class ObjectClass
     Attribute attribute = attributes.get(attributeHandle);
     if (attribute == null)
     {
-      throw new AttributeNotDefined(
-        String.format("attribute not defined: %s", attributeHandle));
+      throw new AttributeNotDefined(String.format("attribute not defined: %s (%s)", attributeHandle, this.name));
     }
     return attribute;
+  }
+
+  public Attribute getAttributeSafely(AttributeHandle attributeHandle)
+  {
+    Attribute attribute = attributes.get(attributeHandle);
+    assert attribute != null;
+    return attribute;
+  }
+
+  public String getAttributeName(AttributeHandle attributeHandle)
+    throws AttributeNotDefined
+  {
+    return getAttribute(attributeHandle).getName();
+  }
+
+  public AttributeHandle getAttributeHandle(String name)
+    throws NameNotFound
+  {
+    return getAttribute(name).getAttributeHandle();
   }
 
   public void checkIfAttributeNotDefined(AttributeHandle attributeHandle)
@@ -219,18 +182,6 @@ public class ObjectClass
     {
       getAttribute(attributeHandle);
     }
-  }
-
-  public boolean isMOM()
-  {
-    return mom;
-  }
-
-  @Override
-  public boolean equals(Object rhs)
-  {
-    return rhs instanceof ObjectClass &&
-           objectClassHandle.equals(((ObjectClass) rhs).objectClassHandle);
   }
 
   @Override

@@ -29,7 +29,7 @@ public class Integer64Time
 {
   private static final byte ENCODED_LENGTH = Long.SIZE / 8;
 
-  public static final Integer64Time INITIAL = new Integer64Time(0);
+  public static final Integer64Time INITIAL = new Integer64Time(0L);
   public static final Integer64Time FINAL = new Integer64Time(Long.MAX_VALUE);
 
   public long time;
@@ -157,7 +157,7 @@ public class Integer64Time
   public int compareTo(Integer64Time rhs)
   {
     long diff = time - rhs.time;
-    return diff > 0l ? 1 : diff < 0l ? -1 : 0;
+    return diff > 0L ? 1 : diff < 0L ? -1 : 0;
   }
 
   @Override

@@ -15,19 +15,17 @@
   -->
 
 <configuration>
-  <appender name="STDOUT"
-            class="ch.qos.logback.core.ConsoleAppender">
-    <layout class="ch.qos.logback.classic.PatternLayout">
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
       <pattern>%d{HH:mm:ss.SSS} %-5level [%-20logger{20}] [%marker] %msg%n</pattern>
-    </layout>
+    </encoder>
   </appender>
 
-  <logger name="org.apache.mina.filter.executor.ExecutorFilter">
-    <level value="INFO"/>
-  </logger>
+  <!--<logger name="org.apache.mina.filter.executor.ExecutorFilter">-->
+    <!--<level value="INFO"/>-->
+  <!--</logger>-->
 
-  <root>
-    <level value="debug"/>
-    <appender-ref ref="STDOUT"/>
+  <root level="TRACE">
+    <appender-ref ref="STDOUT" />
   </root>
 </configuration>

@@ -19,34 +19,33 @@ package net.sf.ohla.rti.messages;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
 
-import hla.rti1516.AttributeHandle;
-import hla.rti1516.ObjectInstanceHandle;
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.AttributeHandle;
+import hla.rti1516e.ObjectInstanceHandle;
 
 public class QueryAttributeOwnership
+  extends ObjectInstanceAttributeMessage
   implements FederationExecutionMessage
 {
-  protected ObjectInstanceHandle objectInstanceHandle;
-  protected AttributeHandle attributeHandle;
-
-  public QueryAttributeOwnership(ObjectInstanceHandle objectInstanceHandle,
-                                 AttributeHandle attributeHandle)
+  public QueryAttributeOwnership(ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle)
   {
-    this.objectInstanceHandle = objectInstanceHandle;
-    this.attributeHandle = attributeHandle;
+    super(MessageType.QUERY_ATTRIBUTE_OWNERSHIP, objectInstanceHandle, attributeHandle);
+
+    encodingFinished();
   }
 
-  public ObjectInstanceHandle getObjectInstanceHandle()
+  public QueryAttributeOwnership(ChannelBuffer buffer)
   {
-    return objectInstanceHandle;
+    super(buffer);
   }
 
-  public AttributeHandle getAttributeHandle()
+  public MessageType getType()
   {
-    return attributeHandle;
+    return MessageType.QUERY_ATTRIBUTE_OWNERSHIP;
   }
 
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.queryAttributeOwnership(federateProxy, this);
   }

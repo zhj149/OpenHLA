@@ -18,6 +18,8 @@ package net.sf.ohla.rti.hla.rti1516;
 
 import java.util.HashSet;
 
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandleSetFactory;
+
 import hla.rti1516.RegionHandle;
 import hla.rti1516.RegionHandleSet;
 
@@ -25,4 +27,25 @@ public class IEEE1516RegionHandleSet
   extends HashSet<RegionHandle>
   implements RegionHandleSet
 {
+  public IEEE1516RegionHandleSet()
+  {
+  }
+
+  public IEEE1516RegionHandleSet(hla.rti1516e.RegionHandleSet regionHandles)
+  {
+    for (hla.rti1516e.RegionHandle regionHandle : regionHandles)
+    {
+      add(new IEEE1516RegionHandle(regionHandle));
+    }
+  }
+
+  public static hla.rti1516e.RegionHandleSet createIEEE1516eRegionHandleSet(RegionHandleSet regionHandles)
+  {
+    hla.rti1516e.RegionHandleSet ieee1516eRegionHandleSet = IEEE1516eRegionHandleSetFactory.INSTANCE.create();
+    for (RegionHandle regionHandle : regionHandles)
+    {
+      ieee1516eRegionHandleSet.add(((IEEE1516RegionHandle) regionHandle).getIEEE1516eRegionHandle());
+    }
+    return ieee1516eRegionHandleSet;
+  }
 }

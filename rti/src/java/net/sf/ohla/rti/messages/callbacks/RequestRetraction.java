@@ -16,23 +16,61 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateInternalError;
-import hla.rti1516.MessageRetractionHandle;
+import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eMessageRetractionHandle;
+import net.sf.ohla.rti.messages.AbstractMessage;
+import net.sf.ohla.rti.messages.FederateMessage;
+import net.sf.ohla.rti.messages.MessageType;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.MessageRetractionHandle;
+import hla.rti1516e.exceptions.FederateInternalError;
 
 public class RequestRetraction
-  implements Callback
+  extends AbstractMessage
+  implements Callback, FederateMessage
 {
-  protected MessageRetractionHandle messageRetractionHandle;
+  private final MessageRetractionHandle messageRetractionHandle;
 
   public RequestRetraction(MessageRetractionHandle messageRetractionHandle)
   {
+    super(MessageType.REQUEST_RETRACTION);
+
     this.messageRetractionHandle = messageRetractionHandle;
+
+    IEEE1516eMessageRetractionHandle.encode(buffer, messageRetractionHandle);
+
+    encodingFinished();
+  }
+
+  public RequestRetraction(ChannelBuffer buffer)
+  {
+    super(buffer);
+
+    messageRetractionHandle = IEEE1516eMessageRetractionHandle.decode(buffer);
+  }
+
+  public MessageRetractionHandle getMessageRetractionHandle()
+  {
+    return messageRetractionHandle;
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.REQUEST_RETRACTION;
   }
 
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
     federateAmbassador.requestRetraction(messageRetractionHandle);
+  }
+
+  public void execute(Federate federate)
+  {
+    federate.callbackReceived(this);
   }
 }

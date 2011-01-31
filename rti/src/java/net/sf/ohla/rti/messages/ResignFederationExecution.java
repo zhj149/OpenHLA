@@ -19,25 +19,37 @@ package net.sf.ohla.rti.messages;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
 
-import hla.rti1516.ResignAction;
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.ResignAction;
 
 public class ResignFederationExecution
+  extends EnumMessage<ResignAction>
   implements FederationExecutionMessage
 {
-  protected ResignAction resignAction;
-
   public ResignFederationExecution(ResignAction resignAction)
   {
-    this.resignAction = resignAction;
+    super(MessageType.RESIGN_FEDERATION_EXECUTION, resignAction);
+
+    encodingFinished();
+  }
+
+  public ResignFederationExecution(ChannelBuffer buffer)
+  {
+    super(buffer, ResignAction.values());
   }
 
   public ResignAction getResignAction()
   {
-    return resignAction;
+    return e;
   }
 
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public MessageType getType()
+  {
+    return MessageType.RESIGN_FEDERATION_EXECUTION;
+  }
+
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.resignFederationExecution(federateProxy, this);
   }

@@ -16,8 +16,10 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
-import java.util.Collection;
 import java.util.HashSet;
+
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandleSetFactory;
 
 import hla.rti1516.FederateHandle;
 import hla.rti1516.FederateHandleSet;
@@ -30,18 +32,22 @@ public class IEEE1516FederateHandleSet
   {
   }
 
-  public IEEE1516FederateHandleSet(int initialCapacity)
+  public IEEE1516FederateHandleSet(hla.rti1516e.FederateHandleSet federateHandles)
   {
-    super(initialCapacity);
+    for (hla.rti1516e.FederateHandle federateHandle : federateHandles)
+    {
+      add(new IEEE1516FederateHandle(federateHandle));
+    }
   }
 
-  public IEEE1516FederateHandleSet(Collection<? extends FederateHandle> c)
+  public static hla.rti1516e.FederateHandleSet createIEEE1516eFederateHandleSet(FederateHandleSet federateHandles)
   {
-    super(c);
-  }
-
-  public IEEE1516FederateHandleSet(IEEE1516FederateHandleSet federateHandleSet)
-  {
-    super(federateHandleSet);
+    hla.rti1516e.FederateHandleSet ieee1516eFederateHandles = IEEE1516eFederateHandleSetFactory.INSTANCE.create();
+    for (FederateHandle federateHandle : federateHandles)
+    {
+      ieee1516eFederateHandles.add(
+        new IEEE1516eFederateHandle(((IEEE1516eFederateHandle) federateHandle).getHandle()));
+    }
+    return ieee1516eFederateHandles;
   }
 }

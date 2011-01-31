@@ -20,22 +20,20 @@ import java.io.Serializable;
 
 import hla.rti.EventRetractionHandle;
 
-import hla.rti1516.MessageRetractionHandle;
-import hla.rti1516.MessageRetractionReturn;
+import hla.rti1516e.MessageRetractionHandle;
+import hla.rti1516e.MessageRetractionReturn;
 
 public class HLA13EventRetractionHandle
   implements EventRetractionHandle, Serializable
 {
-  protected MessageRetractionHandle messageRetractionHandle;
+  private final MessageRetractionHandle messageRetractionHandle;
 
-  public HLA13EventRetractionHandle(
-    MessageRetractionHandle messageRetractionHandle)
+  public HLA13EventRetractionHandle(MessageRetractionHandle messageRetractionHandle)
   {
     this.messageRetractionHandle = messageRetractionHandle;
   }
 
-  public HLA13EventRetractionHandle(
-    MessageRetractionReturn messageRetractionReturn)
+  public HLA13EventRetractionHandle(MessageRetractionReturn messageRetractionReturn)
   {
     this(messageRetractionReturn.handle);
   }
@@ -55,7 +53,6 @@ public class HLA13EventRetractionHandle
   public boolean equals(Object rhs)
   {
     return rhs instanceof HLA13EventRetractionHandle &&
-           messageRetractionHandle.equals(
-             ((HLA13EventRetractionHandle) rhs).messageRetractionHandle);
+           messageRetractionHandle.equals(((HLA13EventRetractionHandle) rhs).messageRetractionHandle);
   }
 }

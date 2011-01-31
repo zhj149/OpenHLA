@@ -16,23 +16,17 @@
 
 package net.sf.ohla.rti.fed;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import net.sf.ohla.rti.fdd.ObjectClass;
+
+import hla.rti1516e.ObjectClassHandle;
 
 public class FEDObjectClass
   extends ObjectClass
 {
   public static final String OBJECT_ROOT = "objectRoot";
 
-  public FEDObjectClass(String name, AtomicInteger objectCount)
+  public FEDObjectClass(ObjectClassHandle objectClassHandle, String name, FEDObjectClass superObjectClass)
   {
-    super(name, objectCount);
-  }
-
-  public FEDObjectClass(String name, ObjectClass superObjectClass,
-                        AtomicInteger objectCount)
-  {
-    super(name, superObjectClass, objectCount);
+    super(objectClassHandle, name, superObjectClass);
   }
 }

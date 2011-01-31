@@ -16,36 +16,59 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import hla.rti1516.AttributeAlreadyOwned;
-import hla.rti1516.AttributeHandleSet;
-import hla.rti1516.AttributeNotPublished;
-import hla.rti1516.AttributeNotRecognized;
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateInternalError;
-import hla.rti1516.ObjectInstanceHandle;
-import hla.rti1516.ObjectInstanceNotKnown;
+
+import net.sf.ohla.rti.Protocol;
+import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.FederateMessage;
+import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.ObjectInstanceAttributesMessage;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.AttributeHandleSet;
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.ObjectInstanceHandle;
+import hla.rti1516e.exceptions.FederateInternalError;
 
 public class RequestAttributeOwnershipAssumption
-  implements Callback
+  extends ObjectInstanceAttributesMessage
+  implements Callback, FederateMessage
 {
-  protected ObjectInstanceHandle objectInstanceHandle;
-  protected AttributeHandleSet attributeHandles;
-  protected byte[] tag;
+  private final byte[] tag;
 
   public RequestAttributeOwnershipAssumption(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles, byte[] tag)
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
   {
-    this.objectInstanceHandle = objectInstanceHandle;
-    this.attributeHandles = attributeHandles;
+    super(MessageType.REQUEST_ATTRIBUTE_OWNERSHIP_ASSUMPTION, objectInstanceHandle, attributeHandles);
+
     this.tag = tag;
+
+    Protocol.encodeBytes(buffer, tag);
+
+    encodingFinished();
+  }
+
+  public RequestAttributeOwnershipAssumption(ChannelBuffer buffer)
+  {
+    super(buffer);
+
+    tag = Protocol.decodeBytes(buffer);
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.REQUEST_ATTRIBUTE_OWNERSHIP_ASSUMPTION;
   }
 
   public void execute(FederateAmbassador federateAmbassador)
-    throws ObjectInstanceNotKnown, AttributeNotRecognized,
-           AttributeAlreadyOwned, AttributeNotPublished, FederateInternalError
+    throws FederateInternalError
   {
-    federateAmbassador.requestAttributeOwnershipAssumption(
-      objectInstanceHandle, attributeHandles, tag);
+    federateAmbassador.requestAttributeOwnershipAssumption(objectInstanceHandle, attributeHandles, tag);
+  }
+
+  public void execute(Federate federate)
+  {
+    federate.callbackReceived(this);
   }
 }

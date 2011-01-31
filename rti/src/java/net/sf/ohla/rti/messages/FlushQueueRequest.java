@@ -3,31 +3,33 @@ package net.sf.ohla.rti.messages;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
 
-import hla.rti1516.LogicalTime;
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.LogicalTime;
+import hla.rti1516e.LogicalTimeFactory;
 
 public class FlushQueueRequest
+  extends LogicalTimeMessage
   implements FederationExecutionMessage
 {
-  protected LogicalTime time;
-
   public FlushQueueRequest(LogicalTime time)
   {
-    this.time = time;
+    super(MessageType.FLUSH_QUEUE_REQUEST, time);
+
+    encodingFinished();
   }
 
-  public LogicalTime getTime()
+  public FlushQueueRequest(ChannelBuffer buffer, LogicalTimeFactory factory)
   {
-    return time;
+    super(buffer, factory);
   }
 
-  @Override
-  public String toString()
+  public MessageType getType()
   {
-    return String.format("Flush Queue Request: %s", time);
+    return MessageType.FLUSH_QUEUE_REQUEST;
   }
 
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.flushQueueRequest(federateProxy, this);
   }

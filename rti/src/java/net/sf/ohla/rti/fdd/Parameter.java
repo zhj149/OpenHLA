@@ -16,36 +16,17 @@
 
 package net.sf.ohla.rti.fdd;
 
-import java.io.Serializable;
-
-import java.util.concurrent.atomic.AtomicInteger;
-
-import net.sf.ohla.rti.hla.rti1516.IEEE1516ParameterHandle;
-
-import org.dom4j.Element;
-
-import hla.rti1516.ParameterHandle;
+import hla.rti1516e.ParameterHandle;
 
 public class Parameter
-  implements Serializable
 {
-  protected ParameterHandle parameterHandle;
+  private final ParameterHandle parameterHandle;
+  private final String name;
 
-  protected String name;
-
-  protected boolean mom;
-
-  public Parameter(String name, AtomicInteger parameterCount)
+  public Parameter(ParameterHandle parameterHandle, String name)
   {
+    this.parameterHandle = parameterHandle;
     this.name = name;
-
-    parameterHandle = new IEEE1516ParameterHandle(parameterCount.incrementAndGet());
-  }
-
-  public Parameter(Element parameter, AtomicInteger parameterCount)
-  {
-    this(((org.dom4j.Attribute) parameter.selectSingleNode("@name")).getValue(),
-         parameterCount);
   }
 
   public ParameterHandle getParameterHandle()
@@ -56,18 +37,6 @@ public class Parameter
   public String getName()
   {
     return name;
-  }
-
-  public boolean isMOM()
-  {
-    return mom;
-  }
-
-  @Override
-  public boolean equals(Object rhs)
-  {
-    return rhs instanceof Parameter &&
-           parameterHandle.equals(((Parameter) rhs).parameterHandle);
   }
 
   @Override

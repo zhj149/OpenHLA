@@ -16,29 +16,20 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
-import java.util.UUID;
-
-import net.sf.ohla.rti.handles.UUIDHandle;
-
-import hla.rti1516.CouldNotDecode;
 import hla.rti1516.MessageRetractionHandle;
 
 public class IEEE1516MessageRetractionHandle
-  extends UUIDHandle
   implements MessageRetractionHandle
 {
-  public IEEE1516MessageRetractionHandle()
+  private final hla.rti1516e.MessageRetractionHandle messageRetractionHandle;
+
+  public IEEE1516MessageRetractionHandle(hla.rti1516e.MessageRetractionHandle messageRetractionHandle)
   {
+    this.messageRetractionHandle = messageRetractionHandle;
   }
 
-  public IEEE1516MessageRetractionHandle(UUID handle)
+  public hla.rti1516e.MessageRetractionHandle getIEEE1516eMessageRetractionHandle()
   {
-    super(handle);
-  }
-
-  public IEEE1516MessageRetractionHandle(byte[] buffer, int offset)
-    throws CouldNotDecode
-  {
-    super(buffer, offset);
+    return messageRetractionHandle;
   }
 }

@@ -18,18 +18,34 @@ package net.sf.ohla.rti.messages;
 
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eMessageRetractionHandle;
 
-import hla.rti1516.MessageRetractionHandle;
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.MessageRetractionHandle;
 
 public class Retract
-  extends AbstractRequest
+  extends AbstractRequest<RetractResponse>
   implements FederationExecutionMessage
 {
-  protected MessageRetractionHandle messageRetractionHandle;
+  private final MessageRetractionHandle messageRetractionHandle;
 
   public Retract(MessageRetractionHandle messageRetractionHandle)
   {
+    super(MessageType.RETRACT);
+
     this.messageRetractionHandle = messageRetractionHandle;
+
+    IEEE1516eMessageRetractionHandle.encode(buffer, messageRetractionHandle);
+
+    encodingFinished();
+  }
+
+  public Retract(ChannelBuffer buffer)
+  {
+    super(buffer);
+
+    messageRetractionHandle = IEEE1516eMessageRetractionHandle.decode(buffer);
   }
 
   public MessageRetractionHandle getMessageRetractionHandle()
@@ -37,8 +53,12 @@ public class Retract
     return messageRetractionHandle;
   }
 
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public MessageType getType()
+  {
+    return MessageType.RETRACT;
+  }
+
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.retract(federateProxy, this);
   }

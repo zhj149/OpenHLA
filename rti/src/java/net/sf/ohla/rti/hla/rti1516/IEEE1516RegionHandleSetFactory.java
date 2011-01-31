@@ -22,12 +22,19 @@ import hla.rti1516.RegionHandleSetFactory;
 public class IEEE1516RegionHandleSetFactory
   implements RegionHandleSetFactory
 {
-  public IEEE1516RegionHandleSetFactory()
+  public static final IEEE1516RegionHandleSetFactory INSTANCE = new IEEE1516RegionHandleSetFactory();
+
+  private IEEE1516RegionHandleSetFactory()
   {
   }
 
   public RegionHandleSet create()
   {
     return new IEEE1516RegionHandleSet();
+  }
+
+  private Object readResolve()
+  {
+    return INSTANCE;
   }
 }

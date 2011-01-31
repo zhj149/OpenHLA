@@ -16,19 +16,46 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateInternalError;
+import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.AbstractMessage;
+import net.sf.ohla.rti.messages.FederateMessage;
+import net.sf.ohla.rti.messages.MessageType;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.exceptions.FederateInternalError;
 
 public class FederationRestoreBegun
-  implements Callback
+  extends AbstractMessage
+  implements Callback, FederateMessage
 {
   public FederationRestoreBegun()
   {
+    super(MessageType.FEDERATION_RESTORE_BEGUN);
+
+    encodingFinished();
+  }
+
+  public FederationRestoreBegun(ChannelBuffer buffer)
+  {
+    super(buffer);
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.FEDERATION_RESTORE_BEGUN;
   }
 
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
     federateAmbassador.federationRestoreBegun();
+  }
+
+  public void execute(Federate federate)
+  {
+    federate.callbackReceived(this);
   }
 }

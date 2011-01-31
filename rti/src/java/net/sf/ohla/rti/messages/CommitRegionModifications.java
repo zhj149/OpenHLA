@@ -16,25 +16,63 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.util.HashMap;
 import java.util.Map;
 
+import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandle;
 
-import hla.rti1516.DimensionHandle;
-import hla.rti1516.RangeBounds;
-import hla.rti1516.RegionHandle;
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.DimensionHandle;
+import hla.rti1516e.RangeBounds;
+import hla.rti1516e.RegionHandle;
 
 public class CommitRegionModifications
-  extends AbstractRequest
+  extends AbstractMessage
   implements FederationExecutionMessage
 {
-  protected Map<RegionHandle, Map<DimensionHandle, RangeBounds>> regionModifications;
+  private final Map<RegionHandle, Map<DimensionHandle, RangeBounds>> regionModifications;
 
-  public CommitRegionModifications(
-    Map<RegionHandle, Map<DimensionHandle, RangeBounds>> regionModifications)
+  public CommitRegionModifications(Map<RegionHandle, Map<DimensionHandle, RangeBounds>> regionModifications)
   {
+    super(MessageType.COMMIT_REGION_MODIFICATIONS);
+
     this.regionModifications = regionModifications;
+
+    Protocol.encodeVarInt(buffer, regionModifications.size());
+    for (Map.Entry<RegionHandle, Map<DimensionHandle, RangeBounds>> entry : regionModifications.entrySet())
+    {
+      IEEE1516eRegionHandle.encode(buffer, entry.getKey());
+      Protocol.encodeVarInt(buffer, entry.getValue().size());
+      for (Map.Entry<DimensionHandle, RangeBounds> entry2 : entry.getValue().entrySet())
+      {
+        IEEE1516eDimensionHandle.encode(buffer, entry2.getKey());
+        Protocol.encodeRangeBounds(buffer, entry2.getValue());
+      }
+    }
+
+    encodingFinished();
+  }
+
+  public CommitRegionModifications(ChannelBuffer buffer)
+  {
+    super(buffer);
+
+    regionModifications = new HashMap<RegionHandle, Map<DimensionHandle, RangeBounds>>();
+
+    for (int count = Protocol.decodeVarInt(buffer); count > 0; count--)
+    {
+      Map<DimensionHandle, RangeBounds> rangeBounds = new HashMap<DimensionHandle, RangeBounds>();
+      regionModifications.put(IEEE1516eRegionHandle.decode(buffer), rangeBounds);
+      for (int count2 = Protocol.decodeVarInt(buffer); count2 > 0; count2--)
+      {
+        rangeBounds.put(IEEE1516eDimensionHandle.decode(buffer), Protocol.decodeRangeBounds(buffer));
+      }
+    }
   }
 
   public Map<RegionHandle, Map<DimensionHandle, RangeBounds>> getRegionModifications()
@@ -42,8 +80,12 @@ public class CommitRegionModifications
     return regionModifications;
   }
 
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public MessageType getType()
+  {
+    return MessageType.COMMIT_REGION_MODIFICATIONS;
+  }
+
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.commitRegionModifications(federateProxy, this);
   }

@@ -16,10 +16,11 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
+
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleValueMapFactory;
 
 import hla.rti1516.AttributeHandle;
 import hla.rti1516.AttributeHandleValueMap;
@@ -28,38 +29,29 @@ public class IEEE1516AttributeHandleValueMap
   extends HashMap<AttributeHandle, byte[]>
   implements AttributeHandleValueMap
 {
-  public IEEE1516AttributeHandleValueMap()
-  {
-  }
-
   public IEEE1516AttributeHandleValueMap(int initialCapacity)
   {
     super(initialCapacity);
   }
 
-  public IEEE1516AttributeHandleValueMap(Map<AttributeHandle, byte[]> clonee)
+  public IEEE1516AttributeHandleValueMap(hla.rti1516e.AttributeHandleValueMap attributeValues)
   {
-    super(clonee);
-  }
-
-  public boolean equals(Object rhs)
-  {
-    return rhs instanceof IEEE1516AttributeHandleValueMap &&
-           equals((IEEE1516AttributeHandleValueMap) rhs);
-  }
-
-  public boolean equals(IEEE1516AttributeHandleValueMap rhs)
-  {
-    boolean equals = keySet().equals(rhs.keySet());
-    if (equals)
+    for (Map.Entry<hla.rti1516e.AttributeHandle, byte[]> entry : attributeValues.entrySet())
     {
-      for (
-        Iterator<byte[]> i = values().iterator(), j = rhs.values().iterator();
-        equals && i.hasNext();)
-      {
-        equals = Arrays.equals(i.next(), j.next());
-      }
+      put(new IEEE1516AttributeHandle(entry.getKey()), entry.getValue());
     }
-    return equals;
+  }
+
+  public static hla.rti1516e.AttributeHandleValueMap createIEEE1516eAttributeHandleValueMap(
+    AttributeHandleValueMap attributeValues)
+  {
+    hla.rti1516e.AttributeHandleValueMap ieee1516eAttributeValues =
+      IEEE1516eAttributeHandleValueMapFactory.INSTANCE.create(attributeValues.size());
+    for (Map.Entry<AttributeHandle, byte[]> entry : attributeValues.entrySet())
+    {
+      ieee1516eAttributeValues.put(
+        new IEEE1516eAttributeHandle(((IEEE1516AttributeHandle) entry.getKey()).getHandle()), entry.getValue());
+    }
+    return ieee1516eAttributeValues;
   }
 }

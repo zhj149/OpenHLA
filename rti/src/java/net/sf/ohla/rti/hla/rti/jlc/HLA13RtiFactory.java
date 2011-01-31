@@ -16,6 +16,7 @@
 
 package net.sf.ohla.rti.hla.rti.jlc;
 
+import net.sf.ohla.rti.RTI;
 import net.sf.ohla.rti.hla.rti.HLA13AttributeHandleSet;
 import net.sf.ohla.rti.hla.rti.HLA13FederateHandleSet;
 import net.sf.ohla.rti.hla.rti.HLA13RTIambassador;
@@ -61,17 +62,17 @@ public class HLA13RtiFactory
 
   public String RtiName()
   {
-    return "OHLA";
+    return RTI.NAME;
   }
 
   public String RtiVersion()
   {
-    return "0.3";
+    return RTI.VERSION;
   }
 
   public long getMinExtent()
   {
-    return Long.MIN_VALUE;
+    return 0L;
   }
 
   public long getMaxExtent()

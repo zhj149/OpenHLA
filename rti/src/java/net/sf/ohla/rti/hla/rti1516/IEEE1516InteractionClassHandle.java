@@ -16,23 +16,23 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
-import net.sf.ohla.rti.handles.ShortHandle;
+import net.sf.ohla.rti.IntegerHandle;
 
 import hla.rti1516.CouldNotDecode;
 import hla.rti1516.InteractionClassHandle;
 
 public class IEEE1516InteractionClassHandle
-  extends ShortHandle
+  extends IntegerHandle
   implements InteractionClassHandle
 {
-  public IEEE1516InteractionClassHandle(int handle)
-  {
-    super(handle);
-  }
-
   public IEEE1516InteractionClassHandle(byte[] buffer, int offset)
     throws CouldNotDecode
   {
     super(buffer, offset);
+  }
+
+  public IEEE1516InteractionClassHandle(hla.rti1516e.InteractionClassHandle interactionClassHandle)
+  {
+    super((IEEE1516InteractionClassHandle) interactionClassHandle);
   }
 }

@@ -16,26 +16,52 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateInternalError;
-import hla.rti1516.InvalidLogicalTime;
-import hla.rti1516.LogicalTime;
-import hla.rti1516.NoRequestToEnableTimeRegulationWasPending;
+import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.FederateMessage;
+import net.sf.ohla.rti.messages.LogicalTimeMessage;
+import net.sf.ohla.rti.messages.MessageType;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.LogicalTime;
+import hla.rti1516e.LogicalTimeFactory;
+import hla.rti1516e.exceptions.FederateInternalError;
 
 public class TimeRegulationEnabled
-  implements Callback
+  extends LogicalTimeMessage
+  implements Callback, FederateMessage
 {
-  protected LogicalTime time;
+  private Federate federate;
 
   public TimeRegulationEnabled(LogicalTime time)
   {
-    this.time = time;
+    super(MessageType.TIME_REGULATION_ENABLED, time);
+
+    encodingFinished();
+  }
+
+  public TimeRegulationEnabled(ChannelBuffer buffer, LogicalTimeFactory logicalTimeFactory)
+  {
+    super(buffer, logicalTimeFactory);
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.TIME_REGULATION_ENABLED;
   }
 
   public void execute(FederateAmbassador federateAmbassador)
-    throws InvalidLogicalTime, NoRequestToEnableTimeRegulationWasPending,
-           FederateInternalError
+    throws FederateInternalError
   {
-    federateAmbassador.timeRegulationEnabled(time);
+    federate.timeRegulationEnabled(time);
+  }
+
+  public void execute(Federate federate)
+  {
+    this.federate = federate;
+
+    federate.callbackReceived(this);
   }
 }

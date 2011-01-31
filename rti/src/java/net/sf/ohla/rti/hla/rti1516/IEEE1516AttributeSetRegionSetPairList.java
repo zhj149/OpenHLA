@@ -18,6 +18,8 @@ package net.sf.ohla.rti.hla.rti1516;
 
 import java.util.ArrayList;
 
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeSetRegionSetPairListFactory;
+
 import hla.rti1516.AttributeRegionAssociation;
 import hla.rti1516.AttributeSetRegionSetPairList;
 
@@ -25,13 +27,32 @@ public class IEEE1516AttributeSetRegionSetPairList
   extends ArrayList<AttributeRegionAssociation>
   implements AttributeSetRegionSetPairList
 {
-  public IEEE1516AttributeSetRegionSetPairList()
+  public IEEE1516AttributeSetRegionSetPairList(int initialCapacity)
   {
-    super();
+    super(initialCapacity);
   }
 
-  public IEEE1516AttributeSetRegionSetPairList(int capacity)
+  public IEEE1516AttributeSetRegionSetPairList(hla.rti1516e.AttributeSetRegionSetPairList attributesAndRegions)
   {
-    super(capacity);
+    for (hla.rti1516e.AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
+    {
+      add(new AttributeRegionAssociation(
+        new IEEE1516AttributeHandleSet(attributeRegionAssociation.ahset),
+        new IEEE1516RegionHandleSet(attributeRegionAssociation.rhset)));
+    }
+  }
+
+  public static hla.rti1516e.AttributeSetRegionSetPairList createIEEE1516eAttributeSetRegionSetPairList(
+    AttributeSetRegionSetPairList attributesAndRegions)
+  {
+    hla.rti1516e.AttributeSetRegionSetPairList ieee1516eAttributesAndRegion =
+      IEEE1516eAttributeSetRegionSetPairListFactory.INSTANCE.create(attributesAndRegions.size());
+    for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
+    {
+      ieee1516eAttributesAndRegion.add(new hla.rti1516e.AttributeRegionAssociation(
+        IEEE1516AttributeHandleSet.createIEEE1516eAttributeHandleSet(attributeRegionAssociation.attributes),
+        IEEE1516RegionHandleSet.createIEEE1516eRegionHandleSet(attributeRegionAssociation.regions)));
+    }
+    return ieee1516eAttributesAndRegion;
   }
 }

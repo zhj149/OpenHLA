@@ -16,58 +16,79 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import net.sf.ohla.rti.fdd.ObjectClass;
+import net.sf.ohla.rti.Protocol;
+import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
+import net.sf.ohla.rti.messages.FederateMessage;
+import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.ObjectInstanceMessage;
 
-import hla.rti1516.CouldNotDiscover;
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateInternalError;
-import hla.rti1516.ObjectClassHandle;
-import hla.rti1516.ObjectClassNotRecognized;
-import hla.rti1516.ObjectInstanceHandle;
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.FederateHandle;
+import hla.rti1516e.ObjectClassHandle;
+import hla.rti1516e.ObjectInstanceHandle;
+import hla.rti1516e.exceptions.FederateInternalError;
 
 public class DiscoverObjectInstance
-  implements Callback
+  extends ObjectInstanceMessage
+  implements Callback, FederateMessage
 {
-  protected ObjectInstanceHandle objectInstanceHandle;
-  protected ObjectClassHandle objectClassHandle;
-  protected String name;
+  private final ObjectClassHandle objectClassHandle;
+  private final String objectInstanceName;
+  private final FederateHandle producingFederateHandle;
 
-  protected transient ObjectClass objectClass;
+  private Federate federate;
 
-  public DiscoverObjectInstance(ObjectInstanceHandle objectInstanceHandle,
-                                ObjectClass objectClass, String name)
+  public DiscoverObjectInstance(
+    ObjectInstanceHandle objectInstanceHandle, ObjectClassHandle objectClassHandle,
+    String objectInstanceName, FederateHandle producingFederateHandle)
   {
-    this.objectInstanceHandle = objectInstanceHandle;
-    this.objectClass = objectClass;
-    this.name = name;
+    super(MessageType.DISCOVER_OBJECT_INSTANCE, objectInstanceHandle);
 
-    objectClassHandle = objectClass.getObjectClassHandle();
+    this.objectClassHandle = objectClassHandle;
+    this.objectInstanceName = objectInstanceName;
+    this.producingFederateHandle = producingFederateHandle;
+
+    IEEE1516eObjectClassHandle.encode(buffer, objectClassHandle);
+    Protocol.encodeString(buffer, objectInstanceName);
+    IEEE1516eFederateHandle.encode(buffer, producingFederateHandle);
+
+    encodingFinished();
   }
 
-  public ObjectInstanceHandle getObjectInstanceHandle()
+  public DiscoverObjectInstance(ChannelBuffer buffer)
   {
-    return objectInstanceHandle;
+    super(buffer);
+
+    objectClassHandle = IEEE1516eObjectClassHandle.decode(buffer);
+    objectInstanceName = Protocol.decodeString(buffer);
+    producingFederateHandle = IEEE1516eFederateHandle.decode(buffer);
   }
 
-  public ObjectClassHandle getObjectClassHandle()
+  public String getObjectInstanceName()
   {
-    return objectClassHandle;
+    return objectInstanceName;
   }
 
-  public String getName()
+  public MessageType getType()
   {
-    return name;
-  }
-
-  public ObjectClass getObjectClass()
-  {
-    return objectClass;
+    return MessageType.DISCOVER_OBJECT_INSTANCE;
   }
 
   public void execute(FederateAmbassador federateAmbassador)
-    throws ObjectClassNotRecognized, CouldNotDiscover, FederateInternalError
+    throws FederateInternalError
   {
-    federateAmbassador.discoverObjectInstance(
-      objectInstanceHandle, objectClassHandle, name);
+    federate.discoverObjectInstance(objectInstanceHandle, objectClassHandle, objectInstanceName, producingFederateHandle);
+  }
+
+  public void execute(Federate federate)
+  {
+    this.federate = federate;
+
+    federate.callbackReceived(this);
   }
 }

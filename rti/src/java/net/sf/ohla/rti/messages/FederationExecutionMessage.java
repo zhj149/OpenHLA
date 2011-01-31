@@ -22,6 +22,5 @@ import net.sf.ohla.rti.federation.FederationExecution;
 public interface FederationExecutionMessage
   extends Message
 {
-  void execute(FederationExecution federationExecution,
-               FederateProxy federateProxy);
+  void execute(FederationExecution federationExecution, FederateProxy federateProxy);
 }

@@ -17,11 +17,12 @@
 package net.sf.ohla.rti.federate;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.locks.Lock;
@@ -30,20 +31,26 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.sf.ohla.rti.fdd.FDD;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandleFactory;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandleSetFactory;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandleValueMapFactory;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeSetRegionSetPairListFactory;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516DimensionHandleFactory;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516DimensionHandleSetFactory;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516FederateHandleFactory;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516FederateHandleSetFactory;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516InteractionClassHandleFactory;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516ObjectClassHandleFactory;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516ObjectInstanceHandleFactory;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516ParameterHandleFactory;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516ParameterHandleValueMapFactory;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516RegionHandleSetFactory;
+import net.sf.ohla.rti.fdd.InteractionClass;
+import net.sf.ohla.rti.fdd.ObjectClass;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleFactory;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSetFactory;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleValueMapFactory;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeSetRegionSetPairListFactory;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleFactory;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSetFactory;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandleFactory;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandleSetFactory;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eInteractionClassHandleFactory;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandleFactory;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectInstanceHandleFactory;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandleFactory;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandleValueMapFactory;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRTIambassador;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandleSetFactory;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandleFactory;
+import net.sf.ohla.rti.messages.AbortFederationRestore;
+import net.sf.ohla.rti.messages.AbortFederationSave;
 import net.sf.ohla.rti.messages.FederateRestoreComplete;
 import net.sf.ohla.rti.messages.FederateRestoreNotComplete;
 import net.sf.ohla.rti.messages.FederateSaveBegun;
@@ -51,330 +58,330 @@ import net.sf.ohla.rti.messages.FederateSaveComplete;
 import net.sf.ohla.rti.messages.FederateSaveNotComplete;
 import net.sf.ohla.rti.messages.GALTAdvanced;
 import net.sf.ohla.rti.messages.GALTUndefined;
+import net.sf.ohla.rti.messages.GetFederateHandle;
+import net.sf.ohla.rti.messages.GetFederateHandleResponse;
+import net.sf.ohla.rti.messages.GetFederateName;
+import net.sf.ohla.rti.messages.GetFederateNameResponse;
 import net.sf.ohla.rti.messages.JoinFederationExecution;
 import net.sf.ohla.rti.messages.JoinFederationExecutionResponse;
+import net.sf.ohla.rti.messages.MessageDecoder;
 import net.sf.ohla.rti.messages.QueryFederationRestoreStatus;
 import net.sf.ohla.rti.messages.QueryFederationSaveStatus;
+import net.sf.ohla.rti.messages.QueryInteractionTransportationType;
 import net.sf.ohla.rti.messages.RegisterFederationSynchronizationPoint;
-import net.sf.ohla.rti.messages.RequestAttributeValueUpdate;
-import net.sf.ohla.rti.messages.RequestFederationRestore;
 import net.sf.ohla.rti.messages.RequestFederationSave;
+import net.sf.ohla.rti.messages.RequestObjectClassAttributeValueUpdate;
+import net.sf.ohla.rti.messages.RequestObjectClassAttributeValueUpdateWithRegions;
+import net.sf.ohla.rti.messages.ResignFederationExecution;
 import net.sf.ohla.rti.messages.Retract;
-import net.sf.ohla.rti.messages.SendInteraction;
-import net.sf.ohla.rti.messages.SubscribeObjectClassAttributes;
+import net.sf.ohla.rti.messages.SetAutomaticResignDirective;
 import net.sf.ohla.rti.messages.SynchronizationPointAchieved;
-import net.sf.ohla.rti.messages.UnsubscribeObjectClassAttributes;
-import net.sf.ohla.rti.messages.callbacks.Callback;
-import net.sf.ohla.rti.messages.callbacks.CallbackManager;
 import net.sf.ohla.rti.messages.callbacks.ReceiveInteraction;
 import net.sf.ohla.rti.messages.callbacks.ReflectAttributeValues;
 import net.sf.ohla.rti.messages.callbacks.RemoveObjectInstance;
+import net.sf.ohla.rti.messages.callbacks.ReportInteractionTransportationType;
 import net.sf.ohla.rti.messages.callbacks.TimeAdvanceGrant;
 
-import org.apache.mina.common.IoSession;
-import org.apache.mina.common.WriteFuture;
-
+import org.jboss.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-import hla.rti1516.AsynchronousDeliveryAlreadyDisabled;
-import hla.rti1516.AsynchronousDeliveryAlreadyEnabled;
-import hla.rti1516.AttributeAcquisitionWasNotCanceled;
-import hla.rti1516.AttributeAcquisitionWasNotRequested;
-import hla.rti1516.AttributeAlreadyBeingAcquired;
-import hla.rti1516.AttributeAlreadyBeingDivested;
-import hla.rti1516.AttributeAlreadyOwned;
-import hla.rti1516.AttributeDivestitureWasNotRequested;
-import hla.rti1516.AttributeHandle;
-import hla.rti1516.AttributeHandleFactory;
-import hla.rti1516.AttributeHandleSet;
-import hla.rti1516.AttributeHandleSetFactory;
-import hla.rti1516.AttributeHandleValueMap;
-import hla.rti1516.AttributeHandleValueMapFactory;
-import hla.rti1516.AttributeNotDefined;
-import hla.rti1516.AttributeNotOwned;
-import hla.rti1516.AttributeNotPublished;
-import hla.rti1516.AttributeNotRecognized;
-import hla.rti1516.AttributeNotSubscribed;
-import hla.rti1516.AttributeRegionAssociation;
-import hla.rti1516.AttributeRelevanceAdvisorySwitchIsOff;
-import hla.rti1516.AttributeRelevanceAdvisorySwitchIsOn;
-import hla.rti1516.AttributeScopeAdvisorySwitchIsOff;
-import hla.rti1516.AttributeScopeAdvisorySwitchIsOn;
-import hla.rti1516.AttributeSetRegionSetPairList;
-import hla.rti1516.AttributeSetRegionSetPairListFactory;
-import hla.rti1516.CouldNotDiscover;
-import hla.rti1516.CouldNotInitiateRestore;
-import hla.rti1516.DeletePrivilegeNotHeld;
-import hla.rti1516.DimensionHandle;
-import hla.rti1516.DimensionHandleFactory;
-import hla.rti1516.DimensionHandleSet;
-import hla.rti1516.DimensionHandleSetFactory;
-import hla.rti1516.FederateAlreadyExecutionMember;
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateHandle;
-import hla.rti1516.FederateHandleFactory;
-import hla.rti1516.FederateHandleRestoreStatusPair;
-import hla.rti1516.FederateHandleSaveStatusPair;
-import hla.rti1516.FederateHandleSet;
-import hla.rti1516.FederateHandleSetFactory;
-import hla.rti1516.FederateHasNotBegunSave;
-import hla.rti1516.FederateInternalError;
-import hla.rti1516.FederateOwnsAttributes;
-import hla.rti1516.FederateServiceInvocationsAreBeingReportedViaMOM;
-import hla.rti1516.FederateUnableToUseTime;
-import hla.rti1516.FederationExecutionDoesNotExist;
-import hla.rti1516.IllegalName;
-import hla.rti1516.InTimeAdvancingState;
-import hla.rti1516.InteractionClassHandle;
-import hla.rti1516.InteractionClassHandleFactory;
-import hla.rti1516.InteractionClassNotDefined;
-import hla.rti1516.InteractionClassNotPublished;
-import hla.rti1516.InteractionClassNotRecognized;
-import hla.rti1516.InteractionClassNotSubscribed;
-import hla.rti1516.InteractionParameterNotDefined;
-import hla.rti1516.InteractionParameterNotRecognized;
-import hla.rti1516.InteractionRelevanceAdvisorySwitchIsOff;
-import hla.rti1516.InteractionRelevanceAdvisorySwitchIsOn;
-import hla.rti1516.InvalidAttributeHandle;
-import hla.rti1516.InvalidDimensionHandle;
-import hla.rti1516.InvalidFederateHandle;
-import hla.rti1516.InvalidInteractionClassHandle;
-import hla.rti1516.InvalidLogicalTime;
-import hla.rti1516.InvalidLookahead;
-import hla.rti1516.InvalidMessageRetractionHandle;
-import hla.rti1516.InvalidObjectClassHandle;
-import hla.rti1516.InvalidOrderName;
-import hla.rti1516.InvalidOrderType;
-import hla.rti1516.InvalidParameterHandle;
-import hla.rti1516.InvalidRangeBound;
-import hla.rti1516.InvalidRegion;
-import hla.rti1516.InvalidRegionContext;
-import hla.rti1516.InvalidTransportationName;
-import hla.rti1516.InvalidTransportationType;
-import hla.rti1516.JoinedFederateIsNotInTimeAdvancingState;
-import hla.rti1516.LogicalTime;
-import hla.rti1516.LogicalTimeAlreadyPassed;
-import hla.rti1516.LogicalTimeInterval;
-import hla.rti1516.MessageCanNoLongerBeRetracted;
-import hla.rti1516.MessageRetractionHandle;
-import hla.rti1516.MessageRetractionReturn;
-import hla.rti1516.MobileFederateServices;
-import hla.rti1516.NameNotFound;
-import hla.rti1516.NoRequestToEnableTimeConstrainedWasPending;
-import hla.rti1516.NoRequestToEnableTimeRegulationWasPending;
-import hla.rti1516.ObjectClassHandle;
-import hla.rti1516.ObjectClassHandleFactory;
-import hla.rti1516.ObjectClassNotDefined;
-import hla.rti1516.ObjectClassNotPublished;
-import hla.rti1516.ObjectClassNotRecognized;
-import hla.rti1516.ObjectClassRelevanceAdvisorySwitchIsOff;
-import hla.rti1516.ObjectClassRelevanceAdvisorySwitchIsOn;
-import hla.rti1516.ObjectInstanceHandle;
-import hla.rti1516.ObjectInstanceHandleFactory;
-import hla.rti1516.ObjectInstanceNameInUse;
-import hla.rti1516.ObjectInstanceNameNotReserved;
-import hla.rti1516.ObjectInstanceNotKnown;
-import hla.rti1516.OrderType;
-import hla.rti1516.OwnershipAcquisitionPending;
-import hla.rti1516.ParameterHandle;
-import hla.rti1516.ParameterHandleFactory;
-import hla.rti1516.ParameterHandleValueMap;
-import hla.rti1516.ParameterHandleValueMapFactory;
-import hla.rti1516.RTIinternalError;
-import hla.rti1516.RangeBounds;
-import hla.rti1516.RegionDoesNotContainSpecifiedDimension;
-import hla.rti1516.RegionHandle;
-import hla.rti1516.RegionHandleSet;
-import hla.rti1516.RegionHandleSetFactory;
-import hla.rti1516.RegionInUseForUpdateOrSubscription;
-import hla.rti1516.RegionNotCreatedByThisFederate;
-import hla.rti1516.RequestForTimeConstrainedPending;
-import hla.rti1516.RequestForTimeRegulationPending;
-import hla.rti1516.ResignAction;
-import hla.rti1516.RestoreFailureReason;
-import hla.rti1516.RestoreInProgress;
-import hla.rti1516.RestoreNotRequested;
-import hla.rti1516.RestoreStatus;
-import hla.rti1516.SaveFailureReason;
-import hla.rti1516.SaveInProgress;
-import hla.rti1516.SaveNotInitiated;
-import hla.rti1516.SaveStatus;
-import hla.rti1516.ServiceGroup;
-import hla.rti1516.SpecifiedSaveLabelDoesNotExist;
-import hla.rti1516.SynchronizationPointFailureReason;
-import hla.rti1516.SynchronizationPointLabelNotAnnounced;
-import hla.rti1516.TimeConstrainedAlreadyEnabled;
-import hla.rti1516.TimeConstrainedIsNotEnabled;
-import hla.rti1516.TimeQueryReturn;
-import hla.rti1516.TimeRegulationAlreadyEnabled;
-import hla.rti1516.TimeRegulationIsNotEnabled;
-import hla.rti1516.TransportationType;
-import hla.rti1516.UnableToPerformSave;
-import hla.rti1516.UnknownName;
-import hla.rti1516.jlc.NullFederateAmbassador;
+import hla.rti1516e.AttributeHandle;
+import hla.rti1516e.AttributeHandleFactory;
+import hla.rti1516e.AttributeHandleSet;
+import hla.rti1516e.AttributeHandleSetFactory;
+import hla.rti1516e.AttributeHandleValueMap;
+import hla.rti1516e.AttributeHandleValueMapFactory;
+import hla.rti1516e.AttributeSetRegionSetPairList;
+import hla.rti1516e.AttributeSetRegionSetPairListFactory;
+import hla.rti1516e.DimensionHandle;
+import hla.rti1516e.DimensionHandleFactory;
+import hla.rti1516e.DimensionHandleSet;
+import hla.rti1516e.DimensionHandleSetFactory;
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.FederateHandle;
+import hla.rti1516e.FederateHandleFactory;
+import hla.rti1516e.FederateHandleSet;
+import hla.rti1516e.FederateHandleSetFactory;
+import hla.rti1516e.InteractionClassHandle;
+import hla.rti1516e.InteractionClassHandleFactory;
+import hla.rti1516e.LogicalTime;
+import hla.rti1516e.LogicalTimeFactory;
+import hla.rti1516e.LogicalTimeFactoryFactory;
+import hla.rti1516e.LogicalTimeInterval;
+import hla.rti1516e.MessageRetractionHandle;
+import hla.rti1516e.MessageRetractionReturn;
+import hla.rti1516e.ObjectClassHandle;
+import hla.rti1516e.ObjectClassHandleFactory;
+import hla.rti1516e.ObjectInstanceHandle;
+import hla.rti1516e.ObjectInstanceHandleFactory;
+import hla.rti1516e.OrderType;
+import hla.rti1516e.ParameterHandle;
+import hla.rti1516e.ParameterHandleFactory;
+import hla.rti1516e.ParameterHandleValueMap;
+import hla.rti1516e.ParameterHandleValueMapFactory;
+import hla.rti1516e.RangeBounds;
+import hla.rti1516e.RegionHandle;
+import hla.rti1516e.RegionHandleSet;
+import hla.rti1516e.RegionHandleSetFactory;
+import hla.rti1516e.ResignAction;
+import hla.rti1516e.RestoreStatus;
+import hla.rti1516e.SaveFailureReason;
+import hla.rti1516e.SaveStatus;
+import hla.rti1516e.ServiceGroup;
+import hla.rti1516e.TimeQueryReturn;
+import hla.rti1516e.TransportationTypeHandle;
+import hla.rti1516e.TransportationTypeHandleFactory;
+import hla.rti1516e.exceptions.AsynchronousDeliveryAlreadyDisabled;
+import hla.rti1516e.exceptions.AsynchronousDeliveryAlreadyEnabled;
+import hla.rti1516e.exceptions.AttributeAcquisitionWasNotRequested;
+import hla.rti1516e.exceptions.AttributeAlreadyBeingAcquired;
+import hla.rti1516e.exceptions.AttributeAlreadyBeingChanged;
+import hla.rti1516e.exceptions.AttributeAlreadyBeingDivested;
+import hla.rti1516e.exceptions.AttributeAlreadyOwned;
+import hla.rti1516e.exceptions.AttributeDivestitureWasNotRequested;
+import hla.rti1516e.exceptions.AttributeNotDefined;
+import hla.rti1516e.exceptions.AttributeNotOwned;
+import hla.rti1516e.exceptions.AttributeNotPublished;
+import hla.rti1516e.exceptions.AttributeRelevanceAdvisorySwitchIsOff;
+import hla.rti1516e.exceptions.AttributeRelevanceAdvisorySwitchIsOn;
+import hla.rti1516e.exceptions.AttributeScopeAdvisorySwitchIsOff;
+import hla.rti1516e.exceptions.AttributeScopeAdvisorySwitchIsOn;
+import hla.rti1516e.exceptions.CouldNotCreateLogicalTimeFactory;
+import hla.rti1516e.exceptions.DeletePrivilegeNotHeld;
+import hla.rti1516e.exceptions.FederateAlreadyExecutionMember;
+import hla.rti1516e.exceptions.FederateHandleNotKnown;
+import hla.rti1516e.exceptions.FederateHasNotBegunSave;
+import hla.rti1516e.exceptions.FederateInternalError;
+import hla.rti1516e.exceptions.FederateNameAlreadyInUse;
+import hla.rti1516e.exceptions.FederateOwnsAttributes;
+import hla.rti1516e.exceptions.FederateServiceInvocationsAreBeingReportedViaMOM;
+import hla.rti1516e.exceptions.FederateUnableToUseTime;
+import hla.rti1516e.exceptions.FederationExecutionDoesNotExist;
+import hla.rti1516e.exceptions.IllegalName;
+import hla.rti1516e.exceptions.InTimeAdvancingState;
+import hla.rti1516e.exceptions.InconsistentFDD;
+import hla.rti1516e.exceptions.InteractionClassNotDefined;
+import hla.rti1516e.exceptions.InteractionClassNotPublished;
+import hla.rti1516e.exceptions.InteractionParameterNotDefined;
+import hla.rti1516e.exceptions.InteractionRelevanceAdvisorySwitchIsOff;
+import hla.rti1516e.exceptions.InteractionRelevanceAdvisorySwitchIsOn;
+import hla.rti1516e.exceptions.InvalidAttributeHandle;
+import hla.rti1516e.exceptions.InvalidDimensionHandle;
+import hla.rti1516e.exceptions.InvalidFederateHandle;
+import hla.rti1516e.exceptions.InvalidInteractionClassHandle;
+import hla.rti1516e.exceptions.InvalidLogicalTime;
+import hla.rti1516e.exceptions.InvalidLookahead;
+import hla.rti1516e.exceptions.InvalidMessageRetractionHandle;
+import hla.rti1516e.exceptions.InvalidObjectClassHandle;
+import hla.rti1516e.exceptions.InvalidOrderName;
+import hla.rti1516e.exceptions.InvalidOrderType;
+import hla.rti1516e.exceptions.InvalidParameterHandle;
+import hla.rti1516e.exceptions.InvalidRangeBound;
+import hla.rti1516e.exceptions.InvalidRegion;
+import hla.rti1516e.exceptions.InvalidRegionContext;
+import hla.rti1516e.exceptions.InvalidResignAction;
+import hla.rti1516e.exceptions.InvalidTransportationName;
+import hla.rti1516e.exceptions.InvalidTransportationType;
+import hla.rti1516e.exceptions.InvalidUpdateRateDesignator;
+import hla.rti1516e.exceptions.LogicalTimeAlreadyPassed;
+import hla.rti1516e.exceptions.MessageCanNoLongerBeRetracted;
+import hla.rti1516e.exceptions.NameNotFound;
+import hla.rti1516e.exceptions.ObjectClassNotDefined;
+import hla.rti1516e.exceptions.ObjectClassNotPublished;
+import hla.rti1516e.exceptions.ObjectClassRelevanceAdvisorySwitchIsOff;
+import hla.rti1516e.exceptions.ObjectClassRelevanceAdvisorySwitchIsOn;
+import hla.rti1516e.exceptions.ObjectInstanceNameInUse;
+import hla.rti1516e.exceptions.ObjectInstanceNameNotReserved;
+import hla.rti1516e.exceptions.ObjectInstanceNotKnown;
+import hla.rti1516e.exceptions.OwnershipAcquisitionPending;
+import hla.rti1516e.exceptions.RTIinternalError;
+import hla.rti1516e.exceptions.RegionDoesNotContainSpecifiedDimension;
+import hla.rti1516e.exceptions.RegionInUseForUpdateOrSubscription;
+import hla.rti1516e.exceptions.RegionNotCreatedByThisFederate;
+import hla.rti1516e.exceptions.RequestForTimeConstrainedPending;
+import hla.rti1516e.exceptions.RequestForTimeRegulationPending;
+import hla.rti1516e.exceptions.RestoreInProgress;
+import hla.rti1516e.exceptions.RestoreNotInProgress;
+import hla.rti1516e.exceptions.RestoreNotRequested;
+import hla.rti1516e.exceptions.SaveInProgress;
+import hla.rti1516e.exceptions.SaveNotInProgress;
+import hla.rti1516e.exceptions.SaveNotInitiated;
+import hla.rti1516e.exceptions.SynchronizationPointLabelNotAnnounced;
+import hla.rti1516e.exceptions.TimeConstrainedAlreadyEnabled;
+import hla.rti1516e.exceptions.TimeConstrainedIsNotEnabled;
+import hla.rti1516e.exceptions.TimeRegulationAlreadyEnabled;
+import hla.rti1516e.exceptions.TimeRegulationIsNotEnabled;
 
 public class Federate
 {
-  public static final String OHLA_FEDERATE_HOST_PROPERTY =
-    "ohla.federate.%s.host";
-  public static final String OHLA_FEDERATE_PORT_PROPERTY =
-    "ohla.federate.%s.port";
+  private static final Logger log = LoggerFactory.getLogger(Federate.class);
 
-  protected final String federateType;
-  protected final String federationExecutionName;
-  protected final FederateAmbassador federateAmbassador;
-  protected final MobileFederateServices mobileFederateServices;
+  private final String federateName;
+  private final String federateType;
+  private final String federationExecutionName;
 
-  protected final FederateAmbassador federateAmbassadorInterceptor =
-    new FederateAmbassadorInterceptor();
+  private final FederateAmbassador federateAmbassador;
 
-  protected FederateHandle federateHandle;
-
-  protected String federationName;
-  protected FDD fdd;
-
-  protected FederateState federateState = FederateState.ACTIVE;
-
-  protected ReadWriteLock federateStateLock =
-    new ReentrantReadWriteLock(true);
-
-  protected SaveStatus saveStatus;
-  protected FederateSave federateSave;
-
-  protected RestoreStatus restoreStatus;
-  protected FederateRestore federateRestore;
-
-  protected Lock synchronizationPointLock = new ReentrantLock(true);
-  protected Map<String, FederateSynchronizationPoint> synchronizationPoints =
-    new HashMap<String, FederateSynchronizationPoint>();
-
-  protected boolean asynchronousDeliveryEnabled;
-
-  protected FederateObjectManager objectManager = new FederateObjectManager(this);
-  protected FederateRegionManager regionManager = new FederateRegionManager(this);
-  protected FederateMessageRetractionManager messageRetractionManager =
-    new FederateMessageRetractionManager(this);
-
-  protected FederateTimeManager timeManager;
-  protected CallbackManager callbackManager = new CallbackManager(this);
-
-  protected Lock futureTasksLock = new ReentrantLock(true);
-  protected Queue<TimestampedFutureTask> futureTasks =
-    new PriorityQueue<TimestampedFutureTask>();
-
-  protected AttributeHandleFactory attributeHandleFactory =
-    new IEEE1516AttributeHandleFactory();
-  protected AttributeHandleSetFactory attributeHandleSetFactory =
-    new IEEE1516AttributeHandleSetFactory();
-  protected AttributeHandleValueMapFactory attributeHandleValueMapFactory =
-    new IEEE1516AttributeHandleValueMapFactory();
-  protected AttributeSetRegionSetPairListFactory attributeSetRegionSetPairListFactory =
-    new IEEE1516AttributeSetRegionSetPairListFactory();
-  protected DimensionHandleFactory dimensionHandleFactory =
-    new IEEE1516DimensionHandleFactory();
-  protected DimensionHandleSetFactory dimensionHandleSetFactory =
-    new IEEE1516DimensionHandleSetFactory();
-  protected FederateHandleFactory federateHandleFactory =
-    new IEEE1516FederateHandleFactory();
-  protected FederateHandleSetFactory federateHandleSetFactory =
-    new IEEE1516FederateHandleSetFactory();
-  protected InteractionClassHandleFactory interactionClassHandleFactory =
-    new IEEE1516InteractionClassHandleFactory();
-  protected ObjectClassHandleFactory objectClassHandleFactory =
-    new IEEE1516ObjectClassHandleFactory();
-  protected ObjectInstanceHandleFactory objectInstanceHandleFactory =
-    new IEEE1516ObjectInstanceHandleFactory();
-  protected ParameterHandleFactory parameterHandleFactory =
-    new IEEE1516ParameterHandleFactory();
-  protected ParameterHandleValueMapFactory parameterHandleValueMapFactory =
-    new IEEE1516ParameterHandleValueMapFactory();
-  protected RegionHandleSetFactory regionHandleSetFactory =
-    new IEEE1516RegionHandleSetFactory();
+  private final CallbackManager callbackManager;
 
   /**
-   * The session with the RTI.
+   * The channel to the RTI.
    */
-  protected IoSession rtiSession;
+  private final Channel rtiChannel;
 
-  protected final Logger log = LoggerFactory.getLogger(getClass());
+  private final String fullFederateName;
+
+  private final FDD fdd;
+
+  private FederateHandle federateHandle;
+
+  private FederateState federateState = FederateState.ACTIVE;
+
+  private ReadWriteLock federateStateLock = new ReentrantReadWriteLock(true);
+
+  private ResignAction automaticResignDirective;
+
+  private SaveStatus saveStatus;
+  private FederateSave federateSave;
+
+  private RestoreStatus restoreStatus;
+  private FederateRestore federateRestore;
+
+  private Lock synchronizationPointLock = new ReentrantLock(true);
+  private Map<String, FederateSynchronizationPoint> synchronizationPoints =
+    new HashMap<String, FederateSynchronizationPoint>();
+
+  private boolean asynchronousDeliveryEnabled;
+
+  private FederateObjectManager objectManager = new FederateObjectManager(this);
+  private FederateRegionManager regionManager = new FederateRegionManager(this);
+  private FederateMessageRetractionManager messageRetractionManager = new FederateMessageRetractionManager(this);
+
+  private final FederateTimeManager timeManager;
+
+  private Lock futureTasksLock = new ReentrantLock(true);
+  private Queue<TimestampedFutureTask> futureTasks = new PriorityQueue<TimestampedFutureTask>();
+
+  private final AttributeHandleFactory attributeHandleFactory =
+    IEEE1516eAttributeHandleFactory.INSTANCE;
+  private final AttributeHandleSetFactory attributeHandleSetFactory =
+    IEEE1516eAttributeHandleSetFactory.INSTANCE;
+  private final AttributeHandleValueMapFactory attributeHandleValueMapFactory =
+    IEEE1516eAttributeHandleValueMapFactory.INSTANCE;
+  private final AttributeSetRegionSetPairListFactory attributeSetRegionSetPairListFactory =
+    IEEE1516eAttributeSetRegionSetPairListFactory.INSTANCE;
+  private final DimensionHandleFactory dimensionHandleFactory =
+    IEEE1516eDimensionHandleFactory.INSTANCE;
+  private final DimensionHandleSetFactory dimensionHandleSetFactory =
+    IEEE1516eDimensionHandleSetFactory.INSTANCE;
+  private final FederateHandleFactory federateHandleFactory =
+    IEEE1516eFederateHandleFactory.INSTANCE;
+  private final FederateHandleSetFactory federateHandleSetFactory =
+    IEEE1516eFederateHandleSetFactory.INSTANCE;
+  private final InteractionClassHandleFactory interactionClassHandleFactory =
+    IEEE1516eInteractionClassHandleFactory.INSTANCE;
+  private final ObjectClassHandleFactory objectClassHandleFactory =
+    IEEE1516eObjectClassHandleFactory.INSTANCE;
+  private final ObjectInstanceHandleFactory objectInstanceHandleFactory =
+    IEEE1516eObjectInstanceHandleFactory.INSTANCE;
+  private final ParameterHandleFactory parameterHandleFactory =
+    IEEE1516eParameterHandleFactory.INSTANCE;
+  private final ParameterHandleValueMapFactory parameterHandleValueMapFactory =
+    IEEE1516eParameterHandleValueMapFactory.INSTANCE;
+  private final RegionHandleSetFactory regionHandleSetFactory =
+    IEEE1516eRegionHandleSetFactory.INSTANCE;
+  private final TransportationTypeHandleFactory transportationTypeHandleFactory =
+    IEEE1516eTransportationTypeHandleFactory.INSTANCE;
+
+  private final LogicalTimeFactory logicalTimeFactory;
+
   protected final Marker marker;
 
-  public Federate(String federateType, String federationExecutionName,
-                  FederateAmbassador federateAmbassador,
-                  MobileFederateServices mobileFederateServices,
-                  IoSession rtiSession)
-    throws FederationExecutionDoesNotExist, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+  public Federate(String federateName, String federateType, String federationExecutionName,
+                  List<FDD> additionalFDDs, FederateAmbassador federateAmbassador, CallbackManager callbackManager,
+                  Channel rtiChannel)
+    throws CouldNotCreateLogicalTimeFactory, FederateNameAlreadyInUse, FederationExecutionDoesNotExist, InconsistentFDD,
+           SaveInProgress, RestoreInProgress, FederateAlreadyExecutionMember, RTIinternalError
   {
     this.federateType = federateType;
     this.federationExecutionName = federationExecutionName;
     this.federateAmbassador = federateAmbassador;
-    this.mobileFederateServices = mobileFederateServices;
-    this.rtiSession = rtiSession;
+    this.callbackManager = callbackManager;
+    this.rtiChannel = rtiChannel;
 
-    marker = MarkerFactory.getMarker(federateType);
+    JoinFederationExecution joinFederationExecution = new JoinFederationExecution(
+      federationExecutionName, federateName, federateType, additionalFDDs);
 
-    JoinFederationExecution joinFederationExecution =
-      new JoinFederationExecution(
-        federateType, federationExecutionName, mobileFederateServices);
-    WriteFuture writeFuture = rtiSession.write(joinFederationExecution);
+    rtiChannel.write(joinFederationExecution);
 
-    // TODO: set timeout
-    //
-    writeFuture.join();
-
-    if (!writeFuture.isWritten())
+    JoinFederationExecutionResponse response = joinFederationExecution.getResponse();
+    switch (response.getResponse())
     {
-      throw new RTIinternalError("error communicating with RTI");
-    }
+      case FEDERATION_EXECUTION_DOES_NOT_EXIST:
+        throw new FederationExecutionDoesNotExist(federationExecutionName);
+      case SAVE_IN_PROGRESS:
+        throw new SaveInProgress(federationExecutionName);
+      case RESTORE_IN_PROGRESS:
+        throw new RestoreInProgress(federationExecutionName);
+      case INCONSISTENT_FDD:
+        // TODO: provide more useful information
+        //
+        throw new InconsistentFDD("");
+      case SUCCESS:
+        federateHandle = response.getFederateHandle();
 
-    try
-    {
-      // TODO: set timeout
-      //
-      Object response = joinFederationExecution.getResponse();
-      if (response instanceof JoinFederationExecutionResponse)
-      {
-        JoinFederationExecutionResponse joinFederationExecutionResponse =
-          (JoinFederationExecutionResponse) response;
+        // don't assign federate name until we have the handle in case the name was null
+        //
+        this.federateName = federateName == null ? defaultFederateName(federateHandle) : federateName;
 
-        federateHandle = joinFederationExecutionResponse.getFederateHandle();
-        fdd = joinFederationExecutionResponse.getFDD();
+        fullFederateName = federationExecutionName + "." + federateName;
 
-        LogicalTime galt = joinFederationExecutionResponse.getGALT();
-        timeManager = new FederateTimeManager(this, mobileFederateServices, galt);
+        marker = MarkerFactory.getMarker(fullFederateName);
 
-        log.info(marker, "joined federation execution: {}", federateHandle);
-      }
-      else if (response instanceof FederationExecutionDoesNotExist)
-      {
-        throw new FederationExecutionDoesNotExist(
-          (FederationExecutionDoesNotExist) response);
-      }
-      else if (response instanceof SaveInProgress)
-      {
-        throw new SaveInProgress((SaveInProgress) response);
-      }
-      else if (response instanceof RestoreInProgress)
-      {
-        throw new RestoreInProgress((RestoreInProgress) response);
-      }
-      else
-      {
-        assert false : String.format("unexpected response: %s", response);
-      }
+        fdd = response.getFDD();
+
+        logicalTimeFactory = LogicalTimeFactoryFactory.getLogicalTimeFactory(
+          response.getLogicalTimeImplementationName());
+
+        if (logicalTimeFactory == null)
+        {
+          rtiChannel.write(new ResignFederationExecution(ResignAction.NO_ACTION));
+
+          throw new CouldNotCreateLogicalTimeFactory(response.getLogicalTimeImplementationName());
+        }
+        else
+        {
+          timeManager = new FederateTimeManager(this, logicalTimeFactory);
+
+          rtiChannel.getPipeline().addBefore(
+            CallbackManagerChannelUpstreamHandler.NAME, FederateChannelUpstreamHandler.NAME,
+            new FederateChannelUpstreamHandler(this));
+
+          ((MessageDecoder) rtiChannel.getPipeline().get(MessageDecoder.NAME)).setLogicalTimeFactory(
+            logicalTimeFactory);
+        }
+        break;
+      default:
+        throw new RTIinternalError("");
     }
-    catch (InterruptedException ie)
-    {
-      throw new RTIinternalError("interrupted awaiting timeout", ie);
-    }
-    catch (ExecutionException ee)
-    {
-      throw new RTIinternalError("unable to get response", ee);
-    }
+  }
+
+  public String getFederateName()
+  {
+    return federateName;
+  }
+
+  public String getFederateType()
+  {
+    return federateType;
+  }
+
+  public String getFederationExecutionName()
+  {
+    return federationExecutionName;
   }
 
   public FederateHandle getFederateHandle()
@@ -382,9 +389,9 @@ public class Federate
     return federateHandle;
   }
 
-  public FederateAmbassador getFederateAmbassador()
+  public Channel getRTIChannel()
   {
-    return federateAmbassadorInterceptor;
+    return rtiChannel;
   }
 
   public FDD getFDD()
@@ -417,11 +424,6 @@ public class Federate
     return callbackManager;
   }
 
-  public IoSession getRTISession()
-  {
-    return rtiSession;
-  }
-
   public Marker getMarker()
   {
     return marker;
@@ -440,9 +442,7 @@ public class Federate
       log.debug(marker, "processing future tasks: {}", maxFutureTaskTimestamp);
 
       for (TimestampedFutureTask timestampedFutureTask = futureTasks.peek();
-           timestampedFutureTask != null &&
-           timestampedFutureTask.getTime().compareTo(
-             maxFutureTaskTimestamp) <= 0;
+           timestampedFutureTask != null && timestampedFutureTask.getTime().compareTo(maxFutureTaskTimestamp) <= 0;
            timestampedFutureTask = futureTasks.peek())
       {
         log.debug(marker, "processing future task: {}", timestampedFutureTask);
@@ -453,8 +453,7 @@ public class Federate
         }
         catch (Throwable t)
         {
-          log.error(marker, String.format("unable to execute scheduled task: %s",
-                                          timestampedFutureTask), t);
+          log.error(marker, String.format("unable to execute scheduled task: %s", timestampedFutureTask), t);
         }
 
         futureTasks.poll();
@@ -497,186 +496,156 @@ public class Federate
     }
   }
 
-  public boolean messageReceived(IoSession session, Object message)
+  public void reflectAttributeValues(ReflectAttributeValues reflectAttributeValues)
   {
-    log.debug(marker, "processing: {}", message);
-
-    boolean processed = true;
-    if (message instanceof Callback)
+    timeManager.getTimeLock().readLock().lock();
+    try
     {
-      if (message instanceof ReflectAttributeValues)
+      OrderType receivedOrderType =
+        reflectAttributeValues.getSentOrderType() == OrderType.TIMESTAMP &&
+        timeManager.isTimeConstrained() && timeManager.galtDefined() ? OrderType.TIMESTAMP : OrderType.RECEIVE;
+      reflectAttributeValues.setReceivedOrderType(receivedOrderType);
+
+      if (receivedOrderType == OrderType.RECEIVE)
       {
-        ReflectAttributeValues reflectAttributeValues =
-          (ReflectAttributeValues) message;
+        // receive order callbacks need to be held until released if we
+        // are constrained and in the time granted state if asynchronous
+        // delivery is disabled
+        //
+        boolean hold = timeManager.isTimeConstrainedAndTimeGranted() && !isAsynchronousDeliveryEnabled();
 
-        timeManager.getTimeLock().readLock().lock();
-        try
-        {
-          OrderType receivedOrderType =
-            reflectAttributeValues.getSentOrderType() == OrderType.TIMESTAMP &&
-            timeManager.isTimeConstrained() && timeManager.galtDefined() ?
-              OrderType.TIMESTAMP : OrderType.RECEIVE;
-          reflectAttributeValues.setReceivedOrderType(receivedOrderType);
-
-          if (receivedOrderType == OrderType.RECEIVE)
-          {
-            // receive order callbacks need to be held until released if we
-            // are constrained and in the time granted state if asynchronous
-            // delivery is disabled
-            //
-            boolean hold = timeManager.isTimeConstrainedAndTimeGranted() &&
-                           !isAsynchronousDeliveryEnabled();
-
-            callbackManager.add(reflectAttributeValues, hold);
-          }
-          else
-          {
-            // schedule the callback for the appropriate time
-            //
-            Future future = schedule(
-              reflectAttributeValues.getUpdateTime(),
-              new AddCallback(reflectAttributeValues));
-
-            // register the message retraction handle
-            //
-            messageRetractionManager.add(
-              reflectAttributeValues.getUpdateTime(), future,
-              reflectAttributeValues.getMessageRetractionHandle());
-          }
-        }
-        finally
-        {
-          timeManager.getTimeLock().readLock().unlock();
-        }
-      }
-      else if (message instanceof ReceiveInteraction)
-      {
-        ReceiveInteraction receiveInteraction = (ReceiveInteraction) message;
-
-        timeManager.getTimeLock().readLock().lock();
-        try
-        {
-          OrderType receivedOrderType =
-            receiveInteraction.getSentOrderType() == OrderType.TIMESTAMP &&
-            timeManager.isTimeConstrained() ? OrderType.TIMESTAMP :
-              OrderType.RECEIVE;
-
-          receiveInteraction.setReceivedOrderType(receivedOrderType);
-
-          if (receivedOrderType == OrderType.RECEIVE)
-          {
-            // receive order callbacks need to be held until released if we
-            // are constrained and in the time granted state, if asynchronous
-            // delivery is disabled
-            //
-            boolean hold = timeManager.isTimeConstrainedAndTimeGranted() &&
-                           !isAsynchronousDeliveryEnabled();
-
-            callbackManager.add(receiveInteraction, hold);
-          }
-          else
-          {
-            // schedule the callback for the appropriate time
-            //
-            Future future = schedule(receiveInteraction.getSendTime(),
-                                     new AddCallback(receiveInteraction));
-
-            // register the message retraction handle
-            //
-            messageRetractionManager.add(
-              receiveInteraction.getSendTime(), future,
-              receiveInteraction.getMessageRetractionHandle());
-          }
-        }
-        finally
-        {
-          timeManager.getTimeLock().readLock().unlock();
-        }
-      }
-      else if (message instanceof RemoveObjectInstance)
-      {
-        RemoveObjectInstance removeObjectInstance =
-          (RemoveObjectInstance) message;
-
-        timeManager.getTimeLock().readLock().lock();
-        try
-        {
-          OrderType receivedOrderType =
-            removeObjectInstance.getSentOrderType() == OrderType.TIMESTAMP &&
-            timeManager.isTimeConstrained() ? OrderType.TIMESTAMP :
-              OrderType.RECEIVE;
-
-          removeObjectInstance.setReceivedOrderType(receivedOrderType);
-
-          if (receivedOrderType == OrderType.RECEIVE)
-          {
-            // receive order callbacks need to be held until released if we
-            // are constrained and in the time granted state, if asynchronous
-            // delivery is disabled
-            //
-            boolean hold = timeManager.isTimeConstrainedAndTimeGranted() &&
-                           !isAsynchronousDeliveryEnabled();
-
-            callbackManager.add(removeObjectInstance, hold);
-          }
-          else
-          {
-            // schedule the callback for the appropriate time
-            //
-            Future future = schedule(removeObjectInstance.getDeleteTime(),
-                                     new AddCallback(removeObjectInstance));
-
-            // register the message retraction handle
-            //
-            messageRetractionManager.add(
-              removeObjectInstance.getDeleteTime(), future,
-              removeObjectInstance.getMessageRetractionHandle());
-          }
-        }
-        finally
-        {
-          timeManager.getTimeLock().readLock().unlock();
-        }
+        callbackManager.add(reflectAttributeValues, hold);
       }
       else
       {
-        if (message instanceof TimeAdvanceGrant)
-        {
-          processFutureTasks(((TimeAdvanceGrant) message).getTime());
-        }
+        // schedule the callback for the appropriate time
+        //
+        Future future = schedule(reflectAttributeValues.getTime(), new AddCallback(reflectAttributeValues));
 
-        callbackManager.add((Callback) message);
+        // register the message retraction handle
+        //
+        messageRetractionManager.add(
+          reflectAttributeValues.getTime(), future, reflectAttributeValues.getMessageRetractionHandle());
       }
     }
-    else if (message instanceof GALTAdvanced)
+    finally
     {
-      GALTAdvanced galtAdvanced = (GALTAdvanced) message;
+      timeManager.getTimeLock().readLock().unlock();
+    }
+  }
 
-      LogicalTime galt = galtAdvanced.getGALT();
+  public void receiveInteraction(ReceiveInteraction receiveInteraction)
+  {
+    timeManager.getTimeLock().readLock().lock();
+    try
+    {
+      OrderType receivedOrderType =
+        receiveInteraction.getSentOrderType() == OrderType.TIMESTAMP && timeManager.isTimeConstrained() ?
+          OrderType.TIMESTAMP : OrderType.RECEIVE;
 
-      timeManager.galtAdvanced(galt);
+      receiveInteraction.setReceivedOrderType(receivedOrderType);
+
+      if (receivedOrderType == OrderType.RECEIVE)
+      {
+        // receive order callbacks need to be held until released if we are constrained and in the time granted state,
+        // if asynchronous delivery is disabled
+        //
+        boolean hold = timeManager.isTimeConstrainedAndTimeGranted() && !isAsynchronousDeliveryEnabled();
+
+        callbackManager.add(receiveInteraction, hold);
+      }
+      else
+      {
+        // schedule the callback for the appropriate time
+        //
+        Future future = schedule(receiveInteraction.getTime(), new AddCallback(receiveInteraction));
+
+        // register the message retraction handle
+        //
+        messageRetractionManager.add(
+          receiveInteraction.getTime(), future, receiveInteraction.getMessageRetractionHandle());
+      }
     }
-    else if (message instanceof GALTUndefined)
+    finally
     {
-      timeManager.galtUndefined();
+      timeManager.getTimeLock().readLock().unlock();
     }
-    else
+  }
+
+  public void removeObjectInstance(RemoveObjectInstance removeObjectInstance)
+  {
+    timeManager.getTimeLock().readLock().lock();
+    try
     {
-      processed = false;
+      OrderType receivedOrderType =
+        removeObjectInstance.getSentOrderType() == OrderType.TIMESTAMP &&
+        timeManager.isTimeConstrained() ? OrderType.TIMESTAMP :
+          OrderType.RECEIVE;
+
+      removeObjectInstance.setReceivedOrderType(receivedOrderType);
+
+      if (receivedOrderType == OrderType.RECEIVE)
+      {
+        // receive order callbacks need to be held until released if we
+        // are constrained and in the time granted state, if asynchronous
+        // delivery is disabled
+        //
+        boolean hold = timeManager.isTimeConstrainedAndTimeGranted() &&
+                       !isAsynchronousDeliveryEnabled();
+
+        callbackManager.add(removeObjectInstance, hold);
+      }
+      else
+      {
+        // schedule the callback for the appropriate time
+        //
+        Future future = schedule(removeObjectInstance.getTime(), new AddCallback(removeObjectInstance));
+
+        // register the message retraction handle
+        //
+        messageRetractionManager.add(
+          removeObjectInstance.getTime(), future, removeObjectInstance.getMessageRetractionHandle());
+      }
     }
-    return processed;
+    finally
+    {
+      timeManager.getTimeLock().readLock().unlock();
+    }
+  }
+
+  public void timeAdvanceGrant(TimeAdvanceGrant timeAdvanceGrant)
+  {
+    processFutureTasks(timeAdvanceGrant.getTime());
+
+    callbackManager.add(timeAdvanceGrant);
+  }
+
+  public void callbackReceived(Callback callback)
+  {
+    callbackManager.add(callback);
+  }
+
+  public void galtAdvanced(GALTAdvanced galtAdvanced)
+  {
+    timeManager.galtAdvanced(galtAdvanced.getTime());
+  }
+
+  public void galtUndefined(GALTUndefined galtUndefined)
+  {
+    timeManager.galtUndefined();
   }
 
   public void resignFederationExecution(ResignAction resignAction)
-    throws OwnershipAcquisitionPending, FederateOwnsAttributes,
-           RTIinternalError
+    throws OwnershipAcquisitionPending, FederateOwnsAttributes, RTIinternalError
   {
     federateStateLock.writeLock().lock();
     try
     {
-      objectManager.resignFederationExecution(resignAction);
+      objectManager.resignFederationExecution();
 
       federateState = FederateState.RESIGNED;
+
+      rtiChannel.write(new ResignFederationExecution(resignAction));
     }
     finally
     {
@@ -684,48 +653,25 @@ public class Federate
     }
   }
 
-  public void registerFederationSynchronizationPoint(String label, byte[] tag)
+  public void registerFederationSynchronizationPoint(String label, byte[] tag, FederateHandleSet federateHandles)
     throws SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    registerFederationSynchronizationPoint(label, tag, null);
-  }
-
-  public void registerFederationSynchronizationPoint(
-    String label, byte[] tag, FederateHandleSet federateHandles)
-    throws SaveInProgress, RestoreInProgress, RTIinternalError
-  {
-    WriteFuture writeFuture;
-
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      writeFuture = rtiSession.write(
-        new RegisterFederationSynchronizationPoint(
-          label, tag, federateHandles));
+      rtiChannel.write(new RegisterFederationSynchronizationPoint(label, tag, federateHandles));
     }
     finally
     {
       federateStateLock.readLock().unlock();
     }
-
-    // TODO: set timeout
-    //
-    writeFuture.join();
-
-    if (!writeFuture.isWritten())
-    {
-      throw new RTIinternalError("error communicating with RTI");
-    }
   }
 
-  public void synchronizationPointAchieved(String label)
-    throws SynchronizationPointLabelNotAnnounced, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+  public void synchronizationPointAchieved(String label, boolean success)
+    throws SynchronizationPointLabelNotAnnounced, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    WriteFuture writeFuture = null;
-
     federateStateLock.readLock().lock();
     try
     {
@@ -734,18 +680,18 @@ public class Federate
       synchronizationPointLock.lock();
       try
       {
-        FederateSynchronizationPoint federateSynchronizationPoint =
-          synchronizationPoints.get(label);
+        FederateSynchronizationPoint federateSynchronizationPoint = synchronizationPoints.get(label);
         if (federateSynchronizationPoint == null)
         {
           throw new SynchronizationPointLabelNotAnnounced(label);
         }
+        else if (federateSynchronizationPoint.synchronizationPointAchieved())
+        {
+          rtiChannel.write(new SynchronizationPointAchieved(label, success));
+        }
         else
         {
-          federateSynchronizationPoint.synchronizationPointAchieved();
-
-          writeFuture =
-            rtiSession.write(new SynchronizationPointAchieved(label));
+          log.debug(marker, "synchronization point already achieved: {}", label);
         }
       }
       finally
@@ -757,18 +703,6 @@ public class Federate
     {
       federateStateLock.readLock().unlock();
     }
-
-    if (writeFuture != null)
-    {
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
-    }
   }
 
   public void requestFederationSave(String label)
@@ -779,43 +713,19 @@ public class Federate
     {
       checkIfActive();
 
-      RequestFederationSave requestFederationSave =
-        new RequestFederationSave(label);
-      WriteFuture writeFuture = rtiSession.write(requestFederationSave);
+      RequestFederationSave requestFederationSave = new RequestFederationSave(label);
 
-      // TODO: set timeout
-      //
-      writeFuture.join();
+      rtiChannel.write(requestFederationSave);
 
-      if (!writeFuture.isWritten())
+      switch (requestFederationSave.getResponse().getResponse())
       {
-        throw new RTIinternalError("error communicating with RTI");
+        case SAVE_IN_PROGRESS:
+          throw new SaveInProgress(federationExecutionName);
+        case RESTORE_IN_PROGRESS:
+          throw new RestoreInProgress(federationExecutionName);
+        case SUCCESS:
+          break;
       }
-
-      // TODO: set timeout
-      //
-      Object response = requestFederationSave.getResponse();
-      if (response instanceof SaveInProgress)
-      {
-        throw new SaveInProgress((SaveInProgress) response);
-      }
-      else if (response instanceof RestoreInProgress)
-      {
-        throw new RestoreInProgress((RestoreInProgress) response);
-      }
-      else
-      {
-        assert response == null :
-          String.format("unexpected response: %s", response);
-      }
-    }
-    catch (InterruptedException ie)
-    {
-      throw new RTIinternalError("interrupted awaiting timeout", ie);
-    }
-    catch (ExecutionException ee)
-    {
-      throw new RTIinternalError("unable to get response", ee);
     }
     finally
     {
@@ -823,9 +733,8 @@ public class Federate
     }
   }
 
-  public void requestFederationSave(String label, LogicalTime saveTime)
-    throws LogicalTimeAlreadyPassed, InvalidLogicalTime,
-           FederateUnableToUseTime, SaveInProgress, RestoreInProgress,
+  public void requestFederationSave(String label, LogicalTime time)
+    throws LogicalTimeAlreadyPassed, InvalidLogicalTime, FederateUnableToUseTime, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
     federateStateLock.writeLock().lock();
@@ -836,48 +745,22 @@ public class Federate
       // no need to lock time manager because we have a write lock on the
       // federate state
       //
-      timeManager.checkIfLogicalTimeAlreadyPassed(saveTime);
+      timeManager.checkIfLogicalTimeAlreadyPassed(time);
 
-      RequestFederationSave requestFederationSave =
-        new RequestFederationSave(label, saveTime);
-      WriteFuture writeFuture = rtiSession.write(requestFederationSave);
+      RequestFederationSave requestFederationSave = new RequestFederationSave(label, time);
+      rtiChannel.write(requestFederationSave);
 
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
+      switch (requestFederationSave.getResponse().getResponse())
       {
-        throw new RTIinternalError("error communicating with RTI");
+        case LOGICAL_TIME_ALREADY_PASSED:
+          throw new LogicalTimeAlreadyPassed(time.toString());
+        case SAVE_IN_PROGRESS:
+          throw new SaveInProgress(federationExecutionName);
+        case RESTORE_IN_PROGRESS:
+          throw new RestoreInProgress(federationExecutionName);
+        case SUCCESS:
+          break;
       }
-
-      // TODO: set timeout
-      //
-      Object response = requestFederationSave.getResponse();
-      if (response instanceof LogicalTimeAlreadyPassed)
-      {
-        throw new LogicalTimeAlreadyPassed((LogicalTimeAlreadyPassed) response);
-      }
-      else if (response instanceof SaveInProgress)
-      {
-        throw new SaveInProgress((SaveInProgress) response);
-      }
-      else if (response instanceof RestoreInProgress)
-      {
-        throw new RestoreInProgress((RestoreInProgress) response);
-      }
-      else
-      {
-        assert false : String.format("unexpected response: %s", response);
-      }
-    }
-    catch (InterruptedException ie)
-    {
-      throw new RTIinternalError("interrupted awaiting timeout", ie);
-    }
-    catch (ExecutionException ee)
-    {
-      throw new RTIinternalError("unable to get response", ee);
     }
     finally
     {
@@ -888,40 +771,27 @@ public class Federate
   public void federateSaveBegun()
     throws SaveNotInitiated, RestoreInProgress, RTIinternalError
   {
-    WriteFuture writeFuture;
-
     federateStateLock.readLock().lock();
     try
     {
       if (saveStatus != SaveStatus.FEDERATE_INSTRUCTED_TO_SAVE)
       {
-        throw new SaveNotInitiated();
+        throw new SaveNotInitiated(fullFederateName);
       }
 
-      writeFuture = rtiSession.write(new FederateSaveBegun());
-
       saveStatus = SaveStatus.FEDERATE_SAVING;
+
+      rtiChannel.write(new FederateSaveBegun());
     }
     finally
     {
       federateStateLock.readLock().unlock();
-    }
-
-    // TODO: set timeout
-    //
-    writeFuture.join();
-
-    if (!writeFuture.isWritten())
-    {
-      throw new RTIinternalError("error communicating with RTI");
     }
   }
 
   public void federateSaveComplete()
     throws FederateHasNotBegunSave, RestoreInProgress, RTIinternalError
   {
-    WriteFuture writeFuture;
-
     federateStateLock.readLock().lock();
     try
     {
@@ -929,33 +799,26 @@ public class Federate
 
       if (saveStatus != SaveStatus.FEDERATE_SAVING)
       {
-        throw new FederateHasNotBegunSave();
+        throw new FederateHasNotBegunSave(fullFederateName);
       }
 
-      writeFuture = rtiSession.write(new FederateSaveComplete(null));
-
       saveStatus = SaveStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_SAVE;
+
+      FederateSave federateSave = new FederateSave();
+
+      // TODO: collect all items to save
+
+      rtiChannel.write(new FederateSaveComplete(federateSave));
     }
     finally
     {
       federateStateLock.readLock().unlock();
-    }
-
-    // TODO: set timeout
-    //
-    writeFuture.join();
-
-    if (!writeFuture.isWritten())
-    {
-      throw new RTIinternalError("error communicating with RTI");
     }
   }
 
   public void federateSaveNotComplete()
     throws FederateHasNotBegunSave, RestoreInProgress, RTIinternalError
   {
-    WriteFuture writeFuture;
-
     federateStateLock.readLock().lock();
     try
     {
@@ -963,99 +826,52 @@ public class Federate
 
       if (saveStatus != SaveStatus.FEDERATE_SAVING)
       {
-        throw new FederateHasNotBegunSave();
+        throw new FederateHasNotBegunSave(fullFederateName);
       }
 
-      writeFuture = rtiSession.write(new FederateSaveNotComplete());
-
       saveStatus = SaveStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_SAVE;
+
+      rtiChannel.write(new FederateSaveNotComplete());
     }
     finally
     {
       federateStateLock.readLock().unlock();
     }
+  }
 
-    // TODO: set timeout
-    //
-    writeFuture.join();
-
-    if (!writeFuture.isWritten())
+  public void abortFederationSave()
+    throws SaveNotInProgress, RTIinternalError
+  {
+    federateStateLock.readLock().lock();
+    try
     {
-      throw new RTIinternalError("error communicating with RTI");
+      AbortFederationSave abortFederationSave = new AbortFederationSave();
+
+      rtiChannel.write(abortFederationSave);
+
+      switch (abortFederationSave.getResponse().getResponse())
+      {
+        case SAVE_NOT_IN_PROGRESS:
+          throw new SaveNotInProgress(federationExecutionName);
+        case SUCCESS:
+          break;
+      }
+    }
+    finally
+    {
+      federateStateLock.readLock().unlock();
     }
   }
 
   public void queryFederationSaveStatus()
     throws RestoreInProgress, RTIinternalError
   {
-    WriteFuture writeFuture;
-
     federateStateLock.readLock().lock();
     try
     {
       checkIfRestoreInProgress();
 
-      writeFuture = rtiSession.write(new QueryFederationSaveStatus());
-    }
-    finally
-    {
-      federateStateLock.readLock().unlock();
-    }
-
-    // TODO: set timeout
-    //
-    writeFuture.join();
-
-    if (!writeFuture.isWritten())
-    {
-      throw new RTIinternalError("error communicating with RTI");
-    }
-  }
-
-  public void requestFederationRestore(String label)
-    throws SaveInProgress, RestoreInProgress, RTIinternalError
-  {
-    federateStateLock.readLock().lock();
-    try
-    {
-      checkIfActive();
-
-      RequestFederationRestore requestFederationRestore =
-        new RequestFederationRestore(label);
-      WriteFuture writeFuture = rtiSession.write(requestFederationRestore);
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
-
-      // TODO: set timeout
-      //
-      Object response = requestFederationRestore.getResponse();
-      if (response instanceof SaveInProgress)
-      {
-        throw new SaveInProgress((SaveInProgress) response);
-      }
-      else if (response instanceof RestoreInProgress)
-      {
-        throw new RestoreInProgress((RestoreInProgress) response);
-      }
-      else
-      {
-        assert false : String.format("unexpected response: %s", response);
-      }
-    }
-    catch (InterruptedException ie)
-    {
-      throw new RTIinternalError("interrupted awaiting timeout", ie);
-    }
-    catch (ExecutionException ee)
-    {
-      throw new RTIinternalError("unable to get response", ee);
+      rtiChannel.write(new QueryFederationSaveStatus());
     }
     finally
     {
@@ -1066,8 +882,6 @@ public class Federate
   public void federateRestoreComplete()
     throws RestoreNotRequested, SaveInProgress, RTIinternalError
   {
-    WriteFuture writeFuture;
-
     federateStateLock.readLock().lock();
     try
     {
@@ -1075,33 +889,22 @@ public class Federate
 
       if (restoreStatus != RestoreStatus.FEDERATE_RESTORING)
       {
-        throw new RestoreNotRequested();
+        throw new RestoreNotRequested(fullFederateName);
       }
 
-      writeFuture = rtiSession.write(new FederateRestoreComplete());
-
       restoreStatus = RestoreStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_RESTORE;
+
+      rtiChannel.write(new FederateRestoreComplete());
     }
     finally
     {
       federateStateLock.readLock().unlock();
-    }
-
-    // TODO: set timeout
-    //
-    writeFuture.join();
-
-    if (!writeFuture.isWritten())
-    {
-      throw new RTIinternalError("error communicating with RTI");
     }
   }
 
   public void federateRestoreNotComplete()
     throws RestoreNotRequested, SaveInProgress, RTIinternalError
   {
-    WriteFuture writeFuture;
-
     federateStateLock.readLock().lock();
     try
     {
@@ -1109,25 +912,40 @@ public class Federate
 
       if (restoreStatus != RestoreStatus.FEDERATE_RESTORING)
       {
-        throw new RestoreNotRequested();
+        throw new RestoreNotRequested(fullFederateName);
       }
 
-      writeFuture = rtiSession.write(new FederateRestoreNotComplete());
-
       restoreStatus = RestoreStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_RESTORE;
+
+      rtiChannel.write(new FederateRestoreNotComplete());
     }
     finally
     {
       federateStateLock.readLock().unlock();
     }
+  }
 
-    // TODO: set timeout
-    //
-    writeFuture.join();
-
-    if (!writeFuture.isWritten())
+  public void abortFederationRestore()
+    throws RestoreNotInProgress, RTIinternalError
+  {
+    federateStateLock.readLock().lock();
+    try
     {
-      throw new RTIinternalError("error communicating with RTI");
+      AbortFederationRestore abortFederationRestore = new AbortFederationRestore();
+
+      rtiChannel.write(abortFederationRestore);
+
+      switch (abortFederationRestore.getResponse().getResponse())
+      {
+        case RESTORE_NOT_IN_PROGRESS:
+          throw new RestoreNotInProgress(federationExecutionName);
+        case SUCCESS:
+          break;
+      }
+    }
+    finally
+    {
+      federateStateLock.readLock().unlock();
     }
   }
 
@@ -1139,17 +957,7 @@ public class Federate
     {
       checkIfSaveInProgress();
 
-      WriteFuture writeFuture =
-        rtiSession.write(new QueryFederationRestoreStatus());
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
+      rtiChannel.write(new QueryFederationRestoreStatus());
     }
     finally
     {
@@ -1159,8 +967,7 @@ public class Federate
 
   public void publishObjectClassAttributes(
     ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles)
-    throws ObjectClassNotDefined, AttributeNotDefined, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    throws ObjectClassNotDefined, AttributeNotDefined, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     // ensure we have a valid object class and attribute handles
     //
@@ -1171,8 +978,7 @@ public class Federate
     {
       checkIfActive();
 
-      objectManager.publishObjectClassAttributes(
-        objectClassHandle, attributeHandles);
+      objectManager.publishObjectClassAttributes(objectClassHandle, attributeHandles);
     }
     finally
     {
@@ -1181,8 +987,7 @@ public class Federate
   }
 
   public void unpublishObjectClass(ObjectClassHandle objectClassHandle)
-    throws ObjectClassNotDefined, OwnershipAcquisitionPending,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws ObjectClassNotDefined, OwnershipAcquisitionPending, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     // ensure we have a valid object class handle
     //
@@ -1203,8 +1008,7 @@ public class Federate
 
   public void unpublishObjectClassAttributes(
     ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles)
-    throws ObjectClassNotDefined, AttributeNotDefined,
-           OwnershipAcquisitionPending, SaveInProgress, RestoreInProgress,
+    throws ObjectClassNotDefined, AttributeNotDefined, OwnershipAcquisitionPending, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
     // ensure we have a valid object class handle
@@ -1216,8 +1020,7 @@ public class Federate
     {
       checkIfActive();
 
-      objectManager.unpublishObjectClassAttributes(
-        objectClassHandle, attributeHandles);
+      objectManager.unpublishObjectClassAttributes(objectClassHandle, attributeHandles);
 
       // TODO: give up ownership of the specified attributes
     }
@@ -1227,10 +1030,8 @@ public class Federate
     }
   }
 
-  public void publishInteractionClass(
-    InteractionClassHandle interactionClassHandle)
-    throws InteractionClassNotDefined, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+  public void publishInteractionClass(InteractionClassHandle interactionClassHandle)
+    throws InteractionClassNotDefined, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     // ensure we have a valid interaction class handle
     //
@@ -1249,10 +1050,8 @@ public class Federate
     }
   }
 
-  public void unpublishInteractionClass(
-    InteractionClassHandle interactionClassHandle)
-    throws InteractionClassNotDefined, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+  public void unpublishInteractionClass(InteractionClassHandle interactionClassHandle)
+    throws InteractionClassNotDefined, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     // ensure we have a valid interaction class handle
     //
@@ -1271,39 +1070,32 @@ public class Federate
     }
   }
 
-  public void subscribeObjectClassAttributes(
-    ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles)
-    throws ObjectClassNotDefined, AttributeNotDefined, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+  public void subscribeObjectClassAttributes(ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles)
+    throws ObjectClassNotDefined, AttributeNotDefined, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     subscribeObjectClassAttributes(objectClassHandle, attributeHandles, false);
   }
 
   public void subscribeObjectClassAttributesPassively(
     ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles)
-    throws ObjectClassNotDefined, AttributeNotDefined, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    throws ObjectClassNotDefined, AttributeNotDefined, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     subscribeObjectClassAttributes(objectClassHandle, attributeHandles, true);
   }
 
   protected void subscribeObjectClassAttributes(
-    ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles,
-    boolean passive)
-    throws ObjectClassNotDefined, AttributeNotDefined, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles, boolean passive)
+    throws ObjectClassNotDefined, AttributeNotDefined, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    // ensure we have a valid object class and attribute handles
-    //
-    fdd.checkIfAttributeNotDefined(objectClassHandle, attributeHandles);
+    ObjectClass objectClass = fdd.getObjectClass(objectClassHandle);
+    objectClass.checkIfAttributeNotDefined(attributeHandles);
 
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      objectManager.subscribeObjectClassAttributes(
-        objectClassHandle, attributeHandles, passive);
+      objectManager.subscribeObjectClassAttributes(objectClass, attributeHandles, passive);
     }
     finally
     {
@@ -1312,8 +1104,7 @@ public class Federate
   }
 
   public void unsubscribeObjectClass(ObjectClassHandle objectClassHandle)
-    throws ObjectClassNotDefined, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws ObjectClassNotDefined, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     // ensure we have a valid object class handle
     //
@@ -1334,8 +1125,7 @@ public class Federate
 
   public void unsubscribeObjectClassAttributes(
     ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles)
-    throws ObjectClassNotDefined, AttributeNotDefined, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    throws ObjectClassNotDefined, AttributeNotDefined, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     // ensure we have a valid object class handle
     //
@@ -1346,8 +1136,7 @@ public class Federate
     {
       checkIfActive();
 
-      objectManager.unsubscribeObjectClassAttributes(
-        objectClassHandle, attributeHandles);
+      objectManager.unsubscribeObjectClassAttributes(objectClassHandle, attributeHandles);
     }
     finally
     {
@@ -1355,40 +1144,32 @@ public class Federate
     }
   }
 
-  public void subscribeInteractionClass(
-    InteractionClassHandle interactionClassHandle)
-    throws InteractionClassNotDefined,
-           FederateServiceInvocationsAreBeingReportedViaMOM, SaveInProgress,
+  public void subscribeInteractionClass(InteractionClassHandle interactionClassHandle)
+    throws InteractionClassNotDefined, FederateServiceInvocationsAreBeingReportedViaMOM, SaveInProgress,
            RestoreInProgress, RTIinternalError
   {
     subscribeInteractionClass(interactionClassHandle, false);
   }
 
-  public void subscribeInteractionClassPassively(
-    InteractionClassHandle interactionClassHandle)
-    throws InteractionClassNotDefined,
-           FederateServiceInvocationsAreBeingReportedViaMOM, SaveInProgress,
+  public void subscribeInteractionClassPassively(InteractionClassHandle interactionClassHandle)
+    throws InteractionClassNotDefined, FederateServiceInvocationsAreBeingReportedViaMOM, SaveInProgress,
            RestoreInProgress, RTIinternalError
   {
     subscribeInteractionClass(interactionClassHandle, true);
   }
 
-  protected void subscribeInteractionClass(
-    InteractionClassHandle interactionClassHandle, boolean passive)
-    throws InteractionClassNotDefined,
-           FederateServiceInvocationsAreBeingReportedViaMOM, SaveInProgress,
+  protected void subscribeInteractionClass(InteractionClassHandle interactionClassHandle, boolean passive)
+    throws InteractionClassNotDefined, FederateServiceInvocationsAreBeingReportedViaMOM, SaveInProgress,
            RestoreInProgress, RTIinternalError
   {
-    // ensure we have a valid interaction class handle
-    //
-    fdd.checkIfInteractionClassNotDefined(interactionClassHandle);
+    InteractionClass interactionClass = fdd.getInteractionClass(interactionClassHandle);
 
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      objectManager.subscribeInteractionClass(interactionClassHandle, passive);
+      objectManager.subscribeInteractionClass(interactionClass, passive);
     }
     finally
     {
@@ -1398,8 +1179,7 @@ public class Federate
 
   public void unsubscribeInteractionClass(
     InteractionClassHandle interactionClassHandle)
-    throws InteractionClassNotDefined, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws InteractionClassNotDefined, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     // ensure we have a valid interaction class handle
     //
@@ -1418,20 +1198,15 @@ public class Federate
     }
   }
 
-  public void reserveObjectInstanceName(String name)
+  public void reserveObjectInstanceName(String objectInstanceName)
     throws IllegalName, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    if (name.startsWith("HLA"))
-    {
-      throw new IllegalName(String.format("starts with 'HLA': %s", name));
-    }
-
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      objectManager.reserveObjectInstanceName(name);
+      objectManager.reserveObjectInstanceName(objectInstanceName);
     }
     finally
     {
@@ -1439,10 +1214,56 @@ public class Federate
     }
   }
 
-  public ObjectInstanceHandle registerObjectInstance(
-    ObjectClassHandle objectClassHandle)
-    throws ObjectClassNotDefined, ObjectClassNotPublished, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+  public void releaseObjectInstanceName(String name)
+    throws ObjectInstanceNameNotReserved, SaveInProgress, RestoreInProgress, RTIinternalError
+  {
+    federateStateLock.readLock().lock();
+    try
+    {
+      checkIfActive();
+
+      objectManager.releaseObjectInstanceName(name);
+    }
+    finally
+    {
+      federateStateLock.readLock().unlock();
+    }
+  }
+
+  public void reserveMultipleObjectInstanceName(Set<String> names)
+    throws IllegalName, SaveInProgress, RestoreInProgress, RTIinternalError
+  {
+    federateStateLock.readLock().lock();
+    try
+    {
+      checkIfActive();
+
+      objectManager.reserveMultipleObjectInstanceName(names);
+    }
+    finally
+    {
+      federateStateLock.readLock().unlock();
+    }
+  }
+
+  public void releaseMultipleObjectInstanceName(Set<String> names)
+    throws ObjectInstanceNameNotReserved, SaveInProgress, RestoreInProgress, RTIinternalError
+  {
+    federateStateLock.readLock().lock();
+    try
+    {
+      checkIfActive();
+
+      objectManager.releaseMultipleObjectInstanceName(names);
+    }
+    finally
+    {
+      federateStateLock.readLock().unlock();
+    }
+  }
+
+  public ObjectInstanceHandle registerObjectInstance(ObjectClassHandle objectClassHandle)
+    throws ObjectClassNotDefined, ObjectClassNotPublished, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -1457,10 +1278,8 @@ public class Federate
     }
   }
 
-  public ObjectInstanceHandle registerObjectInstance(
-    ObjectClassHandle objectClassHandle, String name)
-    throws ObjectClassNotDefined, ObjectClassNotPublished,
-           ObjectInstanceNameNotReserved, ObjectInstanceNameInUse,
+  public ObjectInstanceHandle registerObjectInstance(ObjectClassHandle objectClassHandle, String objectInstanceName)
+    throws ObjectClassNotDefined, ObjectClassNotPublished, ObjectInstanceNameNotReserved, ObjectInstanceNameInUse,
            SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
@@ -1468,7 +1287,7 @@ public class Federate
     {
       checkIfActive();
 
-      return objectManager.registerObjectInstance(objectClassHandle, name);
+      return objectManager.registerObjectInstance(objectClassHandle, objectInstanceName);
     }
     finally
     {
@@ -1477,18 +1296,16 @@ public class Federate
   }
 
   public void updateAttributeValues(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleValueMap attributeValues, byte[] tag)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues, byte[] tag)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      objectManager.updateAttributeValues(
-        objectInstanceHandle, attributeValues, tag);
+      objectManager.updateAttributeValues(objectInstanceHandle, attributeValues, tag);
     }
     finally
     {
@@ -1497,11 +1314,10 @@ public class Federate
   }
 
   public MessageRetractionReturn updateAttributeValues(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleValueMap attributeValues, byte[] tag, LogicalTime updateTime)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned,
-           InvalidLogicalTime, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues,
+    byte[] tag, LogicalTime updateTime)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned, InvalidLogicalTime, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -1525,16 +1341,14 @@ public class Federate
         }
 
         objectManager.updateAttributeValues(
-          objectInstanceHandle, attributeValues, tag, updateTime,
-          messageRetractionHandle, sentOrderType);
+          objectInstanceHandle, attributeValues, tag, updateTime, messageRetractionHandle, sentOrderType);
       }
       finally
       {
         timeManager.getTimeLock().readLock().unlock();
       }
 
-      return new MessageRetractionReturn(messageRetractionHandle != null,
-                                         messageRetractionHandle);
+      return new MessageRetractionReturn(messageRetractionHandle != null, messageRetractionHandle);
     }
     finally
     {
@@ -1543,24 +1357,20 @@ public class Federate
   }
 
   public void sendInteraction(
-    InteractionClassHandle interactionClassHandle,
-    ParameterHandleValueMap parameterValues, byte[] tag)
-    throws InteractionClassNotPublished, InteractionClassNotDefined,
-           InteractionParameterNotDefined, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues, byte[] tag)
+    throws InteractionClassNotPublished, InteractionClassNotDefined, InteractionParameterNotDefined, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
     // ensure we have a valid interaction class and parameter handles
     //
-    fdd.checkIfInteractionParameterNotDefined(
-      interactionClassHandle, parameterValues.keySet());
+    fdd.checkIfInteractionParameterNotDefined(interactionClassHandle, parameterValues.keySet());
 
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      objectManager.sendInteraction(
-        interactionClassHandle, parameterValues, tag);
+      objectManager.sendInteraction(interactionClassHandle, parameterValues, tag);
     }
     finally
     {
@@ -1569,16 +1379,14 @@ public class Federate
   }
 
   public MessageRetractionReturn sendInteraction(
-    InteractionClassHandle interactionClassHandle,
-    ParameterHandleValueMap parameterValues, byte[] tag, LogicalTime sendTime)
-    throws InteractionClassNotPublished, InteractionClassNotDefined,
-           InteractionParameterNotDefined, InvalidLogicalTime, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues,
+    byte[] tag, LogicalTime sendTime)
+    throws InteractionClassNotPublished, InteractionClassNotDefined, InteractionParameterNotDefined,
+           InvalidLogicalTime, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     // ensure we have a valid interaction class and parameter handles
     //
-    fdd.checkIfInteractionParameterNotDefined(
-      interactionClassHandle, parameterValues.keySet());
+    fdd.checkIfInteractionParameterNotDefined(interactionClassHandle, parameterValues.keySet());
 
     federateStateLock.readLock().lock();
     try
@@ -1593,8 +1401,7 @@ public class Federate
         timeManager.sendInteraction(sendTime);
 
         OrderType sentOrderType =
-          timeManager.isTimeRegulating() && sendTime != null ?
-            OrderType.TIMESTAMP : OrderType.RECEIVE;
+          timeManager.isTimeRegulating() && sendTime != null ? OrderType.TIMESTAMP : OrderType.RECEIVE;
 
         if (sentOrderType == OrderType.TIMESTAMP)
         {
@@ -1602,16 +1409,14 @@ public class Federate
         }
 
         objectManager.sendInteraction(
-          interactionClassHandle, parameterValues, tag, sendTime,
-          messageRetractionHandle, sentOrderType);
+          interactionClassHandle, parameterValues, tag, sendTime, messageRetractionHandle, sentOrderType);
       }
       finally
       {
         timeManager.getTimeLock().readLock().unlock();
       }
 
-      return new MessageRetractionReturn(messageRetractionHandle != null,
-                                         messageRetractionHandle);
+      return new MessageRetractionReturn(messageRetractionHandle != null, messageRetractionHandle);
     }
     finally
     {
@@ -1619,10 +1424,8 @@ public class Federate
     }
   }
 
-  public void deleteObjectInstance(
-    ObjectInstanceHandle objectInstanceHandle, byte[] tag)
-    throws ObjectInstanceNotKnown, DeletePrivilegeNotHeld, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+  public void deleteObjectInstance(ObjectInstanceHandle objectInstanceHandle, byte[] tag)
+    throws ObjectInstanceNotKnown, DeletePrivilegeNotHeld, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -1638,10 +1441,9 @@ public class Federate
   }
 
   public MessageRetractionReturn deleteObjectInstance(
-    ObjectInstanceHandle objectInstanceHandle, byte[] tag,
-    LogicalTime deleteTime)
-    throws ObjectInstanceNotKnown, DeletePrivilegeNotHeld, InvalidLogicalTime,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    ObjectInstanceHandle objectInstanceHandle, byte[] tag, LogicalTime deleteTime)
+    throws ObjectInstanceNotKnown, DeletePrivilegeNotHeld, InvalidLogicalTime, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -1673,8 +1475,7 @@ public class Federate
         timeManager.getTimeLock().readLock().unlock();
       }
 
-      return new MessageRetractionReturn(messageRetractionHandle != null,
-                                         messageRetractionHandle);
+      return new MessageRetractionReturn(messageRetractionHandle != null, messageRetractionHandle);
     }
     finally
     {
@@ -1682,28 +1483,28 @@ public class Federate
     }
   }
 
-  public void localDeleteObjectInstance(
-    ObjectInstanceHandle objectInstanceHandle)
-    throws ObjectInstanceNotKnown, FederateOwnsAttributes,
-           OwnershipAcquisitionPending, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+  public void localDeleteObjectInstance(ObjectInstanceHandle objectInstanceHandle)
+    throws ObjectInstanceNotKnown, FederateOwnsAttributes, OwnershipAcquisitionPending, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
     objectManager.localDeleteObjectInstance(objectInstanceHandle);
   }
 
-  public void changeAttributeTransportationType(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles, TransportationType transportationType)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+  public void requestAttributeTransportationTypeChange(
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles,
+    TransportationTypeHandle transportationTypeHandle)
+    throws AttributeAlreadyBeingChanged, AttributeNotOwned, AttributeNotDefined, ObjectInstanceNotKnown,
+           InvalidTransportationType, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      objectManager.changeAttributeTransportationType(
-        objectInstanceHandle, attributeHandles, transportationType);
+      fdd.checkIfInvalidTransportationType(transportationTypeHandle);
+
+      objectManager.requestAttributeTransportationTypeChange(
+        objectInstanceHandle, attributeHandles, transportationTypeHandle);
     }
     finally
     {
@@ -1711,9 +1512,25 @@ public class Federate
     }
   }
 
-  public void changeInteractionTransportationType(
-    InteractionClassHandle interactionClassHandle,
-    TransportationType transportationType)
+  public void queryAttributeTransportationType(
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle)
+    throws AttributeNotDefined, ObjectInstanceNotKnown, SaveInProgress, RestoreInProgress, RTIinternalError
+  {
+    federateStateLock.readLock().lock();
+    try
+    {
+      checkIfActive();
+
+      objectManager.queryAttributeTransportationType(objectInstanceHandle, attributeHandle);
+    }
+    finally
+    {
+      federateStateLock.readLock().unlock();
+    }
+  }
+
+  public void requestInteractionTransportationTypeChange(
+    InteractionClassHandle interactionClassHandle, TransportationTypeHandle transportationTypeHandle)
     throws InteractionClassNotDefined, InteractionClassNotPublished,
            SaveInProgress, RestoreInProgress, RTIinternalError
   {
@@ -1722,8 +1539,7 @@ public class Federate
     {
       checkIfActive();
 
-      objectManager.changeInteractionTransportationType(
-        interactionClassHandle, transportationType);
+      objectManager.requestInteractionTransportationTypeChange(interactionClassHandle, transportationTypeHandle);
     }
     finally
     {
@@ -1731,19 +1547,25 @@ public class Federate
     }
   }
 
-  public void requestAttributeValueUpdate(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles, byte[] tag)
-    throws ObjectInstanceNotKnown, AttributeNotDefined,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+  public void queryInteractionTransportationType(
+    FederateHandle federateHandle, InteractionClassHandle interactionClassHandle)
+    throws InteractionClassNotDefined, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      objectManager.requestAttributeValueUpdate(
-        objectInstanceHandle, attributeHandles, tag);
+      if (federateHandle.equals(this.federateHandle))
+      {
+        callbackManager.add(new ReportInteractionTransportationType(
+          interactionClassHandle, federateHandle,
+          fdd.getInteractionClass(interactionClassHandle).getTransportationTypeHandle()));
+      }
+      else
+      {
+        rtiChannel.write(new QueryInteractionTransportationType(interactionClassHandle, federateHandle));
+      }
     }
     finally
     {
@@ -1752,11 +1574,25 @@ public class Federate
   }
 
   public void requestAttributeValueUpdate(
-    ObjectClassHandle objectClassHandle,
-    AttributeHandleSet attributeHandles,
-    byte[] tag)
-    throws ObjectClassNotDefined, AttributeNotDefined, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, SaveInProgress, RestoreInProgress, RTIinternalError
+  {
+    federateStateLock.readLock().lock();
+    try
+    {
+      checkIfActive();
+
+      objectManager.requestAttributeValueUpdate(objectInstanceHandle, attributeHandles, tag);
+    }
+    finally
+    {
+      federateStateLock.readLock().unlock();
+    }
+  }
+
+  public void requestAttributeValueUpdate(
+    ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles, byte[] tag)
+    throws ObjectClassNotDefined, AttributeNotDefined, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     // check to see if the handles are valid
     //
@@ -1767,18 +1603,7 @@ public class Federate
     {
       checkIfActive();
 
-      WriteFuture writeFuture = rtiSession.write(
-        new RequestAttributeValueUpdate(
-          objectClassHandle, attributeHandles, tag));
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
+      rtiChannel.write(new RequestObjectClassAttributeValueUpdate(objectClassHandle, attributeHandles, tag));
     }
     finally
     {
@@ -1787,18 +1612,16 @@ public class Federate
   }
 
   public void unconditionalAttributeOwnershipDivestiture(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      objectManager.unconditionalAttributeOwnershipDivestiture(
-        objectInstanceHandle, attributeHandles);
+      objectManager.unconditionalAttributeOwnershipDivestiture(objectInstanceHandle, attributeHandles);
     }
     finally
     {
@@ -1807,19 +1630,16 @@ public class Federate
   }
 
   public void negotiatedAttributeOwnershipDivestiture(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles, byte[] tag)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned,
-           AttributeAlreadyBeingDivested, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned, AttributeAlreadyBeingDivested,
+           SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      objectManager.negotiatedAttributeOwnershipDivestiture(
-        objectInstanceHandle, attributeHandles, tag);
+      objectManager.negotiatedAttributeOwnershipDivestiture(objectInstanceHandle, attributeHandles, tag);
     }
     finally
     {
@@ -1828,19 +1648,16 @@ public class Federate
   }
 
   public void confirmDivestiture(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles, byte[] tag)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned,
-           AttributeDivestitureWasNotRequested, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned, AttributeDivestitureWasNotRequested,
+           SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      objectManager.confirmDivestiture(
-        objectInstanceHandle, attributeHandles, tag);
+      objectManager.confirmDivestiture(objectInstanceHandle, attributeHandles, tag);
     }
     finally
     {
@@ -1849,19 +1666,16 @@ public class Federate
   }
 
   public void attributeOwnershipAcquisition(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles, byte[] tag)
-    throws ObjectInstanceNotKnown, ObjectClassNotPublished, AttributeNotDefined,
-           AttributeNotPublished, FederateOwnsAttributes, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
+    throws ObjectInstanceNotKnown, ObjectClassNotPublished, AttributeNotDefined, AttributeNotPublished,
+           FederateOwnsAttributes, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      objectManager.attributeOwnershipAcquisition(
-        objectInstanceHandle, attributeHandles, tag);
+      objectManager.attributeOwnershipAcquisition(objectInstanceHandle, attributeHandles, tag);
     }
     finally
     {
@@ -1870,11 +1684,26 @@ public class Federate
   }
 
   public void attributeOwnershipAcquisitionIfAvailable(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles)
-    throws ObjectInstanceNotKnown, ObjectClassNotPublished, AttributeNotDefined,
-           AttributeNotPublished, FederateOwnsAttributes,
-           AttributeAlreadyBeingAcquired, SaveInProgress, RestoreInProgress,
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
+    throws ObjectInstanceNotKnown, ObjectClassNotPublished, AttributeNotDefined, AttributeNotPublished,
+           FederateOwnsAttributes, AttributeAlreadyBeingAcquired, SaveInProgress, RestoreInProgress, RTIinternalError
+  {
+    federateStateLock.readLock().lock();
+    try
+    {
+      checkIfActive();
+
+      objectManager.attributeOwnershipAcquisitionIfAvailable(objectInstanceHandle, attributeHandles);
+    }
+    finally
+    {
+      federateStateLock.readLock().unlock();
+    }
+  }
+
+  public void attributeOwnershipReleaseDenied(
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
+    throws AttributeNotOwned, AttributeNotDefined, ObjectInstanceNotKnown, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
     federateStateLock.readLock().lock();
@@ -1882,8 +1711,7 @@ public class Federate
     {
       checkIfActive();
 
-      objectManager.attributeOwnershipAcquisitionIfAvailable(
-        objectInstanceHandle, attributeHandles);
+      objectManager.attributeOwnershipReleaseDenied(objectInstanceHandle, attributeHandles);
     }
     finally
     {
@@ -1892,18 +1720,16 @@ public class Federate
   }
 
   public AttributeHandleSet attributeOwnershipDivestitureIfWanted(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      return objectManager.attributeOwnershipDivestitureIfWanted(
-        objectInstanceHandle, attributeHandles);
+      return objectManager.attributeOwnershipDivestitureIfWanted(objectInstanceHandle, attributeHandles);
     }
     finally
     {
@@ -1912,19 +1738,16 @@ public class Federate
   }
 
   public void cancelNegotiatedAttributeOwnershipDivestiture(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned,
-           AttributeDivestitureWasNotRequested, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned, AttributeDivestitureWasNotRequested,
+           SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      objectManager.cancelNegotiatedAttributeOwnershipDivestiture(
-        objectInstanceHandle, attributeHandles);
+      objectManager.cancelNegotiatedAttributeOwnershipDivestiture(objectInstanceHandle, attributeHandles);
     }
     finally
     {
@@ -1933,19 +1756,16 @@ public class Federate
   }
 
   public void cancelAttributeOwnershipAcquisition(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeAlreadyOwned,
-           AttributeAcquisitionWasNotRequested, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeAlreadyOwned, AttributeAcquisitionWasNotRequested,
+           SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      objectManager.cancelAttributeOwnershipAcquisition(
-        objectInstanceHandle, attributeHandles);
+      objectManager.cancelAttributeOwnershipAcquisition(objectInstanceHandle, attributeHandles);
     }
     finally
     {
@@ -1955,16 +1775,14 @@ public class Federate
 
   public void queryAttributeOwnership(
     ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    throws ObjectInstanceNotKnown, AttributeNotDefined, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      objectManager.queryAttributeOwnership(
-        objectInstanceHandle, attributeHandle);
+      objectManager.queryAttributeOwnership(objectInstanceHandle, attributeHandle);
     }
     finally
     {
@@ -1974,16 +1792,14 @@ public class Federate
 
   public boolean isAttributeOwnedByFederate(
     ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    throws ObjectInstanceNotKnown, AttributeNotDefined, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      return objectManager.isAttributeOwnedByFederate(
-        objectInstanceHandle, attributeHandle);
+      return objectManager.isAttributeOwnedByFederate(objectInstanceHandle, attributeHandle);
     }
     finally
     {
@@ -1992,9 +1808,8 @@ public class Federate
   }
 
   public void enableTimeRegulation(LogicalTimeInterval lookahead)
-    throws TimeRegulationAlreadyEnabled, InvalidLookahead, InTimeAdvancingState,
-           RequestForTimeRegulationPending, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws TimeRegulationAlreadyEnabled, InvalidLookahead, InTimeAdvancingState, RequestForTimeRegulationPending,
+           SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -2010,8 +1825,7 @@ public class Federate
   }
 
   public void disableTimeRegulation()
-    throws TimeRegulationIsNotEnabled, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws TimeRegulationIsNotEnabled, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -2027,9 +1841,8 @@ public class Federate
   }
 
   public void enableTimeConstrained()
-    throws TimeConstrainedAlreadyEnabled, InTimeAdvancingState,
-           RequestForTimeConstrainedPending, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws TimeConstrainedAlreadyEnabled, InTimeAdvancingState, RequestForTimeConstrainedPending, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -2045,8 +1858,7 @@ public class Federate
   }
 
   public void disableTimeConstrained()
-    throws TimeConstrainedIsNotEnabled, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws TimeConstrainedIsNotEnabled, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -2062,9 +1874,8 @@ public class Federate
   }
 
   public void timeAdvanceRequest(LogicalTime time)
-    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState,
-           RequestForTimeRegulationPending, RequestForTimeConstrainedPending,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState, RequestForTimeRegulationPending,
+           RequestForTimeConstrainedPending, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -2080,9 +1891,8 @@ public class Federate
   }
 
   public void timeAdvanceRequestAvailable(LogicalTime time)
-    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState,
-           RequestForTimeRegulationPending, RequestForTimeConstrainedPending,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState, RequestForTimeRegulationPending,
+           RequestForTimeConstrainedPending, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -2098,9 +1908,8 @@ public class Federate
   }
 
   public void nextMessageRequest(LogicalTime time)
-    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState,
-           RequestForTimeRegulationPending, RequestForTimeConstrainedPending,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState, RequestForTimeRegulationPending,
+           RequestForTimeConstrainedPending, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -2116,9 +1925,8 @@ public class Federate
   }
 
   public void nextMessageRequestAvailable(LogicalTime time)
-    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState,
-           RequestForTimeRegulationPending, RequestForTimeConstrainedPending,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState, RequestForTimeRegulationPending,
+           RequestForTimeConstrainedPending, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -2134,9 +1942,8 @@ public class Federate
   }
 
   public void flushQueueRequest(LogicalTime time)
-    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState,
-           RequestForTimeRegulationPending, RequestForTimeConstrainedPending,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState, RequestForTimeRegulationPending,
+           RequestForTimeConstrainedPending, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -2152,8 +1959,7 @@ public class Federate
   }
 
   public void enableAsynchronousDelivery()
-    throws AsynchronousDeliveryAlreadyEnabled, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    throws AsynchronousDeliveryAlreadyEnabled, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -2162,7 +1968,7 @@ public class Federate
 
       if (isAsynchronousDeliveryEnabled())
       {
-        throw new AsynchronousDeliveryAlreadyEnabled();
+        throw new AsynchronousDeliveryAlreadyEnabled("");
       }
 
       asynchronousDeliveryEnabled = true;
@@ -2174,8 +1980,7 @@ public class Federate
   }
 
   public void disableAsynchronousDelivery()
-    throws AsynchronousDeliveryAlreadyDisabled, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    throws AsynchronousDeliveryAlreadyDisabled, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -2184,7 +1989,7 @@ public class Federate
 
       if (!isAsynchronousDeliveryEnabled())
       {
-        throw new AsynchronousDeliveryAlreadyDisabled();
+        throw new AsynchronousDeliveryAlreadyDisabled("");
       }
 
       asynchronousDeliveryEnabled = false;
@@ -2244,8 +2049,8 @@ public class Federate
   }
 
   public void modifyLookahead(LogicalTimeInterval lookahead)
-    throws TimeRegulationIsNotEnabled, InvalidLookahead, InTimeAdvancingState,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws TimeRegulationIsNotEnabled, InvalidLookahead, InTimeAdvancingState, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -2261,8 +2066,7 @@ public class Federate
   }
 
   public LogicalTimeInterval queryLookahead()
-    throws TimeRegulationIsNotEnabled, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws TimeRegulationIsNotEnabled, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -2278,9 +2082,8 @@ public class Federate
   }
 
   public void retract(MessageRetractionHandle messageRetractionHandle)
-    throws InvalidMessageRetractionHandle, TimeRegulationIsNotEnabled,
-           MessageCanNoLongerBeRetracted, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws InvalidMessageRetractionHandle, TimeRegulationIsNotEnabled, MessageCanNoLongerBeRetracted,
+           SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -2292,20 +2095,9 @@ public class Federate
       {
         timeManager.checkIfTimeRegulationIsNotEnabled();
 
-        messageRetractionManager.retract(messageRetractionHandle,
-                                         timeManager.queryLogicalTime());
+        messageRetractionManager.retract(messageRetractionHandle, timeManager.queryLogicalTime());
 
-        WriteFuture writeFuture = rtiSession.write(
-          new Retract(messageRetractionHandle));
-
-        // TODO: set timeout
-        //
-        writeFuture.join();
-
-        if (!writeFuture.isWritten())
-        {
-          throw new RTIinternalError("error communicating with RTI");
-        }
+        rtiChannel.write(new Retract(messageRetractionHandle));
       }
       finally
       {
@@ -2319,18 +2111,16 @@ public class Federate
   }
 
   public void changeAttributeOrderType(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles, OrderType orderType)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, OrderType orderType)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      objectManager.changeAttributeOrderType(
-        objectInstanceHandle, attributeHandles, orderType);
+      objectManager.changeAttributeOrderType(objectInstanceHandle, attributeHandles, orderType);
     }
     finally
     {
@@ -2338,18 +2128,15 @@ public class Federate
     }
   }
 
-  public void changeInteractionOrderType(
-    InteractionClassHandle interactionClassHandle, OrderType orderType)
-    throws InteractionClassNotDefined, InteractionClassNotPublished,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+  public void changeInteractionOrderType(InteractionClassHandle interactionClassHandle, OrderType orderType)
+    throws InteractionClassNotDefined, InteractionClassNotPublished, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      objectManager.changeInteractionOrderType(
-        interactionClassHandle, orderType);
+      objectManager.changeInteractionOrderType(interactionClassHandle, orderType);
     }
     finally
     {
@@ -2358,8 +2145,7 @@ public class Federate
   }
 
   public RegionHandle createRegion(DimensionHandleSet dimensionHandles)
-    throws InvalidDimensionHandle, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws InvalidDimensionHandle, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     // check to see if the handles are valid
     //
@@ -2379,8 +2165,7 @@ public class Federate
   }
 
   public void commitRegionModifications(RegionHandleSet regionHandles)
-    throws InvalidRegion, RegionNotCreatedByThisFederate, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    throws InvalidRegion, RegionNotCreatedByThisFederate, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -2396,8 +2181,7 @@ public class Federate
   }
 
   public void deleteRegion(RegionHandle regionHandle)
-    throws InvalidRegion, RegionNotCreatedByThisFederate,
-           RegionInUseForUpdateOrSubscription, SaveInProgress,
+    throws InvalidRegion, RegionNotCreatedByThisFederate, RegionInUseForUpdateOrSubscription, SaveInProgress,
            RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
@@ -2414,33 +2198,16 @@ public class Federate
   }
 
   public ObjectInstanceHandle registerObjectInstanceWithRegions(
-    ObjectClassHandle objectClassHandle,
-    AttributeSetRegionSetPairList attributesAndRegions)
-    throws ObjectClassNotDefined, ObjectClassNotPublished, AttributeNotDefined,
-           AttributeNotPublished, InvalidRegion, RegionNotCreatedByThisFederate,
-           InvalidRegionContext, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions)
+    throws ObjectClassNotDefined, ObjectClassNotPublished, AttributeNotDefined, AttributeNotPublished, InvalidRegion,
+           RegionNotCreatedByThisFederate, InvalidRegionContext, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      ObjectInstanceHandle objectInstanceHandle =
-        registerObjectInstance(objectClassHandle);
-
-      try
-      {
-        associateRegionsForUpdates(objectInstanceHandle, attributesAndRegions);
-      }
-      catch (ObjectInstanceNotKnown oink)
-      {
-        // should never occur
-        //
-        throw new RTIinternalError("unexpected exception", oink);
-      }
-
-      return objectInstanceHandle;
+      return objectManager.registerObjectInstanceWithRegions(objectClassHandle, attributesAndRegions);
     }
     finally
     {
@@ -2449,34 +2216,18 @@ public class Federate
   }
 
   public ObjectInstanceHandle registerObjectInstanceWithRegions(
-    ObjectClassHandle objectClassHandle,
-    AttributeSetRegionSetPairList attributesAndRegions, String name)
-    throws ObjectClassNotDefined, ObjectClassNotPublished, AttributeNotDefined,
-           AttributeNotPublished, InvalidRegion, RegionNotCreatedByThisFederate,
-           InvalidRegionContext, ObjectInstanceNameNotReserved,
-           ObjectInstanceNameInUse, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions, String objectInstanceName)
+    throws ObjectClassNotDefined, ObjectClassNotPublished, AttributeNotDefined, AttributeNotPublished, InvalidRegion,
+           RegionNotCreatedByThisFederate, InvalidRegionContext, ObjectInstanceNameNotReserved, ObjectInstanceNameInUse,
+           SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      ObjectInstanceHandle objectInstanceHandle =
-        registerObjectInstance(objectClassHandle, name);
-
-      try
-      {
-        associateRegionsForUpdates(objectInstanceHandle, attributesAndRegions);
-      }
-      catch (ObjectInstanceNotKnown oink)
-      {
-        // should never occur
-        //
-        throw new RTIinternalError("unexpected exception", oink);
-      }
-
-      return objectInstanceHandle;
+      return objectManager.registerObjectInstanceWithRegions(
+        objectClassHandle, attributesAndRegions, objectInstanceName);
     }
     finally
     {
@@ -2485,19 +2236,16 @@ public class Federate
   }
 
   public void associateRegionsForUpdates(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeSetRegionSetPairList attributesAndRegions)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, InvalidRegion,
-           RegionNotCreatedByThisFederate, InvalidRegionContext, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    ObjectInstanceHandle objectInstanceHandle, AttributeSetRegionSetPairList attributesAndRegions)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, InvalidRegion, RegionNotCreatedByThisFederate,
+           InvalidRegionContext, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      objectManager.associateRegionsForUpdates(
-        objectInstanceHandle, attributesAndRegions);
+      objectManager.associateRegionsForUpdates(objectInstanceHandle, attributesAndRegions);
     }
     finally
     {
@@ -2506,19 +2254,16 @@ public class Federate
   }
 
   public void unassociateRegionsForUpdates(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeSetRegionSetPairList attributesAndRegions)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, InvalidRegion,
-           RegionNotCreatedByThisFederate, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    ObjectInstanceHandle objectInstanceHandle, AttributeSetRegionSetPairList attributesAndRegions)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, InvalidRegion, RegionNotCreatedByThisFederate,
+           SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      objectManager.unassociateRegionsForUpdates(
-        objectInstanceHandle, attributesAndRegions);
+      objectManager.unassociateRegionsForUpdates(objectInstanceHandle, attributesAndRegions);
     }
     finally
     {
@@ -2527,60 +2272,51 @@ public class Federate
   }
 
   public void subscribeObjectClassAttributesWithRegions(
-    ObjectClassHandle objectClassHandle,
-    AttributeSetRegionSetPairList attributesAndRegions)
-    throws ObjectClassNotDefined, AttributeNotDefined, InvalidRegion,
-           RegionNotCreatedByThisFederate, InvalidRegionContext, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions)
+    throws ObjectClassNotDefined, AttributeNotDefined, InvalidRegion, RegionNotCreatedByThisFederate,
+           InvalidRegionContext, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    subscribeObjectClassAttributesWithRegions(
-      objectClassHandle, attributesAndRegions, false);
+    subscribeObjectClassAttributesWithRegions(objectClassHandle, attributesAndRegions, null, false);
+  }
+
+  public void subscribeObjectClassAttributesWithRegions(
+    ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions,
+    String updateRateDesignator)
+    throws ObjectClassNotDefined, AttributeNotDefined, InvalidRegion, RegionNotCreatedByThisFederate,
+           InvalidRegionContext, SaveInProgress, RestoreInProgress, RTIinternalError
+  {
+    subscribeObjectClassAttributesWithRegions(objectClassHandle, attributesAndRegions, updateRateDesignator, false);
   }
 
   public void subscribeObjectClassAttributesPassivelyWithRegions(
-    ObjectClassHandle objectClassHandle,
-    AttributeSetRegionSetPairList attributesAndRegions)
-    throws ObjectClassNotDefined, AttributeNotDefined, InvalidRegion,
-           RegionNotCreatedByThisFederate, InvalidRegionContext, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions)
+    throws ObjectClassNotDefined, AttributeNotDefined, InvalidRegion, RegionNotCreatedByThisFederate,
+           InvalidRegionContext, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    subscribeObjectClassAttributesWithRegions(
-      objectClassHandle, attributesAndRegions, true);
+    subscribeObjectClassAttributesWithRegions(objectClassHandle, attributesAndRegions, null, true);
   }
 
-  protected void subscribeObjectClassAttributesWithRegions(
-    ObjectClassHandle objectClassHandle,
-    AttributeSetRegionSetPairList attributesAndRegions, boolean passive)
-    throws ObjectClassNotDefined, AttributeNotDefined, InvalidRegion,
-           RegionNotCreatedByThisFederate, InvalidRegionContext, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+  public void subscribeObjectClassAttributesPassivelyWithRegions(
+    ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions,
+    String updateRateDesignator)
+    throws ObjectClassNotDefined, AttributeNotDefined, InvalidRegion, RegionNotCreatedByThisFederate,
+           InvalidRegionContext, SaveInProgress, RestoreInProgress, RTIinternalError
+  {
+    subscribeObjectClassAttributesWithRegions(objectClassHandle, attributesAndRegions, updateRateDesignator, true);
+  }
+
+  public void subscribeObjectClassAttributesWithRegions(
+    ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions,
+    String updateRateDesignator, boolean passive)
+    throws ObjectClassNotDefined, AttributeNotDefined, InvalidRegion, RegionNotCreatedByThisFederate,
+           InvalidRegionContext, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
-      {
-        fdd.checkIfAttributeNotDefined(objectClassHandle,
-                                       attributeRegionAssociation.attributes);
-
-        regionManager.subscribeObjectClassAttributesWithRegions(
-          objectClassHandle, attributeRegionAssociation, passive);
-      }
-
-      WriteFuture writeFuture = rtiSession.write(
-        new SubscribeObjectClassAttributes(
-          objectClassHandle, attributesAndRegions, passive));
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
+      regionManager.subscribeObjectClassAttributesWithRegions(objectClassHandle, attributesAndRegions, passive);
     }
     finally
     {
@@ -2589,38 +2325,16 @@ public class Federate
   }
 
   public void unsubscribeObjectClassAttributesWithRegions(
-    ObjectClassHandle objectClassHandle,
-    AttributeSetRegionSetPairList attributesAndRegions)
-    throws ObjectClassNotDefined, AttributeNotDefined, InvalidRegion,
-           RegionNotCreatedByThisFederate, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions)
+    throws ObjectClassNotDefined, AttributeNotDefined, InvalidRegion, RegionNotCreatedByThisFederate,
+           SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
-      {
-        fdd.checkIfAttributeNotDefined(objectClassHandle,
-                                       attributeRegionAssociation.attributes);
-
-        regionManager.unsubscribeObjectClassAttributesWithRegions(
-          objectClassHandle, attributeRegionAssociation);
-      }
-
-      WriteFuture writeFuture = rtiSession.write(
-        new UnsubscribeObjectClassAttributes(
-          objectClassHandle, attributesAndRegions));
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
+      regionManager.unsubscribeObjectClassAttributesWithRegions(objectClassHandle, attributesAndRegions);
     }
     finally
     {
@@ -2629,45 +2343,34 @@ public class Federate
   }
 
   public void subscribeInteractionClassWithRegions(
-    InteractionClassHandle interactionClassHandle,
-    RegionHandleSet regionHandles)
-    throws InteractionClassNotDefined, InvalidRegion,
-           RegionNotCreatedByThisFederate, InvalidRegionContext,
-           FederateServiceInvocationsAreBeingReportedViaMOM, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    InteractionClassHandle interactionClassHandle, RegionHandleSet regionHandles)
+    throws InteractionClassNotDefined, InvalidRegion, RegionNotCreatedByThisFederate, InvalidRegionContext,
+           FederateServiceInvocationsAreBeingReportedViaMOM, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    subscribeInteractionClassWithRegions(
-      interactionClassHandle, regionHandles, false);
+    subscribeInteractionClassWithRegions(interactionClassHandle, regionHandles, false);
   }
 
   public void subscribeInteractionClassPassivelyWithRegions(
-    InteractionClassHandle interactionClassHandle,
-    RegionHandleSet regionHandles)
-    throws InteractionClassNotDefined, InvalidRegion,
-           RegionNotCreatedByThisFederate, InvalidRegionContext,
-           FederateServiceInvocationsAreBeingReportedViaMOM, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    InteractionClassHandle interactionClassHandle, RegionHandleSet regionHandles)
+    throws InteractionClassNotDefined, InvalidRegion, RegionNotCreatedByThisFederate, InvalidRegionContext,
+           FederateServiceInvocationsAreBeingReportedViaMOM, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    subscribeInteractionClassWithRegions(
-      interactionClassHandle, regionHandles, true);
+    subscribeInteractionClassWithRegions(interactionClassHandle, regionHandles, true);
   }
 
   protected void subscribeInteractionClassWithRegions(
-    InteractionClassHandle interactionClassHandle,
-    RegionHandleSet regionHandles, boolean passive)
-    throws InteractionClassNotDefined, InvalidRegion,
-           RegionNotCreatedByThisFederate, InvalidRegionContext,
-           FederateServiceInvocationsAreBeingReportedViaMOM, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    InteractionClassHandle interactionClassHandle, RegionHandleSet regionHandles, boolean passive)
+    throws InteractionClassNotDefined, InvalidRegion, RegionNotCreatedByThisFederate, InvalidRegionContext,
+           FederateServiceInvocationsAreBeingReportedViaMOM, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     fdd.checkIfInteractionClassNotDefined(interactionClassHandle);
+
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      regionManager.subscribeInteractionClassWithRegions(
-        interactionClassHandle, regionHandles, passive);
+      regionManager.subscribeInteractionClassWithRegions(interactionClassHandle, regionHandles, passive);
     }
     finally
     {
@@ -2676,19 +2379,18 @@ public class Federate
   }
 
   public void unsubscribeInteractionClassWithRegions(
-    InteractionClassHandle interactionClassHandle,
-    RegionHandleSet regionHandles)
-    throws InteractionClassNotDefined, InvalidRegion,
-           RegionNotCreatedByThisFederate, SaveInProgress, RestoreInProgress,
+    InteractionClassHandle interactionClassHandle, RegionHandleSet regionHandles)
+    throws InteractionClassNotDefined, InvalidRegion, RegionNotCreatedByThisFederate, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
+    fdd.checkIfInteractionClassNotDefined(interactionClassHandle);
+
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      regionManager.unsubscribeInteractionClassWithRegions(
-        interactionClassHandle, regionHandles);
+      regionManager.unsubscribeInteractionClassWithRegions(interactionClassHandle, regionHandles);
     }
     finally
     {
@@ -2697,37 +2399,21 @@ public class Federate
   }
 
   public void sendInteractionWithRegions(
-    InteractionClassHandle interactionClassHandle,
-    ParameterHandleValueMap parameterValues,
+    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues,
     RegionHandleSet regionHandles, byte[] tag)
-    throws InteractionClassNotDefined, InteractionClassNotPublished,
-           InteractionParameterNotDefined, InvalidRegion,
-           RegionNotCreatedByThisFederate, InvalidRegionContext, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    throws InteractionClassNotDefined, InteractionClassNotPublished, InteractionParameterNotDefined, InvalidRegion,
+           RegionNotCreatedByThisFederate, InvalidRegionContext, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     // ensure we have a valid interaction class and parameter handles
     //
-    fdd.checkIfInteractionParameterNotDefined(interactionClassHandle,
-                                              parameterValues.keySet());
+    fdd.checkIfInteractionParameterNotDefined(interactionClassHandle, parameterValues.keySet());
+
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-//      objectManager.checkIfInteractionClassPublished(interactionClassHandle);
-
-      WriteFuture writeFuture = rtiSession.write(new SendInteraction(
-        interactionClassHandle, parameterValues, tag, OrderType.RECEIVE,
-        TransportationType.HLA_RELIABLE, regionHandles));
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
+      objectManager.sendInteractionWithRegions(interactionClassHandle, parameterValues, regionHandles, tag);
     }
     finally
     {
@@ -2736,52 +2422,49 @@ public class Federate
   }
 
   public MessageRetractionReturn sendInteractionWithRegions(
-    InteractionClassHandle interactionClassHandle,
-    ParameterHandleValueMap parameterValues,
-    RegionHandleSet regionHandles, byte[] tag, LogicalTime sendTime)
-    throws InteractionClassNotDefined, InteractionClassNotPublished,
-           InteractionParameterNotDefined, InvalidRegion,
-           RegionNotCreatedByThisFederate, InvalidRegionContext,
-           InvalidLogicalTime, SaveInProgress, RestoreInProgress,
+    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues,
+    RegionHandleSet regionHandles, byte[] tag, LogicalTime time)
+    throws InteractionClassNotDefined, InteractionClassNotPublished, InteractionParameterNotDefined, InvalidRegion,
+           RegionNotCreatedByThisFederate, InvalidRegionContext, InvalidLogicalTime, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
     // ensure we have a valid interaction class and parameter handles
     //
-    fdd.checkIfInteractionParameterNotDefined(interactionClassHandle,
-                                              parameterValues.keySet());
+    fdd.checkIfInteractionParameterNotDefined(interactionClassHandle, parameterValues.keySet());
+
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-//      objectManager.checkIfInteractionClassPublished(interactionClassHandle);
+      MessageRetractionHandle messageRetractionHandle;
 
-      OrderType sentOrderType =
-        timeManager.isTimeRegulating() && sendTime != null ?
-          OrderType.TIMESTAMP : OrderType.RECEIVE;
-
-      MessageRetractionHandle messageRetractionHandle = null;
-      if (sentOrderType == OrderType.TIMESTAMP)
+      timeManager.getTimeLock().readLock().lock();
+      try
       {
-        messageRetractionHandle = messageRetractionManager.add(sendTime);
+        timeManager.sendInteraction(time);
+
+        OrderType sentOrderType =
+          timeManager.isTimeRegulating() && time != null ? OrderType.TIMESTAMP : OrderType.RECEIVE;
+
+        if (sentOrderType == OrderType.TIMESTAMP)
+        {
+          messageRetractionHandle = messageRetractionManager.add(time);
+        }
+        else
+        {
+          messageRetractionHandle = null;
+        }
+
+        objectManager.sendInteractionWithRegions(
+          interactionClassHandle, parameterValues, regionHandles, tag, time, messageRetractionHandle, sentOrderType);
+      }
+      finally
+      {
+        timeManager.getTimeLock().readLock().unlock();
       }
 
-      WriteFuture writeFuture = rtiSession.write(new SendInteraction(
-        interactionClassHandle, parameterValues, tag, OrderType.RECEIVE,
-        TransportationType.HLA_RELIABLE, sendTime, messageRetractionHandle,
-        regionHandles));
-
-      // TODO: set timeout
-      //
-      writeFuture.join();
-
-      if (!writeFuture.isWritten())
-      {
-        throw new RTIinternalError("error communicating with RTI");
-      }
-
-      return new MessageRetractionReturn(messageRetractionHandle != null,
-                                         messageRetractionHandle);
+      return new MessageRetractionReturn(messageRetractionHandle != null, messageRetractionHandle);
     }
     finally
     {
@@ -2790,29 +2473,118 @@ public class Federate
   }
 
   public void requestAttributeValueUpdateWithRegions(
-    ObjectClassHandle objectClassHandle,
-    AttributeSetRegionSetPairList attributesAndRegions, byte[] tag)
-    throws ObjectClassNotDefined, AttributeNotDefined, InvalidRegion,
-           RegionNotCreatedByThisFederate, InvalidRegionContext, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions, byte[] tag)
+    throws ObjectClassNotDefined, AttributeNotDefined, InvalidRegion, RegionNotCreatedByThisFederate,
+           InvalidRegionContext, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      WriteFuture writeFuture = rtiSession.write(
-        new RequestAttributeValueUpdate(
-          objectClassHandle, attributesAndRegions, tag));
+      rtiChannel.write(new RequestObjectClassAttributeValueUpdateWithRegions(
+        objectClassHandle, attributesAndRegions, tag));
+    }
+    finally
+    {
+      federateStateLock.readLock().unlock();
+    }
+  }
 
-      // TODO: set timeout
-      //
-      writeFuture.join();
+  public ResignAction getAutomaticResignDirective()
+  {
+    federateStateLock.readLock().lock();
+    try
+    {
+      return automaticResignDirective;
+    }
+    finally
+    {
+      federateStateLock.readLock().unlock();
+    }
+  }
 
-      if (!writeFuture.isWritten())
+  public void setAutomaticResignDirective(ResignAction resignAction)
+    throws InvalidResignAction
+  {
+    federateStateLock.writeLock().lock();
+    try
+    {
+      automaticResignDirective = resignAction;
+
+      rtiChannel.write(new SetAutomaticResignDirective(resignAction));
+    }
+    finally
+    {
+      federateStateLock.writeLock().unlock();
+    }
+  }
+
+  public FederateHandle getFederateHandle(String federateName)
+    throws NameNotFound, RTIinternalError
+  {
+    federateStateLock.readLock().lock();
+    try
+    {
+      FederateHandle federateHandle;
+      if (this.federateName.equals(federateName))
       {
-        throw new RTIinternalError("error communicating with RTI");
+        federateHandle = this.federateHandle;
       }
+      else
+      {
+        GetFederateHandle getFederateHandle = new GetFederateHandle(federateName);
+        rtiChannel.write(getFederateHandle);
+
+        GetFederateHandleResponse response = getFederateHandle.getResponse();
+        switch (response.getResponse())
+        {
+          case NAME_NOT_FOUND:
+            throw new NameNotFound(federateName);
+          case SUCCESS:
+            federateHandle = response.getFederateHandle();
+            break;
+          default:
+            throw new RTIinternalError("");
+        }
+      }
+      return federateHandle;
+    }
+    finally
+    {
+      federateStateLock.readLock().unlock();
+    }
+  }
+
+  public String getFederateName(FederateHandle federateHandle)
+    throws InvalidFederateHandle, FederateHandleNotKnown, RTIinternalError
+  {
+    federateStateLock.readLock().lock();
+    try
+    {
+      String federateName;
+      if (this.federateHandle.equals(federateHandle))
+      {
+        federateName = this.federateName;
+      }
+      else
+      {
+        GetFederateName getFederateName = new GetFederateName(federateHandle);
+        rtiChannel.write(getFederateName);
+
+        GetFederateNameResponse response = getFederateName.getResponse();
+        switch (response.getResponse())
+        {
+          case FEDERATE_HANDLE_NOT_KNOWN:
+            throw new FederateHandleNotKnown(federateHandle.toString());
+          case SUCCESS:
+            federateName = response.getFederateName();
+            break;
+          default:
+            throw new RTIinternalError("");
+        }
+      }
+      return federateName;
     }
     finally
     {
@@ -2832,19 +2604,31 @@ public class Federate
     return fdd.getObjectClassName(objectClassHandle);
   }
 
-  public AttributeHandle getAttributeHandle(
-    ObjectClassHandle objectClassHandle, String name)
+  public AttributeHandle getAttributeHandle(ObjectClassHandle objectClassHandle, String name)
     throws InvalidObjectClassHandle, NameNotFound, RTIinternalError
   {
     return fdd.getAttributeHandle(objectClassHandle, name);
   }
 
-  public String getAttributeName(
-    ObjectClassHandle objectClassHandle, AttributeHandle attributeHandle)
-    throws InvalidObjectClassHandle, InvalidAttributeHandle,
-           AttributeNotDefined, RTIinternalError
+  public String getAttributeName(ObjectClassHandle objectClassHandle, AttributeHandle attributeHandle)
+    throws InvalidObjectClassHandle, InvalidAttributeHandle, AttributeNotDefined, RTIinternalError
   {
     return fdd.getAttributeName(objectClassHandle, attributeHandle);
+  }
+
+  public double getUpdateRateValue(String updateRateDesignator)
+    throws InvalidUpdateRateDesignator, RTIinternalError
+  {
+    return 0.0;
+  }
+
+  public double getUpdateRateValueForAttribute(
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, RTIinternalError
+  {
+    objectManager.getObjectInstance(objectInstanceHandle);
+
+    return 0.0;
   }
 
   public InteractionClassHandle getInteractionClassHandle(String name)
@@ -2853,25 +2637,20 @@ public class Federate
     return fdd.getInteractionClassHandle(name);
   }
 
-  public String getInteractionClassName(
-    InteractionClassHandle interactionClassHandle)
+  public String getInteractionClassName(InteractionClassHandle interactionClassHandle)
     throws InvalidInteractionClassHandle, RTIinternalError
   {
     return fdd.getInteractionClassName(interactionClassHandle);
   }
 
-  public ParameterHandle getParameterHandle(
-    InteractionClassHandle interactionClassHandle, String name)
+  public ParameterHandle getParameterHandle(InteractionClassHandle interactionClassHandle, String name)
     throws InvalidInteractionClassHandle, NameNotFound, RTIinternalError
   {
     return fdd.getParameterHandle(interactionClassHandle, name);
   }
 
-  public String getParameterName(
-    InteractionClassHandle interactionClassHandle,
-    ParameterHandle parameterHandle)
-    throws InvalidInteractionClassHandle, InvalidParameterHandle,
-           InteractionParameterNotDefined, RTIinternalError
+  public String getParameterName(InteractionClassHandle interactionClassHandle, ParameterHandle parameterHandle)
+    throws InvalidInteractionClassHandle, InvalidParameterHandle, InteractionParameterNotDefined, RTIinternalError
   {
     return fdd.getParameterName(interactionClassHandle, parameterHandle);
   }
@@ -2908,39 +2687,34 @@ public class Federate
 
   public DimensionHandleSet getAvailableDimensionsForClassAttribute(
     ObjectClassHandle objectClassHandle, AttributeHandle attributeHandle)
-    throws InvalidObjectClassHandle, InvalidAttributeHandle,
-           AttributeNotDefined, RTIinternalError
+    throws InvalidObjectClassHandle, InvalidAttributeHandle, AttributeNotDefined, RTIinternalError
   {
-    return fdd.getAvailableDimensionsForClassAttribute(
-      objectClassHandle, attributeHandle,
-      getDimensionHandleSetFactory().create());
+    return fdd.getAvailableDimensionsForClassAttribute(objectClassHandle, attributeHandle);
   }
 
-  public ObjectClassHandle getKnownObjectClassHandle(
-    ObjectInstanceHandle objectInstanceHandle)
+  public ObjectClassHandle getKnownObjectClassHandle(ObjectInstanceHandle objectInstanceHandle)
     throws ObjectInstanceNotKnown, RTIinternalError
   {
     return objectManager.getObjectClassHandle(objectInstanceHandle);
   }
 
-  public DimensionHandleSet getAvailableDimensionsForInteractionClass(
-    InteractionClassHandle interactionClassHandle)
+  public DimensionHandleSet getAvailableDimensionsForInteractionClass(InteractionClassHandle interactionClassHandle)
     throws InvalidInteractionClassHandle, RTIinternalError
   {
     return fdd.getAvailableDimensionsForInteractionClass(
       interactionClassHandle, getDimensionHandleSetFactory().create());
   }
 
-  public TransportationType getTransportationType(String name)
+  public TransportationTypeHandle getTransportationTypeHandle(String name)
     throws InvalidTransportationName, RTIinternalError
   {
-    return fdd.getTransportationType(name);
+    return fdd.getTransportationTypeHandle(name);
   }
 
-  public String getTransportationName(TransportationType transportationType)
+  public String getTransportationTypeName(TransportationTypeHandle transportationType)
     throws InvalidTransportationType, RTIinternalError
   {
-    return fdd.getTransportationName(transportationType);
+    return fdd.getTransportationTypeName(transportationType);
   }
 
   public OrderType getOrderType(String name)
@@ -2956,8 +2730,7 @@ public class Federate
   }
 
   public void enableObjectClassRelevanceAdvisorySwitch()
-    throws ObjectClassRelevanceAdvisorySwitchIsOn, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    throws ObjectClassRelevanceAdvisorySwitchIsOn, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -2971,8 +2744,7 @@ public class Federate
   }
 
   public void disableObjectClassRelevanceAdvisorySwitch()
-    throws ObjectClassRelevanceAdvisorySwitchIsOff, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    throws ObjectClassRelevanceAdvisorySwitchIsOff, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -2986,8 +2758,7 @@ public class Federate
   }
 
   public void enableAttributeRelevanceAdvisorySwitch()
-    throws AttributeRelevanceAdvisorySwitchIsOn, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    throws AttributeRelevanceAdvisorySwitchIsOn, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -3001,8 +2772,7 @@ public class Federate
   }
 
   public void disableAttributeRelevanceAdvisorySwitch()
-    throws AttributeRelevanceAdvisorySwitchIsOff, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    throws AttributeRelevanceAdvisorySwitchIsOff, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -3016,8 +2786,7 @@ public class Federate
   }
 
   public void enableAttributeScopeAdvisorySwitch()
-    throws AttributeScopeAdvisorySwitchIsOn, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws AttributeScopeAdvisorySwitchIsOn, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -3031,8 +2800,7 @@ public class Federate
   }
 
   public void disableAttributeScopeAdvisorySwitch()
-    throws AttributeScopeAdvisorySwitchIsOff, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws AttributeScopeAdvisorySwitchIsOff, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -3046,8 +2814,7 @@ public class Federate
   }
 
   public void enableInteractionRelevanceAdvisorySwitch()
-    throws InteractionRelevanceAdvisorySwitchIsOn, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    throws InteractionRelevanceAdvisorySwitchIsOn, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -3061,8 +2828,7 @@ public class Federate
   }
 
   public void disableInteractionRelevanceAdvisorySwitch()
-    throws InteractionRelevanceAdvisorySwitchIsOff, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    throws InteractionRelevanceAdvisorySwitchIsOff, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -3091,10 +2857,8 @@ public class Federate
     }
   }
 
-  public RangeBounds getRangeBounds(RegionHandle regionHandle,
-                                    DimensionHandle dimensionHandle)
-    throws InvalidRegion, RegionDoesNotContainSpecifiedDimension,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+  public RangeBounds getRangeBounds(RegionHandle regionHandle, DimensionHandle dimensionHandle)
+    throws InvalidRegion, RegionDoesNotContainSpecifiedDimension, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
     try
@@ -3109,11 +2873,8 @@ public class Federate
     }
   }
 
-  public void setRangeBounds(RegionHandle regionHandle,
-                             DimensionHandle dimensionHandle,
-                             RangeBounds rangeBounds)
-    throws InvalidRegion, RegionNotCreatedByThisFederate,
-           RegionDoesNotContainSpecifiedDimension, InvalidRangeBound,
+  public void setRangeBounds(RegionHandle regionHandle, DimensionHandle dimensionHandle, RangeBounds rangeBounds)
+    throws InvalidRegion, RegionNotCreatedByThisFederate, RegionDoesNotContainSpecifiedDimension, InvalidRangeBound,
            SaveInProgress, RestoreInProgress, RTIinternalError
   {
     // ensure we have a valid dimension handle and range
@@ -3143,19 +2904,6 @@ public class Federate
     throws RTIinternalError
   {
     return serviceGroup.hashCode();
-  }
-
-  public boolean evokeCallback(double seconds)
-    throws RTIinternalError
-  {
-    return callbackManager.evokeCallback(seconds);
-  }
-
-  public boolean evokeMultipleCallbacks(double minimumTime,
-                                        double maximumTime)
-    throws RTIinternalError
-  {
-    return callbackManager.evokeMultipleCallbacks(minimumTime, maximumTime);
   }
 
   public void enableCallbacks()
@@ -3260,9 +3008,198 @@ public class Federate
     return regionHandleSetFactory;
   }
 
-  public String getHLAversion()
+  public TransportationTypeHandleFactory getTransportationTypeHandleFactory()
   {
-    return "1516.1.5";
+    return transportationTypeHandleFactory;
+  }
+
+  public LogicalTimeFactory getLogicalTimeFactory()
+  {
+    return logicalTimeFactory;
+  }
+
+  public void announceSynchronizationPoint(String label, byte[] tag)
+    throws FederateInternalError
+  {
+    FederateSynchronizationPoint federateSynchronizationPoint;
+
+    synchronizationPointLock.lock();
+    try
+    {
+      synchronizationPoints.put(label, new FederateSynchronizationPoint(label, tag));
+    }
+    finally
+    {
+      synchronizationPointLock.unlock();
+    }
+
+    federateAmbassador.announceSynchronizationPoint(label, tag);
+  }
+
+  public void federationSynchronized(String label, FederateHandleSet failedToSyncSet)
+    throws FederateInternalError
+  {
+    FederateSynchronizationPoint federateSynchronizationPoint;
+
+    synchronizationPointLock.lock();
+    try
+    {
+      federateSynchronizationPoint = synchronizationPoints.remove(label);
+
+      assert federateSynchronizationPoint != null;
+    }
+    finally
+    {
+      synchronizationPointLock.unlock();
+    }
+
+    federateAmbassador.federationSynchronized(label, failedToSyncSet);
+  }
+
+  public void initiateFederateSave(String label, LogicalTime time)
+    throws FederateInternalError
+  {
+    federateStateLock.writeLock().lock();
+    try
+    {
+      if (time == null)
+      {
+        federateAmbassador.initiateFederateSave(label);
+      }
+      else
+      {
+        federateAmbassador.initiateFederateSave(label, time);
+      }
+    }
+    finally
+    {
+      federateState = FederateState.SAVE_IN_PROGRESS;
+
+      // hold any pending callbacks so only callbacks that can occur during
+      // a save will get through
+      //
+      callbackManager.holdCallbacks();
+
+      federateStateLock.writeLock().unlock();
+    }
+  }
+
+  public void federationSaved()
+    throws FederateInternalError
+  {
+    federateStateLock.writeLock().lock();
+    try
+    {
+      federateAmbassador.federationSaved();
+    }
+    finally
+    {
+      federateState = FederateState.ACTIVE;
+
+      // TODO: unhold callbacks?
+
+      federateStateLock.writeLock().unlock();
+    }
+  }
+
+  public void federationNotSaved(SaveFailureReason reason)
+    throws FederateInternalError
+  {
+    federateStateLock.writeLock().lock();
+    try
+    {
+      federateAmbassador.federationNotSaved(reason);
+    }
+    finally
+    {
+      federateState = FederateState.ACTIVE;
+
+      // TODO: unhold callbacks?
+
+      federateStateLock.writeLock().unlock();
+    }
+  }
+
+  public void objectInstanceNameReservationSucceeded(String name)
+    throws FederateInternalError
+  {
+    objectManager.objectInstanceNameReservationSucceeded(name, federateAmbassador);
+  }
+
+  public void multipleObjectInstanceNameReservationSucceeded(Set<String> names)
+    throws FederateInternalError
+  {
+    objectManager.multipleObjectInstanceNameReservationSucceeded(names, federateAmbassador);
+  }
+
+  public void objectInstanceNameReservationFailed(String name)
+    throws FederateInternalError
+  {
+    objectManager.objectInstanceNameReservationFailed(name, federateAmbassador);
+  }
+
+  public void multipleObjectInstanceNameReservationFailed(Set<String> names)
+    throws FederateInternalError
+  {
+    objectManager.multipleObjectInstanceNameReservationFailed(names, federateAmbassador);
+  }
+
+  public void discoverObjectInstance(
+    ObjectInstanceHandle objectInstanceHandle, ObjectClassHandle objectClassHandle, String name,
+    FederateHandle producingFederateHandle)
+    throws FederateInternalError
+  {
+    objectManager.discoverObjectInstance(
+      objectInstanceHandle, objectClassHandle, name, producingFederateHandle, federateAmbassador);
+  }
+
+  public void fireReflectAttributeValues(ReflectAttributeValues reflectAttributeValues)
+    throws FederateInternalError
+  {
+    objectManager.fireReflectAttributeValues(reflectAttributeValues, federateAmbassador);
+  }
+
+  public void fireReceiveInteraction(ReceiveInteraction receiveInteraction)
+    throws FederateInternalError
+  {
+    objectManager.fireReceiveInteraction(receiveInteraction, federateAmbassador);
+  }
+
+  public void removeObjectInstance(
+    ObjectInstanceHandle objectInstanceHandle, byte[] tag, OrderType sentOrderType, LogicalTime deleteTime,
+    OrderType receivedOrderType, MessageRetractionHandle messageRetractionHandle,
+    FederateAmbassador.SupplementalRemoveInfo supplementalRemoveInfo)
+    throws FederateInternalError
+  {
+    objectManager.removeObjectInstance(
+      objectInstanceHandle, tag, sentOrderType, deleteTime, receivedOrderType,
+      messageRetractionHandle, supplementalRemoveInfo, federateAmbassador);
+  }
+
+  public void attributeOwnershipAcquisitionNotification(
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
+    throws FederateInternalError
+  {
+    objectManager.attributeOwnershipAcquisitionNotification(
+      objectInstanceHandle, attributeHandles, tag, federateAmbassador);
+  }
+
+  public void timeRegulationEnabled(LogicalTime time)
+    throws FederateInternalError
+  {
+    timeManager.timeRegulationEnabled(time, federateAmbassador);
+  }
+
+  public void timeConstrainedEnabled(LogicalTime time)
+    throws FederateInternalError
+  {
+    timeManager.timeConstrainedEnabled(time, federateAmbassador);
+  }
+
+  public void timeAdvanceGrant(LogicalTime time)
+    throws FederateInternalError
+  {
+    timeManager.timeAdvanceGrant(time, federateAmbassador);
   }
 
   public LogicalTime getNextMessageTime()
@@ -3271,21 +3208,11 @@ public class Federate
     try
     {
       TimestampedFutureTask timestampedFutureTask = futureTasks.peek();
-      return timestampedFutureTask == null ?
-        null : timestampedFutureTask.getTime();
+      return timestampedFutureTask == null ? null : timestampedFutureTask.getTime();
     }
     finally
     {
       futureTasksLock.unlock();
-    }
-  }
-
-  protected void checkIfAlreadyExecutionMember()
-    throws FederateAlreadyExecutionMember
-  {
-    if (federateHandle != null)
-    {
-      throw new FederateAlreadyExecutionMember(federateHandle.toString());
     }
   }
 
@@ -3294,7 +3221,7 @@ public class Federate
   {
     if (federateState == FederateState.SAVE_IN_PROGRESS)
     {
-      throw new SaveInProgress();
+      throw new SaveInProgress("");
     }
   }
 
@@ -3303,19 +3230,22 @@ public class Federate
   {
     if (federateState == FederateState.RESTORE_IN_PROGRESS)
     {
-      throw new RestoreInProgress();
+      throw new RestoreInProgress("");
     }
   }
 
   protected void checkIfActive()
-    throws SaveInProgress, RestoreInProgress, RTIinternalError
+    throws SaveInProgress, RestoreInProgress
   {
-    if (federateState != FederateState.ACTIVE)
+    switch (federateState)
     {
-      checkIfSaveInProgress();
-      checkIfRestoreInProgress();
-
-      throw new RTIinternalError("federate not active");
+      case SAVE_IN_PROGRESS:
+        throw new SaveInProgress("");
+      case RESTORE_IN_PROGRESS:
+        throw new RestoreInProgress("");
+      default:
+        assert federateState == FederateState.ACTIVE;
+        break;
     }
   }
 
@@ -3413,680 +3343,8 @@ public class Federate
     }
   }
 
-  protected class FederateAmbassadorInterceptor
-    extends NullFederateAmbassador
+  public static String defaultFederateName(FederateHandle federateHandle)
   {
-    @Override
-    public void synchronizationPointRegistrationSucceeded(String label)
-      throws FederateInternalError
-    {
-      federateAmbassador.synchronizationPointRegistrationSucceeded(label);
-    }
-
-    @Override
-    public void synchronizationPointRegistrationFailed(
-      String label, SynchronizationPointFailureReason reason)
-      throws FederateInternalError
-    {
-      federateAmbassador.synchronizationPointRegistrationFailed(label, reason);
-    }
-
-    @Override
-    public void announceSynchronizationPoint(String label, byte[] tag)
-      throws FederateInternalError
-    {
-      FederateSynchronizationPoint federateSynchronizationPoint;
-
-      synchronizationPointLock.lock();
-      try
-      {
-        federateSynchronizationPoint = synchronizationPoints.get(label);
-        if (federateSynchronizationPoint == null)
-        {
-          federateSynchronizationPoint =
-            new FederateSynchronizationPoint(label, tag);
-          synchronizationPoints.put(label, federateSynchronizationPoint);
-        }
-      }
-      finally
-      {
-        synchronizationPointLock.unlock();
-      }
-
-      federateSynchronizationPoint.announceSynchronizationPoint();
-
-      federateAmbassador.announceSynchronizationPoint(label, tag);
-    }
-
-    @Override
-    public void federationSynchronized(String label)
-      throws FederateInternalError
-    {
-      FederateSynchronizationPoint federateSynchronizationPoint;
-
-      synchronizationPointLock.lock();
-      try
-      {
-        // remove the synchronization point
-        //
-        federateSynchronizationPoint = synchronizationPoints.remove(label);
-      }
-      finally
-      {
-        synchronizationPointLock.unlock();
-      }
-
-      assert federateSynchronizationPoint != null;
-
-      federateSynchronizationPoint.federationSynchronized();
-
-      federateAmbassador.federationSynchronized(label);
-    }
-
-    @Override
-    public void initiateFederateSave(String label)
-      throws UnableToPerformSave, FederateInternalError
-    {
-      federateStateLock.writeLock().lock();
-      try
-      {
-        federateAmbassador.initiateFederateSave(label);
-      }
-      finally
-      {
-        federateState = FederateState.SAVE_IN_PROGRESS;
-
-        // hold any pending callbacks so only callbacks that can occur during
-        // a save will get through
-        //
-        callbackManager.holdCallbacks();
-
-        federateStateLock.writeLock().unlock();
-      }
-    }
-
-    @Override
-    public void initiateFederateSave(String label, LogicalTime saveTime)
-      throws InvalidLogicalTime, UnableToPerformSave, FederateInternalError
-    {
-      federateStateLock.writeLock().lock();
-      try
-      {
-        federateAmbassador.initiateFederateSave(label, saveTime);
-      }
-      finally
-      {
-        federateState = FederateState.SAVE_IN_PROGRESS;
-
-        // hold any pending callbacks so only callbacks that can occur during
-        // a save will get through
-        //
-        callbackManager.holdCallbacks();
-
-        federateStateLock.writeLock().unlock();
-      }
-    }
-
-    @Override
-    public void federationSaved()
-      throws FederateInternalError
-    {
-      federateStateLock.writeLock().lock();
-      try
-      {
-        federateAmbassador.federationSaved();
-      }
-      finally
-      {
-        federateState = FederateState.ACTIVE;
-
-        // TODO: unhold callbacks?
-
-        federateStateLock.writeLock().unlock();
-      }
-    }
-
-    @Override
-    public void federationNotSaved(SaveFailureReason reason)
-      throws FederateInternalError
-    {
-      federateStateLock.writeLock().lock();
-      try
-      {
-        federateAmbassador.federationNotSaved(reason);
-      }
-      finally
-      {
-        federateState = FederateState.ACTIVE;
-
-        // TODO: unhold callbacks?
-
-        federateStateLock.writeLock().unlock();
-      }
-    }
-
-    @Override
-    public void federationSaveStatusResponse(
-      FederateHandleSaveStatusPair[] response)
-      throws FederateInternalError
-    {
-      federateAmbassador.federationSaveStatusResponse(response);
-    }
-
-    @Override
-    public void requestFederationRestoreSucceeded(String label)
-      throws FederateInternalError
-    {
-      federateAmbassador.requestFederationRestoreSucceeded(label);
-    }
-
-    @Override
-    public void requestFederationRestoreFailed(String label)
-      throws FederateInternalError
-    {
-      federateAmbassador.requestFederationRestoreFailed(label);
-    }
-
-    @Override
-    public void federationRestoreBegun()
-      throws FederateInternalError
-    {
-      federateAmbassador.federationRestoreBegun();
-    }
-
-    @Override
-    public void initiateFederateRestore(String label,
-                                        FederateHandle federateHandle)
-      throws SpecifiedSaveLabelDoesNotExist, CouldNotInitiateRestore,
-             FederateInternalError
-    {
-      federateAmbassador.initiateFederateRestore(label, federateHandle);
-    }
-
-    @Override
-    public void federationRestored()
-      throws FederateInternalError
-    {
-      federateAmbassador.federationRestored();
-    }
-
-    @Override
-    public void federationNotRestored(RestoreFailureReason reason)
-      throws FederateInternalError
-    {
-      federateAmbassador.federationNotRestored(reason);
-    }
-
-    @Override
-    public void federationRestoreStatusResponse(
-      FederateHandleRestoreStatusPair[] response)
-      throws FederateInternalError
-    {
-      federateAmbassador.federationRestoreStatusResponse(response);
-    }
-
-    @Override
-    public void startRegistrationForObjectClass(
-      ObjectClassHandle objectClassHandle)
-      throws ObjectClassNotPublished, FederateInternalError
-    {
-      federateAmbassador.startRegistrationForObjectClass(objectClassHandle);
-    }
-
-    @Override
-    public void stopRegistrationForObjectClass(
-      ObjectClassHandle objectClassHandle)
-      throws ObjectClassNotPublished, FederateInternalError
-    {
-      federateAmbassador.stopRegistrationForObjectClass(objectClassHandle);
-    }
-
-    @Override
-    public void turnInteractionsOn(
-      InteractionClassHandle interactionClassHandle)
-      throws InteractionClassNotPublished, FederateInternalError
-    {
-      federateAmbassador.turnInteractionsOn(interactionClassHandle);
-    }
-
-    @Override
-    public void turnInteractionsOff(
-      InteractionClassHandle interactionClassHandle)
-      throws InteractionClassNotPublished, FederateInternalError
-    {
-      federateAmbassador.turnInteractionsOff(interactionClassHandle);
-    }
-
-    @Override
-    public void objectInstanceNameReservationSucceeded(String name)
-      throws UnknownName, FederateInternalError
-    {
-      objectManager.objectInstanceNameReservationSucceeded(
-        name, federateAmbassador);
-    }
-
-    @Override
-    public void objectInstanceNameReservationFailed(String name)
-      throws UnknownName, FederateInternalError
-    {
-      federateAmbassador.objectInstanceNameReservationFailed(name);
-    }
-
-    @Override
-    public void discoverObjectInstance(
-      ObjectInstanceHandle objectInstanceHandle,
-      ObjectClassHandle objectClassHandle, String name)
-      throws CouldNotDiscover, ObjectClassNotRecognized, FederateInternalError
-    {
-      objectManager.discoverObjectInstance(
-        objectInstanceHandle, objectClassHandle, name, federateAmbassador);
-    }
-
-    @Override
-    public void reflectAttributeValues(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleValueMap attributeValues, byte[] tag,
-      OrderType sentOrderType, TransportationType transportationType)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized,
-             AttributeNotSubscribed, FederateInternalError
-    {
-      objectManager.reflectAttributeValues(
-        objectInstanceHandle, attributeValues, tag, sentOrderType,
-        transportationType, null, null, null, null, federateAmbassador);
-    }
-
-    @Override
-    public void reflectAttributeValues(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleValueMap attributeValues, byte[] tag,
-      OrderType sentOrderType, TransportationType transportationType,
-      RegionHandleSet regionHandles)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized,
-             AttributeNotSubscribed, FederateInternalError
-    {
-      objectManager.reflectAttributeValues(
-        objectInstanceHandle, attributeValues, tag, sentOrderType,
-        transportationType, null, null, null, regionHandles,
-        federateAmbassador);
-    }
-
-    @Override
-    public void reflectAttributeValues(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleValueMap attributeValues, byte[] tag,
-      OrderType sentOrderType, TransportationType transportationType,
-      LogicalTime updateTime, OrderType receivedOrderType)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized,
-             AttributeNotSubscribed, FederateInternalError
-    {
-      objectManager.reflectAttributeValues(
-        objectInstanceHandle, attributeValues, tag, sentOrderType,
-        transportationType, updateTime, receivedOrderType, null, null,
-        federateAmbassador);
-    }
-
-    @Override
-    public void reflectAttributeValues(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleValueMap attributeValues, byte[] tag,
-      OrderType sentOrderType, TransportationType transportationType,
-      LogicalTime updateTime, OrderType receivedOrderType,
-      RegionHandleSet regionHandles)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized,
-             AttributeNotSubscribed, FederateInternalError
-    {
-      objectManager.reflectAttributeValues(
-        objectInstanceHandle, attributeValues, tag, sentOrderType,
-        transportationType, updateTime, receivedOrderType, null, regionHandles,
-        federateAmbassador);
-    }
-
-    @Override
-    public void reflectAttributeValues(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleValueMap attributeValues, byte[] tag,
-      OrderType sentOrderType,
-      TransportationType transportationType, LogicalTime updateTime,
-      OrderType receivedOrderType,
-      MessageRetractionHandle messageRetractionHandle)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized,
-             AttributeNotSubscribed, InvalidLogicalTime, FederateInternalError
-    {
-      objectManager.reflectAttributeValues(
-        objectInstanceHandle, attributeValues, tag, sentOrderType,
-        transportationType, updateTime, receivedOrderType,
-        messageRetractionHandle, null, federateAmbassador);
-    }
-
-    @Override
-    public void reflectAttributeValues(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleValueMap attributeValues, byte[] tag,
-      OrderType sentOrderType, TransportationType transportationType,
-      LogicalTime updateTime, OrderType receivedOrderType,
-      MessageRetractionHandle messageRetractionHandle,
-      RegionHandleSet regionHandles)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized,
-             AttributeNotSubscribed, InvalidLogicalTime, FederateInternalError
-    {
-      objectManager.reflectAttributeValues(
-        objectInstanceHandle, attributeValues, tag, sentOrderType,
-        transportationType, updateTime, receivedOrderType,
-        messageRetractionHandle, regionHandles, federateAmbassador);
-    }
-
-    @Override
-    public void receiveInteraction(
-      InteractionClassHandle interactionClassHandle,
-      ParameterHandleValueMap parameterValues, byte[] tag,
-      OrderType sentOrderType, TransportationType transportationType)
-      throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
-             InteractionClassNotSubscribed, FederateInternalError
-    {
-      objectManager.receiveInteraction(
-        interactionClassHandle, parameterValues, tag, sentOrderType,
-        transportationType, null, null, null, null, federateAmbassador);
-    }
-
-    @Override
-    public void receiveInteraction(
-      InteractionClassHandle interactionClassHandle,
-      ParameterHandleValueMap parameterValues, byte[] tag,
-      OrderType sentOrderType, TransportationType transportationType,
-      RegionHandleSet regionHandles)
-      throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
-             InteractionClassNotSubscribed, FederateInternalError
-    {
-      objectManager.receiveInteraction(
-        interactionClassHandle, parameterValues, tag, sentOrderType,
-        transportationType, null, null, null, regionHandles,
-        federateAmbassador);
-    }
-
-    @Override
-    public void receiveInteraction(
-      InteractionClassHandle interactionClassHandle,
-      ParameterHandleValueMap parameterValues, byte[] tag,
-      OrderType sentOrderType, TransportationType transportationType,
-      LogicalTime sentTime, OrderType receivedOrderType)
-      throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
-             InteractionClassNotSubscribed, FederateInternalError
-    {
-      objectManager.receiveInteraction(
-        interactionClassHandle, parameterValues, tag, sentOrderType,
-        transportationType, sentTime, receivedOrderType, null, null,
-        federateAmbassador);
-    }
-
-    @Override
-    public void receiveInteraction(
-      InteractionClassHandle interactionClassHandle,
-      ParameterHandleValueMap parameterValues, byte[] tag,
-      OrderType sentOrderType, TransportationType transportationType,
-      LogicalTime sentTime, OrderType receivedOrderType,
-      RegionHandleSet regionHandles)
-      throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
-             InteractionClassNotSubscribed, FederateInternalError
-    {
-      objectManager.receiveInteraction(
-        interactionClassHandle, parameterValues, tag, sentOrderType,
-        transportationType, sentTime, receivedOrderType, null, regionHandles,
-        federateAmbassador);
-    }
-
-    @Override
-    public void receiveInteraction(
-      InteractionClassHandle interactionClassHandle,
-      ParameterHandleValueMap parameterValues, byte[] tag,
-      OrderType sentOrderType, TransportationType transportationType,
-      LogicalTime sentTime, OrderType receivedOrderType,
-      MessageRetractionHandle messageRetractionHandle)
-      throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
-             InteractionClassNotSubscribed, InvalidLogicalTime,
-             FederateInternalError
-    {
-      objectManager.receiveInteraction(
-        interactionClassHandle, parameterValues, tag, sentOrderType,
-        transportationType, sentTime, receivedOrderType,
-        messageRetractionHandle, null, federateAmbassador);
-    }
-
-    @Override
-    public void receiveInteraction(
-      InteractionClassHandle interactionClassHandle,
-      ParameterHandleValueMap parameterValues, byte[] tag,
-      OrderType sentOrderType, TransportationType transportationType,
-      LogicalTime sentTime, OrderType receivedOrderType,
-      MessageRetractionHandle messageRetractionHandle,
-      RegionHandleSet regionHandles)
-      throws InteractionClassNotRecognized, InteractionParameterNotRecognized,
-             InteractionClassNotSubscribed, InvalidLogicalTime,
-             FederateInternalError
-    {
-      objectManager.receiveInteraction(
-        interactionClassHandle, parameterValues, tag, sentOrderType,
-        transportationType, sentTime, receivedOrderType,
-        messageRetractionHandle, regionHandles, federateAmbassador);
-    }
-
-    @Override
-    public void removeObjectInstance(ObjectInstanceHandle objectInstanceHandle,
-                                     byte[] tag, OrderType sentOrderType)
-      throws ObjectInstanceNotKnown, FederateInternalError
-    {
-      objectManager.removeObjectInstance(
-        objectInstanceHandle, tag, sentOrderType, null, null, null,
-        federateAmbassador);
-    }
-
-    @Override
-    public void removeObjectInstance(ObjectInstanceHandle objectInstanceHandle,
-                                     byte[] tag, OrderType sentOrderType,
-                                     LogicalTime deleteTime,
-                                     OrderType receivedOrderType)
-      throws ObjectInstanceNotKnown, FederateInternalError
-    {
-      objectManager.removeObjectInstance(
-        objectInstanceHandle, tag, sentOrderType, deleteTime, receivedOrderType,
-        null, federateAmbassador);
-    }
-
-    @Override
-    public void removeObjectInstance(ObjectInstanceHandle objectInstanceHandle,
-                                     byte[] tag, OrderType sentOrderType,
-                                     LogicalTime deleteTime,
-                                     OrderType receivedOrderType,
-                                     MessageRetractionHandle messageRetractionHandle)
-      throws ObjectInstanceNotKnown, InvalidLogicalTime, FederateInternalError
-    {
-      objectManager.removeObjectInstance(
-        objectInstanceHandle, tag, sentOrderType, deleteTime, receivedOrderType,
-        messageRetractionHandle, federateAmbassador);
-    }
-
-    @Override
-    public void attributesInScope(ObjectInstanceHandle objectInstanceHandle,
-                                  AttributeHandleSet attributeHandles)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized,
-             AttributeNotSubscribed, FederateInternalError
-    {
-      federateAmbassador.attributesInScope(
-        objectInstanceHandle, attributeHandles);
-    }
-
-    @Override
-    public void attributesOutOfScope(ObjectInstanceHandle objectInstanceHandle,
-                                     AttributeHandleSet attributeHandles)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized,
-             AttributeNotSubscribed, FederateInternalError
-    {
-      federateAmbassador.attributesOutOfScope(
-        objectInstanceHandle, attributeHandles);
-    }
-
-    @Override
-    public void provideAttributeValueUpdate(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleSet attributeHandles, byte[] tag)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized, AttributeNotOwned,
-             FederateInternalError
-    {
-      federateAmbassador.provideAttributeValueUpdate(
-        objectInstanceHandle, attributeHandles, tag);
-    }
-
-    @Override
-    public void turnUpdatesOnForObjectInstance(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleSet attributeHandles)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized, AttributeNotOwned,
-             FederateInternalError
-    {
-      federateAmbassador.turnUpdatesOnForObjectInstance(
-        objectInstanceHandle, attributeHandles);
-    }
-
-    @Override
-    public void turnUpdatesOffForObjectInstance(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleSet attributeHandles)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized, AttributeNotOwned,
-             FederateInternalError
-    {
-      federateAmbassador.turnUpdatesOffForObjectInstance(
-        objectInstanceHandle, attributeHandles);
-    }
-
-    @Override
-    public void requestAttributeOwnershipAssumption(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleSet attributeHandles, byte[] tag)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized,
-             AttributeAlreadyOwned, AttributeNotPublished, FederateInternalError
-    {
-      federateAmbassador.requestAttributeOwnershipAssumption(
-        objectInstanceHandle, attributeHandles, tag);
-    }
-
-    @Override
-    public void requestDivestitureConfirmation(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleSet attributeHandles)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized, AttributeNotOwned,
-             AttributeDivestitureWasNotRequested, FederateInternalError
-    {
-      federateAmbassador.requestDivestitureConfirmation(
-        objectInstanceHandle, attributeHandles);
-    }
-
-    @Override
-    public void attributeOwnershipAcquisitionNotification(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleSet attributeHandles, byte[] tag)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized,
-             AttributeAcquisitionWasNotRequested, AttributeAlreadyOwned,
-             AttributeNotPublished, FederateInternalError
-    {
-      objectManager.attributeOwnershipAcquisitionNotification(
-        objectInstanceHandle, attributeHandles, tag, federateAmbassador);
-    }
-
-    @Override
-    public void attributeOwnershipUnavailable(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleSet attributeHandles)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized,
-             AttributeAlreadyOwned, AttributeAcquisitionWasNotRequested,
-             FederateInternalError
-    {
-      federateAmbassador.attributeOwnershipUnavailable(
-        objectInstanceHandle, attributeHandles);
-    }
-
-    @Override
-    public void requestAttributeOwnershipRelease(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleSet attributeHandles, byte[] tag)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized, AttributeNotOwned,
-             FederateInternalError
-    {
-      federateAmbassador.requestAttributeOwnershipRelease(
-        objectInstanceHandle, attributeHandles, tag);
-    }
-
-    @Override
-    public void confirmAttributeOwnershipAcquisitionCancellation(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandleSet attributeHandles)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized,
-             AttributeAlreadyOwned, AttributeAcquisitionWasNotCanceled,
-             FederateInternalError
-    {
-      federateAmbassador.confirmAttributeOwnershipAcquisitionCancellation(
-        objectInstanceHandle, attributeHandles);
-    }
-
-    @Override
-    public void informAttributeOwnership(
-      ObjectInstanceHandle objectInstanceHandle,
-      AttributeHandle attributeHandle, FederateHandle federateHandle)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized,
-             FederateInternalError
-    {
-      federateAmbassador.informAttributeOwnership(
-        objectInstanceHandle, attributeHandle, federateHandle);
-    }
-
-    @Override
-    public void attributeIsNotOwned(ObjectInstanceHandle objectInstanceHandle,
-                                    AttributeHandle attributeHandle)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized,
-             FederateInternalError
-    {
-      federateAmbassador.attributeIsNotOwned(
-        objectInstanceHandle, attributeHandle);
-    }
-
-    @Override
-    public void attributeIsOwnedByRTI(ObjectInstanceHandle objectInstanceHandle,
-                                      AttributeHandle attributeHandle)
-      throws ObjectInstanceNotKnown, AttributeNotRecognized,
-             FederateInternalError
-    {
-      federateAmbassador.attributeIsOwnedByRTI(
-        objectInstanceHandle, attributeHandle);
-    }
-
-    @Override
-    public void timeRegulationEnabled(LogicalTime time)
-      throws InvalidLogicalTime, NoRequestToEnableTimeRegulationWasPending,
-             FederateInternalError
-    {
-      timeManager.timeRegulationEnabled(time, federateAmbassador);
-    }
-
-    @Override
-    public void timeConstrainedEnabled(LogicalTime time)
-      throws InvalidLogicalTime, NoRequestToEnableTimeConstrainedWasPending,
-             FederateInternalError
-    {
-      timeManager.timeConstrainedEnabled(time, federateAmbassador);
-    }
-
-    @Override
-    public void timeAdvanceGrant(LogicalTime time)
-      throws InvalidLogicalTime, JoinedFederateIsNotInTimeAdvancingState,
-             FederateInternalError
-    {
-      timeManager.timeAdvanceGrant(time, federateAmbassador);
-    }
-
-    @Override
-    public void requestRetraction(
-      MessageRetractionHandle messageRetractionHandle)
-      throws FederateInternalError
-    {
-      federateAmbassador.requestRetraction(messageRetractionHandle);
-    }
+    return "HLA-Federate-" + federateHandle.toString();
   }
 }

@@ -16,24 +16,69 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.fdd.FDD;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
 
-import hla.rti1516.FederateHandle;
-import hla.rti1516.LogicalTime;
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.FederateHandle;
 
 public class JoinFederationExecutionResponse
-  implements Message
+  extends EnumResponse<JoinFederationExecutionResponse.Response>
 {
-  protected FederateHandle federateHandle;
-  protected FDD fdd;
-  protected LogicalTime galt;
+  public enum Response { SUCCESS, FEDERATION_EXECUTION_DOES_NOT_EXIST, SAVE_IN_PROGRESS, RESTORE_IN_PROGRESS,
+    INCONSISTENT_FDD }
+
+  private final FederateHandle federateHandle;
+  private final FDD fdd;
+  private final String logicalTimeImplementationName;
+
+  public JoinFederationExecutionResponse(long id, Response response)
+  {
+    super(MessageType.JOIN_FEDERATION_EXECUTION_RESPONSE, id, response);
+
+    assert response != Response.SUCCESS;
+
+    federateHandle = null;
+    fdd = null;
+    logicalTimeImplementationName = null;
+
+    encodingFinished();
+  }
 
   public JoinFederationExecutionResponse(
-    FederateHandle federateHandle, FDD fdd, LogicalTime galt)
+    long id, FederateHandle federateHandle, FDD fdd, String logicalTimeImplementationName)
   {
+    super(MessageType.JOIN_FEDERATION_EXECUTION_RESPONSE, id, Response.SUCCESS);
+
     this.federateHandle = federateHandle;
     this.fdd = fdd;
-    this.galt = galt;
+    this.logicalTimeImplementationName = logicalTimeImplementationName;
+
+    IEEE1516eFederateHandle.encode(buffer, federateHandle);
+    FDD.encode(buffer, fdd);
+    Protocol.encodeString(buffer, logicalTimeImplementationName);
+
+    encodingFinished();
+  }
+
+  public JoinFederationExecutionResponse(ChannelBuffer buffer)
+  {
+    super(buffer, Response.values());
+
+    if (response == Response.SUCCESS)
+    {
+      federateHandle = IEEE1516eFederateHandle.decode(buffer);
+      fdd = FDD.decode(buffer);
+      logicalTimeImplementationName = Protocol.decodeString(buffer);
+    }
+    else
+    {
+      federateHandle = null;
+      fdd = null;
+      logicalTimeImplementationName = null;
+    }
   }
 
   public FederateHandle getFederateHandle()
@@ -46,8 +91,13 @@ public class JoinFederationExecutionResponse
     return fdd;
   }
 
-  public LogicalTime getGALT()
+  public String getLogicalTimeImplementationName()
   {
-    return galt;
+    return logicalTimeImplementationName;
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.JOIN_FEDERATION_EXECUTION_RESPONSE;
   }
 }

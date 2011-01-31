@@ -16,24 +16,47 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateInternalError;
-import hla.rti1516.InteractionClassHandle;
-import hla.rti1516.InteractionClassNotPublished;
+import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.FederateMessage;
+import net.sf.ohla.rti.messages.InteractionClassMessage;
+import net.sf.ohla.rti.messages.MessageType;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.InteractionClassHandle;
+import hla.rti1516e.exceptions.FederateInternalError;
 
 public class TurnInteractionsOff
-  implements Callback
+  extends InteractionClassMessage
+  implements Callback, FederateMessage
 {
-  protected InteractionClassHandle interactionClassHandle;
-
   public TurnInteractionsOff(InteractionClassHandle interactionClassHandle)
   {
-    this.interactionClassHandle = interactionClassHandle;
+    super(MessageType.TURN_INTERACTIONS_OFF, interactionClassHandle);
+
+    encodingFinished();
+  }
+
+  public TurnInteractionsOff(ChannelBuffer buffer)
+  {
+    super(buffer);
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.TURN_INTERACTIONS_OFF;
   }
 
   public void execute(FederateAmbassador federateAmbassador)
-    throws InteractionClassNotPublished, FederateInternalError
+    throws FederateInternalError
   {
     federateAmbassador.turnInteractionsOff(interactionClassHandle);
+  }
+
+  public void execute(Federate federate)
+  {
+    federate.callbackReceived(this);
   }
 }

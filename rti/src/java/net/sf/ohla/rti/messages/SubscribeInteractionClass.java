@@ -16,44 +16,59 @@
 
 package net.sf.ohla.rti.messages;
 
-import hla.rti1516.InteractionClassHandle;
-import hla.rti1516.RegionHandleSet;
+import net.sf.ohla.rti.Protocol;
+import net.sf.ohla.rti.federation.FederateProxy;
+import net.sf.ohla.rti.federation.FederationExecution;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.InteractionClassHandle;
 
 public class SubscribeInteractionClass
-  implements Message
+  extends InteractionClassMessage
+  implements FederationExecutionMessage
 {
-  protected InteractionClassHandle interactionClassHandle;
-  protected RegionHandleSet regionHandles;
-  protected boolean passive;
+  private final boolean passive;
 
-  public SubscribeInteractionClass(
-    InteractionClassHandle interactionClassHandle, boolean passive)
+  public SubscribeInteractionClass(InteractionClassHandle interactionClassHandle, boolean passive)
   {
-    this.interactionClassHandle = interactionClassHandle;
+    this(MessageType.SUBSCRIBE_INTERACTION_CLASS, interactionClassHandle, passive, true);
+  }
+
+  public SubscribeInteractionClass(ChannelBuffer buffer)
+  {
+    super(buffer);
+
+    passive = Protocol.decodeBoolean(buffer);
+  }
+
+  protected SubscribeInteractionClass(
+    MessageType messageType, InteractionClassHandle interactionClassHandle, boolean passive, boolean encodingFinished)
+  {
+    super(messageType, interactionClassHandle);
+
     this.passive = passive;
-  }
 
-  public SubscribeInteractionClass(
-    InteractionClassHandle interactionClassHandle, boolean passive,
-    RegionHandleSet regionHandles)
-  {
-    this(interactionClassHandle, passive);
+    Protocol.encodeBoolean(buffer, passive);
 
-    this.regionHandles = regionHandles;
-  }
-
-  public InteractionClassHandle getInteractionClassHandle()
-  {
-    return interactionClassHandle;
-  }
-
-  public RegionHandleSet getRegionHandles()
-  {
-    return regionHandles;
+    if (encodingFinished)
+    {
+      encodingFinished();
+    }
   }
 
   public boolean isPassive()
   {
     return passive;
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.SUBSCRIBE_INTERACTION_CLASS;
+  }
+
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
+  {
+    federationExecution.subscribeInteractionClass(federateProxy, this);
   }
 }

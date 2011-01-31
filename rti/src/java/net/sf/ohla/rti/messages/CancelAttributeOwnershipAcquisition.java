@@ -19,37 +19,35 @@ package net.sf.ohla.rti.messages;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
 
-import hla.rti1516.AttributeHandleSet;
-import hla.rti1516.ObjectInstanceHandle;
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.AttributeHandleSet;
+import hla.rti1516e.ObjectInstanceHandle;
 
 public class CancelAttributeOwnershipAcquisition
+  extends ObjectInstanceAttributesMessage
   implements FederationExecutionMessage
 {
-  protected ObjectInstanceHandle objectInstanceHandle;
-  protected AttributeHandleSet attributeHandles;
-
   public CancelAttributeOwnershipAcquisition(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles)
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
   {
-    this.objectInstanceHandle = objectInstanceHandle;
-    this.attributeHandles = attributeHandles;
+    super(MessageType.CANCEL_ATTRIBUTE_OWNERSHIP_ACQUISITION, objectInstanceHandle, attributeHandles);
+
+    encodingFinished();
   }
 
-  public ObjectInstanceHandle getObjectInstanceHandle()
+  public CancelAttributeOwnershipAcquisition(ChannelBuffer buffer)
   {
-    return objectInstanceHandle;
+    super(buffer);
   }
 
-  public AttributeHandleSet getAttributeHandles()
+  public MessageType getType()
   {
-    return attributeHandles;
+    return MessageType.CANCEL_ATTRIBUTE_OWNERSHIP_ACQUISITION;
   }
 
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
-    federationExecution.cancelAttributeOwnershipAcquisition(
-      federateProxy, this);
+    federationExecution.cancelAttributeOwnershipAcquisition(federateProxy, this);
   }
 }

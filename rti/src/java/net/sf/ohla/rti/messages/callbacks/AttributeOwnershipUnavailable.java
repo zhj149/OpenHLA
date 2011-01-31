@@ -16,35 +16,48 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import hla.rti1516.AttributeAcquisitionWasNotRequested;
-import hla.rti1516.AttributeAlreadyOwned;
-import hla.rti1516.AttributeHandleSet;
-import hla.rti1516.AttributeNotRecognized;
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateInternalError;
-import hla.rti1516.ObjectInstanceHandle;
-import hla.rti1516.ObjectInstanceNotKnown;
+import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.FederateMessage;
+import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.ObjectInstanceAttributesMessage;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.AttributeHandleSet;
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.ObjectInstanceHandle;
+import hla.rti1516e.exceptions.FederateInternalError;
 
 public class AttributeOwnershipUnavailable
-  implements Callback
+  extends ObjectInstanceAttributesMessage
+  implements Callback, FederateMessage
 {
-  protected ObjectInstanceHandle objectInstanceHandle;
-  protected AttributeHandleSet attributeHandles;
-
-  public AttributeOwnershipUnavailable(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles)
+  public AttributeOwnershipUnavailable(ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
   {
-    this.objectInstanceHandle = objectInstanceHandle;
-    this.attributeHandles = attributeHandles;
+    super(MessageType.ATTRIBUTE_OWNERSHIP_UNAVAILABLE, objectInstanceHandle, attributeHandles);
+
+    encodingFinished();
+  }
+
+  public AttributeOwnershipUnavailable(ChannelBuffer buffer)
+  {
+    super(buffer);
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.ATTRIBUTE_OWNERSHIP_UNAVAILABLE;
   }
 
   public void execute(FederateAmbassador federateAmbassador)
-    throws ObjectInstanceNotKnown, AttributeNotRecognized,
-           AttributeAlreadyOwned, AttributeAcquisitionWasNotRequested,
-           FederateInternalError
+    throws FederateInternalError
   {
-    federateAmbassador.attributeOwnershipUnavailable(
-      objectInstanceHandle, attributeHandles);
+    federateAmbassador.attributeOwnershipUnavailable(objectInstanceHandle, attributeHandles);
+  }
+
+  public void execute(Federate federate)
+  {
+    federate.callbackReceived(this);
   }
 }

@@ -16,41 +16,64 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import hla.rti1516.AttributeHandle;
-import hla.rti1516.AttributeNotRecognized;
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateHandle;
-import hla.rti1516.FederateInternalError;
-import hla.rti1516.ObjectInstanceHandle;
-import hla.rti1516.ObjectInstanceNotKnown;
+import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
+import net.sf.ohla.rti.messages.FederateMessage;
+import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.ObjectInstanceAttributeMessage;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.AttributeHandle;
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.FederateHandle;
+import hla.rti1516e.ObjectInstanceHandle;
+import hla.rti1516e.exceptions.FederateInternalError;
 
 public class InformAttributeOwnership
-  implements Callback
+  extends ObjectInstanceAttributeMessage
+  implements Callback, FederateMessage
 {
-  protected ObjectInstanceHandle objectInstanceHandle;
-  protected AttributeHandle attributeHandle;
-  protected FederateHandle federateHandle;
+  private final FederateHandle federateHandle;
 
   public InformAttributeOwnership(
-    ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle,
-    FederateHandle federateHandle)
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle, FederateHandle federateHandle)
   {
-    this.objectInstanceHandle = objectInstanceHandle;
-    this.attributeHandle = attributeHandle;
+    super(MessageType.INFORM_ATTRIBUTE_OWNERSHIP, objectInstanceHandle, attributeHandle);
+
     this.federateHandle = federateHandle;
+
+    IEEE1516eFederateHandle.encode(buffer, federateHandle);
+
+    encodingFinished();
+  }
+
+  public InformAttributeOwnership(ChannelBuffer buffer)
+  {
+    super(buffer);
+
+    federateHandle = IEEE1516eFederateHandle.decode(buffer);
+  }
+
+  public FederateHandle getFederateHandle()
+  {
+    return federateHandle;
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.INFORM_ATTRIBUTE_OWNERSHIP;
   }
 
   public void execute(FederateAmbassador federateAmbassador)
-    throws ObjectInstanceNotKnown, AttributeNotRecognized, FederateInternalError
+    throws FederateInternalError
   {
-    federateAmbassador.informAttributeOwnership(
-      objectInstanceHandle, attributeHandle, federateHandle);
+    federateAmbassador.informAttributeOwnership(objectInstanceHandle, attributeHandle, federateHandle);
   }
 
-  @Override
-  public String toString()
+  public void execute(Federate federate)
   {
-    return String.format("InformAttributeOwnership: %s - %s - %s",
-                         objectInstanceHandle, attributeHandle, federateHandle);
+    federate.callbackReceived(this);
   }
 }

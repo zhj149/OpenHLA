@@ -16,18 +16,40 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.fdd.FDD;
 
-public class CreateFederationExecution
-  extends AbstractRequest
-{
-  protected String federationExecutionName;
-  protected FDD fdd;
+import org.jboss.netty.buffer.ChannelBuffer;
 
-  public CreateFederationExecution(String federationExecutionName, FDD fdd)
+public class CreateFederationExecution
+  extends AbstractRequest<CreateFederationExecutionResponse>
+{
+  private final String federationExecutionName;
+  private final FDD fdd;
+  private final String logicalTimeImplementationName;
+
+  public CreateFederationExecution(String federationExecutionName, FDD fdd, String logicalTimeImplementationName)
   {
+    super(MessageType.CREATE_FEDERATION_EXECUTION);
+
     this.federationExecutionName = federationExecutionName;
     this.fdd = fdd;
+    this.logicalTimeImplementationName = logicalTimeImplementationName;
+
+    Protocol.encodeString(buffer, federationExecutionName);
+    FDD.encode(buffer, fdd);
+    Protocol.encodeString(buffer, logicalTimeImplementationName);
+
+    encodingFinished();
+  }
+
+  public CreateFederationExecution(ChannelBuffer buffer)
+  {
+    super(buffer);
+
+    federationExecutionName = Protocol.decodeString(buffer);
+    fdd = FDD.decode(buffer);
+    logicalTimeImplementationName = Protocol.decodeString(buffer);
   }
 
   public String getFederationExecutionName()
@@ -38,5 +60,15 @@ public class CreateFederationExecution
   public FDD getFDD()
   {
     return fdd;
+  }
+
+  public String getLogicalTimeImplementationName()
+  {
+    return logicalTimeImplementationName;
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.CREATE_FEDERATION_EXECUTION;
   }
 }

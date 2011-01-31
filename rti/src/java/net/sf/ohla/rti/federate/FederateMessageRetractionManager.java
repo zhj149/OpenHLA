@@ -25,23 +25,22 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import net.sf.ohla.rti.hla.rti1516.IEEE1516MessageRetractionHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eMessageRetractionHandle;
 
-import hla.rti1516.LogicalTime;
-import hla.rti1516.MessageCanNoLongerBeRetracted;
-import hla.rti1516.MessageRetractionHandle;
+import hla.rti1516e.LogicalTime;
+import hla.rti1516e.MessageRetractionHandle;
+import hla.rti1516e.exceptions.MessageCanNoLongerBeRetracted;
 
 public class FederateMessageRetractionManager
 {
-  protected Federate federate;
+  private final Federate federate;
 
-  protected AtomicLong messageRetractionCount = new AtomicLong();
+  private final AtomicLong messageRetractionCount = new AtomicLong();
 
-  protected Lock messageRetractionsLock = new ReentrantLock(true);
-  protected Map<MessageRetractionHandle, MessageRetraction> messageRetractions =
+  private final Lock messageRetractionsLock = new ReentrantLock(true);
+  private final Map<MessageRetractionHandle, MessageRetraction> messageRetractions =
     new HashMap<MessageRetractionHandle, MessageRetraction>();
-  protected Queue<MessageRetraction> messageRetractionsByExpiration =
-    new PriorityQueue<MessageRetraction>();
+  private final Queue<MessageRetraction> messageRetractionsByExpiration = new PriorityQueue<MessageRetraction>();
 
   public FederateMessageRetractionManager(Federate federate)
   {
@@ -59,11 +58,9 @@ public class FederateMessageRetractionManager
   }
 
   public MessageRetractionHandle add(
-    LogicalTime time, Future<?> future,
-    MessageRetractionHandle messageRetractionHandle)
+    LogicalTime time, Future<?> future, MessageRetractionHandle messageRetractionHandle)
   {
-    MessageRetraction messageRetraction =
-      new MessageRetraction(messageRetractionHandle, time, future);
+    MessageRetraction messageRetraction = new MessageRetraction(messageRetractionHandle, time, future);
 
     messageRetractionsLock.lock();
     try
@@ -79,19 +76,16 @@ public class FederateMessageRetractionManager
     return messageRetractionHandle;
   }
 
-  public void retract(MessageRetractionHandle messageRetractionHandle,
-                      LogicalTime time)
+  public void retract(MessageRetractionHandle messageRetractionHandle, LogicalTime time)
     throws MessageCanNoLongerBeRetracted
   {
     messageRetractionsLock.lock();
     try
     {
-      MessageRetraction messageRetraction =
-        messageRetractions.get(messageRetractionHandle);
+      MessageRetraction messageRetraction = messageRetractions.get(messageRetractionHandle);
       if (messageRetraction == null)
       {
-        throw new MessageCanNoLongerBeRetracted(
-          String.format("%s", messageRetractionHandle));
+        throw new MessageCanNoLongerBeRetracted(messageRetractionHandle.toString());
       }
       messageRetraction.retract(time);
     }
@@ -103,18 +97,17 @@ public class FederateMessageRetractionManager
 
   protected MessageRetractionHandle nextMessageRetractionHandle()
   {
-    return new IEEE1516MessageRetractionHandle();
+    return new IEEE1516eMessageRetractionHandle(federate.getFederateHandle(), messageRetractionCount.incrementAndGet());
   }
 
   protected class MessageRetraction
     implements Comparable
   {
-    protected MessageRetractionHandle messageRetractionHandle;
-    protected LogicalTime expiration;
-    protected Future<?> future;
+    private final MessageRetractionHandle messageRetractionHandle;
+    private final LogicalTime expiration;
+    private final Future<?> future;
 
-    public MessageRetraction(MessageRetractionHandle messageRetractionHandle,
-                             LogicalTime expiration, Future<?> future)
+    public MessageRetraction(MessageRetractionHandle messageRetractionHandle, LogicalTime expiration, Future<?> future)
     {
       this.messageRetractionHandle = messageRetractionHandle;
       this.expiration = expiration;

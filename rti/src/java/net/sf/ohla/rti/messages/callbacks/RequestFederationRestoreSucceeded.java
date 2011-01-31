@@ -16,22 +16,51 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateInternalError;
+import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.FederateMessage;
+import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.StringMessage;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.exceptions.FederateInternalError;
 
 public class RequestFederationRestoreSucceeded
-  implements Callback
+  extends StringMessage
+  implements Callback, FederateMessage
 {
-  protected String label;
-
-  public RequestFederationRestoreSucceeded(String label)
+  public RequestFederationRestoreSucceeded(String s)
   {
-    this.label = label;
+    super(MessageType.REQUEST_FEDERATION_RESTORE_SUCCEEDED, s);
+
+    encodingFinished();
+  }
+
+  public RequestFederationRestoreSucceeded(ChannelBuffer buffer)
+  {
+    super(buffer);
+  }
+
+  public String getLabel()
+  {
+    return s;
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.REQUEST_FEDERATION_RESTORE_SUCCEEDED;
   }
 
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.requestFederationRestoreSucceeded(label);
+    federateAmbassador.requestFederationRestoreSucceeded(s);
+  }
+
+  public void execute(Federate federate)
+  {
+    federate.callbackReceived(this);
   }
 }
