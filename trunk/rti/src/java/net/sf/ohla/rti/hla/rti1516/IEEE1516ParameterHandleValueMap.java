@@ -16,10 +16,11 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
+
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandleValueMapFactory;
 
 import hla.rti1516.ParameterHandle;
 import hla.rti1516.ParameterHandleValueMap;
@@ -28,39 +29,29 @@ public class IEEE1516ParameterHandleValueMap
   extends HashMap<ParameterHandle, byte[]>
   implements ParameterHandleValueMap
 {
-  public IEEE1516ParameterHandleValueMap()
-  {
-    super();
-  }
-
   public IEEE1516ParameterHandleValueMap(int initialCapacity)
   {
     super(initialCapacity);
   }
 
-  public IEEE1516ParameterHandleValueMap(Map<ParameterHandle, byte[]> clonee)
+  public IEEE1516ParameterHandleValueMap(hla.rti1516e.ParameterHandleValueMap parameterValues)
   {
-    super(clonee);
-  }
-
-  public boolean equals(Object rhs)
-  {
-    return rhs instanceof IEEE1516ParameterHandleValueMap &&
-           equals((IEEE1516ParameterHandleValueMap) rhs);
-  }
-
-  public boolean equals(IEEE1516ParameterHandleValueMap rhs)
-  {
-    boolean equals = keySet().equals(rhs.keySet());
-    if (equals)
+    for (Map.Entry<hla.rti1516e.ParameterHandle, byte[]> entry : parameterValues.entrySet())
     {
-      for (
-        Iterator<byte[]> i = values().iterator(), j = rhs.values().iterator();
-        equals && i.hasNext();)
-      {
-        equals = Arrays.equals(i.next(), j.next());
-      }
+      put(new IEEE1516ParameterHandle(entry.getKey()), entry.getValue());
     }
-    return equals;
+  }
+
+  public static hla.rti1516e.ParameterHandleValueMap createIEEE1516eParameterHandleValueMap(
+    ParameterHandleValueMap parameterValues)
+  {
+    hla.rti1516e.ParameterHandleValueMap ieee1516eParameterValues =
+      IEEE1516eParameterHandleValueMapFactory.INSTANCE.create(parameterValues.size());
+    for (Map.Entry<ParameterHandle, byte[]> entry : parameterValues.entrySet())
+    {
+      ieee1516eParameterValues.put(
+        new IEEE1516eParameterHandle(((IEEE1516ParameterHandle) entry.getKey()).getHandle()), entry.getValue());
+    }
+    return ieee1516eParameterValues;
   }
 }

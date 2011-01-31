@@ -16,46 +16,66 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateInternalError;
-import hla.rti1516.InvalidLogicalTime;
-import hla.rti1516.LogicalTime;
-import hla.rti1516.MessageRetractionHandle;
-import hla.rti1516.ObjectInstanceHandle;
-import hla.rti1516.ObjectInstanceNotKnown;
-import hla.rti1516.OrderType;
+import net.sf.ohla.rti.Protocol;
+import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eMessageRetractionHandle;
+import net.sf.ohla.rti.messages.FederateMessage;
+import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.ObjectInstanceMessage;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.FederateHandle;
+import hla.rti1516e.LogicalTime;
+import hla.rti1516e.LogicalTimeFactory;
+import hla.rti1516e.MessageRetractionHandle;
+import hla.rti1516e.ObjectInstanceHandle;
+import hla.rti1516e.OrderType;
+import hla.rti1516e.exceptions.FederateInternalError;
 
 public class RemoveObjectInstance
-  implements Callback
+  extends ObjectInstanceMessage
+  implements Callback, FederateMessage, FederateAmbassador.SupplementalRemoveInfo
 {
-  protected ObjectInstanceHandle objectInstanceHandle;
-  protected byte[] tag;
-  protected OrderType sentOrderType;
-  protected LogicalTime deleteTime;
-  protected MessageRetractionHandle messageRetractionHandle;
+  private final byte[] tag;
+  private final OrderType sentOrderType;
+  private final LogicalTime time;
+  private final MessageRetractionHandle messageRetractionHandle;
 
-  protected OrderType receivedOrderType;
+  private Federate federate;
+
+  private OrderType receivedOrderType;
+  private FederateHandle producingFederateHandle;
 
   public RemoveObjectInstance(
-    ObjectInstanceHandle objectInstanceHandle, byte[] tag,
-    OrderType sentOrderType, LogicalTime deleteTime,
+    ObjectInstanceHandle objectInstanceHandle, byte[] tag, OrderType sentOrderType, LogicalTime time,
     MessageRetractionHandle messageRetractionHandle)
   {
-    this.objectInstanceHandle = objectInstanceHandle;
+    super(MessageType.REMOVE_OBJECT_INSTANCE, objectInstanceHandle);
+
     this.tag = tag;
     this.sentOrderType = sentOrderType;
-    this.deleteTime = deleteTime;
+    this.time = time;
     this.messageRetractionHandle = messageRetractionHandle;
+
+    Protocol.encodeBytes(buffer, tag);
+    Protocol.encodeEnum(buffer, sentOrderType);
+    Protocol.encodeTime(buffer, time);
+    IEEE1516eMessageRetractionHandle.encode(buffer, messageRetractionHandle);
+
+    encodingFinished();
   }
 
-  public ObjectInstanceHandle getObjectInstanceHandle()
+  public RemoveObjectInstance(ChannelBuffer buffer, LogicalTimeFactory logicalTimeFactory)
   {
-    return objectInstanceHandle;
-  }
+    super(buffer);
 
-  public byte[] getTag()
-  {
-    return tag;
+    tag = Protocol.decodeBytes(buffer);
+    sentOrderType = Protocol.decodeEnum(buffer, OrderType.values());
+    time = Protocol.decodeTime(buffer, logicalTimeFactory);
+    messageRetractionHandle = IEEE1516eMessageRetractionHandle.decode(buffer);
   }
 
   public OrderType getSentOrderType()
@@ -63,9 +83,9 @@ public class RemoveObjectInstance
     return sentOrderType;
   }
 
-  public LogicalTime getDeleteTime()
+  public LogicalTime getTime()
   {
-    return deleteTime;
+    return time;
   }
 
   public MessageRetractionHandle getMessageRetractionHandle()
@@ -73,35 +93,42 @@ public class RemoveObjectInstance
     return messageRetractionHandle;
   }
 
-  public OrderType getReceivedOrderType()
-  {
-    return receivedOrderType;
-  }
-
   public void setReceivedOrderType(OrderType receivedOrderType)
   {
     this.receivedOrderType = receivedOrderType;
   }
 
-  public void execute(FederateAmbassador federateAmbassador)
-    throws ObjectInstanceNotKnown, InvalidLogicalTime, FederateInternalError
+  public void setProducingFederateHandle(FederateHandle producingFederateHandle)
   {
-    if (deleteTime == null)
-    {
-      federateAmbassador.removeObjectInstance(
-        objectInstanceHandle, tag, sentOrderType);
-    }
-    else if (messageRetractionHandle == null)
-    {
-      federateAmbassador.removeObjectInstance(
-        objectInstanceHandle, tag, sentOrderType, deleteTime,
-        receivedOrderType);
-    }
-    else
-    {
-      federateAmbassador.removeObjectInstance(
-        objectInstanceHandle, tag, sentOrderType, deleteTime,
-        receivedOrderType, messageRetractionHandle);
-    }
+    this.producingFederateHandle = producingFederateHandle;
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.REMOVE_OBJECT_INSTANCE;
+  }
+
+  public void execute(FederateAmbassador federateAmbassador)
+    throws FederateInternalError
+  {
+    federate.removeObjectInstance(
+      objectInstanceHandle, tag, sentOrderType, time, receivedOrderType, messageRetractionHandle, this);
+  }
+
+  public void execute(Federate federate)
+  {
+    this.federate = federate;
+
+    federate.removeObjectInstance(this);
+  }
+
+  public boolean hasProducingFederate()
+  {
+    return producingFederateHandle != null;
+  }
+
+  public FederateHandle getProducingFederate()
+  {
+    return producingFederateHandle;
   }
 }

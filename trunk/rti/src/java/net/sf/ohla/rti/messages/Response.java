@@ -20,6 +20,4 @@ public interface Response
   extends Message
 {
   long getRequestId();
-
-  Object getValue();
 }

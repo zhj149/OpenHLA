@@ -16,34 +16,16 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.net.URL;
-import java.net.UnknownHostException;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import net.sf.ohla.rti.fdd.FDD;
-import net.sf.ohla.rti.federate.Federate;
-import net.sf.ohla.rti.filter.RequestResponseFilter;
-import net.sf.ohla.rti.messages.CreateFederationExecution;
-import net.sf.ohla.rti.messages.DestroyFederationExecution;
-
-import org.apache.mina.common.ConnectFuture;
-import org.apache.mina.common.IoHandlerAdapter;
-import org.apache.mina.common.IoSession;
-import org.apache.mina.common.RuntimeIOException;
-import org.apache.mina.common.WriteFuture;
-import org.apache.mina.filter.LoggingFilter;
-import org.apache.mina.filter.codec.ProtocolCodecFactory;
-import org.apache.mina.filter.codec.ProtocolCodecFilter;
-import org.apache.mina.filter.codec.serialization.ObjectSerializationCodecFactory;
-import org.apache.mina.transport.socket.nio.SocketConnector;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eInteractionClassHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRTIambassador;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandle;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,6 +52,7 @@ import hla.rti1516.AttributeScopeAdvisorySwitchIsOff;
 import hla.rti1516.AttributeScopeAdvisorySwitchIsOn;
 import hla.rti1516.AttributeSetRegionSetPairList;
 import hla.rti1516.AttributeSetRegionSetPairListFactory;
+import hla.rti1516.CouldNotDecode;
 import hla.rti1516.CouldNotOpenFDD;
 import hla.rti1516.DeletePrivilegeNotHeld;
 import hla.rti1516.DimensionHandle;
@@ -118,7 +101,9 @@ import hla.rti1516.InvalidTransportationName;
 import hla.rti1516.InvalidTransportationType;
 import hla.rti1516.LogicalTime;
 import hla.rti1516.LogicalTimeAlreadyPassed;
+import hla.rti1516.LogicalTimeFactory;
 import hla.rti1516.LogicalTimeInterval;
+import hla.rti1516.LogicalTimeIntervalFactory;
 import hla.rti1516.MessageCanNoLongerBeRetracted;
 import hla.rti1516.MessageRetractionHandle;
 import hla.rti1516.MessageRetractionReturn;
@@ -153,11 +138,14 @@ import hla.rti1516.RegionNotCreatedByThisFederate;
 import hla.rti1516.RequestForTimeConstrainedPending;
 import hla.rti1516.RequestForTimeRegulationPending;
 import hla.rti1516.ResignAction;
+import hla.rti1516.RestoreFailureReason;
 import hla.rti1516.RestoreInProgress;
 import hla.rti1516.RestoreNotRequested;
+import hla.rti1516.SaveFailureReason;
 import hla.rti1516.SaveInProgress;
 import hla.rti1516.SaveNotInitiated;
 import hla.rti1516.ServiceGroup;
+import hla.rti1516.SynchronizationPointFailureReason;
 import hla.rti1516.SynchronizationPointLabelNotAnnounced;
 import hla.rti1516.TimeConstrainedAlreadyEnabled;
 import hla.rti1516.TimeConstrainedIsNotEnabled;
@@ -166,252 +154,259 @@ import hla.rti1516.TimeRegulationAlreadyEnabled;
 import hla.rti1516.TimeRegulationIsNotEnabled;
 import hla.rti1516.TransportationType;
 
+import hla.rti1516e.TransportationTypeHandle;
+import hla.rti1516e.exceptions.CallNotAllowedFromWithinCallback;
+import hla.rti1516e.exceptions.CouldNotCreateLogicalTimeFactory;
+import hla.rti1516e.exceptions.CouldNotEncode;
+import hla.rti1516e.exceptions.InvalidResignAction;
+import hla.rti1516e.exceptions.InvalidServiceGroup;
+import hla.rti1516e.exceptions.NoAcquisitionPending;
+import hla.rti1516e.exceptions.NotConnected;
+
 public class IEEE1516RTIambassador
   implements RTIambassador
 {
-  private static final Logger log =
-    LoggerFactory.getLogger(IEEE1516RTIambassador.class);
+  private static final Logger log = LoggerFactory.getLogger(IEEE1516RTIambassador.class);
 
-  /**
-   * The session with the RTI.
-   */
-  protected IoSession rtiSession;
+  private final IEEE1516eRTIambassador rtiAmbassador = new IEEE1516eRTIambassador();
 
-  /**
-   * Handles communication with the RTI.
-   */
-  protected RTIIoHandler rtiIoHandler = new RTIIoHandler();
+  private LogicalTimeFactory logicalTimeFactory;
+  private LogicalTimeIntervalFactory logicalTimeIntervalFactory;
 
-  /**
-   * Allows concurrent access to all methods, but ensures that join/resignFederationExecution
-   * are exclusive to all others.
-   */
-  protected ReadWriteLock joinResignLock = new ReentrantReadWriteLock(true);
+  private hla.rti1516e.LogicalTimeFactory ieee1516eLogicalTimeFactory;
 
-  /**
-   * Ensures only one callback is in progress at a time.
-   */
-  protected Semaphore callbackSemaphore = new Semaphore(1, true);
+  private FederateAmbassador federateAmbassador;
 
-  protected Federate federate;
-
-  public Federate getJoinedFederate()
+  public IEEE1516RTIambassador()
   {
-    return federate;
   }
 
-  public void createFederationExecution(String name, FDD fdd)
-    throws FederationExecutionAlreadyExists, RTIinternalError
+  public FederateAmbassador getIEEE1516FederateAmbassador()
   {
-    connectToRTI();
+    return federateAmbassador;
+  }
 
-    CreateFederationExecution createFederationExecution =
-      new CreateFederationExecution(name, fdd);
-    WriteFuture writeFuture = rtiSession.write(createFederationExecution);
-
-    // TODO: set timeout
-    //
-    writeFuture.join();
-
-    if (!writeFuture.isWritten())
-    {
-      throw new RTIinternalError("error communicating with RTI");
-    }
-
+  public void createFederationExecution(String federationExecutionName, URL fdd)
+    throws FederationExecutionAlreadyExists, CouldNotOpenFDD, ErrorReadingFDD, RTIinternalError
+  {
     try
     {
-      // TODO: set timeout
-      //
-      Object response = createFederationExecution.getResponse();
-      if (response instanceof FederationExecutionAlreadyExists)
-      {
-        throw new FederationExecutionAlreadyExists(
-          (FederationExecutionAlreadyExists) response);
-      }
-      else
-      {
-        assert response == null :
-          String.format("unexpected response: %s", response);
-      }
+      rtiAmbassador.createFederationExecution(federationExecutionName, IEEE1516FDDParser.parseFDD(fdd));
     }
-    catch (InterruptedException ie)
+    catch (hla.rti1516e.exceptions.FederationExecutionAlreadyExists feae)
     {
-      throw new RTIinternalError("interrupted awaiting timeout", ie);
+      throw new FederationExecutionAlreadyExists(feae);
     }
-    catch (ExecutionException ee)
+    catch (NotConnected nc)
     {
-      throw new RTIinternalError("unable to get response", ee);
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
-  public void createFederationExecution(String name, URL fdd)
-    throws FederationExecutionAlreadyExists, CouldNotOpenFDD, ErrorReadingFDD,
-           RTIinternalError
+  public void destroyFederationExecution(String federationExecutionName)
+    throws FederatesCurrentlyJoined, FederationExecutionDoesNotExist, RTIinternalError
   {
-    createFederationExecution(name, new FDD(fdd));
-  }
-
-  public void destroyFederationExecution(String name)
-    throws FederatesCurrentlyJoined, FederationExecutionDoesNotExist,
-           RTIinternalError
-  {
-    connectToRTI();
-
-    DestroyFederationExecution destroyFederationExecution =
-      new DestroyFederationExecution(name);
-    WriteFuture writeFuture = rtiSession.write(destroyFederationExecution);
-
-    // TODO: set timeout
-    //
-    writeFuture.join();
-
-    if (!writeFuture.isWritten())
-    {
-      throw new RTIinternalError("error communicating with RTI");
-    }
-
     try
     {
-      // TODO: set timeout
-      //
-      Object response = destroyFederationExecution.getResponse();
-      if (response instanceof FederatesCurrentlyJoined)
-      {
-        throw new FederatesCurrentlyJoined(
-          (FederatesCurrentlyJoined) response);
-      }
-      else if (response instanceof FederationExecutionDoesNotExist)
-      {
-        throw new FederationExecutionDoesNotExist(
-          (FederationExecutionDoesNotExist) response);
-      }
-      else
-      {
-        assert response == null :
-          String.format("unexpected response: %s", response);
-      }
+      rtiAmbassador.destroyFederationExecution(federationExecutionName);
     }
-    catch (InterruptedException ie)
+    catch (hla.rti1516e.exceptions.FederatesCurrentlyJoined fcj)
     {
-      throw new RTIinternalError("interrupted awaiting timeout", ie);
+      throw new FederatesCurrentlyJoined(fcj);
     }
-    catch (ExecutionException ee)
+    catch (hla.rti1516e.exceptions.FederationExecutionDoesNotExist fedne)
     {
-      throw new RTIinternalError("unable to get response", ee);
+      throw new FederationExecutionDoesNotExist(fedne);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public FederateHandle joinFederationExecution(
-    String federateType, String federationName,
-    FederateAmbassador federateAmbassador,
+    String federateType, String federationExecutionName, FederateAmbassador federateAmbassador,
     MobileFederateServices mobileFederateServices)
-    throws FederateAlreadyExecutionMember, FederationExecutionDoesNotExist,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws FederateAlreadyExecutionMember, FederationExecutionDoesNotExist, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
-    if (mobileFederateServices == null)
-    {
-      throw new RTIinternalError(
-        "MobileFederateServices must be supplied");
-    }
-    else if (mobileFederateServices.timeFactory == null)
-    {
-      throw new RTIinternalError(
-        "MobileFederateServices.timeFactory must be supplied");
-    }
-    else if (mobileFederateServices.intervalFactory == null)
-    {
-      throw new RTIinternalError(
-        "MobileFederateServices.intervalFactory must be supplied");
-    }
-
-    connectToRTI();
-
-    joinResignLock.writeLock().lock();
     try
     {
-      checkIfFederateAlreadyExecutionMember();
-
-      federate =
-        new Federate(federateType, federationName, federateAmbassador,
-                     mobileFederateServices, rtiSession);
-
-      return federate.getFederateHandle();
+      return convert(rtiAmbassador.joinFederationExecution(federateType, federationExecutionName));
     }
-    finally
+    catch (CouldNotCreateLogicalTimeFactory cncltf)
     {
-      joinResignLock.writeLock().unlock();
+      throw new RTIinternalError(cncltf);
+    }
+    catch (hla.rti1516e.exceptions.FederationExecutionDoesNotExist fedne)
+    {
+      throw new FederationExecutionDoesNotExist(fedne);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateAlreadyExecutionMember faem)
+    {
+      throw new FederateAlreadyExecutionMember(faem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (CallNotAllowedFromWithinCallback cnafwc)
+    {
+      throw new RTIinternalError(cnafwc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void resignFederationExecution(ResignAction resignAction)
-    throws OwnershipAcquisitionPending, FederateOwnsAttributes,
-           FederateNotExecutionMember, RTIinternalError
+    throws OwnershipAcquisitionPending, FederateOwnsAttributes, FederateNotExecutionMember, RTIinternalError
   {
-    joinResignLock.writeLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.resignFederationExecution(resignAction);
-
-      federate = null;
+      rtiAmbassador.resignFederationExecution(convert(resignAction));
     }
-    finally
+    catch (InvalidResignAction ira)
     {
-      joinResignLock.writeLock().unlock();
+      throw new RTIinternalError(ira);
+    }
+    catch (hla.rti1516e.exceptions.OwnershipAcquisitionPending oap)
+    {
+      throw new OwnershipAcquisitionPending(oap);
+    }
+    catch (hla.rti1516e.exceptions.FederateOwnsAttributes foa)
+    {
+      throw new FederateOwnsAttributes(foa);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (CallNotAllowedFromWithinCallback cnafwc)
+    {
+      cnafwc.printStackTrace();
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void registerFederationSynchronizationPoint(String label, byte[] tag)
-    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.registerFederationSynchronizationPoint(label, tag);
+      rtiAmbassador.registerFederationSynchronizationPoint(label, tag);
     }
-    finally
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
-      joinResignLock.readLock().unlock();
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void registerFederationSynchronizationPoint(
     String label, byte[] tag, FederateHandleSet federateHandles)
-    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.registerFederationSynchronizationPoint(
-        label, tag, federateHandles);
+      rtiAmbassador.registerFederationSynchronizationPoint(label, tag, convert(federateHandles));
     }
-    finally
+    catch (hla.rti1516e.exceptions.InvalidFederateHandle ifh)
     {
-      joinResignLock.readLock().unlock();
+      throw new RTIinternalError(ifh);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void synchronizationPointAchieved(String label)
-    throws SynchronizationPointLabelNotAnnounced, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws SynchronizationPointLabelNotAnnounced, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.synchronizationPointAchieved(label);
+      rtiAmbassador.synchronizationPointAchieved(label);
     }
-    finally
+    catch (hla.rti1516e.exceptions.SynchronizationPointLabelNotAnnounced splna)
     {
-      joinResignLock.readLock().unlock();
+      throw new SynchronizationPointLabelNotAnnounced(splna);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
@@ -419,1001 +414,1976 @@ public class IEEE1516RTIambassador
     throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.requestFederationSave(label);
+      rtiAmbassador.requestFederationSave(label);
     }
-    finally
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
-      joinResignLock.readLock().unlock();
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void requestFederationSave(String label, LogicalTime time)
-    throws LogicalTimeAlreadyPassed, InvalidLogicalTime,
-           FederateUnableToUseTime, FederateNotExecutionMember,
+    throws LogicalTimeAlreadyPassed, InvalidLogicalTime, FederateUnableToUseTime, FederateNotExecutionMember,
            SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.requestFederationSave(label, time);
+      rtiAmbassador.requestFederationSave(label, convert(time));
     }
-    finally
+    catch (hla.rti1516e.exceptions.LogicalTimeAlreadyPassed ltap)
     {
-      joinResignLock.readLock().unlock();
+      throw new LogicalTimeAlreadyPassed(ltap);
+    }
+    catch (hla.rti1516e.exceptions.InvalidLogicalTime ilt)
+    {
+      throw new InvalidLogicalTime(ilt);
+    }
+    catch (hla.rti1516e.exceptions.FederateUnableToUseTime futut)
+    {
+      throw new FederateUnableToUseTime(futut);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void federateSaveBegun()
-    throws SaveNotInitiated, FederateNotExecutionMember, RestoreInProgress,
-           RTIinternalError
+    throws SaveNotInitiated, FederateNotExecutionMember, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.federateSaveBegun();
+      rtiAmbassador.federateSaveBegun();
     }
-    finally
+    catch (hla.rti1516e.exceptions.SaveNotInitiated sni)
     {
-      joinResignLock.readLock().unlock();
+      throw new SaveNotInitiated(sni);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void federateSaveComplete()
-    throws FederateHasNotBegunSave, FederateNotExecutionMember,
-           RestoreInProgress, RTIinternalError
+    throws FederateHasNotBegunSave, FederateNotExecutionMember, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.federateSaveComplete();
+      rtiAmbassador.federateSaveComplete();
     }
-    finally
+    catch (hla.rti1516e.exceptions.FederateHasNotBegunSave fhnbs)
     {
-      joinResignLock.readLock().unlock();
+      throw new FederateHasNotBegunSave(fhnbs);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void federateSaveNotComplete()
-    throws FederateHasNotBegunSave, FederateNotExecutionMember,
-           RestoreInProgress, RTIinternalError
+    throws FederateHasNotBegunSave, FederateNotExecutionMember, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.federateSaveNotComplete();
+      rtiAmbassador.federateSaveNotComplete();
     }
-    finally
+    catch (hla.rti1516e.exceptions.FederateHasNotBegunSave fhnbs)
     {
-      joinResignLock.readLock().unlock();
+      throw new FederateHasNotBegunSave(fhnbs);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void queryFederationSaveStatus()
     throws FederateNotExecutionMember, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.queryFederationSaveStatus();
+      rtiAmbassador.queryFederationSaveStatus();
     }
-    finally
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
-      joinResignLock.readLock().unlock();
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void requestFederationRestore(String label)
-    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.requestFederationRestore(label);
+      rtiAmbassador.requestFederationRestore(label);
     }
-    finally
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
-      joinResignLock.readLock().unlock();
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void federateRestoreComplete()
-    throws RestoreNotRequested, FederateNotExecutionMember, SaveInProgress,
-           RTIinternalError
+    throws RestoreNotRequested, FederateNotExecutionMember, SaveInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.federateRestoreComplete();
+      rtiAmbassador.federateRestoreComplete();
     }
-    finally
+    catch (hla.rti1516e.exceptions.RestoreNotRequested rnr)
     {
-      joinResignLock.readLock().unlock();
+      throw new RestoreNotRequested(rnr);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void federateRestoreNotComplete()
-    throws RestoreNotRequested, FederateNotExecutionMember, SaveInProgress,
-           RTIinternalError
+    throws RestoreNotRequested, FederateNotExecutionMember, SaveInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.federateRestoreNotComplete();
+      rtiAmbassador.federateRestoreNotComplete();
     }
-    finally
+    catch (hla.rti1516e.exceptions.RestoreNotRequested rnr)
     {
-      joinResignLock.readLock().unlock();
+      throw new RestoreNotRequested(rnr);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void queryFederationRestoreStatus()
     throws FederateNotExecutionMember, SaveInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.queryFederationRestoreStatus();
+      rtiAmbassador.queryFederationRestoreStatus();
     }
-    finally
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
-      joinResignLock.readLock().unlock();
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
-  public void publishObjectClassAttributes(ObjectClassHandle objectClassHandle,
-                                           AttributeHandleSet attributeHandles)
-    throws ObjectClassNotDefined, AttributeNotDefined,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+  public void publishObjectClassAttributes(ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles)
+    throws ObjectClassNotDefined, AttributeNotDefined, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.publishObjectClassAttributes(
-        objectClassHandle, attributeHandles);
+      rtiAmbassador.publishObjectClassAttributes(convert(objectClassHandle), convert(attributeHandles));
     }
-    finally
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
     {
-      joinResignLock.readLock().unlock();
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
+    {
+      throw new ObjectClassNotDefined(ocnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void unpublishObjectClass(ObjectClassHandle objectClassHandle)
-    throws ObjectClassNotDefined, OwnershipAcquisitionPending,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws ObjectClassNotDefined, OwnershipAcquisitionPending, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.unpublishObjectClass(objectClassHandle);
+      rtiAmbassador.unpublishObjectClass(convert(objectClassHandle));
     }
-    finally
+    catch (hla.rti1516e.exceptions.OwnershipAcquisitionPending oap)
     {
-      joinResignLock.readLock().unlock();
+      throw new OwnershipAcquisitionPending(oap);
+    }
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
+    {
+      throw new ObjectClassNotDefined(ocnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void unpublishObjectClassAttributes(
-    ObjectClassHandle objectClassHandle,
-    AttributeHandleSet attributeHandles)
-    throws ObjectClassNotDefined, AttributeNotDefined,
-           OwnershipAcquisitionPending, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
-  {
-    joinResignLock.readLock().lock();
-    try
-    {
-      checkIfFederateNotExecutionMember();
-
-      federate.unpublishObjectClassAttributes(
-        objectClassHandle, attributeHandles);
-    }
-    finally
-    {
-      joinResignLock.readLock().unlock();
-    }
-  }
-
-  public void publishInteractionClass(
-    InteractionClassHandle interactionClassHandle)
-    throws InteractionClassNotDefined, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
-  {
-    joinResignLock.readLock().lock();
-    try
-    {
-      checkIfFederateNotExecutionMember();
-
-      federate.publishInteractionClass(interactionClassHandle);
-    }
-    finally
-    {
-      joinResignLock.readLock().unlock();
-    }
-  }
-
-  public void unpublishInteractionClass(
-    InteractionClassHandle interactionClassHandle)
-    throws InteractionClassNotDefined, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
-  {
-    joinResignLock.readLock().lock();
-    try
-    {
-      checkIfFederateNotExecutionMember();
-
-      federate.unpublishInteractionClass(interactionClassHandle);
-    }
-    finally
-    {
-      joinResignLock.readLock().unlock();
-    }
-  }
-
-  public void subscribeObjectClassAttributes(
     ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles)
-    throws ObjectClassNotDefined, AttributeNotDefined,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+    throws ObjectClassNotDefined, AttributeNotDefined, OwnershipAcquisitionPending, FederateNotExecutionMember,
+           SaveInProgress, RestoreInProgress, RTIinternalError
+  {
+    try
+    {
+      rtiAmbassador.unpublishObjectClassAttributes(convert(objectClassHandle), convert(attributeHandles));
+    }
+    catch (hla.rti1516e.exceptions.OwnershipAcquisitionPending oap)
+    {
+      throw new OwnershipAcquisitionPending(oap);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
+    {
+      throw new ObjectClassNotDefined(ocnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
+    }
+  }
+
+  public void publishInteractionClass(InteractionClassHandle interactionClassHandle)
+    throws InteractionClassNotDefined, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
+  {
+    try
+    {
+      rtiAmbassador.publishInteractionClass(convert(interactionClassHandle));
+    }
+    catch (hla.rti1516e.exceptions.InteractionClassNotDefined icnd)
+    {
+      throw new InteractionClassNotDefined(icnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
+    }
+  }
+
+  public void unpublishInteractionClass(InteractionClassHandle interactionClassHandle)
+    throws InteractionClassNotDefined, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
+  {
+    try
+    {
+      rtiAmbassador.unpublishInteractionClass(convert(interactionClassHandle));
+    }
+    catch (hla.rti1516e.exceptions.InteractionClassNotDefined icnd)
+    {
+      throw new InteractionClassNotDefined(icnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
+    }
+  }
+
+  public void subscribeObjectClassAttributes(ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles)
+    throws ObjectClassNotDefined, AttributeNotDefined, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.subscribeObjectClassAttributes(
-        objectClassHandle, attributeHandles);
+      rtiAmbassador.subscribeObjectClassAttributes(convert(objectClassHandle), convert(attributeHandles));
     }
-    finally
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
     {
-      joinResignLock.readLock().unlock();
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
+    {
+      throw new ObjectClassNotDefined(ocnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void subscribeObjectClassAttributesPassively(
     ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles)
-    throws ObjectClassNotDefined, AttributeNotDefined,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+    throws ObjectClassNotDefined, AttributeNotDefined, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.subscribeObjectClassAttributesPassively(
-        objectClassHandle, attributeHandles);
+      rtiAmbassador.subscribeObjectClassAttributesPassively(convert(objectClassHandle), convert(attributeHandles));
     }
-    finally
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
     {
-      joinResignLock.readLock().unlock();
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
+    {
+      throw new ObjectClassNotDefined(ocnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void unsubscribeObjectClass(ObjectClassHandle objectClassHandle)
-    throws ObjectClassNotDefined, FederateNotExecutionMember, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    throws ObjectClassNotDefined, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.unsubscribeObjectClass(objectClassHandle);
+      rtiAmbassador.unsubscribeObjectClass(convert(objectClassHandle));
     }
-    finally
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
     {
-      joinResignLock.readLock().unlock();
+      throw new ObjectClassNotDefined(ocnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
-  public void unsubscribeObjectClassAttributes(
-    ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles)
-    throws ObjectClassNotDefined, AttributeNotDefined,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+  public void unsubscribeObjectClassAttributes(ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles)
+    throws ObjectClassNotDefined, AttributeNotDefined, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.unsubscribeObjectClassAttributes(
-        objectClassHandle, attributeHandles);
+      rtiAmbassador.unsubscribeObjectClassAttributes(convert(objectClassHandle), convert(attributeHandles));
     }
-    finally
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
     {
-      joinResignLock.readLock().unlock();
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
+    {
+      throw new ObjectClassNotDefined(ocnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
-  public void subscribeInteractionClass(
-    InteractionClassHandle interactionClassHandle)
-    throws InteractionClassNotDefined,
-           FederateServiceInvocationsAreBeingReportedViaMOM,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
-  {
-    joinResignLock.readLock().lock();
-    try
-    {
-      checkIfFederateNotExecutionMember();
-
-      federate.subscribeInteractionClass(interactionClassHandle);
-    }
-    finally
-    {
-      joinResignLock.readLock().unlock();
-    }
-  }
-
-  public void subscribeInteractionClassPassively(
-    InteractionClassHandle interactionClassHandle)
-    throws InteractionClassNotDefined,
-           FederateServiceInvocationsAreBeingReportedViaMOM,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
-  {
-    joinResignLock.readLock().lock();
-    try
-    {
-      checkIfFederateNotExecutionMember();
-
-      federate.subscribeInteractionClassPassively(interactionClassHandle);
-    }
-    finally
-    {
-      joinResignLock.readLock().unlock();
-    }
-  }
-
-  public void unsubscribeInteractionClass(
-    InteractionClassHandle interactionClassHandle)
-    throws InteractionClassNotDefined, FederateNotExecutionMember,
+  public void subscribeInteractionClass(InteractionClassHandle interactionClassHandle)
+    throws InteractionClassNotDefined, FederateServiceInvocationsAreBeingReportedViaMOM, FederateNotExecutionMember,
            SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.unsubscribeInteractionClass(interactionClassHandle);
+      rtiAmbassador.subscribeInteractionClass(convert(interactionClassHandle));
     }
-    finally
+    catch (hla.rti1516e.exceptions.FederateServiceInvocationsAreBeingReportedViaMOM fsiabrvmom)
     {
-      joinResignLock.readLock().unlock();
+      throw new FederateServiceInvocationsAreBeingReportedViaMOM(fsiabrvmom);
+    }
+    catch (hla.rti1516e.exceptions.InteractionClassNotDefined icnd)
+    {
+      throw new InteractionClassNotDefined(icnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
-  public void reserveObjectInstanceName(String name)
-    throws IllegalName, FederateNotExecutionMember, SaveInProgress,
+  public void subscribeInteractionClassPassively(InteractionClassHandle interactionClassHandle)
+    throws InteractionClassNotDefined, FederateServiceInvocationsAreBeingReportedViaMOM, FederateNotExecutionMember,
+           SaveInProgress, RestoreInProgress, RTIinternalError
+  {
+    try
+    {
+      rtiAmbassador.subscribeInteractionClassPassively(convert(interactionClassHandle));
+    }
+    catch (hla.rti1516e.exceptions.FederateServiceInvocationsAreBeingReportedViaMOM fsiabrvmom)
+    {
+      throw new FederateServiceInvocationsAreBeingReportedViaMOM(fsiabrvmom);
+    }
+    catch (hla.rti1516e.exceptions.InteractionClassNotDefined icnd)
+    {
+      throw new InteractionClassNotDefined(icnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
+    }
+  }
+
+  public void unsubscribeInteractionClass(InteractionClassHandle interactionClassHandle)
+    throws InteractionClassNotDefined, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
+  {
+    try
+    {
+      rtiAmbassador.unsubscribeInteractionClass(convert(interactionClassHandle));
+    }
+    catch (hla.rti1516e.exceptions.InteractionClassNotDefined icnd)
+    {
+      throw new InteractionClassNotDefined(icnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
+    }
+  }
+
+  public void reserveObjectInstanceName(String objectInstanceName)
+    throws IllegalName, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
+  {
+    try
+    {
+      rtiAmbassador.reserveObjectInstanceName(objectInstanceName);
+    }
+    catch (hla.rti1516e.exceptions.IllegalName in)
+    {
+      throw new IllegalName(in);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
+    }
+  }
+
+  public ObjectInstanceHandle registerObjectInstance(ObjectClassHandle objectClassHandle)
+    throws ObjectClassNotDefined, ObjectClassNotPublished, FederateNotExecutionMember, SaveInProgress,
            RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.reserveObjectInstanceName(name);
+      return convert(rtiAmbassador.registerObjectInstance(convert(objectClassHandle)));
     }
-    finally
+    catch (hla.rti1516e.exceptions.ObjectClassNotPublished ocnp)
     {
-      joinResignLock.readLock().unlock();
+      throw new ObjectClassNotPublished(ocnp);
+    }
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
+    {
+      throw new ObjectClassNotDefined(ocnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
-  public ObjectInstanceHandle registerObjectInstance(
-    ObjectClassHandle objectClassHandle)
-    throws ObjectClassNotDefined, ObjectClassNotPublished,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+  public ObjectInstanceHandle registerObjectInstance(ObjectClassHandle objectClassHandle, String objectInstanceName)
+    throws ObjectClassNotDefined, ObjectClassNotPublished, ObjectInstanceNameNotReserved, ObjectInstanceNameInUse,
+           FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.registerObjectInstance(objectClassHandle);
+      return convert(rtiAmbassador.registerObjectInstance(convert(objectClassHandle), objectInstanceName));
     }
-    finally
+    catch (hla.rti1516e.exceptions.ObjectInstanceNameInUse oiniu)
     {
-      joinResignLock.readLock().unlock();
+      throw new ObjectInstanceNameInUse(oiniu);
+    }
+    catch (hla.rti1516e.exceptions.ObjectInstanceNameNotReserved oinnr)
+    {
+      throw new ObjectInstanceNameNotReserved(oinnr);
+    }
+    catch (hla.rti1516e.exceptions.ObjectClassNotPublished ocnp)
+    {
+      throw new ObjectClassNotPublished(ocnp);
+    }
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
+    {
+      throw new ObjectClassNotDefined(ocnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
-  public ObjectInstanceHandle registerObjectInstance(
-    ObjectClassHandle objectClassHandle, String name)
-    throws ObjectClassNotDefined, ObjectClassNotPublished,
-           ObjectInstanceNameNotReserved, ObjectInstanceNameInUse,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+  public void updateAttributeValues(
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues, byte[] tag)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.registerObjectInstance(objectClassHandle, name);
+      rtiAmbassador.updateAttributeValues(convert(objectInstanceHandle), convert(attributeValues), tag);
     }
-    finally
+    catch (hla.rti1516e.exceptions.AttributeNotOwned ano)
     {
-      joinResignLock.readLock().unlock();
+      throw new AttributeNotOwned(ano);
     }
-  }
-
-  public void updateAttributeValues(ObjectInstanceHandle objectInstanceHandle,
-                                    AttributeHandleValueMap attributeValues,
-                                    byte[] tag)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
-  {
-    joinResignLock.readLock().lock();
-    try
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.updateAttributeValues(
-        objectInstanceHandle, attributeValues, tag);
+      throw new AttributeNotDefined(and);
     }
-    finally
+    catch (hla.rti1516e.exceptions.ObjectInstanceNotKnown oink)
     {
-      joinResignLock.readLock().unlock();
+      throw new ObjectInstanceNotKnown(oink);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public MessageRetractionReturn updateAttributeValues(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleValueMap attributeValues, byte[] tag,
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues, byte[] tag,
     LogicalTime updateTime)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned,
-           InvalidLogicalTime, FederateNotExecutionMember, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned, InvalidLogicalTime,
+           FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.updateAttributeValues(
-        objectInstanceHandle, attributeValues, tag, updateTime);
+      return convert(rtiAmbassador.updateAttributeValues(
+        convert(objectInstanceHandle), convert(attributeValues), tag, convert(updateTime)));
     }
-    finally
+    catch (hla.rti1516e.exceptions.InvalidLogicalTime ilt)
     {
-      joinResignLock.readLock().unlock();
+      throw new InvalidLogicalTime(ilt);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotOwned ano)
+    {
+      throw new AttributeNotOwned(ano);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.ObjectInstanceNotKnown oink)
+    {
+      throw new ObjectInstanceNotKnown(oink);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
-  public void sendInteraction(InteractionClassHandle interactionClassHandle,
-                              ParameterHandleValueMap parameterValues,
-                              byte[] tag)
-    throws InteractionClassNotPublished, InteractionClassNotDefined,
-           InteractionParameterNotDefined, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+  public void sendInteraction(
+    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues, byte[] tag)
+    throws InteractionClassNotPublished, InteractionClassNotDefined, InteractionParameterNotDefined,
+           FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.sendInteraction(
-        interactionClassHandle, parameterValues, tag);
+      rtiAmbassador.sendInteraction(convert(interactionClassHandle), convert(parameterValues), tag);
     }
-    finally
+    catch (hla.rti1516e.exceptions.InteractionClassNotPublished icnp)
     {
-      joinResignLock.readLock().unlock();
+      throw new InteractionClassNotPublished(icnp);
+    }
+    catch (hla.rti1516e.exceptions.InteractionParameterNotDefined ipnd)
+    {
+      throw new InteractionParameterNotDefined(ipnd);
+    }
+    catch (hla.rti1516e.exceptions.InteractionClassNotDefined icnd)
+    {
+      throw new InteractionClassNotDefined(icnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public MessageRetractionReturn sendInteraction(
-    InteractionClassHandle interactionClassHandle,
-    ParameterHandleValueMap parameterValues, byte[] tag, LogicalTime sendTime)
-    throws InteractionClassNotPublished, InteractionClassNotDefined,
-           InteractionParameterNotDefined, InvalidLogicalTime,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues, byte[] tag,
+    LogicalTime time)
+    throws InteractionClassNotPublished, InteractionClassNotDefined, InteractionParameterNotDefined, InvalidLogicalTime,
+           FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.sendInteraction(
-        interactionClassHandle, parameterValues, tag, sendTime);
+      return convert(rtiAmbassador.sendInteraction(
+        convert(interactionClassHandle), convert(parameterValues), tag, convert(time)));
     }
-    finally
+    catch (hla.rti1516e.exceptions.InvalidLogicalTime ilt)
     {
-      joinResignLock.readLock().unlock();
+      throw new InvalidLogicalTime(ilt);
+    }
+    catch (hla.rti1516e.exceptions.InteractionClassNotPublished icnp)
+    {
+      throw new InteractionClassNotPublished(icnp);
+    }
+    catch (hla.rti1516e.exceptions.InteractionParameterNotDefined ipnd)
+    {
+      throw new InteractionParameterNotDefined(ipnd);
+    }
+    catch (hla.rti1516e.exceptions.InteractionClassNotDefined icnd)
+    {
+      throw new InteractionClassNotDefined(icnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
-  public void deleteObjectInstance(ObjectInstanceHandle objectInstanceHandle,
-                                   byte[] tag)
-    throws ObjectInstanceNotKnown, DeletePrivilegeNotHeld,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+  public void deleteObjectInstance(ObjectInstanceHandle objectInstanceHandle, byte[] tag)
+    throws ObjectInstanceNotKnown, DeletePrivilegeNotHeld, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.deleteObjectInstance(objectInstanceHandle, tag);
+      rtiAmbassador.deleteObjectInstance(convert(objectInstanceHandle), tag);
     }
-    finally
+    catch (hla.rti1516e.exceptions.DeletePrivilegeNotHeld dpnh)
     {
-      joinResignLock.readLock().unlock();
+      throw new DeletePrivilegeNotHeld(dpnh);
+    }
+    catch (hla.rti1516e.exceptions.ObjectInstanceNotKnown oink)
+    {
+      throw new ObjectInstanceNotKnown(oink);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public MessageRetractionReturn deleteObjectInstance(
-    ObjectInstanceHandle objectInstanceHandle, byte[] tag,
-    LogicalTime deleteTime)
-    throws ObjectInstanceNotKnown, DeletePrivilegeNotHeld, InvalidLogicalTime,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    ObjectInstanceHandle objectInstanceHandle, byte[] tag, LogicalTime time)
+    throws ObjectInstanceNotKnown, DeletePrivilegeNotHeld, InvalidLogicalTime, FederateNotExecutionMember,
+           SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.deleteObjectInstance(
-        objectInstanceHandle, tag, deleteTime);
+      return convert(rtiAmbassador.deleteObjectInstance(convert(objectInstanceHandle), tag, convert(time)));
     }
-    finally
+    catch (hla.rti1516e.exceptions.InvalidLogicalTime ilt)
     {
-      joinResignLock.readLock().unlock();
+      throw new InvalidLogicalTime(ilt);
+    }
+    catch (hla.rti1516e.exceptions.DeletePrivilegeNotHeld dpnh)
+    {
+      throw new DeletePrivilegeNotHeld(dpnh);
+    }
+    catch (hla.rti1516e.exceptions.ObjectInstanceNotKnown oink)
+    {
+      throw new ObjectInstanceNotKnown(oink);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
-  public void localDeleteObjectInstance(
-    ObjectInstanceHandle objectInstanceHandle)
-    throws ObjectInstanceNotKnown, FederateOwnsAttributes,
-           OwnershipAcquisitionPending, FederateNotExecutionMember,
+  public void localDeleteObjectInstance(ObjectInstanceHandle objectInstanceHandle)
+    throws ObjectInstanceNotKnown, FederateOwnsAttributes, OwnershipAcquisitionPending, FederateNotExecutionMember,
            SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.localDeleteObjectInstance(objectInstanceHandle);
+      rtiAmbassador.localDeleteObjectInstance(convert(objectInstanceHandle));
     }
-    finally
+    catch (hla.rti1516e.exceptions.OwnershipAcquisitionPending oap)
     {
-      joinResignLock.readLock().unlock();
+      throw new OwnershipAcquisitionPending(oap);
+    }
+    catch (hla.rti1516e.exceptions.FederateOwnsAttributes foa)
+    {
+      throw new FederateOwnsAttributes(foa);
+    }
+    catch (hla.rti1516e.exceptions.ObjectInstanceNotKnown oink)
+    {
+      throw new ObjectInstanceNotKnown(oink);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void changeAttributeTransportationType(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles, TransportationType transportationType)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles,
+    TransportationType transportationType)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
-    try
-    {
-      checkIfFederateNotExecutionMember();
-
-      federate.changeAttributeTransportationType(
-        objectInstanceHandle, attributeHandles, transportationType);
-    }
-    finally
-    {
-      joinResignLock.readLock().unlock();
-    }
   }
 
   public void changeInteractionTransportationType(
-    InteractionClassHandle interactionClassHandle,
-    TransportationType transportationType)
-    throws InteractionClassNotDefined, InteractionClassNotPublished,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+    InteractionClassHandle interactionClassHandle, TransportationType transportationType)
+    throws InteractionClassNotDefined, InteractionClassNotPublished, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
+  {
+  }
+
+  public void requestAttributeValueUpdate(
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.changeInteractionTransportationType(
-        interactionClassHandle, transportationType);
+      rtiAmbassador.requestAttributeValueUpdate(convert(objectInstanceHandle), convert(attributeHandles), tag);
     }
-    finally
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
     {
-      joinResignLock.readLock().unlock();
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.ObjectInstanceNotKnown oink)
+    {
+      throw new ObjectInstanceNotKnown(oink);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void requestAttributeValueUpdate(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles, byte[] tag)
-    throws ObjectInstanceNotKnown, AttributeNotDefined,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+    ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles, byte[] tag)
+    throws ObjectClassNotDefined, AttributeNotDefined, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.requestAttributeValueUpdate(
-        objectInstanceHandle, attributeHandles, tag);
+      rtiAmbassador.requestAttributeValueUpdate(convert(objectClassHandle), convert(attributeHandles), tag);
     }
-    finally
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
     {
-      joinResignLock.readLock().unlock();
+      throw new AttributeNotDefined(and);
     }
-  }
-
-  public void requestAttributeValueUpdate(ObjectClassHandle objectClassHandle,
-                                          AttributeHandleSet attributeHandles,
-                                          byte[] tag)
-    throws ObjectClassNotDefined, AttributeNotDefined,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
-  {
-    joinResignLock.readLock().lock();
-    try
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.requestAttributeValueUpdate(
-        objectClassHandle, attributeHandles, tag);
+      throw new ObjectClassNotDefined(ocnd);
     }
-    finally
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
-      joinResignLock.readLock().unlock();
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void unconditionalAttributeOwnershipDivestiture(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.unconditionalAttributeOwnershipDivestiture(
-        objectInstanceHandle, attributeHandles);
+      rtiAmbassador.unconditionalAttributeOwnershipDivestiture(
+        convert(objectInstanceHandle), convert(attributeHandles));
     }
-    finally
+    catch (hla.rti1516e.exceptions.AttributeNotOwned ano)
     {
-      joinResignLock.readLock().unlock();
+      throw new AttributeNotOwned(ano);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.ObjectInstanceNotKnown oink)
+    {
+      throw new ObjectInstanceNotKnown(oink);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void negotiatedAttributeOwnershipDivestiture(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles, byte[] tag)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned,
-           AttributeAlreadyBeingDivested, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned, AttributeAlreadyBeingDivested,
+           FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.negotiatedAttributeOwnershipDivestiture(
-        objectInstanceHandle, attributeHandles, tag);
+      rtiAmbassador.negotiatedAttributeOwnershipDivestiture(
+        convert(objectInstanceHandle), convert(attributeHandles), tag);
     }
-    finally
+    catch (hla.rti1516e.exceptions.AttributeAlreadyBeingDivested aabd)
     {
-      joinResignLock.readLock().unlock();
+      throw new AttributeAlreadyBeingDivested(aabd);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotOwned ano)
+    {
+      throw new AttributeNotOwned(ano);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.ObjectInstanceNotKnown oink)
+    {
+      throw new ObjectInstanceNotKnown(oink);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
-  public void confirmDivestiture(ObjectInstanceHandle objectInstanceHandle,
-                                 AttributeHandleSet attributeHandles,
-                                 byte[] tag)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned,
-           AttributeDivestitureWasNotRequested, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+  public void confirmDivestiture(
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned, AttributeDivestitureWasNotRequested,
+           FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.confirmDivestiture(
-        objectInstanceHandle, attributeHandles, tag);
+      rtiAmbassador.confirmDivestiture(convert(objectInstanceHandle), convert(attributeHandles), tag);
     }
-    finally
+    catch (NoAcquisitionPending nap)
     {
-      joinResignLock.readLock().unlock();
+      throw new RTIinternalError(nap);
+    }
+    catch (hla.rti1516e.exceptions.AttributeDivestitureWasNotRequested adwnr)
+    {
+      throw new AttributeDivestitureWasNotRequested(adwnr);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotOwned ano)
+    {
+      throw new AttributeNotOwned(ano);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.ObjectInstanceNotKnown oink)
+    {
+      throw new ObjectInstanceNotKnown(oink);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void attributeOwnershipAcquisition(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles, byte[] tag)
-    throws ObjectInstanceNotKnown, ObjectClassNotPublished, AttributeNotDefined,
-           AttributeNotPublished, FederateOwnsAttributes,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
+    throws ObjectInstanceNotKnown, ObjectClassNotPublished, AttributeNotDefined, AttributeNotPublished,
+           FederateOwnsAttributes, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.attributeOwnershipAcquisition(
-        objectInstanceHandle, attributeHandles, tag);
+      rtiAmbassador.attributeOwnershipAcquisition(convert(objectInstanceHandle), convert(attributeHandles), tag);
     }
-    finally
+    catch (hla.rti1516e.exceptions.AttributeNotPublished anp)
     {
-      joinResignLock.readLock().unlock();
+      throw new AttributeNotPublished(anp);
+    }
+    catch (hla.rti1516e.exceptions.ObjectClassNotPublished ocnp)
+    {
+      throw new ObjectClassNotPublished(ocnp);
+    }
+    catch (hla.rti1516e.exceptions.FederateOwnsAttributes foa)
+    {
+      throw new FederateOwnsAttributes(foa);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.ObjectInstanceNotKnown oink)
+    {
+      throw new ObjectInstanceNotKnown(oink);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void attributeOwnershipAcquisitionIfAvailable(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles)
-    throws ObjectInstanceNotKnown, ObjectClassNotPublished, AttributeNotDefined,
-           AttributeNotPublished, FederateOwnsAttributes,
-           AttributeAlreadyBeingAcquired, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
+    throws ObjectInstanceNotKnown, ObjectClassNotPublished, AttributeNotDefined, AttributeNotPublished,
+           FederateOwnsAttributes, AttributeAlreadyBeingAcquired, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.attributeOwnershipAcquisitionIfAvailable(
-        objectInstanceHandle, attributeHandles);
+      rtiAmbassador.attributeOwnershipAcquisitionIfAvailable(convert(objectInstanceHandle), convert(attributeHandles));
     }
-    finally
+    catch (hla.rti1516e.exceptions.AttributeAlreadyBeingAcquired aaba)
     {
-      joinResignLock.readLock().unlock();
+      throw new AttributeAlreadyBeingAcquired(aaba);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotPublished anp)
+    {
+      throw new AttributeNotPublished(anp);
+    }
+    catch (hla.rti1516e.exceptions.ObjectClassNotPublished ocnp)
+    {
+      throw new ObjectClassNotPublished(ocnp);
+    }
+    catch (hla.rti1516e.exceptions.FederateOwnsAttributes foa)
+    {
+      throw new FederateOwnsAttributes(foa);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.ObjectInstanceNotKnown oink)
+    {
+      throw new ObjectInstanceNotKnown(oink);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public AttributeHandleSet attributeOwnershipDivestitureIfWanted(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.attributeOwnershipDivestitureIfWanted(
-        objectInstanceHandle, attributeHandles);
+      return convert(rtiAmbassador.attributeOwnershipDivestitureIfWanted(
+        convert(objectInstanceHandle), convert(attributeHandles)));
     }
-    finally
+    catch (hla.rti1516e.exceptions.AttributeNotOwned ano)
     {
-      joinResignLock.readLock().unlock();
+      throw new AttributeNotOwned(ano);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.ObjectInstanceNotKnown oink)
+    {
+      throw new ObjectInstanceNotKnown(oink);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void cancelNegotiatedAttributeOwnershipDivestiture(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned,
-           AttributeDivestitureWasNotRequested, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned, AttributeDivestitureWasNotRequested,
+           FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.cancelNegotiatedAttributeOwnershipDivestiture(
-        objectInstanceHandle, attributeHandles);
+      rtiAmbassador.cancelNegotiatedAttributeOwnershipDivestiture(
+        convert(objectInstanceHandle), convert(attributeHandles));
     }
-    finally
+    catch (hla.rti1516e.exceptions.AttributeDivestitureWasNotRequested adwnr)
     {
-      joinResignLock.readLock().unlock();
+      throw new AttributeDivestitureWasNotRequested(adwnr);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotOwned ano)
+    {
+      throw new AttributeNotOwned(ano);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.ObjectInstanceNotKnown oink)
+    {
+      throw new ObjectInstanceNotKnown(oink);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void cancelAttributeOwnershipAcquisition(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeAlreadyOwned,
-           AttributeAcquisitionWasNotRequested, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeAlreadyOwned, AttributeAcquisitionWasNotRequested,
+           FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.cancelAttributeOwnershipAcquisition(
-        objectInstanceHandle, attributeHandles);
+      rtiAmbassador.cancelAttributeOwnershipAcquisition(convert(objectInstanceHandle), convert(attributeHandles));
     }
-    finally
+    catch (hla.rti1516e.exceptions.AttributeAcquisitionWasNotRequested aawnr)
     {
-      joinResignLock.readLock().unlock();
+      throw new AttributeAcquisitionWasNotRequested(aawnr);
+    }
+    catch (hla.rti1516e.exceptions.AttributeAlreadyOwned aao)
+    {
+      throw new AttributeAlreadyOwned(aao);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.ObjectInstanceNotKnown oink)
+    {
+      throw new ObjectInstanceNotKnown(oink);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
-  public void queryAttributeOwnership(ObjectInstanceHandle objectInstanceHandle,
-                                      AttributeHandle attributeHandle)
-    throws ObjectInstanceNotKnown, AttributeNotDefined,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+  public void queryAttributeOwnership(ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.queryAttributeOwnership(
-        objectInstanceHandle, attributeHandle);
+      rtiAmbassador.queryAttributeOwnership(convert(objectInstanceHandle), convert(attributeHandle));
     }
-    finally
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
     {
-      joinResignLock.readLock().unlock();
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.ObjectInstanceNotKnown oink)
+    {
+      throw new ObjectInstanceNotKnown(oink);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public boolean isAttributeOwnedByFederate(
     ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle)
-    throws ObjectInstanceNotKnown, AttributeNotDefined,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+    throws ObjectInstanceNotKnown, AttributeNotDefined, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.isAttributeOwnedByFederate(
-        objectInstanceHandle, attributeHandle);
+      return rtiAmbassador.isAttributeOwnedByFederate(convert(objectInstanceHandle), convert(attributeHandle));
     }
-    finally
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
     {
-      joinResignLock.readLock().unlock();
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.ObjectInstanceNotKnown oink)
+    {
+      throw new ObjectInstanceNotKnown(oink);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void enableTimeRegulation(LogicalTimeInterval lookahead)
-    throws TimeRegulationAlreadyEnabled, InvalidLookahead, InTimeAdvancingState,
-           RequestForTimeRegulationPending, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws TimeRegulationAlreadyEnabled, InvalidLookahead, InTimeAdvancingState, RequestForTimeRegulationPending,
+           FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.enableTimeRegulation(lookahead);
+      rtiAmbassador.enableTimeRegulation(convert(lookahead));
     }
-    finally
+    catch (hla.rti1516e.exceptions.InvalidLookahead il)
     {
-      joinResignLock.readLock().unlock();
+      throw new InvalidLookahead(il);
+    }
+    catch (hla.rti1516e.exceptions.InTimeAdvancingState itas)
+    {
+      throw new InTimeAdvancingState(itas);
+    }
+    catch (hla.rti1516e.exceptions.RequestForTimeRegulationPending rftrp)
+    {
+      throw new RequestForTimeRegulationPending(rftrp);
+    }
+    catch (hla.rti1516e.exceptions.TimeRegulationAlreadyEnabled trae)
+    {
+      throw new TimeRegulationAlreadyEnabled(trae);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void disableTimeRegulation()
-    throws TimeRegulationIsNotEnabled, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws TimeRegulationIsNotEnabled, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.disableTimeRegulation();
+      rtiAmbassador.disableTimeRegulation();
     }
-    finally
+    catch (hla.rti1516e.exceptions.TimeRegulationIsNotEnabled trine)
     {
-      joinResignLock.readLock().unlock();
+      throw new TimeRegulationIsNotEnabled(trine);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void enableTimeConstrained()
-    throws TimeConstrainedAlreadyEnabled, InTimeAdvancingState,
-           RequestForTimeConstrainedPending, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws TimeConstrainedAlreadyEnabled, InTimeAdvancingState, RequestForTimeConstrainedPending,
+           FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.enableTimeConstrained();
+      rtiAmbassador.enableTimeConstrained();
     }
-    finally
+    catch (hla.rti1516e.exceptions.InTimeAdvancingState itas)
     {
-      joinResignLock.readLock().unlock();
+      throw new InTimeAdvancingState(itas);
+    }
+    catch (hla.rti1516e.exceptions.RequestForTimeConstrainedPending rftcp)
+    {
+      throw new RequestForTimeConstrainedPending(rftcp);
+    }
+    catch (hla.rti1516e.exceptions.TimeConstrainedAlreadyEnabled tcae)
+    {
+      throw new TimeConstrainedAlreadyEnabled(tcae);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void disableTimeConstrained()
-    throws TimeConstrainedIsNotEnabled, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws TimeConstrainedIsNotEnabled, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.disableTimeConstrained();
+      rtiAmbassador.disableTimeConstrained();
     }
-    finally
+    catch (hla.rti1516e.exceptions.TimeConstrainedIsNotEnabled tcine)
     {
-      joinResignLock.readLock().unlock();
+      throw new TimeConstrainedIsNotEnabled(tcine);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void timeAdvanceRequest(LogicalTime time)
-    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState,
-           RequestForTimeRegulationPending, RequestForTimeConstrainedPending,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState, RequestForTimeRegulationPending,
+           RequestForTimeConstrainedPending, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.timeAdvanceRequest(time);
+      rtiAmbassador.timeAdvanceRequest(convert(time));
     }
-    finally
+    catch (hla.rti1516e.exceptions.LogicalTimeAlreadyPassed ltap)
     {
-      joinResignLock.readLock().unlock();
+      throw new LogicalTimeAlreadyPassed(ltap);
+    }
+    catch (hla.rti1516e.exceptions.InvalidLogicalTime ilt)
+    {
+      throw new InvalidLogicalTime(ilt);
+    }
+    catch (hla.rti1516e.exceptions.InTimeAdvancingState itas)
+    {
+      throw new InTimeAdvancingState(itas);
+    }
+    catch (hla.rti1516e.exceptions.RequestForTimeRegulationPending rftrp)
+    {
+      throw new RequestForTimeRegulationPending(rftrp);
+    }
+    catch (hla.rti1516e.exceptions.RequestForTimeConstrainedPending rftcp)
+    {
+      throw new RequestForTimeConstrainedPending(rftcp);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void timeAdvanceRequestAvailable(LogicalTime time)
-    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState,
-           RequestForTimeRegulationPending, RequestForTimeConstrainedPending,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState, RequestForTimeRegulationPending,
+           RequestForTimeConstrainedPending, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.timeAdvanceRequestAvailable(time);
+      rtiAmbassador.timeAdvanceRequestAvailable(convert(time));
     }
-    finally
+    catch (hla.rti1516e.exceptions.LogicalTimeAlreadyPassed ltap)
     {
-      joinResignLock.readLock().unlock();
+      throw new LogicalTimeAlreadyPassed(ltap);
+    }
+    catch (hla.rti1516e.exceptions.InvalidLogicalTime ilt)
+    {
+      throw new InvalidLogicalTime(ilt);
+    }
+    catch (hla.rti1516e.exceptions.InTimeAdvancingState itas)
+    {
+      throw new InTimeAdvancingState(itas);
+    }
+    catch (hla.rti1516e.exceptions.RequestForTimeRegulationPending rftrp)
+    {
+      throw new RequestForTimeRegulationPending(rftrp);
+    }
+    catch (hla.rti1516e.exceptions.RequestForTimeConstrainedPending rftcp)
+    {
+      throw new RequestForTimeConstrainedPending(rftcp);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
@@ -1423,1458 +2393,2442 @@ public class IEEE1516RTIambassador
            FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.nextMessageRequest(time);
+      rtiAmbassador.nextMessageRequest(convert(time));
     }
-    finally
+    catch (hla.rti1516e.exceptions.LogicalTimeAlreadyPassed ltap)
     {
-      joinResignLock.readLock().unlock();
+      throw new LogicalTimeAlreadyPassed(ltap);
+    }
+    catch (hla.rti1516e.exceptions.InvalidLogicalTime ilt)
+    {
+      throw new InvalidLogicalTime(ilt);
+    }
+    catch (hla.rti1516e.exceptions.InTimeAdvancingState itas)
+    {
+      throw new InTimeAdvancingState(itas);
+    }
+    catch (hla.rti1516e.exceptions.RequestForTimeRegulationPending rftrp)
+    {
+      throw new RequestForTimeRegulationPending(rftrp);
+    }
+    catch (hla.rti1516e.exceptions.RequestForTimeConstrainedPending rftcp)
+    {
+      throw new RequestForTimeConstrainedPending(rftcp);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void nextMessageRequestAvailable(LogicalTime time)
-    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState,
-           RequestForTimeRegulationPending, RequestForTimeConstrainedPending,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState, RequestForTimeRegulationPending,
+           RequestForTimeConstrainedPending, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.nextMessageRequestAvailable(time);
+      rtiAmbassador.nextMessageRequestAvailable(convert(time));
     }
-    finally
+    catch (hla.rti1516e.exceptions.LogicalTimeAlreadyPassed ltap)
     {
-      joinResignLock.readLock().unlock();
+      throw new LogicalTimeAlreadyPassed(ltap);
+    }
+    catch (hla.rti1516e.exceptions.InvalidLogicalTime ilt)
+    {
+      throw new InvalidLogicalTime(ilt);
+    }
+    catch (hla.rti1516e.exceptions.InTimeAdvancingState itas)
+    {
+      throw new InTimeAdvancingState(itas);
+    }
+    catch (hla.rti1516e.exceptions.RequestForTimeRegulationPending rftrp)
+    {
+      throw new RequestForTimeRegulationPending(rftrp);
+    }
+    catch (hla.rti1516e.exceptions.RequestForTimeConstrainedPending rftcp)
+    {
+      throw new RequestForTimeConstrainedPending(rftcp);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void flushQueueRequest(LogicalTime time)
-    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState,
-           RequestForTimeRegulationPending, RequestForTimeConstrainedPending,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState, RequestForTimeRegulationPending,
+           RequestForTimeConstrainedPending, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.flushQueueRequest(time);
+      rtiAmbassador.flushQueueRequest(convert(time));
     }
-    finally
+    catch (hla.rti1516e.exceptions.LogicalTimeAlreadyPassed ltap)
     {
-      joinResignLock.readLock().unlock();
+      throw new LogicalTimeAlreadyPassed(ltap);
+    }
+    catch (hla.rti1516e.exceptions.InvalidLogicalTime ilt)
+    {
+      throw new InvalidLogicalTime(ilt);
+    }
+    catch (hla.rti1516e.exceptions.InTimeAdvancingState itas)
+    {
+      throw new InTimeAdvancingState(itas);
+    }
+    catch (hla.rti1516e.exceptions.RequestForTimeRegulationPending rftrp)
+    {
+      throw new RequestForTimeRegulationPending(rftrp);
+    }
+    catch (hla.rti1516e.exceptions.RequestForTimeConstrainedPending rftcp)
+    {
+      throw new RequestForTimeConstrainedPending(rftcp);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void enableAsynchronousDelivery()
-    throws AsynchronousDeliveryAlreadyEnabled, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws AsynchronousDeliveryAlreadyEnabled, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.enableAsynchronousDelivery();
+      rtiAmbassador.enableAsynchronousDelivery();
     }
-    finally
+    catch (hla.rti1516e.exceptions.AsynchronousDeliveryAlreadyEnabled adae)
     {
-      joinResignLock.readLock().unlock();
+      new AsynchronousDeliveryAlreadyEnabled(adae);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void disableAsynchronousDelivery()
-    throws AsynchronousDeliveryAlreadyDisabled, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws AsynchronousDeliveryAlreadyDisabled, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.disableAsynchronousDelivery();
+      rtiAmbassador.disableAsynchronousDelivery();
     }
-    finally
+    catch (hla.rti1516e.exceptions.AsynchronousDeliveryAlreadyDisabled adad)
     {
-      joinResignLock.readLock().unlock();
+      throw new AsynchronousDeliveryAlreadyDisabled(adad);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public TimeQueryReturn queryGALT()
-    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.queryGALT();
+      return convert(rtiAmbassador.queryGALT());
     }
-    finally
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
-      joinResignLock.readLock().unlock();
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public LogicalTime queryLogicalTime()
-    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.queryLogicalTime();
+      return convert(rtiAmbassador.queryLogicalTime());
     }
-    finally
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
-      joinResignLock.readLock().unlock();
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public TimeQueryReturn queryLITS()
-    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.queryLITS();
+      return convert(rtiAmbassador.queryLITS());
     }
-    finally
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
-      joinResignLock.readLock().unlock();
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void modifyLookahead(LogicalTimeInterval lookahead)
-    throws TimeRegulationIsNotEnabled, InvalidLookahead, InTimeAdvancingState,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws TimeRegulationIsNotEnabled, InvalidLookahead, InTimeAdvancingState, FederateNotExecutionMember,
+           SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.modifyLookahead(lookahead);
+      rtiAmbassador.modifyLookahead(convert(lookahead));
     }
-    finally
+    catch (hla.rti1516e.exceptions.InvalidLookahead il)
     {
-      joinResignLock.readLock().unlock();
+      throw new InvalidLookahead(il);
+    }
+    catch (hla.rti1516e.exceptions.InTimeAdvancingState itas)
+    {
+      throw new InTimeAdvancingState(itas);
+    }
+    catch (hla.rti1516e.exceptions.TimeRegulationIsNotEnabled trine)
+    {
+      throw new TimeRegulationIsNotEnabled(trine);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public LogicalTimeInterval queryLookahead()
-    throws TimeRegulationIsNotEnabled, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws TimeRegulationIsNotEnabled, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.queryLookahead();
+      return convert(rtiAmbassador.queryLookahead());
     }
-    finally
+    catch (hla.rti1516e.exceptions.TimeRegulationIsNotEnabled trine)
     {
-      joinResignLock.readLock().unlock();
+      throw new TimeRegulationIsNotEnabled(trine);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void retract(MessageRetractionHandle messageRetractionHandle)
-    throws InvalidMessageRetractionHandle, TimeRegulationIsNotEnabled,
-           MessageCanNoLongerBeRetracted, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws InvalidMessageRetractionHandle, TimeRegulationIsNotEnabled, MessageCanNoLongerBeRetracted,
+           FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.retract(messageRetractionHandle);
+      rtiAmbassador.retract(convert(messageRetractionHandle));
     }
-    finally
+    catch (hla.rti1516e.exceptions.MessageCanNoLongerBeRetracted mcnlbr)
     {
-      joinResignLock.readLock().unlock();
+      throw new MessageCanNoLongerBeRetracted(mcnlbr);
+    }
+    catch (hla.rti1516e.exceptions.InvalidMessageRetractionHandle imrh)
+    {
+      throw new InvalidMessageRetractionHandle(imrh);
+    }
+    catch (hla.rti1516e.exceptions.TimeRegulationIsNotEnabled trine)
+    {
+      throw new TimeRegulationIsNotEnabled(trine);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void changeAttributeOrderType(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles, OrderType orderType)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, OrderType orderType)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.changeAttributeOrderType(
-        objectInstanceHandle, attributeHandles, orderType);
+      rtiAmbassador.changeAttributeOrderType(
+        convert(objectInstanceHandle), convert(attributeHandles), convert(orderType));
     }
-    finally
+    catch (hla.rti1516e.exceptions.AttributeNotOwned ano)
     {
-      joinResignLock.readLock().unlock();
+      throw new AttributeNotOwned(ano);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.ObjectInstanceNotKnown oink)
+    {
+      throw new ObjectInstanceNotKnown(oink);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void changeInteractionOrderType(
     InteractionClassHandle interactionClassHandle, OrderType orderType)
-    throws InteractionClassNotDefined, InteractionClassNotPublished,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws InteractionClassNotDefined, InteractionClassNotPublished, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.changeInteractionOrderType(
-        interactionClassHandle, orderType);
+      rtiAmbassador.changeInteractionOrderType(convert(interactionClassHandle), convert(orderType));
     }
-    finally
+    catch (hla.rti1516e.exceptions.InteractionClassNotPublished icnp)
     {
-      joinResignLock.readLock().unlock();
+      throw new InteractionClassNotPublished(icnp);
+    }
+    catch (hla.rti1516e.exceptions.InteractionClassNotDefined icnd)
+    {
+      throw new InteractionClassNotDefined(icnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public RegionHandle createRegion(DimensionHandleSet dimensionHandles)
-    throws InvalidDimensionHandle, FederateNotExecutionMember, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    throws InvalidDimensionHandle, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.createRegion(dimensionHandles);
+      return convert(rtiAmbassador.createRegion(convert(dimensionHandles)));
     }
-    finally
+    catch (hla.rti1516e.exceptions.InvalidDimensionHandle idh)
     {
-      joinResignLock.readLock().unlock();
+      throw new InvalidDimensionHandle(idh);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void commitRegionModifications(RegionHandleSet regionHandles)
-    throws InvalidRegion, RegionNotCreatedByThisFederate,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+    throws InvalidRegion, RegionNotCreatedByThisFederate, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.commitRegionModifications(regionHandles);
+      rtiAmbassador.commitRegionModifications(convert(regionHandles));
     }
-    finally
+    catch (hla.rti1516e.exceptions.RegionNotCreatedByThisFederate rncbtf)
     {
-      joinResignLock.readLock().unlock();
+      throw new RegionNotCreatedByThisFederate(rncbtf);
+    }
+    catch (hla.rti1516e.exceptions.InvalidRegion ir)
+    {
+      throw new InvalidRegion(ir);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void deleteRegion(RegionHandle regionHandle)
-    throws InvalidRegion, RegionNotCreatedByThisFederate,
-           RegionInUseForUpdateOrSubscription, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws InvalidRegion, RegionNotCreatedByThisFederate, RegionInUseForUpdateOrSubscription,
+           FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.deleteRegion(regionHandle);
+      rtiAmbassador.deleteRegion(convert(regionHandle));
     }
-    finally
+    catch (hla.rti1516e.exceptions.RegionInUseForUpdateOrSubscription riufuos)
     {
-      joinResignLock.readLock().unlock();
+      throw new RegionInUseForUpdateOrSubscription(riufuos);
+    }
+    catch (hla.rti1516e.exceptions.RegionNotCreatedByThisFederate rncbtf)
+    {
+      throw new RegionNotCreatedByThisFederate(rncbtf);
+    }
+    catch (hla.rti1516e.exceptions.InvalidRegion ir)
+    {
+      throw new InvalidRegion(ir);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public ObjectInstanceHandle registerObjectInstanceWithRegions(
-    ObjectClassHandle objectClassHandle,
-    AttributeSetRegionSetPairList attributesAndRegions)
-    throws ObjectClassNotDefined, ObjectClassNotPublished, AttributeNotDefined,
-           AttributeNotPublished, InvalidRegion,
-           RegionNotCreatedByThisFederate, InvalidRegionContext,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions)
+    throws ObjectClassNotDefined, ObjectClassNotPublished, AttributeNotDefined, AttributeNotPublished, InvalidRegion,
+           RegionNotCreatedByThisFederate, InvalidRegionContext, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.registerObjectInstanceWithRegions(
-        objectClassHandle, attributesAndRegions);
+      return convert(rtiAmbassador.registerObjectInstanceWithRegions(
+        convert(objectClassHandle), convert(attributesAndRegions)));
     }
-    finally
+    catch (hla.rti1516e.exceptions.InvalidRegionContext irc)
     {
-      joinResignLock.readLock().unlock();
+      throw new InvalidRegionContext(irc);
+    }
+    catch (hla.rti1516e.exceptions.RegionNotCreatedByThisFederate rncbtf)
+    {
+      throw new RegionNotCreatedByThisFederate(rncbtf);
+    }
+    catch (hla.rti1516e.exceptions.InvalidRegion ir)
+    {
+      throw new InvalidRegion(ir);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotPublished anp)
+    {
+      throw new AttributeNotPublished(anp);
+    }
+    catch (hla.rti1516e.exceptions.ObjectClassNotPublished ocnp)
+    {
+      throw new ObjectClassNotPublished(ocnp);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
+    {
+      throw new ObjectClassNotDefined(ocnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public ObjectInstanceHandle registerObjectInstanceWithRegions(
-    ObjectClassHandle objectClassHandle,
-    AttributeSetRegionSetPairList attributesAndRegions, String name)
-    throws ObjectClassNotDefined, ObjectClassNotPublished, AttributeNotDefined,
-           AttributeNotPublished, InvalidRegion,
-           RegionNotCreatedByThisFederate, InvalidRegionContext,
-           ObjectInstanceNameNotReserved, ObjectInstanceNameInUse,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions, String objectInstanceName)
+    throws ObjectClassNotDefined, ObjectClassNotPublished, AttributeNotDefined, AttributeNotPublished, InvalidRegion,
+           RegionNotCreatedByThisFederate, InvalidRegionContext, ObjectInstanceNameNotReserved, ObjectInstanceNameInUse,
+           FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.registerObjectInstanceWithRegions(
-        objectClassHandle, attributesAndRegions, name);
+      return convert(rtiAmbassador.registerObjectInstanceWithRegions(
+        convert(objectClassHandle), convert(attributesAndRegions), objectInstanceName));
     }
-    finally
+    catch (hla.rti1516e.exceptions.ObjectInstanceNameInUse oiniu)
     {
-      joinResignLock.readLock().unlock();
+      throw new ObjectInstanceNameInUse(oiniu);
+    }
+    catch (hla.rti1516e.exceptions.ObjectInstanceNameNotReserved oinnr)
+    {
+      throw new ObjectInstanceNameNotReserved(oinnr);
+    }
+    catch (hla.rti1516e.exceptions.InvalidRegionContext irc)
+    {
+      throw new InvalidRegionContext(irc);
+    }
+    catch (hla.rti1516e.exceptions.RegionNotCreatedByThisFederate rncbtf)
+    {
+      throw new RegionNotCreatedByThisFederate(rncbtf);
+    }
+    catch (hla.rti1516e.exceptions.InvalidRegion ir)
+    {
+      throw new InvalidRegion(ir);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotPublished anp)
+    {
+      throw new AttributeNotPublished(anp);
+    }
+    catch (hla.rti1516e.exceptions.ObjectClassNotPublished ocnp)
+    {
+      throw new ObjectClassNotPublished(ocnp);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
+    {
+      throw new ObjectClassNotDefined(ocnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void associateRegionsForUpdates(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeSetRegionSetPairList attributesAndRegions)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, InvalidRegion,
-           RegionNotCreatedByThisFederate, InvalidRegionContext,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    ObjectInstanceHandle objectInstanceHandle, AttributeSetRegionSetPairList attributesAndRegions)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, InvalidRegion, RegionNotCreatedByThisFederate,
+           InvalidRegionContext, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.associateRegionsForUpdates(
-        objectInstanceHandle, attributesAndRegions);
+      rtiAmbassador.associateRegionsForUpdates(convert(objectInstanceHandle), convert(attributesAndRegions));
     }
-    finally
+    catch (hla.rti1516e.exceptions.InvalidRegionContext irc)
     {
-      joinResignLock.readLock().unlock();
+      throw new InvalidRegionContext(irc);
+    }
+    catch (hla.rti1516e.exceptions.RegionNotCreatedByThisFederate rncbtf)
+    {
+      throw new RegionNotCreatedByThisFederate(rncbtf);
+    }
+    catch (hla.rti1516e.exceptions.InvalidRegion ir)
+    {
+      throw new InvalidRegion(ir);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.ObjectInstanceNotKnown oink)
+    {
+      throw new ObjectInstanceNotKnown(oink);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void unassociateRegionsForUpdates(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeSetRegionSetPairList attributesAndRegions)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, InvalidRegion,
-           RegionNotCreatedByThisFederate, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    ObjectInstanceHandle objectInstanceHandle, AttributeSetRegionSetPairList attributesAndRegions)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, InvalidRegion, RegionNotCreatedByThisFederate,
+           FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.unassociateRegionsForUpdates(
-        objectInstanceHandle, attributesAndRegions);
+      rtiAmbassador.unassociateRegionsForUpdates(convert(objectInstanceHandle), convert(attributesAndRegions));
     }
-    finally
+    catch (hla.rti1516e.exceptions.RegionNotCreatedByThisFederate rncbtf)
     {
-      joinResignLock.readLock().unlock();
+      throw new RegionNotCreatedByThisFederate(rncbtf);
+    }
+    catch (hla.rti1516e.exceptions.InvalidRegion ir)
+    {
+      throw new InvalidRegion(ir);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.ObjectInstanceNotKnown oink)
+    {
+      throw new ObjectInstanceNotKnown(oink);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void subscribeObjectClassAttributesWithRegions(
-    ObjectClassHandle objectClassHandle,
-    AttributeSetRegionSetPairList attributesAndRegions)
-    throws ObjectClassNotDefined, AttributeNotDefined, InvalidRegion,
-           RegionNotCreatedByThisFederate, InvalidRegionContext,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions)
+    throws ObjectClassNotDefined, AttributeNotDefined, InvalidRegion, RegionNotCreatedByThisFederate,
+           InvalidRegionContext, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.subscribeObjectClassAttributesWithRegions(
-        objectClassHandle, attributesAndRegions);
+      rtiAmbassador.subscribeObjectClassAttributesWithRegions(
+        convert(objectClassHandle), convert(attributesAndRegions));
     }
-    finally
+    catch (hla.rti1516e.exceptions.InvalidRegionContext irc)
     {
-      joinResignLock.readLock().unlock();
+      throw new InvalidRegionContext(irc);
+    }
+    catch (hla.rti1516e.exceptions.RegionNotCreatedByThisFederate rncbtf)
+    {
+      throw new RegionNotCreatedByThisFederate(rncbtf);
+    }
+    catch (hla.rti1516e.exceptions.InvalidRegion ir)
+    {
+      throw new InvalidRegion(ir);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
+    {
+      throw new ObjectClassNotDefined(ocnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void subscribeObjectClassAttributesPassivelyWithRegions(
-    ObjectClassHandle objectClassHandle,
-    AttributeSetRegionSetPairList attributesAndRegions)
-    throws ObjectClassNotDefined, AttributeNotDefined, InvalidRegion,
-           RegionNotCreatedByThisFederate, InvalidRegionContext,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions)
+    throws ObjectClassNotDefined, AttributeNotDefined, InvalidRegion, RegionNotCreatedByThisFederate,
+           InvalidRegionContext, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.subscribeObjectClassAttributesPassivelyWithRegions(
-        objectClassHandle, attributesAndRegions);
+      rtiAmbassador.subscribeObjectClassAttributesPassivelyWithRegions(
+        convert(objectClassHandle), convert(attributesAndRegions));
     }
-    finally
+    catch (hla.rti1516e.exceptions.InvalidRegionContext irc)
     {
-      joinResignLock.readLock().unlock();
+      throw new InvalidRegionContext(irc);
+    }
+    catch (hla.rti1516e.exceptions.RegionNotCreatedByThisFederate rncbtf)
+    {
+      throw new RegionNotCreatedByThisFederate(rncbtf);
+    }
+    catch (hla.rti1516e.exceptions.InvalidRegion ir)
+    {
+      throw new InvalidRegion(ir);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
+    {
+      throw new ObjectClassNotDefined(ocnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void unsubscribeObjectClassAttributesWithRegions(
-    ObjectClassHandle objectClassHandle,
-    AttributeSetRegionSetPairList attributesAndRegions)
-    throws ObjectClassNotDefined, AttributeNotDefined, InvalidRegion,
-           RegionNotCreatedByThisFederate, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions)
+    throws ObjectClassNotDefined, AttributeNotDefined, InvalidRegion, RegionNotCreatedByThisFederate,
+           FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.unsubscribeObjectClassAttributesWithRegions(
-        objectClassHandle, attributesAndRegions);
+      rtiAmbassador.unsubscribeObjectClassAttributesWithRegions(
+        convert(objectClassHandle), convert(attributesAndRegions));
     }
-    finally
+    catch (hla.rti1516e.exceptions.RegionNotCreatedByThisFederate rncbtf)
     {
-      joinResignLock.readLock().unlock();
+      throw new RegionNotCreatedByThisFederate(rncbtf);
+    }
+    catch (hla.rti1516e.exceptions.InvalidRegion ir)
+    {
+      throw new InvalidRegion(ir);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
+    {
+      throw new ObjectClassNotDefined(ocnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void subscribeInteractionClassWithRegions(
-    InteractionClassHandle interactionClassHandle,
-    RegionHandleSet regionHandles)
-    throws InteractionClassNotDefined, InvalidRegion,
-           RegionNotCreatedByThisFederate, InvalidRegionContext,
-           FederateServiceInvocationsAreBeingReportedViaMOM,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    InteractionClassHandle interactionClassHandle, RegionHandleSet regionHandles)
+    throws InteractionClassNotDefined, InvalidRegion, RegionNotCreatedByThisFederate, InvalidRegionContext,
+           FederateServiceInvocationsAreBeingReportedViaMOM, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.subscribeInteractionClassWithRegions(
-        interactionClassHandle, regionHandles);
+      rtiAmbassador.subscribeInteractionClassWithRegions(convert(interactionClassHandle), convert(regionHandles));
     }
-    finally
+    catch (hla.rti1516e.exceptions.FederateServiceInvocationsAreBeingReportedViaMOM fsiabrvmom)
     {
-      joinResignLock.readLock().unlock();
+      throw new FederateServiceInvocationsAreBeingReportedViaMOM(fsiabrvmom);
+    }
+    catch (hla.rti1516e.exceptions.InvalidRegionContext irc)
+    {
+      throw new InvalidRegionContext(irc);
+    }
+    catch (hla.rti1516e.exceptions.RegionNotCreatedByThisFederate rncbtf)
+    {
+      throw new RegionNotCreatedByThisFederate(rncbtf);
+    }
+    catch (hla.rti1516e.exceptions.InvalidRegion ir)
+    {
+      throw new InvalidRegion(ir);
+    }
+    catch (hla.rti1516e.exceptions.InteractionClassNotDefined icnd)
+    {
+      throw new InteractionClassNotDefined(icnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void subscribeInteractionClassPassivelyWithRegions(
-    InteractionClassHandle interactionClassHandle,
-    RegionHandleSet regionHandles)
-    throws InteractionClassNotDefined, InvalidRegion,
-           RegionNotCreatedByThisFederate, InvalidRegionContext,
-           FederateServiceInvocationsAreBeingReportedViaMOM,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    InteractionClassHandle interactionClassHandle, RegionHandleSet regionHandles)
+    throws InteractionClassNotDefined, InvalidRegion, RegionNotCreatedByThisFederate, InvalidRegionContext,
+           FederateServiceInvocationsAreBeingReportedViaMOM, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.subscribeInteractionClassPassivelyWithRegions(
-        interactionClassHandle, regionHandles);
+      rtiAmbassador.subscribeInteractionClassPassivelyWithRegions(
+        convert(interactionClassHandle), convert(regionHandles));
     }
-    finally
+    catch (hla.rti1516e.exceptions.FederateServiceInvocationsAreBeingReportedViaMOM fsiabrvmom)
     {
-      joinResignLock.readLock().unlock();
+      throw new FederateServiceInvocationsAreBeingReportedViaMOM(fsiabrvmom);
+    }
+    catch (hla.rti1516e.exceptions.InvalidRegionContext irc)
+    {
+      throw new InvalidRegionContext(irc);
+    }
+    catch (hla.rti1516e.exceptions.RegionNotCreatedByThisFederate rncbtf)
+    {
+      throw new RegionNotCreatedByThisFederate(rncbtf);
+    }
+    catch (hla.rti1516e.exceptions.InvalidRegion ir)
+    {
+      throw new InvalidRegion(ir);
+    }
+    catch (hla.rti1516e.exceptions.InteractionClassNotDefined icnd)
+    {
+      throw new InteractionClassNotDefined(icnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void unsubscribeInteractionClassWithRegions(
-    InteractionClassHandle interactionClassHandle,
-    RegionHandleSet regionHandles)
-    throws InteractionClassNotDefined, InvalidRegion,
-           RegionNotCreatedByThisFederate, FederateNotExecutionMember,
+    InteractionClassHandle interactionClassHandle, RegionHandleSet regionHandles)
+    throws InteractionClassNotDefined, InvalidRegion, RegionNotCreatedByThisFederate, FederateNotExecutionMember,
            SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.unsubscribeInteractionClassWithRegions(
-        interactionClassHandle, regionHandles);
+      rtiAmbassador.unsubscribeInteractionClassWithRegions(convert(interactionClassHandle), convert(regionHandles));
     }
-    finally
+    catch (hla.rti1516e.exceptions.RegionNotCreatedByThisFederate rncbtf)
     {
-      joinResignLock.readLock().unlock();
+      throw new RegionNotCreatedByThisFederate(rncbtf);
+    }
+    catch (hla.rti1516e.exceptions.InvalidRegion ir)
+    {
+      throw new InvalidRegion(ir);
+    }
+    catch (hla.rti1516e.exceptions.InteractionClassNotDefined icnd)
+    {
+      throw new InteractionClassNotDefined(icnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void sendInteractionWithRegions(
-    InteractionClassHandle interactionClassHandle,
-    ParameterHandleValueMap parameterValues,
+    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues,
     RegionHandleSet regionHandles, byte[] tag)
-    throws InteractionClassNotDefined, InteractionClassNotPublished,
-           InteractionParameterNotDefined, InvalidRegion,
-           RegionNotCreatedByThisFederate, InvalidRegionContext,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws InteractionClassNotDefined, InteractionClassNotPublished, InteractionParameterNotDefined, InvalidRegion,
+           RegionNotCreatedByThisFederate, InvalidRegionContext, FederateNotExecutionMember, SaveInProgress,
+           RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.sendInteractionWithRegions(
-        interactionClassHandle, parameterValues, regionHandles, tag);
+      rtiAmbassador.sendInteractionWithRegions(
+        convert(interactionClassHandle), convert(parameterValues), convert(regionHandles), tag);
     }
-    finally
+    catch (hla.rti1516e.exceptions.InvalidRegionContext irc)
     {
-      joinResignLock.readLock().unlock();
+      throw new InvalidRegionContext(irc);
+    }
+    catch (hla.rti1516e.exceptions.RegionNotCreatedByThisFederate rncbtf)
+    {
+      throw new RegionNotCreatedByThisFederate(rncbtf);
+    }
+    catch (hla.rti1516e.exceptions.InvalidRegion ir)
+    {
+      throw new InvalidRegion(ir);
+    }
+    catch (hla.rti1516e.exceptions.InteractionClassNotPublished icnp)
+    {
+      throw new InteractionClassNotPublished(icnp);
+    }
+    catch (hla.rti1516e.exceptions.InteractionParameterNotDefined ipnd)
+    {
+      throw new InteractionParameterNotDefined(ipnd);
+    }
+    catch (hla.rti1516e.exceptions.InteractionClassNotDefined icnd)
+    {
+      throw new InteractionClassNotDefined(icnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public MessageRetractionReturn sendInteractionWithRegions(
-    InteractionClassHandle interactionClassHandle,
-    ParameterHandleValueMap parameterValues,
-    RegionHandleSet regionHandles, byte[] tag, LogicalTime sendTime)
-    throws InteractionClassNotDefined, InteractionClassNotPublished,
-           InteractionParameterNotDefined, InvalidRegion,
-           RegionNotCreatedByThisFederate, InvalidRegionContext,
-           InvalidLogicalTime, FederateNotExecutionMember, SaveInProgress,
-           RestoreInProgress, RTIinternalError
+    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues,
+    RegionHandleSet regionHandles, byte[] tag, LogicalTime time)
+    throws InteractionClassNotDefined, InteractionClassNotPublished, InteractionParameterNotDefined, InvalidRegion,
+           RegionNotCreatedByThisFederate, InvalidRegionContext, InvalidLogicalTime, FederateNotExecutionMember,
+           SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.sendInteractionWithRegions(
-        interactionClassHandle, parameterValues, regionHandles, tag, sendTime);
+      return convert(rtiAmbassador.sendInteractionWithRegions(
+        convert(interactionClassHandle), convert(parameterValues), convert(regionHandles), tag, convert(time)));
     }
-    finally
+    catch (hla.rti1516e.exceptions.InvalidLogicalTime ilt)
     {
-      joinResignLock.readLock().unlock();
+      throw new InvalidLogicalTime(ilt);
+    }
+    catch (hla.rti1516e.exceptions.InvalidRegionContext irc)
+    {
+      throw new InvalidRegionContext(irc);
+    }
+    catch (hla.rti1516e.exceptions.RegionNotCreatedByThisFederate rncbtf)
+    {
+      throw new RegionNotCreatedByThisFederate(rncbtf);
+    }
+    catch (hla.rti1516e.exceptions.InvalidRegion ir)
+    {
+      throw new InvalidRegion(ir);
+    }
+    catch (hla.rti1516e.exceptions.InteractionClassNotPublished icnp)
+    {
+      throw new InteractionClassNotPublished(icnp);
+    }
+    catch (hla.rti1516e.exceptions.InteractionParameterNotDefined ipnd)
+    {
+      throw new InteractionParameterNotDefined(ipnd);
+    }
+    catch (hla.rti1516e.exceptions.InteractionClassNotDefined icnd)
+    {
+      throw new InteractionClassNotDefined(icnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void requestAttributeValueUpdateWithRegions(
-    ObjectClassHandle objectClassHandle,
-    AttributeSetRegionSetPairList attributesAndRegions, byte[] tag)
-    throws ObjectClassNotDefined, AttributeNotDefined, InvalidRegion,
-           RegionNotCreatedByThisFederate, InvalidRegionContext,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions, byte[] tag)
+    throws ObjectClassNotDefined, AttributeNotDefined, InvalidRegion, RegionNotCreatedByThisFederate,
+           InvalidRegionContext, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.requestAttributeValueUpdateWithRegions(
-        objectClassHandle, attributesAndRegions, tag);
+      rtiAmbassador.requestAttributeValueUpdateWithRegions(
+        convert(objectClassHandle), convert(attributesAndRegions), tag);
     }
-    finally
+    catch (hla.rti1516e.exceptions.InvalidRegionContext irc)
     {
-      joinResignLock.readLock().unlock();
+      throw new InvalidRegionContext(irc);
+    }
+    catch (hla.rti1516e.exceptions.RegionNotCreatedByThisFederate rncbtf)
+    {
+      throw new RegionNotCreatedByThisFederate(rncbtf);
+    }
+    catch (hla.rti1516e.exceptions.InvalidRegion ir)
+    {
+      throw new InvalidRegion(ir);
+    }
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    {
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
+    {
+      throw new ObjectClassNotDefined(ocnd);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public ObjectClassHandle getObjectClassHandle(String name)
     throws NameNotFound, FederateNotExecutionMember, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getObjectClassHandle(name);
+      return convert(rtiAmbassador.getObjectClassHandle(name));
     }
-    finally
+    catch (hla.rti1516e.exceptions.NameNotFound nnf)
     {
-      joinResignLock.readLock().unlock();
+      throw new NameNotFound(nnf);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public String getObjectClassName(ObjectClassHandle objectClassHandle)
-    throws InvalidObjectClassHandle, FederateNotExecutionMember,
-           RTIinternalError
+    throws InvalidObjectClassHandle, FederateNotExecutionMember, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getObjectClassName(objectClassHandle);
+      return rtiAmbassador.getObjectClassName(convert(objectClassHandle));
     }
-    finally
+    catch (hla.rti1516e.exceptions.InvalidObjectClassHandle ioch)
     {
-      joinResignLock.readLock().unlock();
+      throw new InvalidObjectClassHandle(ioch);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
-  public AttributeHandle getAttributeHandle(ObjectClassHandle objectClassHandle,
-                                            String name)
-    throws InvalidObjectClassHandle, NameNotFound, FederateNotExecutionMember,
-           RTIinternalError
+  public AttributeHandle getAttributeHandle(ObjectClassHandle objectClassHandle, String name)
+    throws InvalidObjectClassHandle, NameNotFound, FederateNotExecutionMember, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getAttributeHandle(objectClassHandle, name);
+      return convert(rtiAmbassador.getAttributeHandle(convert(objectClassHandle), name));
     }
-    finally
+    catch (hla.rti1516e.exceptions.NameNotFound nnf)
     {
-      joinResignLock.readLock().unlock();
+      throw new NameNotFound(nnf);
+    }
+    catch (hla.rti1516e.exceptions.InvalidObjectClassHandle ioch)
+    {
+      throw new InvalidObjectClassHandle(ioch);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
-  public String getAttributeName(ObjectClassHandle objectClassHandle,
-                                 AttributeHandle attributeHandle)
-    throws InvalidObjectClassHandle, InvalidAttributeHandle,
-           AttributeNotDefined, FederateNotExecutionMember, RTIinternalError
+  public String getAttributeName(ObjectClassHandle objectClassHandle, AttributeHandle attributeHandle)
+    throws InvalidObjectClassHandle, InvalidAttributeHandle, AttributeNotDefined, FederateNotExecutionMember,
+           RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getAttributeName(objectClassHandle, attributeHandle);
+      return rtiAmbassador.getAttributeName(convert(objectClassHandle), convert(attributeHandle));
     }
-    finally
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
     {
-      joinResignLock.readLock().unlock();
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.InvalidAttributeHandle iah)
+    {
+      throw new InvalidAttributeHandle(iah);
+    }
+    catch (hla.rti1516e.exceptions.InvalidObjectClassHandle ioch)
+    {
+      throw new InvalidObjectClassHandle(ioch);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public InteractionClassHandle getInteractionClassHandle(String name)
     throws NameNotFound, FederateNotExecutionMember, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getInteractionClassHandle(name);
+      return convert(rtiAmbassador.getInteractionClassHandle(name));
     }
-    finally
+    catch (hla.rti1516e.exceptions.NameNotFound nnf)
     {
-      joinResignLock.readLock().unlock();
+      throw new NameNotFound(nnf);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
-  public String getInteractionClassName(
-    InteractionClassHandle interactionClassHandle)
-    throws InvalidInteractionClassHandle, FederateNotExecutionMember,
-           RTIinternalError
+  public String getInteractionClassName(InteractionClassHandle interactionClassHandle)
+    throws InvalidInteractionClassHandle, FederateNotExecutionMember, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getInteractionClassName(interactionClassHandle);
+      return rtiAmbassador.getInteractionClassName(convert(interactionClassHandle));
     }
-    finally
+    catch (hla.rti1516e.exceptions.InvalidInteractionClassHandle iich)
     {
-      joinResignLock.readLock().unlock();
+      throw new InvalidInteractionClassHandle(iich);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
-  public ParameterHandle getParameterHandle(
-    InteractionClassHandle interactionClassHandle, String name)
-    throws InvalidInteractionClassHandle, NameNotFound,
+  public ParameterHandle getParameterHandle(InteractionClassHandle interactionClassHandle, String name)
+    throws InvalidInteractionClassHandle, NameNotFound, FederateNotExecutionMember, RTIinternalError
+  {
+    try
+    {
+      return convert(rtiAmbassador.getParameterHandle(convert(interactionClassHandle), name));
+    }
+    catch (hla.rti1516e.exceptions.NameNotFound nnf)
+    {
+      throw new NameNotFound(nnf);
+    }
+    catch (hla.rti1516e.exceptions.InvalidInteractionClassHandle iich)
+    {
+      throw new InvalidInteractionClassHandle(iich);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
+    }
+  }
+
+  public String getParameterName(InteractionClassHandle interactionClassHandle, ParameterHandle parameterHandle)
+    throws InvalidInteractionClassHandle, InvalidParameterHandle, InteractionParameterNotDefined,
            FederateNotExecutionMember, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getParameterHandle(interactionClassHandle, name);
+      return rtiAmbassador.getParameterName(convert(interactionClassHandle), convert(parameterHandle));
     }
-    finally
+    catch (hla.rti1516e.exceptions.InteractionParameterNotDefined ipnd)
     {
-      joinResignLock.readLock().unlock();
+      throw new InteractionParameterNotDefined(ipnd);
+    }
+    catch (hla.rti1516e.exceptions.InvalidParameterHandle iph)
+    {
+      throw new InvalidParameterHandle(iph);
+    }
+    catch (hla.rti1516e.exceptions.InvalidInteractionClassHandle iich)
+    {
+      throw new InvalidInteractionClassHandle(iich);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
-  public String getParameterName(InteractionClassHandle interactionClassHandle,
-                                 ParameterHandle parameterHandle)
-    throws InvalidInteractionClassHandle, InvalidParameterHandle,
-           InteractionParameterNotDefined, FederateNotExecutionMember,
-           RTIinternalError
-  {
-    joinResignLock.readLock().lock();
-    try
-    {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getParameterName(interactionClassHandle, parameterHandle);
-    }
-    finally
-    {
-      joinResignLock.readLock().unlock();
-    }
-  }
-
-  public ObjectInstanceHandle getObjectInstanceHandle(String name)
+  public ObjectInstanceHandle getObjectInstanceHandle(String objectInstanceName)
     throws ObjectInstanceNotKnown, FederateNotExecutionMember, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getObjectInstanceHandle(name);
+      return convert(rtiAmbassador.getObjectInstanceHandle(objectInstanceName));
     }
-    finally
+    catch (hla.rti1516e.exceptions.ObjectInstanceNotKnown oink)
     {
-      joinResignLock.readLock().unlock();
+      throw new ObjectInstanceNotKnown(oink);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public String getObjectInstanceName(ObjectInstanceHandle objectInstanceHandle)
     throws ObjectInstanceNotKnown, FederateNotExecutionMember, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getObjectInstanceName(objectInstanceHandle);
+      return rtiAmbassador.getObjectInstanceName(convert(objectInstanceHandle));
     }
-    finally
+    catch (hla.rti1516e.exceptions.ObjectInstanceNotKnown oink)
     {
-      joinResignLock.readLock().unlock();
+      throw new ObjectInstanceNotKnown(oink);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public DimensionHandle getDimensionHandle(String name)
     throws NameNotFound, FederateNotExecutionMember, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getDimensionHandle(name);
+      return convert(rtiAmbassador.getDimensionHandle(name));
     }
-    finally
+    catch (hla.rti1516e.exceptions.NameNotFound nnf)
     {
-      joinResignLock.readLock().unlock();
+      throw new NameNotFound(nnf);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public String getDimensionName(DimensionHandle dimensionHandle)
     throws InvalidDimensionHandle, FederateNotExecutionMember, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getDimensionName(dimensionHandle);
+      return rtiAmbassador.getDimensionName(convert(dimensionHandle));
     }
-    finally
+    catch (hla.rti1516e.exceptions.InvalidDimensionHandle idh)
     {
-      joinResignLock.readLock().unlock();
+      throw new InvalidDimensionHandle(idh);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public long getDimensionUpperBound(DimensionHandle dimensionHandle)
     throws InvalidDimensionHandle, FederateNotExecutionMember, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getDimensionUpperBound(dimensionHandle);
+      return rtiAmbassador.getDimensionUpperBound(convert(dimensionHandle));
     }
-    finally
+    catch (hla.rti1516e.exceptions.InvalidDimensionHandle idh)
     {
-      joinResignLock.readLock().unlock();
+      throw new InvalidDimensionHandle(idh);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public DimensionHandleSet getAvailableDimensionsForClassAttribute(
     ObjectClassHandle objectClassHandle, AttributeHandle attributeHandle)
-    throws InvalidObjectClassHandle, InvalidAttributeHandle,
-           AttributeNotDefined, FederateNotExecutionMember, RTIinternalError
-  {
-    joinResignLock.readLock().lock();
-    try
-    {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getAvailableDimensionsForClassAttribute(
-        objectClassHandle, attributeHandle);
-    }
-    finally
-    {
-      joinResignLock.readLock().unlock();
-    }
-  }
-
-  public ObjectClassHandle getKnownObjectClassHandle(
-    ObjectInstanceHandle objectInstanceHandle)
-    throws ObjectInstanceNotKnown, FederateNotExecutionMember, RTIinternalError
-  {
-    joinResignLock.readLock().lock();
-    try
-    {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getKnownObjectClassHandle(objectInstanceHandle);
-    }
-    finally
-    {
-      joinResignLock.readLock().unlock();
-    }
-  }
-
-  public DimensionHandleSet getAvailableDimensionsForInteractionClass(
-    InteractionClassHandle interactionClassHandle)
-    throws InvalidInteractionClassHandle, FederateNotExecutionMember,
+    throws InvalidObjectClassHandle, InvalidAttributeHandle, AttributeNotDefined, FederateNotExecutionMember,
            RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getAvailableDimensionsForInteractionClass(
-        interactionClassHandle);
+      return convert(rtiAmbassador.getAvailableDimensionsForClassAttribute(
+        convert(objectClassHandle), convert(attributeHandle)));
     }
-    finally
+    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
     {
-      joinResignLock.readLock().unlock();
+      throw new AttributeNotDefined(and);
+    }
+    catch (hla.rti1516e.exceptions.InvalidAttributeHandle iah)
+    {
+      throw new InvalidAttributeHandle(iah);
+    }
+    catch (hla.rti1516e.exceptions.InvalidObjectClassHandle ioch)
+    {
+      throw new InvalidObjectClassHandle(ioch);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
+    }
+  }
+
+  public ObjectClassHandle getKnownObjectClassHandle(ObjectInstanceHandle objectInstanceHandle)
+    throws ObjectInstanceNotKnown, FederateNotExecutionMember, RTIinternalError
+  {
+    try
+    {
+      return convert(rtiAmbassador.getKnownObjectClassHandle(convert(objectInstanceHandle)));
+    }
+    catch (hla.rti1516e.exceptions.ObjectInstanceNotKnown oink)
+    {
+      throw new ObjectInstanceNotKnown(oink);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
+    }
+  }
+
+  public DimensionHandleSet getAvailableDimensionsForInteractionClass(InteractionClassHandle interactionClassHandle)
+    throws InvalidInteractionClassHandle, FederateNotExecutionMember, RTIinternalError
+  {
+    try
+    {
+      return convert(rtiAmbassador.getAvailableDimensionsForInteractionClass(convert(interactionClassHandle)));
+    }
+    catch (hla.rti1516e.exceptions.InvalidInteractionClassHandle iich)
+    {
+      throw new InvalidInteractionClassHandle(iich);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public TransportationType getTransportationType(String name)
-    throws InvalidTransportationName, FederateNotExecutionMember,
-           RTIinternalError
+    throws InvalidTransportationName, FederateNotExecutionMember, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getTransportationType(name);
+      return convert(rtiAmbassador.getTransportationTypeHandle(name));
     }
-    finally
+    catch (hla.rti1516e.exceptions.InvalidTransportationName itn)
     {
-      joinResignLock.readLock().unlock();
+      throw new InvalidTransportationName(itn);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public String getTransportationName(TransportationType transportationType)
-    throws InvalidTransportationType, FederateNotExecutionMember,
-           RTIinternalError
+    throws InvalidTransportationType, FederateNotExecutionMember, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getTransportationName(transportationType);
+      return rtiAmbassador.getTransportationTypeName(convert(transportationType));
     }
-    finally
+    catch (hla.rti1516e.exceptions.InvalidTransportationType itt)
     {
-      joinResignLock.readLock().unlock();
+      throw new InvalidTransportationType(itt);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public OrderType getOrderType(String name)
     throws InvalidOrderName, FederateNotExecutionMember, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getOrderType(name);
+      return convert(rtiAmbassador.getOrderType(name));
     }
-    finally
+    catch (hla.rti1516e.exceptions.InvalidOrderName ion)
     {
-      joinResignLock.readLock().unlock();
+      throw new InvalidOrderName(ion);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public String getOrderName(OrderType orderType)
     throws InvalidOrderType, FederateNotExecutionMember, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getOrderName(orderType);
+      return rtiAmbassador.getOrderName(convert(orderType));
     }
-    finally
+    catch (hla.rti1516e.exceptions.InvalidOrderType iot)
     {
-      joinResignLock.readLock().unlock();
+      throw new InvalidOrderType(iot);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void enableObjectClassRelevanceAdvisorySwitch()
-    throws FederateNotExecutionMember, ObjectClassRelevanceAdvisorySwitchIsOn,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws FederateNotExecutionMember, ObjectClassRelevanceAdvisorySwitchIsOn, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.enableObjectClassRelevanceAdvisorySwitch();
+      rtiAmbassador.enableObjectClassRelevanceAdvisorySwitch();
     }
-    finally
+    catch (hla.rti1516e.exceptions.ObjectClassRelevanceAdvisorySwitchIsOn ocrasio)
     {
-      joinResignLock.readLock().unlock();
+      throw new ObjectClassRelevanceAdvisorySwitchIsOn(ocrasio);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void disableObjectClassRelevanceAdvisorySwitch()
-    throws ObjectClassRelevanceAdvisorySwitchIsOff, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws ObjectClassRelevanceAdvisorySwitchIsOff, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.disableObjectClassRelevanceAdvisorySwitch();
+      rtiAmbassador.disableObjectClassRelevanceAdvisorySwitch();
     }
-    finally
+    catch (hla.rti1516e.exceptions.ObjectClassRelevanceAdvisorySwitchIsOff ocrasio)
     {
-      joinResignLock.readLock().unlock();
+      throw new ObjectClassRelevanceAdvisorySwitchIsOff(ocrasio);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void enableAttributeRelevanceAdvisorySwitch()
-    throws AttributeRelevanceAdvisorySwitchIsOn, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws AttributeRelevanceAdvisorySwitchIsOn, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.enableAttributeRelevanceAdvisorySwitch();
+      rtiAmbassador.enableAttributeRelevanceAdvisorySwitch();
     }
-    finally
+    catch (hla.rti1516e.exceptions.AttributeRelevanceAdvisorySwitchIsOn arasio)
     {
-      joinResignLock.readLock().unlock();
+      throw new AttributeRelevanceAdvisorySwitchIsOn(arasio);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void disableAttributeRelevanceAdvisorySwitch()
-    throws AttributeRelevanceAdvisorySwitchIsOff, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws AttributeRelevanceAdvisorySwitchIsOff, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.disableAttributeRelevanceAdvisorySwitch();
+      rtiAmbassador.disableAttributeRelevanceAdvisorySwitch();
     }
-    finally
+    catch (hla.rti1516e.exceptions.AttributeRelevanceAdvisorySwitchIsOff arasio)
     {
-      joinResignLock.readLock().unlock();
+      throw new AttributeRelevanceAdvisorySwitchIsOff(arasio);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void enableAttributeScopeAdvisorySwitch()
-    throws AttributeScopeAdvisorySwitchIsOn, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws AttributeScopeAdvisorySwitchIsOn, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.enableAttributeScopeAdvisorySwitch();
+      rtiAmbassador.enableAttributeScopeAdvisorySwitch();
     }
-    finally
+    catch (hla.rti1516e.exceptions.AttributeScopeAdvisorySwitchIsOn asasio)
     {
-      joinResignLock.readLock().unlock();
+      throw new AttributeScopeAdvisorySwitchIsOn(asasio);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void disableAttributeScopeAdvisorySwitch()
-    throws AttributeScopeAdvisorySwitchIsOff, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws AttributeScopeAdvisorySwitchIsOff, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.disableAttributeScopeAdvisorySwitch();
+      rtiAmbassador.disableAttributeScopeAdvisorySwitch();
     }
-    finally
+    catch (hla.rti1516e.exceptions.AttributeScopeAdvisorySwitchIsOff asasio)
     {
-      joinResignLock.readLock().unlock();
+      throw new AttributeScopeAdvisorySwitchIsOff(asasio);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void enableInteractionRelevanceAdvisorySwitch()
-    throws InteractionRelevanceAdvisorySwitchIsOn, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws InteractionRelevanceAdvisorySwitchIsOn, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.enableInteractionRelevanceAdvisorySwitch();
+      rtiAmbassador.enableInteractionRelevanceAdvisorySwitch();
     }
-    finally
+    catch (hla.rti1516e.exceptions.InteractionRelevanceAdvisorySwitchIsOn irasio)
     {
-      joinResignLock.readLock().unlock();
+      throw new InteractionRelevanceAdvisorySwitchIsOn(irasio);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void disableInteractionRelevanceAdvisorySwitch()
-    throws InteractionRelevanceAdvisorySwitchIsOff, FederateNotExecutionMember,
-           SaveInProgress, RestoreInProgress, RTIinternalError
+    throws InteractionRelevanceAdvisorySwitchIsOff, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+           RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.disableInteractionRelevanceAdvisorySwitch();
+      rtiAmbassador.disableInteractionRelevanceAdvisorySwitch();
     }
-    finally
+    catch (hla.rti1516e.exceptions.InteractionRelevanceAdvisorySwitchIsOff irasio)
     {
-      joinResignLock.readLock().unlock();
+      throw new InteractionRelevanceAdvisorySwitchIsOff(irasio);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public DimensionHandleSet getDimensionHandleSet(RegionHandle regionHandle)
-    throws InvalidRegion, FederateNotExecutionMember, SaveInProgress,
+    throws InvalidRegion, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
+  {
+    try
+    {
+      return convert(rtiAmbassador.getDimensionHandleSet(convert(regionHandle)));
+    }
+    catch (hla.rti1516e.exceptions.InvalidRegion ir)
+    {
+      throw new InvalidRegion(ir);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
+    }
+  }
+
+  public RangeBounds getRangeBounds(RegionHandle regionHandle, DimensionHandle dimensionHandle)
+    throws InvalidRegion, RegionDoesNotContainSpecifiedDimension, FederateNotExecutionMember, SaveInProgress,
            RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getDimensionHandleSet(regionHandle);
+      return convert(rtiAmbassador.getRangeBounds(convert(regionHandle), convert(dimensionHandle)));
     }
-    finally
+    catch (hla.rti1516e.exceptions.RegionDoesNotContainSpecifiedDimension rdncsd)
     {
-      joinResignLock.readLock().unlock();
+      throw new RegionDoesNotContainSpecifiedDimension(rdncsd);
+    }
+    catch (hla.rti1516e.exceptions.InvalidRegion ir)
+    {
+      throw new InvalidRegion(ir);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
-  public RangeBounds getRangeBounds(RegionHandle regionHandle,
-                                    DimensionHandle dimensionHandle)
-    throws InvalidRegion, RegionDoesNotContainSpecifiedDimension,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+  public void setRangeBounds(RegionHandle regionHandle, DimensionHandle dimensionHandle, RangeBounds rangeBounds)
+    throws InvalidRegion, RegionNotCreatedByThisFederate, RegionDoesNotContainSpecifiedDimension, InvalidRangeBound,
+           FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getRangeBounds(regionHandle, dimensionHandle);
+      rtiAmbassador.setRangeBounds(convert(regionHandle), convert(dimensionHandle), convert(rangeBounds));
     }
-    finally
+    catch (hla.rti1516e.exceptions.InvalidRangeBound irb)
     {
-      joinResignLock.readLock().unlock();
+      throw new InvalidRangeBound(irb);
     }
-  }
-
-  public void setRangeBounds(RegionHandle regionHandle,
-                             DimensionHandle dimensionHandle,
-                             RangeBounds rangeBounds)
-    throws InvalidRegion, RegionNotCreatedByThisFederate,
-           RegionDoesNotContainSpecifiedDimension, InvalidRangeBound,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
-  {
-    joinResignLock.readLock().lock();
-    try
+    catch (hla.rti1516e.exceptions.RegionDoesNotContainSpecifiedDimension rdncsd)
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.setRangeBounds(regionHandle, dimensionHandle, rangeBounds);
+      throw new RegionDoesNotContainSpecifiedDimension(rdncsd);
     }
-    finally
+    catch (hla.rti1516e.exceptions.RegionNotCreatedByThisFederate rncbtf)
     {
-      joinResignLock.readLock().unlock();
+      throw new RegionNotCreatedByThisFederate(rncbtf);
+    }
+    catch (hla.rti1516e.exceptions.InvalidRegion ir)
+    {
+      throw new InvalidRegion(ir);
+    }
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
+    {
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public long normalizeFederateHandle(FederateHandle federateHandle)
     throws InvalidFederateHandle, FederateNotExecutionMember, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.normalizeFederateHandle(federateHandle);
+      return rtiAmbassador.normalizeFederateHandle(convert(federateHandle));
     }
-    finally
+    catch (hla.rti1516e.exceptions.InvalidFederateHandle ifh)
     {
-      joinResignLock.readLock().unlock();
+      throw new InvalidFederateHandle(ifh);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public long normalizeServiceGroup(ServiceGroup serviceGroup)
     throws FederateNotExecutionMember, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.normalizeServiceGroup(serviceGroup);
+      return rtiAmbassador.normalizeServiceGroup(convert(serviceGroup));
     }
-    finally
+    catch (InvalidServiceGroup isg)
     {
-      joinResignLock.readLock().unlock();
+      throw new RTIinternalError(isg);
+    }
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    {
+      throw new FederateNotExecutionMember(fnem);
+    }
+    catch (NotConnected nc)
+    {
+      throw new RTIinternalError(nc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public boolean evokeCallback(double seconds)
     throws FederateNotExecutionMember, RTIinternalError
   {
-    // ensure only one callback is in progress
-    //
-    if (!callbackSemaphore.tryAcquire())
-    {
-      throw new RTIinternalError("concurrent access attempted");
-    }
-
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      return federate.evokeCallback(seconds);
+      return rtiAmbassador.evokeCallback(seconds);
     }
-    finally
+    catch (CallNotAllowedFromWithinCallback cnafwc)
     {
-      joinResignLock.readLock().unlock();
-      callbackSemaphore.release();
+      throw new RTIinternalError(cnafwc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public boolean evokeMultipleCallbacks(double minimumTime, double maximumTime)
     throws FederateNotExecutionMember, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      // ensure only one callback is in progress
-      //
-      if (!callbackSemaphore.tryAcquire())
-      {
-        throw new RTIinternalError("concurrent access attempted");
-      }
-
-      try
-      {
-        checkIfFederateNotExecutionMember();
-
-        return federate.evokeMultipleCallbacks(minimumTime, maximumTime);
-      }
-      finally
-      {
-        callbackSemaphore.release();
-      }
+      return rtiAmbassador.evokeMultipleCallbacks(minimumTime, maximumTime);
     }
-    finally
+    catch (CallNotAllowedFromWithinCallback cnafwc)
     {
-      joinResignLock.readLock().unlock();
+      throw new RTIinternalError(cnafwc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void enableCallbacks()
-    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.enableCallbacks();
+      rtiAmbassador.enableCallbacks();
     }
-    finally
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
-      joinResignLock.readLock().unlock();
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public void disableCallbacks()
-    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
-           RTIinternalError
+    throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    joinResignLock.readLock().lock();
     try
     {
-      checkIfFederateNotExecutionMember();
-
-      federate.disableCallbacks();
+      rtiAmbassador.disableCallbacks();
     }
-    finally
+    catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
-      joinResignLock.readLock().unlock();
+      throw new SaveInProgress(sip);
+    }
+    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+    {
+      throw new RestoreInProgress(rip);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie);
     }
   }
 
   public AttributeHandleFactory getAttributeHandleFactory()
-    throws FederateNotExecutionMember
   {
-    joinResignLock.readLock().lock();
-    try
-    {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getAttributeHandleFactory();
-    }
-    finally
-    {
-      joinResignLock.readLock().unlock();
-    }
+    return IEEE1516AttributeHandleFactory.INSTANCE;
   }
 
   public AttributeHandleSetFactory getAttributeHandleSetFactory()
-    throws FederateNotExecutionMember
   {
-    joinResignLock.readLock().lock();
-    try
-    {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getAttributeHandleSetFactory();
-    }
-    finally
-    {
-      joinResignLock.readLock().unlock();
-    }
+    return IEEE1516AttributeHandleSetFactory.INSTANCE;
   }
 
   public AttributeHandleValueMapFactory getAttributeHandleValueMapFactory()
-    throws FederateNotExecutionMember
   {
-    joinResignLock.readLock().lock();
-    try
-    {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getAttributeHandleValueMapFactory();
-    }
-    finally
-    {
-      joinResignLock.readLock().unlock();
-    }
+    return IEEE1516AttributeHandleValueMapFactory.INSTANCE;
   }
 
-  public AttributeSetRegionSetPairListFactory
-    getAttributeSetRegionSetPairListFactory()
-    throws FederateNotExecutionMember
+  public AttributeSetRegionSetPairListFactory getAttributeSetRegionSetPairListFactory()
   {
-    joinResignLock.readLock().lock();
-    try
-    {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getAttributeSetRegionSetPairListFactory();
-    }
-    finally
-    {
-      joinResignLock.readLock().unlock();
-    }
+    return IEEE1516AttributeSetRegionSetPairListFactory.INSTANCE;
   }
 
   public DimensionHandleFactory getDimensionHandleFactory()
-    throws FederateNotExecutionMember
   {
-    joinResignLock.readLock().lock();
-    try
-    {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getDimensionHandleFactory();
-    }
-    finally
-    {
-      joinResignLock.readLock().unlock();
-    }
+    return IEEE1516DimensionHandleFactory.INSTANCE;
   }
 
   public DimensionHandleSetFactory getDimensionHandleSetFactory()
-    throws FederateNotExecutionMember
   {
-    joinResignLock.readLock().lock();
-    try
-    {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getDimensionHandleSetFactory();
-    }
-    finally
-    {
-      joinResignLock.readLock().unlock();
-    }
+    return IEEE1516DimensionHandleSetFactory.INSTANCE;
   }
 
   public FederateHandleFactory getFederateHandleFactory()
-    throws FederateNotExecutionMember
   {
-    joinResignLock.readLock().lock();
-    try
-    {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getFederateHandleFactory();
-    }
-    finally
-    {
-      joinResignLock.readLock().unlock();
-    }
+    return IEEE1516FederateHandleFactory.INSTANCE;
   }
 
   public FederateHandleSetFactory getFederateHandleSetFactory()
-    throws FederateNotExecutionMember
   {
-    joinResignLock.readLock().lock();
-    try
-    {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getFederateHandleSetFactory();
-    }
-    finally
-    {
-      joinResignLock.readLock().unlock();
-    }
+    return IEEE1516FederateHandleSetFactory.INSTANCE;
   }
 
   public InteractionClassHandleFactory getInteractionClassHandleFactory()
-    throws FederateNotExecutionMember
   {
-    joinResignLock.readLock().lock();
-    try
-    {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getInteractionClassHandleFactory();
-    }
-    finally
-    {
-      joinResignLock.readLock().unlock();
-    }
+    return IEEE1516InteractionClassHandleFactory.INSTANCE;
   }
 
   public ObjectClassHandleFactory getObjectClassHandleFactory()
-    throws FederateNotExecutionMember
   {
-    joinResignLock.readLock().lock();
-    try
-    {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getObjectClassHandleFactory();
-    }
-    finally
-    {
-      joinResignLock.readLock().unlock();
-    }
+    return IEEE1516ObjectClassHandleFactory.INSTANCE;
   }
 
   public ObjectInstanceHandleFactory getObjectInstanceHandleFactory()
-    throws FederateNotExecutionMember
   {
-    joinResignLock.readLock().lock();
-    try
-    {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getObjectInstanceHandleFactory();
-    }
-    finally
-    {
-      joinResignLock.readLock().unlock();
-    }
+    return IEEE1516ObjectInstanceHandleFactory.INSTANCE;
   }
 
   public ParameterHandleFactory getParameterHandleFactory()
-    throws FederateNotExecutionMember
   {
-    joinResignLock.readLock().lock();
-    try
-    {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getParameterHandleFactory();
-    }
-    finally
-    {
-      joinResignLock.readLock().unlock();
-    }
+    return IEEE1516ParameterHandleFactory.INSTANCE;
   }
 
   public ParameterHandleValueMapFactory getParameterHandleValueMapFactory()
-    throws FederateNotExecutionMember
   {
-    joinResignLock.readLock().lock();
-    try
-    {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getParameterHandleValueMapFactory();
-    }
-    finally
-    {
-      joinResignLock.readLock().unlock();
-    }
+    return IEEE1516ParameterHandleValueMapFactory.INSTANCE;
   }
 
   public RegionHandleSetFactory getRegionHandleSetFactory()
-    throws FederateNotExecutionMember
   {
-    joinResignLock.readLock().lock();
-    try
-    {
-      checkIfFederateNotExecutionMember();
-
-      return federate.getRegionHandleSetFactory();
-    }
-    finally
-    {
-      joinResignLock.readLock().unlock();
-    }
+    return IEEE1516RegionHandleSetFactory.INSTANCE;
   }
 
   public String getHLAversion()
@@ -2882,135 +4836,334 @@ public class IEEE1516RTIambassador
     return "1516.1.5";
   }
 
-  protected void checkIfFederateAlreadyExecutionMember()
-    throws FederateAlreadyExecutionMember
+  public FederateHandle convert(hla.rti1516e.FederateHandle federateHandle)
   {
-    if (federate != null)
-    {
-      throw new FederateAlreadyExecutionMember(
-        federate.getFederateHandle().toString());
-    }
+    return new IEEE1516FederateHandle(federateHandle);
   }
 
-  protected void checkIfFederateNotExecutionMember()
-    throws FederateNotExecutionMember
+  public hla.rti1516e.FederateHandle convert(FederateHandle federateHandle)
   {
-    if (federate == null)
-    {
-      throw new FederateNotExecutionMember();
-    }
+    return new IEEE1516eFederateHandle(((IEEE1516FederateHandle) federateHandle).getHandle());
   }
 
-  protected synchronized void connectToRTI()
+  public hla.rti1516e.AttributeHandleSet convert(AttributeHandleSet attributeHandles)
+  {
+    return IEEE1516AttributeHandleSet.createIEEE1516eAttributeHandleSet(attributeHandles);
+  }
+
+  public AttributeHandleSet convert(hla.rti1516e.AttributeHandleSet attributeHandles)
+  {
+    return new IEEE1516AttributeHandleSet(attributeHandles);
+  }
+
+  public hla.rti1516e.FederateHandleSet convert(FederateHandleSet federateHandles)
+  {
+    return IEEE1516FederateHandleSet.createIEEE1516eFederateHandleSet(federateHandles);
+  }
+
+  public hla.rti1516e.LogicalTime convert(LogicalTime logicalTime)
     throws RTIinternalError
   {
-    if (rtiSession == null || !rtiSession.isConnected())
+    byte[] buffer = new byte[logicalTime.encodedLength()];
+    logicalTime.encode(buffer, 0);
+
+    try
     {
-      String host =
-        System.getProperties().getProperty("ohla.rti.host");
-      String port =
-        System.getProperties().getProperty("ohla.rti.port");
-
-      try
-      {
-        SocketConnector connector = new SocketConnector();
-
-        // set socket options
-        //
-        connector.setConnectTimeout(30);
-
-        connector.setHandler(rtiIoHandler);
-
-        // TODO: selection of codec factory
-        //
-        ProtocolCodecFactory codec = new ObjectSerializationCodecFactory();
-
-        // handles messages to/from bytes
-        //
-        connector.getFilterChain().addLast(
-          "ProtocolCodecFilter", new ProtocolCodecFilter(codec));
-
-        // connector.getFilterChain().addLast("LoggingFilter", new LoggingFilter());
-
-        // handles request/response pairs
-        //
-        connector.getFilterChain().addLast(
-          "RequestResponseFilter", new RequestResponseFilter());
-
-        SocketAddress rtiConnectionInfo =
-          new InetSocketAddress(
-            host == null ? null : InetAddress.getByName(host),
-            port == null ? 0 : Integer.parseInt(port));
-
-        log.debug("connecting to rti: {}", rtiConnectionInfo);
-
-        // TODO: selection of local address to connect to rti?
-        //
-        ConnectFuture future = connector.connect(rtiConnectionInfo);
-        future.join();
-
-        try
-        {
-          rtiSession = future.getSession();
-        }
-        catch (RuntimeIOException rioe)
-        {
-          throw new RTIinternalError(
-            String.format("unable to connect to RTI: %s", rtiConnectionInfo),
-            rioe);
-        }
-
-        rtiSession.setAttribute("ConveyRegionDesignatorSets", Boolean.TRUE);
-      }
-      catch (NumberFormatException nfe)
-      {
-        throw new RTIinternalError(String.format("invalid port: %s", port),
-                                   nfe);
-      }
-      catch (UnknownHostException uhe)
-      {
-        throw new RTIinternalError(String.format("unknown host: %s", host),
-                                   uhe);
-      }
-      catch (IOException ioe)
-      {
-        throw new RTIinternalError("unable to bind acceptor to: %s", ioe);
-      }
+      return ieee1516eLogicalTimeFactory.decodeTime(buffer, 0);
+    }
+    catch (hla.rti1516e.exceptions.CouldNotDecode cnd)
+    {
+      throw new RTIinternalError(cnd);
     }
   }
 
-  protected class RTIIoHandler
-    extends IoHandlerAdapter
+  public LogicalTime convert(hla.rti1516e.LogicalTime logicalTime)
+    throws RTIinternalError
   {
-    @Override
-    public void exceptionCaught(IoSession session, Throwable throwable)
-      throws Exception
+    byte[] buffer = new byte[logicalTime.encodedLength()];
+    try
     {
-      // close the session if an unexpected exception occurs
-      //
-      session.close();
+      logicalTime.encode(buffer, 0);
+    }
+    catch (CouldNotEncode cne)
+    {
+      throw new RTIinternalError(cne);
     }
 
-    @Override
-    public void messageReceived(IoSession session, Object message)
-      throws Exception
+    try
     {
-      joinResignLock.readLock().lock();
-      try
-      {
-        if (federate == null)
-        {
-          log.debug("discarding message (no longer joined): {}", message);
-        }
-        else if (!federate.messageReceived(session, message))
-        {
-          assert false : String.format("unexpected message: %s", message);
-        }
-      }
-      finally
-      {
-        joinResignLock.readLock().unlock();
-      }
+      return logicalTimeFactory.decode(buffer, 0);
     }
+    catch (CouldNotDecode cnd)
+    {
+      throw new RTIinternalError(cnd);
+    }
+  }
+
+  public hla.rti1516e.LogicalTimeInterval convert(LogicalTimeInterval logicalTimeInterval)
+    throws RTIinternalError
+  {
+    byte[] buffer = new byte[logicalTimeInterval.encodedLength()];
+    logicalTimeInterval.encode(buffer, 0);
+
+    try
+    {
+      return ieee1516eLogicalTimeFactory.decodeInterval(buffer, 0);
+    }
+    catch (hla.rti1516e.exceptions.CouldNotDecode cnd)
+    {
+      throw new RTIinternalError(cnd);
+    }
+  }
+
+  public LogicalTimeInterval convert(hla.rti1516e.LogicalTimeInterval logicalTimeInterval)
+    throws RTIinternalError
+  {
+    byte[] buffer = new byte[logicalTimeInterval.encodedLength()];
+    try
+    {
+      logicalTimeInterval.encode(buffer, 0);
+    }
+    catch (CouldNotEncode cne)
+    {
+      throw new RTIinternalError(cne);
+    }
+
+    try
+    {
+      return logicalTimeIntervalFactory.decode(buffer, 0);
+    }
+    catch (CouldNotDecode cnd)
+    {
+      throw new RTIinternalError(cnd);
+    }
+  }
+
+  public ObjectInstanceHandle convert(hla.rti1516e.ObjectInstanceHandle objectInstanceHandle)
+  {
+    return new IEEE1516ObjectInstanceHandle(objectInstanceHandle);
+  }
+
+  public hla.rti1516e.ObjectInstanceHandle convert(ObjectInstanceHandle objectInstanceHandle)
+  {
+    return ((IEEE1516ObjectInstanceHandle) objectInstanceHandle).getIEEE1516eObjectInstanceHandle();
+  }
+
+  public ObjectClassHandle convert(hla.rti1516e.ObjectClassHandle objectClassHandle)
+  {
+    return new IEEE1516ObjectClassHandle(objectClassHandle);
+  }
+
+  public hla.rti1516e.ObjectClassHandle convert(ObjectClassHandle objectClassHandle)
+  {
+    return new IEEE1516eObjectClassHandle(((IEEE1516ObjectClassHandle) objectClassHandle).getHandle());
+  }
+
+  public AttributeHandle convert(hla.rti1516e.AttributeHandle attributeHandle)
+  {
+    return new IEEE1516AttributeHandle(attributeHandle);
+  }
+
+  public hla.rti1516e.AttributeHandle convert(AttributeHandle attributeHandle)
+  {
+    return new IEEE1516eAttributeHandle(((IEEE1516AttributeHandle) attributeHandle).getHandle());
+  }
+
+  public DimensionHandle convert(hla.rti1516e.DimensionHandle dimensionHandle)
+  {
+    return new IEEE1516DimensionHandle(dimensionHandle);
+  }
+
+  public hla.rti1516e.DimensionHandle convert(DimensionHandle dimensionHandle)
+  {
+    return new IEEE1516eDimensionHandle(((IEEE1516DimensionHandle) dimensionHandle).getHandle());
+  }
+
+  public InteractionClassHandle convert(hla.rti1516e.InteractionClassHandle interactionClassHandle)
+  {
+    return new IEEE1516InteractionClassHandle(interactionClassHandle);
+  }
+
+  public hla.rti1516e.InteractionClassHandle convert(
+    InteractionClassHandle interactionClassHandle)
+  {
+    return new IEEE1516eInteractionClassHandle(((IEEE1516InteractionClassHandle) interactionClassHandle).getHandle());
+  }
+
+  public ParameterHandle convert(hla.rti1516e.ParameterHandle parameterHandle)
+  {
+    return new IEEE1516ParameterHandle(parameterHandle);
+  }
+
+  public hla.rti1516e.ParameterHandle convert(ParameterHandle parameterHandle)
+  {
+    return new IEEE1516eParameterHandle(((IEEE1516ParameterHandle) parameterHandle).getHandle());
+  }
+
+  public TransportationType convert(TransportationTypeHandle transportationTypeHandle)
+  {
+    return TransportationType.values()[((IEEE1516eTransportationTypeHandle) transportationTypeHandle).getHandle()];
+  }
+
+  public TransportationTypeHandle convert(TransportationType transportationType)
+  {
+    return new IEEE1516eTransportationTypeHandle(transportationType.ordinal());
+  }
+
+  public OrderType convert(hla.rti1516e.OrderType orderType)
+  {
+    return OrderType.values()[orderType.ordinal()];
+  }
+
+  public hla.rti1516e.OrderType convert(OrderType orderType)
+  {
+    return hla.rti1516e.OrderType.values()[orderType.ordinal()];
+  }
+
+  public SynchronizationPointFailureReason convert(
+    hla.rti1516e.SynchronizationPointFailureReason synchronizationPointFailureReason)
+  {
+    return SynchronizationPointFailureReason.values()[synchronizationPointFailureReason.ordinal()];
+  }
+
+  public hla.rti1516e.SynchronizationPointFailureReason convert(
+    SynchronizationPointFailureReason synchronizationPointFailureReason)
+  {
+    return hla.rti1516e.SynchronizationPointFailureReason.values()[synchronizationPointFailureReason.ordinal()];
+  }
+
+  public SaveFailureReason convert(hla.rti1516e.SaveFailureReason saveFailureReason)
+  {
+    return SaveFailureReason.values()[saveFailureReason.ordinal()];
+  }
+
+  public hla.rti1516e.SaveFailureReason convert(SaveFailureReason saveFailureReason)
+  {
+    return hla.rti1516e.SaveFailureReason.values()[saveFailureReason.ordinal()];
+  }
+
+  public RestoreFailureReason convert(hla.rti1516e.RestoreFailureReason restoreFailureReason)
+  {
+    return RestoreFailureReason.values()[restoreFailureReason.ordinal()];
+  }
+
+  public hla.rti1516e.RestoreFailureReason convert(RestoreFailureReason restoreFailureReason)
+  {
+    return hla.rti1516e.RestoreFailureReason.values()[restoreFailureReason.ordinal()];
+  }
+
+  public ResignAction convert(hla.rti1516e.ResignAction resignAction)
+  {
+    return ResignAction.values()[resignAction.ordinal()];
+  }
+
+  public hla.rti1516e.ResignAction convert(ResignAction resignAction)
+  {
+    return hla.rti1516e.ResignAction.values()[resignAction.ordinal()];
+  }
+
+  public MessageRetractionReturn convert(hla.rti1516e.MessageRetractionReturn messageRetractionReturn)
+  {
+    return new MessageRetractionReturn(
+      messageRetractionReturn.retractionHandleIsValid, convert(messageRetractionReturn.handle));
+  }
+
+  public TimeQueryReturn convert(hla.rti1516e.TimeQueryReturn timeQueryReturn)
+    throws RTIinternalError
+  {
+    return new TimeQueryReturn(timeQueryReturn.timeIsValid, convert(timeQueryReturn.time));
+  }
+
+  public MessageRetractionHandle convert(hla.rti1516e.MessageRetractionHandle messageRetractionHandle)
+  {
+    return new IEEE1516MessageRetractionHandle(messageRetractionHandle);
+  }
+
+  public hla.rti1516e.MessageRetractionHandle convert(MessageRetractionHandle messageRetractionHandle)
+  {
+    return ((IEEE1516MessageRetractionHandle) messageRetractionHandle).getIEEE1516eMessageRetractionHandle();
+  }
+
+  public hla.rti1516e.AttributeHandleValueMap convert(AttributeHandleValueMap attributeValues)
+  {
+    return IEEE1516AttributeHandleValueMap.createIEEE1516eAttributeHandleValueMap(attributeValues);
+  }
+
+  public AttributeHandleValueMap convert(hla.rti1516e.AttributeHandleValueMap attributeValues)
+  {
+    return new IEEE1516AttributeHandleValueMap(attributeValues);
+  }
+
+  public hla.rti1516e.ParameterHandleValueMap convert(ParameterHandleValueMap parameterValues)
+  {
+    return IEEE1516ParameterHandleValueMap.createIEEE1516eParameterHandleValueMap(parameterValues);
+  }
+
+  public ParameterHandleValueMap convert(hla.rti1516e.ParameterHandleValueMap parameterValues)
+  {
+    return new IEEE1516ParameterHandleValueMap(parameterValues);
+  }
+
+  public RegionHandle convert(hla.rti1516e.RegionHandle regionHandle)
+  {
+    return new IEEE1516RegionHandle(regionHandle);
+  }
+
+  public hla.rti1516e.RegionHandle convert(RegionHandle regionHandle)
+  {
+    return ((IEEE1516RegionHandle) regionHandle).getIEEE1516eRegionHandle();
+  }
+
+  public RegionHandleSet convert(hla.rti1516e.RegionHandleSet regionHandles)
+  {
+    return new IEEE1516RegionHandleSet(regionHandles);
+  }
+
+  public hla.rti1516e.RegionHandleSet convert(RegionHandleSet regionHandles)
+  {
+    return IEEE1516RegionHandleSet.createIEEE1516eRegionHandleSet(regionHandles);
+  }
+
+  public DimensionHandleSet convert(hla.rti1516e.DimensionHandleSet dimensionHandles)
+  {
+    return new IEEE1516DimensionHandleSet(dimensionHandles);
+  }
+
+  public hla.rti1516e.DimensionHandleSet convert(DimensionHandleSet dimensionHandles)
+  {
+    return IEEE1516DimensionHandleSet.createIEEE1516eDimensionHandleSet(dimensionHandles);
+  }
+
+  public hla.rti1516e.RangeBounds convert(RangeBounds rangeBounds)
+  {
+    return new hla.rti1516e.RangeBounds(rangeBounds.lower, rangeBounds.upper);
+  }
+
+  public RangeBounds convert(hla.rti1516e.RangeBounds rangeBounds)
+  {
+    RangeBounds rb = new RangeBounds();
+    rb.lower = rangeBounds.lower;
+    rb.upper = rangeBounds.upper;
+    return rb;
+  }
+
+  public AttributeSetRegionSetPairList convert(hla.rti1516e.AttributeSetRegionSetPairList attributesAndRegions)
+  {
+    return new IEEE1516AttributeSetRegionSetPairList(attributesAndRegions);
+  }
+
+  public hla.rti1516e.AttributeSetRegionSetPairList convert(AttributeSetRegionSetPairList attributesAndRegions)
+  {
+    return IEEE1516AttributeSetRegionSetPairList.createIEEE1516eAttributeSetRegionSetPairList(attributesAndRegions);
+  }
+
+  public ServiceGroup convert(hla.rti1516e.ServiceGroup serviceGroup)
+  {
+    return ServiceGroup.values()[serviceGroup.ordinal()];
+  }
+
+  public hla.rti1516e.ServiceGroup convert(ServiceGroup serviceGroup)
+  {
+    return hla.rti1516e.ServiceGroup.values()[serviceGroup.ordinal()];
   }
 }

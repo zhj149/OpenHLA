@@ -16,26 +16,52 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateInternalError;
-import hla.rti1516.InvalidLogicalTime;
-import hla.rti1516.LogicalTime;
-import hla.rti1516.NoRequestToEnableTimeConstrainedWasPending;
+import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.FederateMessage;
+import net.sf.ohla.rti.messages.LogicalTimeMessage;
+import net.sf.ohla.rti.messages.MessageType;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.LogicalTime;
+import hla.rti1516e.LogicalTimeFactory;
+import hla.rti1516e.exceptions.FederateInternalError;
 
 public class TimeConstrainedEnabled
-  implements Callback
+  extends LogicalTimeMessage
+  implements Callback, FederateMessage
 {
-  protected LogicalTime time;
+  private Federate federate;
 
   public TimeConstrainedEnabled(LogicalTime time)
   {
-    this.time = time;
+    super(MessageType.TIME_CONSTRAINED_ENABLED, time);
+
+    encodingFinished();
+  }
+
+  public TimeConstrainedEnabled(ChannelBuffer buffer, LogicalTimeFactory logicalTimeFactory)
+  {
+    super(buffer, logicalTimeFactory);
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.TIME_CONSTRAINED_ENABLED;
   }
 
   public void execute(FederateAmbassador federateAmbassador)
-    throws InvalidLogicalTime, NoRequestToEnableTimeConstrainedWasPending,
-           FederateInternalError
+    throws FederateInternalError
   {
-    federateAmbassador.timeConstrainedEnabled(time);
+    federate.timeConstrainedEnabled(time);
+  }
+
+  public void execute(Federate federate)
+  {
+    this.federate = federate;
+
+    federate.callbackReceived(this);
   }
 }

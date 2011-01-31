@@ -8,14 +8,13 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="HLA 1.3" />
-    <orderEntry type="module" module-name="IEEE 1516" />
-    <orderEntry type="library" name="dom4j" level="project" />
-    <orderEntry type="library" name="mina" level="project" />
-    <orderEntry type="library" name="testng" level="project" />
-    <orderEntry type="library" name="logback" level="project" />
-    <orderEntry type="library" name="slf4j" level="project" />
-    <orderEntry type="module-library">
+    <orderEntry type="module" module-name="HLA 1.3" exported="" />
+    <orderEntry type="module" module-name="IEEE 1516" exported="" />
+    <orderEntry type="module" module-name="IEEE 1516e" exported="" />
+    <orderEntry type="library" exported="" name="logback" level="project" />
+    <orderEntry type="library" exported="" name="slf4j" level="project" />
+    <orderEntry type="library" exported="" name="netty" level="project" />
+    <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
           <root url="file://$MODULE_DIR$/../../resources" />

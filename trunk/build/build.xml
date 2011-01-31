@@ -41,19 +41,11 @@
   <!-- Libraries                                                        -->
   <!-- ================================================================ -->
 
-  <!-- MINA -->
-  <property name="apache.mina.root"
-            location="${project.thirdparty}/apache/mina"/>
-  <property name="apache.mina.lib" location="${apache.mina.root}/lib"/>
-  <path id="apache.mina.classpath">
-    <fileset dir="${apache.mina.lib}" includes="*.jar"/>
-  </path>
-
-  <!-- DOM4J -->
-  <property name="dom4j.root" location="${project.thirdparty}/dom4j"/>
-  <property name="dom4j.lib" location="${dom4j.root}/lib"/>
-  <path id="dom4j.classpath">
-    <fileset dir="${dom4j.lib}" includes="*.jar"/>
+  <!-- Netty -->
+  <property name="netty.root" location="${project.thirdparty}/netty"/>
+  <property name="netty.lib" location="${netty.root}/lib"/>
+  <path id="netty.classpath">
+    <fileset dir="${netty.lib}" includes="*.jar"/>
   </path>
 
   <!-- SLF4J -->
@@ -80,14 +72,13 @@
   <path id="testng.classpath">
     <fileset dir="${testng.lib}" includes="*.jar"/>
   </path>
-  <taskdef resource="testngtasks" classpathref="testng.classpath"/>
+  <taskdef name="testng" classname="org.testng.TestNGAntTask" classpathref="testng.classpath"/>
 
   <!-- The combined library classpath. -->
   <path id="library.classpath">
-    <path refid="apache.mina.classpath"/>
+    <path refid="netty.classpath"/>
     <path refid="slf4j.classpath"/>
     <path refid="logback.classpath"/>
-    <path refid="dom4j.classpath"/>
   </path>
 
   <!-- The combined classpath. -->
@@ -117,7 +108,46 @@
 
 
   <!-- ================================================================== -->
-  <!-- IEEE 1516                                                      -->
+  <!-- IEEE 1516e                                                         -->
+  <!-- ================================================================== -->
+
+  <property name="ieee-1516e.jar" value="ieee-1516e.jar"/>
+
+  <property name="source.ieee-1516e" location="${project.root}/ieee-1516e/src"/>
+  <property name="source.ieee-1516e.java" location="${source.ieee-1516e}/java"/>
+
+  <target name="compile-ieee-1516e" depends="compile-ieee-1516e-java"/>
+
+  <target name="compile-ieee-1516e-java" depends="init">
+    <mkdir dir="${output}/ieee-1516e/classes"/>
+
+    <javac destdir="${output}/ieee-1516e/classes"
+           fork="${javac.fork}"
+           optimize="${javac.optimize}"
+           debug="${javac.debug}"
+           verbose="${javac.verbose}"
+           deprecation="${javac.deprecation}"
+           includes="**/*.java">
+
+      <classpath>
+        <path refid="javac.classpath"/>
+      </classpath>
+
+      <src path="${source.ieee-1516e.java}"/>
+    </javac>
+  </target>
+
+  <target name="jar-ieee-1516e" depends="compile-ieee-1516e-java">
+    <mkdir dir="${output.lib}"/>
+
+    <jar jarfile="${output.lib}/${ieee-1516e.jar}">
+      <fileset dir="${output}/ieee-1516e/classes"/>
+    </jar>
+  </target>
+
+
+  <!-- ================================================================== -->
+  <!-- IEEE 1516                                                          -->
   <!-- ================================================================== -->
 
   <property name="ieee-1516.jar" value="ieee-1516.jar"/>
@@ -221,7 +251,7 @@
   </target>
 
   <target name="compile-ohla-java"
-          depends="jar-ieee-1516, jar-hla-1.3, generate-hla-1.3-fed">
+          depends="jar-ieee-1516e, jar-ieee-1516, jar-hla-1.3, generate-hla-1.3-fed">
     <mkdir dir="${output}/rti/classes"/>
 
     <javac srcdir="${source.rti.java}"
@@ -237,6 +267,7 @@
         <path refid="javac.classpath"/>
         <pathelement location="${output.lib}/${hla-1.3.jar}"/>
         <pathelement location="${output.lib}/${ieee-1516.jar}"/>
+        <pathelement location="${output.lib}/${ieee-1516e.jar}"/>
       </classpath>
     </javac>
   </target>
@@ -294,6 +325,7 @@
         <path refid="testng.classpath"/>
         <pathelement location="${output.lib}/${hla-1.3.jar}"/>
         <pathelement location="${output.lib}/${ieee-1516.jar}"/>
+        <pathelement location="${output.lib}/${ieee-1516e.jar}"/>
         <pathelement location="${output.lib}/${rti.jar}"/>
       </classpath>
 
@@ -301,8 +333,33 @@
     </javac>
   </target>
 
-  <target name="testsuite" depends="testsuite-ieee-1516, testsuite-hla-1.3"
+  <target name="testsuite" depends="testsuite-ieee-1516e, testsuite-ieee-1516, testsuite-hla-1.3"
           description="Executes the Testsuite."/>
+
+  <target name="testsuite-ieee-1516e" depends="compile-testsuite-java"
+          description="Executes the IEEE 1516e Testsuite.">
+    <mkdir dir="${output}/testsuite/results"/>
+
+    <testng outputDir="${output}/testsuite/results/ieee-1516e"
+            haltOnfailure="true">
+      <classpath>
+        <path refid="javac.classpath"/>
+        <pathelement location="${output.lib}/${hla-1.3.jar}"/>
+        <pathelement location="${output.lib}/${ieee-1516.jar}"/>
+        <pathelement location="${output.lib}/${ieee-1516e.jar}"/>
+        <pathelement location="${output.lib}/${rti.jar}"/>
+        <pathelement location="${output}/testsuite/classes"/>
+        <pathelement location="${project.resources}"/>
+        <pathelement location="${project.resources.testsuite}"/>
+      </classpath>
+      <xmlfileset dir="${project.resources.testsuite}" includes="ieee-1516e-testng.xml"/>
+
+      <jvmarg value="-ea"/>
+
+      <sysproperty key="ohla.rti.host" value="localhost"/>
+      <sysproperty key="ohla.rti.port" value="5000"/>
+    </testng>
+  </target>
 
   <target name="testsuite-ieee-1516" depends="compile-testsuite-java"
           description="Executes the IEEE 1516 Testsuite.">
@@ -312,7 +369,9 @@
             haltOnfailure="true">
       <classpath>
         <path refid="javac.classpath"/>
+        <pathelement location="${output.lib}/${hla-1.3.jar}"/>
         <pathelement location="${output.lib}/${ieee-1516.jar}"/>
+        <pathelement location="${output.lib}/${ieee-1516e.jar}"/>
         <pathelement location="${output.lib}/${rti.jar}"/>
         <pathelement location="${output}/testsuite/classes"/>
         <pathelement location="${project.resources}"/>
@@ -337,6 +396,7 @@
         <path refid="javac.classpath"/>
         <pathelement location="${output.lib}/${hla-1.3.jar}"/>
         <pathelement location="${output.lib}/${ieee-1516.jar}"/>
+        <pathelement location="${output.lib}/${ieee-1516e.jar}"/>
         <pathelement location="${output.lib}/${rti.jar}"/>
         <pathelement location="${output}/testsuite/classes"/>
         <pathelement location="${project.resources}"/>
@@ -366,7 +426,7 @@
   <!-- Distribution                                                       -->
   <!-- ================================================================== -->
 
-  <target name="dist" depends="jar-ieee-1516, jar-hla-1.3, jar-ohla, docs">
+  <target name="dist" depends="jar-ieee-1516e, jar-ieee-1516, jar-hla-1.3, jar-ohla, docs">
     <mkdir dir="${output.dist}"/>
 
     <tar destfile="${output.dist}/${dist.name}.tar.gz" compression="gzip">
@@ -389,11 +449,11 @@
   <!-- Programs                                                           -->
   <!-- ================================================================== -->
 
-  <target name="start-rti" depends="jar-ohla"
-          description="Starts the OHLA RTI.">
+  <target name="start-rti" depends="jar-ohla" description="Starts the OHLA RTI.">
     <java classname="net.sf.ohla.rti.RTI" fork="yes">
       <classpath>
         <path refid="javac.classpath"/>
+        <pathelement location="${output.lib}/${ieee-1516e.jar}"/>
         <pathelement location="${output.lib}/${ieee-1516.jar}"/>
         <pathelement location="${output.lib}/${hla-1.3.jar}"/>
         <pathelement location="${output.lib}/${rti.jar}"/>
@@ -411,14 +471,7 @@
   <!-- Cleaning                                                           -->
   <!-- ================================================================== -->
 
-  <target name="clean-light" description="Cleans any editor backup files.">
-    <delete>
-      <fileset dir="${project.root}" includes="**/*~" defaultexcludes="no"/>
-    </delete>
-  </target>
-
-  <target name="clean" depends="clean-light"
-          description="Brings the distribution back to pre-build status.">
+  <target name="clean" description="Brings the distribution back to pre-build status.">
     <delete dir="${output}"/>
   </target>
 

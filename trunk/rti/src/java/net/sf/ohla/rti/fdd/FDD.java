@@ -16,63 +16,60 @@
 
 package net.sf.ohla.rti.fdd;
 
-import java.io.IOException;
-import java.io.Serializable;
 import java.net.URL;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import org.dom4j.Document;
-import org.dom4j.DocumentException;
-import org.dom4j.Element;
-import org.dom4j.io.SAXReader;
+import net.sf.ohla.rti.Protocol;
+import net.sf.ohla.rti.fed.FED;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSet;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eInteractionClassHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
 
-import hla.rti1516.AttributeHandle;
-import hla.rti1516.AttributeNotDefined;
-import hla.rti1516.CouldNotOpenFDD;
-import hla.rti1516.DimensionHandle;
-import hla.rti1516.DimensionHandleSet;
-import hla.rti1516.ErrorReadingFDD;
-import hla.rti1516.InteractionClassHandle;
-import hla.rti1516.InteractionClassNotDefined;
-import hla.rti1516.InteractionParameterNotDefined;
-import hla.rti1516.InvalidAttributeHandle;
-import hla.rti1516.InvalidDimensionHandle;
-import hla.rti1516.InvalidInteractionClassHandle;
-import hla.rti1516.InvalidObjectClassHandle;
-import hla.rti1516.InvalidOrderName;
-import hla.rti1516.InvalidOrderType;
-import hla.rti1516.InvalidParameterHandle;
-import hla.rti1516.InvalidRangeBound;
-import hla.rti1516.InvalidTransportationName;
-import hla.rti1516.InvalidTransportationType;
-import hla.rti1516.NameNotFound;
-import hla.rti1516.ObjectClassHandle;
-import hla.rti1516.ObjectClassNotDefined;
-import hla.rti1516.OrderType;
-import hla.rti1516.ParameterHandle;
-import hla.rti1516.RangeBounds;
-import hla.rti1516.TransportationType;
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.AttributeHandle;
+import hla.rti1516e.DimensionHandle;
+import hla.rti1516e.DimensionHandleSet;
+import hla.rti1516e.InteractionClassHandle;
+import hla.rti1516e.ObjectClassHandle;
+import hla.rti1516e.OrderType;
+import hla.rti1516e.ParameterHandle;
+import hla.rti1516e.RangeBounds;
+import hla.rti1516e.TransportationTypeHandle;
+import hla.rti1516e.exceptions.AttributeNotDefined;
+import hla.rti1516e.exceptions.InconsistentFDD;
+import hla.rti1516e.exceptions.InteractionClassNotDefined;
+import hla.rti1516e.exceptions.InteractionParameterNotDefined;
+import hla.rti1516e.exceptions.InvalidAttributeHandle;
+import hla.rti1516e.exceptions.InvalidDimensionHandle;
+import hla.rti1516e.exceptions.InvalidInteractionClassHandle;
+import hla.rti1516e.exceptions.InvalidObjectClassHandle;
+import hla.rti1516e.exceptions.InvalidOrderName;
+import hla.rti1516e.exceptions.InvalidOrderType;
+import hla.rti1516e.exceptions.InvalidParameterHandle;
+import hla.rti1516e.exceptions.InvalidRangeBound;
+import hla.rti1516e.exceptions.InvalidTransportationName;
+import hla.rti1516e.exceptions.InvalidTransportationType;
+import hla.rti1516e.exceptions.NameNotFound;
+import hla.rti1516e.exceptions.ObjectClassNotDefined;
 
 public class FDD
-  implements Serializable
 {
-  public static final String HLA_OBJECT_ROOT_PREFIX =
-    ObjectClass.HLA_OBJECT_ROOT + ".";
-  public static final String HLA_INTERACTION_ROOT_PREFIX =
-    InteractionClass.HLA_INTERACTION_ROOT + ".";
+  public static final String HLA_OBJECT_ROOT_PREFIX = ObjectClass.HLA_OBJECT_ROOT.getName() + ".";
+  public static final String HLA_INTERACTION_ROOT_PREFIX = InteractionClass.HLA_INTERACTION_ROOT.getName() + ".";
 
-  protected static Map<OrderType, String> orderTypeNames =
-    new EnumMap<OrderType, String>(OrderType.class);
-  protected static Map<String, OrderType> orderTypesByName =
-    new HashMap<String, OrderType>();
+  private static final Map<OrderType, String> orderTypeNames = new EnumMap<OrderType, String>(OrderType.class);
+  private static final Map<String, OrderType> orderTypesByName = new HashMap<String, OrderType>();
 
   static
   {
@@ -83,75 +80,63 @@ public class FDD
     orderTypesByName.put("Receive", OrderType.RECEIVE);
   }
 
-  protected static Map<TransportationType, String> transportationTypeNames =
-    new EnumMap<TransportationType, String>(TransportationType.class);
-  protected static Map<String, TransportationType> transportationTypesByName =
-    new HashMap<String, TransportationType>();
+  private final Set<URL> sources = new LinkedHashSet<URL>();
 
-  static
-  {
-    transportationTypeNames.put(
-      TransportationType.HLA_RELIABLE, "HLAreliable");
-    transportationTypeNames.put(
-      TransportationType.HLA_BEST_EFFORT, "HLAbestEffort");
+  private final Map<ObjectClassHandle, ObjectClass> objectClasses = new HashMap<ObjectClassHandle, ObjectClass>();
+  private final Map<String, ObjectClass> objectClassesByName = new HashMap<String, ObjectClass>();
 
-    transportationTypesByName.put(
-      "HLAreliable", TransportationType.HLA_RELIABLE);
-    transportationTypesByName.put(
-      "HLAbestEffort", TransportationType.HLA_BEST_EFFORT);
-  }
-
-  protected Map<ObjectClassHandle, ObjectClass> objectClasses =
-    new HashMap<ObjectClassHandle, ObjectClass>();
-  protected Map<String, ObjectClass> objectClassesByName =
-    new HashMap<String, ObjectClass>();
-
-  protected Map<InteractionClassHandle, InteractionClass> interactionClasses =
+  private final Map<InteractionClassHandle, InteractionClass> interactionClasses =
     new HashMap<InteractionClassHandle, InteractionClass>();
-  protected Map<String, InteractionClass> interactionClassesByName =
+  private final Map<String, InteractionClass> interactionClassesByName =
     new HashMap<String, InteractionClass>();
 
-  protected Map<DimensionHandle, Dimension> dimensions =
-    new HashMap<DimensionHandle, Dimension>();
-  protected Map<String, Dimension> dimensionsByName =
-    new HashMap<String, Dimension>();
+  private final Map<DimensionHandle, Dimension> dimensions = new HashMap<DimensionHandle, Dimension>();
+  private final Map<String, Dimension> dimensionsByName = new HashMap<String, Dimension>();
 
-  protected FDD()
+  private final Map<TransportationTypeHandle, TransportationType> transportationTypes =
+    new HashMap<TransportationTypeHandle, TransportationType>();
+  private final Map<String, TransportationType> transportationTypesByName = new HashMap<String, TransportationType>();
+
+  private final FED fed;
+
+  public FDD(URL source)
   {
+    this(source, null);
   }
 
-  protected FDD(FDD clonee)
+  public FDD(URL source, FED fed)
   {
-    objectClasses.putAll(clonee.objectClasses);
-    objectClassesByName.putAll(clonee.objectClassesByName);
+    sources.add(source);
 
-    interactionClasses.putAll(clonee.interactionClasses);
-    interactionClassesByName.putAll(clonee.interactionClassesByName);
+    this.fed = fed == null ? new FED(this) : fed;
 
-    dimensions.putAll(clonee.dimensions);
-    dimensionsByName.putAll(clonee.dimensionsByName);
+    objectClasses.put(ObjectClass.HLA_OBJECT_ROOT.getObjectClassHandle(), ObjectClass.HLA_OBJECT_ROOT);
+    objectClassesByName.put(ObjectClass.HLA_OBJECT_ROOT.getName(), ObjectClass.HLA_OBJECT_ROOT);
+
+    interactionClasses.put(
+      InteractionClass.HLA_INTERACTION_ROOT.getInteractionClassHandle(), InteractionClass.HLA_INTERACTION_ROOT);
+    interactionClassesByName.put(
+      InteractionClass.HLA_INTERACTION_ROOT.getName(), InteractionClass.HLA_INTERACTION_ROOT);
+
+    transportationTypes.put(
+      TransportationType.HLA_RELIABLE.getTransportationTypeHandle(), TransportationType.HLA_RELIABLE);
+    transportationTypesByName.put(
+      TransportationType.HLA_RELIABLE.getName(), TransportationType.HLA_RELIABLE);
+
+    transportationTypes.put(
+      TransportationType.HLA_BEST_EFFORT.getTransportationTypeHandle(), TransportationType.HLA_BEST_EFFORT);
+    transportationTypesByName.put(
+      TransportationType.HLA_BEST_EFFORT.getName(), TransportationType.HLA_BEST_EFFORT);
   }
 
-  public FDD(URL url)
-    throws CouldNotOpenFDD, ErrorReadingFDD
+  public Set<URL> getSources()
   {
-    if (url == null)
-    {
-      throw new CouldNotOpenFDD(String.format("could not open FDD: %s", url));
-    }
+    return sources;
+  }
 
-    try
-    {
-      process(new SAXReader().read(url.openStream()));
-    }
-    catch (IOException ioe)
-    {
-      throw new CouldNotOpenFDD("could not open FDD", ioe);
-    }
-    catch (DocumentException de)
-    {
-      throw new ErrorReadingFDD("error reading FDD", de);
-    }
+  public FED getFED()
+  {
+    return fed;
   }
 
   public Map<ObjectClassHandle, ObjectClass> getObjectClasses()
@@ -184,34 +169,120 @@ public class FDD
     return dimensionsByName;
   }
 
-  public void add(ObjectClass objectClass)
+  public void merge(FDD fdd)
+    throws InconsistentFDD
   {
-    objectClasses.put(objectClass.getObjectClassHandle(), objectClass);
-    objectClassesByName.put(objectClass.getName(), objectClass);
-
-    for (ObjectClass subClass : objectClass.getSubObjectClasses().values())
-    {
-      add(subClass);
-    }
   }
 
-  public void add(InteractionClass interactionClass)
+  public void merge(Collection<FDD> fdds)
+    throws InconsistentFDD
   {
-    interactionClasses.put(interactionClass.getInteractionClassHandle(),
-                           interactionClass);
-    interactionClassesByName.put(interactionClass.getName(), interactionClass);
-
-    for (InteractionClass subInteraction :
-      interactionClass.getSubInteractionClasses().values())
-    {
-      add(subInteraction);
-    }
   }
 
-  public void add(Dimension dimension)
+  public ObjectClass addObjectClass(String objectClassName, ObjectClass superObjectClass)
   {
-    dimensions.put(dimension.getDimensionHandle(), dimension);
-    dimensionsByName.put(dimension.getName(), dimension);
+    if (superObjectClass == null)
+    {
+       superObjectClass = ObjectClass.HLA_OBJECT_ROOT;
+    }
+    else if (superObjectClass != ObjectClass.HLA_OBJECT_ROOT)
+    {
+      objectClassName = superObjectClass.getName() + "." + objectClassName;
+    }
+
+    ObjectClass objectClass = objectClassesByName.get(objectClassName);
+    if (objectClass == null)
+    {
+      ObjectClassHandle objectClassHandle = new IEEE1516eObjectClassHandle(objectClasses.size() + 1);
+
+      objectClass = new ObjectClass(objectClassHandle, objectClassName, superObjectClass);
+
+      objectClasses.put(objectClassHandle, objectClass);
+      objectClassesByName.put(objectClassName, objectClass);
+    }
+    return objectClass;
+  }
+
+  public Attribute addAttribute(
+    ObjectClass objectClass, String name, Set<String> dimensions, String transportationTypeName, String orderTypeName)
+  {
+    return addAttribute(objectClass, name, getDimensionHandles(dimensions), transportationTypeName, orderTypeName);
+  }
+
+  public Attribute addAttribute(
+    ObjectClass objectClass, String name, DimensionHandleSet dimensionHandles,
+    String transportationTypeName, String orderTypeName)
+  {
+    TransportationType transportationType = transportationTypesByName.get(transportationTypeName);
+    if (transportationType == null)
+    {
+      transportationType = TransportationType.HLA_RELIABLE;
+    }
+
+    OrderType orderType = orderTypesByName.get(orderTypeName);
+    if (orderType == null)
+    {
+      orderType = OrderType.RECEIVE;
+    }
+
+    return objectClass.addAttribute(
+      name, dimensionHandles, transportationType.getTransportationTypeHandle(), orderType);
+  }
+
+  public InteractionClass addInteractionClass(
+    String name, InteractionClass superInteractionClass, Set<String> dimensions,
+    String transportationTypeName, String orderTypeName)
+  {
+    return addInteractionClass(
+      name, superInteractionClass, getDimensionHandles(dimensions), transportationTypeName, orderTypeName);
+  }
+
+  public InteractionClass addInteractionClass(
+    String name, InteractionClass superInteractionClass, DimensionHandleSet dimensionHandles,
+    String transportationTypeName, String orderTypeName)
+  {
+    TransportationType transportationType = transportationTypesByName.get(transportationTypeName);
+    if (transportationType == null)
+    {
+      transportationType = TransportationType.HLA_RELIABLE;
+    }
+
+    OrderType orderType = orderTypesByName.get(orderTypeName);
+
+    InteractionClass interactionClass = interactionClassesByName.get(name);
+    if (interactionClass == null)
+    {
+      InteractionClassHandle interactionClassHandle =
+        new IEEE1516eInteractionClassHandle(interactionClasses.size() + 1);
+
+      interactionClass = new InteractionClass(
+        interactionClassHandle, name,
+        superInteractionClass == null ? InteractionClass.HLA_INTERACTION_ROOT : superInteractionClass,
+        dimensionHandles, transportationType.getTransportationTypeHandle(), orderType);
+
+      interactionClasses.put(interactionClassHandle, interactionClass);
+      interactionClassesByName.put(name, interactionClass);
+    }
+    return interactionClass;
+  }
+
+  public Parameter addParameter(InteractionClass interactionClass, String name)
+  {
+    return interactionClass.addParameter(name);
+  }
+
+  public Dimension addDimension(String name)
+  {
+    Dimension dimension = dimensionsByName.get(name);
+    if (dimension == null)
+    {
+      DimensionHandle dimensionHandle = new IEEE1516eDimensionHandle(this.dimensions.size() + 1);
+      dimension = new Dimension(dimensionHandle, name);
+
+      dimensions.put(dimensionHandle, dimension);
+      dimensionsByName.put(name, dimension);
+    }
+    return dimension;
   }
 
   public ObjectClass getObjectClass(ObjectClassHandle objectClassHandle)
@@ -220,9 +291,15 @@ public class FDD
     ObjectClass objectClass = objectClasses.get(objectClassHandle);
     if (objectClass == null)
     {
-      throw new ObjectClassNotDefined(
-        String.format("object class not defined: %s", objectClassHandle));
+      throw new ObjectClassNotDefined(String.format("object class not defined: %s", objectClassHandle));
     }
+    return objectClass;
+  }
+
+  public ObjectClass getObjectClassSafely(ObjectClassHandle objectClassHandle)
+  {
+    ObjectClass objectClass = objectClasses.get(objectClassHandle);
+    assert objectClass != null;
     return objectClass;
   }
 
@@ -239,8 +316,7 @@ public class FDD
     ObjectClass objectClass = objectClassesByName.get(name);
     if (objectClass == null)
     {
-      throw new NameNotFound(
-        String.format("object class name not found: %s", name));
+      throw new NameNotFound(String.format("object class name not found: %s", name));
     }
     return objectClass;
   }
@@ -260,28 +336,23 @@ public class FDD
     }
     catch (ObjectClassNotDefined ocnd)
     {
-      throw new InvalidObjectClassHandle(
-        String.format("invalid object class handle: %s", objectClassHandle),
-        ocnd);
+      throw new InvalidObjectClassHandle(String.format("invalid object class handle: %s", objectClassHandle), ocnd);
     }
   }
 
-  public Attribute getAttribute(ObjectClassHandle objectClassHandle,
-                                String name)
+  public Attribute getAttribute(ObjectClassHandle objectClassHandle, String name)
     throws NameNotFound, ObjectClassNotDefined
   {
     return getObjectClass(objectClassHandle).getAttribute(name);
   }
 
-  public Attribute getAttribute(ObjectClassHandle objectClassHandle,
-                                AttributeHandle attributeHandle)
+  public Attribute getAttribute(ObjectClassHandle objectClassHandle, AttributeHandle attributeHandle)
     throws AttributeNotDefined, ObjectClassNotDefined
   {
     return getObjectClass(objectClassHandle).getAttribute(attributeHandle);
   }
 
-  public AttributeHandle getAttributeHandle(ObjectClassHandle objectClassHandle,
-                                            String name)
+  public AttributeHandle getAttributeHandle(ObjectClassHandle objectClassHandle, String name)
     throws NameNotFound, InvalidObjectClassHandle
   {
     try
@@ -290,9 +361,7 @@ public class FDD
     }
     catch (ObjectClassNotDefined ocnd)
     {
-      throw new InvalidObjectClassHandle(
-        String.format("invalid object class handle: %s", objectClassHandle),
-        ocnd);
+      throw new InvalidObjectClassHandle(String.format("invalid object class handle: %s", objectClassHandle), ocnd);
     }
   }
 
@@ -306,28 +375,29 @@ public class FDD
     }
     catch (AttributeNotDefined and)
     {
-      throw new InvalidAttributeHandle(
-        String.format("invalid attribute handle: %s", attributeHandle), and);
+      throw new InvalidAttributeHandle(String.format("invalid attribute handle: %s", attributeHandle), and);
     }
     catch (ObjectClassNotDefined ocnd)
     {
-      throw new InvalidObjectClassHandle(
-        String.format("invalid object class handle: %s", objectClassHandle),
-        ocnd);
+      throw new InvalidObjectClassHandle(String.format("invalid object class handle: %s", objectClassHandle), ocnd);
     }
   }
 
-  public InteractionClass getInteractionClass(
-    InteractionClassHandle interactionClassHandle)
+  public InteractionClass getInteractionClass(InteractionClassHandle interactionClassHandle)
     throws InteractionClassNotDefined
   {
-    InteractionClass interactionClass =
-      interactionClasses.get(interactionClassHandle);
+    InteractionClass interactionClass = interactionClasses.get(interactionClassHandle);
     if (interactionClass == null)
     {
-      throw new InteractionClassNotDefined(String.format(
-        "interaction class not defined: %s", interactionClassHandle));
+      throw new InteractionClassNotDefined(String.format("interaction class not defined: %s", interactionClassHandle));
     }
+    return interactionClass;
+  }
+
+  public InteractionClass getInteractionClassSafely(InteractionClassHandle interactionClassHandle)
+  {
+    InteractionClass interactionClass = interactionClasses.get(interactionClassHandle);
+    assert interactionClass != null;
     return interactionClass;
   }
 
@@ -344,8 +414,7 @@ public class FDD
     InteractionClass interactionClass = interactionClassesByName.get(name);
     if (interactionClass == null)
     {
-      throw new NameNotFound(
-        String.format("interaction class name not found: %s", name));
+      throw new NameNotFound(String.format("interaction class name not found: %s", name));
     }
     return interactionClass;
   }
@@ -356,8 +425,7 @@ public class FDD
     return getInteractionClass(name).getInteractionClassHandle();
   }
 
-  public String getInteractionClassName(
-    InteractionClassHandle interactionClassHandle)
+  public String getInteractionClassName(InteractionClassHandle interactionClassHandle)
     throws InvalidInteractionClassHandle
   {
     try
@@ -367,24 +435,20 @@ public class FDD
     catch (InteractionClassNotDefined icnd)
     {
       throw new InvalidInteractionClassHandle(
-        String.format("invalid interaction class handle: %s",
-                      interactionClassHandle), icnd);
+        String.format("invalid interaction class handle: %s", interactionClassHandle), icnd);
     }
   }
 
-  public Parameter getParameter(InteractionClassHandle interactionClassHandle,
-                                String name)
+  public Parameter getParameter(InteractionClassHandle interactionClassHandle, String name)
     throws NameNotFound, InteractionClassNotDefined
   {
     return getInteractionClass(interactionClassHandle).getParameter(name);
   }
 
-  public Parameter getParameter(InteractionClassHandle interactionClassHandle,
-                                ParameterHandle parameterHandle)
+  public Parameter getParameter(InteractionClassHandle interactionClassHandle, ParameterHandle parameterHandle)
     throws InteractionParameterNotDefined, InteractionClassNotDefined
   {
-    return getInteractionClass(interactionClassHandle).getParameter(
-      parameterHandle);
+    return getInteractionClass(interactionClassHandle).getParameter(parameterHandle);
   }
 
   public ParameterHandle getParameterHandle(
@@ -398,13 +462,11 @@ public class FDD
     catch (InteractionClassNotDefined icnd)
     {
       throw new InvalidInteractionClassHandle(
-        String.format("invalid interaction class handle: %s",
-                      interactionClassHandle), icnd);
+        String.format("invalid interaction class handle: %s", interactionClassHandle), icnd);
     }
   }
 
-  public String getParameterName(InteractionClassHandle interactionClassHandle,
-                                 ParameterHandle parameterHandle)
+  public String getParameterName(InteractionClassHandle interactionClassHandle, ParameterHandle parameterHandle)
     throws InvalidParameterHandle, InvalidInteractionClassHandle
   {
     try
@@ -413,14 +475,12 @@ public class FDD
     }
     catch (InteractionParameterNotDefined ipnd)
     {
-      throw new InvalidParameterHandle(
-        String.format("invalid parameter handle: %s", parameterHandle), ipnd);
+      throw new InvalidParameterHandle(String.format("invalid parameter handle: %s", parameterHandle), ipnd);
     }
     catch (InteractionClassNotDefined icnd)
     {
       throw new InvalidInteractionClassHandle(
-        String.format("invalid interaction class handle: %s",
-                      interactionClassHandle), icnd);
+        String.format("invalid interaction class handle: %s", interactionClassHandle), icnd);
     }
   }
 
@@ -430,8 +490,7 @@ public class FDD
     Dimension dimension = dimensionsByName.get(name);
     if (dimension == null)
     {
-      throw new NameNotFound(
-        String.format("dimension name not found: %s", name));
+      throw new NameNotFound(String.format("dimension name not found: %s", name));
     }
     return dimension;
   }
@@ -442,18 +501,22 @@ public class FDD
     Dimension dimension = dimensions.get(dimensionHandle);
     if (dimension == null)
     {
-      throw new InvalidDimensionHandle(
-        String.format("invalid dimension handle: %s", dimensionHandle));
+      throw new InvalidDimensionHandle(String.format("invalid dimension handle: %s", dimensionHandle));
     }
     return dimension;
   }
 
-  public Collection<Dimension> getDimensions(
-    DimensionHandleSet dimensionHandles)
+  public Dimension getDimensionSafely(DimensionHandle dimensionHandle)
+  {
+    Dimension dimension = dimensions.get(dimensionHandle);
+    assert dimension != null;
+    return dimension;
+  }
+
+  public Collection<Dimension> getDimensions(DimensionHandleSet dimensionHandles)
     throws InvalidDimensionHandle
   {
-    Collection<Dimension> dimensions =
-      new ArrayList<Dimension>(dimensionHandles.size());
+    Collection<Dimension> dimensions = new ArrayList<Dimension>(dimensionHandles.size());
 
     for (DimensionHandle dimensionHandle : dimensionHandles)
     {
@@ -474,81 +537,56 @@ public class FDD
     return getDimension(dimensionHandle).getName();
   }
 
-  public RangeBounds getRangeBounds(DimensionHandle dimensionHandle)
-    throws InvalidDimensionHandle
-  {
-    return getDimension(dimensionHandle).getRangeBounds();
-  }
-
   public long getDimensionUpperBound(DimensionHandle dimensionHandle)
     throws InvalidDimensionHandle
   {
-    return getRangeBounds(dimensionHandle).upper;
+    return getDimension(dimensionHandle).getUpperBound();
   }
 
   public DimensionHandleSet getAvailableDimensionsForClassAttribute(
-    ObjectClassHandle objectClassHandle, AttributeHandle attributeHandle,
-    DimensionHandleSet dimensionHandles)
+    ObjectClassHandle objectClassHandle, AttributeHandle attributeHandle)
     throws InvalidObjectClassHandle, InvalidAttributeHandle, AttributeNotDefined
   {
     try
     {
-      for (Dimension dimension : getAttribute(
-        objectClassHandle, attributeHandle).getDimensions().values())
-      {
-        dimensionHandles.add(dimension.getDimensionHandle());
-      }
-
-      return dimensionHandles;
+      return getAttribute(objectClassHandle, attributeHandle).getDimensions();
     }
     catch (ObjectClassNotDefined ocnd)
     {
       throw new InvalidObjectClassHandle(
-        String.format("invalid object class handle: %s", objectClassHandle),
-        ocnd);
+        String.format("invalid object class handle: %s", objectClassHandle), ocnd);
     }
   }
 
   public DimensionHandleSet getAvailableDimensionsForInteractionClass(
-    InteractionClassHandle interactionClassHandle,
-    DimensionHandleSet dimensionHandles)
+    InteractionClassHandle interactionClassHandle, DimensionHandleSet dimensionHandles)
     throws InvalidInteractionClassHandle
   {
     try
     {
-      for (Dimension dimension : getInteractionClass(
-        interactionClassHandle).getDimensions().values())
-      {
-        dimensionHandles.add(dimension.getDimensionHandle());
-      }
-
-      return dimensionHandles;
+      return getInteractionClass(interactionClassHandle).getDimensions();
     }
     catch (InteractionClassNotDefined icnd)
     {
       throw new InvalidInteractionClassHandle(
-        String.format("invalid interaction class handle: %s",
-                      interactionClassHandle));
+        String.format("invalid interaction class handle: %s", interactionClassHandle));
     }
   }
 
-  public void changeInteractionOrderType(InteractionClassHandle interactionClassHandle,
-                           OrderType orderType)
+  public void changeInteractionOrderType(InteractionClassHandle interactionClassHandle, OrderType orderType)
     throws InteractionClassNotDefined
   {
     getInteractionClass(interactionClassHandle).setOrderType(orderType);
   }
 
   public void changeInteractionTransportationType(
-    InteractionClassHandle interactionClassHandle,
-    TransportationType transportationType)
+    InteractionClassHandle interactionClassHandle, TransportationTypeHandle transportationTypeHandle)
     throws InteractionClassNotDefined
   {
-    getInteractionClass(interactionClassHandle).setTransportationType(
-      transportationType);
+    getInteractionClass(interactionClassHandle).setTransportationTypeHandle(transportationTypeHandle);
   }
 
-  public TransportationType getTransportationType(String name)
+  public TransportationTypeHandle getTransportationTypeHandle(String name)
     throws InvalidTransportationName
   {
     TransportationType transportationType = transportationTypesByName.get(name);
@@ -556,19 +594,18 @@ public class FDD
     {
       throw new InvalidTransportationName(name);
     }
-    return transportationType;
+    return transportationType.getTransportationTypeHandle();
   }
 
-  public String getTransportationName(TransportationType transportationType)
+  public String getTransportationTypeName(TransportationTypeHandle transportationTypeHandle)
     throws InvalidTransportationType
   {
-    String name = transportationTypeNames.get(transportationType);
-    if (name == null)
+    TransportationType transportationType = transportationTypes.get(transportationTypeHandle);
+    if (transportationType == null)
     {
-      throw new InvalidTransportationType(
-        String.format("%s", transportationType));
+      throw new InvalidTransportationType(transportationTypeHandle.toString());
     }
-    return name;
+    return transportationType.getName();
   }
 
   public OrderType getOrderType(String name)
@@ -588,7 +625,7 @@ public class FDD
     String name = orderTypeNames.get(orderType);
     if (name == null)
     {
-      throw new InvalidOrderType(String.format("%s", orderType));
+      throw new InvalidOrderType(orderType.toString());
     }
     return name;
   }
@@ -599,15 +636,13 @@ public class FDD
     getObjectClass(objectClassHandle);
   }
 
-  public void checkIfAttributeNotDefined(ObjectClassHandle objectClassHandle,
-                                         AttributeHandle attributeHandle)
+  public void checkIfAttributeNotDefined(ObjectClassHandle objectClassHandle, AttributeHandle attributeHandle)
     throws ObjectClassNotDefined, AttributeNotDefined
   {
     getObjectClass(objectClassHandle).getAttribute(attributeHandle);
   }
 
-  public void checkIfAttributeNotDefined(ObjectClassHandle objectClassHandle,
-                                         Set<AttributeHandle> attributeHandles)
+  public void checkIfAttributeNotDefined(ObjectClassHandle objectClassHandle, Set<AttributeHandle> attributeHandles)
     throws ObjectClassNotDefined, AttributeNotDefined
   {
     ObjectClass objectClass = getObjectClass(objectClassHandle);
@@ -618,27 +653,23 @@ public class FDD
   }
 
   public void checkIfInteractionParameterNotDefined(
-    InteractionClassHandle interactionClassHandle,
-    Set<ParameterHandle> parameterHandles)
+    InteractionClassHandle interactionClassHandle, Set<ParameterHandle> parameterHandles)
     throws InteractionClassNotDefined, InteractionParameterNotDefined
   {
-    InteractionClass interactionClass =
-      getInteractionClass(interactionClassHandle);
+    InteractionClass interactionClass = getInteractionClass(interactionClassHandle);
     for (ParameterHandle parameterHandle : parameterHandles)
     {
       interactionClass.getParameter(parameterHandle);
     }
   }
 
-  public void checkIfInteractionClassNotDefined(
-    InteractionClassHandle interactionClassHandle)
+  public void checkIfInteractionClassNotDefined(InteractionClassHandle interactionClassHandle)
     throws InteractionClassNotDefined
   {
     getInteractionClass(interactionClassHandle);
   }
 
-  public void checkIfInvalidDimensionHandle(
-    Set<DimensionHandle> dimensionHandles)
+  public void checkIfInvalidDimensionHandle(Set<DimensionHandle> dimensionHandles)
     throws InvalidDimensionHandle
   {
     for (DimensionHandle dimensionHandle : dimensionHandles)
@@ -647,8 +678,7 @@ public class FDD
     }
   }
 
-  public void checkIfInvalidRangeBound(DimensionHandle dimensionHandle,
-                                       RangeBounds rangeBounds)
+  public void checkIfInvalidRangeBound(DimensionHandle dimensionHandle, RangeBounds rangeBounds)
     throws InvalidRangeBound
   {
     try
@@ -657,112 +687,77 @@ public class FDD
     }
     catch (InvalidDimensionHandle idh)
     {
-      throw new InvalidRangeBound(idh);
+      throw new InvalidRangeBound("", idh);
     }
   }
 
-  @SuppressWarnings("unchecked")
-  protected void process(Document fdd)
-    throws ErrorReadingFDD
+  public void checkIfInvalidTransportationType(TransportationTypeHandle transportationTypeHandle)
+    throws InvalidTransportationType
   {
-    // add dimensions first, object and interaction classes depend on them
-    //
-    List<Element> dimensions =
-      fdd.selectNodes("//objectModel/dimensions/dimension");
-    for (Element dimension : dimensions)
-    {
-      add(new Dimension(dimension));
-    }
+    getTransportationTypeName(transportationTypeHandle);
+  }
 
-    AtomicInteger objectClassCount = new AtomicInteger();
-    AtomicInteger attributeCount = new AtomicInteger();
-
-    ObjectClass hlaObjectRoot;
-
-    // select all the HLA object root classes
-    //
-    List<Element> hlaObjectRoots = fdd.selectNodes(
-      String.format("//objectModel/objects/objectClass[@name='%s']",
-                    ObjectClass.HLA_OBJECT_ROOT));
-    if (hlaObjectRoots.isEmpty())
+  private DimensionHandleSet getDimensionHandles(Set<String> dimensions)
+  {
+    DimensionHandleSet dimensionHandles;
+    if (dimensions == null || dimensions.isEmpty())
     {
-      // no HLA object root specified in the FDD
-      //
-      hlaObjectRoot =
-        new ObjectClass(ObjectClass.HLA_OBJECT_ROOT, objectClassCount);
-      hlaObjectRoot.add(new Attribute(
-        Attribute.HLA_PRIVILEGE_TO_DELETE_OBJECT, attributeCount));
-    }
-    else if (hlaObjectRoots.size() == 1)
-    {
-      // the HLA object root is specified in the FDD
-      //
-      hlaObjectRoot = new ObjectClass(
-        hlaObjectRoots.get(0), objectClassCount, attributeCount, this);
+      dimensionHandles = null;
     }
     else
     {
-      throw new ErrorReadingFDD(
-        String.format("only 1 %s allowed", ObjectClass.HLA_OBJECT_ROOT));
+      dimensionHandles = new IEEE1516eDimensionHandleSet();
+
+      for (String dimensionName : dimensions)
+      {
+        dimensionHandles.add(addDimension(dimensionName).getDimensionHandle());
+      }
     }
+    return dimensionHandles;
+  }
 
-    add(hlaObjectRoot);
+  public static void encode(ChannelBuffer buffer, FDD fdd)
+  {
+  }
 
-    List<Element> nonHLAObjectRoots = fdd.selectNodes(
-      String.format("//objectModel/objects/objectClass[@name!='%s']",
-                    ObjectClass.HLA_OBJECT_ROOT));
-    for (Element objectClass : nonHLAObjectRoots)
+  public static FDD decode(ChannelBuffer buffer)
+  {
+    return null;
+  }
+
+  public static void encodeList(ChannelBuffer buffer, List<FDD> fdds)
+  {
+    if (fdds == null || fdds.isEmpty())
     {
-      // root object classes that are not the HLA object root will be subclassed
-      // to the HLA object root
-      //
-      add(new ObjectClass(
-        objectClass, hlaObjectRoot, objectClassCount, attributeCount, this));
-    }
-
-    AtomicInteger interactionClassCount = new AtomicInteger();
-    AtomicInteger parameterCount = new AtomicInteger();
-
-    InteractionClass hlaInteractionRoot;
-
-    // select all the HLA interaction root classes
-    //
-    List<Element> hlaInteractionRoots = fdd.selectNodes(
-      String.format("//objectModel/interactions/interactionClass[@name='%s']",
-                    InteractionClass.HLA_INTERACTION_ROOT));
-    if (hlaInteractionRoots.isEmpty())
-    {
-      // no HLA interaction root specified in the FDD
-      //
-      hlaInteractionRoot = new InteractionClass(
-        InteractionClass.HLA_INTERACTION_ROOT, interactionClassCount);
-    }
-    else if (hlaInteractionRoots.size() == 1)
-    {
-      // the HLA interaction root is specified in the FDD
-      //
-      hlaInteractionRoot = new InteractionClass(
-        hlaInteractionRoots.get(0), interactionClassCount,
-        parameterCount, this);
+      Protocol.encodeVarInt(buffer, 0);
     }
     else
     {
-      throw new ErrorReadingFDD(String.format(
-        "only 1 %s allowed", InteractionClass.HLA_INTERACTION_ROOT));
+      Protocol.encodeVarInt(buffer, 0);
+      for (FDD fdd : fdds)
+      {
+        encode(buffer, fdd);
+      }
     }
+  }
 
-    add(hlaInteractionRoot);
+  public static List<FDD> decodeList(ChannelBuffer buffer)
+  {
+    List<FDD> fdds;
 
-    List<Element> nonHLAInteractionRoots = fdd.selectNodes(
-      String.format("//objectModel/interactions/interactionClass[@name='%s']",
-                    InteractionClass.HLA_INTERACTION_ROOT));
-    for (Element interactionClass : nonHLAInteractionRoots)
+    int size = Protocol.decodeVarInt(buffer);
+    if (size == 0)
     {
-      // root interaction classes that are not the HLA interaction root will be
-      // subclassed to the HLA interaction root
-      //
-      add(new InteractionClass(interactionClass, hlaInteractionRoot,
-                               interactionClassCount, parameterCount, this));
+      fdds = Collections.emptyList();
     }
+    else
+    {
+      fdds = new ArrayList<FDD>(size);
+      for (; size > 0; size--)
+      {
+        fdds.add(FDD.decode(buffer));
+      }
+    }
+    return fdds;
   }
 }

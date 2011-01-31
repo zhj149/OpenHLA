@@ -16,37 +16,52 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateInternalError;
-import hla.rti1516.InvalidLogicalTime;
-import hla.rti1516.JoinedFederateIsNotInTimeAdvancingState;
-import hla.rti1516.LogicalTime;
+import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.FederateMessage;
+import net.sf.ohla.rti.messages.LogicalTimeMessage;
+import net.sf.ohla.rti.messages.MessageType;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.LogicalTime;
+import hla.rti1516e.LogicalTimeFactory;
+import hla.rti1516e.exceptions.FederateInternalError;
 
 public class TimeAdvanceGrant
-  implements Callback
+  extends LogicalTimeMessage
+  implements Callback, FederateMessage
 {
-  protected LogicalTime time;
+  private Federate federate;
 
   public TimeAdvanceGrant(LogicalTime time)
   {
-    this.time = time;
+    super(MessageType.TIME_ADVANCE_GRANT, time);
+
+    encodingFinished();
   }
 
-  public LogicalTime getTime()
+  public TimeAdvanceGrant(ChannelBuffer buffer, LogicalTimeFactory logicalTimeFactory)
   {
-    return time;
+    super(buffer, logicalTimeFactory);
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.TIME_ADVANCE_GRANT;
   }
 
   public void execute(FederateAmbassador federateAmbassador)
-    throws InvalidLogicalTime, JoinedFederateIsNotInTimeAdvancingState,
-           FederateInternalError
+    throws FederateInternalError
   {
-    federateAmbassador.timeAdvanceGrant(time);
+    federate.timeAdvanceGrant(time);
   }
 
-  @Override
-  public String toString()
+  public void execute(Federate federate)
   {
-    return String.format("Time Advance Grant: %s", time);
+    this.federate = federate;
+
+    federate.timeAdvanceGrant(this);
   }
 }

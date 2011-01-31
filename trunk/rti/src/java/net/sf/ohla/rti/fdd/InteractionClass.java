@@ -16,141 +16,56 @@
 
 package net.sf.ohla.rti.fdd;
 
-import java.io.Serializable;
-
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.StringTokenizer;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import net.sf.ohla.rti.hla.rti1516.IEEE1516InteractionClassHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eInteractionClassHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandle;
 
-import org.dom4j.Element;
-
-import hla.rti1516.DimensionHandle;
-import hla.rti1516.ErrorReadingFDD;
-import hla.rti1516.InteractionClassHandle;
-import hla.rti1516.InteractionParameterNotDefined;
-import hla.rti1516.NameNotFound;
-import hla.rti1516.OrderType;
-import hla.rti1516.ParameterHandle;
-import hla.rti1516.TransportationType;
+import hla.rti1516e.DimensionHandleSet;
+import hla.rti1516e.InteractionClassHandle;
+import hla.rti1516e.OrderType;
+import hla.rti1516e.ParameterHandle;
+import hla.rti1516e.TransportationTypeHandle;
+import hla.rti1516e.exceptions.InteractionParameterNotDefined;
+import hla.rti1516e.exceptions.NameNotFound;
 
 public class InteractionClass
-  implements Serializable
 {
-  public static final String HLA_INTERACTION_ROOT = "HLAinteractionRoot";
+  public static final InteractionClass HLA_INTERACTION_ROOT = new InteractionClass(
+    new IEEE1516eInteractionClassHandle(1), "HLAinteractionRoot", null, null,
+    TransportationType.HLA_RELIABLE.getTransportationTypeHandle(), OrderType.TIMESTAMP);
 
-  protected InteractionClassHandle interactionClassHandle;
+  private final InteractionClassHandle interactionClassHandle;
+  private final String name;
 
-  protected String name;
+  private final InteractionClass superInteractionClass;
 
-  protected InteractionClass superInteractionClass;
+  private final DimensionHandleSet dimensions;
 
-  protected Map<String, InteractionClass> subInteractionClasses =
-    new HashMap<String, InteractionClass>();
+  protected Map<ParameterHandle, Parameter> parameters = new HashMap<ParameterHandle, Parameter>();
+  protected Map<String, Parameter> parametersByName = new HashMap<String, Parameter>();
 
-  protected String order = "TimeStamp";
-  protected OrderType orderType = OrderType.TIMESTAMP;
+  private TransportationTypeHandle transportationTypeHandle;
+  private OrderType orderType;
 
-  protected String transportation = "HLAreliable";
-  protected TransportationType transportationType =
-    TransportationType.HLA_RELIABLE;
-
-  protected Map<DimensionHandle, Dimension> dimensions =
-    new HashMap<DimensionHandle, Dimension>();
-
-  protected Map<ParameterHandle, Parameter> parameters =
-    new HashMap<ParameterHandle, Parameter>();
-  protected Map<String, Parameter> parametersByName =
-    new HashMap<String, Parameter>();
-
-  protected boolean mom;
-
-  public InteractionClass(String name, AtomicInteger interactionClassCount)
+  public InteractionClass(
+    InteractionClassHandle interactionClassHandle, String name, InteractionClass superInteractionClass,
+    DimensionHandleSet dimensions, TransportationTypeHandle transportationTypeHandle, OrderType orderType)
   {
-    this(name, null, interactionClassCount);
-  }
-
-  public InteractionClass(String name, InteractionClass superInteractionClass,
-                          AtomicInteger interactionClassCount)
-  {
+    this.interactionClassHandle = interactionClassHandle;
     this.name = name;
     this.superInteractionClass = superInteractionClass;
+    this.dimensions = dimensions;
+    this.transportationTypeHandle = transportationTypeHandle;
+    this.orderType = orderType;
 
     if (superInteractionClass != null)
     {
-      if (!superInteractionClass.isHLAinteractionRoot())
-      {
-        // fully qualify the name
-        //
-        this.name = String.format(
-          "%s.%s", superInteractionClass.getName(), name);
-      }
-
       // get a reference to all the super interaction classes attributes
       //
       parameters.putAll(superInteractionClass.parameters);
       parametersByName.putAll(superInteractionClass.parametersByName);
-    }
-
-    interactionClassHandle =
-      new IEEE1516InteractionClassHandle(interactionClassCount.incrementAndGet());
-  }
-
-  public InteractionClass(Element interactionClass,
-                          AtomicInteger interactionClassCount,
-                          AtomicInteger parameterCount, FDD fdd)
-    throws ErrorReadingFDD
-  {
-    this(interactionClass, null, interactionClassCount, parameterCount, fdd);
-  }
-
-  @SuppressWarnings("unchecked")
-  public InteractionClass(Element interactionClass,
-                          InteractionClass superClass,
-                          AtomicInteger interactionClassCount,
-                          AtomicInteger parameterCount, FDD fdd)
-    throws ErrorReadingFDD
-  {
-    this(((org.dom4j.Attribute) interactionClass.selectSingleNode(
-      "@name")).getValue(), superClass, interactionClassCount);
-
-    org.dom4j.Attribute order =
-      (org.dom4j.Attribute) interactionClass.selectSingleNode("@order");
-    if (order != null)
-    {
-      setOrder(order.getValue());
-    }
-
-    org.dom4j.Attribute transportation =
-      (org.dom4j.Attribute) interactionClass.selectSingleNode(
-        "@transportation");
-    if (transportation != null)
-    {
-      setTransportation(transportation.getValue());
-    }
-
-    org.dom4j.Attribute dimensions =
-      (org.dom4j.Attribute) interactionClass.selectSingleNode("@dimensions");
-    if (dimensions != null)
-    {
-      setDimensions(dimensions.getValue(), fdd);
-    }
-
-    List<Element> parameters = interactionClass.selectNodes("parameter");
-    for (Element e : parameters)
-    {
-      add(new Parameter(e, parameterCount));
-    }
-
-    List<Element> subInteractions =
-      interactionClass.selectNodes("interactionClass");
-    for (Element e : subInteractions)
-    {
-      add(new InteractionClass(
-        e, this, interactionClassCount, parameterCount, fdd));
     }
   }
 
@@ -162,11 +77,6 @@ public class InteractionClass
   public String getName()
   {
     return name;
-  }
-
-  public boolean isHLAinteractionRoot()
-  {
-    return name.equals(HLA_INTERACTION_ROOT);
   }
 
   public boolean hasSuperInteractionClass()
@@ -186,39 +96,9 @@ public class InteractionClass
             isAssignableFrom(interactionClass.getSuperInteractionClass()));
   }
 
-  public void add(InteractionClass subInteractionClass)
+  public DimensionHandleSet getDimensions()
   {
-    subInteractionClasses.put(
-      subInteractionClass.getName(), subInteractionClass);
-  }
-
-  public Map<String, InteractionClass> getSubInteractionClasses()
-  {
-    return subInteractionClasses;
-  }
-
-  public String getOrder()
-  {
-    return order;
-  }
-
-  public void setOrder(String order)
-    throws ErrorReadingFDD
-  {
-    this.order = order;
-
-    if ("timestamp".equalsIgnoreCase(order))
-    {
-      orderType = OrderType.TIMESTAMP;
-    }
-    else if ("receive".equalsIgnoreCase(this.order))
-    {
-      orderType = OrderType.RECEIVE;
-    }
-    else
-    {
-      throw new ErrorReadingFDD(String.format("unknown order: %s", this.order));
-    }
+    return dimensions;
   }
 
   public OrderType getOrderType()
@@ -231,50 +111,29 @@ public class InteractionClass
     this.orderType = orderType;
   }
 
-  public String getTransportation()
+  public TransportationTypeHandle getTransportationTypeHandle()
   {
-    return transportation;
+    return transportationTypeHandle;
   }
 
-  public void setTransportation(String transportation)
-    throws ErrorReadingFDD
+  public void setTransportationTypeHandle(TransportationTypeHandle transportationTypeHandle)
   {
-    this.transportation = transportation;
+    this.transportationTypeHandle = transportationTypeHandle;
+  }
 
-    if ("hlabesteffort".equalsIgnoreCase(transportation))
+  public Parameter addParameter(String name)
+  {
+    Parameter parameter = parametersByName.get(name);
+    if (parameter == null)
     {
-      transportationType = TransportationType.HLA_BEST_EFFORT;
+      ParameterHandle parameterHandle = new IEEE1516eParameterHandle(parameters.size() + 1);
+
+      parameter = new Parameter(parameterHandle, name);
+
+      parameters.put(parameterHandle, parameter);
+      parametersByName.put(name, parameter);
     }
-    else if ("hlareliable".equalsIgnoreCase(transportation))
-    {
-      transportationType = TransportationType.HLA_RELIABLE;
-    }
-    else
-    {
-      throw new ErrorReadingFDD(
-        String.format("unknown transportation: %s", transportation));
-    }
-  }
-
-  public TransportationType getTransportationType()
-  {
-    return transportationType;
-  }
-
-  public void setTransportationType(TransportationType transportationType)
-  {
-    this.transportationType = transportationType;
-  }
-
-  public Map<DimensionHandle, Dimension> getDimensions()
-  {
-    return dimensions;
-  }
-
-  public void add(Parameter parameter)
-  {
-    parameters.put(parameter.getParameterHandle(), parameter);
-    parametersByName.put(parameter.getName(), parameter);
+    return parameter;
   }
 
   public boolean hasParameter(String name)
@@ -321,19 +180,6 @@ public class InteractionClass
     return parametersByName;
   }
 
-  public boolean isMOM()
-  {
-    return mom;
-  }
-
-  @Override
-  public boolean equals(Object rhs)
-  {
-    return rhs instanceof InteractionClass &&
-           interactionClassHandle.equals(
-             ((InteractionClass) rhs).interactionClassHandle);
-  }
-
   @Override
   public int hashCode()
   {
@@ -344,25 +190,5 @@ public class InteractionClass
   public String toString()
   {
     return name;
-  }
-
-  protected void setDimensions(String dimensions, FDD fdd)
-    throws ErrorReadingFDD
-  {
-    for (StringTokenizer tokenizer = new StringTokenizer(dimensions, " ");
-         tokenizer.hasMoreTokens();)
-    {
-      String dimensionName = tokenizer.nextToken().trim();
-      if (dimensionName.length() > 0 && !"NA".equals(dimensionName))
-      {
-        Dimension dimension = fdd.getDimensionsByName().get(dimensionName);
-        if (dimension == null)
-        {
-          throw new ErrorReadingFDD(String.format(
-            "unknown dimension: %s", dimensionName));
-        }
-        this.dimensions.put(dimension.getDimensionHandle(), dimension);
-      }
-    }
   }
 }

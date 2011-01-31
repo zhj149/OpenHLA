@@ -24,166 +24,115 @@ import java.util.Set;
 
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.fdd.ObjectClass;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516ParameterHandleValueMap;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandleValueMap;
 
-import hla.rti1516.AttributeHandle;
-import hla.rti1516.AttributeHandleSet;
-import hla.rti1516.AttributeHandleValueMap;
-import hla.rti1516.AttributeRegionAssociation;
-import hla.rti1516.AttributeSetRegionSetPairList;
-import hla.rti1516.InteractionClassHandle;
-import hla.rti1516.ObjectClassHandle;
-import hla.rti1516.ParameterHandleValueMap;
-import hla.rti1516.RegionHandle;
-import hla.rti1516.RegionHandleSet;
+import hla.rti1516e.AttributeHandle;
+import hla.rti1516e.AttributeHandleSet;
+import hla.rti1516e.AttributeHandleValueMap;
+import hla.rti1516e.AttributeRegionAssociation;
+import hla.rti1516e.AttributeSetRegionSetPairList;
+import hla.rti1516e.InteractionClassHandle;
+import hla.rti1516e.ObjectClassHandle;
+import hla.rti1516e.ParameterHandleValueMap;
+import hla.rti1516e.RegionHandle;
+import hla.rti1516e.RegionHandleSet;
 
 public class SubscriptionManager
 {
-  protected Map<ObjectClassHandle, Map<AttributeHandle, AttributeSubscription>>
-    subscribedObjectClasses =
-    new HashMap<ObjectClassHandle, Map<AttributeHandle, AttributeSubscription>>();
+  protected Map<ObjectClassHandle, ObjectClassSubscription> subscribedObjectClasses =
+    new HashMap<ObjectClassHandle, ObjectClassSubscription>();
 
-  protected Map<InteractionClassHandle, InteractionClassSubscription>
-    subscribedInteractionClasses =
+  protected Map<InteractionClassHandle, InteractionClassSubscription> subscribedInteractionClasses =
     new HashMap<InteractionClassHandle, InteractionClassSubscription>();
 
+  /**
+   * Returns {@code true} if the specified {@code ObjectClassHandle} is explicitly subscribed. This method does
+   * <b>not</b> test for any subscriptions to any ancestors of the specified object class.
+   *
+   * @param objectClassHandle the specified {@code ObjectClassHandle} to test for subscription
+   * @return {@code true} if the specified {@code ObjectClassHandle} is explicitly subscribed; {@code false} otherwise
+   */
   public boolean isObjectClassSubscribed(ObjectClassHandle objectClassHandle)
   {
     return subscribedObjectClasses.containsKey(objectClassHandle);
   }
 
   public void subscribeObjectClassAttributes(
-    ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles,
-    boolean passive)
+    ObjectClass objectClass, AttributeHandleSet attributeHandles, boolean passive)
   {
-    Map<AttributeHandle, AttributeSubscription> attributeSubscriptions =
-      getAttributeSubscriptions(objectClassHandle, true);
-
-    for (AttributeHandle attributeHandle : attributeHandles)
+    ObjectClassSubscription objectClassSubscription = subscribedObjectClasses.get(objectClass.getObjectClassHandle());
+    if (objectClassSubscription == null)
     {
-      AttributeSubscription attributeSubscription =
-        attributeSubscriptions.get(attributeHandle);
-      if (attributeSubscription == null)
-      {
-        attributeSubscriptions.put(
-          attributeHandle, new AttributeSubscription(attributeHandle, passive));
-      }
-      else
-      {
-        attributeSubscription.subscribe(passive);
-      }
+      subscribedObjectClasses.put(
+        objectClass.getObjectClassHandle(), new ObjectClassSubscription(objectClass, attributeHandles, passive));
+    }
+    else
+    {
+      objectClassSubscription.subscribe(attributeHandles, passive);
     }
   }
 
   public void subscribeObjectClassAttributes(
-    ObjectClassHandle objectClassHandle,
-    AttributeSetRegionSetPairList attributesAndRegions, boolean passive)
+    ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions, boolean passive)
   {
-    Map<AttributeHandle, AttributeSubscription> attributeSubscriptions =
-      getAttributeSubscriptions(objectClassHandle, true);
-
-    for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
+    ObjectClassSubscription objectClassSubscription = subscribedObjectClasses.get(objectClassHandle);
+    if (objectClassSubscription != null)
     {
-      for (AttributeHandle attributeHandle : attributeRegionAssociation.attributes)
-      {
-        AttributeSubscription attributeSubscription =
-          attributeSubscriptions.get(attributeHandle);
-        if (attributeSubscription == null)
-        {
-          attributeSubscriptions.put(
-            attributeHandle, new AttributeSubscription(
-            attributeHandle, attributeRegionAssociation.regions, passive));
-        }
-        else
-        {
-          attributeSubscription.subscribe(
-            attributeRegionAssociation.regions, passive);
-        }
-      }
+      objectClassSubscription.subscribe(attributesAndRegions, passive);
     }
   }
 
   public void unsubscribeObjectClass(ObjectClassHandle objectClassHandle)
   {
-    Map<AttributeHandle, AttributeSubscription> attributeSubscriptions =
-      getAttributeSubscriptions(objectClassHandle, false);
+    subscribedObjectClasses.remove(objectClassHandle);
+  }
 
-    if (attributeSubscriptions != null)
+  public void unsubscribeObjectClassAttributes(ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles)
+  {
+    ObjectClassSubscription objectClassSubscription = subscribedObjectClasses.get(objectClassHandle);
+    if (objectClassSubscription != null)
     {
-      for (AttributeSubscription attributeSubscription : attributeSubscriptions.values())
+      if (objectClassSubscription.unsubscribe(attributeHandles))
       {
-        // unsubscribe from the default region
-        //
-        attributeSubscription.unsubscribe();
+        subscribedObjectClasses.remove(objectClassHandle);
       }
     }
   }
 
   public void unsubscribeObjectClassAttributes(
-    ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles)
+    ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions)
   {
-    Map<AttributeHandle, AttributeSubscription> attributeSubscriptions =
-      getAttributeSubscriptions(objectClassHandle, false);
-
-    if (attributeSubscriptions != null)
+    ObjectClassSubscription objectClassSubscription = subscribedObjectClasses.get(objectClassHandle);
+    if (objectClassSubscription != null)
     {
-      for (AttributeHandle attributeHandle : attributeHandles)
+      if (objectClassSubscription.unsubscribe(attributesAndRegions))
       {
-        AttributeSubscription attributeSubscription =
-          attributeSubscriptions.get(attributeHandle);
-        if (attributeSubscription != null)
-        {
-          // unsubscribe from the default region
-          //
-          attributeSubscription.unsubscribe();
-        }
+        subscribedObjectClasses.remove(objectClassHandle);
       }
     }
   }
 
-  public void unsubscribeObjectClassAttributes(
-    ObjectClassHandle objectClassHandle,
-    AttributeSetRegionSetPairList attributesAndRegions)
-  {
-    Map<AttributeHandle, AttributeSubscription> attributeSubscriptions =
-      getAttributeSubscriptions(objectClassHandle, false);
-
-    if (attributeSubscriptions != null)
-    {
-      for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
-      {
-        for (AttributeHandle attributeHandle : attributeRegionAssociation.attributes)
-        {
-          AttributeSubscription attributeSubscription =
-            attributeSubscriptions.get(attributeHandle);
-          if (attributeSubscription != null)
-          {
-            // unsubscribe from the specified regions
-            //
-            attributeSubscription.unsubscribe(
-              attributeRegionAssociation.regions);
-          }
-        }
-      }
-    }
-  }
-
-  public boolean isInteractionClassSubscribed(
-    InteractionClassHandle interactionClassHandle)
+  /**
+   * Returns {@code true} if the specified {@code InteractionClassHandle} is explicitly subscribed. This method does
+   * <b>not</b> test for any subscriptions to any ancestors of the specified interaction class.
+   *
+   * @param interactionClassHandle the specified {@code InteractionClassHandle} to test for subscription
+   * @return {@code true} if the specified {@code InteractionClassHandle} is explicitly subscribed; {@code false}
+   *         otherwise
+   */
+  public boolean isInteractionClassSubscribed(InteractionClassHandle interactionClassHandle)
   {
     return subscribedInteractionClasses.containsKey(interactionClassHandle);
   }
 
-  public void subscribeInteractionClass(
-    InteractionClassHandle interactionClassHandle, boolean passive)
+  public void subscribeInteractionClass(InteractionClass interactionClass, boolean passive)
   {
     InteractionClassSubscription interactionClassSubscription =
-      subscribedInteractionClasses.get(interactionClassHandle);
+      subscribedInteractionClasses.get(interactionClass.getInteractionClassHandle());
     if (interactionClassSubscription == null)
     {
       subscribedInteractionClasses.put(
-        interactionClassHandle,
-        new InteractionClassSubscription(interactionClassHandle, passive));
+        interactionClass.getInteractionClassHandle(), new InteractionClassSubscription(interactionClass, passive));
     }
     else
     {
@@ -192,17 +141,15 @@ public class SubscriptionManager
   }
 
   public void subscribeInteractionClass(
-    InteractionClassHandle interactionClassHandle,
-    RegionHandleSet regionHandles, boolean passive)
+    InteractionClass interactionClass, RegionHandleSet regionHandles, boolean passive)
   {
     InteractionClassSubscription interactionClassSubscription =
-      subscribedInteractionClasses.get(interactionClassHandle);
+      subscribedInteractionClasses.get(interactionClass.getInteractionClassHandle());
     if (interactionClassSubscription == null)
     {
       subscribedInteractionClasses.put(
-        interactionClassHandle,
-        new InteractionClassSubscription(
-          interactionClassHandle, regionHandles, passive));
+        interactionClass.getInteractionClassHandle(),
+        new InteractionClassSubscription(interactionClass, regionHandles, passive));
     }
     else
     {
@@ -210,33 +157,31 @@ public class SubscriptionManager
     }
   }
 
-  public void unsubscribeInteractionClass(
-    InteractionClassHandle interactionClassHandle)
+  public void unsubscribeInteractionClass(InteractionClassHandle interactionClassHandle)
   {
-    InteractionClassSubscription interactionClassSubscription =
-      subscribedInteractionClasses.get(interactionClassHandle);
-    if (interactionClassSubscription != null)
-    {
-      interactionClassSubscription.unsubscribe();
-    }
+    subscribedInteractionClasses.remove(interactionClassHandle);
   }
 
-  public void unsubscribeInteractionClass(
-    InteractionClassHandle interactionClassHandle,
-    RegionHandleSet regionHandles)
+  public void unsubscribeInteractionClass(InteractionClassHandle interactionClassHandle, RegionHandleSet regionHandles)
   {
     InteractionClassSubscription interactionClassSubscription =
       subscribedInteractionClasses.get(interactionClassHandle);
     if (interactionClassSubscription != null)
     {
       interactionClassSubscription.unsubscribe(regionHandles);
+
+      if (interactionClassSubscription.getSubscribedRegionHandles().isEmpty())
+      {
+        // the interaction is unsubscribed when there are no longer any subscribed regions
+        //
+        subscribedInteractionClasses.remove(interactionClassHandle);
+      }
     }
   }
 
   public ObjectClass getSubscribedObjectClass(ObjectClass objectClass)
   {
-    boolean subscribed = isObjectClassSubscribed(
-      objectClass.getObjectClassHandle());
+    boolean subscribed = isObjectClassSubscribed(objectClass.getObjectClassHandle());
 
     if (!subscribed && objectClass.hasSuperObjectClass())
     {
@@ -246,19 +191,16 @@ public class SubscriptionManager
       {
         objectClass = objectClass.getSuperObjectClass();
 
-        subscribed = isObjectClassSubscribed(
-          objectClass.getObjectClassHandle());
+        subscribed = isObjectClassSubscribed(objectClass.getObjectClassHandle());
       } while (!subscribed && objectClass.hasSuperObjectClass());
     }
 
     return subscribed ? objectClass : null;
   }
 
-  public InteractionClass getSubscribedInteractionClass(
-    InteractionClass interactionClass)
+  public InteractionClass getSubscribedInteractionClass(InteractionClass interactionClass)
   {
-    boolean subscribed = isInteractionClassSubscribed(
-      interactionClass.getInteractionClassHandle());
+    boolean subscribed = isInteractionClassSubscribed(interactionClass.getInteractionClassHandle());
 
     if (!subscribed && interactionClass.hasSuperInteractionClass())
     {
@@ -268,30 +210,26 @@ public class SubscriptionManager
       {
         interactionClass = interactionClass.getSuperInteractionClass();
 
-        subscribed = isInteractionClassSubscribed(
-          interactionClass.getInteractionClassHandle());
+        subscribed = isInteractionClassSubscribed(interactionClass.getInteractionClassHandle());
       } while (!subscribed && interactionClass.hasSuperInteractionClass());
     }
 
     return subscribed ? interactionClass : null;
   }
 
-  public void trim(AttributeHandleValueMap attributeValues,
-                   ObjectClassHandle objectClassHandle)
+  public void trim(AttributeHandleValueMap attributeValues, ObjectClassHandle objectClassHandle)
   {
-    Map<AttributeHandle, AttributeSubscription> attributeSubscriptions =
-      subscribedObjectClasses.get(objectClassHandle);
-    assert attributeSubscriptions != null;
+    ObjectClassSubscription objectClassSubscription = subscribedObjectClasses.get(objectClassHandle);
+    assert objectClassSubscription != null;
 
-    attributeValues.keySet().retainAll(attributeSubscriptions.keySet());
+    objectClassSubscription.trim(attributeValues);
   }
 
-  protected Map<AttributeHandle, AttributeSubscription> getSubscribedAttributeSubscriptions(
-    ObjectClass objectClass)
+  protected ObjectClassSubscription getSubscribedObjectClassSubscription(ObjectClass objectClass)
   {
-    Map<AttributeHandle, AttributeSubscription> subscriptions =
+    ObjectClassSubscription objectClassSubscription =
       subscribedObjectClasses.get(objectClass.getObjectClassHandle());
-    if (subscriptions == null && objectClass.hasSuperObjectClass())
+    if (objectClassSubscription == null && objectClass.hasSuperObjectClass())
     {
       // see if an anscestor of the object class is subscribed
 
@@ -299,36 +237,17 @@ public class SubscriptionManager
       {
         objectClass = objectClass.getSuperObjectClass();
 
-        subscriptions = subscribedObjectClasses.get(
-          objectClass.getObjectClassHandle());
-
-      } while (subscriptions == null && objectClass.hasSuperObjectClass());
+        objectClassSubscription = subscribedObjectClasses.get(objectClass.getObjectClassHandle());
+      } while (objectClassSubscription == null && objectClass.hasSuperObjectClass());
     }
-    return subscriptions;
+    return objectClassSubscription;
   }
 
-  protected Map<AttributeHandle, AttributeSubscription> getAttributeSubscriptions(
-    ObjectClassHandle objectClassHandle, boolean addIfMissing)
+  protected InteractionClassSubscription getSubscribedInteractionClassSubscription(InteractionClass interactionClass)
   {
-    Map<AttributeHandle, AttributeSubscription> attributeSubscriptions =
-      subscribedObjectClasses.get(objectClassHandle);
-    if (attributeSubscriptions == null && addIfMissing)
-    {
-      attributeSubscriptions =
-        new HashMap<AttributeHandle, AttributeSubscription>();
-      subscribedObjectClasses.put(objectClassHandle,
-                                  attributeSubscriptions);
-    }
-    return attributeSubscriptions;
-  }
-
-  protected InteractionClassSubscription getSubscribedInteractionClassSubscription(
-    InteractionClass interactionClass)
-  {
-    InteractionClassSubscription subscription =
-      subscribedInteractionClasses.get(
-        interactionClass.getInteractionClassHandle());
-    if (subscription == null && interactionClass.hasSuperInteractionClass())
+    InteractionClassSubscription interactionClassSubscription =
+      subscribedInteractionClasses.get(interactionClass.getInteractionClassHandle());
+    if (interactionClassSubscription == null && interactionClass.hasSuperInteractionClass())
     {
       // see if an anscestor of the interaction class is subscribed
 
@@ -336,13 +255,11 @@ public class SubscriptionManager
       {
         interactionClass = interactionClass.getSuperInteractionClass();
 
-        subscription = subscribedInteractionClasses.get(
-          interactionClass.getInteractionClassHandle());
+        interactionClassSubscription = subscribedInteractionClasses.get(interactionClass.getInteractionClassHandle());
 
-      } while (subscription == null &&
-               interactionClass.hasSuperInteractionClass());
+      } while (interactionClassSubscription == null && interactionClass.hasSuperInteractionClass());
     }
-    return subscription;
+    return interactionClassSubscription;
   }
 
   protected boolean containsAny(final Collection lhs, final Collection rhs)
@@ -367,7 +284,120 @@ public class SubscriptionManager
     return containsAny;
   }
 
-  protected abstract class AbstractSubscription
+  protected class ObjectClassSubscription
+  {
+    private final ObjectClass objectClass;
+
+    private final Map<AttributeHandle, AttributeSubscription> attributeSubscriptions =
+      new HashMap<AttributeHandle, AttributeSubscription>();
+
+    private ObjectClassSubscription(ObjectClass objectClass, AttributeHandleSet attributeHandles, boolean passive)
+    {
+      this.objectClass = objectClass;
+
+      subscribe(attributeHandles, passive);
+    }
+
+    private ObjectClassSubscription(
+      ObjectClass objectClass, AttributeSetRegionSetPairList attributesAndRegions, boolean passive)
+    {
+      this.objectClass = objectClass;
+
+      subscribe(attributesAndRegions, passive);
+    }
+
+    public void subscribe(AttributeHandleSet attributeHandles, boolean passive)
+    {
+      for (AttributeHandle attributeHandle : attributeHandles)
+      {
+        AttributeSubscription attributeSubscription = attributeSubscriptions.get(attributeHandle);
+        if (attributeSubscription == null)
+        {
+          attributeSubscriptions.put(attributeHandle, new AttributeSubscription(attributeHandle, passive));
+        }
+        else
+        {
+          attributeSubscription.subscribe(passive);
+        }
+      }
+    }
+
+    public void subscribe(AttributeSetRegionSetPairList attributesAndRegions, boolean passive)
+    {
+      for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
+      {
+        for (AttributeHandle attributeHandle : attributeRegionAssociation.ahset)
+        {
+          AttributeSubscription attributeSubscription = attributeSubscriptions.get(attributeHandle);
+          if (attributeSubscription == null)
+          {
+            attributeSubscriptions.put(
+              attributeHandle, new AttributeSubscription(attributeHandle, attributeRegionAssociation.rhset, passive));
+          }
+          else
+          {
+            attributeSubscription.subscribe(attributeRegionAssociation.rhset, passive);
+          }
+        }
+      }
+    }
+
+    /**
+     * Unsubscribes from the specified {@code attributeHandles}. Returns {@code true} if there are no more attribute
+     * subscriptions.
+     *
+     * @param attributeHandles the {@code attributeHandles} to unsubscribe from
+     * @return {@code true} if there are no more attribute subscriptions; {@code false} otherwise
+     */
+    public boolean unsubscribe(AttributeHandleSet attributeHandles)
+    {
+      for (AttributeHandle attributeHandle : attributeHandles)
+      {
+        attributeSubscriptions.remove(attributeHandle);
+      }
+
+      return attributeSubscriptions.isEmpty();
+    }
+
+    /**
+     * Unsubscribes from the specified {@code attributesAndRegions}. Returns {@code true} if there are no more attribute
+     * subscriptions.
+     *
+     * @param attributesAndRegions the {@code attributesAndRegions} to unsubscribe from
+     * @return {@code true} if there are no more attribute subscriptions; {@code false} otherwise
+     */
+    public boolean unsubscribe(AttributeSetRegionSetPairList attributesAndRegions)
+    {
+      for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
+      {
+        for (AttributeHandle attributeHandle : attributeRegionAssociation.ahset)
+        {
+          AttributeSubscription attributeSubscription = attributeSubscriptions.get(attributeHandle);
+          if (attributeSubscription != null)
+          {
+            if (attributeSubscription.unsubscribe(attributeRegionAssociation.rhset))
+            {
+              attributeSubscriptions.remove(attributeHandle);
+            }
+          }
+        }
+      }
+
+      return attributeSubscriptions.isEmpty();
+    }
+
+    public void trim(AttributeHandleValueMap attributeValues)
+    {
+      attributeValues.keySet().retainAll(attributeSubscriptions.keySet());
+    }
+
+    public AttributeSubscription getAttributeSubscription(AttributeHandle attributeHandle)
+    {
+      return attributeSubscriptions.get(attributeHandle);
+    }
+  }
+
+  protected abstract class RegionSubscription
   {
     protected boolean defaultRegionSubscribed;
     protected boolean defaultRegionPassive;
@@ -375,12 +405,12 @@ public class SubscriptionManager
     protected final Map<RegionHandle, Boolean> subscribedRegionHandles =
       new HashMap<RegionHandle, Boolean>();
 
-    public AbstractSubscription(boolean passive)
+    public RegionSubscription(boolean passive)
     {
       subscribe(passive);
     }
 
-    public AbstractSubscription(RegionHandleSet regionHandles, boolean passive)
+    public RegionSubscription(RegionHandleSet regionHandles, boolean passive)
     {
       subscribe(regionHandles, passive);
     }
@@ -406,14 +436,6 @@ public class SubscriptionManager
       defaultRegionPassive = passive;
     }
 
-    public void unsubscribe()
-    {
-      defaultRegionSubscribed = false;
-      defaultRegionPassive = false;
-
-      subscribedRegionHandles.clear();
-    }
-
     public void subscribe(RegionHandleSet regionHandles, boolean passive)
     {
       for (RegionHandle regionHandle : regionHandles)
@@ -422,30 +444,29 @@ public class SubscriptionManager
       }
     }
 
-    public void unsubscribe(RegionHandleSet regionHandles)
+    public boolean unsubscribe(RegionHandleSet regionHandles)
     {
       for (RegionHandle regionHandle : regionHandles)
       {
         subscribedRegionHandles.remove(regionHandle);
       }
+      return subscribedRegionHandles.isEmpty();
     }
   }
 
   protected class AttributeSubscription
-    extends AbstractSubscription
+    extends RegionSubscription
   {
     protected final AttributeHandle attributeHandle;
 
-    public AttributeSubscription(AttributeHandle attributeHandle,
-                                 boolean passive)
+    public AttributeSubscription(AttributeHandle attributeHandle, boolean passive)
     {
       super(passive);
 
       this.attributeHandle = attributeHandle;
     }
 
-    public AttributeSubscription(AttributeHandle attributeHandle,
-                                 RegionHandleSet regionHandles, boolean passive)
+    public AttributeSubscription(AttributeHandle attributeHandle, RegionHandleSet regionHandles, boolean passive)
     {
       super(regionHandles, passive);
 
@@ -459,50 +480,50 @@ public class SubscriptionManager
   }
 
   protected class InteractionClassSubscription
-    extends AbstractSubscription
+    extends RegionSubscription
   {
-    protected final InteractionClassHandle interactionClassHandle;
+    protected final InteractionClass interactionClass;
 
-    public InteractionClassSubscription(
-      InteractionClassHandle interactionClassHandle, boolean passive)
+    public InteractionClassSubscription(InteractionClass interactionClass, boolean passive)
     {
       super(passive);
 
-      this.interactionClassHandle = interactionClassHandle;
+      this.interactionClass = interactionClass;
     }
 
     public InteractionClassSubscription(
-      InteractionClassHandle interactionClassHandle,
-      RegionHandleSet regionHandles, boolean passive)
+      InteractionClass interactionClass, RegionHandleSet regionHandles, boolean passive)
     {
       super(regionHandles, passive);
 
-      this.interactionClassHandle = interactionClassHandle;
+      this.interactionClass = interactionClass;
+    }
+
+    public InteractionClass getInteractionClass()
+    {
+      return interactionClass;
     }
 
     public InteractionClassHandle getInteractionClassHandle()
     {
-      return interactionClassHandle;
+      return interactionClass.getInteractionClassHandle();
     }
 
-    public ParameterHandleValueMap trim(
-      InteractionClass interactionClass,
-      ParameterHandleValueMap parameterValues)
+    public ParameterHandleValueMap trim(InteractionClass interactionClass, ParameterHandleValueMap parameterValues)
     {
-      ParameterHandleValueMap trimmedParameterValues = parameterValues;
-
-      if (!interactionClassHandle.equals(
-        interactionClass.getInteractionClassHandle()))
+      ParameterHandleValueMap trimmedParameterValues;
+      if (this.interactionClass == interactionClass)
       {
-        trimmedParameterValues =
-          new IEEE1516ParameterHandleValueMap(parameterValues);
+        trimmedParameterValues = parameterValues;
+      }
+      else
+      {
+        trimmedParameterValues = new IEEE1516eParameterHandleValueMap(parameterValues);
 
         // keep the parameters only at the interaction level that is subscribed
         //
-        trimmedParameterValues.keySet().retainAll(
-          interactionClass.getParameters().keySet());
+        trimmedParameterValues.keySet().retainAll(this.interactionClass.getParameters().keySet());
       }
-
       return trimmedParameterValues;
     }
   }

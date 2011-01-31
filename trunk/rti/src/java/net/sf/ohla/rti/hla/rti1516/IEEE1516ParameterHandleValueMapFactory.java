@@ -22,12 +22,19 @@ import hla.rti1516.ParameterHandleValueMapFactory;
 public class IEEE1516ParameterHandleValueMapFactory
   implements ParameterHandleValueMapFactory
 {
-  public IEEE1516ParameterHandleValueMapFactory()
+  public static final IEEE1516ParameterHandleValueMapFactory INSTANCE = new IEEE1516ParameterHandleValueMapFactory();
+
+  private IEEE1516ParameterHandleValueMapFactory()
   {
   }
 
   public ParameterHandleValueMap create(int capacity)
   {
-    return new IEEE1516ParameterHandleValueMap();
+    return new IEEE1516ParameterHandleValueMap(capacity);
+  }
+
+  private Object readResolve()
+  {
+    return INSTANCE;
   }
 }

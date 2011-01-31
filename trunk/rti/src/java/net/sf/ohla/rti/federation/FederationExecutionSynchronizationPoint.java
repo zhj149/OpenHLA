@@ -16,22 +16,21 @@
 
 package net.sf.ohla.rti.federation;
 
-import java.util.HashSet;
-import java.util.Set;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandleSetFactory;
 
-import hla.rti1516.FederateHandle;
+import hla.rti1516e.FederateHandle;
+import hla.rti1516e.FederateHandleSet;
 
 public class FederationExecutionSynchronizationPoint
 {
-  protected String label;
-  protected byte[] tag;
-  protected Set<FederateHandle> federateHandles;
+  private final String label;
+  private final byte[] tag;
+  private final FederateHandleSet federateHandles;
 
-  protected Set<FederateHandle> awaitingSynchronization =
-    new HashSet<FederateHandle>();
+  private final FederateHandleSet awaitingSynchronization = IEEE1516eFederateHandleSetFactory.INSTANCE.create();
+  private final FederateHandleSet failedToSynchronize = IEEE1516eFederateHandleSetFactory.INSTANCE.create();
 
-  public FederationExecutionSynchronizationPoint(String label, byte[] tag,
-                                                 Set<FederateHandle> federateHandles)
+  public FederationExecutionSynchronizationPoint(String label, byte[] tag, FederateHandleSet federateHandles)
   {
     this.label = label;
     this.tag = tag;
@@ -50,14 +49,29 @@ public class FederationExecutionSynchronizationPoint
     return tag;
   }
 
-  public Set<FederateHandle> getFederateHandles()
+  public FederateHandleSet getFederateHandles()
   {
     return federateHandles;
   }
 
-  public boolean synchronizationPointAchieved(FederateHandle federateHandle)
+  public FederateHandleSet getAwaitingSynchronization()
+  {
+    return awaitingSynchronization;
+  }
+
+  public FederateHandleSet getFailedToSynchronize()
+  {
+    return failedToSynchronize;
+  }
+
+  public boolean synchronizationPointAchieved(FederateHandle federateHandle, boolean success)
   {
     awaitingSynchronization.remove(federateHandle);
+
+    if (!success)
+    {
+      failedToSynchronize.add(federateHandle);
+    }
 
     return awaitingSynchronization.isEmpty();
   }

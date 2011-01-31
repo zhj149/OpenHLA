@@ -16,23 +16,51 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateInternalError;
-import hla.rti1516.SaveFailureReason;
+import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.EnumMessage;
+import net.sf.ohla.rti.messages.FederateMessage;
+import net.sf.ohla.rti.messages.MessageType;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.SaveFailureReason;
+import hla.rti1516e.exceptions.FederateInternalError;
 
 public class FederationNotSaved
-  implements Callback
+  extends EnumMessage<SaveFailureReason>
+  implements Callback, FederateMessage
 {
-  protected SaveFailureReason reason;
+  private Federate federate;
 
-  public FederationNotSaved(SaveFailureReason reason)
+  public FederationNotSaved(SaveFailureReason saveFailureReason)
   {
-    this.reason = reason;
+    super(MessageType.FEDERATION_NOT_SAVED, saveFailureReason);
+
+    encodingFinished();
+  }
+
+  public FederationNotSaved(ChannelBuffer buffer)
+  {
+    super(buffer, SaveFailureReason.values());
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.FEDERATION_NOT_SAVED;
   }
 
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.federationNotSaved(reason);
+    federate.federationNotSaved(e);
+  }
+
+  public void execute(Federate federate)
+  {
+    this.federate = federate;
+
+    federate.callbackReceived(this);
   }
 }

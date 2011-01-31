@@ -17,7 +17,9 @@
 package net.sf.ohla.rti.hla.rti1516;
 
 import java.util.HashSet;
-import java.util.Set;
+
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSetFactory;
 
 import hla.rti1516.AttributeHandle;
 import hla.rti1516.AttributeHandleSet;
@@ -30,18 +32,22 @@ public class IEEE1516AttributeHandleSet
   {
   }
 
-  public IEEE1516AttributeHandleSet(int initialCapacity)
+  public IEEE1516AttributeHandleSet(hla.rti1516e.AttributeHandleSet attributeHandles)
   {
-    super(initialCapacity);
+    for (hla.rti1516e.AttributeHandle attributeHandle : attributeHandles)
+    {
+      add(new IEEE1516AttributeHandle(attributeHandle));
+    }
   }
 
-  public IEEE1516AttributeHandleSet(Set<AttributeHandle> attributeHandles)
+  public static hla.rti1516e.AttributeHandleSet createIEEE1516eAttributeHandleSet(AttributeHandleSet attributeHandles)
   {
-    super(attributeHandles);
-  }
-
-  public IEEE1516AttributeHandleSet(IEEE1516AttributeHandleSet attributeHandles)
-  {
-    super(attributeHandles);
+    hla.rti1516e.AttributeHandleSet ieee1516eAttributeHandles = IEEE1516eAttributeHandleSetFactory.INSTANCE.create();
+    for (AttributeHandle attributeHandle : attributeHandles)
+    {
+      ieee1516eAttributeHandles.add(
+        new IEEE1516eAttributeHandle(((IEEE1516AttributeHandle) attributeHandle).getHandle()));
+    }
+    return ieee1516eAttributeHandles;
   }
 }

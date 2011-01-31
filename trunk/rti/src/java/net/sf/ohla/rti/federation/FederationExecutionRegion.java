@@ -23,27 +23,23 @@ import java.util.Set;
 
 import net.sf.ohla.rti.fdd.Attribute;
 import net.sf.ohla.rti.fdd.Dimension;
+import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.fdd.InteractionClass;
 
-import hla.rti1516.DimensionHandle;
-import hla.rti1516.DimensionHandleSet;
-import hla.rti1516.RangeBounds;
-import hla.rti1516.RegionDoesNotContainSpecifiedDimension;
-import hla.rti1516.RegionHandle;
+import hla.rti1516e.DimensionHandle;
+import hla.rti1516e.DimensionHandleSet;
+import hla.rti1516e.RangeBounds;
+import hla.rti1516e.RegionHandle;
+import hla.rti1516e.exceptions.RegionDoesNotContainSpecifiedDimension;
 
 public class FederationExecutionRegion
 {
-  protected final RegionHandle regionHandle;
-  protected final DimensionHandleSet dimensionHandles;
+  private final RegionHandle regionHandle;
+  private final DimensionHandleSet dimensionHandles;
 
-  protected final Map<DimensionHandle, RangeBounds> rangeBounds =
-    new HashMap<DimensionHandle, RangeBounds>();
+  private final Map<DimensionHandle, RangeBounds> rangeBounds = new HashMap<DimensionHandle, RangeBounds>();
 
-  protected final FederationExecutionRegionManager regionManager;
-
-  public FederationExecutionRegion(
-    RegionHandle regionHandle, DimensionHandleSet dimensionHandles,
-    FederationExecutionRegionManager regionManager)
+  public FederationExecutionRegion(RegionHandle regionHandle, DimensionHandleSet dimensionHandles, FDD fdd)
   {
     this.regionHandle = regionHandle;
     this.dimensionHandles = dimensionHandles;
@@ -52,15 +48,10 @@ public class FederationExecutionRegion
     //
     for (DimensionHandle dimensionHandle : dimensionHandles)
     {
-      Dimension dimension =
-        regionManager.getFederationExecution().getFDD().getDimensions().get(
-          dimensionHandle);
-      assert dimension != null;
+      Dimension dimension = fdd.getDimensionSafely(dimensionHandle);
 
-      rangeBounds.put(dimensionHandle, dimension.getRangeBounds());
+      rangeBounds.put(dimensionHandle, new RangeBounds(0L, dimension.getUpperBound()));
     }
-
-    this.regionManager = regionManager;
   }
 
   public RegionHandle getRegionHandle()
@@ -74,23 +65,21 @@ public class FederationExecutionRegion
   }
 
   public RangeBounds getRangeBounds(DimensionHandle dimensionHandle)
-    throws RegionDoesNotContainSpecifiedDimension
   {
-    RangeBounds rangeBounds = this.rangeBounds.get(dimensionHandle);
-    if (rangeBounds == null)
+    return rangeBounds.get(dimensionHandle);
+  }
+
+  public Map<DimensionHandle, RangeBounds> copyRangeBounds()
+  {
+    Map<DimensionHandle, RangeBounds> rangeBounds = new HashMap<DimensionHandle, RangeBounds>();
+    for (Map.Entry<DimensionHandle, RangeBounds> entry : this.rangeBounds.entrySet())
     {
-      throw new RegionDoesNotContainSpecifiedDimension(dimensionHandle);
+      rangeBounds.put(entry.getKey(), entry.getValue());
     }
     return rangeBounds;
   }
 
-  public FederationExecutionRegionManager getRegionManager()
-  {
-    return regionManager;
-  }
-
-  public void commitRegionModifications(
-    Map<DimensionHandle, RangeBounds> rangeBounds)
+  public void commitRegionModifications(Map<DimensionHandle, RangeBounds> rangeBounds)
   {
     this.rangeBounds.putAll(rangeBounds);
   }
@@ -100,13 +89,11 @@ public class FederationExecutionRegion
     // TODO: notify all our intersecting regions
   }
 
-  public boolean intersects(FederationExecutionRegion region,
-                            Set<DimensionHandle> dimensionHandles)
+  public boolean intersects(FederationExecutionRegion region, Set<DimensionHandle> dimensionHandles)
   {
     boolean intersects = false;
 
-    for (Iterator<DimensionHandle> i = dimensionHandles.iterator();
-         !intersects && i.hasNext();)
+    for (Iterator<DimensionHandle> i = dimensionHandles.iterator(); !intersects && i.hasNext();)
     {
       DimensionHandle dimensionHandle = i.next();
 
@@ -124,8 +111,7 @@ public class FederationExecutionRegion
 
   protected boolean intersects(RangeBounds lhs, RangeBounds rhs)
   {
-    return (lhs.lower < rhs.upper && rhs.lower < lhs.upper) ||
-           lhs.lower == rhs.lower;
+    return (lhs.lower < rhs.upper && rhs.lower < lhs.upper) || lhs.lower == rhs.lower;
   }
 
   protected abstract class RegionRealization
@@ -133,8 +119,7 @@ public class FederationExecutionRegion
     protected final Map<RegionHandle, FederationExecutionRegion> intersectingRegions =
       new HashMap<RegionHandle, FederationExecutionRegion>();
 
-    public void determineIntersectingRegions(
-      Map<RegionHandle, FederationExecutionRegion> regions)
+    public void determineIntersectingRegions(Map<RegionHandle, FederationExecutionRegion> regions)
     {
       intersectingRegions.clear();
 
@@ -153,16 +138,14 @@ public class FederationExecutionRegion
 
       if (regionHandles.size() < intersectingRegions.size())
       {
-        for (Iterator<RegionHandle> i = regionHandles.iterator();
-             !intersects && i.hasNext();)
+        for (Iterator<RegionHandle> i = regionHandles.iterator(); !intersects && i.hasNext();)
         {
           intersects = intersectingRegions.containsKey(i.next());
         }
       }
       else
       {
-        for (Iterator<RegionHandle> i = intersectingRegions.keySet().iterator();
-             !intersects && i.hasNext();)
+        for (Iterator<RegionHandle> i = intersectingRegions.keySet().iterator(); !intersects && i.hasNext();)
         {
           intersects = regionHandles.contains(i.next());
         }

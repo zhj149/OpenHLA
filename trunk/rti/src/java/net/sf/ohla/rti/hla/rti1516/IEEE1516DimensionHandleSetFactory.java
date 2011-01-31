@@ -22,12 +22,19 @@ import hla.rti1516.DimensionHandleSetFactory;
 public class IEEE1516DimensionHandleSetFactory
   implements DimensionHandleSetFactory
 {
-  public IEEE1516DimensionHandleSetFactory()
+  public static final IEEE1516DimensionHandleSetFactory INSTANCE = new IEEE1516DimensionHandleSetFactory();
+
+  private IEEE1516DimensionHandleSetFactory()
   {
   }
 
   public DimensionHandleSet create()
   {
     return new IEEE1516DimensionHandleSet();
+  }
+
+  private Object readResolve()
+  {
+    return INSTANCE;
   }
 }

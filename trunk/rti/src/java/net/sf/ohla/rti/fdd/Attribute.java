@@ -16,78 +16,35 @@
 
 package net.sf.ohla.rti.fdd;
 
-import java.io.Serializable;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.StringTokenizer;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import net.sf.ohla.rti.hla.rti1516.IEEE1516AttributeHandle;
-
-import org.dom4j.Element;
-
-import hla.rti1516.AttributeHandle;
-import hla.rti1516.DimensionHandle;
-import hla.rti1516.ErrorReadingFDD;
-import hla.rti1516.OrderType;
-import hla.rti1516.TransportationType;
+import hla.rti1516e.AttributeHandle;
+import hla.rti1516e.DimensionHandleSet;
+import hla.rti1516e.OrderType;
+import hla.rti1516e.TransportationTypeHandle;
 
 public class Attribute
-  implements Serializable
 {
-  public static final String HLA_PRIVILEGE_TO_DELETE_OBJECT =
-    "HLAprivilegeToDeleteObject";
+  public static final Attribute HLA_PRIVILEGE_TO_DELETE_OBJECT = new Attribute(
+    new IEEE1516eAttributeHandle(1), "HLAprivilegeToDeleteObject", null,
+    TransportationType.HLA_RELIABLE.getTransportationTypeHandle(), OrderType.TIMESTAMP);
 
-  protected AttributeHandle attributeHandle;
-  protected String name;
+  private final AttributeHandle attributeHandle;
+  private final String name;
 
-  protected String order = "TimeStamp";
-  protected OrderType orderType = OrderType.TIMESTAMP;
+  private final DimensionHandleSet dimensions;
 
-  protected String transportation = "HLAreliable";
-  protected TransportationType transportationType =
-    TransportationType.HLA_RELIABLE;
+  private TransportationTypeHandle transportationTypeHandle;
+  private OrderType orderType;
 
-  protected Map<DimensionHandle, Dimension> dimensions =
-    new HashMap<DimensionHandle, Dimension>();
-
-  protected boolean mom;
-
-  public Attribute(String name, AtomicInteger attributeCount)
+  public Attribute(AttributeHandle attributeHandle, String name, DimensionHandleSet dimensions,
+                   TransportationTypeHandle transportationTypeHandle, OrderType orderType)
   {
+    this.attributeHandle = attributeHandle;
     this.name = name;
-
-    attributeHandle =
-      new IEEE1516AttributeHandle(attributeCount.incrementAndGet());
-  }
-
-  public Attribute(Element attribute, AtomicInteger attributeCount, FDD fdd)
-    throws ErrorReadingFDD
-  {
-    this(((org.dom4j.Attribute) attribute.selectSingleNode(
-      "@name")).getValue(), attributeCount);
-
-    org.dom4j.Attribute order =
-      (org.dom4j.Attribute) attribute.selectSingleNode("@order");
-    if (order != null)
-    {
-      setOrder(order.getValue());
-    }
-
-    org.dom4j.Attribute transportation =
-      (org.dom4j.Attribute) attribute.selectSingleNode("@transportation");
-    if (transportation != null)
-    {
-      setTransportation(transportation.getValue());
-    }
-
-    org.dom4j.Attribute dimensions =
-      (org.dom4j.Attribute) attribute.selectSingleNode("@dimensions");
-    if (dimensions != null)
-    {
-      setDimensions(dimensions.getValue(), fdd);
-    }
+    this.dimensions = dimensions;
+    this.transportationTypeHandle = transportationTypeHandle;
+    this.orderType = orderType;
   }
 
   public AttributeHandle getAttributeHandle()
@@ -100,28 +57,9 @@ public class Attribute
     return name;
   }
 
-  public String getOrder()
+  public DimensionHandleSet getDimensions()
   {
-    return order;
-  }
-
-  public void setOrder(String order)
-    throws ErrorReadingFDD
-  {
-    this.order = order;
-
-    if ("timestamp".equalsIgnoreCase(order))
-    {
-      orderType = OrderType.TIMESTAMP;
-    }
-    else if ("receive".equalsIgnoreCase(this.order))
-    {
-      orderType = OrderType.RECEIVE;
-    }
-    else
-    {
-      throw new ErrorReadingFDD(String.format("unknown order: %s", order));
-    }
+    return dimensions;
   }
 
   public OrderType getOrderType()
@@ -129,52 +67,19 @@ public class Attribute
     return orderType;
   }
 
-  public String getTransportation()
+  public void setOrderType(OrderType orderType)
   {
-    return transportation;
+    this.orderType = orderType;
   }
 
-  public void setTransportation(String transportation)
-    throws ErrorReadingFDD
+  public TransportationTypeHandle getTransportationTypeHandle()
   {
-    this.transportation = transportation;
-
-    if ("hlabesteffort".equalsIgnoreCase(transportation))
-    {
-      transportationType = TransportationType.HLA_BEST_EFFORT;
-    }
-    else if ("hlareliable".equalsIgnoreCase(transportation))
-    {
-      transportationType = TransportationType.HLA_RELIABLE;
-    }
-    else
-    {
-      throw new ErrorReadingFDD(String.format(
-        "unknown transportation: %s", transportation));
-    }
+    return transportationTypeHandle;
   }
 
-  public TransportationType getTransportationType()
+  public void setTransportationTypeHandle(TransportationTypeHandle transportationTypeHandle)
   {
-    return transportationType;
-  }
-
-
-  public Map<DimensionHandle, Dimension> getDimensions()
-  {
-    return dimensions;
-  }
-
-  public boolean isMOM()
-  {
-    return mom;
-  }
-
-  @Override
-  public boolean equals(Object rhs)
-  {
-    return rhs instanceof Attribute &&
-           attributeHandle.equals(((Attribute) rhs).attributeHandle);
+    this.transportationTypeHandle = transportationTypeHandle;
   }
 
   @Override
@@ -187,25 +92,5 @@ public class Attribute
   public String toString()
   {
     return name;
-  }
-
-  protected void setDimensions(String dimensions, FDD fdd)
-    throws ErrorReadingFDD
-  {
-    for (StringTokenizer tokenizer = new StringTokenizer(dimensions, " ");
-         tokenizer.hasMoreTokens();)
-    {
-      String dimensionName = tokenizer.nextToken().trim();
-      if (dimensionName.length() > 0 && !"NA".equals(dimensionName))
-      {
-        Dimension dimension = fdd.getDimensionsByName().get(dimensionName);
-        if (dimension == null)
-        {
-          throw new ErrorReadingFDD(String.format(
-            "unknown dimension: %s", dimensionName));
-        }
-        this.dimensions.put(dimension.getDimensionHandle(), dimension);
-      }
-    }
   }
 }

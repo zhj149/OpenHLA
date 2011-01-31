@@ -16,21 +16,42 @@
 
 package net.sf.ohla.rti.messages;
 
-import hla.rti1516.AttributeHandleSet;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSet;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.AttributeHandleSet;
 
 public class AttributeOwnershipDivestitureIfWantedResponse
-  extends AbstractRequest
+  extends AbstractResponse
 {
-  protected AttributeHandleSet attributeHandles;
+  private final AttributeHandleSet attributeHandles;
 
-  public AttributeOwnershipDivestitureIfWantedResponse(
-    AttributeHandleSet attributeHandles)
+  public AttributeOwnershipDivestitureIfWantedResponse(long id, AttributeHandleSet attributeHandles)
   {
+    super(MessageType.ATTRIBUTE_OWNERSHIP_DIVESTITURE_IF_WANTED_RESPONSE, id);
+
     this.attributeHandles = attributeHandles;
+
+    IEEE1516eAttributeHandleSet.encode(buffer, attributeHandles);
+
+    encodingFinished();
+  }
+
+  public AttributeOwnershipDivestitureIfWantedResponse(ChannelBuffer buffer)
+  {
+    super(buffer);
+
+    attributeHandles = IEEE1516eAttributeHandleSet.decode(buffer);
   }
 
   public AttributeHandleSet getAttributeHandles()
   {
     return attributeHandles;
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.ATTRIBUTE_OWNERSHIP_DIVESTITURE_IF_WANTED_RESPONSE;
   }
 }

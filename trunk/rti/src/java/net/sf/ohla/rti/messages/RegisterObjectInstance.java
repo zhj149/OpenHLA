@@ -16,36 +16,85 @@
 
 package net.sf.ohla.rti.messages;
 
-import java.util.Set;
-
+import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSet;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeSetRegionSetPairList;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
 
-import hla.rti1516.AttributeHandle;
-import hla.rti1516.ObjectClassHandle;
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.AttributeHandleSet;
+import hla.rti1516e.AttributeSetRegionSetPairList;
+import hla.rti1516e.ObjectClassHandle;
+import hla.rti1516e.ObjectInstanceHandle;
 
 public class RegisterObjectInstance
-  extends AbstractRequest
+  extends ObjectInstanceMessage
   implements FederationExecutionMessage
 {
-  protected ObjectClassHandle objectClassHandle;
-  protected Set<AttributeHandle> publishedAttributeHandles;
-  protected String name;
+  private final ObjectClassHandle objectClassHandle;
+  private final String objectInstanceName;
+  private final AttributeHandleSet publishedAttributeHandles;
+  private final AttributeSetRegionSetPairList attributesAndRegions;
 
-  public RegisterObjectInstance(ObjectClassHandle objectClassHandle,
-                                Set<AttributeHandle> publishedAttributeHandles)
+  public RegisterObjectInstance(
+    ObjectInstanceHandle objectInstanceHandle, ObjectClassHandle objectClassHandle,
+    AttributeHandleSet publishedAttributeHandles)
   {
-    this.objectClassHandle = objectClassHandle;
-    this.publishedAttributeHandles = publishedAttributeHandles;
+    this(objectInstanceHandle, objectClassHandle, null, publishedAttributeHandles, null);
   }
 
-  public RegisterObjectInstance(ObjectClassHandle objectClassHandle,
-                                Set<AttributeHandle> publishedAttributeHandles,
-                                String name)
+  public RegisterObjectInstance(
+    ObjectInstanceHandle objectInstanceHandle, ObjectClassHandle objectClassHandle, String objectInstanceName,
+    AttributeHandleSet publishedAttributeHandles)
   {
-    this(objectClassHandle, publishedAttributeHandles);
+    this(objectInstanceHandle, objectClassHandle, objectInstanceName, publishedAttributeHandles, null);
+  }
 
-    this.name = name;
+  public RegisterObjectInstance(
+    ObjectInstanceHandle objectInstanceHandle, ObjectClassHandle objectClassHandle,
+    AttributeHandleSet publishedAttributeHandles, AttributeSetRegionSetPairList attributesAndRegions)
+  {
+    this(objectInstanceHandle, objectClassHandle, null, publishedAttributeHandles, attributesAndRegions);
+  }
+
+  public RegisterObjectInstance(
+    ObjectInstanceHandle objectInstanceHandle, ObjectClassHandle objectClassHandle, String objectInstanceName,
+    AttributeHandleSet publishedAttributeHandles, AttributeSetRegionSetPairList attributesAndRegions)
+  {
+    super(MessageType.REGISTER_OBJECT_INSTANCE, objectInstanceHandle);
+
+    this.objectClassHandle = objectClassHandle;
+    this.objectInstanceName = objectInstanceName;
+    this.publishedAttributeHandles = publishedAttributeHandles;
+    this.attributesAndRegions = attributesAndRegions;
+
+    IEEE1516eObjectClassHandle.encode(buffer, objectClassHandle);
+    Protocol.encodeOptionalString(buffer, objectInstanceName);
+    IEEE1516eAttributeHandleSet.encode(buffer, publishedAttributeHandles);
+    IEEE1516eAttributeSetRegionSetPairList.encode(buffer, attributesAndRegions);
+
+    encodingFinished();
+  }
+
+  public RegisterObjectInstance(ChannelBuffer buffer)
+  {
+    super(buffer);
+
+    objectClassHandle = IEEE1516eObjectClassHandle.decode(buffer);
+
+    String s = Protocol.decodeOptionalString(buffer);
+    objectInstanceName = s == null ? ("HLA-" + objectInstanceHandle.toString()) : s;
+
+    publishedAttributeHandles = IEEE1516eAttributeHandleSet.decode(buffer);
+    attributesAndRegions = IEEE1516eAttributeSetRegionSetPairList.decode(buffer);
+  }
+
+  public String getObjectInstanceName()
+  {
+    return objectInstanceName;
   }
 
   public ObjectClassHandle getObjectClassHandle()
@@ -53,18 +102,22 @@ public class RegisterObjectInstance
     return objectClassHandle;
   }
 
-  public Set<AttributeHandle> getPublishedAttributeHandles()
+  public AttributeHandleSet getPublishedAttributeHandles()
   {
     return publishedAttributeHandles;
   }
 
-  public String getName()
+  public AttributeSetRegionSetPairList getAttributesAndRegions()
   {
-    return name;
+    return attributesAndRegions;
   }
 
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public MessageType getType()
+  {
+    return MessageType.REGISTER_OBJECT_INSTANCE;
+  }
+
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.registerObjectInstance(federateProxy, this);
   }

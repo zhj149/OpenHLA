@@ -24,9 +24,20 @@ import hla.rti1516.ParameterHandleFactory;
 public class IEEE1516ParameterHandleFactory
   implements ParameterHandleFactory
 {
+  public static final IEEE1516ParameterHandleFactory INSTANCE = new IEEE1516ParameterHandleFactory();
+
+  private IEEE1516ParameterHandleFactory()
+  {
+  }
+
   public ParameterHandle decode(byte[] buffer, int offset)
     throws CouldNotDecode, FederateNotExecutionMember
   {
     return new IEEE1516ParameterHandle(buffer, offset);
+  }
+
+  private Object readResolve()
+  {
+    return INSTANCE;
   }
 }

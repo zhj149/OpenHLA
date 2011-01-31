@@ -16,22 +16,49 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateInternalError;
+import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.FederateMessage;
+import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.StringMessage;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.exceptions.FederateInternalError;
 
 public class SynchronizationPointRegistrationSucceeded
-  implements Callback
+  extends StringMessage
+  implements Callback, FederateMessage
 {
-  protected String label;
-
-  public SynchronizationPointRegistrationSucceeded(String label)
+  public SynchronizationPointRegistrationSucceeded(String s)
   {
-    this.label = label;
+    super(MessageType.SYNCHRONIZATION_POINT_REGISTRATION_SUCCEEDED, s);
+  }
+
+  public SynchronizationPointRegistrationSucceeded(ChannelBuffer buffer)
+  {
+    super(buffer);
+  }
+
+  public String getLabel()
+  {
+    return s;
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.SYNCHRONIZATION_POINT_REGISTRATION_SUCCEEDED;
   }
 
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.synchronizationPointRegistrationSucceeded(label);
+    federateAmbassador.synchronizationPointRegistrationSucceeded(s);
+  }
+
+  public void execute(Federate federate)
+  {
+    federate.callbackReceived(this);
   }
 }

@@ -16,26 +16,20 @@
 
 package net.sf.ohla.rti.federate;
 
-import hla.rti1516.FederateHandle;
+import org.jboss.netty.buffer.ChannelBuffer;
 
 public class FederateSave
 {
-  protected FederateHandle federateHandle;
-  protected String federateType;
-
-  public FederateSave(FederateHandle federateHandle, String federateType)
+  public FederateSave()
   {
-    this.federateHandle = federateHandle;
-    this.federateType = federateType;
   }
 
-  public FederateHandle getFederateHandle()
+  public FederateSave(ChannelBuffer buffer)
   {
-    return federateHandle;
+    // TODO: decode
   }
 
-  public String getFederateType()
+  public void encode(ChannelBuffer buffer)
   {
-    return federateType;
   }
 }

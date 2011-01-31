@@ -19,32 +19,34 @@ package net.sf.ohla.rti.messages;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
 
-import hla.rti1516.LogicalTime;
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.LogicalTime;
+import hla.rti1516e.LogicalTimeFactory;
 
 public class NextMessageRequest
+  extends LogicalTimeMessage
   implements FederationExecutionMessage
 {
-  protected LogicalTime time;
-
   public NextMessageRequest(LogicalTime time)
   {
-    this.time = time;
+    super(MessageType.NEXT_MESSAGE_REQUEST, time);
+
+    encodingFinished();
   }
 
-  public LogicalTime getTime()
+  public NextMessageRequest(ChannelBuffer buffer, LogicalTimeFactory factory)
   {
-    return time;
+    super(buffer, factory);
   }
 
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public MessageType getType()
+  {
+    return MessageType.NEXT_MESSAGE_REQUEST;
+  }
+
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.nextMessageRequest(federateProxy, this);
-  }
-
-  @Override
-  public String toString()
-  {
-    return String.format("Next Message Request: %s", time);
   }
 }

@@ -1,36 +1,27 @@
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.federation.FederateProxy;
-import net.sf.ohla.rti.federation.FederationExecution;
+import org.jboss.netty.buffer.ChannelBuffer;
 
-import hla.rti1516.LogicalTime;
+import hla.rti1516e.LogicalTime;
+import hla.rti1516e.LogicalTimeFactory;
 
 public class NextMessageRequestAvailableTimeAdvanceGrant
-  implements FederationExecutionMessage
+  extends LogicalTimeMessage
 {
-  protected LogicalTime time;
-
   public NextMessageRequestAvailableTimeAdvanceGrant(LogicalTime time)
   {
-    this.time = time;
+    super(MessageType.NEXT_MESSAGE_REQUEST_AVAILABLE_TIME_ADVANCE_GRANT, time);
+
+    encodingFinished();
   }
 
-  public LogicalTime getTime()
+  public NextMessageRequestAvailableTimeAdvanceGrant(ChannelBuffer buffer, LogicalTimeFactory factory)
   {
-    return time;
+    super(buffer, factory);
   }
 
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public MessageType getType()
   {
-    federationExecution.nextMessageRequestAvailableTimeAdvanceGrant(
-      federateProxy, this);
-  }
-
-  @Override
-  public String toString()
-  {
-    return String.format(
-      "Next Message Request Available Time Advance Grant: %s", time);
+    return MessageType.NEXT_MESSAGE_REQUEST_AVAILABLE_TIME_ADVANCE_GRANT;
   }
 }

@@ -19,25 +19,38 @@ package net.sf.ohla.rti.messages;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
 
-import hla.rti1516.LogicalTimeInterval;
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.LogicalTimeFactory;
+import hla.rti1516e.LogicalTimeInterval;
 
 public class ModifyLookahead
+  extends LogicalTimeIntervalMessage
   implements FederationExecutionMessage
 {
-  protected LogicalTimeInterval lookahead;
-
   public ModifyLookahead(LogicalTimeInterval lookahead)
   {
-    this.lookahead = lookahead;
+    super(MessageType.MODIFY_LOOKAHEAD, lookahead);
+
+    encodingFinished();
+  }
+
+  public ModifyLookahead(ChannelBuffer buffer, LogicalTimeFactory factory)
+  {
+    super(buffer, factory);
   }
 
   public LogicalTimeInterval getLookahead()
   {
-    return lookahead;
+    return interval;
   }
 
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public MessageType getType()
+  {
+    return MessageType.MODIFY_LOOKAHEAD;
+  }
+
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.modifyLookahead(federateProxy, this);
   }

@@ -27,10 +27,8 @@ public class Integer64TimeInterval
 {
   private static final byte ENCODED_LENGTH = Long.SIZE / 8;
 
-  public static final Integer64TimeInterval ZERO =
-    new Integer64TimeInterval(0);
-  public static final Integer64TimeInterval EPSILON =
-    new Integer64TimeInterval(1);
+  public static final Integer64TimeInterval ZERO = new Integer64TimeInterval(0L);
+  public static final Integer64TimeInterval EPSILON = new Integer64TimeInterval(1L);
 
   public long interval;
 

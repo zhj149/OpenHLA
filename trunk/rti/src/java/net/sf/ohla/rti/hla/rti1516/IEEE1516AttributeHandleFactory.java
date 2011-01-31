@@ -24,9 +24,20 @@ import hla.rti1516.FederateNotExecutionMember;
 public class IEEE1516AttributeHandleFactory
   implements AttributeHandleFactory
 {
+  public static final IEEE1516AttributeHandleFactory INSTANCE = new IEEE1516AttributeHandleFactory();
+
+  private IEEE1516AttributeHandleFactory()
+  {
+  }
+
   public AttributeHandle decode(byte[] buffer, int offset)
-    throws CouldNotDecode, FederateNotExecutionMember
+    throws CouldNotDecode
   {
     return new IEEE1516AttributeHandle(buffer, offset);
+  }
+
+  private Object readResolve()
+  {
+    return INSTANCE;
   }
 }

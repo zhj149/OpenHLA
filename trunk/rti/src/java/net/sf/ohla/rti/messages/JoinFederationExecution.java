@@ -16,27 +16,47 @@
 
 package net.sf.ohla.rti.messages;
 
-import hla.rti1516.MobileFederateServices;
+import java.util.List;
+
+import net.sf.ohla.rti.Protocol;
+import net.sf.ohla.rti.fdd.FDD;
+
+import org.jboss.netty.buffer.ChannelBuffer;
 
 public class JoinFederationExecution
-  extends AbstractRequest
+  extends AbstractRequest<JoinFederationExecutionResponse>
 {
-  protected String federateType;
-  protected String federationExecutionName;
-  protected MobileFederateServices mobileFederateServices;
+  private final String federateName;
+  private final String federateType;
+  private final String federationExecutionName;
+  private final List<FDD> additionalFDDs;
 
   public JoinFederationExecution(
-    String federateType, String federationExecutionName,
-    MobileFederateServices mobileFederateServices)
+    String federateName, String federateType, String federationExecutionName, List<FDD> additionalFDDs)
   {
+    super(MessageType.CREATE_FEDERATION_EXECUTION);
+
+    this.federateName = federateName;
     this.federateType = federateType;
     this.federationExecutionName = federationExecutionName;
-    this.mobileFederateServices = mobileFederateServices;
+    this.additionalFDDs = additionalFDDs;
+
+    Protocol.encodeOptionalString(buffer, federateName);
+    Protocol.encodeString(buffer, federateType);
+    Protocol.encodeString(buffer, federationExecutionName);
+    FDD.encodeList(buffer, additionalFDDs);
+
+    encodingFinished();
   }
 
-  public String getFederateType()
+  public JoinFederationExecution(ChannelBuffer buffer)
   {
-    return federateType;
+    super(buffer);
+
+    federateName = Protocol.decodeOptionalString(buffer);
+    federateType = Protocol.decodeString(buffer);
+    federationExecutionName = Protocol.decodeString(buffer);
+    additionalFDDs = FDD.decodeList(buffer);
   }
 
   public String getFederationExecutionName()
@@ -44,8 +64,23 @@ public class JoinFederationExecution
     return federationExecutionName;
   }
 
-  public MobileFederateServices getMobileFederateServices()
+  public String getFederateName()
   {
-    return mobileFederateServices;
+    return federateName;
+  }
+
+  public String getFederateType()
+  {
+    return federateType;
+  }
+
+  public List<FDD> getAdditionalFDDs()
+  {
+    return additionalFDDs;
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.CREATE_FEDERATION_EXECUTION;
   }
 }

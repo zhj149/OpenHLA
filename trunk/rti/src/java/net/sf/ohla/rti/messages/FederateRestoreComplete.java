@@ -19,11 +19,30 @@ package net.sf.ohla.rti.messages;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
 
+import org.jboss.netty.buffer.ChannelBuffer;
+
 public class FederateRestoreComplete
+  extends AbstractMessage
   implements FederationExecutionMessage
 {
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public FederateRestoreComplete()
+  {
+    super(MessageType.FEDERATE_RESTORE_COMPLETE);
+
+    encodingFinished();
+  }
+
+  public FederateRestoreComplete(ChannelBuffer buffer)
+  {
+    super(buffer);
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.FEDERATE_RESTORE_COMPLETE;
+  }
+
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.federateRestoreComplete(federateProxy, this);
   }

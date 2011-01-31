@@ -19,32 +19,34 @@ package net.sf.ohla.rti.messages;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
 
-import hla.rti1516.LogicalTime;
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.LogicalTime;
+import hla.rti1516e.LogicalTimeFactory;
 
 public class NextMessageRequestAvailable
+  extends LogicalTimeMessage
   implements FederationExecutionMessage
 {
-  protected LogicalTime time;
-
   public NextMessageRequestAvailable(LogicalTime time)
   {
-    this.time = time;
+    super(MessageType.NEXT_MESSAGE_REQUEST_AVAILABLE, time);
+
+    encodingFinished();
   }
 
-  public LogicalTime getTime()
+  public NextMessageRequestAvailable(ChannelBuffer buffer, LogicalTimeFactory factory)
   {
-    return time;
+    super(buffer, factory);
   }
 
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public MessageType getType()
+  {
+    return MessageType.NEXT_MESSAGE_REQUEST_AVAILABLE;
+  }
+
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.nextMessageRequestAvailable(federateProxy, this);
-  }
-
-  @Override
-  public String toString()
-  {
-    return String.format("Next Message Request Available: %s", time);
   }
 }

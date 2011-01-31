@@ -16,23 +16,55 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateInternalError;
-import hla.rti1516.UnknownName;
+import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.FederateMessage;
+import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.StringMessage;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.exceptions.FederateInternalError;
 
 public class ObjectInstanceNameReservationFailed
-  implements Callback
+  extends StringMessage
+  implements Callback, FederateMessage
 {
-  protected String name;
+  private Federate federate;
 
   public ObjectInstanceNameReservationFailed(String name)
   {
-    this.name = name;
+    super(MessageType.OBJECT_INSTANCE_NAME_RESERVATION_FAILED, name);
+
+    encodingFinished();
+  }
+
+  public ObjectInstanceNameReservationFailed(ChannelBuffer buffer)
+  {
+    super(buffer);
+  }
+
+  public String getName()
+  {
+    return s;
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.OBJECT_INSTANCE_NAME_RESERVATION_FAILED;
   }
 
   public void execute(FederateAmbassador federateAmbassador)
-    throws UnknownName, FederateInternalError
+    throws FederateInternalError
   {
-    federateAmbassador.objectInstanceNameReservationFailed(name);
+    federate.objectInstanceNameReservationFailed(s);
+  }
+
+  public void execute(Federate federate)
+  {
+    this.federate = federate;
+
+    federate.callbackReceived(this);
   }
 }

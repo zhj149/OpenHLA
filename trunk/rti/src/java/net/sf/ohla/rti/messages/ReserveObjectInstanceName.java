@@ -19,23 +19,35 @@ package net.sf.ohla.rti.messages;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
 
+import org.jboss.netty.buffer.ChannelBuffer;
+
 public class ReserveObjectInstanceName
+  extends StringMessage
   implements FederationExecutionMessage
 {
-  protected String name;
-
-  public ReserveObjectInstanceName(String name)
+  public ReserveObjectInstanceName(String objectInstanceName)
   {
-    this.name = name;
+    super(MessageType.RESERVE_OBJECT_INSTANCE_NAME, objectInstanceName);
+
+    encodingFinished();
   }
 
-  public String getName()
+  public ReserveObjectInstanceName(ChannelBuffer buffer)
   {
-    return name;
+    super(buffer);
   }
 
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public String getObjectInstanceName()
+  {
+    return s;
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.RESERVE_OBJECT_INSTANCE_NAME;
+  }
+
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.reserveObjectInstanceName(federateProxy, this);
   }

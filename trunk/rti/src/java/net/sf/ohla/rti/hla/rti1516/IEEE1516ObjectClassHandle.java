@@ -16,23 +16,24 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
-import net.sf.ohla.rti.handles.ShortHandle;
+import net.sf.ohla.rti.IntegerHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
 
 import hla.rti1516.CouldNotDecode;
 import hla.rti1516.ObjectClassHandle;
 
 public class IEEE1516ObjectClassHandle
-  extends ShortHandle
+  extends IntegerHandle
   implements ObjectClassHandle
 {
-  public IEEE1516ObjectClassHandle(int handle)
-  {
-    super(handle);
-  }
-
   public IEEE1516ObjectClassHandle(byte[] buffer, int offset)
     throws CouldNotDecode
   {
     super(buffer, offset);
+  }
+
+  public IEEE1516ObjectClassHandle(hla.rti1516e.ObjectClassHandle objectClassHandle)
+  {
+    super((IEEE1516eObjectClassHandle) objectClassHandle);
   }
 }

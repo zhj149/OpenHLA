@@ -19,24 +19,25 @@ package net.sf.ohla.rti.hla.rti;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sf.ohla.rti.hla.rti1516.IEEE1516ParameterHandle;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516ParameterHandleValueMap;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandleValueMap;
 
 import hla.rti.ArrayIndexOutOfBounds;
 import hla.rti.SuppliedParameters;
 
-import hla.rti1516.ParameterHandle;
+import hla.rti1516e.ParameterHandle;
 
 public class HLA13SuppliedParameters
-  extends IEEE1516ParameterHandleValueMap
+  extends IEEE1516eParameterHandleValueMap
   implements SuppliedParameters
 {
-  protected List<ParameterHandle> parameterHandles =
-    new ArrayList<ParameterHandle>();
+  private final List<ParameterHandle> parameterHandles;
 
   public HLA13SuppliedParameters()
   {
     super();
+
+    parameterHandles = new ArrayList<ParameterHandle>();
   }
 
   public HLA13SuppliedParameters(int initialCapacity)
@@ -51,7 +52,7 @@ public class HLA13SuppliedParameters
   {
     try
     {
-      return parameterHandles.get(index).hashCode();
+      return ((IEEE1516eParameterHandle) parameterHandles.get(index)).getHandle();
     }
     catch (IndexOutOfBoundsException ioobe)
     {
@@ -86,9 +87,7 @@ public class HLA13SuppliedParameters
 
   public void add(int parameterHandle, byte[] value)
   {
-    ParameterHandle ohlaParameterHandle =
-      new IEEE1516ParameterHandle(parameterHandle);
-
+    ParameterHandle ohlaParameterHandle = new IEEE1516eParameterHandle(parameterHandle);
     if (put(ohlaParameterHandle, value) == null)
     {
       parameterHandles.add(ohlaParameterHandle);

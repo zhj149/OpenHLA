@@ -16,35 +16,36 @@
 
 package net.sf.ohla.rti.messages;
 
-import hla.rti1516.InteractionClassHandle;
-import hla.rti1516.RegionHandleSet;
+import net.sf.ohla.rti.federation.FederateProxy;
+import net.sf.ohla.rti.federation.FederationExecution;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.InteractionClassHandle;
 
 public class UnsubscribeInteractionClass
-  implements Message
+  extends InteractionClassMessage
+  implements FederationExecutionMessage
 {
-  protected InteractionClassHandle interactionClassHandle;
-  protected RegionHandleSet regionHandles;
-
   public UnsubscribeInteractionClass(InteractionClassHandle interactionClassHandle)
   {
-    this.interactionClassHandle = interactionClassHandle;
+    super(MessageType.UNSUBSCRIBE_INTERACTION_CLASS, interactionClassHandle);
+
+    encodingFinished();
   }
 
-  public UnsubscribeInteractionClass(InteractionClassHandle interactionClassHandle,
-                                     RegionHandleSet regionHandles)
+  public UnsubscribeInteractionClass(ChannelBuffer buffer)
   {
-    this(interactionClassHandle);
-
-    this.regionHandles = regionHandles;
+    super(buffer);
   }
 
-  public InteractionClassHandle getInteractionClassHandle()
+  public MessageType getType()
   {
-    return interactionClassHandle;
+    return MessageType.UNSUBSCRIBE_INTERACTION_CLASS;
   }
 
-  public RegionHandleSet getRegionHandles()
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
-    return regionHandles;
+    federationExecution.unsubscribeInteractionClass(federateProxy, this);
   }
 }

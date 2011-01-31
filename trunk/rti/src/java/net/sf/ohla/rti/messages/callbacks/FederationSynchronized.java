@@ -16,22 +16,60 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateInternalError;
+import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandleSet;
+import net.sf.ohla.rti.messages.FederateMessage;
+import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.StringMessage;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.FederateHandleSet;
+import hla.rti1516e.exceptions.FederateInternalError;
 
 public class FederationSynchronized
-  implements Callback
+  extends StringMessage
+  implements Callback, FederateMessage
 {
-  protected String label;
+  private final FederateHandleSet failedToSynchronize;
 
-  public FederationSynchronized(String label)
+  private Federate federate;
+
+  public FederationSynchronized(String label, FederateHandleSet failedToSynchronize)
   {
-    this.label = label;
+    super(MessageType.FEDERATION_SYNCHRONIZED, label);
+
+    this.failedToSynchronize = failedToSynchronize;
+
+    IEEE1516eFederateHandleSet.encode(buffer, failedToSynchronize);
+
+    encodingFinished();
+  }
+
+  public FederationSynchronized(ChannelBuffer buffer)
+  {
+    super(buffer);
+
+    failedToSynchronize = IEEE1516eFederateHandleSet.decode(buffer);
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.FEDERATION_SYNCHRONIZED;
   }
 
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.federationSynchronized(label);
+    federate.federationSynchronized(s, failedToSynchronize);
+  }
+
+  public void execute(Federate federate)
+  {
+    this.federate = federate;
+
+    federate.callbackReceived(this);
   }
 }

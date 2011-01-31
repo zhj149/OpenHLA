@@ -16,56 +16,21 @@
 
 package net.sf.ohla.rti.fdd;
 
-import java.io.Serializable;
-
-import net.sf.ohla.rti.hla.rti1516.IEEE1516DimensionHandle;
-
-import org.dom4j.Element;
-
-import hla.rti1516.DimensionHandle;
-import hla.rti1516.ErrorReadingFDD;
-import hla.rti1516.InvalidRangeBound;
-import hla.rti1516.RangeBounds;
+import hla.rti1516e.DimensionHandle;
+import hla.rti1516e.RangeBounds;
+import hla.rti1516e.exceptions.InvalidRangeBound;
 
 public class Dimension
-  implements Serializable
 {
-  protected DimensionHandle dimensionHandle;
+  private final DimensionHandle dimensionHandle;
+  private final String name;
 
-  protected String name;
-  protected String upperBound;
+  private long upperBound = Long.MAX_VALUE;
 
-  protected RangeBounds rangeBounds = new RangeBounds();
-
-  public Dimension(String name)
+  public Dimension(DimensionHandle dimensionHandle, String name)
   {
+    this.dimensionHandle = dimensionHandle;
     this.name = name;
-
-    dimensionHandle = new IEEE1516DimensionHandle(name);
-  }
-
-  public Dimension(Element dimension)
-    throws ErrorReadingFDD
-  {
-    this(
-      ((org.dom4j.Attribute) dimension.selectSingleNode("@name")).getValue());
-
-    org.dom4j.Attribute attribute =
-      (org.dom4j.Attribute) dimension.selectSingleNode("@upperBound");
-    if (attribute != null)
-    {
-      upperBound = attribute.getValue();
-
-      try
-      {
-        rangeBounds.upper = Long.parseLong(upperBound);
-      }
-      catch (NumberFormatException nfe)
-      {
-        throw new ErrorReadingFDD(String.format(
-          "invalid upper bound: %s", upperBound), nfe);
-      }
-    }
   }
 
   public DimensionHandle getDimensionHandle()
@@ -78,46 +43,24 @@ public class Dimension
     return name;
   }
 
-  public String getUpperBound()
+  public long getUpperBound()
   {
     return upperBound;
   }
 
-  public RangeBounds getRangeBounds()
+  public void setUpperBound(long upperBound)
   {
-    RangeBounds rangeBounds = new RangeBounds();
-    rangeBounds.lower = this.rangeBounds.lower;
-    rangeBounds.upper = this.rangeBounds.upper;
-    return rangeBounds;
+    this.upperBound = upperBound;
   }
 
   public void validate(RangeBounds rangeBounds)
     throws InvalidRangeBound
   {
-    if (rangeBounds.lower < this.rangeBounds.lower)
+    if (rangeBounds.upper > upperBound)
     {
       throw new InvalidRangeBound(String.format(
-        "invalid range bound: %d < %d", rangeBounds.lower,
-        this.rangeBounds.lower));
+        "invalid range bound: %d > %d", rangeBounds.upper, upperBound));
     }
-    else if (rangeBounds.upper > this.rangeBounds.upper)
-    {
-      throw new InvalidRangeBound(String.format(
-        "invalid range bound: %d > %d", rangeBounds.upper,
-        this.rangeBounds.upper));
-    }
-    else if ((rangeBounds.upper - rangeBounds.lower) < 1)
-    {
-      throw new InvalidRangeBound(String.format(
-        "invalid range bound: %d <= %d", rangeBounds.upper, rangeBounds.lower));
-    }
-  }
-
-  @Override
-  public boolean equals(Object rhs)
-  {
-    return rhs instanceof Dimension &&
-           dimensionHandle.equals(((Dimension) rhs).dimensionHandle);
   }
 
   @Override

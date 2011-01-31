@@ -16,32 +16,48 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import hla.rti1516.AttributeHandleSet;
-import hla.rti1516.AttributeNotRecognized;
-import hla.rti1516.AttributeNotSubscribed;
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateInternalError;
-import hla.rti1516.ObjectInstanceHandle;
-import hla.rti1516.ObjectInstanceNotKnown;
+import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.FederateMessage;
+import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.ObjectInstanceAttributesMessage;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.AttributeHandleSet;
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.ObjectInstanceHandle;
+import hla.rti1516e.exceptions.FederateInternalError;
 
 public class AttributesOutOfScope
-  implements Callback
+  extends ObjectInstanceAttributesMessage
+  implements Callback, FederateMessage
 {
-  protected ObjectInstanceHandle objectInstanceHandle;
-  protected AttributeHandleSet attributeHandles;
-
-  public AttributesOutOfScope(ObjectInstanceHandle objectInstanceHandle,
-                              AttributeHandleSet attributeHandles)
+  public AttributesOutOfScope(ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
   {
-    this.objectInstanceHandle = objectInstanceHandle;
-    this.attributeHandles = attributeHandles;
+    super(MessageType.ATTRIBUTES_OUT_OF_SCOPE, objectInstanceHandle, attributeHandles);
+
+    encodingFinished();
+  }
+
+  public AttributesOutOfScope(ChannelBuffer buffer)
+  {
+    super(buffer);
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.ATTRIBUTES_OUT_OF_SCOPE;
   }
 
   public void execute(FederateAmbassador federateAmbassador)
-    throws ObjectInstanceNotKnown, AttributeNotRecognized,
-           AttributeNotSubscribed, FederateInternalError
+    throws FederateInternalError
   {
-    federateAmbassador.attributesOutOfScope(
-      objectInstanceHandle, attributeHandles);
+    federateAmbassador.attributesOutOfScope(objectInstanceHandle, attributeHandles);
+  }
+
+  public void execute(Federate federate)
+  {
+    federate.callbackReceived(this);
   }
 }

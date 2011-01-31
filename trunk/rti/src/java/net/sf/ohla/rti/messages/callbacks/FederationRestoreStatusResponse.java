@@ -16,24 +16,74 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateHandleRestoreStatusPair;
-import hla.rti1516.FederateInternalError;
+import net.sf.ohla.rti.Protocol;
+import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
+import net.sf.ohla.rti.messages.AbstractMessage;
+import net.sf.ohla.rti.messages.FederateMessage;
+import net.sf.ohla.rti.messages.MessageType;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.FederateHandle;
+import hla.rti1516e.FederateRestoreStatus;
+import hla.rti1516e.RestoreStatus;
+import hla.rti1516e.exceptions.FederateInternalError;
 
 public class FederationRestoreStatusResponse
-  implements Callback
+  extends AbstractMessage
+  implements Callback, FederateMessage
 {
-  protected FederateHandleRestoreStatusPair[] response;
+  private final FederateRestoreStatus[] response;
 
-  public FederationRestoreStatusResponse(
-    FederateHandleRestoreStatusPair[] response)
+  public FederationRestoreStatusResponse(FederateRestoreStatus[] response)
   {
+    super(MessageType.FEDERATION_RESTORE_STATUS_RESPONSE);
+
     this.response = response;
+
+    Protocol.encodeVarInt(buffer, response.length);
+    for (FederateRestoreStatus status : response)
+    {
+      IEEE1516eFederateHandle.encode(buffer, status.preRestoreHandle);
+      IEEE1516eFederateHandle.encode(buffer, status.postRestoreHandle);
+      Protocol.encodeEnum(buffer, status.status);
+    }
+
+    encodingFinished();
+  }
+
+  public FederationRestoreStatusResponse(ChannelBuffer buffer)
+  {
+    super(buffer);
+
+    int length = Protocol.decodeVarInt(buffer);
+    response = new FederateRestoreStatus[length];
+    for (int i = 0; i < length; i++)
+    {
+      FederateHandle preRestoreHandle = IEEE1516eFederateHandle.decode(buffer);
+      FederateHandle postRestoreHandle = IEEE1516eFederateHandle.decode(buffer);
+      RestoreStatus status = Protocol.decodeEnum(buffer, RestoreStatus.values());
+
+      response[i] = new FederateRestoreStatus(preRestoreHandle, postRestoreHandle, status);
+    }
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.FEDERATION_RESTORE_STATUS_RESPONSE;
   }
 
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
     federateAmbassador.federationRestoreStatusResponse(response);
+  }
+
+  public void execute(Federate federate)
+  {
+    federate.callbackReceived(this);
   }
 }

@@ -19,25 +19,38 @@ package net.sf.ohla.rti.messages;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
 
-import hla.rti1516.LogicalTimeInterval;
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.LogicalTimeFactory;
+import hla.rti1516e.LogicalTimeInterval;
 
 public class EnableTimeRegulation
+  extends LogicalTimeIntervalMessage
   implements FederationExecutionMessage
 {
-  protected final LogicalTimeInterval lookahead;
-
   public EnableTimeRegulation(LogicalTimeInterval lookahead)
   {
-    this.lookahead = lookahead;
+    super(MessageType.ENABLE_TIME_REGULATION, lookahead);
+
+    encodingFinished();
+  }
+
+  public EnableTimeRegulation(ChannelBuffer buffer, LogicalTimeFactory factory)
+  {
+    super(buffer, factory);
   }
 
   public LogicalTimeInterval getLookahead()
   {
-    return lookahead;
+    return interval;
   }
 
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public MessageType getType()
+  {
+    return MessageType.ENABLE_TIME_REGULATION;
+  }
+
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.enableTimeRegulation(federateProxy, this);
   }

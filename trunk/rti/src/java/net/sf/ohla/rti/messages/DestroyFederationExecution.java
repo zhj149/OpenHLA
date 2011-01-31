@@ -16,18 +16,40 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.Protocol;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
 public class DestroyFederationExecution
-  extends AbstractRequest
+  extends AbstractRequest<DestroyFederationExecutionResponse>
 {
-  protected String federationExecutionName;
+  private final String federationExecutionName;
 
   public DestroyFederationExecution(String federationExecutionName)
   {
+    super(MessageType.DESTROY_FEDERATION_EXECUTION);
+
     this.federationExecutionName = federationExecutionName;
+
+    Protocol.encodeString(buffer, federationExecutionName);
+
+    encodingFinished();
+  }
+
+  public DestroyFederationExecution(ChannelBuffer buffer)
+  {
+    super(buffer);
+
+    federationExecutionName = Protocol.decodeString(buffer);
   }
 
   public String getFederationExecutionName()
   {
     return federationExecutionName;
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.DESTROY_FEDERATION_EXECUTION;
   }
 }

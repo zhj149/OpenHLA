@@ -1,4 +1,8 @@
-0.4
+0.5 alpha
+  - ported to Netty
+  - added IEEE 1516 'Evolved' support
+
+0.4 alpha
 
 0.3 alpha
   - refactoring

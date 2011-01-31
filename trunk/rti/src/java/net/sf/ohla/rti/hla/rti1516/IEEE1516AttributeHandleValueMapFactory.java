@@ -22,12 +22,19 @@ import hla.rti1516.AttributeHandleValueMapFactory;
 public class IEEE1516AttributeHandleValueMapFactory
   implements AttributeHandleValueMapFactory
 {
-  public IEEE1516AttributeHandleValueMapFactory()
+  public static final IEEE1516AttributeHandleValueMapFactory INSTANCE = new IEEE1516AttributeHandleValueMapFactory();
+
+  private IEEE1516AttributeHandleValueMapFactory()
   {
   }
 
   public AttributeHandleValueMap create(int capacity)
   {
-    return new IEEE1516AttributeHandleValueMap();
+    return new IEEE1516AttributeHandleValueMap(capacity);
+  }
+
+  private Object readResolve()
+  {
+    return INSTANCE;
   }
 }

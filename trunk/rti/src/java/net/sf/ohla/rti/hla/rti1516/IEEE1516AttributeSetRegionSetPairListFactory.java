@@ -22,12 +22,20 @@ import hla.rti1516.AttributeSetRegionSetPairListFactory;
 public class IEEE1516AttributeSetRegionSetPairListFactory
   implements AttributeSetRegionSetPairListFactory
 {
-  public IEEE1516AttributeSetRegionSetPairListFactory()
+  public static final IEEE1516AttributeSetRegionSetPairListFactory INSTANCE =
+    new IEEE1516AttributeSetRegionSetPairListFactory();
+
+  private IEEE1516AttributeSetRegionSetPairListFactory()
   {
   }
 
   public AttributeSetRegionSetPairList create(int capacity)
   {
     return new IEEE1516AttributeSetRegionSetPairList(capacity);
+  }
+
+  private Object readResolve()
+  {
+    return INSTANCE;
   }
 }

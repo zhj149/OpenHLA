@@ -16,23 +16,22 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
-import net.sf.ohla.rti.handles.StringHandle;
+import net.sf.ohla.rti.IntegerHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandle;
 
-import hla.rti1516.CouldNotDecode;
 import hla.rti1516.DimensionHandle;
 
 public class IEEE1516DimensionHandle
-  extends StringHandle
+  extends IntegerHandle
   implements DimensionHandle
 {
-  public IEEE1516DimensionHandle(String handle)
-  {
-    super(handle);
-  }
-
   public IEEE1516DimensionHandle(byte[] buffer, int offset)
-    throws CouldNotDecode
   {
     super(buffer, offset);
+  }
+
+  public IEEE1516DimensionHandle(hla.rti1516e.DimensionHandle dimensionHandle)
+  {
+    super((IEEE1516eDimensionHandle) dimensionHandle);
   }
 }

@@ -16,62 +16,38 @@
 
 package net.sf.ohla.rti.messages;
 
-import java.util.Collection;
-
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
 
-import hla.rti1516.AttributeHandleSet;
-import hla.rti1516.ObjectInstanceHandle;
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.AttributeHandleSet;
+import hla.rti1516e.ObjectInstanceHandle;
 
 public class UnconditionalAttributeOwnershipDivestiture
+  extends ObjectInstanceAttributesMessage
   implements FederationExecutionMessage
 {
-  protected ObjectInstanceHandle objectInstanceHandle;
-  protected Collection<ObjectInstanceHandle> objectInstanceHandles;
-
-  protected AttributeHandleSet attributeHandles;
-
   public UnconditionalAttributeOwnershipDivestiture(
-    ObjectInstanceHandle objectInstanceHandle)
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
   {
-    this.objectInstanceHandle = objectInstanceHandle;
+    super(MessageType.UNCONDITIONAL_ATTRIBUTE_OWNERSHIP_DIVESTITURE, objectInstanceHandle, attributeHandles);
+
+    encodingFinished();
   }
 
-  public UnconditionalAttributeOwnershipDivestiture(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles)
+  public UnconditionalAttributeOwnershipDivestiture(ChannelBuffer buffer)
   {
-    this(objectInstanceHandle);
-
-    this.attributeHandles = attributeHandles;
+    super(buffer);
   }
 
-  public UnconditionalAttributeOwnershipDivestiture(
-    Collection<ObjectInstanceHandle> objectInstanceHandles)
+  public MessageType getType()
   {
-    this.objectInstanceHandles = objectInstanceHandles;
+    return MessageType.UNCONDITIONAL_ATTRIBUTE_OWNERSHIP_DIVESTITURE;
   }
 
-  public ObjectInstanceHandle getObjectInstanceHandle()
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
-    return objectInstanceHandle;
-  }
-
-  public Collection<ObjectInstanceHandle> getObjectInstanceHandles()
-  {
-    return objectInstanceHandles;
-  }
-
-  public AttributeHandleSet getAttributeHandles()
-  {
-    return attributeHandles;
-  }
-
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
-  {
-    federationExecution.unconditionalAttributeOwnershipDivestiture(
-      federateProxy, this);
+    federationExecution.unconditionalAttributeOwnershipDivestiture(federateProxy, this);
   }
 }

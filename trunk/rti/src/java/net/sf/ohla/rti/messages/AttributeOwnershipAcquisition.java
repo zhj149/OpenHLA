@@ -16,36 +16,38 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
 
-import hla.rti1516.AttributeHandleSet;
-import hla.rti1516.ObjectInstanceHandle;
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.AttributeHandleSet;
+import hla.rti1516e.ObjectInstanceHandle;
 
 public class AttributeOwnershipAcquisition
+  extends ObjectInstanceAttributesMessage
   implements FederationExecutionMessage
 {
-  protected ObjectInstanceHandle objectInstanceHandle;
-  protected AttributeHandleSet attributeHandles;
-  protected byte[] tag;
+  private final byte[] tag;
 
   public AttributeOwnershipAcquisition(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles, byte[] tag)
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
   {
-    this.objectInstanceHandle = objectInstanceHandle;
-    this.attributeHandles = attributeHandles;
+    super(MessageType.ATTRIBUTE_OWNERSHIP_ACQUISITION, objectInstanceHandle, attributeHandles);
+
     this.tag = tag;
+
+    Protocol.encodeBytes(buffer, tag);
+
+    encodingFinished();
   }
 
-  public ObjectInstanceHandle getObjectInstanceHandle()
+  public AttributeOwnershipAcquisition(ChannelBuffer buffer)
   {
-    return objectInstanceHandle;
-  }
+    super(buffer);
 
-  public AttributeHandleSet getAttributeHandles()
-  {
-    return attributeHandles;
+    tag = Protocol.decodeBytes(buffer);
   }
 
   public byte[] getTag()
@@ -53,10 +55,13 @@ public class AttributeOwnershipAcquisition
     return tag;
   }
 
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public MessageType getType()
   {
-    federationExecution.attributeOwnershipAcquisition(
-      federateProxy, this);
+    return MessageType.ATTRIBUTE_OWNERSHIP_ACQUISITION;
+  }
+
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
+  {
+    federationExecution.attributeOwnershipAcquisition(federateProxy, this);
   }
 }

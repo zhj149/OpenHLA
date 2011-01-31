@@ -19,11 +19,28 @@ package net.sf.ohla.rti.messages;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
 
+import org.jboss.netty.buffer.ChannelBuffer;
+
 public class QueryFederationSaveStatus
+  extends AbstractMessage
   implements FederationExecutionMessage
 {
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public QueryFederationSaveStatus()
+  {
+    super(MessageType.QUERY_FEDERATION_SAVE_STATUS);
+  }
+
+  public QueryFederationSaveStatus(ChannelBuffer buffer)
+  {
+    super(buffer);
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.QUERY_FEDERATION_SAVE_STATUS;
+  }
+
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.queryFederationSaveStatus(federateProxy, this);
   }

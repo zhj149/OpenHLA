@@ -16,23 +16,20 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
-import net.sf.ohla.rti.handles.ShortHandle;
-
-import hla.rti1516.CouldNotDecode;
 import hla.rti1516.RegionHandle;
 
 public class IEEE1516RegionHandle
-  extends ShortHandle
   implements RegionHandle
 {
-  public IEEE1516RegionHandle(int handle)
+  private final hla.rti1516e.RegionHandle regionHandle;
+
+  public IEEE1516RegionHandle(hla.rti1516e.RegionHandle regionHandle)
   {
-    super(handle);
+    this.regionHandle = regionHandle;
   }
 
-  public IEEE1516RegionHandle(byte[] buffer, int offset)
-    throws CouldNotDecode
+  public hla.rti1516e.RegionHandle getIEEE1516eRegionHandle()
   {
-    super(buffer, offset);
+    return regionHandle;
   }
 }

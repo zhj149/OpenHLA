@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project relativePaths="true" version="4">
+<project version="4">
   <component name="CCaseConfig">
     <option name="checkoutReserved" value="false" />
     <option name="markExternalChangeAsUpToDate" value="true" />
@@ -29,19 +29,390 @@
     <option name="USER" value="" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" readonly="true" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederateProxyIoFilter.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederateProxyIoFilter.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UpdateLITS.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/OHLA.iws" afterPath="$PROJECT_DIR$/OHLA.iws" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederateProxy.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederateProxy.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionTimeManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionTimeManager.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FlushQueueRequest.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecution.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecution.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateTimeManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateTimeManager.java" />
+    <list default="true" readonly="true" id="c306879c-2744-4d82-a20f-7284eb5ea0e6" name="Default" comment="">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../resources/META-INF" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../thirdparty/netty" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/../../thirdparty/dom4j" afterPath="" />
     </list>
-    <list name="Failed commit: Default (3)" comment="- refactoring" />
-    <list name="Failed commit: Default" comment="- removed log4j" />
-    <list name="Failed commit: Default (2)" comment="- refactoring" />
+    <list id="b327ec2e-3874-42f5-be84-709b1575db86" name="Failed commit: Default (3)" comment="- initial IEEE 1516 Evolved support&#10;- migrated to Netty">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../resources/META-INF/services" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516e/federation" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516e" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/handles" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../thirdparty/logback/lib/logback-classic-0.9.28-sources.jar" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../thirdparty/logback/lib/logback-classic-0.9.28.jar" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../thirdparty/logback/lib/logback-core-0.9.28-sources.jar" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../thirdparty/logback/lib/logback-core-0.9.28.jar" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../thirdparty/netty/lib/netty-3.2.3.Final-sources.jar" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../thirdparty/netty/lib/netty-3.2.3.Final.jar" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../thirdparty/netty/lib" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../thirdparty/slf4j/lib/slf4j-api-1.6.1-sources.jar" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../thirdparty/slf4j/lib/slf4j-api-1.6.1.jar" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../thirdparty/testng/lib/testng-5.14.7.jar" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/IEEE 1516e.iml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../resources/META-INF/services/hla.rti1516e.LogicalTimeFactory" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../resources/META-INF/services/hla.rti1516e.RtiFactory" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../resources/testsuite/ConnectionFailedLocalSettingsDesignator.properties" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../resources/testsuite/LocalSettingsDesignator.properties" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../resources/testsuite/TestObjectModel-ieee-1516e.xml.bad" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../resources/testsuite/TestObjectModel-ieee-1516e.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../resources/testsuite/ieee-1516e-testng.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/Protocol.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/RTIChannelPipelineFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/RTIChannelUpstreamHandler.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/RTIMessageDecoder.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/TransportationType.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/CallbackManagerChannelUpstreamHandler.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateChannelPipelineFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateChannelUpstreamHandler.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederateProxySubscriptionManager.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/ResignedFederate.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FDDParser.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FederateAmbassadorBridge.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eAttributeHandle.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eAttributeHandleFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eAttributeHandleSet.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eAttributeHandleSetFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eAttributeHandleValueMap.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eAttributeHandleValueMapFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eAttributeSetRegionSetPairList.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eAttributeSetRegionSetPairListFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eDimensionHandle.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eDimensionHandleFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eDimensionHandleSet.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eDimensionHandleSetFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eFDDParser.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eFederateHandle.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eFederateHandleFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eFederateHandleSet.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eFederateHandleSetFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eFederationExecutionInformationSet.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eInteractionClassHandle.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eInteractionClassHandleFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eMessageRetractionHandle.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eObjectClassHandle.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eObjectClassHandleFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eObjectInstanceHandle.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eObjectInstanceHandleFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eParameterHandle.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eParameterHandleFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eParameterHandleValueMap.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eParameterHandleValueMapFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eRTIambassador.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eRegionHandle.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eRegionHandleSet.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eRegionHandleSetFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eRtiFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eTransportationTypeHandle.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eTransportationTypeHandleFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAfloat64Interval.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAfloat64Time.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAfloat64TimeFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAinteger64Interval.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAinteger64Time.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAinteger64TimeFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13FederateAmbassadorBridge.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AbortFederationRestore.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AbortFederationRestoreResponse.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AbortFederationSave.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AbortFederationSaveResponse.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AbstractMessage.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AbstractResponse.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AssociateRegionsForUpdatesResponse.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/CreateFederationExecutionResponse.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/DestroyFederationExecutionResponse.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/EnumMessage.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/EnumResponse.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederateMessage.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/GetFederateHandle.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/GetFederateHandleResponse.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/GetFederateName.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/GetFederateNameResponse.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/InteractionClassMessage.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ListFederationExecutions.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/LogicalTimeIntervalMessage.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/LogicalTimeMessage.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/MessageDecoder.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/MessageEncoder.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/MessageFactory.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/MessageType.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ObjectClassMessage.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ObjectInstanceAttributeMessage.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ObjectInstanceAttributesMessage.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ObjectInstanceMessage.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ObjectInstancesMessage.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/QueryInteractionTransportationType.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ReleaseMultipleObjectInstanceName.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ReleaseObjectInstanceName.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RequestFederationRestoreResponse.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RequestFederationSaveResponse.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RequestObjectClassAttributeValueUpdateWithRegions.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RequestObjectInstanceAttributeValueUpdate.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RequestResponseHandler.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ReserveMultipleObjectInstanceName.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RetractResponse.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/SetAutomaticResignDirective.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/StringMessage.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/StringRequest.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/StringsMessage.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/SubscribeInteractionClassWithRegions.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/SubscribeObjectClassAttributesWithRegions.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnassociateRegionsForUpdatesResponse.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnpublishObjectClass.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnpublishObjectClassAttributes.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnsubscribeInteractionClassWithRegions.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnsubscribeObjectClassAttributesWithRegions.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/MultipleObjectInstanceNameReservationFailed.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/MultipleObjectInstanceNameReservationSucceeded.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ReportFederationExecutions.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ReportInteractionTransportationType.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516e/BaseTestNG.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516e/TestConstants.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516e/federation/ConnectionTestNG.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516e/federation/CreationTestNG.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../thirdparty/netty/LICENSE.txt" />
+      <change type="DELETED" beforePath="C:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\filter\RequestResponseFilter.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\handles\Handle.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\handles\ShortHandle.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\handles\StringHandle.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\handles\UUIDHandle.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\messages\DefaultResponse.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\messages\FederateJoined.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\messages\FederateSaveInitiated.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\messages\FederateSaveInitiatedFailed.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\messages\GetRangeBounds.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\messages\RequestResponse.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\ohla-0.5\thirdparty\apache\mina\license.html" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\ohla-0.5\thirdparty\dom4j\LICENSE.txt" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/filter/codec" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/filter" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/handles" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\ohla-0.5\thirdparty\apache\mina\lib\backport-util-concurrent.jar" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\ohla-0.5\thirdparty\apache\mina\lib\mina-core-1.1.0-SNAPSHOT.jar" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/../../thirdparty/apache/mina/lib" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/../../thirdparty/apache/mina" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\ohla-0.5\thirdparty\dom4j\lib\dom4j-1.6.1.jar" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\ohla-0.5\thirdparty\dom4j\lib\jaxen-1.1-beta-6.jar" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/../../thirdparty/dom4j/lib" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\ohla-0.5\thirdparty\logback\lib\logback-classic-0.9.15.jar" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\ohla-0.5\thirdparty\logback\lib\logback-core-0.9.15.jar" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\ohla-0.5\thirdparty\slf4j\lib\slf4j-api-1.5.6.jar" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\ohla-0.5\thirdparty\testng\lib\testng-5.3-jdk15.jar" afterPath="" />
+      <change type="MOVED" beforePath="C:\projects\ohla-0.5\resources\testsuite\TestObjectModel.xml" afterPath="$PROJECT_DIR$/../../resources/testsuite/TestObjectModel-1516.xml" />
+      <change type="MOVED" beforePath="C:\projects\ohla-0.5\resources\testsuite\TestObjectModel.xml.bad" afterPath="$PROJECT_DIR$/../../resources/testsuite/TestObjectModel-1516.xml.bad" />
+      <change type="MOVED" beforePath="C:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\fed\FEDFDD.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/FED.java" />
+      <change type="MOVED" beforePath="C:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\federation\FederateProxyIoFilter.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederateProxyChannelHandler.java" />
+      <change type="MOVED" beforePath="C:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\handles\IntegerHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/IntegerHandle.java" />
+      <change type="MOVED" beforePath="C:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\messages\RequestAttributeValueUpdate.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RequestObjectClassAttributeValueUpdate.java" />
+      <change type="MOVED" beforePath="C:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\messages\callbacks\Callback.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/Callback.java" />
+      <change type="MOVED" beforePath="C:\projects\ohla-0.5\rti\src\java\net\sf\ohla\rti\messages\callbacks\CallbackManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/CallbackManager.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../CHANGELOG.txt" afterPath="$PROJECT_DIR$/../../CHANGELOG.txt" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../build.xml" afterPath="$PROJECT_DIR$/../build.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/HLA 1.3.iml" afterPath="$PROJECT_DIR$/HLA 1.3.iml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/OHLA.ipr" afterPath="$PROJECT_DIR$/OHLA.ipr" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/OHLA.iws" afterPath="$PROJECT_DIR$/OHLA.iws" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/RTI.iml" afterPath="$PROJECT_DIR$/RTI.iml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Testsuite.iml" afterPath="$PROJECT_DIR$/Testsuite.iml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../resources/logback-test.xml" afterPath="$PROJECT_DIR$/../../resources/logback-test.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../resources/testsuite/ieee-1516-testng.xml" afterPath="$PROJECT_DIR$/../../resources/testsuite/ieee-1516-testng.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/RTI.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/RTI.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/SubscriptionManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/SubscriptionManager.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/Attribute.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/Attribute.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/Dimension.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/Dimension.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/FDD.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/FDD.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/InteractionClass.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/InteractionClass.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/ObjectClass.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/ObjectClass.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/Parameter.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/Parameter.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/FEDAttribute.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/FEDAttribute.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/FEDInteractionClass.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/FEDInteractionClass.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/FEDObjectClass.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/FEDObjectClass.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/RoutingSpace.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/RoutingSpace.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/javacc/FEDParser.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/javacc/FEDParser.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/javacc/FEDParser.jj" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/javacc/FEDParser.jj" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/javacc/FEDParserConstants.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/javacc/FEDParserConstants.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/javacc/FEDParserTokenManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/javacc/FEDParserTokenManager.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/Federate.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/Federate.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateAttributeInstance.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateAttributeInstance.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateMessageRetractionManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateMessageRetractionManager.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateObjectInstance.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateObjectInstance.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateObjectManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateObjectManager.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateRegion.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateRegion.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateRegionManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateRegionManager.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateSave.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateSave.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateSynchronizationPoint.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateSynchronizationPoint.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateTimeManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateTimeManager.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederateProxy.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederateProxy.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecution.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecution.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionAttributeInstance.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionAttributeInstance.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionObjectInstance.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionObjectInstance.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionObjectManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionObjectManager.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionRegion.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionRegion.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionRegionManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionRegionManager.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionRestore.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionRestore.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionSave.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionSave.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionSynchronizationPoint.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionSynchronizationPoint.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionTimeManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionTimeManager.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeHandle.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeHandleFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeHandleFactory.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeHandleSet.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeHandleSet.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeHandleSetFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeHandleSetFactory.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeHandleValueMap.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeHandleValueMap.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeHandleValueMapFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeHandleValueMapFactory.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeSetRegionSetPairList.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeSetRegionSetPairList.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeSetRegionSetPairListFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeSetRegionSetPairListFactory.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516DimensionHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516DimensionHandle.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516DimensionHandleFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516DimensionHandleFactory.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516DimensionHandleSet.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516DimensionHandleSet.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516DimensionHandleSetFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516DimensionHandleSetFactory.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FederateHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FederateHandle.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FederateHandleFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FederateHandleFactory.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FederateHandleSet.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FederateHandleSet.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FederateHandleSetFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FederateHandleSetFactory.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516InteractionClassHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516InteractionClassHandle.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516InteractionClassHandleFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516InteractionClassHandleFactory.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516MessageRetractionHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516MessageRetractionHandle.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ObjectClassHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ObjectClassHandle.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ObjectClassHandleFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ObjectClassHandleFactory.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ObjectInstanceHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ObjectInstanceHandle.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ObjectInstanceHandleFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ObjectInstanceHandleFactory.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ParameterHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ParameterHandle.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ParameterHandleFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ParameterHandleFactory.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ParameterHandleValueMap.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ParameterHandleValueMap.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ParameterHandleValueMapFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ParameterHandleValueMapFactory.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516RTIambassador.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516RTIambassador.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516RegionHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516RegionHandle.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516RegionHandleSet.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516RegionHandleSet.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516RegionHandleSetFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516RegionHandleSetFactory.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13AttributeHandleSet.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13AttributeHandleSet.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13EventRetractionHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13EventRetractionHandle.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13FederateHandleSet.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13FederateHandleSet.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13RTIambassador.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13RTIambassador.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13ReceivedInteraction.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13ReceivedInteraction.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13ReflectedAttributes.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13ReflectedAttributes.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13Region.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13Region.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13SuppliedAttributes.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13SuppliedAttributes.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13SuppliedParameters.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13SuppliedParameters.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/Integer64Time.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/Integer64Time.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/Integer64TimeInterval.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/Integer64TimeInterval.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/jlc/HLA13RtiFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/jlc/HLA13RtiFactory.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AbstractRequest.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AbstractRequest.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AssociateRegionsForUpdates.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AssociateRegionsForUpdates.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AttributeOwnershipAcquisition.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AttributeOwnershipAcquisition.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AttributeOwnershipAcquisitionIfAvailable.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AttributeOwnershipAcquisitionIfAvailable.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AttributeOwnershipDivestitureIfWanted.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AttributeOwnershipDivestitureIfWanted.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AttributeOwnershipDivestitureIfWantedResponse.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AttributeOwnershipDivestitureIfWantedResponse.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/CancelAttributeOwnershipAcquisition.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/CancelAttributeOwnershipAcquisition.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/CancelNegotiatedAttributeOwnershipDivestiture.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/CancelNegotiatedAttributeOwnershipDivestiture.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/CommitRegionModifications.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/CommitRegionModifications.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ConfirmDivestiture.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ConfirmDivestiture.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/CreateFederationExecution.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/CreateFederationExecution.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/CreateRegion.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/CreateRegion.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/DeleteObjectInstance.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/DeleteObjectInstance.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/DeleteRegion.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/DeleteRegion.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/DestroyFederationExecution.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/DestroyFederationExecution.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/DisableTimeConstrained.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/DisableTimeConstrained.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/DisableTimeRegulation.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/DisableTimeRegulation.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/EnableTimeConstrained.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/EnableTimeConstrained.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/EnableTimeRegulation.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/EnableTimeRegulation.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederateRestoreComplete.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederateRestoreComplete.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederateRestoreNotComplete.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederateRestoreNotComplete.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederateSaveBegun.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederateSaveBegun.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederateSaveComplete.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederateSaveComplete.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederateSaveNotComplete.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederateSaveNotComplete.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederationExecutionMessage.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederationExecutionMessage.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FlushQueueRequest.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FlushQueueRequest.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/GALTAdvanced.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/GALTAdvanced.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/GALTUndefined.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/GALTUndefined.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/JoinFederationExecution.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/JoinFederationExecution.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/JoinFederationExecutionResponse.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/JoinFederationExecutionResponse.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/Message.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/Message.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ModifyLookahead.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ModifyLookahead.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/NegotiatedAttributeOwnershipDivestiture.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/NegotiatedAttributeOwnershipDivestiture.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/NextMessageRequest.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/NextMessageRequest.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/NextMessageRequestAvailable.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/NextMessageRequestAvailable.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/NextMessageRequestAvailableTimeAdvanceGrant.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/NextMessageRequestAvailableTimeAdvanceGrant.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/NextMessageRequestTimeAdvanceGrant.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/NextMessageRequestTimeAdvanceGrant.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/QueryAttributeOwnership.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/QueryAttributeOwnership.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/QueryFederationRestoreStatus.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/QueryFederationRestoreStatus.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/QueryFederationSaveStatus.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/QueryFederationSaveStatus.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RegisterFederationSynchronizationPoint.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RegisterFederationSynchronizationPoint.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RegisterObjectInstance.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RegisterObjectInstance.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/Request.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/Request.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RequestFederationRestore.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RequestFederationRestore.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RequestFederationSave.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RequestFederationSave.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ReserveObjectInstanceName.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ReserveObjectInstanceName.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ResignFederationExecution.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ResignFederationExecution.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/Response.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/Response.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/Retract.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/Retract.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/SendInteraction.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/SendInteraction.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/SubscribeInteractionClass.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/SubscribeInteractionClass.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/SubscribeObjectClassAttributes.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/SubscribeObjectClassAttributes.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/SynchronizationPointAchieved.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/SynchronizationPointAchieved.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/TimeAdvanceRequest.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/TimeAdvanceRequest.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/TimeAdvanceRequestAvailable.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/TimeAdvanceRequestAvailable.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnassociateRegionsForUpdates.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnassociateRegionsForUpdates.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnconditionalAttributeOwnershipDivestiture.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnconditionalAttributeOwnershipDivestiture.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnsubscribeInteractionClass.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnsubscribeInteractionClass.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnsubscribeObjectClassAttributes.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnsubscribeObjectClassAttributes.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UpdateAttributeValues.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UpdateAttributeValues.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UpdateLITS.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UpdateLITS.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AnnounceSynchronizationPoint.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AnnounceSynchronizationPoint.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AttributeIsNotOwned.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AttributeIsNotOwned.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AttributeIsOwnedByRTI.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AttributeIsOwnedByRTI.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AttributeOwnershipAcquisitionNotification.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AttributeOwnershipAcquisitionNotification.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AttributeOwnershipUnavailable.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AttributeOwnershipUnavailable.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AttributesInScope.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AttributesInScope.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AttributesOutOfScope.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AttributesOutOfScope.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ConfirmAttributeOwnershipAcquisitionCancellation.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ConfirmAttributeOwnershipAcquisitionCancellation.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/DiscoverObjectInstance.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/DiscoverObjectInstance.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationNotRestored.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationNotRestored.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationNotSaved.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationNotSaved.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationRestoreBegun.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationRestoreBegun.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationRestoreStatusResponse.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationRestoreStatusResponse.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationRestored.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationRestored.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationSaveStatusResponse.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationSaveStatusResponse.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationSaved.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationSaved.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationSynchronized.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationSynchronized.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/InformAttributeOwnership.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/InformAttributeOwnership.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/InitiateFederateRestore.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/InitiateFederateRestore.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/InitiateFederateSave.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/InitiateFederateSave.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ObjectInstanceNameReservationFailed.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ObjectInstanceNameReservationFailed.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ObjectInstanceNameReservationSucceeded.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ObjectInstanceNameReservationSucceeded.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ProvideAttributeValueUpdate.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ProvideAttributeValueUpdate.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ReceiveInteraction.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ReceiveInteraction.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ReflectAttributeValues.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ReflectAttributeValues.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RemoveObjectInstance.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RemoveObjectInstance.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RequestAttributeOwnershipAssumption.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RequestAttributeOwnershipAssumption.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RequestAttributeOwnershipRelease.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RequestAttributeOwnershipRelease.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RequestDivestitureConfirmation.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RequestDivestitureConfirmation.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RequestFederationRestoreFailed.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RequestFederationRestoreFailed.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RequestFederationRestoreSucceeded.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RequestFederationRestoreSucceeded.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RequestRetraction.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RequestRetraction.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/StartRegistrationForObjectClass.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/StartRegistrationForObjectClass.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/StopRegistrationForObjectClass.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/StopRegistrationForObjectClass.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/SynchronizationPointRegistrationFailed.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/SynchronizationPointRegistrationFailed.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/SynchronizationPointRegistrationSucceeded.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/SynchronizationPointRegistrationSucceeded.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TimeAdvanceGrant.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TimeAdvanceGrant.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TimeConstrainedEnabled.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TimeConstrainedEnabled.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TimeRegulationEnabled.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TimeRegulationEnabled.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TurnInteractionsOff.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TurnInteractionsOff.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TurnInteractionsOn.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TurnInteractionsOn.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TurnUpdatesOffForObjectInstance.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TurnUpdatesOffForObjectInstance.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TurnUpdatesOnForObjectInstance.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TurnUpdatesOnForObjectInstance.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../thirdparty/logback/LICENSE.txt" afterPath="$PROJECT_DIR$/../../thirdparty/logback/LICENSE.txt" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../thirdparty/slf4j/LICENSE.txt" afterPath="$PROJECT_DIR$/../../thirdparty/slf4j/LICENSE.txt" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../thirdparty/testng/LICENSE.txt" afterPath="$PROJECT_DIR$/../../thirdparty/testng/LICENSE.txt" />
+    </list>
+    <list id="b279f3ba-c417-49c1-bcc1-a24f5fc97d41" name="Failed commit: Default" comment="- removed log4j" />
+    <list id="261d7dd6-cad7-41bb-912f-d59a03f7b57d" name="Failed commit: Default (2)" comment="- refactoring" />
+    <file path="$PROJECT_DIR$/OHLA.iws" changelist="c306879c-2744-4d82-a20f-7284eb5ea0e6" time="1296516305781" ignored="false" />
+    <option name="TRACKING_ENABLED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="ChangesViewManager" flattened_view="true" show_ignored="false" />
   <component name="Commander">
@@ -57,6 +428,34 @@
     <disable_hints />
   </component>
   <component name="DebuggerManager">
+    <line_breakpoints>
+      <breakpoint url="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eRTIambassador.java" line="589" class="net.sf.ohla.rti.hla.rti1516e.IEEE1516eRTIambassador" package="net.sf.ohla.rti.hla.rti1516e">
+        <option name="ENABLED" value="true" />
+        <option name="LOG_ENABLED" value="false" />
+        <option name="LOG_EXPRESSION_ENABLED" value="false" />
+        <option name="SUSPEND_POLICY" value="SuspendAll" />
+        <option name="COUNT_FILTER_ENABLED" value="false" />
+        <option name="COUNT_FILTER" value="0" />
+        <option name="CONDITION_ENABLED" value="false" />
+        <option name="CLASS_FILTERS_ENABLED" value="false" />
+        <option name="INSTANCE_FILTERS_ENABLED" value="false" />
+        <option name="CONDITION" value="" />
+        <option name="LOG_MESSAGE" value="" />
+      </breakpoint>
+      <breakpoint url="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/Federate.java" line="333" class="net.sf.ohla.rti.federate.Federate" package="net.sf.ohla.rti.federate">
+        <option name="ENABLED" value="true" />
+        <option name="LOG_ENABLED" value="false" />
+        <option name="LOG_EXPRESSION_ENABLED" value="false" />
+        <option name="SUSPEND_POLICY" value="SuspendAll" />
+        <option name="COUNT_FILTER_ENABLED" value="false" />
+        <option name="COUNT_FILTER" value="0" />
+        <option name="CONDITION_ENABLED" value="false" />
+        <option name="CLASS_FILTERS_ENABLED" value="false" />
+        <option name="INSTANCE_FILTERS_ENABLED" value="false" />
+        <option name="CONDITION" value="" />
+        <option name="LOG_MESSAGE" value="" />
+      </breakpoint>
+    </line_breakpoints>
     <breakpoint_any>
       <breakpoint>
         <option name="NOTIFY_CAUGHT" value="true" />
@@ -104,8 +503,8 @@
       <property name="field_breakpoints_groupByClasses" value="true" />
       <property name="method_breakpoints_groupByClasses" value="true" />
       <property name="exception_breakpoints_viewId" value="TABLE" />
-      <property name="exception_breakpoints_groupByClasses" value="true" />
       <property name="field_breakpoints_viewId" value="TABLE" />
+      <property name="exception_breakpoints_groupByClasses" value="true" />
       <property name="method_breakpoints_groupByMethods" value="false" />
     </ui_properties>
   </component>
@@ -137,82 +536,91 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="FederateProxy.java" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederateProxy.java">
+      <file leaf-file-name="IEEE1516eHLAfloat64Interval.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAfloat64Interval.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="405" column="14" selection-start="11019" selection-end="11019" vertical-scroll-proportion="0.04390935">
+            <state line="105" column="29" selection-start="3186" selection-end="3186" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="FederateProxyIoFilter.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederateProxyIoFilter.java">
+      <file leaf-file-name="IEEE1516eHLAinteger64Time.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAinteger64Time.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="201" column="73" selection-start="7442" selection-end="7442" vertical-scroll-proportion="0.0">
+            <state line="90" column="32" selection-start="2597" selection-end="2597" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="FederationExecutionTimeManager.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionTimeManager.java">
+      <file leaf-file-name="IEEE1516eHLAfloat64Time.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAfloat64Time.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="450" column="25" selection-start="12786" selection-end="12786" vertical-scroll-proportion="0.0">
+            <state line="54" column="37" selection-start="1650" selection-end="1650" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="FederateTimeManager.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateTimeManager.java">
+      <file leaf-file-name="IEEE1516eHLAinteger64Interval.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAinteger64Interval.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="765" column="0" selection-start="19620" selection-end="19620" vertical-scroll-proportion="0.0">
+            <state line="81" column="43" selection-start="2388" selection-end="2388" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="NextMessageRequestAvailableTimeAdvanceGrant.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/NextMessageRequestAvailableTimeAdvanceGrant.java">
+      <file leaf-file-name="HLAinteger64Interval.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../ieee-1516e/src/java/hla/rti1516e/time/HLAinteger64Interval.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="7" column="13" selection-start="186" selection-end="186" vertical-scroll-proportion="0.0">
+            <state line="19" column="17" selection-start="786" selection-end="786" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="UpdateLITS.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UpdateLITS.java">
+      <file leaf-file-name="IEEE1516eHLAinteger64TimeFactory.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAinteger64TimeFactory.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="31" column="34" selection-start="647" selection-end="647" vertical-scroll-proportion="0.0">
+            <state line="27" column="25" selection-start="1012" selection-end="1012" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="FederationExecution.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecution.java">
+      <file leaf-file-name="CreationTestNG.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516e/federation/CreationTestNG.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="1320" column="23" selection-start="40574" selection-end="40574" vertical-scroll-proportion="0.0">
+            <state line="111" column="36" selection-start="3340" selection-end="3340" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="FlushQueueRequest.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FlushQueueRequest.java">
+      <file leaf-file-name="SupportServicesTestNG.java" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516/SupportServicesTestNG.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="33" column="0" selection-start="204" selection-end="703" vertical-scroll-proportion="0.0">
+            <state line="43" column="13" selection-start="1571" selection-end="1571" vertical-scroll-proportion="0.025679758">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Federate.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/Federate.java">
+      <file leaf-file-name="IEEE1516eHLAfloat64TimeFactory.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAfloat64TimeFactory.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="468" column="14" selection-start="17877" selection-end="17877" vertical-scroll-proportion="0.0">
+            <state line="47" column="0" selection-start="1005" selection-end="1694" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="HLAinteger64TimeFactory.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../ieee-1516e/src/java/hla/rti1516e/time/HLAinteger64TimeFactory.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="30" column="20" selection-start="1075" selection-end="1075" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -225,10 +633,42 @@
       <setting name="OPEN_NEW_TAB" value="false" />
     </FindUsagesManager>
   </component>
+  <component name="Git.Settings">
+    <option name="CHECKOUT_INCLUDE_TAGS" value="false" />
+    <option name="UPDATE_CHANGES_POLICY" value="STASH" />
+  </component>
   <component name="HierarchyBrowserManager">
     <option name="IS_AUTOSCROLL_TO_SOURCE" value="false" />
     <option name="SORT_ALPHABETICALLY" value="false" />
     <option name="HIDE_CLASSES_WHERE_METHOD_NOT_IMPLEMENTED" value="false" />
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="changedFiles">
+      <list>
+        <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AbstractMessage.java" />
+        <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAfloat64TimeFactory.java" />
+        <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAfloat64Time.java" />
+        <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FDDParser.java" />
+        <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ReportFederationExecutions.java" />
+        <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/CallbackChannelUpstreamHandler.java" />
+        <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/CallbackManagerChannelUpstreamHandler.java" />
+        <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateChannelPipelineFactory.java" />
+        <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/Federate.java" />
+        <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eRTIambassador.java" />
+        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516e/federation/CreationTestNG.java" />
+        <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAfloat64Interval.java" />
+        <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAinteger64Interval.java" />
+        <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAinteger64Time.java" />
+        <option value="$PROJECT_DIR$/../../resources/META-INF/services/hla.rti1516e.LogicalTimeFactory" />
+        <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAinteger64TimeFactory.java" />
+      </list>
+    </option>
+  </component>
+  <component name="MavenProjectNavigator">
+    <treeState />
+  </component>
+  <component name="MavenRunner">
+    <option name="jreName" value="#JAVA_INTERNAL" />
   </component>
   <component name="ModuleEditorState">
     <option name="LAST_EDITED_MODULE_NAME" value="OHLA" />
@@ -243,6 +683,25 @@
   </component>
   <component name="PerforceDirect.Settings">
     <option name="useNativeApi" value="true" />
+  </component>
+  <component name="ProjectInspectionProfilesVisibleTreeState">
+    <entry key="Project Default">
+      <profile-state>
+        <expanded-state>
+          <State>
+            <id>Inspections</id>
+          </State>
+          <State>
+            <id>Spelling</id>
+          </State>
+        </expanded-state>
+        <selected-state>
+          <State>
+            <id>Spelling</id>
+          </State>
+        </selected-state>
+      </profile-state>
+    </entry>
   </component>
   <component name="ProjectLevelVcsManager">
     <OptionsSetting value="true" id="Add" />
@@ -306,28 +765,215 @@
     <option name="STATE" value="0" />
   </component>
   <component name="ProjectView">
-    <navigator currentView="ProjectPane" proportions="0.5" version="1" splitterProportion="0.5">
+    <navigator currentView="ProjectPane" proportions="" version="1" splitterProportion="0.5">
       <flattenPackages ProjectPane="false" />
       <showMembers />
       <showModules />
       <showLibraryContents />
       <hideEmptyPackages ProjectPane="true" />
       <abbreviatePackageNames />
-      <showStructure PackagesPane="false" Scope="false" Favorites="false" ProjectPane="false" />
       <autoscrollToSource />
       <autoscrollFromSource />
       <sortByType />
     </navigator>
+    <panes>
+      <pane id="ProjectPane">
+        <subPane>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="ohla-0.5" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="ohla-0.5" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="testsuite" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="ohla-0.5" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="rti" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="ohla-0.5" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="resources" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="ohla-0.5" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="resources" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="services" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+        </subPane>
+      </pane>
+      <pane id="Scope" />
+      <pane id="Favorites" />
+      <pane id="PackagesPane">
+        <subPane>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Testsuite" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewModuleNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Testsuite" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewModuleNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="net.sf.ohla" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageElementNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="rti1516e" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageElementNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Testsuite" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewModuleNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="net.sf.ohla" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageElementNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="rti1516" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageElementNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Testsuite" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewModuleNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="net.sf.ohla" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageElementNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="rti" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageElementNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="RTI" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewModuleNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewModuleNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewProjectNode" />
+            </PATH_ELEMENT>
+          </PATH>
+        </subPane>
+      </pane>
+    </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="project.structure.last.edited" value="Modules" />
+    <property name="project.structure.last.edited" value="Libraries" />
     <property name="project.structure.proportion" value="0.15" />
-    <property name="options.splitter.main.proportions" value="0.3" />
+    <property name="OverrideImplement.combined" value="true" />
     <property name="cvs_file_history_treeOrder2" value="2" />
+    <property name="options.splitter.main.proportions" value="0.3" />
     <property name="cvs_file_history_treeOrder1" value="1" />
     <property name="RunManagerConfig.showSettingsBeforeRunnig" value="true" />
     <property name="cvs_file_history_treeOrder3" value="3" />
     <property name="MemberChooser.sorted" value="false" />
+    <property name="recentsLimit" value="5" />
     <property name="GoToClass.includeJavaFiles" value="false" />
     <property name="GoToClass.toSaveIncludeLibraries" value="false" />
     <property name="cvs_file_history_treeWidth0" value="299" />
@@ -344,22 +990,26 @@
     <property name="options.splitter.details.proportions" value="0.2" />
     <property name="GoToFile.includeJavaFiles" value="false" />
     <property name="RunManagerConfig.compileBeforeRunning" value="true" />
-    <property name="options.lastSelected" value="preferences.sourceCode.General" />
+    <property name="options.lastSelected" value="copyright.profiles" />
     <property name="cvs_file_history_flatOrder2" value="2" />
     <property name="cvs_file_history_flatOrder3" value="3" />
     <property name="cvs_file_history_flatOrder0" value="0" />
-    <property name="project.structure.side.proportion" value="0.2" />
     <property name="cvs_file_history_flatOrder1" value="1" />
+    <property name="project.structure.side.proportion" value="0.2" />
     <property name="MemberChooser.copyJavadoc" value="false" />
     <property name="options.searchVisible" value="true" />
+    <property name="dynamic.classpath" value="false" />
   </component>
   <component name="RecentsManager">
+    <key name="MoveMembersDialog.RECENTS_KEY">
+      <recent name="net.sf.ohla.rti.Bytes" />
+    </key>
     <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
-      <recent name="net.sf.ohla.rti1516.time" />
+      <recent name="net.sf.ohla.rti1516e.federation" />
+      <recent name="net.sf.ohla.rti.messages" />
       <recent name="net.sf.ohla.rti" />
-      <recent name="net.sf.ohla.rti.hla.rti1516.jlc" />
-      <recent name="net.sf.ohla.rti.hla.rti1516" />
-      <recent name="net.sf.ohla.rti.hla.rti.jlc" />
+      <recent name="net.sf.ohla.rti.federate" />
+      <recent name="net.sf.ohla.rti.messages.callbacks" />
     </key>
   </component>
   <component name="RunManager" selected="TestNG.HLA 1.3 Testsuite">
@@ -369,8 +1019,31 @@
       <option name="SHMEM_ADDRESS" value="javadebug" />
       <option name="HOST" value="localhost" />
       <option name="PORT" value="5005" />
+      <method>
+        <option name="AntTarget" enabled="false" />
+        <option name="BuildArtifacts" enabled="false" />
+        <option name="Maven.BeforeRunTask" enabled="false" />
+      </method>
     </configuration>
-    <configuration default="true" type="TestNG" factoryName="TestNG" enabled="false" merge="false" runner="emma">
+    <configuration default="true" type="Applet" factoryName="Applet">
+      <module name="" />
+      <option name="MAIN_CLASS_NAME" />
+      <option name="HTML_FILE_NAME" />
+      <option name="HTML_USED" value="false" />
+      <option name="WIDTH" value="400" />
+      <option name="HEIGHT" value="300" />
+      <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
+      <option name="VM_PARAMETERS" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <method>
+        <option name="AntTarget" enabled="false" />
+        <option name="BuildArtifacts" enabled="false" />
+        <option name="Make" enabled="true" />
+        <option name="Maven.BeforeRunTask" enabled="false" />
+      </method>
+    </configuration>
+    <configuration default="true" type="TestNG" factoryName="TestNG">
       <module name="" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
       <option name="ALTERNATIVE_JRE_PATH" />
@@ -387,31 +1060,22 @@
       <option name="ANNOTATION_TYPE" />
       <option name="ENV_VARIABLES" />
       <option name="PASS_PARENT_ENVS" value="true" />
-      <option name="ADDITIONAL_CLASS_PATH" />
       <option name="TEST_SEARCH_SCOPE">
         <value defaultName="wholeProject" />
       </option>
+      <option name="USE_DEFAULT_REPORTERS" value="false" />
       <option name="PROPERTIES_FILE" />
       <envs />
       <properties />
       <listeners />
       <method>
-        <option name="Make" value="true" />
+        <option name="AntTarget" enabled="false" />
+        <option name="BuildArtifacts" enabled="false" />
+        <option name="Make" enabled="true" />
+        <option name="Maven.BeforeRunTask" enabled="false" />
       </method>
     </configuration>
-    <configuration default="true" type="Applet" factoryName="Applet">
-      <module name="" />
-      <option name="MAIN_CLASS_NAME" />
-      <option name="HTML_FILE_NAME" />
-      <option name="HTML_USED" value="false" />
-      <option name="WIDTH" value="400" />
-      <option name="HEIGHT" value="300" />
-      <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
-      <option name="VM_PARAMETERS" />
-      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" />
-    </configuration>
-    <configuration default="true" type="Application" factoryName="Application" enabled="false" merge="false" runner="emma">
+    <configuration default="true" type="Application" factoryName="Application">
       <option name="MAIN_CLASS_NAME" />
       <option name="VM_PARAMETERS" />
       <option name="PROGRAM_PARAMETERS" />
@@ -424,10 +1088,13 @@
       <module name="" />
       <envs />
       <method>
-        <option name="Make" value="true" />
+        <option name="AntTarget" enabled="false" />
+        <option name="BuildArtifacts" enabled="false" />
+        <option name="Make" enabled="true" />
+        <option name="Maven.BeforeRunTask" enabled="false" />
       </method>
     </configuration>
-    <configuration default="true" type="JUnit" factoryName="JUnit" enabled="false" merge="false" runner="emma">
+    <configuration default="true" type="JUnit" factoryName="JUnit">
       <module name="" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
       <option name="ALTERNATIVE_JRE_PATH" />
@@ -440,20 +1107,23 @@
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="ENV_VARIABLES" />
       <option name="PASS_PARENT_ENVS" value="true" />
-      <option name="ADDITIONAL_CLASS_PATH" />
       <option name="TEST_SEARCH_SCOPE">
         <value defaultName="wholeProject" />
       </option>
       <envs />
+      <patterns />
       <method>
-        <option name="Make" value="true" />
+        <option name="AntTarget" enabled="false" />
+        <option name="BuildArtifacts" enabled="false" />
+        <option name="Make" enabled="true" />
+        <option name="Maven.BeforeRunTask" enabled="false" />
       </method>
     </configuration>
-    <configuration default="false" name="RTI" type="Application" factoryName="Application" enabled="false" merge="false" runner="emma">
+    <configuration default="false" name="RTI" type="Application" factoryName="Application">
       <option name="MAIN_CLASS_NAME" value="net.sf.ohla.rti.RTI" />
       <option name="VM_PARAMETERS" value="-ea -server" />
       <option name="PROGRAM_PARAMETERS" value="" />
-      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$/../.." />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
       <option name="ALTERNATIVE_JRE_PATH" value="" />
       <option name="ENABLE_SWING_INSPECTOR" value="false" />
@@ -469,11 +1139,36 @@
       <RunnerSettings RunnerId="Run" />
       <ConfigurationWrapper RunnerId="Debug" />
       <ConfigurationWrapper RunnerId="Run" />
-      <method>
-        <option name="Make" value="true" />
-      </method>
+      <method />
     </configuration>
-    <configuration default="false" name="IEEE 1516 Testsuite" type="TestNG" factoryName="TestNG" enabled="false" merge="false" runner="emma">
+    <configuration default="false" name="HLA 1.3 Testsuite" type="TestNG" factoryName="TestNG">
+      <module name="RTI" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" value="" />
+      <option name="SUITE_NAME" value="$PROJECT_DIR$/../../resources/testsuite/hla-1.3-testng.xml" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="MAIN_CLASS_NAME" value="" />
+      <option name="METHOD_NAME" value="" />
+      <option name="GROUP_NAME" value="" />
+      <option name="TEST_OBJECT" value="SUITE" />
+      <option name="VM_PARAMETERS" value="" />
+      <option name="PARAMETERS" value="" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$/../.." />
+      <option name="OUTPUT_DIRECTORY" value="C:\projects\ohla-0.5\build\output\testsuite\results\hla-1.3" />
+      <option name="ANNOTATION_TYPE" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="moduleWithDependencies" />
+      </option>
+      <option name="USE_DEFAULT_REPORTERS" value="false" />
+      <option name="PROPERTIES_FILE" value="" />
+      <envs />
+      <properties />
+      <listeners />
+      <method />
+    </configuration>
+    <configuration default="false" name="IEEE 1516 Testsuite" type="TestNG" factoryName="TestNG">
       <module name="Testsuite" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
       <option name="ALTERNATIVE_JRE_PATH" value="" />
@@ -483,17 +1178,17 @@
       <option name="METHOD_NAME" value="" />
       <option name="GROUP_NAME" value="" />
       <option name="TEST_OBJECT" value="SUITE" />
-      <option name="VM_PARAMETERS" value="-Dohla.rti.host=localhost -Dohla.rti.port=5000" />
+      <option name="VM_PARAMETERS" value="" />
       <option name="PARAMETERS" value="" />
-      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$/../output/testsuite/results/ieee-1516" />
-      <option name="OUTPUT_DIRECTORY" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$/../.." />
+      <option name="OUTPUT_DIRECTORY" value="C:\projects\ohla-0.5\build\output\testsuite\results\ieee-1516" />
       <option name="ANNOTATION_TYPE" />
       <option name="ENV_VARIABLES" />
       <option name="PASS_PARENT_ENVS" value="true" />
-      <option name="ADDITIONAL_CLASS_PATH" />
       <option name="TEST_SEARCH_SCOPE">
-        <value defaultName="wholeProject" />
+        <value defaultName="moduleWithDependencies" />
       </option>
+      <option name="USE_DEFAULT_REPORTERS" value="false" />
       <option name="PROPERTIES_FILE" value="" />
       <envs />
       <properties />
@@ -506,37 +1201,46 @@
       <RunnerSettings RunnerId="Run" />
       <ConfigurationWrapper RunnerId="Debug" />
       <ConfigurationWrapper RunnerId="Run" />
+      <method />
     </configuration>
-    <configuration default="false" name="HLA 1.3 Testsuite" type="TestNG" factoryName="TestNG" enabled="false" merge="false" runner="emma">
-      <module name="RTI" />
+    <configuration default="false" name="IEEE 1516e Testsuite" type="TestNG" factoryName="TestNG">
+      <module name="Testsuite" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
       <option name="ALTERNATIVE_JRE_PATH" value="" />
-      <option name="SUITE_NAME" value="$PROJECT_DIR$/../../resources/testsuite/hla-1.3-testng.xml" />
+      <option name="SUITE_NAME" value="$PROJECT_DIR$/../../resources/testsuite/ieee-1516e-testng.xml" />
       <option name="PACKAGE_NAME" value="" />
       <option name="MAIN_CLASS_NAME" value="" />
       <option name="METHOD_NAME" value="" />
       <option name="GROUP_NAME" value="" />
       <option name="TEST_OBJECT" value="SUITE" />
-      <option name="VM_PARAMETERS" value="-Dohla.rti.host=localhost -Dohla.rti.port=5000" />
+      <option name="VM_PARAMETERS" value="" />
       <option name="PARAMETERS" value="" />
-      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$/../output/testsuite/results/hla-1.3" />
-      <option name="OUTPUT_DIRECTORY" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$/../.." />
+      <option name="OUTPUT_DIRECTORY" value="C:\projects\ohla-0.5\build\output\testsuite\results\ieee-1516e" />
       <option name="ANNOTATION_TYPE" />
       <option name="ENV_VARIABLES" />
       <option name="PASS_PARENT_ENVS" value="true" />
-      <option name="ADDITIONAL_CLASS_PATH" />
       <option name="TEST_SEARCH_SCOPE">
-        <value defaultName="wholeProject" />
+        <value defaultName="moduleWithDependencies" />
       </option>
+      <option name="USE_DEFAULT_REPORTERS" value="false" />
       <option name="PROPERTIES_FILE" value="" />
       <envs />
       <properties />
       <listeners />
+      <RunnerSettings RunnerId="Debug">
+        <option name="DEBUG_PORT" value="3667" />
+        <option name="TRANSPORT" value="0" />
+        <option name="LOCAL" value="true" />
+      </RunnerSettings>
+      <ConfigurationWrapper RunnerId="Debug" />
+      <method />
     </configuration>
-    <list size="3">
+    <list size="4">
       <item index="0" class="java.lang.String" itemvalue="Application.RTI" />
-      <item index="1" class="java.lang.String" itemvalue="TestNG.IEEE 1516 Testsuite" />
-      <item index="2" class="java.lang.String" itemvalue="TestNG.HLA 1.3 Testsuite" />
+      <item index="1" class="java.lang.String" itemvalue="TestNG.HLA 1.3 Testsuite" />
+      <item index="2" class="java.lang.String" itemvalue="TestNG.IEEE 1516 Testsuite" />
+      <item index="3" class="java.lang.String" itemvalue="TestNG.IEEE 1516e Testsuite" />
     </list>
   </component>
   <component name="ScopeViewComponent">
@@ -744,7 +1448,7 @@
     <option name="USE_PROJECT_SETTINGS" value="true" />
     <option name="USE_ALTERNATE_LOCATION" value="false" />
   </component>
-  <component name="SvnConfiguration">
+  <component name="SvnConfiguration" maxAnnotateRevisions="500">
     <option name="USER" value="" />
     <option name="PASSWORD" value="" />
     <option name="LAST_MERGED_REVISION" />
@@ -753,9 +1457,80 @@
     <option name="MERGE_DIFF_USE_ANCESTRY" value="true" />
     <option name="UPDATE_LOCK_ON_DEMAND" value="false" />
     <option name="IGNORE_SPACES_IN_MERGE" value="false" />
+    <option name="DETECT_NESTED_COPIES" value="true" />
+    <option name="CHECK_NESTED_FOR_QUICK_MERGE" value="false" />
+    <option name="IGNORE_SPACES_IN_ANNOTATE" value="true" />
+    <option name="SHOW_MERGE_SOURCES_IN_ANNOTATE" value="true" />
     <configuration useDefault="true">C:\Documents and Settings\Michael\Application Data\Subversion</configuration>
     <upgradeMode>auto</upgradeMode>
     <myIsUseDefaultProxy>true</myIsUseDefaultProxy>
+    <supportedVersion>125</supportedVersion>
+  </component>
+  <component name="SvnFileUrlMappingImpl">
+    <option name="myMappingRoots">
+      <list>
+        <SvnCopyRootSimple>
+          <option name="myVcsRoot" value="C:\projects\ohla-0.5\build\intellij" />
+          <option name="myCopyRoot" value="C:\projects\ohla-0.5\build\intellij" />
+        </SvnCopyRootSimple>
+        <SvnCopyRootSimple>
+          <option name="myVcsRoot" value="C:\projects\ohla-0.5" />
+          <option name="myCopyRoot" value="C:\projects\ohla-0.5" />
+        </SvnCopyRootSimple>
+        <SvnCopyRootSimple>
+          <option name="myVcsRoot" value="C:\projects\ohla-0.5\testsuite" />
+          <option name="myCopyRoot" value="C:\projects\ohla-0.5\testsuite" />
+        </SvnCopyRootSimple>
+        <SvnCopyRootSimple>
+          <option name="myVcsRoot" value="C:\projects\ohla-0.5\rti" />
+          <option name="myCopyRoot" value="C:\projects\ohla-0.5\rti" />
+        </SvnCopyRootSimple>
+        <SvnCopyRootSimple>
+          <option name="myVcsRoot" value="C:\projects\ohla-0.5\ieee-1516" />
+          <option name="myCopyRoot" value="C:\projects\ohla-0.5\ieee-1516" />
+        </SvnCopyRootSimple>
+        <SvnCopyRootSimple>
+          <option name="myVcsRoot" value="C:\projects\ohla-0.5\hla-1.3" />
+          <option name="myCopyRoot" value="C:\projects\ohla-0.5\hla-1.3" />
+        </SvnCopyRootSimple>
+        <SvnCopyRootSimple>
+          <option name="myVcsRoot" value="C:\projects\ohla-0.5\ieee-1516e" />
+          <option name="myCopyRoot" value="C:\projects\ohla-0.5\ieee-1516e" />
+        </SvnCopyRootSimple>
+      </list>
+    </option>
+    <option name="myMoreRealMappingRoots">
+      <list>
+        <SvnCopyRootSimple>
+          <option name="myVcsRoot" value="C:\projects\ohla-0.5" />
+          <option name="myCopyRoot" value="C:\projects\ohla-0.5" />
+        </SvnCopyRootSimple>
+      </list>
+    </option>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="c306879c-2744-4d82-a20f-7284eb5ea0e6" name="Default" comment="- more time management bug fixes&#10;- testsuite passing" />
+      <created>1291939285546</created>
+      <updated>1291939285546</updated>
+    </task>
+    <task id="LOCAL-00001" summary="Failed commit: Default (3)">
+      <changelist id="b327ec2e-3874-42f5-be84-709b1575db86" name="Failed commit: Default (3)" comment="- refactoring" />
+      <created>1291939270531</created>
+      <updated>1291939270531</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Failed commit: Default">
+      <changelist id="b279f3ba-c417-49c1-bcc1-a24f5fc97d41" name="Failed commit: Default" comment="- removed log4j" />
+      <created>1291939270531</created>
+      <updated>1291939270531</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Failed commit: Default (2)">
+      <changelist id="261d7dd6-cad7-41bb-912f-d59a03f7b57d" name="Failed commit: Default (2)" comment="- refactoring" />
+      <created>1291939270531</created>
+      <updated>1291939270531</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
+    <servers />
   </component>
   <component name="TodoView" selected-index="0">
     <todo-panel id="selected-file">
@@ -781,41 +1556,41 @@
     <frame x="-4" y="-4" width="1448" height="874" extended-state="6" />
     <editor active="false" />
     <layout>
-      <window_info id="Data Sources" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="5" side_tool="false" />
-      <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32899022" sideWeight="0.5" order="12" side_tool="false" />
-      <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="10" side_tool="false" />
-      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.15401146" sideWeight="0.5" order="0" side_tool="false" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.5540721" sideWeight="0.5" order="1" side_tool="false" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.40114942" sideWeight="0.5" order="4" side_tool="false" />
-      <window_info id="Dataflow to this" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" />
-      <window_info id="IDEtalk Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="11" side_tool="false" />
-      <window_info id="IDEtalk" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3295129" sideWeight="0.5" order="3" side_tool="false" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32988507" sideWeight="0.5" order="13" side_tool="false" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.31375167" sideWeight="0.5" order="14" side_tool="false" />
-      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32736155" sideWeight="0.5" order="8" side_tool="false" />
-      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" />
-      <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3998378" sideWeight="0.5" order="1" side_tool="false" />
-      <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="4" side_tool="false" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.3295129" sideWeight="0.43658212" order="0" side_tool="false" />
-      <window_info id="Dependency Viewer" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32988507" sideWeight="0.5" order="15" side_tool="false" />
-      <window_info id="Web Preview" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="9" side_tool="false" />
-      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="6" side_tool="false" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.27816093" sideWeight="0.5" order="2" side_tool="false" />
-      <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" />
-      <window_info id="SVN Repositories" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32872927" sideWeight="0.5" order="10" side_tool="false" />
-      <window_info id="Maven projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" />
-      <window_info id="File View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" />
-      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" />
-      <window_info id="Dependency Cycles" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="17" side_tool="false" />
-      <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="5" side_tool="false" />
-      <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" />
-      <window_info id="Favorites" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32928804" sideWeight="0.5" order="8" side_tool="false" />
-      <window_info id="Web" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" />
-      <window_info id="Metrics" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="18" side_tool="false" />
-      <window_info id="EJB" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="3" side_tool="false" />
-      <window_info id="CVS" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="19" side_tool="false" />
-      <window_info id="Module Dependencies" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="9" side_tool="false" />
-      <window_info id="Duplicates" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="16" side_tool="false" />
+      <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32827586" sideWeight="0.5" order="12" side_tool="false" content_ui="tabs" />
+      <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
+      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.15362526" sideWeight="0.47862068" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.5213793" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32965517" sideWeight="0.5" order="13" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4289655" sideWeight="0.5" order="14" side_tool="false" content_ui="tabs" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32689655" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32950467" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39913854" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.29073942" sideWeight="0.5710345" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Dependency Viewer" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32988507" sideWeight="0.5" order="15" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3737931" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Dataflow to this" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="IDEtalk Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
+      <window_info id="IDEtalk" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3295129" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="SVN Repositories" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32872927" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
+      <window_info id="Maven projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="File View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Dependency Cycles" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="17" side_tool="false" content_ui="tabs" />
+      <window_info id="Data Sources" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.5241379" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32928804" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Web" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Metrics" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="18" side_tool="false" content_ui="tabs" />
+      <window_info id="EJB" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Module Dependencies" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
+      <window_info id="CVS" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="19" side_tool="false" content_ui="tabs" />
+      <window_info id="Web Preview" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
+      <window_info id="Duplicates" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="16" side_tool="false" content_ui="tabs" />
+      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
   <component name="TransparentCheckInConfiguration">
@@ -840,16 +1615,23 @@
     <option name="SHOW_FILE_HISTORY_AS_TREE" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
-    <option name="OFFER_MOVE_TO_ANOTHER_CHANGELIST_ON_PARTIAL_COMMIT" value="true" />
+    <option name="OFFER_MOVE_TO_ANOTHER_CHANGELIST_ON_PARTIAL_COMMIT" value="false" />
     <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="PERFORM_UPDATE_IN_BACKGROUND" value="false" />
     <option name="PERFORM_COMMIT_IN_BACKGROUND" value="false" />
     <option name="PERFORM_EDIT_IN_BACKGROUND" value="true" />
     <option name="PERFORM_CHECKOUT_IN_BACKGROUND" value="true" />
     <option name="PERFORM_ADD_REMOVE_IN_BACKGROUND" value="true" />
+    <option name="PERFORM_ROLLBACK_IN_BACKGROUND" value="false" />
+    <option name="CHECK_LOCALLY_CHANGED_CONFLICTS_IN_BACKGROUND" value="false" />
+    <option name="ENABLE_BACKGROUND_PROCESSES" value="false" />
+    <option name="CHANGED_ON_SERVER_INTERVAL" value="60" />
+    <option name="SHOW_ONLY_CHANGED_IN_SELECTION_DIFF" value="true" />
     <option name="FORCE_NON_EMPTY_COMMENT" value="false" />
-    <option name="LAST_COMMIT_MESSAGE" value="- more time management bug fixes&#10;- testsuite passing" />
+    <option name="LAST_COMMIT_MESSAGE" value="- initial IEEE 1516 Evolved support&#10;- migrated to Netty" />
+    <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="true" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="false" />
+    <option name="CHECK_FILES_UP_TO_DATE_BEFORE_COMMIT" value="false" />
     <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="REFORMAT_BEFORE_FILE_COMMIT" value="false" />
     <option name="FILE_HISTORY_DIALOG_COMMENTS_SPLITTER_PROPORTION" value="0.8" />
@@ -859,9 +1641,6 @@
     <option name="UPDATE_GROUP_BY_CHANGELIST" value="false" />
     <option name="SHOW_FILE_HISTORY_AS_TREE" value="false" />
     <option name="FILE_HISTORY_SPLITTER_PROPORTION" value="0.6" />
-    <MESSAGE value="- add constructor that takes a RegionHandle" />
-    <MESSAGE value="- add constructor that takes a DimensionHandle" />
-    <MESSAGE value="- constructor that takes a RegionHandle could throw NullPointerException if argument was null" />
     <MESSAGE value="- re-ordered methods" />
     <MESSAGE value="- initial preparation for DDM support" />
     <MESSAGE value="- corrected replacement object WriteRequest" />
@@ -884,6 +1663,9 @@
     <MESSAGE value="- time management bug fixes" />
     <MESSAGE value="- more time management bug fixes&#10;- broke out time management test cases&#10;- testsuite passing" />
     <MESSAGE value="- more time management bug fixes&#10;- testsuite passing" />
+    <MESSAGE value="- initial IEEE 1516 Evolved support&#10;- migration to Netty" />
+    <MESSAGE value="- added IEEE 1516 Evolved API&#10;" />
+    <MESSAGE value="- initial IEEE 1516 Evolved support&#10;- migrated to Netty" />
   </component>
   <component name="VssConfiguration">
     <option name="CLIENT_PATH" value="" />
@@ -937,7 +1719,6 @@
       <runInBackground value="false" />
       <targetFilters>
         <filter targetName="clean" isVisible="true" />
-        <filter targetName="clean-light" isVisible="true" />
         <filter targetName="compile-hla-1.3" isVisible="false" />
         <filter targetName="compile-hla-1.3-java" isVisible="false" />
         <filter targetName="compile-ieee-1516" isVisible="false" />
@@ -957,6 +1738,13 @@
         <filter targetName="testsuite" isVisible="true" />
         <filter targetName="testsuite-hla-1.3" isVisible="true" />
         <filter targetName="testsuite-ieee-1516" isVisible="true" />
+        <filter targetName="compile-ieee-1516e" isVisible="false" />
+        <filter targetName="docs" isVisible="false" />
+        <filter targetName="javadoc" isVisible="false" />
+        <filter targetName="testsuite-ieee-1516e" isVisible="true" />
+        <filter targetName="jar-ieee-1516e" isVisible="false" />
+        <filter targetName="compile-ieee-1516e-java" isVisible="false" />
+        <filter targetName="dist" isVisible="false" />
       </targetFilters>
       <treeView value="false" />
       <verbose value="true" />
@@ -974,184 +1762,181 @@
     <option name="myLastEditedConfigurable" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/NextMessageRequestAvailable.java">
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eRTIambassador.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="49" column="0" selection-start="825" selection-end="1355" vertical-scroll-proportion="0.0">
+        <state line="507" column="36" selection-start="19198" selection-end="19198" vertical-scroll-proportion="0.0" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516e/BaseTestNG.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="36" column="16" selection-start="1070" selection-end="1070" vertical-scroll-proportion="0.0" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516/FederationManagementTestNG.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="48" column="13" selection-start="1628" selection-end="1628" vertical-scroll-proportion="0.0" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../ieee-1516e/src/java/hla/rti1516e/RTIambassador.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="134" column="8" selection-start="3936" selection-end="3936" vertical-scroll-proportion="0.0" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../ieee-1516e/src/java/hla/rti1516e/time/HLAfloat64Interval.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="19" column="17" selection-start="785" selection-end="785" vertical-scroll-proportion="0.0" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../resources/META-INF/services/hla.rti1516e.LogicalTimeFactory">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="1" column="53" selection-start="118" selection-end="118" vertical-scroll-proportion="0.025679758" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAfloat64Interval.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="105" column="29" selection-start="3186" selection-end="3186" vertical-scroll-proportion="0.0" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAinteger64Time.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="90" column="32" selection-start="2597" selection-end="2597" vertical-scroll-proportion="0.0" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAfloat64Time.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="54" column="37" selection-start="1650" selection-end="1650" vertical-scroll-proportion="0.0" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAinteger64Interval.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="81" column="43" selection-start="2388" selection-end="2388" vertical-scroll-proportion="0.0" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../ieee-1516e/src/java/hla/rti1516e/time/HLAinteger64Interval.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="19" column="17" selection-start="786" selection-end="786" vertical-scroll-proportion="0.0" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAinteger64TimeFactory.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="27" column="25" selection-start="1012" selection-end="1012" vertical-scroll-proportion="0.0" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516e/federation/CreationTestNG.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="111" column="36" selection-start="3340" selection-end="3340" vertical-scroll-proportion="0.0" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516/SupportServicesTestNG.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="43" column="13" selection-start="1571" selection-end="1571" vertical-scroll-proportion="0.025679758">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../ieee-1516/src/java/hla/rti1516/RTIambassador.java">
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAfloat64TimeFactory.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="23" column="0" selection-start="1050" selection-end="1050" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
+        <state line="47" column="0" selection-start="1005" selection-end="1694" vertical-scroll-proportion="0.0" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516RTIambassador.java">
+    <entry file="file://$PROJECT_DIR$/../../ieee-1516e/src/java/hla/rti1516e/time/HLAinteger64TimeFactory.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="2959" column="18" selection-start="80708" selection-end="80708" vertical-scroll-proportion="0.6388102">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/RTI.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="411" column="26" selection-start="11064" selection-end="11064" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/GALTAdvanced.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="21" column="0" selection-start="705" selection-end="726" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederateProxyIoFilter.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="201" column="73" selection-start="7442" selection-end="7442" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateTimeManager.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="765" column="0" selection-start="19620" selection-end="19620" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/NextMessageRequestAvailableTimeAdvanceGrant.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="7" column="13" selection-start="186" selection-end="186" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UpdateLITS.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="31" column="34" selection-start="647" selection-end="647" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecution.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="1320" column="23" selection-start="40574" selection-end="40574" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FlushQueueRequest.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="33" column="0" selection-start="204" selection-end="703" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/Federate.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="468" column="14" selection-start="17877" selection-end="17877" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionTimeManager.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="450" column="25" selection-start="12786" selection-end="12786" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederateProxy.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="405" column="14" selection-start="11019" selection-end="11019" vertical-scroll-proportion="0.04390935">
-          <folding />
-        </state>
+        <state line="30" column="20" selection-start="1075" selection-end="1075" vertical-scroll-proportion="0.0" />
       </provider>
     </entry>
   </component>
   <component name="masterDetails">
-    <option name="states">
-      <map>
-        <entry key="Copyright.UI">
-          <value>
-            <UIState>
-              <option name="proportions">
-                <SplitterProportionsDataImpl />
-              </option>
-            </UIState>
-          </value>
-        </entry>
-        <entry key="Errors.UI">
-          <value>
-            <UIState>
-              <option name="proportions">
-                <SplitterProportionsDataImpl />
-              </option>
-            </UIState>
-          </value>
-        </entry>
-        <entry key="ScopeChooserConfigurable.UI">
-          <value>
-            <UIState>
-              <option name="proportions">
-                <SplitterProportionsDataImpl>
-                  <option name="proportions">
-                    <list>
-                      <option value="0.2" />
-                    </list>
-                  </option>
-                </SplitterProportionsDataImpl>
-              </option>
-            </UIState>
-          </value>
-        </entry>
-      </map>
-    </option>
-    <option name="myStates">
-      <map>
-        <entry key="Copyright.UI">
-          <value>
-            <UIState>
-              <option name="proportions">
-                <SplitterProportionsDataImpl />
-              </option>
-            </UIState>
-          </value>
-        </entry>
-        <entry key="Errors.UI">
-          <value>
-            <UIState>
-              <option name="proportions">
-                <SplitterProportionsDataImpl />
-              </option>
-            </UIState>
-          </value>
-        </entry>
-        <entry key="ScopeChooserConfigurable.UI">
-          <value>
-            <UIState>
-              <option name="proportions">
-                <SplitterProportionsDataImpl>
-                  <option name="proportions">
-                    <list>
-                      <option value="0.2" />
-                    </list>
-                  </option>
-                </SplitterProportionsDataImpl>
-              </option>
-            </UIState>
-          </value>
-        </entry>
-      </map>
-    </option>
+    <states>
+      <state key="ArtifactsStructureConfigurable.UI">
+        <settings>
+          <artifact-editor />
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="Copyright.UI">
+        <settings>
+          <last-edited>OHLA</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="FacetStructureConfigurable.UI">
+        <settings>
+          <last-edited>Android</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="GlobalLibrariesConfigurable.UI">
+        <settings>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="JdkListConfigurable.UI">
+        <settings>
+          <last-edited>1.6</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="ModuleStructureConfigurable.UI">
+        <settings>
+          <last-edited>OHLA</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+                <option value="0.5" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="ProjectLibrariesConfigurable.UI">
+        <settings>
+          <last-edited>slf4j</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="ScopeChooserConfigurable.UI">
+        <settings>
+          <splitter-proportions />
+        </settings>
+      </state>
+    </states>
   </component>
   <component name="testng.defaultConfiguration">
     <outputDirectory />

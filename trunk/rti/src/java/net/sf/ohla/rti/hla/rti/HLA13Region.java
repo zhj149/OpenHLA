@@ -22,27 +22,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.sf.ohla.rti.fdd.Dimension;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516RegionHandleSet;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandleSet;
 
 import hla.rti.ArrayIndexOutOfBounds;
 import hla.rti.Region;
 
-import hla.rti1516.RangeBounds;
-import hla.rti1516.RegionHandle;
-import hla.rti1516.RegionHandleSet;
+import hla.rti1516e.RangeBounds;
+import hla.rti1516e.RegionHandle;
+import hla.rti1516e.RegionHandleSet;
 
 public class HLA13Region
   implements Region
 {
-  protected int token;
-  protected int routingSpaceHandle;
-  protected List<Extent> extents;
+  private final int token;
+  private final int routingSpaceHandle;
+  private final List<Extent> extents;
 
   protected transient RegionHandleSet regionHandles;
 
-  public HLA13Region(int token, int routingSpaceHandle,
-                    List<Dimension> dimensions,
-                    RegionHandleSet regionHandles)
+  public HLA13Region(int token, int routingSpaceHandle, List<Dimension> dimensions, RegionHandleSet regionHandles)
   {
     this.token = token;
     this.routingSpaceHandle = routingSpaceHandle;
@@ -75,7 +73,7 @@ public class HLA13Region
   {
     if (regionHandles == null)
     {
-      regionHandles = new IEEE1516RegionHandleSet();
+      regionHandles = new IEEE1516eRegionHandleSet();
       for (Extent extent : extents)
       {
         regionHandles.add(extent.getRegionHandle());
@@ -150,10 +148,7 @@ public class HLA13Region
       rangeBounds = new ArrayList<RangeBounds>(extent.rangeBounds.size());
       for (RangeBounds rangeBounds : extent.rangeBounds)
       {
-        RangeBounds tempRangeBounds = new RangeBounds();
-        tempRangeBounds.lower = rangeBounds.lower;
-        tempRangeBounds.upper = rangeBounds.upper;
-        this.rangeBounds.add(tempRangeBounds);
+        this.rangeBounds.add(new RangeBounds(rangeBounds.lower, rangeBounds.upper));
       }
     }
 
@@ -167,7 +162,7 @@ public class HLA13Region
       //
       for (Dimension dimension : dimensions)
       {
-        rangeBounds.add(new RangeBounds());
+        rangeBounds.add(new RangeBounds(0L, dimension.getUpperBound()));
       }
     }
 
@@ -207,13 +202,13 @@ public class HLA13Region
     public void setRangeLowerBound(int dimensionHandle, long lowerBound)
       throws ArrayIndexOutOfBounds
     {
-      getRangeBounds(dimensionHandle).lower = lowerBound;
+      rangeBounds.set(dimensionHandle, new RangeBounds(lowerBound, getRangeBounds(dimensionHandle).upper));
     }
 
     public void setRangeUpperBound(int dimensionHandle, long upperBound)
       throws ArrayIndexOutOfBounds
     {
-      getRangeBounds(dimensionHandle).upper = upperBound;
+      rangeBounds.set(dimensionHandle, new RangeBounds(getRangeBounds(dimensionHandle).lower, upperBound));
     }
   }
 }

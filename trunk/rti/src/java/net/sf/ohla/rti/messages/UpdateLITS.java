@@ -1,34 +1,27 @@
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.federation.FederationExecution;
-import net.sf.ohla.rti.federation.FederateProxy;
+import org.jboss.netty.buffer.ChannelBuffer;
 
-import hla.rti1516.LogicalTime;
+import hla.rti1516e.LogicalTime;
+import hla.rti1516e.LogicalTimeFactory;
 
 public class UpdateLITS
-  implements FederationExecutionMessage
+  extends LogicalTimeMessage
 {
-  protected LogicalTime lits;
-
-  public UpdateLITS(LogicalTime lits)
+  public UpdateLITS(LogicalTime time)
   {
-    this.lits = lits;
+    super(MessageType.UPDATE_LITS, time);
+
+    encodingFinished();
   }
 
-  public LogicalTime getLITS()
+  public UpdateLITS(ChannelBuffer buffer, LogicalTimeFactory factory)
   {
-    return lits;
+    super(buffer, factory);
   }
 
-  @Override
-  public String toString()
+  public MessageType getType()
   {
-    return String.format("update LITS: %s", lits);
-  }
-
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
-  {
-    federationExecution.updateLITS(federateProxy, this);
+    return MessageType.UPDATE_LITS;
   }
 }

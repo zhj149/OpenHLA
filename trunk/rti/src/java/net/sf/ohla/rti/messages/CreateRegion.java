@@ -18,18 +18,45 @@ package net.sf.ohla.rti.messages;
 
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSet;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandle;
 
-import hla.rti1516.DimensionHandleSet;
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.DimensionHandleSet;
+import hla.rti1516e.RegionHandle;
 
 public class CreateRegion
-  extends AbstractRequest
+  extends AbstractMessage
   implements FederationExecutionMessage
 {
-  protected DimensionHandleSet dimensionHandles;
+  private final RegionHandle regionHandle;
+  private final DimensionHandleSet dimensionHandles;
 
-  public CreateRegion(DimensionHandleSet dimensionHandles)
+  public CreateRegion(RegionHandle regionHandle, DimensionHandleSet dimensionHandles)
   {
+    super(MessageType.CREATE_REGION);
+
+    this.regionHandle = regionHandle;
     this.dimensionHandles = dimensionHandles;
+
+    IEEE1516eRegionHandle.encode(buffer, regionHandle);
+    IEEE1516eDimensionHandleSet.encode(buffer, dimensionHandles);
+
+    encodingFinished();
+  }
+
+  public CreateRegion(ChannelBuffer buffer)
+  {
+    super(buffer);
+
+    regionHandle = IEEE1516eRegionHandle.decode(buffer);
+    dimensionHandles = IEEE1516eDimensionHandleSet.decode(buffer);
+  }
+
+  public RegionHandle getRegionHandle()
+  {
+    return regionHandle;
   }
 
   public DimensionHandleSet getDimensionHandles()
@@ -37,8 +64,12 @@ public class CreateRegion
     return dimensionHandles;
   }
 
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public MessageType getType()
+  {
+    return MessageType.CREATE_REGION;
+  }
+
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.createRegion(federateProxy, this);
   }

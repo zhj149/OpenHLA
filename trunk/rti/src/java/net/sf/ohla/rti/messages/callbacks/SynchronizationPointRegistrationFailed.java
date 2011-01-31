@@ -16,26 +16,66 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateInternalError;
-import hla.rti1516.SynchronizationPointFailureReason;
+import net.sf.ohla.rti.Protocol;
+import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.FederateMessage;
+import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.StringMessage;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.SynchronizationPointFailureReason;
+import hla.rti1516e.exceptions.FederateInternalError;
 
 public class SynchronizationPointRegistrationFailed
-  implements Callback
+  extends StringMessage
+  implements Callback, FederateMessage
 {
-  protected String label;
-  protected SynchronizationPointFailureReason reason;
+  private final SynchronizationPointFailureReason reason;
 
-  public SynchronizationPointRegistrationFailed(
-    String label, SynchronizationPointFailureReason reason)
+  public SynchronizationPointRegistrationFailed(String s, SynchronizationPointFailureReason reason)
   {
-    this.label = label;
+    super(MessageType.SYNCHRONIZATION_POINT_REGISTRATION_FAILED, s);
+
     this.reason = reason;
+
+    Protocol.encodeEnum(buffer, reason);
+
+    encodingFinished();
+  }
+
+  public SynchronizationPointRegistrationFailed(ChannelBuffer buffer)
+  {
+    super(buffer);
+
+    reason = Protocol.decodeEnum(buffer, SynchronizationPointFailureReason.values());
+  }
+
+  public String getLabel()
+  {
+    return s;
+  }
+
+  public SynchronizationPointFailureReason getReason()
+  {
+    return reason;
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.SYNCHRONIZATION_POINT_REGISTRATION_FAILED;
   }
 
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.synchronizationPointRegistrationFailed(label, reason);
+    federateAmbassador.synchronizationPointRegistrationFailed(s, reason);
+  }
+
+  public void execute(Federate federate)
+  {
+    federate.callbackReceived(this);
   }
 }

@@ -16,33 +16,58 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import hla.rti1516.AttributeHandleSet;
-import hla.rti1516.AttributeNotOwned;
-import hla.rti1516.AttributeNotRecognized;
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateInternalError;
-import hla.rti1516.ObjectInstanceHandle;
-import hla.rti1516.ObjectInstanceNotKnown;
+import net.sf.ohla.rti.Protocol;
+import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.FederateMessage;
+import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.ObjectInstanceAttributesMessage;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.AttributeHandleSet;
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.ObjectInstanceHandle;
+import hla.rti1516e.exceptions.FederateInternalError;
 
 public class TurnUpdatesOnForObjectInstance
-  implements Callback
+  extends ObjectInstanceAttributesMessage
+  implements Callback, FederateMessage
 {
-  protected ObjectInstanceHandle objectInstanceHandle;
-  protected AttributeHandleSet attributeHandles;
+  private final String updateRateDesignator;
 
   public TurnUpdatesOnForObjectInstance(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles)
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, String updateRateDesignator)
   {
-    this.objectInstanceHandle = objectInstanceHandle;
-    this.attributeHandles = attributeHandles;
+    super(MessageType.TURN_UPDATES_ON_FOR_OBJECT_INSTANCE, objectInstanceHandle, attributeHandles);
+
+    this.updateRateDesignator = updateRateDesignator;
+
+    Protocol.encodeString(buffer, updateRateDesignator);
+
+    encodingFinished();
+  }
+
+  public TurnUpdatesOnForObjectInstance(ChannelBuffer buffer)
+  {
+    super(buffer);
+
+    updateRateDesignator = Protocol.decodeString(buffer);
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.TURN_UPDATES_ON_FOR_OBJECT_INSTANCE;
   }
 
   public void execute(FederateAmbassador federateAmbassador)
-    throws ObjectInstanceNotKnown, AttributeNotRecognized, AttributeNotOwned,
-           FederateInternalError
+    throws FederateInternalError
   {
-    federateAmbassador.turnUpdatesOnForObjectInstance(
-      objectInstanceHandle, attributeHandles);
+    federateAmbassador.turnUpdatesOffForObjectInstance(objectInstanceHandle, attributeHandles);
+  }
+
+  public void execute(Federate federate)
+  {
+    federate.callbackReceived(this);
   }
 }

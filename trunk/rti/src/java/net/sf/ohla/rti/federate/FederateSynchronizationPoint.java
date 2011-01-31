@@ -16,29 +16,17 @@
 
 package net.sf.ohla.rti.federate;
 
-import hla.rti1516.FederateHandleSet;
-import hla.rti1516.SynchronizationPointFailureReason;
-import hla.rti1516.SynchronizationPointLabelNotAnnounced;
-
 public class FederateSynchronizationPoint
 {
-  protected String label;
-  protected byte[] tag;
-  protected FederateHandleSet federateHandles;
-  protected State state = State.ATTEMPTING_TO_REGISTER_SYNCH_POINT;
+  private final String label;
+  private final byte[] tag;
+
+  private State state = State.MOVING_TO_SYNCH_POINT;
 
   public FederateSynchronizationPoint(String label, byte[] tag)
   {
     this.label = label;
     this.tag = tag;
-  }
-
-  public FederateSynchronizationPoint(String label, byte[] tag,
-                                      FederateHandleSet federateHandles)
-  {
-    this(label, tag);
-
-    this.federateHandles = federateHandles;
   }
 
   public String getLabel()
@@ -51,46 +39,18 @@ public class FederateSynchronizationPoint
     return tag;
   }
 
-  public FederateHandleSet getFederateHandles()
+  public boolean synchronizationPointAchieved()
   {
-    return federateHandles;
-  }
-
-  public void synchronizationPointRegistrationSucceeded()
-  {
-    state = State.NO_ACTIVITY;
-  }
-
-  public void synchronizationPointRegistrationFailed(
-    SynchronizationPointFailureReason reason)
-  {
-    state = State.NO_ACTIVITY;
-  }
-
-  public void announceSynchronizationPoint()
-  {
-    state = State.MOVING_TO_SYNCH_POINT;
-  }
-
-  public void synchronizationPointAchieved()
-    throws SynchronizationPointLabelNotAnnounced
-  {
-    if (state != State.MOVING_TO_SYNCH_POINT)
+    boolean synchronizationPointAchieved = state == State.MOVING_TO_SYNCH_POINT;
+    if (synchronizationPointAchieved)
     {
-      throw new SynchronizationPointLabelNotAnnounced(label);
+      state = State.WAITING_FOR_REST_OF_FEDERATION_TO_SYNCHRONIZE;
     }
-
-    state = State.WAITING_FOR_REST_OF_FEDERATION_TO_SYNCHRONIZE;
-  }
-
-  public void federationSynchronized()
-  {
-    state = State.NO_ACTIVITY;
+    return synchronizationPointAchieved;
   }
 
   protected enum State
   {
-    NO_ACTIVITY, ATTEMPTING_TO_REGISTER_SYNCH_POINT, MOVING_TO_SYNCH_POINT,
-    WAITING_FOR_REST_OF_FEDERATION_TO_SYNCHRONIZE
+    MOVING_TO_SYNCH_POINT, WAITING_FOR_REST_OF_FEDERATION_TO_SYNCHRONIZE
   }
 }

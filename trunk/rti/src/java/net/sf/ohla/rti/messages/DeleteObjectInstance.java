@@ -16,40 +16,71 @@
 
 package net.sf.ohla.rti.messages;
 
+import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eMessageRetractionHandle;
 
-import hla.rti1516.LogicalTime;
-import hla.rti1516.MessageRetractionHandle;
-import hla.rti1516.ObjectInstanceHandle;
-import hla.rti1516.OrderType;
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.LogicalTime;
+import hla.rti1516e.LogicalTimeFactory;
+import hla.rti1516e.MessageRetractionHandle;
+import hla.rti1516e.ObjectInstanceHandle;
+import hla.rti1516e.OrderType;
 
 public class DeleteObjectInstance
+  extends ObjectInstanceMessage
   implements FederationExecutionMessage
 {
-  protected ObjectInstanceHandle objectInstanceHandle;
-  protected byte[] tag;
-  protected OrderType sentOrderType;
-  protected LogicalTime deleteTime;
-  protected MessageRetractionHandle messageRetractionHandle;
+  private final byte[] tag;
+  private final OrderType sentOrderType;
+  private final LogicalTime deleteTime;
+  private final MessageRetractionHandle messageRetractionHandle;
 
-  public DeleteObjectInstance(ObjectInstanceHandle objectInstanceHandle,
-                              byte[] tag, OrderType sentOrderType)
+  public DeleteObjectInstance(ObjectInstanceHandle objectInstanceHandle, byte[] tag)
   {
-    this.objectInstanceHandle = objectInstanceHandle;
+    super(MessageType.DELETE_OBJECT_INSTANCE, objectInstanceHandle);
+
     this.tag = tag;
-    this.sentOrderType = sentOrderType;
+
+    sentOrderType = OrderType.RECEIVE;
+    deleteTime = null;
+    messageRetractionHandle = null;
+
+    Protocol.encodeBytes(buffer, tag);
+    Protocol.encodeEnum(buffer, sentOrderType);
+    Protocol.encodeNullTime(buffer);
+    IEEE1516eMessageRetractionHandle.encode(buffer, messageRetractionHandle);
   }
 
-  public DeleteObjectInstance(ObjectInstanceHandle objectInstanceHandle,
-                              byte[] tag, OrderType sentOrderType,
-                              LogicalTime deleteTime,
-                              MessageRetractionHandle messageRetractionHandle)
+  public DeleteObjectInstance(
+    ObjectInstanceHandle objectInstanceHandle, byte[] tag, OrderType sentOrderType, LogicalTime deleteTime,
+    MessageRetractionHandle messageRetractionHandle)
   {
-    this(objectInstanceHandle, tag, sentOrderType);
+    super(MessageType.DELETE_OBJECT_INSTANCE, objectInstanceHandle);
 
+    this.tag = tag;
+    this.sentOrderType = sentOrderType;
     this.deleteTime = deleteTime;
     this.messageRetractionHandle = messageRetractionHandle;
+
+    Protocol.encodeBytes(buffer, tag);
+    Protocol.encodeEnum(buffer, sentOrderType);
+    Protocol.encodeTime(buffer, deleteTime);
+    IEEE1516eMessageRetractionHandle.encode(buffer, messageRetractionHandle);
+
+    encodingFinished();
+  }
+
+  public DeleteObjectInstance(ChannelBuffer buffer, LogicalTimeFactory logicalTimeFactory)
+  {
+    super(buffer);
+
+    tag = Protocol.decodeBytes(buffer);
+    sentOrderType = Protocol.decodeEnum(buffer, OrderType.values());
+    deleteTime = Protocol.decodeTime(buffer, logicalTimeFactory);
+    messageRetractionHandle = IEEE1516eMessageRetractionHandle.decode(buffer);
   }
 
   public ObjectInstanceHandle getObjectInstanceHandle()
@@ -77,8 +108,12 @@ public class DeleteObjectInstance
     return messageRetractionHandle;
   }
 
-  public void execute(FederationExecution federationExecution,
-                      FederateProxy federateProxy)
+  public MessageType getType()
+  {
+    return MessageType.DELETE_OBJECT_INSTANCE;
+  }
+
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.deleteObjectInstance(federateProxy, this);
   }

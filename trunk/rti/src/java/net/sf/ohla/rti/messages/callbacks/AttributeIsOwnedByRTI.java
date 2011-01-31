@@ -16,30 +16,48 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import hla.rti1516.AttributeHandle;
-import hla.rti1516.AttributeNotRecognized;
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateInternalError;
-import hla.rti1516.ObjectInstanceHandle;
-import hla.rti1516.ObjectInstanceNotKnown;
+import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.FederateMessage;
+import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.ObjectInstanceAttributeMessage;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.AttributeHandle;
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.ObjectInstanceHandle;
+import hla.rti1516e.exceptions.FederateInternalError;
 
 public class AttributeIsOwnedByRTI
-  implements Callback
+  extends ObjectInstanceAttributeMessage
+  implements Callback, FederateMessage
 {
-  protected ObjectInstanceHandle objectInstanceHandle;
-  protected AttributeHandle attributeHandle;
-
-  public AttributeIsOwnedByRTI(ObjectInstanceHandle objectInstanceHandle,
-                               AttributeHandle attributeHandle)
+  public AttributeIsOwnedByRTI(ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle)
   {
-    this.objectInstanceHandle = objectInstanceHandle;
-    this.attributeHandle = attributeHandle;
+    super(MessageType.ATTRIBUTE_IS_OWNED_BY_RTI, objectInstanceHandle, attributeHandle);
+
+    encodingFinished();
+  }
+
+  public AttributeIsOwnedByRTI(ChannelBuffer buffer)
+  {
+    super(buffer);
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.ATTRIBUTE_IS_OWNED_BY_RTI;
   }
 
   public void execute(FederateAmbassador federateAmbassador)
-    throws ObjectInstanceNotKnown, AttributeNotRecognized, FederateInternalError
+    throws FederateInternalError
   {
-    federateAmbassador.attributeIsOwnedByRTI(
-      objectInstanceHandle, attributeHandle);
+    federateAmbassador.attributeIsOwnedByRTI(objectInstanceHandle, attributeHandle);
+  }
+
+  public void execute(Federate federate)
+  {
+    federate.callbackReceived(this);
   }
 }

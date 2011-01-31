@@ -16,9 +16,12 @@
 
 package net.sf.ohla.rti.fed;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import net.sf.ohla.rti.fdd.InteractionClass;
+
+import hla.rti1516e.DimensionHandleSet;
+import hla.rti1516e.InteractionClassHandle;
+import hla.rti1516e.OrderType;
+import hla.rti1516e.TransportationTypeHandle;
 
 public class FEDInteractionClass
   extends InteractionClass
@@ -27,15 +30,11 @@ public class FEDInteractionClass
 
   protected RoutingSpace routingSpace = RoutingSpace.DEFAULT;
 
-  public FEDInteractionClass(String name, AtomicInteger interactionClassCount)
+  public FEDInteractionClass(
+    InteractionClassHandle interactionClassHandle, String name, FEDInteractionClass superInteractionClass,
+    DimensionHandleSet dimensions, TransportationTypeHandle transportationTypeHandle, OrderType orderType)
   {
-    super(name, interactionClassCount);
-  }
-
-  public FEDInteractionClass(String name, FEDInteractionClass superClass,
-                             AtomicInteger interactionClassCount)
-  {
-    super(name, superClass, interactionClassCount);
+    super(interactionClassHandle, name, superInteractionClass, dimensions, transportationTypeHandle, orderType);
   }
 
   public boolean hasRoutingSpace()

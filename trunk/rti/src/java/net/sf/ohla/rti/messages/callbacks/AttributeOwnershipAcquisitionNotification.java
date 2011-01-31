@@ -16,53 +16,68 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import hla.rti1516.AttributeAcquisitionWasNotRequested;
-import hla.rti1516.AttributeAlreadyOwned;
-import hla.rti1516.AttributeHandleSet;
-import hla.rti1516.AttributeNotPublished;
-import hla.rti1516.AttributeNotRecognized;
-import hla.rti1516.FederateAmbassador;
-import hla.rti1516.FederateInternalError;
-import hla.rti1516.ObjectInstanceHandle;
-import hla.rti1516.ObjectInstanceNotKnown;
+import net.sf.ohla.rti.Protocol;
+import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.FederateMessage;
+import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.ObjectInstanceAttributesMessage;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.AttributeHandleSet;
+import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.ObjectInstanceHandle;
+import hla.rti1516e.exceptions.FederateInternalError;
 
 public class AttributeOwnershipAcquisitionNotification
-  implements Callback
+  extends ObjectInstanceAttributesMessage
+  implements Callback, FederateMessage
 {
-  protected ObjectInstanceHandle objectInstanceHandle;
-  protected AttributeHandleSet attributeHandles;
-  protected byte[] tag;
+  private final byte[] tag;
+
+  private Federate federate;
 
   public AttributeOwnershipAcquisitionNotification(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles)
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
   {
-    this.objectInstanceHandle = objectInstanceHandle;
-    this.attributeHandles = attributeHandles;
+    this(objectInstanceHandle, attributeHandles, null);
   }
 
   public AttributeOwnershipAcquisitionNotification(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleSet attributeHandles, byte[] tag)
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
   {
-    this(objectInstanceHandle, attributeHandles);
+    super(MessageType.ATTRIBUTE_OWNERSHIP_ACQUISITION_NOTIFICATION, objectInstanceHandle, attributeHandles);
 
     this.tag = tag;
+
+    Protocol.encodeBytes(buffer, tag);
+
+    encodingFinished();
+  }
+
+  public AttributeOwnershipAcquisitionNotification(ChannelBuffer buffer)
+  {
+    super(buffer);
+
+    tag = Protocol.decodeBytes(buffer);
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.ATTRIBUTE_OWNERSHIP_ACQUISITION_NOTIFICATION;
   }
 
   public void execute(FederateAmbassador federateAmbassador)
-    throws ObjectInstanceNotKnown, AttributeNotRecognized,
-           AttributeAcquisitionWasNotRequested, AttributeAlreadyOwned,
-           AttributeNotPublished, FederateInternalError
+    throws FederateInternalError
   {
-    federateAmbassador.attributeOwnershipAcquisitionNotification(
-      objectInstanceHandle, attributeHandles, tag);
+    federate.attributeOwnershipAcquisitionNotification(objectInstanceHandle, attributeHandles, tag);
   }
 
-  @Override
-  public String toString()
+  public void execute(Federate federate)
   {
-    return String.format("AttributeOwnershipNotification: %s - %s",
-                         objectInstanceHandle, attributeHandles);
+    this.federate = federate;
+
+    federate.callbackReceived(this);
   }
 }

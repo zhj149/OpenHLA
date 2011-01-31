@@ -16,36 +16,19 @@
 
 package net.sf.ohla.rti.messages;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import org.jboss.netty.channel.ChannelFutureListener;
 
-public interface Request
-  extends Message
+import hla.rti1516e.exceptions.RTIinternalError;
+
+public interface Request<R>
+  extends Message, ChannelFutureListener
 {
   long getId();
 
   void setId(long id);
 
-  Object getResponse()
-    throws InterruptedException, ExecutionException;
-
-  Object getResponseUninterruptibly()
-    throws ExecutionException;
-
-  Object getResponse(long timeout, TimeUnit unit)
-    throws InterruptedException, ExecutionException, TimeoutException;
+  R getResponse()
+    throws InterruptedException, RTIinternalError;
 
   void setResponse(Object response);
-
-  void setResponseFailed(Throwable cause);
-
-  void await()
-    throws InterruptedException, ExecutionException;
-
-  void awaitUninterruptibly()
-    throws ExecutionException;
-
-  void await(long timeout, TimeUnit unit)
-    throws InterruptedException, ExecutionException, TimeoutException;
 }

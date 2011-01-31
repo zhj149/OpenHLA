@@ -24,9 +24,20 @@ import hla.rti1516.FederateNotExecutionMember;
 public class IEEE1516DimensionHandleFactory
   implements DimensionHandleFactory
 {
+  public static final IEEE1516DimensionHandleFactory INSTANCE = new IEEE1516DimensionHandleFactory();
+
+  private IEEE1516DimensionHandleFactory()
+  {
+  }
+
   public DimensionHandle decode(byte[] buffer, int offset)
-    throws CouldNotDecode, FederateNotExecutionMember
+    throws CouldNotDecode
   {
     return new IEEE1516DimensionHandle(buffer, offset);
+  }
+
+  private Object readResolve()
+  {
+    return INSTANCE;
   }
 }

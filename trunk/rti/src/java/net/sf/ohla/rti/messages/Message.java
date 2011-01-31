@@ -16,9 +16,11 @@
 
 package net.sf.ohla.rti.messages;
 
-import java.io.Serializable;
+import org.jboss.netty.buffer.ChannelBuffer;
 
 public interface Message
-  extends Serializable
 {
+  MessageType getType();
+
+  ChannelBuffer getBuffer();
 }

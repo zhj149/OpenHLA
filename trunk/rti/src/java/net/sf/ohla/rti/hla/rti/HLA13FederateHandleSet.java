@@ -19,16 +19,16 @@ package net.sf.ohla.rti.hla.rti;
 import java.util.Collection;
 import java.util.Iterator;
 
-import net.sf.ohla.rti.hla.rti1516.IEEE1516FederateHandle;
-import net.sf.ohla.rti.hla.rti1516.IEEE1516FederateHandleSet;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandleSet;
 
 import hla.rti.FederateHandleSet;
 import hla.rti.HandleIterator;
 
-import hla.rti1516.FederateHandle;
+import hla.rti1516e.FederateHandle;
 
 public class HLA13FederateHandleSet
-  extends IEEE1516FederateHandleSet
+  extends IEEE1516eFederateHandleSet
   implements FederateHandleSet
 {
   public HLA13FederateHandleSet()
@@ -45,24 +45,24 @@ public class HLA13FederateHandleSet
     super(c);
   }
 
-  public HLA13FederateHandleSet(hla.rti1516.FederateHandleSet federateHandles)
+  public HLA13FederateHandleSet(hla.rti1516e.FederateHandleSet federateHandles)
   {
     super(federateHandles);
   }
 
   public void add(int handle)
   {
-    add(new IEEE1516FederateHandle(handle));
+    add(new IEEE1516eFederateHandle(handle));
   }
 
   public void remove(int handle)
   {
-    remove(new IEEE1516FederateHandle(handle));
+    remove(new IEEE1516eFederateHandle(handle));
   }
 
   public boolean isMember(int handle)
   {
-    return contains(new IEEE1516FederateHandle(handle));
+    return contains(new IEEE1516eFederateHandle(handle));
   }
 
   public HandleIterator handles()
@@ -78,7 +78,7 @@ public class HLA13FederateHandleSet
   public class FederateHandleIterator
     implements HandleIterator
   {
-    protected Iterator<FederateHandle> i = iterator();
+    private Iterator<FederateHandle> i = iterator();
 
     public int first()
     {
@@ -93,7 +93,7 @@ public class HLA13FederateHandleSet
 
     public int next()
     {
-      return i.next().hashCode();
+      return ((IEEE1516eFederateHandle) i.next()).getHandle();
     }
   }
 }

@@ -22,12 +22,19 @@ import hla.rti1516.FederateHandleSetFactory;
 public class IEEE1516FederateHandleSetFactory
   implements FederateHandleSetFactory
 {
-  public IEEE1516FederateHandleSetFactory()
+  public static final IEEE1516FederateHandleSetFactory INSTANCE = new IEEE1516FederateHandleSetFactory();
+
+  private IEEE1516FederateHandleSetFactory()
   {
   }
 
   public FederateHandleSet create()
   {
     return new IEEE1516FederateHandleSet();
+  }
+
+  private Object readResolve()
+  {
+    return INSTANCE;
   }
 }
