@@ -34,7 +34,7 @@ public class JoinFederationExecution
   public JoinFederationExecution(
     String federateName, String federateType, String federationExecutionName, List<FDD> additionalFDDs)
   {
-    super(MessageType.CREATE_FEDERATION_EXECUTION);
+    super(MessageType.JOIN_FEDERATION_EXECUTION);
 
     this.federateName = federateName;
     this.federateType = federateType;
@@ -81,6 +81,6 @@ public class JoinFederationExecution
 
   public MessageType getType()
   {
-    return MessageType.CREATE_FEDERATION_EXECUTION;
+    return MessageType.JOIN_FEDERATION_EXECUTION;
   }
 }

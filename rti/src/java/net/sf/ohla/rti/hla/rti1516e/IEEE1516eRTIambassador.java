@@ -278,11 +278,11 @@ public class IEEE1516eRTIambassador
   {
     if (federateAmbassador == null)
     {
-      throw new IllegalArgumentException("FederateAmbassador cannot be null");
+      throw new IllegalArgumentException("federateAmbassador cannot be null");
     }
     else if (callbackModel == null)
     {
-      throw new IllegalArgumentException("CallbackModel cannot be null");
+      throw new IllegalArgumentException("callbackModel cannot be null");
     }
 
     String host;
@@ -3517,6 +3517,11 @@ public class IEEE1516eRTIambassador
   public String getObjectClassName(ObjectClassHandle objectClassHandle)
     throws InvalidObjectClassHandle, FederateNotExecutionMember, NotConnected, RTIinternalError
   {
+    if (objectClassHandle == null)
+    {
+      throw new InvalidObjectClassHandle("objectClassHandle cannot be null");
+    }
+
     connectLock.readLock().lock();
     try
     {
@@ -3648,6 +3653,15 @@ public class IEEE1516eRTIambassador
     throws AttributeNotDefined, InvalidAttributeHandle, InvalidObjectClassHandle, FederateNotExecutionMember,
            NotConnected, RTIinternalError
   {
+    if (objectClassHandle == null)
+    {
+      throw new InvalidObjectClassHandle("objectClassHandle cannot be null");
+    }
+    else if (attributeHandle == null)
+    {
+      throw new InvalidAttributeHandle("objectClassHandle cannot be null");
+    }
+
     connectLock.readLock().lock();
     try
     {
@@ -3829,9 +3843,14 @@ public class IEEE1516eRTIambassador
     }
   }
 
-  public OrderType getOrderType(String name)
+  public OrderType getOrderType(String orderTypeName)
     throws InvalidOrderName, FederateNotExecutionMember, NotConnected, RTIinternalError
   {
+    if (orderTypeName == null)
+    {
+      throw new InvalidOrderName("orderTypeName cannot be null");
+    }
+
     connectLock.readLock().lock();
     try
     {
@@ -3842,7 +3861,7 @@ public class IEEE1516eRTIambassador
       {
         checkIfFederateNotExecutionMember();
 
-        return federate.getOrderType(name);
+        return federate.getOrderType(orderTypeName);
       }
       finally
       {
@@ -3855,9 +3874,14 @@ public class IEEE1516eRTIambassador
     }
   }
 
-  public String getOrderName(OrderType theType)
+  public String getOrderName(OrderType orderType)
     throws InvalidOrderType, FederateNotExecutionMember, NotConnected, RTIinternalError
   {
+    if (orderType == null)
+    {
+      throw new InvalidOrderType("orderType cannot be null");
+    }
+
     connectLock.readLock().lock();
     try
     {
@@ -3868,7 +3892,7 @@ public class IEEE1516eRTIambassador
       {
         checkIfFederateNotExecutionMember();
 
-        return federate.getOrderName(theType);
+        return federate.getOrderName(orderType);
       }
       finally
       {
@@ -3881,9 +3905,14 @@ public class IEEE1516eRTIambassador
     }
   }
 
-  public TransportationTypeHandle getTransportationTypeHandle(String name)
+  public TransportationTypeHandle getTransportationTypeHandle(String transportationTypeName)
     throws InvalidTransportationName, FederateNotExecutionMember, NotConnected, RTIinternalError
   {
+    if (transportationTypeName == null)
+    {
+      throw new InvalidTransportationName("transportationTypeName cannot be null");
+    }
+
     connectLock.readLock().lock();
     try
     {
@@ -3894,7 +3923,7 @@ public class IEEE1516eRTIambassador
       {
         checkIfFederateNotExecutionMember();
 
-        return federate.getTransportationTypeHandle(name);
+        return federate.getTransportationTypeHandle(transportationTypeName);
       }
       finally
       {
@@ -3910,6 +3939,11 @@ public class IEEE1516eRTIambassador
   public String getTransportationTypeName(TransportationTypeHandle transportationTypeHandle)
     throws InvalidTransportationType, FederateNotExecutionMember, NotConnected, RTIinternalError
   {
+    if (transportationTypeHandle == null)
+    {
+      throw new InvalidTransportationType("transportationTypeHandle cannot be null");
+    }
+
     connectLock.readLock().lock();
     try
     {
@@ -3933,8 +3967,8 @@ public class IEEE1516eRTIambassador
     }
   }
 
-  public DimensionHandleSet getAvailableDimensionsForClassAttribute(ObjectClassHandle objectClassHandle,
-                                                                    AttributeHandle attributeHandle)
+  public DimensionHandleSet getAvailableDimensionsForClassAttribute(
+    ObjectClassHandle objectClassHandle, AttributeHandle attributeHandle)
     throws AttributeNotDefined, InvalidAttributeHandle, InvalidObjectClassHandle, FederateNotExecutionMember,
            NotConnected, RTIinternalError
   {

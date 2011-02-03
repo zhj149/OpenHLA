@@ -123,7 +123,7 @@ public class FederationExecutionRegionManager
           FederationExecutionRegion region = this.regions.get(j.next());
           if (region != null)
           {
-            intersects = subscribedRegion.intersects(region, interactionClass.getDimensions());
+            intersects = subscribedRegion.intersects(region, interactionClass.getDimensionHandles());
           }
         }
       }
@@ -163,7 +163,7 @@ public class FederationExecutionRegionManager
           FederationExecutionRegion region = this.regions.get(j.next());
           if (region != null)
           {
-            intersects = subscribedRegion.intersects(region, attribute.getDimensions());
+            intersects = subscribedRegion.intersects(region, attribute.getDimensionHandles());
           }
         }
       }
@@ -190,13 +190,13 @@ public class FederationExecutionRegionManager
   public boolean intersectsOnly(
     Set<RegionHandle> subscribedRegionHandles, Set<RegionHandle> regionHandles, Attribute attribute)
   {
-    return intersectsOnly(subscribedRegionHandles, regionHandles, attribute.getDimensions());
+    return intersectsOnly(subscribedRegionHandles, regionHandles, attribute.getDimensionHandles());
   }
 
   public boolean intersectsOnly(
     Set<RegionHandle> subscribedRegionHandles, Set<RegionHandle> regionHandles, InteractionClass interactionClass)
   {
-    return intersectsOnly(subscribedRegionHandles, regionHandles, interactionClass.getDimensions());
+    return intersectsOnly(subscribedRegionHandles, regionHandles, interactionClass.getDimensionHandles());
   }
 
   public boolean intersectsOnly(

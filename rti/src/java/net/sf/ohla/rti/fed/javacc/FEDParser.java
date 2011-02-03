@@ -184,14 +184,19 @@ public class FEDParser implements FEDParserConstants {
 
   final public void ObjectRoot() throws ParseException, ErrorReadingFED {
   String objectClassName;
+  ObjectClass objectRoot;
     jj_consume_token(CLASS);
     objectClassName = ObjectClassName();
-    if (!net.sf.ohla.rti.fed.FED.OBJECT_ROOT.equals(objectClassName))
+    if (net.sf.ohla.rti.fed.FED.OBJECT_ROOT.equals(objectClassName))
+    {
+      objectRoot = fed.addObjectClass(FDD.HLA_OBJECT_ROOT, null);
+    }
+    else
     {
       {if (true) throw new ErrorReadingFED("invalid root object: " + objectClassName + " (must be " + net.sf.ohla.rti.fed.FED.OBJECT_ROOT + ")");}
     }
-    PriviledgeToDeleteAttribute();
-    RTIprivateObject();
+    PriviledgeToDeleteAttribute(objectRoot);
+    RTIprivateObject(objectRoot);
     label_3:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -202,12 +207,12 @@ public class FEDParser implements FEDParserConstants {
         jj_la1[2] = jj_gen;
         break label_3;
       }
-      ObjectClass(ObjectClass.HLA_OBJECT_ROOT);
+      ObjectClass(objectRoot);
     }
     jj_consume_token(RPAREN);
   }
 
-  final public void PriviledgeToDeleteAttribute() throws ParseException, ErrorReadingFED {
+  final public void PriviledgeToDeleteAttribute(ObjectClass objectRoot) throws ParseException, ErrorReadingFED {
   String attributeName;
   String transport;
   String order;
@@ -225,31 +230,29 @@ public class FEDParser implements FEDParserConstants {
       ;
     }
     jj_consume_token(RPAREN);
-    if (!net.sf.ohla.rti.fed.FED.PRIVILEGE_TO_DELETE.equals(attributeName))
+    if (net.sf.ohla.rti.fed.FED.PRIVILEGE_TO_DELETE.equals(attributeName))
+    {
+      fed.addAttribute(objectRoot, attributeName, transport, order, spaceName);
+    }
+    else
     {
       {if (true) throw new ErrorReadingFED("invalid attribute: " + attributeName + " (must be " + net.sf.ohla.rti.fed.FED.PRIVILEGE_TO_DELETE + ")");}
     }
-
-    fed.setTransport(Attribute.HLA_PRIVILEGE_TO_DELETE_OBJECT, transport);
-    fed.setOrder(Attribute.HLA_PRIVILEGE_TO_DELETE_OBJECT, order);
-
-    if (spaceName != null)
-    {
-      fed.setRoutingSpace(Attribute.HLA_PRIVILEGE_TO_DELETE_OBJECT, spaceName);
-    }
   }
 
-  final public void RTIprivateObject() throws ParseException, ErrorReadingFED {
+  final public void RTIprivateObject(ObjectClass objectRoot) throws ParseException, ErrorReadingFED {
   String objectClassName;
     jj_consume_token(CLASS);
     objectClassName = ObjectClassName();
     jj_consume_token(RPAREN);
-    if (!net.sf.ohla.rti.fed.FED.RTI_PRIVATE.equals(objectClassName))
+    if (net.sf.ohla.rti.fed.FED.RTI_PRIVATE.equals(objectClassName))
+    {
+      fed.addObjectClass(objectClassName, objectRoot);
+    }
+    else
     {
       {if (true) throw new ErrorReadingFED("invalid object: " + objectClassName + " (must be " + net.sf.ohla.rti.fed.FED.RTI_PRIVATE + ")");}
     }
-
-    fed.getFDD().addObjectClass(objectClassName, ObjectClass.HLA_OBJECT_ROOT);
   }
 
   final public void ObjectClass(ObjectClass parent) throws ParseException, ErrorReadingFED {
@@ -258,7 +261,7 @@ public class FEDParser implements FEDParserConstants {
   ObjectClass objectClass;
     jj_consume_token(CLASS);
     objectClassName = ObjectClassName();
-    objectClass = fed.getFDD().addObjectClass(objectClassName, parent);
+    objectClass = fed.addObjectClass(objectClassName, parent);
     label_4:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -318,6 +321,7 @@ public class FEDParser implements FEDParserConstants {
   String transport;
   String order;
   String spaceName = null;
+  InteractionClass interactionRoot;
     jj_consume_token(CLASS);
     interactionClassName = InteractionClassName();
     transport = Transport();
@@ -330,20 +334,16 @@ public class FEDParser implements FEDParserConstants {
       jj_la1[7] = jj_gen;
       ;
     }
-    if (!net.sf.ohla.rti.fed.FED.INTERACTION_ROOT.equals(interactionClassName))
+    if (net.sf.ohla.rti.fed.FED.INTERACTION_ROOT.equals(interactionClassName))
+    {
+      interactionRoot = fed.addInteractionClass(null, FDD.HLA_INTERACTION_ROOT, transport, order, spaceName);
+    }
+    else
     {
       {if (true) throw new ErrorReadingFED(
         "invalid root interaction: " + interactionClassName + " (must be " + net.sf.ohla.rti.fed.FED.INTERACTION_ROOT + ")");}
     }
-
-    fed.setTransport(InteractionClass.HLA_INTERACTION_ROOT, transport);
-    fed.setOrder(InteractionClass.HLA_INTERACTION_ROOT, order);
-
-    if (spaceName != null)
-    {
-      fed.setRoutingSpace(InteractionClass.HLA_INTERACTION_ROOT, spaceName);
-    }
-    RTIprivateInteraction();
+    RTIprivateInteraction(interactionRoot);
     label_6:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -354,12 +354,12 @@ public class FEDParser implements FEDParserConstants {
         jj_la1[8] = jj_gen;
         break label_6;
       }
-      InteractionClass(InteractionClass.HLA_INTERACTION_ROOT);
+      InteractionClass(interactionRoot);
     }
     jj_consume_token(RPAREN);
   }
 
-  final public void RTIprivateInteraction() throws ParseException, ErrorReadingFED {
+  final public void RTIprivateInteraction(InteractionClass interactionRoot) throws ParseException, ErrorReadingFED {
   String interactionClassName;
   String transport;
   String order;
@@ -377,13 +377,15 @@ public class FEDParser implements FEDParserConstants {
       ;
     }
     jj_consume_token(RPAREN);
-    if (!net.sf.ohla.rti.fed.FED.RTI_PRIVATE.equals(interactionClassName))
+    if (net.sf.ohla.rti.fed.FED.RTI_PRIVATE.equals(interactionClassName))
+    {
+      fed.addInteractionClass(interactionRoot, interactionClassName, transport, order, spaceName);
+    }
+    else
     {
       {if (true) throw new ErrorReadingFED(
         "invalid interaction: " + interactionClassName + " (must be " + net.sf.ohla.rti.fed.FED.RTI_PRIVATE + ")");}
     }
-
-    fed.addInteractionClass(InteractionClass.HLA_INTERACTION_ROOT, interactionClassName, transport, order, spaceName);
   }
 
   final public void InteractionClass(InteractionClass parent) throws ParseException, ErrorReadingFED {
@@ -438,7 +440,7 @@ public class FEDParser implements FEDParserConstants {
     jj_consume_token(PARAMETER);
     parameterName = ParameterName();
     jj_consume_token(RPAREN);
-    fed.getFDD().addParameter(interactionClass, parameterName);
+    fed.addParameter(interactionClass, parameterName);
   }
 
   final public String ObjectClassName() throws ParseException {

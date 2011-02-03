@@ -19,6 +19,7 @@ package net.sf.ohla.rti;
 import org.jboss.netty.buffer.ChannelBuffer;
 
 public class IntegerHandle
+  implements Comparable<IntegerHandle>
 {
   protected final int handle;
 
@@ -60,6 +61,11 @@ public class IntegerHandle
   protected void encode(ChannelBuffer buffer)
   {
     Protocol.encodeVarInt(buffer, handle);
+  }
+
+  public int compareTo(IntegerHandle rhs)
+  {
+    return handle - rhs.handle;
   }
 
   @Override

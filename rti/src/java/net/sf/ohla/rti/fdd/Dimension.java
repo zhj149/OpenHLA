@@ -16,6 +16,11 @@
 
 package net.sf.ohla.rti.fdd;
 
+import net.sf.ohla.rti.Protocol;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandle;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
 import hla.rti1516e.DimensionHandle;
 import hla.rti1516e.RangeBounds;
 import hla.rti1516e.exceptions.InvalidRangeBound;
@@ -23,14 +28,21 @@ import hla.rti1516e.exceptions.InvalidRangeBound;
 public class Dimension
 {
   private final DimensionHandle dimensionHandle;
-  private final String name;
+  private final String dimensionName;
 
   private long upperBound = Long.MAX_VALUE;
 
-  public Dimension(DimensionHandle dimensionHandle, String name)
+  public Dimension(DimensionHandle dimensionHandle, String dimensionName)
   {
     this.dimensionHandle = dimensionHandle;
-    this.name = name;
+    this.dimensionName = dimensionName;
+  }
+
+  public Dimension(ChannelBuffer buffer)
+  {
+    dimensionHandle = IEEE1516eDimensionHandle.decode(buffer);
+    dimensionName = Protocol.decodeString(buffer);
+    upperBound = Protocol.decodeVarLong(buffer);
   }
 
   public DimensionHandle getDimensionHandle()
@@ -38,9 +50,9 @@ public class Dimension
     return dimensionHandle;
   }
 
-  public String getName()
+  public String getDimensionName()
   {
-    return name;
+    return dimensionName;
   }
 
   public long getUpperBound()
@@ -72,6 +84,18 @@ public class Dimension
   @Override
   public String toString()
   {
-    return name;
+    return dimensionName;
+  }
+
+  public static void encode(ChannelBuffer buffer, Dimension dimension)
+  {
+    IEEE1516eDimensionHandle.encode(buffer, dimension.dimensionHandle);
+    Protocol.encodeString(buffer, dimension.dimensionName);
+    Protocol.encodeVarLong(buffer, dimension.upperBound);
+  }
+
+  public static Dimension decode(ChannelBuffer buffer)
+  {
+    return new Dimension(buffer);
   }
 }
