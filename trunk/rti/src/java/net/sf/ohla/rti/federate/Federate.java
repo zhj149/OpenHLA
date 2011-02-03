@@ -313,7 +313,7 @@ public class Federate
     this.rtiChannel = rtiChannel;
 
     JoinFederationExecution joinFederationExecution = new JoinFederationExecution(
-      federationExecutionName, federateName, federateType, additionalFDDs);
+      federateName, federateType, federationExecutionName, additionalFDDs);
 
     rtiChannel.write(joinFederationExecution);
 

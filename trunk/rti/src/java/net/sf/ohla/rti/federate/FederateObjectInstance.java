@@ -27,6 +27,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.sf.ohla.rti.fdd.Attribute;
+import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.fdd.TransportationType;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSet;
@@ -149,14 +150,16 @@ public class FederateObjectInstance
     }
 
     // TODO: check rules about implicit publishing
-    //
-    if (!attributes.containsKey(Attribute.HLA_PRIVILEGE_TO_DELETE_OBJECT.getAttributeHandle()))
+
+    Attribute privilegeToDeleteObjectAttribute =
+      objectClass.getAttributeSafely(FDD.HLA_PRIVILEGE_TO_DELETE_OBJECT);
+    if (!attributes.containsKey(privilegeToDeleteObjectAttribute.getAttributeHandle()))
     {
       // create an attribute instance for the HLA privilege to delete
       // object attribute
       //
-      attributes.put(Attribute.HLA_PRIVILEGE_TO_DELETE_OBJECT.getAttributeHandle(),
-                     new FederateAttributeInstance(Attribute.HLA_PRIVILEGE_TO_DELETE_OBJECT));
+      attributes.put(privilegeToDeleteObjectAttribute.getAttributeHandle(),
+                     new FederateAttributeInstance(privilegeToDeleteObjectAttribute));
     }
 
     if (attributesAndRegions != null)
@@ -795,17 +798,12 @@ public class FederateObjectInstance
   {
     // dangerous method, must be called with proper protection
 
-    if (!attributes.containsKey(Attribute.HLA_PRIVILEGE_TO_DELETE_OBJECT.getAttributeHandle()))
+    Attribute privilegeToDeleteObjectAttribute =
+      objectClass.getAttributeSafely(FDD.HLA_PRIVILEGE_TO_DELETE_OBJECT);
+    if (!attributes.containsKey(privilegeToDeleteObjectAttribute.getAttributeHandle()))
     {
       throw new DeletePrivilegeNotHeld(objectInstanceHandle.toString());
     }
-  }
-
-  public boolean isDeletePrivilegeHeld()
-  {
-    // dangerous method, must be called with proper protection
-
-    return attributes.containsKey(Attribute.HLA_PRIVILEGE_TO_DELETE_OBJECT.getAttributeHandle());
   }
 
   public int hashCode()

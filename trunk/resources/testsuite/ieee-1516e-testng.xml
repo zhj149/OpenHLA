@@ -20,6 +20,16 @@
     <classes>
       <class name="net.sf.ohla.rti1516e.federation.ConnectionTestNG"/>
       <class name="net.sf.ohla.rti1516e.federation.CreationTestNG"/>
+      <class name="net.sf.ohla.rti1516e.federation.JoiningTestNG"/>
+    </classes>
+  </test>
+  <test name="IEEE 1516e - Support Services">
+    <classes>
+      <class name="net.sf.ohla.rti1516e.support.OrderSupportTestNG"/>
+      <class name="net.sf.ohla.rti1516e.support.TransportationSupportTestNG"/>
+      <class name="net.sf.ohla.rti1516e.support.ObjectSupportTestNG"/>
+      <class name="net.sf.ohla.rti1516e.support.InteractionSupportTestNG"/>
+      <class name="net.sf.ohla.rti1516e.support.DimensionSupportTestNG"/>
     </classes>
   </test>
 </suite>

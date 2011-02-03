@@ -183,13 +183,22 @@ public class IEEE1516FDDParser
       private final ObjectClass objectClass;
 
       public ObjectClassHandler(String objectClassName)
+        throws SAXException
       {
         this(objectClassName, null);
       }
 
       private ObjectClassHandler(String objectClassName, ObjectClass superObjectClass)
+        throws SAXException
       {
-        objectClass = fdd.addObjectClass(objectClassName, superObjectClass);
+        try
+        {
+          objectClass = fdd.addObjectClass(objectClassName, superObjectClass);
+        }
+        catch (hla.rti1516e.exceptions.ErrorReadingFDD erfdd)
+        {
+          throw new SAXException(erfdd);
+        }
       }
 
       @Override
@@ -198,8 +207,15 @@ public class IEEE1516FDDParser
       {
         if (qName.equals("Attribute"))
         {
-          fdd.addAttribute(objectClass, attributes.getValue("name"), getDimensions(attributes.getValue("dimensions")),
-                           attributes.getValue("transportation"), attributes.getValue("order"));
+          try
+          {
+            fdd.addAttribute(objectClass, attributes.getValue("name"), getDimensions(attributes.getValue("dimensions")),
+                             attributes.getValue("transportation"), attributes.getValue("order"));
+          }
+          catch (hla.rti1516e.exceptions.ErrorReadingFDD erfdd)
+          {
+            throw new SAXException(erfdd);
+          }
         }
         else if (qName.equals("ObjectClass"))
         {
@@ -224,15 +240,24 @@ public class IEEE1516FDDParser
       private final InteractionClass interactionClass;
 
       private InteractionClassHandler(Attributes attributes)
+        throws SAXException
       {
         this(attributes, null);
       }
 
       private InteractionClassHandler(Attributes attributes, InteractionClass superInteractionClass)
+        throws SAXException
       {
-        interactionClass = fdd.addInteractionClass(
-          attributes.getValue("name"), superInteractionClass, getDimensions(attributes.getValue("dimensions")),
-          attributes.getValue("transportation"), attributes.getValue("order"));
+        try
+        {
+          interactionClass = fdd.addInteractionClass(
+            attributes.getValue("name"), superInteractionClass, getDimensions(attributes.getValue("dimensions")),
+            attributes.getValue("transportation"), attributes.getValue("order"));
+        }
+        catch (hla.rti1516e.exceptions.ErrorReadingFDD erfdd)
+        {
+          throw new SAXException(erfdd);
+        }
       }
 
       @Override
@@ -241,7 +266,14 @@ public class IEEE1516FDDParser
       {
         if (qName.equals("Parameter"))
         {
-          fdd.addParameter(interactionClass, attributes.getValue("name"));
+          try
+          {
+            fdd.addParameter(interactionClass, attributes.getValue("name"));
+          }
+          catch (hla.rti1516e.exceptions.ErrorReadingFDD erfdd)
+          {
+            throw new SAXException(erfdd);
+          }
         }
         else if (qName.equals("InteractionClass"))
         {

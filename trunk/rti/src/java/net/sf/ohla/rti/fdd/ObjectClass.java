@@ -19,11 +19,15 @@ package net.sf.ohla.rti.fdd;
 import java.io.Serializable;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
+
+import org.jboss.netty.buffer.ChannelBuffer;
 
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.DimensionHandleSet;
@@ -31,34 +35,26 @@ import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.OrderType;
 import hla.rti1516e.TransportationTypeHandle;
 import hla.rti1516e.exceptions.AttributeNotDefined;
+import hla.rti1516e.exceptions.ErrorReadingFDD;
 import hla.rti1516e.exceptions.NameNotFound;
 
 public class ObjectClass
   implements Serializable
 {
-  public static final ObjectClass HLA_OBJECT_ROOT =
-    new ObjectClass(new IEEE1516eObjectClassHandle(1), "HLAobjectRoot", null);
-
-  static
-  {
-    HLA_OBJECT_ROOT.attributes.put(
-      Attribute.HLA_PRIVILEGE_TO_DELETE_OBJECT.getAttributeHandle(), Attribute.HLA_PRIVILEGE_TO_DELETE_OBJECT);
-    HLA_OBJECT_ROOT.attributesByName.put(
-      Attribute.HLA_PRIVILEGE_TO_DELETE_OBJECT.getName(), Attribute.HLA_PRIVILEGE_TO_DELETE_OBJECT);
-  }
-
   private final ObjectClassHandle objectClassHandle;
-  private final String name;
+  private final String objectClassName;
 
   private final ObjectClass superObjectClass;
+
+  private final Set<Attribute> declaredAttributes = new HashSet<Attribute>();
 
   private final Map<AttributeHandle, Attribute> attributes = new HashMap<AttributeHandle, Attribute>();
   private final Map<String, Attribute> attributesByName = new HashMap<String, Attribute>();
 
-  public ObjectClass(ObjectClassHandle objectClassHandle, String name, ObjectClass superObjectClass)
+  public ObjectClass(ObjectClassHandle objectClassHandle, String objectClassName, ObjectClass superObjectClass)
   {
     this.objectClassHandle = objectClassHandle;
-    this.name = name;
+    this.objectClassName = objectClassName;
     this.superObjectClass = superObjectClass;
 
     if (superObjectClass != null)
@@ -70,14 +66,45 @@ public class ObjectClass
     }
   }
 
+  public ObjectClass(ChannelBuffer buffer, Map<ObjectClassHandle, ObjectClass> objectClasses)
+  {
+    objectClassHandle = IEEE1516eObjectClassHandle.decode(buffer);
+    objectClassName = Protocol.decodeString(buffer);
+
+    if (Protocol.decodeBoolean(buffer))
+    {
+      superObjectClass = objectClasses.get(IEEE1516eObjectClassHandle.decode(buffer));
+
+      // get a reference to all the super object classes attributes
+      //
+      attributes.putAll(superObjectClass.attributes);
+      attributesByName.putAll(superObjectClass.attributesByName);
+    }
+    else
+    {
+      superObjectClass = null;
+    }
+
+    for (int declaredAttributeCount = Protocol.decodeVarInt(buffer); declaredAttributeCount > 0;
+         declaredAttributeCount--)
+    {
+      Attribute attribute = Attribute.decode(buffer);
+
+      declaredAttributes.add(attribute);
+
+      attributes.put(attribute.getAttributeHandle(), attribute);
+      attributesByName.put(attribute.getAttributeName(), attribute);
+    }
+  }
+
   public ObjectClassHandle getObjectClassHandle()
   {
     return objectClassHandle;
   }
 
-  public String getName()
+  public String getObjectClassName()
   {
-    return name;
+    return objectClassName;
   }
 
   public boolean hasSuperObjectClass()
@@ -102,19 +129,25 @@ public class ObjectClass
   }
 
   public Attribute addAttribute(
-    String name, DimensionHandleSet dimensionHandles, TransportationTypeHandle transportationTypeHandle,
+    String attributeName, DimensionHandleSet dimensionHandles, TransportationTypeHandle transportationTypeHandle,
     OrderType orderType)
+    throws ErrorReadingFDD
   {
-    Attribute attribute = attributesByName.get(name);
-    if (attribute == null)
+    if (attributesByName.containsKey(attributeName))
     {
-      AttributeHandle attributeHandle = new IEEE1516eAttributeHandle(attributes.size() + 1);
-
-      attribute = new Attribute(attributeHandle, name, dimensionHandles, transportationTypeHandle, orderType);
-
-      attributes.put(attributeHandle, attribute);
-      attributesByName.put(name, attribute);
+      throw new ErrorReadingFDD(attributeName + " already exists in " + objectClassName);
     }
+
+    AttributeHandle attributeHandle = new IEEE1516eAttributeHandle(attributes.size() + 1);
+
+    Attribute attribute = new Attribute(
+      attributeHandle, attributeName, dimensionHandles, transportationTypeHandle, orderType);
+
+    declaredAttributes.add(attribute);
+
+    attributes.put(attributeHandle, attribute);
+    attributesByName.put(attributeName, attribute);
+
     return attribute;
   }
 
@@ -134,7 +167,7 @@ public class ObjectClass
     Attribute attribute = attributesByName.get(name);
     if (attribute == null)
     {
-      throw new NameNotFound(String.format("attribute name not found: %s (%s)", name, this.name));
+      throw new NameNotFound(String.format("attribute name not found: %s (%s)", name, this.objectClassName));
     }
     return attribute;
   }
@@ -145,7 +178,7 @@ public class ObjectClass
     Attribute attribute = attributes.get(attributeHandle);
     if (attribute == null)
     {
-      throw new AttributeNotDefined(String.format("attribute not defined: %s (%s)", attributeHandle, this.name));
+      throw new AttributeNotDefined(String.format("attribute not defined: %s (%s)", attributeHandle, this.objectClassName));
     }
     return attribute;
   }
@@ -157,10 +190,17 @@ public class ObjectClass
     return attribute;
   }
 
+  public Attribute getAttributeSafely(String attributeName)
+  {
+    Attribute attribute = attributesByName.get(attributeName);
+    assert attribute != null;
+    return attribute;
+  }
+
   public String getAttributeName(AttributeHandle attributeHandle)
     throws AttributeNotDefined
   {
-    return getAttribute(attributeHandle).getName();
+    return getAttribute(attributeHandle).getAttributeName();
   }
 
   public AttributeHandle getAttributeHandle(String name)
@@ -193,6 +233,33 @@ public class ObjectClass
   @Override
   public String toString()
   {
-    return name;
+    return objectClassName;
+  }
+
+  public static void encode(ChannelBuffer buffer, ObjectClass objectClass)
+  {
+    IEEE1516eObjectClassHandle.encode(buffer, objectClass.objectClassHandle);
+    Protocol.encodeString(buffer, objectClass.objectClassName);
+
+    if (objectClass.superObjectClass == null)
+    {
+      Protocol.encodeBoolean(buffer, false);
+    }
+    else
+    {
+      Protocol.encodeBoolean(buffer, true);
+      IEEE1516eObjectClassHandle.encode(buffer, objectClass.superObjectClass.objectClassHandle);
+    }
+
+    Protocol.encodeVarInt(buffer, objectClass.declaredAttributes.size());
+    for (Attribute attribute : objectClass.declaredAttributes)
+    {
+      Attribute.encode(buffer, attribute);
+    }
+  }
+
+  public static ObjectClass decode(ChannelBuffer buffer, Map<ObjectClassHandle, ObjectClass> objectClasses)
+  {
+    return new ObjectClass(buffer, objectClasses);
   }
 }

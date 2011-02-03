@@ -2994,7 +2994,7 @@ public class HLA13RTIambassador
 
     RoutingSpace routingSpace = fed.getRoutingSpace(routingSpaceHandle);
 
-    log.debug("creating region in {}, with {} extent(s)", routingSpace.getName(), numberOfExtents);
+    log.debug("creating region in {}, with {} extent(s)", routingSpace.getRoutingSpaceName(), numberOfExtents);
 
     // create an IEEE 1516e region for each extent
     //

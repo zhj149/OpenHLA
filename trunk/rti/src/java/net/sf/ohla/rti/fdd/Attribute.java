@@ -16,7 +16,12 @@
 
 package net.sf.ohla.rti.fdd;
 
+import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSet;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandle;
+
+import org.jboss.netty.buffer.ChannelBuffer;
 
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.DimensionHandleSet;
@@ -25,26 +30,31 @@ import hla.rti1516e.TransportationTypeHandle;
 
 public class Attribute
 {
-  public static final Attribute HLA_PRIVILEGE_TO_DELETE_OBJECT = new Attribute(
-    new IEEE1516eAttributeHandle(1), "HLAprivilegeToDeleteObject", null,
-    TransportationType.HLA_RELIABLE.getTransportationTypeHandle(), OrderType.TIMESTAMP);
-
   private final AttributeHandle attributeHandle;
-  private final String name;
+  private final String attributeName;
 
-  private final DimensionHandleSet dimensions;
+  private final DimensionHandleSet dimensionHandles;
 
   private TransportationTypeHandle transportationTypeHandle;
   private OrderType orderType;
 
-  public Attribute(AttributeHandle attributeHandle, String name, DimensionHandleSet dimensions,
+  public Attribute(AttributeHandle attributeHandle, String attributeName, DimensionHandleSet dimensionHandles,
                    TransportationTypeHandle transportationTypeHandle, OrderType orderType)
   {
     this.attributeHandle = attributeHandle;
-    this.name = name;
-    this.dimensions = dimensions;
+    this.attributeName = attributeName;
+    this.dimensionHandles = dimensionHandles;
     this.transportationTypeHandle = transportationTypeHandle;
     this.orderType = orderType;
+  }
+
+  public Attribute(ChannelBuffer buffer)
+  {
+    attributeHandle = IEEE1516eAttributeHandle.decode(buffer);
+    attributeName = Protocol.decodeString(buffer);
+    dimensionHandles = IEEE1516eDimensionHandleSet.decode(buffer);
+    transportationTypeHandle = IEEE1516eTransportationTypeHandle.decode(buffer);
+    orderType = Protocol.decodeEnum(buffer, OrderType.values());
   }
 
   public AttributeHandle getAttributeHandle()
@@ -52,14 +62,14 @@ public class Attribute
     return attributeHandle;
   }
 
-  public String getName()
+  public String getAttributeName()
   {
-    return name;
+    return attributeName;
   }
 
-  public DimensionHandleSet getDimensions()
+  public DimensionHandleSet getDimensionHandles()
   {
-    return dimensions;
+    return dimensionHandles;
   }
 
   public OrderType getOrderType()
@@ -91,6 +101,20 @@ public class Attribute
   @Override
   public String toString()
   {
-    return name;
+    return attributeName;
+  }
+
+  public static void encode(ChannelBuffer buffer, Attribute attribute)
+  {
+    IEEE1516eAttributeHandle.encode(buffer, attribute.attributeHandle);
+    Protocol.encodeString(buffer, attribute.attributeName);
+    IEEE1516eDimensionHandleSet.encode(buffer, attribute.dimensionHandles);
+    IEEE1516eTransportationTypeHandle.encode(buffer, attribute.transportationTypeHandle);
+    Protocol.encodeEnum(buffer, attribute.orderType);
+  }
+
+  public static Attribute decode(ChannelBuffer buffer)
+  {
+    return new Attribute(buffer);
   }
 }

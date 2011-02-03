@@ -21,11 +21,15 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.fdd.Attribute;
 import net.sf.ohla.rti.fdd.Dimension;
 import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.fdd.ObjectClass;
+import net.sf.ohla.rti.fdd.Parameter;
+
+import org.jboss.netty.buffer.ChannelBuffer;
 
 import hla.rti.AttributeNotDefined;
 import hla.rti.DimensionNotDefined;
@@ -40,6 +44,7 @@ import hla.rti.SpaceNotDefined;
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.InteractionClassHandle;
 import hla.rti1516e.ObjectClassHandle;
+import hla.rti1516e.exceptions.ErrorReadingFDD;
 
 public class FED
 {
@@ -55,9 +60,6 @@ public class FED
   private final Map<Integer, RoutingSpace> routingSpaces = new HashMap<Integer, RoutingSpace>();
   private final Map<String, RoutingSpace> routingSpacesByName = new HashMap<String, RoutingSpace>();
 
-  private final Map<InteractionClassHandle, RoutingSpace> interactionClassRoutingSpaces =
-    new HashMap<InteractionClassHandle, RoutingSpace>();
-
   private String fedName;
 
   public FED(URL source)
@@ -68,6 +70,21 @@ public class FED
   public FED(FDD fdd)
   {
     this.fdd = fdd;
+  }
+
+  public FED(ChannelBuffer buffer, FDD fdd)
+  {
+    this(fdd);
+
+    fedName = Protocol.decodeOptionalString(buffer);
+
+    for (int routingSpaceCount = Protocol.decodeVarInt(buffer); routingSpaceCount > 0; routingSpaceCount--)
+    {
+      RoutingSpace routingSpace = RoutingSpace.decode(buffer, fdd.getDimensions());
+
+      routingSpaces.put(routingSpace.getRoutingSpaceHandle(), routingSpace);
+      routingSpacesByName.put(routingSpace.getRoutingSpaceName(), routingSpace);
+    }
   }
 
   public FDD getFDD()
@@ -85,6 +102,19 @@ public class FED
     this.fedName = fedName;
   }
 
+  public ObjectClass addObjectClass(String objectClassName, ObjectClass superObjectClass)
+    throws ErrorReadingFED
+  {
+    try
+    {
+      return fdd.addObjectClass(objectClassName, superObjectClass);
+    }
+    catch (ErrorReadingFDD erfdd)
+    {
+      throw new ErrorReadingFED(erfdd.getMessage(), erfdd);
+    }
+  }
+
   public Attribute addAttribute(
     ObjectClass objectClass, String attributeName, String transportationTypeName, String orderTypeName,
     String routingSpaceName)
@@ -96,10 +126,15 @@ public class FED
       throw new ErrorReadingFED("unknown routing space: " + routingSpaceName + " for attribute " + attributeName);
     }
 
-    Attribute attribute = fdd.addAttribute(
-      objectClass, attributeName, routingSpace.getDimensionHandles(), transportationTypeName, orderTypeName);
-
-    return attribute;
+    try
+    {
+      return fdd.addAttribute(
+        objectClass, attributeName, routingSpace.getDimensionHandles(), transportationTypeName, orderTypeName);
+    }
+    catch (ErrorReadingFDD erfdd)
+    {
+      throw new ErrorReadingFED(erfdd.getMessage(), erfdd);
+    }
   }
 
   public InteractionClass addInteractionClass(
@@ -114,11 +149,29 @@ public class FED
         "unknown routing space: " + routingSpaceName + " for interaction class " + interactionClassName);
     }
 
-    InteractionClass interactionClass = fdd.addInteractionClass(
-      interactionClassName, superInteractionClass, routingSpace.getDimensionHandles(),
-      transportationTypeName, orderTypeName);
+    try
+    {
+      return fdd.addInteractionClass(
+        interactionClassName, superInteractionClass, routingSpace.getDimensionHandles(),
+        transportationTypeName, orderTypeName);
+    }
+    catch (ErrorReadingFDD erfdd)
+    {
+      throw new ErrorReadingFED(erfdd.getMessage(), erfdd);
+    }
+  }
 
-    return interactionClass;
+  public Parameter addParameter(InteractionClass interactionClass, String parameterName)
+    throws ErrorReadingFED
+  {
+    try
+    {
+      return fdd.addParameter(interactionClass, parameterName);
+    }
+    catch (ErrorReadingFDD erfdd)
+    {
+      throw new ErrorReadingFED(erfdd.getMessage(), erfdd);
+    }
   }
 
   public RoutingSpace addRoutingSpace(String routingSpaceName)
@@ -126,7 +179,7 @@ public class FED
     RoutingSpace routingSpace = routingSpacesByName.get(routingSpaceName);
     if (routingSpace == null)
     {
-      routingSpace = new RoutingSpace(routingSpaceName, routingSpaces.size() + 1);
+      routingSpace = new RoutingSpace(routingSpaces.size() + 1, routingSpaceName);
 
       routingSpaces.put(routingSpace.getRoutingSpaceHandle(), routingSpace);
       routingSpacesByName.put(routingSpaceName, routingSpace);
@@ -136,35 +189,11 @@ public class FED
 
   public Dimension addRoutingSpaceDimension(RoutingSpace routingSpace, String dimensionName)
   {
-    Dimension dimension = fdd.addDimension(routingSpace.getName() + "." + dimensionName);
+    Dimension dimension = fdd.addDimension(routingSpace.getRoutingSpaceName() + "." + dimensionName);
 
     routingSpace.addDimension(dimensionName, dimension);
 
     return dimension;
-  }
-
-  public void setTransport(Attribute attribute, String transportationTypeName)
-  {
-  }
-
-  public void setTransport(InteractionClass interactionClass, String transportationTypeName)
-  {
-  }
-
-  public void setOrder(Attribute attribute, String orderTypeName)
-  {
-  }
-
-  public void setOrder(InteractionClass interactionClass, String orderTypeName)
-  {
-  }
-
-  public void setRoutingSpace(Attribute attribute, String routingSpaceName)
-  {
-  }
-
-  public void setRoutingSpace(InteractionClass interactionClass, String routingSpaceName)
-  {
   }
 
   public RoutingSpace getRoutingSpace(String name)
@@ -198,7 +227,7 @@ public class FED
   public String getRoutingSpaceName(int routingSpaceHandle)
     throws SpaceNotDefined
   {
-    return getRoutingSpace(routingSpaceHandle).getName();
+    return getRoutingSpace(routingSpaceHandle).getRoutingSpaceName();
   }
 
   public int getDimensionHandle(String name, int routingSpaceHandle)
@@ -210,7 +239,7 @@ public class FED
   public String getDimensionName(int dimensionHandle, int routingSpaceHandle)
     throws SpaceNotDefined, DimensionNotDefined
   {
-    return getRoutingSpace(routingSpaceHandle).getDimensionName(
+    return getRoutingSpace(routingSpaceHandle).getDimensionAlias(
       dimensionHandle);
   }
 
@@ -260,5 +289,21 @@ public class FED
     {
       throw new InteractionClassNotDefined(icnd);
     }
+  }
+
+  public static void encode(ChannelBuffer buffer, FED fed)
+  {
+    Protocol.encodeOptionalString(buffer, fed.fedName);
+
+    Protocol.encodeVarInt(buffer, fed.routingSpaces.size());
+    for (RoutingSpace routingSpace : fed.routingSpaces.values())
+    {
+      RoutingSpace.encode(buffer, routingSpace);
+    }
+  }
+
+  public static FED decode(ChannelBuffer buffer, FDD fdd)
+  {
+    return new FED(buffer, fdd);
   }
 }

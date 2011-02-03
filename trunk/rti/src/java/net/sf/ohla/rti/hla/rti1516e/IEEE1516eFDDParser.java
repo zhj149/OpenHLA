@@ -50,10 +50,18 @@ public class IEEE1516eFDDParser
   public static List<FDD> parseFDDs(URL[] urls)
     throws ErrorReadingFDD, CouldNotOpenFDD, RTIinternalError
   {
-    List<FDD> additionalFDDs = new ArrayList<FDD>(urls.length);
-    for (URL additionalFomModule : urls)
+    List<FDD> additionalFDDs;
+    if (urls == null || urls.length == 0)
     {
-      additionalFDDs.add(parseFDD(additionalFomModule));
+      additionalFDDs = null;
+    }
+    else
+    {
+      additionalFDDs = new ArrayList<FDD>(urls.length);
+      for (URL additionalFomModule : urls)
+      {
+        additionalFDDs.add(parseFDD(additionalFomModule));
+      }
     }
     return additionalFDDs;
   }
@@ -83,7 +91,8 @@ public class IEEE1516eFDDParser
     }
     catch (SAXException saxe)
     {
-      throw new ErrorReadingFDD(saxe.getMessage(), saxe);
+      throw saxe.getCause() instanceof ErrorReadingFDD ?
+        (ErrorReadingFDD) saxe.getCause() : new ErrorReadingFDD(saxe.getMessage(), saxe);
     }
     catch (ParserConfigurationException pce)
     {
@@ -106,7 +115,14 @@ public class IEEE1516eFDDParser
     }
     catch (SAXException saxe)
     {
-      throw new ErrorReadingMIM(saxe.getMessage(), saxe);
+      if (saxe.getCause() instanceof ErrorReadingFDD)
+      {
+        throw new ErrorReadingMIM(saxe.getCause().getMessage(), saxe.getCause());
+      }
+      else
+      {
+        throw new ErrorReadingMIM(saxe.getMessage(), saxe);
+      }
     }
     catch (ParserConfigurationException pce)
     {
@@ -139,15 +155,15 @@ public class IEEE1516eFDDParser
       {
         contentHandlerStack.peek().startElement(uri, localName, qName, attributes);
       }
-      else if (qName.equals("ObjectClass"))
+      else if (qName.equals("objectClass"))
       {
         contentHandlerStack.push(new ObjectClassHandler(null));
       }
-      else if (qName.equals("InteractionClass"))
+      else if (qName.equals("interactionClass"))
       {
         contentHandlerStack.push(new InteractionClassHandler(null));
       }
-      else if (qName.equals("Dimension"))
+      else if (qName.equals("dimension"))
       {
         contentHandlerStack.push(new DimensionHandler());
       }
@@ -218,11 +234,11 @@ public class IEEE1516eFDDParser
         {
           saveContent();
         }
-        else if (qName.equals("Attribute"))
+        else if (qName.equals("attribute"))
         {
           contentHandlerStack.push(new AttributeHandler());
         }
-        else if (qName.equals("ObjectClass"))
+        else if (qName.equals("objectClass"))
         {
           contentHandlerStack.push(new ObjectClassHandler(objectClass));
         }
@@ -234,18 +250,18 @@ public class IEEE1516eFDDParser
       {
         if (qName.equals("name"))
         {
-          if (superObjectClass == null || ObjectClass.HLA_OBJECT_ROOT == superObjectClass)
-          {
-            objectClassName = getContent();
-          }
-          else
-          {
-            objectClassName = superObjectClass.getName() + "." + getContent();
-          }
+          objectClassName = getContent();
 
-          objectClass = fdd.addObjectClass(objectClassName, null);
+          try
+          {
+            objectClass = fdd.addObjectClass(objectClassName, superObjectClass);
+          }
+          catch (ErrorReadingFDD erfdd)
+          {
+            throw new SAXException(erfdd);
+          }
         }
-        else if (qName.equals("ObjectClass"))
+        else if (qName.equals("objectClass"))
         {
           contentHandlerStack.pop();
         }
@@ -256,7 +272,7 @@ public class IEEE1516eFDDParser
       {
         private final Set<String> dimensions = new HashSet<String>();
 
-        private String name;
+        private String attributeName;
         private String transportationTypeName;
         private String orderTypeName;
 
@@ -288,7 +304,7 @@ public class IEEE1516eFDDParser
         {
           if (qName.equals("name"))
           {
-            name = getContent();
+            attributeName = getContent();
           }
           else if (qName.equals("dimension"))
           {
@@ -302,9 +318,16 @@ public class IEEE1516eFDDParser
           {
             orderTypeName = getContent();
           }
-          else if (qName.equals("Attribute"))
+          else if (qName.equals("attribute"))
           {
-            fdd.addAttribute(objectClass, name, dimensions, transportationTypeName, orderTypeName);
+            try
+            {
+              fdd.addAttribute(objectClass, attributeName, dimensions, transportationTypeName, orderTypeName);
+            }
+            catch (ErrorReadingFDD erfdd)
+            {
+              throw new SAXException(erfdd);
+            }
 
             contentHandlerStack.pop();
           }
@@ -350,11 +373,11 @@ public class IEEE1516eFDDParser
         {
           saveContent();
         }
-        else if (qName.equals("Parameter"))
+        else if (qName.equals("parameter"))
         {
           contentHandlerStack.push(new ParameterHandler());
         }
-        else if (qName.equals("InteractionClass"))
+        else if (qName.equals("interactionClass"))
         {
           contentHandlerStack.push(new InteractionClassHandler(interactionClass));
         }
@@ -366,14 +389,7 @@ public class IEEE1516eFDDParser
       {
         if (qName.equals("name"))
         {
-          if (superInteractionClass == null || InteractionClass.HLA_INTERACTION_ROOT == superInteractionClass)
-          {
-            interactionClassName = getContent();
-          }
-          else
-          {
-            interactionClassName = superInteractionClass.getName() + "." + getContent();
-          }
+          interactionClassName = getContent();
         }
         else if (qName.equals("dimension"))
         {
@@ -387,10 +403,17 @@ public class IEEE1516eFDDParser
         {
           orderTypeName = getContent();
 
-          interactionClass = fdd.addInteractionClass(
-            interactionClassName, superInteractionClass, dimensions, transportationTypeName, orderTypeName);
+          try
+          {
+            interactionClass = fdd.addInteractionClass(
+              interactionClassName, superInteractionClass, dimensions, transportationTypeName, orderTypeName);
+          }
+          catch (ErrorReadingFDD erfdd)
+          {
+            throw new SAXException(erfdd);
+          }
         }
-        else if (qName.equals("InteractionClass"))
+        else if (qName.equals("interactionClass"))
         {
           contentHandlerStack.pop();
         }
@@ -419,9 +442,16 @@ public class IEEE1516eFDDParser
           {
             name = getContent();
           }
-          else if (qName.equals("Parameter"))
+          else if (qName.equals("parameter"))
           {
-            fdd.addParameter(interactionClass, name);
+            try
+            {
+              fdd.addParameter(interactionClass, name);
+            }
+            catch (ErrorReadingFDD erfdd)
+            {
+              throw new SAXException(erfdd);
+            }
 
             contentHandlerStack.pop();
           }
@@ -460,7 +490,7 @@ public class IEEE1516eFDDParser
         {
           dimension.setUpperBound(Long.parseLong(getContent()));
         }
-        else if (qName.equals("Dimension"))
+        else if (qName.equals("dimension"))
         {
           contentHandlerStack.pop();
         }

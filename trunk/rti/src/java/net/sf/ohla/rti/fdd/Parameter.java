@@ -16,17 +16,28 @@
 
 package net.sf.ohla.rti.fdd;
 
+import net.sf.ohla.rti.Protocol;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandle;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
 import hla.rti1516e.ParameterHandle;
 
 public class Parameter
 {
   private final ParameterHandle parameterHandle;
-  private final String name;
+  private final String parameterName;
 
-  public Parameter(ParameterHandle parameterHandle, String name)
+  public Parameter(ParameterHandle parameterHandle, String parameterName)
   {
     this.parameterHandle = parameterHandle;
-    this.name = name;
+    this.parameterName = parameterName;
+  }
+
+  public Parameter(ChannelBuffer buffer)
+  {
+    parameterHandle = IEEE1516eParameterHandle.decode(buffer);
+    parameterName = Protocol.decodeString(buffer);
   }
 
   public ParameterHandle getParameterHandle()
@@ -34,9 +45,9 @@ public class Parameter
     return parameterHandle;
   }
 
-  public String getName()
+  public String getParameterName()
   {
-    return name;
+    return parameterName;
   }
 
   @Override
@@ -48,6 +59,17 @@ public class Parameter
   @Override
   public String toString()
   {
-    return name;
+    return parameterName;
+  }
+
+  public static void encode(ChannelBuffer buffer, Parameter parameter)
+  {
+    IEEE1516eParameterHandle.encode(buffer, parameter.parameterHandle);
+    Protocol.encodeString(buffer, parameter.parameterName);
+  }
+
+  public static Parameter decode(ChannelBuffer buffer)
+  {
+    return new Parameter(buffer);
   }
 }

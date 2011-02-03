@@ -243,22 +243,27 @@ void ObjectRoot()
   throws ErrorReadingFED :
 {
   String objectClassName;
+  ObjectClass objectRoot;
 }
 {
   <CLASS> objectClassName=ObjectClassName()
   {
-    if (!net.sf.ohla.rti.fed.FED.OBJECT_ROOT.equals(objectClassName))
+    if (net.sf.ohla.rti.fed.FED.OBJECT_ROOT.equals(objectClassName))
+    {
+      objectRoot = fed.addObjectClass(FDD.HLA_OBJECT_ROOT, null);
+    }
+    else
     {
       throw new ErrorReadingFED("invalid root object: " + objectClassName + " (must be " + net.sf.ohla.rti.fed.FED.OBJECT_ROOT + ")");
     }
   }
-  PriviledgeToDeleteAttribute()
-  RTIprivateObject()
-  ( ObjectClass(ObjectClass.HLA_OBJECT_ROOT) )*
+  PriviledgeToDeleteAttribute(objectRoot)
+  RTIprivateObject(objectRoot)
+  ( ObjectClass(objectRoot) )*
   <RPAREN>
 }
 
-void PriviledgeToDeleteAttribute()
+void PriviledgeToDeleteAttribute(ObjectClass objectRoot)
   throws ErrorReadingFED :
 {
   String attributeName;
@@ -269,22 +274,18 @@ void PriviledgeToDeleteAttribute()
 {
   <ATTRIBUTE> attributeName=AttributeName() transport=Transport() order=Order() [ spaceName=SpaceName() ] <RPAREN>
   {
-    if (!net.sf.ohla.rti.fed.FED.PRIVILEGE_TO_DELETE.equals(attributeName))
+    if (net.sf.ohla.rti.fed.FED.PRIVILEGE_TO_DELETE.equals(attributeName))
+    {
+      fed.addAttribute(objectRoot, attributeName, transport, order, spaceName);
+    }
+    else
     {
       throw new ErrorReadingFED("invalid attribute: " + attributeName + " (must be " + net.sf.ohla.rti.fed.FED.PRIVILEGE_TO_DELETE + ")");
-    }
-
-    fed.setTransport(Attribute.HLA_PRIVILEGE_TO_DELETE_OBJECT, transport);
-    fed.setOrder(Attribute.HLA_PRIVILEGE_TO_DELETE_OBJECT, order);
-
-    if (spaceName != null)
-    {
-      fed.setRoutingSpace(Attribute.HLA_PRIVILEGE_TO_DELETE_OBJECT, spaceName);
     }
   }
 }
 
-void RTIprivateObject()
+void RTIprivateObject(ObjectClass objectRoot)
   throws ErrorReadingFED :
 {
   String objectClassName;
@@ -292,12 +293,14 @@ void RTIprivateObject()
 {
   <CLASS> objectClassName=ObjectClassName() <RPAREN>
   {
-    if (!net.sf.ohla.rti.fed.FED.RTI_PRIVATE.equals(objectClassName))
+    if (net.sf.ohla.rti.fed.FED.RTI_PRIVATE.equals(objectClassName))
+    {
+      fed.addObjectClass(objectClassName, objectRoot);
+    }
+    else
     {
       throw new ErrorReadingFED("invalid object: " + objectClassName + " (must be " + net.sf.ohla.rti.fed.FED.RTI_PRIVATE + ")");
     }
-
-    fed.getFDD().addObjectClass(objectClassName, ObjectClass.HLA_OBJECT_ROOT);
   }
 }
 
@@ -311,7 +314,7 @@ void ObjectClass(ObjectClass parent)
 {
   <CLASS> objectClassName=ObjectClassName()
   {
-    objectClass = fed.getFDD().addObjectClass(objectClassName, parent);
+    objectClass = fed.addObjectClass(objectClassName, parent);
   }
   ( Attribute(objectClass) )*
   ( ObjectClass(objectClass) )*
@@ -346,30 +349,27 @@ void InteractionRoot()
   String transport;
   String order;
   String spaceName = null;
+  InteractionClass interactionRoot;
 }
 {
   <CLASS> interactionClassName=InteractionClassName() transport=Transport() order=Order() [ spaceName=SpaceName() ]
   {
-    if (!net.sf.ohla.rti.fed.FED.INTERACTION_ROOT.equals(interactionClassName))
+    if (net.sf.ohla.rti.fed.FED.INTERACTION_ROOT.equals(interactionClassName))
+    {
+      interactionRoot = fed.addInteractionClass(null, FDD.HLA_INTERACTION_ROOT, transport, order, spaceName);
+    }
+    else
     {
       throw new ErrorReadingFED(
         "invalid root interaction: " + interactionClassName + " (must be " + net.sf.ohla.rti.fed.FED.INTERACTION_ROOT + ")");
     }
-
-    fed.setTransport(InteractionClass.HLA_INTERACTION_ROOT, transport);
-    fed.setOrder(InteractionClass.HLA_INTERACTION_ROOT, order);
-
-    if (spaceName != null)
-    {
-      fed.setRoutingSpace(InteractionClass.HLA_INTERACTION_ROOT, spaceName);
-    }
   }
-  RTIprivateInteraction()
-  ( InteractionClass(InteractionClass.HLA_INTERACTION_ROOT) )*
+  RTIprivateInteraction(interactionRoot)
+  ( InteractionClass(interactionRoot) )*
   <RPAREN>
 }
 
-void RTIprivateInteraction()
+void RTIprivateInteraction(InteractionClass interactionRoot)
   throws ErrorReadingFED :
 {
   String interactionClassName;
@@ -380,13 +380,15 @@ void RTIprivateInteraction()
 {
   <CLASS> interactionClassName=InteractionClassName() transport=Transport() order=Order() [ spaceName=SpaceName() ] <RPAREN>
   {
-    if (!net.sf.ohla.rti.fed.FED.RTI_PRIVATE.equals(interactionClassName))
+    if (net.sf.ohla.rti.fed.FED.RTI_PRIVATE.equals(interactionClassName))
+    {
+      fed.addInteractionClass(interactionRoot, interactionClassName, transport, order, spaceName);
+    }
+    else
     {
       throw new ErrorReadingFED(
         "invalid interaction: " + interactionClassName + " (must be " + net.sf.ohla.rti.fed.FED.RTI_PRIVATE + ")");
     }
-
-    fed.addInteractionClass(InteractionClass.HLA_INTERACTION_ROOT, interactionClassName, transport, order, spaceName);
   }
 }
 
@@ -418,7 +420,7 @@ void Parameter(InteractionClass interactionClass)
 {
   <PARAMETER> parameterName=ParameterName() <RPAREN>
   {
-    fed.getFDD().addParameter(interactionClass, parameterName);
+    fed.addParameter(interactionClass, parameterName);
   }
 }
 
