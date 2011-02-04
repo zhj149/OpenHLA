@@ -25,6 +25,7 @@
   </test>
   <test name="IEEE 1516e - Support Services">
     <classes>
+      <class name="net.sf.ohla.rti1516e.support.FederateSupportTestNG"/>
       <class name="net.sf.ohla.rti1516e.support.OrderSupportTestNG"/>
       <class name="net.sf.ohla.rti1516e.support.TransportationSupportTestNG"/>
       <class name="net.sf.ohla.rti1516e.support.ObjectSupportTestNG"/>

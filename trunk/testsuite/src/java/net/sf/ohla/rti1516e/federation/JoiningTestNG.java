@@ -23,8 +23,10 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import hla.rti1516e.CallbackModel;
+import hla.rti1516e.FederateHandle;
 import hla.rti1516e.NullFederateAmbassador;
 import hla.rti1516e.ResignAction;
+import hla.rti1516e.exceptions.FederationExecutionDoesNotExist;
 
 @Test
 public class JoiningTestNG
@@ -50,12 +52,46 @@ public class JoiningTestNG
   public void testJoinFederationExecution()
     throws Exception
   {
-    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME);
+    FederateHandle federateHandle =
+      rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME);
+    String federateName = rtiAmbassadors.get(0).getFederateName(federateHandle);
+
+    assert federateHandle.equals(rtiAmbassadors.get(0).getFederateHandle(federateName));
+
+    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
   }
 
-  public void testResignFederationExecution()
+  @Test
+  public void testJoinFederationExecutionWithFederateName()
     throws Exception
   {
+    FederateHandle federateHandle =
+      rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_NAME, FEDERATE_TYPE, FEDERATION_NAME);
+
+    assert FEDERATE_NAME.equals(rtiAmbassadors.get(0).getFederateName(federateHandle));
+    assert federateHandle.equals(rtiAmbassadors.get(0).getFederateHandle(FEDERATE_NAME));
+
     rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
+  }
+
+  @Test(expectedExceptions = {IllegalArgumentException.class})
+  public void testJoinFederationExecutionWithNullFederateType()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).joinFederationExecution(null, FEDERATION_NAME);
+  }
+
+  @Test(expectedExceptions = {IllegalArgumentException.class})
+  public void testJoinFederationExecutionWithNullFederatationExecutionName()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, null);
+  }
+
+  @Test(expectedExceptions = {FederationExecutionDoesNotExist.class})
+  public void testJoinFederationThatDoesNotExist()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, "xxx");
   }
 }

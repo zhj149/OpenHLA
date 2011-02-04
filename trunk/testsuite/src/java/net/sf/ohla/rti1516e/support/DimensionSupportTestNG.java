@@ -39,26 +39,8 @@ import hla.rti1516e.exceptions.NameNotFound;
 
 @Test
 public class DimensionSupportTestNG
-  extends BaseTestNG
+  extends BaseSupportTestNG
 {
-  @BeforeClass
-  public void setup()
-    throws Exception
-  {
-    rtiAmbassadors.get(0).connect(new NullFederateAmbassador(), CallbackModel.HLA_EVOKED);
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
-    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME);
-  }
-
-  @AfterClass
-  public void teardown()
-    throws Exception
-  {
-    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
-    rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
-    rtiAmbassadors.get(0).disconnect();
-  }
-
   @Test
   public void testGetDimensionHandleNameAndUpperBound()
     throws Exception
