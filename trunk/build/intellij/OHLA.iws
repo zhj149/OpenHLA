@@ -30,9 +30,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" readonly="true" id="c306879c-2744-4d82-a20f-7284eb5ea0e6" name="Default" comment="">
-      <change type="MOVED" beforePath="C:\projects\ohla-0.5\resources\META-INF\services\hla.rti1516e.LogicalTimeFactory" afterPath="$PROJECT_DIR$/../../rti/resources/META-INF/services/hla.rti1516e.LogicalTimeFactory" />
-      <change type="MOVED" beforePath="C:\projects\ohla-0.5\resources\META-INF\services\hla.rti1516e.RtiFactory" afterPath="$PROJECT_DIR$/../../rti/resources/META-INF/services/hla.rti1516e.RtiFactory" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/OHLA.iws" afterPath="$PROJECT_DIR$/OHLA.iws" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/resources/ieee-1516e-testng.xml" afterPath="$PROJECT_DIR$/../../testsuite/resources/ieee-1516e-testng.xml" />
     </list>
     <list id="b279f3ba-c417-49c1-bcc1-a24f5fc97d41" name="Failed commit: Default" comment="- removed log4j" />
     <list id="261d7dd6-cad7-41bb-912f-d59a03f7b57d" name="Failed commit: Default (2)" comment="- refactoring" />
@@ -155,28 +154,19 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="ConnectionFailedLocalSettingsDesignator.properties" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../resources/testsuite/ConnectionFailedLocalSettingsDesignator.properties">
+      <file leaf-file-name="build.xml" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../build.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
+            <state line="354" column="18" selection-start="13160" selection-end="13160" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="LocalSettingsDesignator.properties" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/../../resources/testsuite/LocalSettingsDesignator.properties">
+      <file leaf-file-name="ieee-1516e-testng.xml" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/../../testsuite/resources/ieee-1516e-testng.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ieee-1516e-testng.xml" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../resources/testsuite/ieee-1516e-testng.xml">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="29" column="55" selection-start="1382" selection-end="1382" vertical-scroll-proportion="0.0">
+            <state line="10" column="9" selection-start="371" selection-end="371" vertical-scroll-proportion="0.1">
               <folding />
             </state>
           </provider>
@@ -248,8 +238,6 @@
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
       <list>
-        <option value="$PROJECT_DIR$/../../resources/testsuite/TestObjectModel-ieee-1516e.xml" />
-        <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/ObjectClass.java" />
         <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/InteractionClass.java" />
         <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/FDD.java" />
         <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti1516e/TestConstants.java" />
@@ -264,6 +252,8 @@
         <option value="$PROJECT_DIR$/../../resources/testsuite/ieee-1516e-testng.xml" />
         <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eRTIambassador.java" />
         <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/Federate.java" />
+        <option value="$PROJECT_DIR$/../build.xml" />
+        <option value="$PROJECT_DIR$/../../testsuite/resources/ieee-1516e-testng.xml" />
       </list>
     </option>
   </component>
@@ -406,6 +396,20 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="rti" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="rti" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="resources" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -1104,7 +1108,7 @@
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32827586" sideWeight="0.5" order="12" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
-      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.15362526" sideWeight="0.6193103" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.15362526" sideWeight="0.6193103" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.5241379" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.46206897" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32965517" sideWeight="0.5" order="13" side_tool="false" content_ui="tabs" />
@@ -1366,13 +1370,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../resources/testsuite/ConnectionFailedLocalSettingsDesignator.properties">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/support/FederateSupportTestNG.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="49" column="8" selection-start="1612" selection-end="1612" vertical-scroll-proportion="0.0">
@@ -1385,13 +1382,6 @@
     <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/federation/JoiningTestNG.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="60" column="44" selection-start="1944" selection-end="1944" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../ieee-1516e/src/java/hla/rti1516e/RTIambassador.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="223" column="0" selection-start="6628" selection-end="6628" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
@@ -1410,16 +1400,23 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../resources/testsuite/ieee-1516e-testng.xml">
+    <entry file="file://$PROJECT_DIR$/../../ieee-1516e/src/java/hla/rti1516e/RTIambassador.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="29" column="55" selection-start="1382" selection-end="1382" vertical-scroll-proportion="0.0">
+        <state line="223" column="0" selection-start="6628" selection-end="6628" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../resources/testsuite/LocalSettingsDesignator.properties">
+    <entry file="file://$PROJECT_DIR$/../build.xml">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
+        <state line="354" column="18" selection-start="13160" selection-end="13160" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../testsuite/resources/ieee-1516e-testng.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="10" column="9" selection-start="371" selection-end="371" vertical-scroll-proportion="0.1">
           <folding />
         </state>
       </provider>
