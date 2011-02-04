@@ -406,7 +406,6 @@
       <module fileurl="file://$PROJECT_DIR$/HLA 1.3.iml" filepath="$PROJECT_DIR$/HLA 1.3.iml" />
       <module fileurl="file://$PROJECT_DIR$/IEEE 1516.iml" filepath="$PROJECT_DIR$/IEEE 1516.iml" />
       <module fileurl="file://$PROJECT_DIR$/IEEE 1516e.iml" filepath="$PROJECT_DIR$/IEEE 1516e.iml" />
-      <module fileurl="file://$PROJECT_DIR$/OHLA.iml" filepath="$PROJECT_DIR$/OHLA.iml" />
       <module fileurl="file://$PROJECT_DIR$/RTI.iml" filepath="$PROJECT_DIR$/RTI.iml" />
       <module fileurl="file://$PROJECT_DIR$/Testsuite.iml" filepath="$PROJECT_DIR$/Testsuite.iml" />
     </modules>
