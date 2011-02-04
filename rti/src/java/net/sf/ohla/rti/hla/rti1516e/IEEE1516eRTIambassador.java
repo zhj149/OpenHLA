@@ -601,46 +601,64 @@ public class IEEE1516eRTIambassador
       connectLock.readLock().unlock();
     }
 
-    return null;
+    return federate.getFederateHandle();
   }
 
-  public FederateHandle joinFederationExecution(String federateType, String federationExecutionName,
-                                                URL[] additionalFomModules)
+  public FederateHandle joinFederationExecution(
+    String federateType, String federationExecutionName, URL[] additionalFomModules)
     throws CouldNotCreateLogicalTimeFactory, FederationExecutionDoesNotExist, InconsistentFDD, ErrorReadingFDD,
            CouldNotOpenFDD, SaveInProgress, RestoreInProgress, FederateAlreadyExecutionMember, NotConnected,
            CallNotAllowedFromWithinCallback, RTIinternalError
   {
+    if (federateType == null)
+    {
+      throw new IllegalArgumentException("federateType cannot be null");
+    }
+    else if (federationExecutionName == null)
+    {
+      throw new IllegalArgumentException("federationExecutionName cannot be null");
+    }
+
     try
     {
       return joinFederationExecution(null, federateType, federationExecutionName, additionalFomModules);
     }
     catch (FederateNameAlreadyInUse fnaiu)
     {
-      throw new RTIinternalError("", fnaiu);
+      throw new RTIinternalError("unexpected exception", fnaiu);
     }
   }
 
-  public FederateHandle joinFederationExecution(String federateName, String federateType,
-                                                String federationExecutionName)
+  public FederateHandle joinFederationExecution(
+    String federateName, String federateType, String federationExecutionName)
     throws CouldNotCreateLogicalTimeFactory, FederateNameAlreadyInUse, FederationExecutionDoesNotExist, SaveInProgress,
            RestoreInProgress, FederateAlreadyExecutionMember, NotConnected, CallNotAllowedFromWithinCallback,
            RTIinternalError
   {
+    if (federateType == null)
+    {
+      throw new IllegalArgumentException("federateType cannot be null");
+    }
+    else if (federationExecutionName == null)
+    {
+      throw new IllegalArgumentException("federationExecutionName cannot be null");
+    }
+
     try
     {
       return joinFederationExecution(federateName, federateType, federationExecutionName, null);
     }
     catch (InconsistentFDD ifdd)
     {
-      throw new RTIinternalError("", ifdd);
+      throw new RTIinternalError("unexpected exception", ifdd);
     }
     catch (ErrorReadingFDD erfdd)
     {
-      throw new RTIinternalError("", erfdd);
+      throw new RTIinternalError("unexpected exception", erfdd);
     }
     catch (CouldNotOpenFDD cnofdd)
     {
-      throw new RTIinternalError("", cnofdd);
+      throw new RTIinternalError("unexpected exception", cnofdd);
     }
   }
 
@@ -648,25 +666,34 @@ public class IEEE1516eRTIambassador
     throws CouldNotCreateLogicalTimeFactory, FederationExecutionDoesNotExist, SaveInProgress, RestoreInProgress,
            FederateAlreadyExecutionMember, NotConnected, CallNotAllowedFromWithinCallback, RTIinternalError
   {
+    if (federateType == null)
+    {
+      throw new IllegalArgumentException("federateType cannot be null");
+    }
+    else if (federationExecutionName == null)
+    {
+      throw new IllegalArgumentException("federationExecutionName cannot be null");
+    }
+
     try
     {
       return joinFederationExecution(null, federateType, federationExecutionName, null);
     }
     catch (FederateNameAlreadyInUse fnaiu)
     {
-      throw new RTIinternalError("", fnaiu);
+      throw new RTIinternalError("unexpected exception", fnaiu);
     }
     catch (InconsistentFDD ifdd)
     {
-      throw new RTIinternalError("", ifdd);
+      throw new RTIinternalError("unexpected exception", ifdd);
     }
     catch (ErrorReadingFDD erfdd)
     {
-      throw new RTIinternalError("", erfdd);
+      throw new RTIinternalError("unexpected exception", erfdd);
     }
     catch (CouldNotOpenFDD cnofdd)
     {
-      throw new RTIinternalError("", cnofdd);
+      throw new RTIinternalError("unexpected exception", cnofdd);
     }
   }
 
@@ -674,6 +701,11 @@ public class IEEE1516eRTIambassador
     throws InvalidResignAction, OwnershipAcquisitionPending, FederateOwnsAttributes, FederateNotExecutionMember,
            NotConnected, CallNotAllowedFromWithinCallback, RTIinternalError
   {
+    if (resignAction == null)
+    {
+      throw new InvalidResignAction("null");
+    }
+
     checkIfCallNotAllowedFromWithinCallback();
 
     connectLock.readLock().lock();
@@ -3436,9 +3468,14 @@ public class IEEE1516eRTIambassador
     }
   }
 
-  public FederateHandle getFederateHandle(String name)
+  public FederateHandle getFederateHandle(String federateName)
     throws NameNotFound, FederateNotExecutionMember, NotConnected, RTIinternalError
   {
+    if (federateName == null)
+    {
+      throw new IllegalArgumentException("federateName cannot be null");
+    }
+
     connectLock.readLock().lock();
     try
     {
@@ -3449,7 +3486,7 @@ public class IEEE1516eRTIambassador
       {
         checkIfFederateNotExecutionMember();
 
-        return federate.getFederateHandle(name);
+        return federate.getFederateHandle(federateName);
       }
       finally
       {
@@ -3465,6 +3502,11 @@ public class IEEE1516eRTIambassador
   public String getFederateName(FederateHandle federateHandle)
     throws InvalidFederateHandle, FederateHandleNotKnown, FederateNotExecutionMember, NotConnected, RTIinternalError
   {
+    if (federateHandle == null)
+    {
+      throw new InvalidFederateHandle("null");
+    }
+
     connectLock.readLock().lock();
     try
     {

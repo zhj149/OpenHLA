@@ -646,6 +646,8 @@ public class Federate
       federateState = FederateState.RESIGNED;
 
       rtiChannel.write(new ResignFederationExecution(resignAction));
+
+      rtiChannel.getPipeline().remove(FederateChannelUpstreamHandler.NAME);
     }
     finally
     {
