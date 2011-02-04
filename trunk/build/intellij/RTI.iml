@@ -17,7 +17,7 @@
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="file://$MODULE_DIR$/../../resources" />
+          <root url="file://$MODULE_DIR$/../../rti/resources" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
