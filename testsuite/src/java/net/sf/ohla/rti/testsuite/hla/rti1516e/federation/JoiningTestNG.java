@@ -26,6 +26,7 @@ import hla.rti1516e.CallbackModel;
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.NullFederateAmbassador;
 import hla.rti1516e.ResignAction;
+import hla.rti1516e.exceptions.FederateNotExecutionMember;
 import hla.rti1516e.exceptions.FederationExecutionDoesNotExist;
 
 @Test
@@ -93,5 +94,12 @@ public class JoiningTestNG
     throws Exception
   {
     rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, "xxx");
+  }
+
+  @Test(expectedExceptions = {FederateNotExecutionMember.class})
+  public void testResignFederationExecutionNotExecutionMemberOf()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
   }
 }

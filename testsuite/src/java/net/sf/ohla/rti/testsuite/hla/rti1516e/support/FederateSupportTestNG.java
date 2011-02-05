@@ -16,6 +16,8 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti1516e.support;
 
+import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseSupportTestNG;
+
 import org.testng.annotations.Test;
 
 import hla.rti1516e.exceptions.FederateAlreadyExecutionMember;
