@@ -16,8 +16,6 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
-import net.sf.ohla.rti.Protocol;
-
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleFactory;
 import hla.rti1516e.exceptions.CouldNotDecode;
@@ -36,7 +34,7 @@ public class IEEE1516eAttributeHandleFactory
   {
     try
     {
-      return new IEEE1516eAttributeHandle(buffer, offset);
+      return IEEE1516eAttributeHandle.decode(buffer, offset);
     }
     catch (Throwable t)
     {

@@ -26,19 +26,22 @@ public class IEEE1516eFederateHandle
   extends IntegerHandle
   implements FederateHandle
 {
+  private static final IEEE1516eFederateHandle[] cache;
+  static
+  {
+    // TODO: get cache size from properties
+
+    cache = new IEEE1516eFederateHandle[128];
+
+    for (int i = 1; i < cache.length; i++)
+    {
+      cache[i] = new IEEE1516eFederateHandle(i);
+    }
+  }
+
   public IEEE1516eFederateHandle(int handle)
   {
     super(handle);
-  }
-
-  public IEEE1516eFederateHandle(ChannelBuffer buffer)
-  {
-    super(buffer);
-  }
-
-  public IEEE1516eFederateHandle(byte[] buffer, int offset)
-  {
-    super(buffer, offset);
   }
 
   public static void encode(ChannelBuffer buffer, FederateHandle federateHandle)
@@ -48,11 +51,13 @@ public class IEEE1516eFederateHandle
 
   public static IEEE1516eFederateHandle decode(ChannelBuffer buffer)
   {
-    return new IEEE1516eFederateHandle(buffer);
+    int handle = decodeHandle(buffer);
+    return handle < cache.length ? cache[handle] : new IEEE1516eFederateHandle(handle);
   }
 
   public static IEEE1516eFederateHandle decode(byte[] buffer, int offset)
   {
-    return new IEEE1516eFederateHandle(buffer, offset);
+    int handle = decodeHandle(buffer, offset);
+    return handle < cache.length ? cache[handle] : new IEEE1516eFederateHandle(handle);
   }
 }

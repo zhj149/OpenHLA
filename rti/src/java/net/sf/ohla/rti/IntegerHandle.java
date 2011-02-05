@@ -35,12 +35,12 @@ public class IntegerHandle
 
   public IntegerHandle(ChannelBuffer buffer)
   {
-    handle = Protocol.decodeVarInt(buffer);
+    handle = decodeHandle(buffer);
   }
 
   public IntegerHandle(byte[] buffer, int offset)
   {
-    handle = Protocol.decodeVarInt(buffer, offset);
+    handle = decodeHandle(buffer, offset);
   }
 
   public int getHandle()
@@ -84,5 +84,15 @@ public class IntegerHandle
   public String toString()
   {
     return Integer.toString(handle);
+  }
+
+  public static int decodeHandle(ChannelBuffer buffer)
+  {
+    return Protocol.decodeVarInt(buffer);
+  }
+
+  public static int decodeHandle(byte[] buffer, int offset)
+  {
+    return Protocol.decodeVarInt(buffer, offset);
   }
 }
