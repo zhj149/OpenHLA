@@ -344,6 +344,8 @@ public class FederationExecution
     byte[] tag = registerFederationSynchronizationPoint.getTag();
     FederateHandleSet federateHandles = registerFederationSynchronizationPoint.getFederateHandles();
 
+    log.debug(marker, "register federation synchronization point: {}", label);
+
     federationExecutionStateLock.writeLock().lock();
     try
     {
@@ -351,6 +353,8 @@ public class FederationExecution
         synchronizationPoints.get(label);
       if (federationExecutionSynchronizationPoint != null)
       {
+        log.debug(marker, "register federation synchronization point failed, label not unique: {}", label);
+
         federateProxy.getFederateChannel().write(new SynchronizationPointRegistrationFailed(
           label, SynchronizationPointFailureReason.SYNCHRONIZATION_POINT_LABEL_NOT_UNIQUE));
       }
@@ -368,6 +372,10 @@ public class FederationExecution
         //
         if (!federateHandlesValid  && !federates.keySet().containsAll(federateHandles))
         {
+          log.debug(
+            marker, "register federation synchronization point failed, synchonization set member not joined: {}, {} not in {}",
+            new Object[] { label, federateHandles, federates.keySet() });
+
           federateProxy.getFederateChannel().write(new SynchronizationPointRegistrationFailed(
             label, SynchronizationPointFailureReason.SYNCHRONIZATION_SET_MEMBER_NOT_JOINED));
         }

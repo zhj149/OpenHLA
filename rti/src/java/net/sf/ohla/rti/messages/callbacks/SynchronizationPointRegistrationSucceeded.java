@@ -34,6 +34,8 @@ public class SynchronizationPointRegistrationSucceeded
   public SynchronizationPointRegistrationSucceeded(String s)
   {
     super(MessageType.SYNCHRONIZATION_POINT_REGISTRATION_SUCCEEDED, s);
+
+    encodingFinished();
   }
 
   public SynchronizationPointRegistrationSucceeded(ChannelBuffer buffer)
