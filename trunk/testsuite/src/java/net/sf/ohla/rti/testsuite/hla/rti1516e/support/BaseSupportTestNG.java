@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.sf.ohla.rti.testsuite.hla.rti1516e;
+package net.sf.ohla.rti.testsuite.hla.rti1516e.support;
 
 import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
 
