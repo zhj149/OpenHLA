@@ -16,8 +16,6 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
-import net.sf.ohla.rti.Protocol;
-
 import hla.rti1516e.ParameterHandle;
 import hla.rti1516e.ParameterHandleFactory;
 import hla.rti1516e.exceptions.CouldNotDecode;
@@ -36,7 +34,7 @@ public class IEEE1516eParameterHandleFactory
   {
     try
     {
-      return new IEEE1516eParameterHandle(Protocol.decodeVarInt(buffer, offset));
+      return IEEE1516eParameterHandle.decode(buffer, offset);
     }
     catch (Throwable t)
     {

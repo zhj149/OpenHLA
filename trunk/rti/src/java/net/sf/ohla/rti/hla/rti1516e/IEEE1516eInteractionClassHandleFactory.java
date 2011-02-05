@@ -16,8 +16,6 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
-import net.sf.ohla.rti.Protocol;
-
 import hla.rti1516e.InteractionClassHandle;
 import hla.rti1516e.InteractionClassHandleFactory;
 import hla.rti1516e.exceptions.CouldNotDecode;
@@ -36,7 +34,7 @@ public class IEEE1516eInteractionClassHandleFactory
   {
     try
     {
-      return new IEEE1516eInteractionClassHandle(Protocol.decodeVarInt(buffer, offset));
+      return IEEE1516eInteractionClassHandle.decode(buffer, offset);
     }
     catch (Throwable t)
     {

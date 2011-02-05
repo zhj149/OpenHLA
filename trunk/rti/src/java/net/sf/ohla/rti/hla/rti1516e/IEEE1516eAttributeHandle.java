@@ -26,14 +26,22 @@ public class IEEE1516eAttributeHandle
   extends IntegerHandle
   implements AttributeHandle
 {
+  private static final IEEE1516eAttributeHandle[] cache;
+  static
+  {
+    // TODO: get cache size from properties
+
+    cache = new IEEE1516eAttributeHandle[128];
+
+    for (int i = 1; i < cache.length; i++)
+    {
+      cache[i] = new IEEE1516eAttributeHandle(i);
+    }
+  }
+
   public IEEE1516eAttributeHandle(int handle)
   {
     super(handle);
-  }
-
-  public IEEE1516eAttributeHandle(ChannelBuffer buffer)
-  {
-    super(buffer);
   }
 
   public IEEE1516eAttributeHandle(byte[] buffer, int offset)
@@ -48,6 +56,13 @@ public class IEEE1516eAttributeHandle
 
   public static IEEE1516eAttributeHandle decode(ChannelBuffer buffer)
   {
-    return new IEEE1516eAttributeHandle(buffer);
+    int handle = decodeHandle(buffer);
+    return handle < cache.length ? cache[handle] : new IEEE1516eAttributeHandle(handle);
+  }
+
+  public static IEEE1516eAttributeHandle decode(byte[] buffer, int offset)
+  {
+    int handle = decodeHandle(buffer, offset);
+    return handle < cache.length ? cache[handle] : new IEEE1516eAttributeHandle(handle);
   }
 }

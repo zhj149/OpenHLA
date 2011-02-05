@@ -13,7 +13,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="file://$MODULE_DIR$/../../resources/testsuite" />
+          <root url="file://$MODULE_DIR$/../../testsuite/resources" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

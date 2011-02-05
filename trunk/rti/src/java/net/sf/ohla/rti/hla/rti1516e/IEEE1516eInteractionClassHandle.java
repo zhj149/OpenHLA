@@ -16,7 +16,6 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
-import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.IntegerHandle;
 
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -27,14 +26,22 @@ public class IEEE1516eInteractionClassHandle
   extends IntegerHandle
   implements InteractionClassHandle
 {
+  private static final IEEE1516eInteractionClassHandle[] cache;
+  static
+  {
+    // TODO: get cache size from properties
+
+    cache = new IEEE1516eInteractionClassHandle[1024];
+
+    for (int i = 1; i < cache.length; i++)
+    {
+      cache[i] = new IEEE1516eInteractionClassHandle(i);
+    }
+  }
+
   public IEEE1516eInteractionClassHandle(int handle)
   {
     super(handle);
-  }
-
-  public IEEE1516eInteractionClassHandle(ChannelBuffer buffer)
-  {
-    super(buffer);
   }
 
   public static void encode(ChannelBuffer buffer, InteractionClassHandle interactionClassHandle)
@@ -44,6 +51,13 @@ public class IEEE1516eInteractionClassHandle
 
   public static IEEE1516eInteractionClassHandle decode(ChannelBuffer buffer)
   {
-    return new IEEE1516eInteractionClassHandle(Protocol.decodeVarInt(buffer));
+    int handle = decodeHandle(buffer);
+    return handle < cache.length ? cache[handle] : new IEEE1516eInteractionClassHandle(handle);
+  }
+
+  public static IEEE1516eInteractionClassHandle decode(byte[] buffer, int offset)
+  {
+    int handle = decodeHandle(buffer, offset);
+    return handle < cache.length ? cache[handle] : new IEEE1516eInteractionClassHandle(handle);
   }
 }

@@ -26,14 +26,22 @@ public class IEEE1516eDimensionHandle
   extends IntegerHandle
   implements DimensionHandle
 {
+  private static final IEEE1516eDimensionHandle[] cache;
+  static
+  {
+    // TODO: get cache size from properties
+
+    cache = new IEEE1516eDimensionHandle[32];
+
+    for (int i = 1; i < cache.length; i++)
+    {
+      cache[i] = new IEEE1516eDimensionHandle(i);
+    }
+  }
+
   public IEEE1516eDimensionHandle(int handle)
   {
     super(handle);
-  }
-
-  public IEEE1516eDimensionHandle(ChannelBuffer buffer)
-  {
-    super(buffer);
   }
 
   public static void encode(ChannelBuffer buffer, DimensionHandle attributeHandle)
@@ -43,6 +51,13 @@ public class IEEE1516eDimensionHandle
 
   public static IEEE1516eDimensionHandle decode(ChannelBuffer buffer)
   {
-    return new IEEE1516eDimensionHandle(buffer);
+    int handle = decodeHandle(buffer);
+    return handle < cache.length ? cache[handle] : new IEEE1516eDimensionHandle(handle);
+  }
+
+  public static IEEE1516eDimensionHandle decode(byte[] buffer, int offset)
+  {
+    int handle = decodeHandle(buffer, offset);
+    return handle < cache.length ? cache[handle] : new IEEE1516eDimensionHandle(handle);
   }
 }

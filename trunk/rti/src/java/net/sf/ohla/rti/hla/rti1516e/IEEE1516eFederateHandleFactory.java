@@ -16,8 +16,6 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
-import net.sf.ohla.rti.Protocol;
-
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.FederateHandleFactory;
 import hla.rti1516e.exceptions.CouldNotDecode;
@@ -36,7 +34,7 @@ public class IEEE1516eFederateHandleFactory
   {
     try
     {
-      return new IEEE1516eFederateHandle(Protocol.decodeVarInt(buffer, offset));
+      return IEEE1516eFederateHandle.decode(buffer, offset);
     }
     catch (Throwable t)
     {

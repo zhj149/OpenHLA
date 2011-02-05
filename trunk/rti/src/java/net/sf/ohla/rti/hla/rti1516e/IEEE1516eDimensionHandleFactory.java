@@ -16,8 +16,6 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
-import net.sf.ohla.rti.Protocol;
-
 import hla.rti1516e.DimensionHandle;
 import hla.rti1516e.DimensionHandleFactory;
 import hla.rti1516e.exceptions.CouldNotDecode;
@@ -36,7 +34,7 @@ public class IEEE1516eDimensionHandleFactory
   {
     try
     {
-      return new IEEE1516eDimensionHandle(Protocol.decodeVarInt(buffer, offset));
+      return IEEE1516eDimensionHandle.decode(buffer, offset);
     }
     catch (Throwable t)
     {

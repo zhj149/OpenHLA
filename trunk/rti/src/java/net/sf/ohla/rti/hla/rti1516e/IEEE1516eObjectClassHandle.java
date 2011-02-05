@@ -27,14 +27,22 @@ public class IEEE1516eObjectClassHandle
   extends IntegerHandle
   implements ObjectClassHandle
 {
+  private static final IEEE1516eObjectClassHandle[] cache;
+  static
+  {
+    // TODO: get cache size from properties
+
+    cache = new IEEE1516eObjectClassHandle[1024];
+
+    for (int i = 1; i < cache.length; i++)
+    {
+      cache[i] = new IEEE1516eObjectClassHandle(i);
+    }
+  }
+
   public IEEE1516eObjectClassHandle(int handle)
   {
     super(handle);
-  }
-
-  public IEEE1516eObjectClassHandle(ChannelBuffer buffer)
-  {
-    super(buffer);
   }
 
   public static void encode(ChannelBuffer buffer, ObjectClassHandle objectClassHandle)
@@ -44,6 +52,13 @@ public class IEEE1516eObjectClassHandle
 
   public static IEEE1516eObjectClassHandle decode(ChannelBuffer buffer)
   {
-    return new IEEE1516eObjectClassHandle(Protocol.decodeVarInt(buffer));
+    int handle = decodeHandle(buffer);
+    return handle < cache.length ? cache[handle] : new IEEE1516eObjectClassHandle(handle);
+  }
+
+  public static IEEE1516eObjectClassHandle decode(byte[] buffer, int offset)
+  {
+    int handle = decodeHandle(buffer, offset);
+    return handle < cache.length ? cache[handle] : new IEEE1516eObjectClassHandle(handle);
   }
 }

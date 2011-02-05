@@ -16,7 +16,6 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
-import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.fdd.TransportationType;
 
 import hla.rti1516e.TransportationTypeHandle;
@@ -38,7 +37,7 @@ public class IEEE1516eTransportationTypeHandleFactory
   {
     try
     {
-      return new IEEE1516eTransportationTypeHandle(Protocol.decodeVarInt(buffer, offset));
+      return IEEE1516eTransportationTypeHandle.decode(buffer, offset);
     }
     catch (Throwable t)
     {

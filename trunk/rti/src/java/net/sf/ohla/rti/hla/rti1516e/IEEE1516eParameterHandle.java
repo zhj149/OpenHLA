@@ -17,7 +17,6 @@
 package net.sf.ohla.rti.hla.rti1516e;
 
 import net.sf.ohla.rti.IntegerHandle;
-import net.sf.ohla.rti.Protocol;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
@@ -27,14 +26,22 @@ public class IEEE1516eParameterHandle
   extends IntegerHandle
   implements ParameterHandle
 {
+  private static final IEEE1516eParameterHandle[] cache;
+  static
+  {
+    // TODO: get cache size from properties
+
+    cache = new IEEE1516eParameterHandle[256];
+
+    for (int i = 1; i < cache.length; i++)
+    {
+      cache[i] = new IEEE1516eParameterHandle(i);
+    }
+  }
+
   public IEEE1516eParameterHandle(int handle)
   {
     super(handle);
-  }
-
-  public IEEE1516eParameterHandle(ChannelBuffer buffer)
-  {
-    super(buffer);
   }
 
   public static void encode(ChannelBuffer buffer, ParameterHandle parameterHandle)
@@ -44,6 +51,13 @@ public class IEEE1516eParameterHandle
 
   public static IEEE1516eParameterHandle decode(ChannelBuffer buffer)
   {
-    return new IEEE1516eParameterHandle(Protocol.decodeVarInt(buffer));
+    int handle = decodeHandle(buffer);
+    return handle < cache.length ? cache[handle] : new IEEE1516eParameterHandle(handle);
+  }
+
+  public static IEEE1516eParameterHandle decode(byte[] buffer, int offset)
+  {
+    int handle = decodeHandle(buffer, offset);
+    return handle < cache.length ? cache[handle] : new IEEE1516eParameterHandle(handle);
   }
 }

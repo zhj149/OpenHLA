@@ -29,6 +29,19 @@ public class IEEE1516eTransportationTypeHandle
   public static final IEEE1516eTransportationTypeHandle HLA_RELIABLE = new IEEE1516eTransportationTypeHandle(0);
   public static final IEEE1516eTransportationTypeHandle HLA_BEST_EFFORT = new IEEE1516eTransportationTypeHandle(1);
 
+  private static final IEEE1516eTransportationTypeHandle[] cache;
+  static
+  {
+    // TODO: get cache size from properties
+
+    cache = new IEEE1516eTransportationTypeHandle[8];
+
+    for (int i = 1; i < cache.length; i++)
+    {
+      cache[i] = new IEEE1516eTransportationTypeHandle(i);
+    }
+  }
+
   public IEEE1516eTransportationTypeHandle(int handle)
   {
     super(handle);
@@ -46,6 +59,13 @@ public class IEEE1516eTransportationTypeHandle
 
   public static TransportationTypeHandle decode(ChannelBuffer buffer)
   {
-    return new IEEE1516eTransportationTypeHandle(buffer);
+    int handle = decodeHandle(buffer);
+    return handle < cache.length ? cache[handle] : new IEEE1516eTransportationTypeHandle(handle);
+  }
+
+  public static IEEE1516eTransportationTypeHandle decode(byte[] buffer, int offset)
+  {
+    int handle = decodeHandle(buffer, offset);
+    return handle < cache.length ? cache[handle] : new IEEE1516eTransportationTypeHandle(handle);
   }
 }
