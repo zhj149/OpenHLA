@@ -29,15 +29,16 @@ import hla.rti1516e.RTIambassador;
 import hla.rti1516e.RtiFactory;
 import hla.rti1516e.RtiFactoryFactory;
 
-@Test(groups = {"IEEE 1516e"})
 public abstract class BaseTestNG
   implements TestConstants
 {
+  protected final int rtiAmbassadorCount;
+  protected final List<RTIambassador> rtiAmbassadors;
+
   protected URL fdd;
   protected URL badFDD;
 
-  protected int rtiAmbassadorCount;
-  protected List<RTIambassador> rtiAmbassadors;
+  protected RtiFactory rtiFactory;
 
   protected BaseTestNG()
   {
@@ -61,7 +62,7 @@ public abstract class BaseTestNG
     badFDD = Thread.currentThread().getContextClassLoader().getResource(BAD_FDD);
     assert badFDD != null : "could not locate: " + BAD_FDD;
 
-    RtiFactory rtiFactory = RtiFactoryFactory.getRtiFactory();
+    rtiFactory = RtiFactoryFactory.getRtiFactory();
     for (int count = rtiAmbassadorCount; count > 0; count--)
     {
       rtiAmbassadors.add(rtiFactory.getRtiAmbassador());

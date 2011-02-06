@@ -41,6 +41,8 @@ import hla.rti1516e.exceptions.FederationExecutionDoesNotExist;
 public class CreationTestNG
   extends BaseTestNG
 {
+  private static final String FEDERATION_NAME = "OHLA Creation Test Federation";
+
   private TestFederateAmbassador federateAmbassador;
 
   private final Set<FederationExecutionInformation> createdFederationExecutionInformations =

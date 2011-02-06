@@ -26,6 +26,13 @@ import hla.rti1516e.exceptions.InvalidResignAction;
 public class FederateSupportTestNG
   extends BaseSupportTestNG
 {
+  private static final String FEDERATION_NAME = "OHLA Federate Support Test Federation";
+
+  public FederateSupportTestNG()
+  {
+    super(FEDERATION_NAME);
+  }
+
   @Test(expectedExceptions = {FederateAlreadyExecutionMember.class})
   public void testJoinFederationExecutionAlreadyExecutionMemberOf()
     throws Exception

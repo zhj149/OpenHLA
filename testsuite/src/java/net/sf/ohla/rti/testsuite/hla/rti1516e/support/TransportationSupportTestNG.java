@@ -26,6 +26,13 @@ import hla.rti1516e.exceptions.InvalidTransportationType;
 public class TransportationSupportTestNG
   extends BaseSupportTestNG
 {
+  private static final String FEDERATION_NAME = "OHLA Transportation Support Test Federation";
+
+  public TransportationSupportTestNG()
+  {
+    super(FEDERATION_NAME);
+  }
+
   @Test
   public void testGetReliableTransportationTypeHandleAndName()
     throws Exception

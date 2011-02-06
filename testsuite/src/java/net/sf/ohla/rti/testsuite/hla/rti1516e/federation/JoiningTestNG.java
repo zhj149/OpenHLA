@@ -33,6 +33,8 @@ import hla.rti1516e.exceptions.FederationExecutionDoesNotExist;
 public class JoiningTestNG
   extends BaseTestNG
 {
+  private static final String FEDERATION_NAME = "OHLA Joining Test Federation";
+
   @BeforeClass
   public void setup()
     throws Exception
