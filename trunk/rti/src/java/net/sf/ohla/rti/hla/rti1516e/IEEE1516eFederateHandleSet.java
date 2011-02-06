@@ -30,6 +30,8 @@ public class IEEE1516eFederateHandleSet
   extends HashSet<FederateHandle>
   implements FederateHandleSet
 {
+  public static final FederateHandleSet EMPTY = new IEEE1516eFederateHandleSet();
+
   public IEEE1516eFederateHandleSet()
   {
   }

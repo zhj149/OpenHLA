@@ -52,7 +52,8 @@ public class FederationSynchronized
   {
     super(buffer);
 
-    failedToSynchronize = IEEE1516eFederateHandleSet.decode(buffer);
+    FederateHandleSet failedToSynchronize = IEEE1516eFederateHandleSet.decode(buffer);
+    this.failedToSynchronize = failedToSynchronize == null ? IEEE1516eFederateHandleSet.EMPTY : failedToSynchronize;
   }
 
   public MessageType getType()

@@ -3038,7 +3038,7 @@ public class Federate
     federateAmbassador.announceSynchronizationPoint(label, tag);
   }
 
-  public void federationSynchronized(String label, FederateHandleSet failedToSyncSet)
+  public void federationSynchronized(String label, FederateHandleSet failedToSynchronize)
     throws FederateInternalError
   {
     FederateSynchronizationPoint federateSynchronizationPoint;
@@ -3055,7 +3055,7 @@ public class Federate
       synchronizationPointLock.unlock();
     }
 
-    federateAmbassador.federationSynchronized(label, failedToSyncSet);
+    federateAmbassador.federationSynchronized(label, failedToSynchronize);
   }
 
   public void initiateFederateSave(String label, LogicalTime time)

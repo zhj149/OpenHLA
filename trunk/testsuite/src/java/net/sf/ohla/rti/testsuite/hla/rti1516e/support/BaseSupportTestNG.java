@@ -26,17 +26,30 @@ import hla.rti1516e.CallbackModel;
 import hla.rti1516e.NullFederateAmbassador;
 import hla.rti1516e.ResignAction;
 
-@Test
-public class BaseSupportTestNG
+public abstract class BaseSupportTestNG
   extends BaseTestNG
 {
+  protected final String federationName;
+
+  protected BaseSupportTestNG(String federationName)
+  {
+    this.federationName = federationName;
+  }
+
+  protected BaseSupportTestNG(int rtiAmbassadorCount, String federationName)
+  {
+    super(rtiAmbassadorCount);
+
+    this.federationName = federationName;
+  }
+
   @BeforeClass
   public void setup()
     throws Exception
   {
     rtiAmbassadors.get(0).connect(new NullFederateAmbassador(), CallbackModel.HLA_EVOKED);
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
-    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME);
+    rtiAmbassadors.get(0).createFederationExecution(federationName, fdd);
+    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, federationName);
   }
 
   @AfterClass
@@ -44,7 +57,7 @@ public class BaseSupportTestNG
     throws Exception
   {
     rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
-    rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
+    rtiAmbassadors.get(0).destroyFederationExecution(federationName);
     rtiAmbassadors.get(0).disconnect();
   }
 }

@@ -16,14 +16,13 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti1516e;
 
+import java.util.Random;
+
 public interface TestConstants
 {
   static final String LOCAL_SETTINGS_DESIGNATOR = "LocalSettingsDesignator.properties";
   static final String CONNECTION_FAILED_LOCAL_SETTINGS_DESIGNATOR =
     "ConnectionFailedLocalSettingsDesignator.properties";
-
-  static final String FEDERATION_NAME = "OHLA Test Federation";
-  static final String NONEXISTANT_FEDERATION_NAME = FEDERATION_NAME + " - Non-Existant Federation";
 
   static final String FDD = "TestObjectModel-ieee-1516e.xml";
   static final String BAD_FDD = FDD + ".bad";
@@ -35,6 +34,11 @@ public interface TestConstants
 
   static final String SYNCHRONIZATION_POINT_1 = "Synchronization Point 1";
   static final String SYNCHRONIZATION_POINT_2 = "Synchronization Point 2";
+  static final String SYNCHRONIZATION_POINT_3 = "Synchronization Point 3";
+  static final String SYNCHRONIZATION_POINT_4 = "Synchronization Point 4";
+  static final String SYNCHRONIZATION_POINT_5 = "Synchronization Point 5";
+
+  static final byte[] TAG = new byte[] { (byte) Math.random(), (byte) Math.random(), (byte) Math.random() };
 
   static final String TEST_OBJECT = "TestObject";
   static final String TEST_OBJECT2 = "TestObject.TestObject2";
