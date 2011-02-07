@@ -1135,26 +1135,33 @@ public class IEEE1516eRTIambassador
     throws AttributeNotDefined, ObjectClassNotDefined, SaveInProgress, RestoreInProgress, FederateNotExecutionMember,
            NotConnected, RTIinternalError
   {
-    connectLock.readLock().lock();
-    try
+    if (objectClassHandle == null)
     {
-      checkIfNotConnected();
-
-      joinResignLock.readLock().lock();
+      throw new ObjectClassNotDefined("objectClassHandle cannot be null");
+    }
+    else
+    {
+      connectLock.readLock().lock();
       try
       {
-        checkIfFederateNotExecutionMember();
+        checkIfNotConnected();
 
-        federate.publishObjectClassAttributes(objectClassHandle, attributeHandles);
+        joinResignLock.readLock().lock();
+        try
+        {
+          checkIfFederateNotExecutionMember();
+
+          federate.publishObjectClassAttributes(objectClassHandle, attributeHandles);
+        }
+        finally
+        {
+          joinResignLock.readLock().unlock();
+        }
       }
       finally
       {
-        joinResignLock.readLock().unlock();
+        connectLock.readLock().unlock();
       }
-    }
-    finally
-    {
-      connectLock.readLock().unlock();
     }
   }
 

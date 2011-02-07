@@ -38,7 +38,7 @@ public class CallbackManager
   /**
    * Ensures only one callback is in progress at a time.
    */
-  protected Semaphore evokeSemaphore = new Semaphore(1, true);
+  private final Semaphore evokeSemaphore = new Semaphore(1, true);
 
   private final Lock callbacksLock = new ReentrantLock(true);
   private final Condition noCallbacks = callbacksLock.newCondition();
@@ -270,7 +270,17 @@ public class CallbackManager
 
   protected boolean evokeCallback()
   {
-    Callback callback = nextCallback();
+    Callback callback;
+    callbacksLock.lock();
+    try
+    {
+      callback = nextCallback();
+    }
+    finally
+    {
+      callbacksLock.unlock();
+    }
+
     if (callback != null)
     {
       try
@@ -287,21 +297,8 @@ public class CallbackManager
     return areCallbacksPending();
   }
 
-  protected Callback nextCallback()
+  private Callback nextCallback()
   {
-    Callback nextCallback = null;
-    if (enabled)
-    {
-      callbacksLock.lock();
-      try
-      {
-        nextCallback = callbacks.poll();
-      }
-      finally
-      {
-        callbacksLock.unlock();
-      }
-    }
-    return nextCallback;
+    return enabled ? callbacks.poll() : null;
   }
 }

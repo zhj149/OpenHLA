@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2010, Michael Newcomb
+ * Copyright (c) 2005-2011, Michael Newcomb
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ import hla.rti1516.CouldNotOpenFDD;
 import hla.rti1516.ErrorReadingFDD;
 import hla.rti1516.RTIinternalError;
 
-public class IEEE1516FDDParser
+public class IEEE1516FDDParser2
 {
   public static FDD parseFDD(URL url)
     throws ErrorReadingFDD, CouldNotOpenFDD, RTIinternalError
