@@ -23,6 +23,7 @@ import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.exceptions.ObjectClassNotDefined;
 
+@Test
 public class ObjectDeclarationTestNG
   extends BaseDeclarationTestNG
 {

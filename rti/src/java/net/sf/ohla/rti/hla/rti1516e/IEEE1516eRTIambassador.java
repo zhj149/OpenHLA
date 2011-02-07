@@ -1139,29 +1139,27 @@ public class IEEE1516eRTIambassador
     {
       throw new ObjectClassNotDefined("objectClassHandle cannot be null");
     }
-    else
+
+    connectLock.readLock().lock();
+    try
     {
-      connectLock.readLock().lock();
+      checkIfNotConnected();
+
+      joinResignLock.readLock().lock();
       try
       {
-        checkIfNotConnected();
+        checkIfFederateNotExecutionMember();
 
-        joinResignLock.readLock().lock();
-        try
-        {
-          checkIfFederateNotExecutionMember();
-
-          federate.publishObjectClassAttributes(objectClassHandle, attributeHandles);
-        }
-        finally
-        {
-          joinResignLock.readLock().unlock();
-        }
+        federate.publishObjectClassAttributes(objectClassHandle, attributeHandles);
       }
       finally
       {
-        connectLock.readLock().unlock();
+        joinResignLock.readLock().unlock();
       }
+    }
+    finally
+    {
+      connectLock.readLock().unlock();
     }
   }
 
@@ -1169,6 +1167,11 @@ public class IEEE1516eRTIambassador
     throws OwnershipAcquisitionPending, ObjectClassNotDefined, SaveInProgress, RestoreInProgress,
            FederateNotExecutionMember, NotConnected, RTIinternalError
   {
+    if (objectClassHandle == null)
+    {
+      throw new ObjectClassNotDefined("objectClassHandle cannot be null");
+    }
+
     connectLock.readLock().lock();
     try
     {
@@ -1196,6 +1199,11 @@ public class IEEE1516eRTIambassador
     throws OwnershipAcquisitionPending, AttributeNotDefined, ObjectClassNotDefined, SaveInProgress, RestoreInProgress,
            FederateNotExecutionMember, NotConnected, RTIinternalError
   {
+    if (objectClassHandle == null)
+    {
+      throw new ObjectClassNotDefined("objectClassHandle cannot be null");
+    }
+
     connectLock.readLock().lock();
     try
     {
@@ -1223,6 +1231,11 @@ public class IEEE1516eRTIambassador
     throws InteractionClassNotDefined, SaveInProgress, RestoreInProgress, FederateNotExecutionMember, NotConnected,
            RTIinternalError
   {
+    if (interactionClassHandle == null)
+    {
+      throw new InteractionClassNotDefined("interactionClassHandle cannot be null");
+    }
+
     connectLock.readLock().lock();
     try
     {
@@ -1250,6 +1263,11 @@ public class IEEE1516eRTIambassador
     throws InteractionClassNotDefined, SaveInProgress, RestoreInProgress, FederateNotExecutionMember, NotConnected,
            RTIinternalError
   {
+    if (interactionClassHandle == null)
+    {
+      throw new InteractionClassNotDefined("interactionClassHandle cannot be null");
+    }
+
     connectLock.readLock().lock();
     try
     {
