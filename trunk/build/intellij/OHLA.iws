@@ -146,10 +146,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="IEEE1516FDDparser.java" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FDDparser.java">
+      <file leaf-file-name="IEEE1516FDDParser.java" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FDDParser.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="49" column="17" selection-start="1437" selection-end="1437" vertical-scroll-proportion="0.35">
+            <state line="41" column="28" selection-start="1268" selection-end="1268" vertical-scroll-proportion="0.15">
               <folding />
             </state>
           </provider>
@@ -250,7 +250,6 @@
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
       <list>
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/federation/JoiningTestNG.java" />
         <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/federation/SynchronizationTestNG.java" />
         <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/BaseTestNG.java" />
         <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/support/DimensionSupportTestNG.java" />
@@ -266,6 +265,7 @@
         <option value="$PROJECT_DIR$/../../testsuite/resources/ieee-1516e-testng.xml" />
         <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/declaration/ObjectDeclarationTestNG.java" />
         <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FDDparser.java" />
+        <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FDDParser.java" />
       </list>
     </option>
   </component>
@@ -1523,9 +1523,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FDDparser.java">
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FDDParser.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="49" column="17" selection-start="1437" selection-end="1437" vertical-scroll-proportion="0.35">
+        <state line="41" column="28" selection-start="1268" selection-end="1268" vertical-scroll-proportion="0.15">
           <folding />
         </state>
       </provider>
