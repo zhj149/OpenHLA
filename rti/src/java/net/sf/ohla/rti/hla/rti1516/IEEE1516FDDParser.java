@@ -39,7 +39,7 @@ import hla.rti1516.CouldNotOpenFDD;
 import hla.rti1516.ErrorReadingFDD;
 import hla.rti1516.RTIinternalError;
 
-public class IEEE1516FDDParser2
+public class IEEE1516FDDParser
 {
   public static FDD parseFDD(URL url)
     throws ErrorReadingFDD, CouldNotOpenFDD, RTIinternalError

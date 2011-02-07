@@ -191,7 +191,7 @@ public class IEEE1516RTIambassador
   {
     try
     {
-      rtiAmbassador.createFederationExecution(federationExecutionName, IEEE1516FDDParser2.parseFDD(fdd));
+      rtiAmbassador.createFederationExecution(federationExecutionName, IEEE1516FDDParser.parseFDD(fdd));
     }
     catch (hla.rti1516e.exceptions.FederationExecutionAlreadyExists feae)
     {
