@@ -16,33 +16,33 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
 <suite name="OHLA IEEE 1516e Testsuite" verbose="5">
-  <!--<test name="IEEE 1516e - Federation Management">-->
-    <!--<classes>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516e.federation.ConnectionTestNG"/>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516e.federation.CreationTestNG"/>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516e.federation.JoiningTestNG"/>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516e.federation.SynchronizationTestNG"/>-->
-    <!--</classes>-->
-  <!--</test>-->
-  <!--<test name="IEEE 1516e - Declaration Management">-->
-    <!--<classes>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516e.declaration.ObjectDeclarationTestNG"/>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516e.declaration.InteractionDeclarationTestNG"/>-->
-    <!--</classes>-->
-  <!--</test>-->
+  <test name="IEEE 1516e - Federation Management">
+    <classes>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.federation.ConnectionTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.federation.CreationTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.federation.JoiningTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.federation.SynchronizationTestNG"/>
+    </classes>
+  </test>
+  <test name="IEEE 1516e - Declaration Management">
+    <classes>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.declaration.ObjectDeclarationTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.declaration.InteractionDeclarationTestNG"/>
+    </classes>
+  </test>
   <test name="IEEE 1516e - Object Management">
     <classes>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.object.NameReservationTestNG"/>
     </classes>
   </test>
-  <!--<test name="IEEE 1516e - Support Services">-->
-    <!--<classes>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516e.support.FederateSupportTestNG"/>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516e.support.OrderSupportTestNG"/>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516e.support.TransportationSupportTestNG"/>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516e.support.ObjectSupportTestNG"/>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516e.support.InteractionSupportTestNG"/>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516e.support.DimensionSupportTestNG"/>-->
-    <!--</classes>-->
-  <!--</test>-->
+  <test name="IEEE 1516e - Support Services">
+    <classes>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.support.FederateSupportTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.support.OrderSupportTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.support.TransportationSupportTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.support.ObjectSupportTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.support.InteractionSupportTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.support.DimensionSupportTestNG"/>
+    </classes>
+  </test>
 </suite>
