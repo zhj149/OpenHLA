@@ -23,6 +23,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.sf.ohla.rti.RTIChannelUpstreamHandler;
 import net.sf.ohla.rti.fdd.InteractionClass;
+import net.sf.ohla.rti.federate.Federate;
 import net.sf.ohla.rti.federate.TimeAdvanceType;
 import net.sf.ohla.rti.messages.FederateRestoreComplete;
 import net.sf.ohla.rti.messages.FederateRestoreNotComplete;
@@ -131,7 +132,7 @@ public class FederateProxy
   {
     this.federationExecution = federationExecution;
     this.federateHandle = federateHandle;
-    this.federateName = federateName;
+    this.federateName = federateName == null ? Federate.defaultFederateName(federateHandle) : federateName;
     this.federateType = federateType;
     this.federateChannel = federateChannel;
     this.galt = galt;
@@ -144,9 +145,9 @@ public class FederateProxy
     federateChannel.getPipeline().addBefore(
       RTIChannelUpstreamHandler.NAME, FederateProxyChannelHandler.NAME, new FederateProxyChannelHandler(this));
 
-    marker = MarkerFactory.getMarker(federationExecution.getName() + "." + federateName);
+    marker = MarkerFactory.getMarker(federationExecution.getName() + "." + this.federateName);
 
-    log.debug(marker, "federate joined: {}", federateName);
+    log.debug(marker, "federate joined: {}", this.federateName);
   }
 
   public FederationExecution getFederationExecution()

@@ -274,7 +274,7 @@ public class FederationExecution
     String federateName = joinFederationExecution.getFederateName();
     String federateType = joinFederationExecution.getFederateType();
 
-    log.debug(marker, "join federation execution: {}", federateName);
+    log.debug(marker, "join federation execution: {} - {}", federateType, federateName);
 
     federationExecutionStateLock.writeLock().lock();
     try
