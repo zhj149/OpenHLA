@@ -33,6 +33,8 @@ public class MultipleObjectInstanceNameReservationSucceeded
   extends StringsMessage
   implements Callback, FederateMessage
 {
+  private Federate federate;
+
   public MultipleObjectInstanceNameReservationSucceeded(Set<String> objectInstanceNames)
   {
     super(MessageType.MULTIPLE_OBJECT_INSTANCE_NAME_RESERVATION_SUCCEEDED, objectInstanceNames);
@@ -58,11 +60,13 @@ public class MultipleObjectInstanceNameReservationSucceeded
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.multipleObjectInstanceNameReservationSucceeded(strings);
+    federate.multipleObjectInstanceNameReservationSucceeded(strings);
   }
 
   public void execute(Federate federate)
   {
+    this.federate = federate;
+
     federate.callbackReceived(this);
   }
 }

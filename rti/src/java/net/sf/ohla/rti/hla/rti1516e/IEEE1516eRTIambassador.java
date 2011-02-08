@@ -1539,7 +1539,11 @@ public class IEEE1516eRTIambassador
   public void reserveObjectInstanceName(String objectInstanceName)
     throws IllegalName, SaveInProgress, RestoreInProgress, FederateNotExecutionMember, NotConnected, RTIinternalError
   {
-    if (objectInstanceName.startsWith("HLA"))
+    if (objectInstanceName == null)
+    {
+      throw new IllegalName("objectInstanceName cannot be null");
+    }
+    else if (objectInstanceName.startsWith("HLA"))
     {
       throw new IllegalName(objectInstanceName);
     }
@@ -1598,9 +1602,13 @@ public class IEEE1516eRTIambassador
     throws IllegalName, NameSetWasEmpty, SaveInProgress, RestoreInProgress, FederateNotExecutionMember, NotConnected,
            RTIinternalError
   {
-    if (names.isEmpty())
+    if (names == null)
     {
-      throw new NameSetWasEmpty("");
+      throw new NameSetWasEmpty("names cannot be null");
+    }
+    else if (names.isEmpty())
+    {
+      throw new NameSetWasEmpty("names cannot be empty");
     }
     else
     {

@@ -250,7 +250,7 @@ public class FederationExecutionObjectManager
         FederateProxy reservingFederateProxy = this.reservedObjectInstanceNames.get(objectInstanceName);
         if (reservingFederateProxy == null)
         {
-          reservedObjectInstanceNames.put(objectInstanceName, reservingFederateProxy);
+          reservedObjectInstanceNames.put(objectInstanceName, federateProxy);
         }
         else
         {

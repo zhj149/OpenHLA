@@ -221,13 +221,13 @@ public class SynchronizationTestNG
   protected static class TestFederateAmbassador
     extends NullFederateAmbassador
   {
-    protected RTIambassador rtiAmbassador;
+    private final RTIambassador rtiAmbassador;
 
-    protected Set<String> successfullyRegisteredSynchronizationPoints = new HashSet<String>();
-    protected Map<String, SynchronizationPointFailureReason> unsuccessfullyRegisteredSynchronizationPoints =
+    private final Set<String> successfullyRegisteredSynchronizationPoints = new HashSet<String>();
+    private final Map<String, SynchronizationPointFailureReason> unsuccessfullyRegisteredSynchronizationPoints =
       new HashMap<String, SynchronizationPointFailureReason>();
-    protected Map<String, byte[]> announcedSynchronizationPoints = new HashMap<String, byte[]>();
-    protected Map<String, FederateHandleSet> federationSynchronized = new HashMap<String, FederateHandleSet>();
+    private final Map<String, byte[]> announcedSynchronizationPoints = new HashMap<String, byte[]>();
+    private final Map<String, FederateHandleSet> federationSynchronized = new HashMap<String, FederateHandleSet>();
 
     public TestFederateAmbassador(RTIambassador rtiAmbassador)
     {
