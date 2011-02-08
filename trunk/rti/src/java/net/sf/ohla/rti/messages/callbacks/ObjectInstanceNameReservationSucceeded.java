@@ -58,7 +58,7 @@ public class ObjectInstanceNameReservationSucceeded
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federate.objectInstanceNameReservationFailed(s);
+    federate.objectInstanceNameReservationSucceeded(s);
   }
 
   public void execute(Federate federate)

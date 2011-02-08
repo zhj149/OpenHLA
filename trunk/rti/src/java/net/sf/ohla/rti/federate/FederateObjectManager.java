@@ -34,6 +34,7 @@ import net.sf.ohla.rti.fdd.TransportationType;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectInstanceHandle;
 import net.sf.ohla.rti.messages.DeleteObjectInstance;
 import net.sf.ohla.rti.messages.RegisterObjectInstance;
+import net.sf.ohla.rti.messages.ReleaseMultipleObjectInstanceName;
 import net.sf.ohla.rti.messages.ReleaseObjectInstanceName;
 import net.sf.ohla.rti.messages.ReserveMultipleObjectInstanceName;
 import net.sf.ohla.rti.messages.ReserveObjectInstanceName;
@@ -433,11 +434,7 @@ public class FederateObjectManager
     reservedObjectInstanceNamesLock.lock();
     try
     {
-      if (reservedObjectInstanceNames.contains(objectInstanceName))
-      {
-        throw new IllegalName("object instance name already reserved: " + objectInstanceName);
-      }
-      else if (objectInstanceNamesBeingReserved.contains(objectInstanceName))
+      if (objectInstanceNamesBeingReserved.contains(objectInstanceName))
       {
         throw new IllegalName("object instance name already being reserved: " + objectInstanceName);
       }
@@ -452,19 +449,19 @@ public class FederateObjectManager
     federate.getRTIChannel().write(new ReserveObjectInstanceName(objectInstanceName));
   }
 
-  public void releaseObjectInstanceName(String name)
+  public void releaseObjectInstanceName(String objectInstanceName)
     throws ObjectInstanceNameNotReserved, RTIinternalError
   {
     reservedObjectInstanceNamesLock.lock();
     try
     {
-      if (reservedObjectInstanceNames.remove(name))
+      if (reservedObjectInstanceNames.remove(objectInstanceName))
       {
-        federate.getRTIChannel().write(new ReleaseObjectInstanceName(name));
+        federate.getRTIChannel().write(new ReleaseObjectInstanceName(objectInstanceName));
       }
       else
       {
-        throw new ObjectInstanceNameNotReserved(name);
+        throw new ObjectInstanceNameNotReserved(objectInstanceName);
       }
     }
     finally
@@ -473,41 +470,37 @@ public class FederateObjectManager
     }
   }
 
-  public void reserveMultipleObjectInstanceName(Set<String> names)
+  public void reserveMultipleObjectInstanceName(Set<String> objectInstanceNames)
     throws IllegalName, RTIinternalError
   {
     reservedObjectInstanceNamesLock.lock();
     try
     {
-      for (String name : names)
+      for (String name : objectInstanceNames)
       {
-        if (reservedObjectInstanceNames.contains(name))
-        {
-          throw new IllegalName("object instance name already reserved: " + name);
-        }
-        else if (objectInstanceNamesBeingReserved.contains(name))
+        if (objectInstanceNamesBeingReserved.contains(name))
         {
           throw new IllegalName("object instance name already being reserved: " + name);
         }
       }
 
-      objectInstanceNamesBeingReserved.addAll(names);
+      objectInstanceNamesBeingReserved.addAll(objectInstanceNames);
     }
     finally
     {
       reservedObjectInstanceNamesLock.unlock();
     }
 
-    federate.getRTIChannel().write(new ReserveMultipleObjectInstanceName(names));
+    federate.getRTIChannel().write(new ReserveMultipleObjectInstanceName(objectInstanceNames));
   }
 
-  public void releaseMultipleObjectInstanceName(Set<String> names)
+  public void releaseMultipleObjectInstanceName(Set<String> objectInstanceNames)
     throws ObjectInstanceNameNotReserved, RTIinternalError
   {
     reservedObjectInstanceNamesLock.lock();
     try
     {
-      for (String name : names)
+      for (String name : objectInstanceNames)
       {
         if (!reservedObjectInstanceNames.contains(name))
         {
@@ -515,14 +508,14 @@ public class FederateObjectManager
         }
       }
 
-      reservedObjectInstanceNames.removeAll(names);
+      reservedObjectInstanceNames.removeAll(objectInstanceNames);
     }
     finally
     {
       reservedObjectInstanceNamesLock.unlock();
     }
 
-    federate.getRTIChannel().write(new ReserveMultipleObjectInstanceName(names));
+    federate.getRTIChannel().write(new ReleaseMultipleObjectInstanceName(objectInstanceNames));
   }
 
   public ObjectInstanceHandle registerObjectInstance(ObjectClassHandle objectClassHandle)
