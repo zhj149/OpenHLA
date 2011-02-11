@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.locks.LockSupport;
 
 import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
 
@@ -84,6 +85,10 @@ public class NameReservationTestNG
     rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
     rtiAmbassadors.get(1).resignFederationExecution(ResignAction.NO_ACTION);
     rtiAmbassadors.get(2).resignFederationExecution(ResignAction.NO_ACTION);
+
+    // this is necessary to ensure the federates is actually resigned
+    //
+    LockSupport.parkUntil(System.currentTimeMillis() + 1000);
 
     rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
 

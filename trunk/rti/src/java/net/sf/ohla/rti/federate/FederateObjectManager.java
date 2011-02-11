@@ -66,6 +66,7 @@ import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.OrderType;
 import hla.rti1516e.ParameterHandleValueMap;
 import hla.rti1516e.RegionHandleSet;
+import hla.rti1516e.ResignAction;
 import hla.rti1516e.TransportationTypeHandle;
 import hla.rti1516e.exceptions.AttributeAcquisitionWasNotRequested;
 import hla.rti1516e.exceptions.AttributeAlreadyBeingAcquired;
@@ -129,7 +130,7 @@ public class FederateObjectManager
     this.federate = federate;
   }
 
-  public void resignFederationExecution()
+  public void resignFederationExecution(ResignAction resignAction)
     throws OwnershipAcquisitionPending, FederateOwnsAttributes, RTIinternalError
   {
     objectsLock.writeLock().lock();
@@ -137,8 +138,28 @@ public class FederateObjectManager
     {
       for (FederateObjectInstance objectInstance : objects.values())
       {
-        objectInstance.checkIfOwnershipAcquisitionPending();
-        objectInstance.checkIfFederateOwnsAttributes();
+        switch (resignAction)
+        {
+          case UNCONDITIONALLY_DIVEST_ATTRIBUTES:
+            objectInstance.checkIfOwnershipAcquisitionPending();
+            break;
+          case DELETE_OBJECTS:
+            objectInstance.checkIfFederateOwnsAttributes();
+            objectInstance.checkIfOwnershipAcquisitionPending();
+            break;
+          case CANCEL_PENDING_OWNERSHIP_ACQUISITIONS:
+            objectInstance.checkIfFederateOwnsAttributes();
+            break;
+          case DELETE_OBJECTS_THEN_DIVEST:
+            objectInstance.checkIfOwnershipAcquisitionPending();
+            break;
+          case CANCEL_THEN_DELETE_THEN_DIVEST:
+            objectInstance.checkIfOwnershipAcquisitionPending();
+            break;
+          case NO_ACTION:
+            objectInstance.checkIfFederateOwnsAttributes();
+            break;
+        }
       }
     }
     finally

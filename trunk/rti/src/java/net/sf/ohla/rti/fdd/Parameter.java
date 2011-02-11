@@ -50,6 +50,11 @@ public class Parameter
     return parameterName;
   }
 
+  public void copyTo(InteractionClass interactionClass)
+  {
+    interactionClass.addParameterSafely(parameterName);
+  }
+
   @Override
   public int hashCode()
   {

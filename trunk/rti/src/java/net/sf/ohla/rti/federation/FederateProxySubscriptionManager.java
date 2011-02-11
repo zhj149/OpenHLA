@@ -23,14 +23,17 @@ import java.util.Map;
 import net.sf.ohla.rti.SubscriptionManager;
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleValueMap;
+import net.sf.ohla.rti.messages.RegisterObjectInstance;
 import net.sf.ohla.rti.messages.SendInteraction;
 import net.sf.ohla.rti.messages.UpdateAttributeValues;
+import net.sf.ohla.rti.messages.callbacks.DiscoverObjectInstance;
 import net.sf.ohla.rti.messages.callbacks.ReceiveInteraction;
 import net.sf.ohla.rti.messages.callbacks.ReflectAttributeValues;
 
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleValueMap;
 import hla.rti1516e.DimensionHandle;
+import hla.rti1516e.FederateHandle;
 import hla.rti1516e.ParameterHandleValueMap;
 import hla.rti1516e.RangeBounds;
 import hla.rti1516e.RegionHandle;
@@ -38,6 +41,35 @@ import hla.rti1516e.RegionHandle;
 public class FederateProxySubscriptionManager
   extends SubscriptionManager
 {
+  public DiscoverObjectInstance transform(
+    FederateProxy federateProxy, FederationExecutionObjectInstance objectInstance,
+    RegisterObjectInstance registerObjectInstance)
+  {
+    return transform(federateProxy.getFederateHandle(), objectInstance, registerObjectInstance);
+  }
+
+  public DiscoverObjectInstance transform(
+    FederateHandle producingFederateHandle, FederationExecutionObjectInstance objectInstance,
+    RegisterObjectInstance registerObjectInstance)
+  {
+    DiscoverObjectInstance discoverObjectInstance;
+
+    ObjectClassSubscription objectClassSubscription =
+      getSubscribedObjectClassSubscription(objectInstance.getObjectClass());
+    if (objectClassSubscription == null)
+    {
+      discoverObjectInstance = null;
+    }
+    else
+    {
+      discoverObjectInstance = new DiscoverObjectInstance(
+        registerObjectInstance.getObjectInstanceHandle(), registerObjectInstance.getObjectClassHandle(),
+        registerObjectInstance.getObjectInstanceName(), producingFederateHandle);
+    }
+
+    return discoverObjectInstance;
+  }
+
   public ReflectAttributeValues transform(
     FederateProxy federateProxy, FederationExecutionObjectInstance objectInstance,
     UpdateAttributeValues updateAttributeValues)

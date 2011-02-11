@@ -39,12 +39,14 @@ import hla.rti1516.CouldNotOpenFDD;
 import hla.rti1516.ErrorReadingFDD;
 import hla.rti1516.RTIinternalError;
 
+import hla.rti1516e.exceptions.InconsistentFDD;
+
 public class IEEE1516FDDParser
 {
   public static FDD parseFDD(URL url)
     throws ErrorReadingFDD, CouldNotOpenFDD, RTIinternalError
   {
-    FDD fdd = new FDD(url);
+    FDD fdd = new FDD(url.toString());
     try
     {
       SAXParserFactory.newInstance().newSAXParser().parse(url.openStream(), new Handler(fdd));
@@ -55,7 +57,14 @@ public class IEEE1516FDDParser
     }
     catch (SAXException saxe)
     {
-      throw new ErrorReadingFDD(saxe.getMessage(), saxe);
+      if (saxe.getCause() instanceof ErrorReadingFDD)
+      {
+        throw (ErrorReadingFDD) saxe.getCause();
+      }
+      else
+      {
+        throw new ErrorReadingFDD(saxe.getMessage(), saxe);
+      }
     }
     catch (ParserConfigurationException pce)
     {
@@ -195,9 +204,9 @@ public class IEEE1516FDDParser
         {
           objectClass = fdd.addObjectClass(objectClassName, superObjectClass);
         }
-        catch (hla.rti1516e.exceptions.ErrorReadingFDD erfdd)
+        catch (InconsistentFDD ifdd)
         {
-          throw new SAXException(erfdd);
+          throw new SAXException(ifdd);
         }
       }
 
@@ -212,9 +221,9 @@ public class IEEE1516FDDParser
             fdd.addAttribute(objectClass, attributes.getValue("name"), getDimensions(attributes.getValue("dimensions")),
                              attributes.getValue("transportation"), attributes.getValue("order"));
           }
-          catch (hla.rti1516e.exceptions.ErrorReadingFDD erfdd)
+          catch (InconsistentFDD ifdd)
           {
-            throw new SAXException(erfdd);
+            throw new SAXException(ifdd);
           }
         }
         else if (qName.equals("ObjectClass"))
@@ -254,9 +263,9 @@ public class IEEE1516FDDParser
             attributes.getValue("name"), superInteractionClass, getDimensions(attributes.getValue("dimensions")),
             attributes.getValue("transportation"), attributes.getValue("order"));
         }
-        catch (hla.rti1516e.exceptions.ErrorReadingFDD erfdd)
+        catch (InconsistentFDD ifdd)
         {
-          throw new SAXException(erfdd);
+          throw new SAXException(ifdd);
         }
       }
 
@@ -270,9 +279,9 @@ public class IEEE1516FDDParser
           {
             fdd.addParameter(interactionClass, attributes.getValue("name"));
           }
-          catch (hla.rti1516e.exceptions.ErrorReadingFDD erfdd)
+          catch (InconsistentFDD ifdd)
           {
-            throw new SAXException(erfdd);
+            throw new SAXException(ifdd);
           }
         }
         else if (qName.equals("InteractionClass"))

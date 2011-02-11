@@ -194,6 +194,8 @@ public class IEEE1516eRTIambassador
 {
   private static final Logger log = LoggerFactory.getLogger(IEEE1516eRTIambassador.class);
 
+  public static final String HLA_STANDARD_MIM = "HLAstandardMIM.xml";
+
   /**
    * Allows concurrent access to all methods, but ensures that connect/disconnect are exclusive to all others.
    */
@@ -422,8 +424,8 @@ public class IEEE1516eRTIambassador
       throw new CouldNotOpenMIM("MIM module cannot be null");
     }
 
-    FDD fdd = IEEE1516eFDDParser.parseMIM(mimModule);
-    fdd.merge(IEEE1516eFDDParser.parseFDDs(fomModules));
+    FDD mim = IEEE1516eFDDParser.parseMIM(mimModule);
+    FDD fdd = mim.merge(IEEE1516eFDDParser.parseFDDs(fomModules));
 
     createFederationExecution(federationExecutionName, fdd, logicalTimeImplementationName);
   }
@@ -442,7 +444,13 @@ public class IEEE1516eRTIambassador
       throw new CouldNotOpenFDD("at least 1 FOM module required");
     }
 
-    FDD fdd = IEEE1516eFDDParser.parseFDD(fomModules);
+    URL mimModule = Thread.currentThread().getContextClassLoader().getResource(HLA_STANDARD_MIM);
+    if (mimModule == null)
+    {
+      throw new RTIinternalError("could not locate MIM: " + HLA_STANDARD_MIM);
+    }
+    FDD mim = IEEE1516eFDDParser.parseFDD(mimModule);
+    FDD fdd = mim.merge(IEEE1516eFDDParser.parseFDDs(fomModules));
 
     createFederationExecution(federationExecutionName, fdd, logicalTimeImplementationName);
   }
@@ -483,7 +491,13 @@ public class IEEE1516eRTIambassador
       throw new CouldNotOpenFDD("at least 1 FOM module required");
     }
 
-    FDD fdd = IEEE1516eFDDParser.parseFDD(fomModules);
+    URL mimModule = Thread.currentThread().getContextClassLoader().getResource(HLA_STANDARD_MIM);
+    if (mimModule == null)
+    {
+      throw new RTIinternalError("could not locate MIM: " + HLA_STANDARD_MIM);
+    }
+    FDD mim = IEEE1516eFDDParser.parseFDD(mimModule);
+    FDD fdd = mim.merge(IEEE1516eFDDParser.parseFDDs(fomModules));
 
     createFederationExecution(federationExecutionName, fdd);
   }
@@ -505,7 +519,13 @@ public class IEEE1516eRTIambassador
       throw new CouldNotOpenFDD("FOM module cannot be null");
     }
 
-    FDD fdd = IEEE1516eFDDParser.parseFDD(fomModule);
+    URL mimModule = Thread.currentThread().getContextClassLoader().getResource(HLA_STANDARD_MIM);
+    if (mimModule == null)
+    {
+      throw new RTIinternalError("could not locate MIM: " + HLA_STANDARD_MIM);
+    }
+    FDD mim = IEEE1516eFDDParser.parseFDD(mimModule);
+    FDD fdd = mim.merge(IEEE1516eFDDParser.parseFDD(fomModule));
 
     createFederationExecution(federationExecutionName, fdd);
   }
@@ -1139,27 +1159,29 @@ public class IEEE1516eRTIambassador
     {
       throw new ObjectClassNotDefined("objectClassHandle cannot be null");
     }
-
-    connectLock.readLock().lock();
-    try
+    else if (attributeHandles != null && attributeHandles.size() > 0)
     {
-      checkIfNotConnected();
-
-      joinResignLock.readLock().lock();
+      connectLock.readLock().lock();
       try
       {
-        checkIfFederateNotExecutionMember();
+        checkIfNotConnected();
 
-        federate.publishObjectClassAttributes(objectClassHandle, attributeHandles);
+        joinResignLock.readLock().lock();
+        try
+        {
+          checkIfFederateNotExecutionMember();
+
+          federate.publishObjectClassAttributes(objectClassHandle, attributeHandles);
+        }
+        finally
+        {
+          joinResignLock.readLock().unlock();
+        }
       }
       finally
       {
-        joinResignLock.readLock().unlock();
+        connectLock.readLock().unlock();
       }
-    }
-    finally
-    {
-      connectLock.readLock().unlock();
     }
   }
 
