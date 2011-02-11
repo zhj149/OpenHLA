@@ -18,8 +18,10 @@ package net.sf.ohla.rti.testsuite.hla.rti1516e.object;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.locks.LockSupport;
 
 import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
@@ -154,10 +156,26 @@ public class RegistrationTestNG
     federateAmbassadors.get(2).checkObjectClassHandle(objectInstanceHandle, testObjectClassHandle2);
   }
 
+  @Test
+  public void testRegisterObjectInstanceByName()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).reserveObjectInstanceName(TEST_OBJECT);
+    federateAmbassadors.get(0).checkObjectInstanceNameReserved(TEST_OBJECT);
+
+    ObjectInstanceHandle objectInstanceHandle =
+      rtiAmbassadors.get(0).registerObjectInstance(testObjectClassHandle, TEST_OBJECT);
+
+    federateAmbassadors.get(2).checkObjectInstanceHandle(objectInstanceHandle);
+    federateAmbassadors.get(2).checkObjectInstanceName(objectInstanceHandle, TEST_OBJECT);
+  }
+
   protected static class TestFederateAmbassador
     extends NullFederateAmbassador
   {
     private final RTIambassador rtiAmbassador;
+
+    private final Set<String> reservedObjectInstanceNames = new HashSet<String>();
 
     private final Map<ObjectInstanceHandle, TestObjectInstance> objectInstances =
       new HashMap<ObjectInstanceHandle, TestObjectInstance>();
@@ -165,6 +183,16 @@ public class RegistrationTestNG
     public TestFederateAmbassador(RTIambassador rtiAmbassador)
     {
       this.rtiAmbassador = rtiAmbassador;
+    }
+
+    public void checkObjectInstanceNameReserved(String objectInstanceName)
+      throws Exception
+    {
+      for (int i = 0; i < 5 && !reservedObjectInstanceNames.contains(objectInstanceName); i++)
+      {
+        rtiAmbassador.evokeCallback(1.0);
+      }
+      assert reservedObjectInstanceNames.contains(objectInstanceName);
     }
 
     public void checkObjectInstanceHandle(ObjectInstanceHandle objectInstanceHandle)
@@ -182,6 +210,20 @@ public class RegistrationTestNG
     {
       assert objectInstances.containsKey(objectInstanceHandle);
       assert objectInstances.get(objectInstanceHandle).getObjectClassHandle().equals(objectClassHandle);
+    }
+
+    public void checkObjectInstanceName(ObjectInstanceHandle objectInstanceHandle, String objectInstanceName)
+      throws Exception
+    {
+      assert objectInstances.containsKey(objectInstanceHandle);
+      assert objectInstances.get(objectInstanceHandle).getObjectInstanceName().equals(objectInstanceName);
+    }
+
+    @Override
+    public void objectInstanceNameReservationSucceeded(String name)
+      throws FederateInternalError
+    {
+      reservedObjectInstanceNames.add(name);
     }
 
     @Override
