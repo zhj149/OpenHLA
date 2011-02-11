@@ -23,26 +23,37 @@ import org.jboss.netty.buffer.ChannelBuffer;
 
 import hla.rti1516e.DimensionHandle;
 import hla.rti1516e.RangeBounds;
+import hla.rti1516e.exceptions.InconsistentFDD;
 import hla.rti1516e.exceptions.InvalidRangeBound;
 
 public class Dimension
 {
+  private final FDD fdd;
+
   private final DimensionHandle dimensionHandle;
   private final String dimensionName;
 
   private long upperBound = Long.MAX_VALUE;
 
-  public Dimension(DimensionHandle dimensionHandle, String dimensionName)
+  public Dimension(FDD fdd, DimensionHandle dimensionHandle, String dimensionName)
   {
+    this.fdd = fdd;
     this.dimensionHandle = dimensionHandle;
     this.dimensionName = dimensionName;
   }
 
-  public Dimension(ChannelBuffer buffer)
+  public Dimension(ChannelBuffer buffer, FDD fdd)
   {
+    this.fdd = fdd;
+
     dimensionHandle = IEEE1516eDimensionHandle.decode(buffer);
     dimensionName = Protocol.decodeString(buffer);
     upperBound = Protocol.decodeVarLong(buffer);
+  }
+
+  public FDD getFDD()
+  {
+    return fdd;
   }
 
   public DimensionHandle getDimensionHandle()
@@ -75,6 +86,15 @@ public class Dimension
     }
   }
 
+  public void checkForInconsistentFDD(Dimension dimension)
+    throws InconsistentFDD
+  {
+    if (upperBound != dimension.upperBound)
+    {
+      throw new InconsistentFDD("inconsistent Dimension: " + dimensionName + " upperBound mismatch");
+    }
+  }
+
   @Override
   public int hashCode()
   {
@@ -94,8 +114,8 @@ public class Dimension
     Protocol.encodeVarLong(buffer, dimension.upperBound);
   }
 
-  public static Dimension decode(ChannelBuffer buffer)
+  public static Dimension decode(ChannelBuffer buffer, FDD fdd)
   {
-    return new Dimension(buffer);
+    return new Dimension(buffer, fdd);
   }
 }

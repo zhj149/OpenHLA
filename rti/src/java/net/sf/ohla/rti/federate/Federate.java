@@ -641,7 +641,7 @@ public class Federate
     federateStateLock.writeLock().lock();
     try
     {
-      objectManager.resignFederationExecution();
+      objectManager.resignFederationExecution(resignAction);
 
       federateState = FederateState.RESIGNED;
 

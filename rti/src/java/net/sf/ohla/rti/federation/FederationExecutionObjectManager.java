@@ -34,7 +34,6 @@ import net.sf.ohla.rti.messages.RequestObjectInstanceAttributeValueUpdate;
 import net.sf.ohla.rti.messages.UnassociateRegionsForUpdates;
 import net.sf.ohla.rti.messages.UnassociateRegionsForUpdatesResponse;
 import net.sf.ohla.rti.messages.UpdateAttributeValues;
-import net.sf.ohla.rti.messages.callbacks.DiscoverObjectInstance;
 import net.sf.ohla.rti.messages.callbacks.MultipleObjectInstanceNameReservationFailed;
 import net.sf.ohla.rti.messages.callbacks.MultipleObjectInstanceNameReservationSucceeded;
 import net.sf.ohla.rti.messages.callbacks.ObjectInstanceNameReservationFailed;
@@ -161,11 +160,10 @@ public class FederationExecutionObjectManager
 
       for (FederationExecutionObjectInstance objectInstance : objects.values())
       {
-        if (objectClass.isAssignableFrom(objectInstance.getObjectClass()))
+        if (!federateProxy.getFederateHandle().equals(objectInstance.getProducingFederateHandle()) &&
+            objectClass.isAssignableFrom(objectInstance.getObjectClass()))
         {
-          federateProxy.discoverObjectInstance(new DiscoverObjectInstance(
-            objectInstance.getObjectInstanceHandle(), objectClass.getObjectClassHandle(),
-            objectInstance.getObjectInstanceName(), objectInstance.getProducingFederateHandle()));
+          federateProxy.discoverObjectInstance(objectInstance);
         }
       }
     }
@@ -181,15 +179,16 @@ public class FederationExecutionObjectManager
     objectsLock.readLock().lock();
     try
     {
+      // TODO: consider sending one message instead of many
+
       for (FederationExecutionObjectInstance objectInstance : objects.values())
       {
-        if (objectClass.isAssignableFrom(objectInstance.getObjectClass()))
+        if (!federateProxy.getFederateHandle().equals(objectInstance.getProducingFederateHandle()) &&
+            objectClass.isAssignableFrom(objectInstance.getObjectClass()))
         {
           // TODO: DDM
 
-          federateProxy.discoverObjectInstance(new DiscoverObjectInstance(
-            objectInstance.getObjectInstanceHandle(), objectClass.getObjectClassHandle(),
-            objectInstance.getObjectInstanceName(), objectInstance.getProducingFederateHandle()));
+          federateProxy.discoverObjectInstance(objectInstance);
         }
       }
     }
@@ -292,7 +291,7 @@ public class FederationExecutionObjectManager
     }
   }
 
-  public ObjectInstanceHandle registerObjectInstance(
+  public FederationExecutionObjectInstance registerObjectInstance(
     FederateProxy federateProxy, ObjectInstanceHandle objectInstanceHandle, ObjectClassHandle objectClassHandle,
     String objectInstanceName, AttributeHandleSet publishedAttributeHandles)
   {
@@ -314,7 +313,7 @@ public class FederationExecutionObjectManager
       objectsLock.writeLock().unlock();
     }
 
-    return objectInstanceHandle;
+    return objectInstance;
   }
 
   public void updateAttributeValues(FederateProxy federateProxy, UpdateAttributeValues updateAttributeValues)

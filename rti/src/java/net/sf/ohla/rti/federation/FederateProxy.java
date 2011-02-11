@@ -16,8 +16,11 @@
 
 package net.sf.ohla.rti.federation;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -33,6 +36,7 @@ import net.sf.ohla.rti.messages.FederateSaveNotComplete;
 import net.sf.ohla.rti.messages.GALTAdvanced;
 import net.sf.ohla.rti.messages.GALTUndefined;
 import net.sf.ohla.rti.messages.QueryInteractionTransportationType;
+import net.sf.ohla.rti.messages.RegisterObjectInstance;
 import net.sf.ohla.rti.messages.Retract;
 import net.sf.ohla.rti.messages.SendInteraction;
 import net.sf.ohla.rti.messages.SubscribeInteractionClass;
@@ -68,6 +72,7 @@ import hla.rti1516e.FederateHandle;
 import hla.rti1516e.InteractionClassHandle;
 import hla.rti1516e.LogicalTime;
 import hla.rti1516e.LogicalTimeInterval;
+import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.OrderType;
 import hla.rti1516e.ResignAction;
 import hla.rti1516e.RestoreStatus;
@@ -92,6 +97,9 @@ public class FederateProxy
 
   private final ReadWriteLock subscriptionLock = new ReentrantReadWriteLock(true);
   private final FederateProxySubscriptionManager subscriptionManager = new FederateProxySubscriptionManager();
+
+  private final Set<ObjectInstanceHandle> discoveredObjects =
+    Collections.synchronizedSet(new HashSet<ObjectInstanceHandle>());
 
   private final Map<InteractionClassHandle, TransportationTypeHandle> interactionClassTransportationTypeHandles =
     new HashMap<InteractionClassHandle, TransportationTypeHandle>();
@@ -293,9 +301,40 @@ public class FederateProxy
     restoreStatus = RestoreStatus.NO_RESTORE_IN_PROGRESS;
   }
 
-  public void discoverObjectInstance(DiscoverObjectInstance discoverObjectInstance)
+  public void discoverObjectInstance(FederationExecutionObjectInstance objectInstance)
   {
-    federateChannel.write(discoverObjectInstance);
+    // this is triggered by a subscription change, of which only one thread can change at a time
+
+    if (!discoveredObjects.contains(objectInstance.getObjectInstanceHandle()))
+    {
+      federateChannel.write(new DiscoverObjectInstance(
+        objectInstance.getObjectInstanceHandle(), objectInstance.getObjectClass().getObjectClassHandle(),
+        objectInstance.getObjectInstanceName(), objectInstance.getProducingFederateHandle()));
+    }
+  }
+
+  public void registerObjectInstance(
+    FederateProxy federateProxy, FederationExecutionObjectInstance objectInstance,
+    RegisterObjectInstance registerObjectInstance)
+  {
+    DiscoverObjectInstance discoverObjectInstance;
+
+    subscriptionLock.readLock().lock();
+    try
+    {
+      discoverObjectInstance = subscriptionManager.transform(federateProxy, objectInstance, registerObjectInstance);
+
+      if (discoverObjectInstance != null)
+      {
+        discoveredObjects.add(discoverObjectInstance.getObjectInstanceHandle());
+
+        federateChannel.write(discoverObjectInstance);
+      }
+    }
+    finally
+    {
+      subscriptionLock.readLock().unlock();
+    }
   }
 
   public void reflectAttributeValues(

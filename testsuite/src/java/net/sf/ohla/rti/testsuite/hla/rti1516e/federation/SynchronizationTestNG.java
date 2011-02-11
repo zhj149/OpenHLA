@@ -82,6 +82,10 @@ public class SynchronizationTestNG
     rtiAmbassadors.get(1).resignFederationExecution(ResignAction.NO_ACTION);
     rtiAmbassadors.get(2).resignFederationExecution(ResignAction.NO_ACTION);
 
+    // this is necessary to ensure the federates is actually resigned
+    //
+    LockSupport.parkUntil(System.currentTimeMillis() + 1000);
+
     rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
 
     rtiAmbassadors.get(0).disconnect();

@@ -832,22 +832,15 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      objectManager.registerObjectInstance(
+      FederationExecutionObjectInstance objectInstance = objectManager.registerObjectInstance(
         federateProxy, registerObjectInstance.getObjectInstanceHandle(), registerObjectInstance.getObjectClassHandle(),
         registerObjectInstance.getObjectInstanceName(), registerObjectInstance.getPublishedAttributeHandles());
-
-      ObjectClass objectClass = fdd.getObjectClasses().get(registerObjectInstance.getObjectClassHandle());
-      assert objectClass != null;
-
-      DiscoverObjectInstance discoverObjectInstance = new DiscoverObjectInstance(
-        registerObjectInstance.getObjectInstanceHandle(), registerObjectInstance.getObjectClassHandle(),
-        registerObjectInstance.getObjectInstanceName(), federateProxy.getFederateHandle());
 
       for (FederateProxy f : federates.values())
       {
         if (f != federateProxy)
         {
-          f.discoverObjectInstance(discoverObjectInstance);
+          f.registerObjectInstance(federateProxy, objectInstance, registerObjectInstance);
         }
       }
     }

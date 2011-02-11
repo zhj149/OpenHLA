@@ -48,7 +48,7 @@ import hla.rti1516e.exceptions.RTIinternalError;
 public class IEEE1516eFDDParser
 {
   public static List<FDD> parseFDDs(URL[] urls)
-    throws ErrorReadingFDD, CouldNotOpenFDD, RTIinternalError
+    throws InconsistentFDD, ErrorReadingFDD, CouldNotOpenFDD, RTIinternalError
   {
     List<FDD> additionalFDDs;
     if (urls == null || urls.length == 0)
@@ -66,24 +66,13 @@ public class IEEE1516eFDDParser
     return additionalFDDs;
   }
 
-  public static FDD parseFDD(URL[] urls)
+  public static FDD parseFDD(URL fom)
     throws InconsistentFDD, ErrorReadingFDD, CouldNotOpenFDD, RTIinternalError
   {
-    FDD fdd = parseFDD(urls[0]);
-    for (int i = 1; i < urls.length; i++)
-    {
-      fdd.merge(parseFDD(urls[i]));
-    }
-    return fdd;
-  }
-
-  public static FDD parseFDD(URL url)
-    throws ErrorReadingFDD, CouldNotOpenFDD, RTIinternalError
-  {
-    FDD fdd = new FDD(url);
+    FDD fdd = new FDD(fom.toString());
     try
     {
-      SAXParserFactory.newInstance().newSAXParser().parse(url.openStream(), new Handler(fdd));
+      SAXParserFactory.newInstance().newSAXParser().parse(fom.openStream(), new Handler(fdd));
     }
     catch (IOException ioe)
     {
@@ -91,8 +80,18 @@ public class IEEE1516eFDDParser
     }
     catch (SAXException saxe)
     {
-      throw saxe.getCause() instanceof ErrorReadingFDD ?
-        (ErrorReadingFDD) saxe.getCause() : new ErrorReadingFDD(saxe.getMessage(), saxe);
+      if (saxe.getCause() instanceof ErrorReadingFDD)
+      {
+        throw (ErrorReadingFDD) saxe.getCause();
+      }
+      else if (saxe.getCause() instanceof InconsistentFDD)
+      {
+        throw (InconsistentFDD) saxe.getCause();
+      }
+      else
+      {
+        throw new ErrorReadingFDD(saxe.getMessage(), saxe);
+      }
     }
     catch (ParserConfigurationException pce)
     {
@@ -101,13 +100,13 @@ public class IEEE1516eFDDParser
     return fdd;
   }
 
-  public static FDD parseMIM(URL url)
+  public static FDD parseMIM(URL mim)
     throws ErrorReadingMIM, CouldNotOpenMIM, DesignatorIsHLAstandardMIM, RTIinternalError
   {
-    FDD fdd = new FDD(url);
+    FDD fdd = new FDD(mim.toString());
     try
     {
-      SAXParserFactory.newInstance().newSAXParser().parse(url.openStream(), new Handler(fdd));
+      SAXParserFactory.newInstance().newSAXParser().parse(mim.openStream(), new Handler(fdd));
     }
     catch (IOException ioe)
     {
@@ -116,6 +115,10 @@ public class IEEE1516eFDDParser
     catch (SAXException saxe)
     {
       if (saxe.getCause() instanceof ErrorReadingFDD)
+      {
+        throw new ErrorReadingMIM(saxe.getCause().getMessage(), saxe.getCause());
+      }
+      else if (saxe.getCause() instanceof InconsistentFDD)
       {
         throw new ErrorReadingMIM(saxe.getCause().getMessage(), saxe.getCause());
       }
@@ -252,13 +255,23 @@ public class IEEE1516eFDDParser
         {
           objectClassName = getContent();
 
+          if (superObjectClass == null)
+          {
+            // only one object class has no root
+
+            if (!FDD.HLA_OBJECT_ROOT.equals(objectClassName))
+            {
+              throw new SAXException(new ErrorReadingFDD(objectClassName + " does not have parent ObjectClass"));
+            }
+          }
+
           try
           {
             objectClass = fdd.addObjectClass(objectClassName, superObjectClass);
           }
-          catch (ErrorReadingFDD erfdd)
+          catch (InconsistentFDD ifdd)
           {
-            throw new SAXException(erfdd);
+            throw new SAXException(ifdd);
           }
         }
         else if (qName.equals("objectClass"))
@@ -324,9 +337,9 @@ public class IEEE1516eFDDParser
             {
               fdd.addAttribute(objectClass, attributeName, dimensions, transportationTypeName, orderTypeName);
             }
-            catch (ErrorReadingFDD erfdd)
+            catch (InconsistentFDD ifdd)
             {
-              throw new SAXException(erfdd);
+              throw new SAXException(ifdd);
             }
 
             contentHandlerStack.pop();
@@ -408,9 +421,9 @@ public class IEEE1516eFDDParser
             interactionClass = fdd.addInteractionClass(
               interactionClassName, superInteractionClass, dimensions, transportationTypeName, orderTypeName);
           }
-          catch (ErrorReadingFDD erfdd)
+          catch (InconsistentFDD ifdd)
           {
-            throw new SAXException(erfdd);
+            throw new SAXException(ifdd);
           }
         }
         else if (qName.equals("interactionClass"))
@@ -448,9 +461,9 @@ public class IEEE1516eFDDParser
             {
               fdd.addParameter(interactionClass, name);
             }
-            catch (ErrorReadingFDD erfdd)
+            catch (InconsistentFDD ifdd)
             {
-              throw new SAXException(erfdd);
+              throw new SAXException(ifdd);
             }
 
             contentHandlerStack.pop();

@@ -16,49 +16,59 @@
 
 package net.sf.ohla.rti.fdd;
 
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
 
 import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSet;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSetFactory;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eInteractionClassHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandle;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
+import hla.rti1516e.DimensionHandle;
 import hla.rti1516e.DimensionHandleSet;
 import hla.rti1516e.InteractionClassHandle;
 import hla.rti1516e.OrderType;
 import hla.rti1516e.ParameterHandle;
 import hla.rti1516e.TransportationTypeHandle;
-import hla.rti1516e.exceptions.ErrorReadingFDD;
+import hla.rti1516e.exceptions.InconsistentFDD;
 import hla.rti1516e.exceptions.InteractionParameterNotDefined;
 import hla.rti1516e.exceptions.NameNotFound;
 
 public class InteractionClass
 {
+  private final FDD fdd;
+
   private final InteractionClassHandle interactionClassHandle;
   private final String interactionClassName;
 
   private final InteractionClass superInteractionClass;
+
+  private final LinkedHashMap<InteractionClassHandle, InteractionClass> subInteractionClasses =
+    new LinkedHashMap<InteractionClassHandle, InteractionClass>();
+  private final LinkedHashMap<String, InteractionClass> subInteractionClassesByName =
+    new LinkedHashMap<String, InteractionClass>();
 
   private final DimensionHandleSet dimensionHandles;
 
   private TransportationTypeHandle transportationTypeHandle;
   private OrderType orderType;
 
-  private final Set<Parameter> declaredParameters = new HashSet<Parameter>();
+  private final LinkedHashSet<Parameter> declaredParameters = new LinkedHashSet<Parameter>();
 
-  private final Map<ParameterHandle, Parameter> parameters = new HashMap<ParameterHandle, Parameter>();
-  private final Map<String, Parameter> parametersByName = new HashMap<String, Parameter>();
+  private final LinkedHashMap<ParameterHandle, Parameter> parameters = new LinkedHashMap<ParameterHandle, Parameter>();
+  private final LinkedHashMap<String, Parameter> parametersByName = new LinkedHashMap<String, Parameter>();
 
   public InteractionClass(
-    InteractionClassHandle interactionClassHandle, String interactionClassName, InteractionClass superInteractionClass,
-    DimensionHandleSet dimensionHandles, TransportationTypeHandle transportationTypeHandle, OrderType orderType)
+    FDD fdd, InteractionClassHandle interactionClassHandle, String interactionClassName,
+    InteractionClass superInteractionClass, DimensionHandleSet dimensionHandles,
+    TransportationTypeHandle transportationTypeHandle, OrderType orderType)
   {
+    this.fdd = fdd;
     this.interactionClassHandle = interactionClassHandle;
     this.interactionClassName = interactionClassName;
     this.superInteractionClass = superInteractionClass;
@@ -72,22 +82,29 @@ public class InteractionClass
       //
       parameters.putAll(superInteractionClass.parameters);
       parametersByName.putAll(superInteractionClass.parametersByName);
+
+      superInteractionClass.subInteractionClasses.put(interactionClassHandle, this);
+      superInteractionClass.subInteractionClassesByName.put(interactionClassName, this);
     }
   }
 
-  public InteractionClass(ChannelBuffer buffer, Map<InteractionClassHandle, InteractionClass> interactionClasses)
+  public InteractionClass(ChannelBuffer buffer, FDD fdd)
   {
+    this.fdd = fdd;
     interactionClassHandle = IEEE1516eInteractionClassHandle.decode(buffer);
     interactionClassName = Protocol.decodeString(buffer);
 
     if (Protocol.decodeBoolean(buffer))
     {
-      superInteractionClass = interactionClasses.get(IEEE1516eInteractionClassHandle.decode(buffer));
+      superInteractionClass = fdd.getInteractionClassSafely(IEEE1516eInteractionClassHandle.decode(buffer));
 
       // get a reference to all the super interaction classes parameters
       //
       parameters.putAll(superInteractionClass.parameters);
       parametersByName.putAll(superInteractionClass.parametersByName);
+
+      superInteractionClass.subInteractionClasses.put(interactionClassHandle, this);
+      superInteractionClass.subInteractionClassesByName.put(interactionClassName, this);
     }
     else
     {
@@ -163,12 +180,28 @@ public class InteractionClass
   }
 
   public Parameter addParameter(String parameterName)
-    throws ErrorReadingFDD
+    throws InconsistentFDD
   {
     if (parametersByName.containsKey(parameterName))
     {
-      throw new ErrorReadingFDD(parameterName + " already exists in " + interactionClassName);
+      throw new InconsistentFDD(parameterName + " already exists in " + interactionClassName);
     }
+
+    ParameterHandle parameterHandle = new IEEE1516eParameterHandle(parameters.size() + 1);
+
+    Parameter parameter = new Parameter(parameterHandle, parameterName);
+
+    declaredParameters.add(parameter);
+
+    parameters.put(parameterHandle, parameter);
+    parametersByName.put(parameterName, parameter);
+
+    return parameter;
+  }
+
+  public Parameter addParameterSafely(String parameterName)
+  {
+    assert !parametersByName.containsKey(parameterName);
 
     ParameterHandle parameterHandle = new IEEE1516eParameterHandle(parameters.size() + 1);
 
@@ -226,6 +259,30 @@ public class InteractionClass
     return parametersByName;
   }
 
+  public void merge(InteractionClass rhsInteractionClass, FDD fdd)
+    throws InconsistentFDD
+  {
+    if (rhsInteractionClass.declaredParameters.size() > 0 &&
+        !declaredParameters.equals(rhsInteractionClass.declaredParameters))
+    {
+      throw new InconsistentFDD("inconsistent InteractionClass: " + rhsInteractionClass.interactionClassName);
+    }
+
+    for (InteractionClass rhsSubInteractionClass : rhsInteractionClass.subInteractionClasses.values())
+    {
+      InteractionClass lhsSubInteractionClass =
+        subInteractionClassesByName.get(rhsSubInteractionClass.interactionClassName);
+      if (lhsSubInteractionClass == null)
+      {
+        rhsSubInteractionClass.copyTo(fdd, this);
+      }
+      else
+      {
+        lhsSubInteractionClass.merge(rhsSubInteractionClass, fdd);
+      }
+    }
+  }
+
   @Override
   public int hashCode()
   {
@@ -236,6 +293,39 @@ public class InteractionClass
   public String toString()
   {
     return interactionClassName;
+  }
+
+  private void copyTo(FDD fdd, InteractionClass superInteractionClass)
+  {
+    DimensionHandleSet dimensionHandles;
+    if (this.dimensionHandles == null || this.dimensionHandles.isEmpty())
+    {
+      dimensionHandles = null;
+    }
+    else
+    {
+      dimensionHandles = IEEE1516eDimensionHandleSetFactory.INSTANCE.create();
+      for (DimensionHandle oldDimensionHandle : this.dimensionHandles)
+      {
+        Dimension oldDimension = this.fdd.getDimensionSafely(oldDimensionHandle);
+        Dimension newDimension = fdd.getDimensionSafely(oldDimension.getDimensionName());
+
+        dimensionHandles.add(newDimension.getDimensionHandle());
+      }
+    }
+
+    InteractionClass interactionClass = fdd.addInteractionClassSafely(
+      interactionClassName, superInteractionClass, dimensionHandles, transportationTypeHandle, orderType);
+
+    for (Parameter parameter : declaredParameters)
+    {
+      parameter.copyTo(interactionClass);
+    }
+
+    for (InteractionClass subInteractionClass : subInteractionClasses.values())
+    {
+      subInteractionClass.copyTo(fdd, interactionClass);
+    }
   }
 
   public static void encode(ChannelBuffer buffer, InteractionClass interactionClass)
@@ -264,9 +354,8 @@ public class InteractionClass
     }
   }
 
-  public static InteractionClass decode(
-    ChannelBuffer buffer, Map<InteractionClassHandle, InteractionClass> interactionClasses)
+  public static InteractionClass decode(ChannelBuffer buffer, FDD fdd)
   {
-    return new InteractionClass(buffer, interactionClasses);
+    return new InteractionClass(buffer, fdd);
   }
 }
