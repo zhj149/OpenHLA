@@ -18,6 +18,8 @@ package net.sf.ohla.rti.messages;
 
 public enum MessageType
 {
+  FDD_UPDATED,
+
   CREATE_FEDERATION_EXECUTION,
   CREATE_FEDERATION_EXECUTION_RESPONSE,
 

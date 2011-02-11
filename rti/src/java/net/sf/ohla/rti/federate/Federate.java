@@ -234,7 +234,7 @@ public class Federate
 
   private final String fullFederateName;
 
-  private final FDD fdd;
+  private volatile FDD fdd;
 
   private FederateHandle federateHandle;
 
@@ -432,6 +432,11 @@ public class Federate
   public boolean isAsynchronousDeliveryEnabled()
   {
     return asynchronousDeliveryEnabled;
+  }
+
+  public void fddUpdated(FDD fdd)
+  {
+    this.fdd = fdd;
   }
 
   public void processFutureTasks(LogicalTime maxFutureTaskTimestamp)
@@ -3288,6 +3293,7 @@ public class Federate
       return time;
     }
 
+    @SuppressWarnings("unchecked")
     public int compareTo(TimestampedFutureTask rhs)
     {
       return time.compareTo(rhs.time);

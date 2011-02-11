@@ -50,6 +50,7 @@ import net.sf.ohla.rti.messages.DisableTimeConstrained;
 import net.sf.ohla.rti.messages.DisableTimeRegulation;
 import net.sf.ohla.rti.messages.EnableTimeConstrained;
 import net.sf.ohla.rti.messages.EnableTimeRegulation;
+import net.sf.ohla.rti.messages.FDDUpdated;
 import net.sf.ohla.rti.messages.FederateRestoreComplete;
 import net.sf.ohla.rti.messages.FederateRestoreNotComplete;
 import net.sf.ohla.rti.messages.FederateSaveBegun;
@@ -110,7 +111,6 @@ import net.sf.ohla.rti.messages.UpdateAttributeValues;
 import net.sf.ohla.rti.messages.UpdateLITS;
 import net.sf.ohla.rti.messages.callbacks.AnnounceSynchronizationPoint;
 import net.sf.ohla.rti.messages.callbacks.AttributeOwnershipAcquisitionNotification;
-import net.sf.ohla.rti.messages.callbacks.DiscoverObjectInstance;
 import net.sf.ohla.rti.messages.callbacks.FederationNotSaved;
 import net.sf.ohla.rti.messages.callbacks.FederationRestoreStatusResponse;
 import net.sf.ohla.rti.messages.callbacks.FederationSaveStatusResponse;
@@ -144,13 +144,15 @@ import hla.rti1516e.OrderType;
 import hla.rti1516e.RestoreStatus;
 import hla.rti1516e.SaveStatus;
 import hla.rti1516e.SynchronizationPointFailureReason;
+import hla.rti1516e.exceptions.InconsistentFDD;
 
 public class FederationExecution
 {
   private static final Logger log = LoggerFactory.getLogger(FederationExecution.class);
 
   private final String name;
-  private final FDD fdd;
+
+  private volatile FDD fdd;
 
   private final ReadWriteLock federationExecutionStateLock = new ReentrantReadWriteLock(true);
   private FederationExecutionState federationExecutionState = FederationExecutionState.ACTIVE;
@@ -295,19 +297,43 @@ public class FederationExecution
       }
       else
       {
-        // get the next federate handle
-        //
-        FederateHandle federateHandle = nextFederateHandle();
+        try
+        {
+          if (joinFederationExecution.getAdditionalFDDs().size() > 0)
+          {
+            fdd = fdd.merge(joinFederationExecution.getAdditionalFDDs());
 
-        FederateProxy federateProxy = new FederateProxy(
-          this, federateHandle, federateName, federateType, context.getChannel(), timeManager.getGALT());
+            // notify existing federates that the FDD has been updated
+            //
+            for (FederateProxy federateProxy : federates.values())
+            {
+              federateProxy.getFederateChannel().write(new FDDUpdated(fdd));
+            }
+          }
 
-        federates.put(federateHandle, federateProxy);
-        federatesByName.put(federateName, federateProxy);
+          // get the next federate handle
+          //
+          FederateHandle federateHandle = nextFederateHandle();
 
-        context.getChannel().write(new JoinFederationExecutionResponse(
-          joinFederationExecution.getId(), federateHandle, fdd, timeManager.getLogicalTimeFactory().getName()));
-        context.getChannel().write(new GALTAdvanced(timeManager.getGALT()));
+          FederateProxy federateProxy = new FederateProxy(
+            this, federateHandle, federateName, federateType, context.getChannel(), timeManager.getGALT());
+
+          federates.put(federateHandle, federateProxy);
+          federatesByName.put(federateName, federateProxy);
+
+          context.getChannel().write(new JoinFederationExecutionResponse(
+            joinFederationExecution.getId(), federateHandle, fdd, timeManager.getLogicalTimeFactory().getName()));
+          context.getChannel().write(new GALTAdvanced(timeManager.getGALT()));
+        }
+        catch (InconsistentFDD iFDD)
+        {
+          log.debug(marker, "join federation execution failed, inconsistent FDD", iFDD);
+
+          // TODO: response needs a message about the failure
+
+          context.getChannel().write(new JoinFederationExecutionResponse(
+            joinFederationExecution.getId(), JoinFederationExecutionResponse.Response.INCONSISTENT_FDD));
+        }
       }
     }
     finally

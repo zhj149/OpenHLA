@@ -217,6 +217,8 @@ public class FDD
   {
     FDD mergedFDD = clone();
 
+    mergedFDD.sources.addAll(fdd.sources);
+
     // merge dimensions first, so they are available when merging attributes and interaction classes
 
     for (Dimension rhsDimension : fdd.dimensions.values())
@@ -255,7 +257,7 @@ public class FDD
   public FDD merge(List<FDD> fdds)
     throws InconsistentFDD
   {
-    FDD mergedFDD = clone();
+    FDD mergedFDD = this;
 
     for (FDD fdd : fdds)
     {
