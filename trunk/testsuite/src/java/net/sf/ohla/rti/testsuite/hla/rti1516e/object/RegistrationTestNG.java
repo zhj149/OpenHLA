@@ -170,7 +170,7 @@ public class RegistrationTestNG
     federateAmbassadors.get(2).checkObjectInstanceName(objectInstanceHandle, TEST_OBJECT);
   }
 
-  protected static class TestFederateAmbassador
+  private static class TestFederateAmbassador
     extends NullFederateAmbassador
   {
     private final RTIambassador rtiAmbassador;
