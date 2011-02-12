@@ -1697,6 +1697,11 @@ public class IEEE1516eRTIambassador
     throws ObjectClassNotPublished, ObjectClassNotDefined, SaveInProgress, RestoreInProgress,
            FederateNotExecutionMember, NotConnected, RTIinternalError
   {
+    if (objectClassHandle == null)
+    {
+      throw new ObjectClassNotDefined("objectClassHandle cannot be null");
+    }
+
     connectLock.readLock().lock();
     try
     {
@@ -1720,10 +1725,19 @@ public class IEEE1516eRTIambassador
     }
   }
 
-  public ObjectInstanceHandle registerObjectInstance(ObjectClassHandle objectClassHandle, String name)
+  public ObjectInstanceHandle registerObjectInstance(ObjectClassHandle objectClassHandle, String objectInstanceName)
     throws ObjectInstanceNameInUse, ObjectInstanceNameNotReserved, ObjectClassNotPublished, ObjectClassNotDefined,
            SaveInProgress, RestoreInProgress, FederateNotExecutionMember, NotConnected, RTIinternalError
   {
+    if (objectClassHandle == null)
+    {
+      throw new ObjectClassNotDefined("objectClassHandle cannot be null");
+    }
+    else if (objectInstanceName == null)
+    {
+      throw new IllegalArgumentException("objectInstanceName cannot be null");
+    }
+
     connectLock.readLock().lock();
     try
     {
@@ -1734,7 +1748,7 @@ public class IEEE1516eRTIambassador
       {
         checkIfFederateNotExecutionMember();
 
-        return federate.registerObjectInstance(objectClassHandle, name);
+        return federate.registerObjectInstance(objectClassHandle, objectInstanceName);
       }
       finally
       {
