@@ -61,9 +61,13 @@ public class RegistrationTestNG
   private AttributeHandle attributeHandle6;
   private AttributeHandleSet testObjectAttributeHandles2;
 
+  private ObjectInstanceHandle objectInstanceHandle1;
+  private ObjectInstanceHandle objectInstanceHandle2;
+  private ObjectInstanceHandle objectInstanceHandle3;
+
   public RegistrationTestNG()
   {
-    super(3);
+    super(5);
   }
 
   @BeforeClass
@@ -73,16 +77,22 @@ public class RegistrationTestNG
     federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(0)));
     federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(1)));
     federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(2)));
+    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(3)));
+    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(4)));
 
     rtiAmbassadors.get(0).connect(federateAmbassadors.get(0), CallbackModel.HLA_EVOKED);
     rtiAmbassadors.get(1).connect(federateAmbassadors.get(1), CallbackModel.HLA_EVOKED);
     rtiAmbassadors.get(2).connect(federateAmbassadors.get(2), CallbackModel.HLA_EVOKED);
+    rtiAmbassadors.get(3).connect(federateAmbassadors.get(3), CallbackModel.HLA_EVOKED);
+    rtiAmbassadors.get(4).connect(federateAmbassadors.get(4), CallbackModel.HLA_EVOKED);
 
     rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
 
     rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME);
     rtiAmbassadors.get(1).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME);
     rtiAmbassadors.get(2).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME);
+    rtiAmbassadors.get(3).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME);
+    rtiAmbassadors.get(4).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME);
 
     testObjectClassHandle = rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT);
     attributeHandle1 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle, ATTRIBUTE1);
@@ -121,6 +131,8 @@ public class RegistrationTestNG
     rtiAmbassadors.get(0).resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
     rtiAmbassadors.get(1).resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
     rtiAmbassadors.get(2).resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
+    rtiAmbassadors.get(3).resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
+    rtiAmbassadors.get(4).resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
 
     // this is necessary to ensure the federates is actually resigned
     //
@@ -131,29 +143,52 @@ public class RegistrationTestNG
     rtiAmbassadors.get(0).disconnect();
     rtiAmbassadors.get(1).disconnect();
     rtiAmbassadors.get(2).disconnect();
+    rtiAmbassadors.get(3).disconnect();
+    rtiAmbassadors.get(4).disconnect();
   }
 
   @Test
   public void testRegisterObjectInstance()
     throws Exception
   {
-    ObjectInstanceHandle objectInstanceHandle = rtiAmbassadors.get(0).registerObjectInstance(testObjectClassHandle);
+    objectInstanceHandle1 = rtiAmbassadors.get(0).registerObjectInstance(testObjectClassHandle);
 
-    federateAmbassadors.get(2).checkObjectInstanceHandle(objectInstanceHandle);
-    federateAmbassadors.get(2).checkObjectClassHandle(objectInstanceHandle, testObjectClassHandle);
+    federateAmbassadors.get(2).checkObjectInstanceHandle(objectInstanceHandle1);
+    federateAmbassadors.get(2).checkObjectClassHandle(objectInstanceHandle1, testObjectClassHandle);
+
+    assert testObjectClassHandle.equals(rtiAmbassadors.get(0).getKnownObjectClassHandle(objectInstanceHandle1));
+
+    String objectInstanceName = rtiAmbassadors.get(0).getObjectInstanceName(objectInstanceHandle1);
+    assert objectInstanceHandle1.equals(rtiAmbassadors.get(0).getObjectInstanceHandle(objectInstanceName));
+
+    assert objectInstanceName.equals(rtiAmbassadors.get(2).getObjectInstanceName(objectInstanceHandle1));
+    assert objectInstanceHandle1.equals(rtiAmbassadors.get(2).getObjectInstanceHandle(objectInstanceName));
   }
 
   @Test
   public void testRegisterObjectInstanceChild()
     throws Exception
   {
-    ObjectInstanceHandle objectInstanceHandle = rtiAmbassadors.get(1).registerObjectInstance(testObjectClassHandle2);
+    objectInstanceHandle2 = rtiAmbassadors.get(1).registerObjectInstance(testObjectClassHandle2);
 
-    federateAmbassadors.get(0).checkObjectInstanceHandle(objectInstanceHandle);
-    federateAmbassadors.get(2).checkObjectInstanceHandle(objectInstanceHandle);
+    federateAmbassadors.get(0).checkObjectInstanceHandle(objectInstanceHandle2);
+    federateAmbassadors.get(0).checkObjectClassHandle(objectInstanceHandle2, testObjectClassHandle);
 
-    federateAmbassadors.get(0).checkObjectClassHandle(objectInstanceHandle, testObjectClassHandle);
-    federateAmbassadors.get(2).checkObjectClassHandle(objectInstanceHandle, testObjectClassHandle2);
+    federateAmbassadors.get(2).checkObjectInstanceHandle(objectInstanceHandle2);
+    federateAmbassadors.get(2).checkObjectClassHandle(objectInstanceHandle2, testObjectClassHandle2);
+
+    assert testObjectClassHandle.equals(rtiAmbassadors.get(0).getKnownObjectClassHandle(objectInstanceHandle2));
+    assert testObjectClassHandle2.equals(rtiAmbassadors.get(1).getKnownObjectClassHandle(objectInstanceHandle2));
+    assert testObjectClassHandle2.equals(rtiAmbassadors.get(2).getKnownObjectClassHandle(objectInstanceHandle2));
+
+    String objectInstanceName = rtiAmbassadors.get(0).getObjectInstanceName(objectInstanceHandle2);
+    assert objectInstanceHandle2.equals(rtiAmbassadors.get(0).getObjectInstanceHandle(objectInstanceName));
+
+    assert objectInstanceName.equals(rtiAmbassadors.get(1).getObjectInstanceName(objectInstanceHandle2));
+    assert objectInstanceHandle2.equals(rtiAmbassadors.get(1).getObjectInstanceHandle(objectInstanceName));
+
+    assert objectInstanceName.equals(rtiAmbassadors.get(2).getObjectInstanceName(objectInstanceHandle2));
+    assert objectInstanceHandle2.equals(rtiAmbassadors.get(2).getObjectInstanceHandle(objectInstanceName));
   }
 
   @Test
@@ -163,11 +198,41 @@ public class RegistrationTestNG
     rtiAmbassadors.get(0).reserveObjectInstanceName(TEST_OBJECT);
     federateAmbassadors.get(0).checkObjectInstanceNameReserved(TEST_OBJECT);
 
-    ObjectInstanceHandle objectInstanceHandle =
-      rtiAmbassadors.get(0).registerObjectInstance(testObjectClassHandle, TEST_OBJECT);
+    objectInstanceHandle3 = rtiAmbassadors.get(0).registerObjectInstance(testObjectClassHandle, TEST_OBJECT);
 
-    federateAmbassadors.get(2).checkObjectInstanceHandle(objectInstanceHandle);
-    federateAmbassadors.get(2).checkObjectInstanceName(objectInstanceHandle, TEST_OBJECT);
+    federateAmbassadors.get(2).checkObjectInstanceHandle(objectInstanceHandle3);
+    federateAmbassadors.get(2).checkObjectInstanceName(objectInstanceHandle3, TEST_OBJECT);
+
+    assert testObjectClassHandle.equals(rtiAmbassadors.get(0).getKnownObjectClassHandle(objectInstanceHandle3));
+    assert testObjectClassHandle.equals(rtiAmbassadors.get(2).getKnownObjectClassHandle(objectInstanceHandle3));
+
+    assert TEST_OBJECT.equals(rtiAmbassadors.get(0).getObjectInstanceName(objectInstanceHandle3));
+    assert objectInstanceHandle3.equals(rtiAmbassadors.get(0).getObjectInstanceHandle(TEST_OBJECT));
+
+    assert TEST_OBJECT.equals(rtiAmbassadors.get(2).getObjectInstanceName(objectInstanceHandle3));
+    assert objectInstanceHandle3.equals(rtiAmbassadors.get(2).getObjectInstanceHandle(TEST_OBJECT));
+  }
+
+  @Test(dependsOnMethods = {"testRegisterObjectInstance", "testRegisterObjectInstanceChild", "testRegisterObjectInstanceByName"})
+  public void testLateSubscribe()
+    throws Exception
+  {
+    rtiAmbassadors.get(3).subscribeObjectClassAttributes(testObjectClassHandle, testObjectAttributeHandles);
+    rtiAmbassadors.get(4).subscribeObjectClassAttributes(testObjectClassHandle2, testObjectAttributeHandles2);
+
+    federateAmbassadors.get(3).checkObjectInstanceHandle(objectInstanceHandle1);
+    federateAmbassadors.get(3).checkObjectInstanceHandle(objectInstanceHandle2);
+    federateAmbassadors.get(3).checkObjectInstanceHandle(objectInstanceHandle3);
+
+    federateAmbassadors.get(4).checkObjectInstanceHandle(objectInstanceHandle2);
+
+    federateAmbassadors.get(3).checkObjectClassHandle(objectInstanceHandle1, testObjectClassHandle);
+    federateAmbassadors.get(3).checkObjectClassHandle(objectInstanceHandle2, testObjectClassHandle);
+    federateAmbassadors.get(3).checkObjectClassHandle(objectInstanceHandle3, testObjectClassHandle);
+
+    federateAmbassadors.get(4).checkObjectClassHandle(objectInstanceHandle2, testObjectClassHandle2);
+
+    federateAmbassadors.get(3).checkObjectInstanceName(objectInstanceHandle3, TEST_OBJECT);
   }
 
   private static class TestFederateAmbassador
@@ -208,14 +273,12 @@ public class RegistrationTestNG
     public void checkObjectClassHandle(ObjectInstanceHandle objectInstanceHandle, ObjectClassHandle objectClassHandle)
       throws Exception
     {
-      assert objectInstances.containsKey(objectInstanceHandle);
       assert objectInstances.get(objectInstanceHandle).getObjectClassHandle().equals(objectClassHandle);
     }
 
     public void checkObjectInstanceName(ObjectInstanceHandle objectInstanceHandle, String objectInstanceName)
       throws Exception
     {
-      assert objectInstances.containsKey(objectInstanceHandle);
       assert objectInstances.get(objectInstanceHandle).getObjectInstanceName().equals(objectInstanceName);
     }
 
