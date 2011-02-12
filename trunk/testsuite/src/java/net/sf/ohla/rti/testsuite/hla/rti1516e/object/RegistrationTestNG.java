@@ -40,6 +40,9 @@ import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.RTIambassador;
 import hla.rti1516e.ResignAction;
 import hla.rti1516e.exceptions.FederateInternalError;
+import hla.rti1516e.exceptions.ObjectClassNotDefined;
+import hla.rti1516e.exceptions.ObjectClassNotPublished;
+import hla.rti1516e.exceptions.ObjectInstanceNameInUse;
 
 @Test
 public class RegistrationTestNG
@@ -213,6 +216,13 @@ public class RegistrationTestNG
     assert objectInstanceHandle3.equals(rtiAmbassadors.get(2).getObjectInstanceHandle(TEST_OBJECT));
   }
 
+  @Test(dependsOnMethods = {"testRegisterObjectInstanceByName"}, expectedExceptions = {ObjectInstanceNameInUse.class})
+  public void testRegisterObjectInstanceByNameAgain()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).registerObjectInstance(testObjectClassHandle, TEST_OBJECT);
+  }
+
   @Test(dependsOnMethods = {"testRegisterObjectInstance", "testRegisterObjectInstanceChild", "testRegisterObjectInstanceByName"})
   public void testLateSubscribe()
     throws Exception
@@ -233,6 +243,41 @@ public class RegistrationTestNG
     federateAmbassadors.get(4).checkObjectClassHandle(objectInstanceHandle2, testObjectClassHandle2);
 
     federateAmbassadors.get(3).checkObjectInstanceName(objectInstanceHandle3, TEST_OBJECT);
+  }
+
+  @Test(expectedExceptions = {ObjectClassNotDefined.class})
+  public void testRegisterObjectInstanceWithNullObjectClassHandle()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).registerObjectInstance(null);
+  }
+
+  @Test(expectedExceptions = {ObjectClassNotDefined.class})
+  public void testRegisterObjectInstanceByNameWithNullObjectClassHandle()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).registerObjectInstance(null, TEST_OBJECT);
+  }
+
+  @Test(expectedExceptions = {IllegalArgumentException.class})
+  public void testRegisterObjectInstanceByNameWithNullObjectInstanceName()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).registerObjectInstance(testObjectClassHandle, null);
+  }
+
+  @Test(expectedExceptions = {ObjectClassNotPublished.class})
+  public void testRegisterObjectInstanceOfUnpublishedObjectClass()
+    throws Exception
+  {
+    rtiAmbassadors.get(2).registerObjectInstance(testObjectClassHandle);
+  }
+
+  @Test(expectedExceptions = {ObjectClassNotPublished.class})
+  public void testRegisterObjectInstanceByNameOfUnpublishedObjectClass()
+    throws Exception
+  {
+    rtiAmbassadors.get(2).registerObjectInstance(testObjectClassHandle, TEST_OBJECT);
   }
 
   private static class TestFederateAmbassador
