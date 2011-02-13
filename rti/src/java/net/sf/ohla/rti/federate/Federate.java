@@ -520,9 +520,8 @@ public class Federate
 
       if (receivedOrderType == OrderType.RECEIVE)
       {
-        // receive order callbacks need to be held until released if we
-        // are constrained and in the time granted state if asynchronous
-        // delivery is disabled
+        // receive order callbacks need to be held until released if we are constrained and in the time granted state
+        // if asynchronous delivery is disabled
         //
         boolean hold = timeManager.isTimeConstrainedAndTimeGranted() && !isAsynchronousDeliveryEnabled();
 
@@ -1346,8 +1345,7 @@ public class Federate
         timeManager.updateAttributeValues(updateTime);
 
         OrderType sentOrderType =
-          timeManager.isTimeRegulating() && updateTime != null ?
-            OrderType.TIMESTAMP : OrderType.RECEIVE;
+          timeManager.isTimeRegulating() && updateTime != null ? OrderType.TIMESTAMP : OrderType.RECEIVE;
 
         if (sentOrderType == OrderType.TIMESTAMP)
         {

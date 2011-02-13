@@ -385,11 +385,11 @@ public class IEEE1516eRTIambassador
     {
       if (rtiChannel == null)
       {
-        log.debug("not connected");
+        log.warn("not connected");
       }
       else if (federate == null)
       {
-        log.info("disconnecting from the RTI");
+        log.info("disconnecting from the RTI: {}", rtiChannel.getLocalAddress());
 
         rtiChannel.close();
 
@@ -1761,61 +1761,91 @@ public class IEEE1516eRTIambassador
     }
   }
 
-  public void updateAttributeValues(ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues,
-                                    byte[] tag)
+  public void updateAttributeValues(
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues, byte[] tag)
     throws AttributeNotOwned, AttributeNotDefined, ObjectInstanceNotKnown, SaveInProgress, RestoreInProgress,
            FederateNotExecutionMember, NotConnected, RTIinternalError
   {
-    connectLock.readLock().lock();
-    try
+    if (objectInstanceHandle == null)
     {
-      checkIfNotConnected();
-
-      joinResignLock.readLock().lock();
+      throw new ObjectInstanceNotKnown("objectInstanceHandle cannot be null");
+    }
+    else if (attributeValues == null || attributeValues.isEmpty())
+    {
+      log.warn("attempting to update object instance with null or empty attribute values: {}", objectInstanceHandle);
+    }
+    else
+    {
+      connectLock.readLock().lock();
       try
       {
-        checkIfFederateNotExecutionMember();
+        checkIfNotConnected();
 
-        federate.updateAttributeValues(objectInstanceHandle, attributeValues, tag);
+        joinResignLock.readLock().lock();
+        try
+        {
+          checkIfFederateNotExecutionMember();
+
+          federate.updateAttributeValues(objectInstanceHandle, attributeValues, tag);
+        }
+        finally
+        {
+          joinResignLock.readLock().unlock();
+        }
       }
       finally
       {
-        joinResignLock.readLock().unlock();
+        connectLock.readLock().unlock();
       }
-    }
-    finally
-    {
-      connectLock.readLock().unlock();
     }
   }
 
-  public MessageRetractionReturn updateAttributeValues(ObjectInstanceHandle objectInstanceHandle,
-                                                       AttributeHandleValueMap attributeValues, byte[] tag,
-                                                       LogicalTime time)
+  public MessageRetractionReturn updateAttributeValues(
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues, byte[] tag, LogicalTime time)
     throws InvalidLogicalTime, AttributeNotOwned, AttributeNotDefined, ObjectInstanceNotKnown, SaveInProgress,
            RestoreInProgress, FederateNotExecutionMember, NotConnected, RTIinternalError
   {
-    connectLock.readLock().lock();
-    try
-    {
-      checkIfNotConnected();
+    MessageRetractionReturn messageRetractionReturn;
 
-      joinResignLock.readLock().lock();
+    if (objectInstanceHandle == null)
+    {
+      throw new ObjectInstanceNotKnown("objectInstanceHandle cannot be null");
+    }
+    else if (time == null)
+    {
+      throw new InvalidLogicalTime("time cannot be null");
+    }
+    else if (attributeValues == null || attributeValues.isEmpty())
+    {
+      log.warn("attempting to update object instance with null or empty attribute values: {}", objectInstanceHandle);
+
+      messageRetractionReturn = new MessageRetractionReturn(false, null);
+    }
+    else
+    {
+      connectLock.readLock().lock();
       try
       {
-        checkIfFederateNotExecutionMember();
+        checkIfNotConnected();
 
-        return federate.updateAttributeValues(objectInstanceHandle, attributeValues, tag, time);
+        joinResignLock.readLock().lock();
+        try
+        {
+          checkIfFederateNotExecutionMember();
+
+          messageRetractionReturn = federate.updateAttributeValues(objectInstanceHandle, attributeValues, tag, time);
+        }
+        finally
+        {
+          joinResignLock.readLock().unlock();
+        }
       }
       finally
       {
-        joinResignLock.readLock().unlock();
+        connectLock.readLock().unlock();
       }
     }
-    finally
-    {
-      connectLock.readLock().unlock();
-    }
+    return messageRetractionReturn;
   }
 
   public void sendInteraction(
@@ -1823,26 +1853,37 @@ public class IEEE1516eRTIambassador
     throws InteractionClassNotPublished, InteractionParameterNotDefined, InteractionClassNotDefined, SaveInProgress,
            RestoreInProgress, FederateNotExecutionMember, NotConnected, RTIinternalError
   {
-    connectLock.readLock().lock();
-    try
+    if (interactionClassHandle == null)
     {
-      checkIfNotConnected();
-
-      joinResignLock.readLock().lock();
+      throw new InteractionClassNotDefined("interactionClassHandle cannot be null");
+    }
+    else if (parameterValues == null || parameterValues.isEmpty())
+    {
+      log.warn("attempting to send interaction with null or empty parameter values: {}", interactionClassHandle);
+    }
+    else
+    {
+      connectLock.readLock().lock();
       try
       {
-        checkIfFederateNotExecutionMember();
+        checkIfNotConnected();
 
-        federate.sendInteraction(interactionClassHandle, parameterValues, tag);
+        joinResignLock.readLock().lock();
+        try
+        {
+          checkIfFederateNotExecutionMember();
+
+          federate.sendInteraction(interactionClassHandle, parameterValues, tag);
+        }
+        finally
+        {
+          joinResignLock.readLock().unlock();
+        }
       }
       finally
       {
-        joinResignLock.readLock().unlock();
+        connectLock.readLock().unlock();
       }
-    }
-    finally
-    {
-      connectLock.readLock().unlock();
     }
   }
 
@@ -1852,27 +1893,48 @@ public class IEEE1516eRTIambassador
     throws InvalidLogicalTime, InteractionClassNotPublished, InteractionParameterNotDefined, InteractionClassNotDefined,
            SaveInProgress, RestoreInProgress, FederateNotExecutionMember, NotConnected, RTIinternalError
   {
-    connectLock.readLock().lock();
-    try
-    {
-      checkIfNotConnected();
+    MessageRetractionReturn messageRetractionReturn;
 
-      joinResignLock.readLock().lock();
+    if (interactionClassHandle == null)
+    {
+      throw new InteractionClassNotDefined("interactionClassHandle cannot be null");
+    }
+    else if (time == null)
+    {
+      throw new InvalidLogicalTime("time cannot be null");
+    }
+    else if (parameterValues == null || parameterValues.isEmpty())
+    {
+      log.warn("attempting to send interaction with null or empty parameter values: {}", interactionClassHandle);
+
+      messageRetractionReturn = new MessageRetractionReturn(false, null);
+    }
+    else
+    {
+      connectLock.readLock().lock();
       try
       {
-        checkIfFederateNotExecutionMember();
+        checkIfNotConnected();
 
-        return federate.sendInteraction(interactionClassHandle, parameterValues, tag, time);
+        joinResignLock.readLock().lock();
+        try
+        {
+          checkIfFederateNotExecutionMember();
+
+          messageRetractionReturn = federate.sendInteraction(interactionClassHandle, parameterValues, tag, time);
+        }
+        finally
+        {
+          joinResignLock.readLock().unlock();
+        }
       }
       finally
       {
-        joinResignLock.readLock().unlock();
+        connectLock.readLock().unlock();
       }
     }
-    finally
-    {
-      connectLock.readLock().unlock();
-    }
+
+    return messageRetractionReturn;
   }
 
   public void deleteObjectInstance(ObjectInstanceHandle objectInstanceHandle, byte[] tag)

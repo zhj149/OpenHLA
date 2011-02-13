@@ -130,7 +130,6 @@ public class FederateProxy
   private LogicalTime lots;
 
   private boolean conveyRegionDesignatorSets;
-  private boolean conveyProducingFederate;
 
   private final Marker marker;
 
@@ -206,11 +205,6 @@ public class FederateProxy
   public boolean isConveyRegionDesignatorSets()
   {
     return conveyRegionDesignatorSets;
-  }
-
-  public boolean isConveyProducingFederate()
-  {
-    return conveyProducingFederate;
   }
 
   public void modifyLookahead(LogicalTimeInterval lookahead)

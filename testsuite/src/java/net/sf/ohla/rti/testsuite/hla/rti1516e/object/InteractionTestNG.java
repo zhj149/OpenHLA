@@ -17,11 +17,8 @@
 package net.sf.ohla.rti.testsuite.hla.rti1516e.object;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.locks.LockSupport;
 
 import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
@@ -31,10 +28,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import hla.rti1516e.CallbackModel;
-import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.InteractionClassHandle;
-import hla.rti1516e.LogicalTime;
-import hla.rti1516e.MessageRetractionHandle;
 import hla.rti1516e.NullFederateAmbassador;
 import hla.rti1516e.OrderType;
 import hla.rti1516e.ParameterHandle;
@@ -43,6 +37,9 @@ import hla.rti1516e.RTIambassador;
 import hla.rti1516e.ResignAction;
 import hla.rti1516e.TransportationTypeHandle;
 import hla.rti1516e.exceptions.FederateInternalError;
+import hla.rti1516e.exceptions.InteractionClassNotDefined;
+import hla.rti1516e.exceptions.InteractionClassNotPublished;
+import hla.rti1516e.exceptions.InteractionParameterNotDefined;
 
 @Test
 public class InteractionTestNG
@@ -53,17 +50,10 @@ public class InteractionTestNG
   private final List<TestFederateAmbassador> federateAmbassadors = new ArrayList<TestFederateAmbassador>(3);
 
   private InteractionClassHandle testInteractionClassHandle;
-  private ParameterHandle parameterHandle1;
-  private ParameterHandle parameterHandle2;
-  private ParameterHandle parameterHandle3;
-
   private InteractionClassHandle testInteractionClassHandle2;
-  private ParameterHandle parameterHandle4;
-  private ParameterHandle parameterHandle5;
-  private ParameterHandle parameterHandle6;
 
-  private ParameterHandleValueMap parameterValues;
-  private ParameterHandleValueMap parameterValues2;
+  private ParameterHandleValueMap testParameterValues;
+  private ParameterHandleValueMap testParameterValues2;
 
   public InteractionTestNG()
   {
@@ -89,34 +79,32 @@ public class InteractionTestNG
     rtiAmbassadors.get(2).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME);
 
     testInteractionClassHandle = rtiAmbassadors.get(0).getInteractionClassHandle(TEST_INTERACTION);
-    parameterHandle1 = rtiAmbassadors.get(0).getParameterHandle(testInteractionClassHandle, PARAMETER1);
-    parameterHandle2 = rtiAmbassadors.get(0).getParameterHandle(testInteractionClassHandle, PARAMETER2);
-    parameterHandle3 = rtiAmbassadors.get(0).getParameterHandle(testInteractionClassHandle, PARAMETER3);
+    ParameterHandle parameterHandle1 = rtiAmbassadors.get(0).getParameterHandle(testInteractionClassHandle, PARAMETER1);
+    ParameterHandle parameterHandle2 = rtiAmbassadors.get(0).getParameterHandle(testInteractionClassHandle, PARAMETER2);
+    ParameterHandle parameterHandle3 = rtiAmbassadors.get(0).getParameterHandle(testInteractionClassHandle, PARAMETER3);
 
     testInteractionClassHandle2 = rtiAmbassadors.get(0).getInteractionClassHandle(TEST_INTERACTION2);
-    parameterHandle4 = rtiAmbassadors.get(0).getParameterHandle(testInteractionClassHandle2, PARAMETER4);
-    parameterHandle5 = rtiAmbassadors.get(0).getParameterHandle(testInteractionClassHandle2, PARAMETER5);
-    parameterHandle6 = rtiAmbassadors.get(0).getParameterHandle(testInteractionClassHandle2, PARAMETER6);
+    ParameterHandle parameterHandle4 = rtiAmbassadors.get(0).getParameterHandle(testInteractionClassHandle2, PARAMETER4);
+    ParameterHandle parameterHandle5 = rtiAmbassadors.get(0).getParameterHandle(testInteractionClassHandle2, PARAMETER5);
+    ParameterHandle parameterHandle6 = rtiAmbassadors.get(0).getParameterHandle(testInteractionClassHandle2, PARAMETER6);
 
-    parameterValues = rtiAmbassadors.get(0).getParameterHandleValueMapFactory().create(3);
-    parameterValues.put(parameterHandle1, PARAMETER1_VALUE.getBytes());
-    parameterValues.put(parameterHandle2, PARAMETER2_VALUE.getBytes());
-    parameterValues.put(parameterHandle3, PARAMETER3_VALUE.getBytes());
+    testParameterValues = rtiAmbassadors.get(0).getParameterHandleValueMapFactory().create(3);
+    testParameterValues.put(parameterHandle1, PARAMETER1_VALUE.getBytes());
+    testParameterValues.put(parameterHandle2, PARAMETER2_VALUE.getBytes());
+    testParameterValues.put(parameterHandle3, PARAMETER3_VALUE.getBytes());
 
-    parameterValues2 = rtiAmbassadors.get(0).getParameterHandleValueMapFactory().create(6);
-    parameterValues2.put(parameterHandle1, PARAMETER1_VALUE.getBytes());
-    parameterValues2.put(parameterHandle2, PARAMETER2_VALUE.getBytes());
-    parameterValues2.put(parameterHandle3, PARAMETER3_VALUE.getBytes());
-    parameterValues2.put(parameterHandle4, PARAMETER4_VALUE.getBytes());
-    parameterValues2.put(parameterHandle5, PARAMETER5_VALUE.getBytes());
-    parameterValues2.put(parameterHandle6, PARAMETER6_VALUE.getBytes());
+    testParameterValues2 = rtiAmbassadors.get(0).getParameterHandleValueMapFactory().create(6);
+    testParameterValues2.put(parameterHandle1, PARAMETER1_VALUE.getBytes());
+    testParameterValues2.put(parameterHandle2, PARAMETER2_VALUE.getBytes());
+    testParameterValues2.put(parameterHandle3, PARAMETER3_VALUE.getBytes());
+    testParameterValues2.put(parameterHandle4, PARAMETER4_VALUE.getBytes());
+    testParameterValues2.put(parameterHandle5, PARAMETER5_VALUE.getBytes());
+    testParameterValues2.put(parameterHandle6, PARAMETER6_VALUE.getBytes());
 
     rtiAmbassadors.get(0).publishInteractionClass(testInteractionClassHandle);
-    rtiAmbassadors.get(1).publishInteractionClass(testInteractionClassHandle2);
+    rtiAmbassadors.get(0).publishInteractionClass(testInteractionClassHandle2);
 
-    rtiAmbassadors.get(0).subscribeInteractionClass(testInteractionClassHandle);
-    rtiAmbassadors.get(1).subscribeInteractionClass(testInteractionClassHandle2);
-    rtiAmbassadors.get(2).subscribeInteractionClass(testInteractionClassHandle);
+    rtiAmbassadors.get(1).subscribeInteractionClass(testInteractionClassHandle);
     rtiAmbassadors.get(2).subscribeInteractionClass(testInteractionClassHandle2);
   }
 
@@ -143,19 +131,31 @@ public class InteractionTestNG
   public void testSendInteraction()
     throws Exception
   {
-    rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle, parameterValues, null);
+    rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle2, testParameterValues2, TAG);
 
-    federateAmbassadors.get(2).checkParameterValues(testInteractionClassHandle, parameterValues);
+    federateAmbassadors.get(1).checkParameterValues(testInteractionClassHandle, testParameterValues, TAG);
+    federateAmbassadors.get(2).checkParameterValues(testInteractionClassHandle2, testParameterValues2, TAG);
   }
 
-  @Test
-  public void testSendInteractionChild()
+  @Test(expectedExceptions = {InteractionClassNotDefined.class})
+  public void testSendInteractionWithNullInteractionClassHandle()
     throws Exception
   {
-    rtiAmbassadors.get(1).sendInteraction(testInteractionClassHandle2, parameterValues2, null);
+    rtiAmbassadors.get(0).sendInteraction(null, testParameterValues, TAG);
+  }
 
-    federateAmbassadors.get(0).checkParameterValues(testInteractionClassHandle, parameterValues);
-    federateAmbassadors.get(2).checkParameterValues(testInteractionClassHandle2, parameterValues2);
+  @Test(expectedExceptions = {InteractionClassNotPublished.class})
+  public void testSendUnpublishedInteraction()
+    throws Exception
+  {
+    rtiAmbassadors.get(2).sendInteraction(testInteractionClassHandle, testParameterValues, TAG);
+  }
+
+  @Test(expectedExceptions = {InteractionParameterNotDefined.class})
+  public void testSendInteractionWithUndefinedParameters()
+    throws Exception
+  {
+    rtiAmbassadors.get(2).sendInteraction(testInteractionClassHandle, testParameterValues2, TAG);
   }
 
   private static class TestFederateAmbassador
@@ -165,6 +165,7 @@ public class InteractionTestNG
 
     private InteractionClassHandle interactionClassHandle;
     private ParameterHandleValueMap parameterValues;
+    private byte[] tag;
 
     public TestFederateAmbassador(RTIambassador rtiAmbassador)
     {
@@ -172,17 +173,19 @@ public class InteractionTestNG
     }
 
     public void checkParameterValues(
-      InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues)
+      InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues, byte[] tag)
       throws Exception
     {
       for (int i = 0; i < 5 && this.interactionClassHandle == null; i++)
       {
         rtiAmbassador.evokeCallback(1.0);
       }
-      assert interactionClassHandle.equals(this.interactionClassHandle) && parameterValues.equals(this.parameterValues);
+      assert interactionClassHandle.equals(this.interactionClassHandle) &&
+             parameterValues.equals(this.parameterValues) && Arrays.equals(tag, this.tag);
 
       this.interactionClassHandle = null;
       this.parameterValues = null;
+      this.tag = null;
     }
 
     @Override
@@ -193,28 +196,7 @@ public class InteractionTestNG
     {
       this.interactionClassHandle = interactionClassHandle;
       this.parameterValues = parameterValues;
-    }
-
-    @Override
-    public void receiveInteraction(
-      InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues, byte[] tag,
-      OrderType sentOrderType, TransportationTypeHandle transportationTypeHandle, LogicalTime time,
-      OrderType receivedOrderType, SupplementalReceiveInfo receiveInfo)
-      throws FederateInternalError
-    {
-      this.interactionClassHandle = interactionClassHandle;
-      this.parameterValues = parameterValues;
-    }
-
-    @Override
-    public void receiveInteraction(
-      InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues, byte[] tag,
-      OrderType sentOrderType, TransportationTypeHandle transportationTypeHandle, LogicalTime time,
-      OrderType receivedOrderType, MessageRetractionHandle messageRetractionHandle, SupplementalReceiveInfo receiveInfo)
-      throws FederateInternalError
-    {
-      this.interactionClassHandle = interactionClassHandle;
-      this.parameterValues = parameterValues;
+      this.tag = tag;
     }
   }
 }
