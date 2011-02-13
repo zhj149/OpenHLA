@@ -76,12 +76,13 @@ public class IEEE1516eParameterHandleValueMap
 
   private boolean equals(IEEE1516eParameterHandleValueMap rhs)
   {
-    boolean equals = keySet().equals(rhs.keySet());
+    boolean equals = size() == rhs.size();
     if (equals)
     {
-      for (Iterator<byte[]> i = values().iterator(), j = rhs.values().iterator(); equals && i.hasNext();)
+      for (Iterator<Map.Entry<ParameterHandle, byte[]>> i = entrySet().iterator(); i.hasNext() && equals;)
       {
-        equals = Arrays.equals(i.next(), j.next());
+        Map.Entry<ParameterHandle, byte[]> entry = i.next();
+        equals = Arrays.equals(entry.getValue(), rhs.get(entry.getKey()));
       }
     }
     return equals;

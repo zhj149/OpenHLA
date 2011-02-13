@@ -16,6 +16,7 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti1516e.object;
 
+import hla.rti1516e.AttributeHandleValueMap;
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.ObjectInstanceHandle;
@@ -26,6 +27,12 @@ public class TestObjectInstance
   private final ObjectClassHandle objectClassHandle;
   private final String objectInstanceName;
   private final FederateHandle producingFederateHandle;
+
+  private AttributeHandleValueMap attributeValues;
+  private byte[] tag;
+  private FederateHandle updatingFederateHandle;
+
+  private boolean removed;
 
   public TestObjectInstance(
     ObjectInstanceHandle objectInstanceHandle, ObjectClassHandle objectClassHandle, String objectInstanceName,
@@ -55,5 +62,38 @@ public class TestObjectInstance
   public FederateHandle getProducingFederateHandle()
   {
     return producingFederateHandle;
+  }
+
+  public AttributeHandleValueMap getAttributeValues()
+  {
+    return attributeValues;
+  }
+
+  public void setAttributeValues(
+    AttributeHandleValueMap attributeValues, byte[] tag, FederateHandle updatingFederateHandle)
+  {
+    this.attributeValues = attributeValues;
+    this.tag = tag;
+    this.updatingFederateHandle = updatingFederateHandle;
+  }
+
+  public byte[] getTag()
+  {
+    return tag;
+  }
+
+  public FederateHandle getUpdatingFederateHandle()
+  {
+    return updatingFederateHandle;
+  }
+
+  public boolean isRemoved()
+  {
+    return removed;
+  }
+
+  public void setRemoved(boolean removed)
+  {
+    this.removed = removed;
   }
 }

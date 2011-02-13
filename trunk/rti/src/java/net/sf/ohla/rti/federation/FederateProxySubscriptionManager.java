@@ -84,7 +84,7 @@ public class FederateProxySubscriptionManager
     }
     else
     {
-      Map<RegionHandle, Map<DimensionHandle, RangeBounds>> sentRegions = federateProxy.isConveyProducingFederate() ?
+      Map<RegionHandle, Map<DimensionHandle, RangeBounds>> sentRegions = federateProxy.isConveyRegionDesignatorSets() ?
         new HashMap<RegionHandle, Map<DimensionHandle, RangeBounds>>() : null;
 
       AttributeHandleValueMap attributeValues =
@@ -101,26 +101,29 @@ public class FederateProxySubscriptionManager
         {
           i.remove();
         }
-        else if (sentRegions == null)
+        else if (attributeSubscription.getSubscribedRegionHandles().size() > 0)
         {
-          // just check for intersection
-
-          if (!objectInstance.regionsIntersect(
-            attributeHandle, federateProxy.getFederationExecution().getRegionManager(),
-            attributeSubscription.getSubscribedRegionHandles()))
+          if (sentRegions == null)
           {
-            i.remove();
+            // just check for intersection
+
+            if (!objectInstance.regionsIntersect(
+              attributeHandle, federateProxy.getFederationExecution().getRegionManager(),
+              attributeSubscription.getSubscribedRegionHandles()))
+            {
+              i.remove();
+            }
           }
-        }
-        else
-        {
-          // copy all the regions
-
-          if (!objectInstance.regionsIntersect(
-            attributeHandle, federateProxy.getFederationExecution().getRegionManager(),
-            attributeSubscription.getSubscribedRegionHandles(), sentRegions))
+          else
           {
-            i.remove();
+            // copy all the regions
+
+            if (!objectInstance.regionsIntersect(
+              attributeHandle, federateProxy.getFederationExecution().getRegionManager(),
+              attributeSubscription.getSubscribedRegionHandles(), sentRegions))
+            {
+              i.remove();
+            }
           }
         }
       }
@@ -177,36 +180,35 @@ public class FederateProxySubscriptionManager
         trimmedParameterValues = null;
         sentRegions = null;
       }
-      else
+      else if (federateProxy.isConveyRegionDesignatorSets())
       {
-        if (federateProxy.isConveyRegionDesignatorSets())
+        sentRegions = federateProxy.getFederationExecution().getRegionManager().intersects(
+          interactionClassSubscription.getSubscribedRegionHandles(), sendInteraction.getSentRegionHandles(),
+          interactionClassSubscription.getInteractionClass());
+        if (sentRegions == null)
         {
-          sentRegions = federateProxy.getFederationExecution().getRegionManager().intersects(
-            interactionClassSubscription.getSubscribedRegionHandles(), sendInteraction.getSentRegionHandles(),
-            interactionClassSubscription.getInteractionClass());
-          if (sentRegions == null)
-          {
-            trimmedParameterValues = null;
-          }
-          else
-          {
-            trimmedParameterValues = interactionClassSubscription.trim(interactionClass, sendInteraction.getParameterValues());
-          }
+          trimmedParameterValues = null;
         }
         else
         {
-          sentRegions = null;
+          trimmedParameterValues =
+            interactionClassSubscription.trim(interactionClass, sendInteraction.getParameterValues());
+        }
+      }
+      else
+      {
+        sentRegions = null;
 
-          if (federateProxy.getFederationExecution().getRegionManager().intersectsOnly(
-            interactionClassSubscription.getSubscribedRegionHandles(), sendInteraction.getSentRegionHandles(),
-            interactionClassSubscription.getInteractionClass()))
-          {
-            trimmedParameterValues = null;
-          }
-          else
-          {
-            trimmedParameterValues = interactionClassSubscription.trim(interactionClass, sendInteraction.getParameterValues());
-          }
+        if (federateProxy.getFederationExecution().getRegionManager().intersectsOnly(
+          interactionClassSubscription.getSubscribedRegionHandles(), sendInteraction.getSentRegionHandles(),
+          interactionClassSubscription.getInteractionClass()))
+        {
+          trimmedParameterValues = null;
+        }
+        else
+        {
+          trimmedParameterValues =
+            interactionClassSubscription.trim(interactionClass, sendInteraction.getParameterValues());
         }
       }
 
