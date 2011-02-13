@@ -966,8 +966,16 @@ public class FederateObjectManager
           objectsByName.put(name, objectInstance);
           getObjectsByClassHandle(knownObjectClass.getObjectClassHandle()).add(objectInstanceHandle);
 
-          federateAmbassador.discoverObjectInstance(
-            objectInstanceHandle, knownObjectClass.getObjectClassHandle(), name);
+          if (federate.isConveyProducingFederate())
+          {
+            federateAmbassador.discoverObjectInstance(
+              objectInstanceHandle, knownObjectClass.getObjectClassHandle(), name, producingFederateHandle);
+          }
+          else
+          {
+            federateAmbassador.discoverObjectInstance(
+              objectInstanceHandle, knownObjectClass.getObjectClassHandle(), name);
+          }
         }
         finally
         {

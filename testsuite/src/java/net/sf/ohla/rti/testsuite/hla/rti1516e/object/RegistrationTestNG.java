@@ -50,7 +50,8 @@ public class RegistrationTestNG
 {
   private static final String FEDERATION_NAME = "OHLA Object Registration Test Federation";
 
-  private final List<TestFederateAmbassador> federateAmbassadors = new ArrayList<TestFederateAmbassador>(3);
+  private final List<FederateHandle> federateHandles = new ArrayList<FederateHandle>(5);
+  private final List<TestFederateAmbassador> federateAmbassadors = new ArrayList<TestFederateAmbassador>(5);
 
   private ObjectClassHandle testObjectClassHandle;
   private AttributeHandle attributeHandle1;
@@ -91,11 +92,11 @@ public class RegistrationTestNG
 
     rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
 
-    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME);
-    rtiAmbassadors.get(1).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME);
-    rtiAmbassadors.get(2).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME);
-    rtiAmbassadors.get(3).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME);
-    rtiAmbassadors.get(4).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME);
+    federateHandles.add(rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME));
+    federateHandles.add(rtiAmbassadors.get(1).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME));
+    federateHandles.add(rtiAmbassadors.get(2).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME));
+    federateHandles.add(rtiAmbassadors.get(3).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME));
+    federateHandles.add(rtiAmbassadors.get(4).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME));
 
     testObjectClassHandle = rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT);
     attributeHandle1 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle, ATTRIBUTE1);
@@ -158,6 +159,7 @@ public class RegistrationTestNG
 
     federateAmbassadors.get(2).checkObjectInstanceHandle(objectInstanceHandle1);
     federateAmbassadors.get(2).checkObjectClassHandle(objectInstanceHandle1, testObjectClassHandle);
+    federateAmbassadors.get(2).checkProducingFederateHandle(objectInstanceHandle1, federateHandles.get(0));
 
     assert testObjectClassHandle.equals(rtiAmbassadors.get(0).getKnownObjectClassHandle(objectInstanceHandle1));
 
@@ -176,9 +178,11 @@ public class RegistrationTestNG
 
     federateAmbassadors.get(0).checkObjectInstanceHandle(objectInstanceHandle2);
     federateAmbassadors.get(0).checkObjectClassHandle(objectInstanceHandle2, testObjectClassHandle);
+    federateAmbassadors.get(0).checkProducingFederateHandle(objectInstanceHandle2, federateHandles.get(1));
 
     federateAmbassadors.get(2).checkObjectInstanceHandle(objectInstanceHandle2);
     federateAmbassadors.get(2).checkObjectClassHandle(objectInstanceHandle2, testObjectClassHandle2);
+    federateAmbassadors.get(2).checkProducingFederateHandle(objectInstanceHandle2, federateHandles.get(1));
 
     assert testObjectClassHandle.equals(rtiAmbassadors.get(0).getKnownObjectClassHandle(objectInstanceHandle2));
     assert testObjectClassHandle2.equals(rtiAmbassadors.get(1).getKnownObjectClassHandle(objectInstanceHandle2));
@@ -205,6 +209,7 @@ public class RegistrationTestNG
 
     federateAmbassadors.get(2).checkObjectInstanceHandle(objectInstanceHandle3);
     federateAmbassadors.get(2).checkObjectInstanceName(objectInstanceHandle3, TEST_OBJECT);
+    federateAmbassadors.get(2).checkProducingFederateHandle(objectInstanceHandle3, federateHandles.get(0));
 
     assert testObjectClassHandle.equals(rtiAmbassadors.get(0).getKnownObjectClassHandle(objectInstanceHandle3));
     assert testObjectClassHandle.equals(rtiAmbassadors.get(2).getKnownObjectClassHandle(objectInstanceHandle3));
@@ -233,14 +238,16 @@ public class RegistrationTestNG
     federateAmbassadors.get(3).checkObjectInstanceHandle(objectInstanceHandle1);
     federateAmbassadors.get(3).checkObjectInstanceHandle(objectInstanceHandle2);
     federateAmbassadors.get(3).checkObjectInstanceHandle(objectInstanceHandle3);
-
-    federateAmbassadors.get(4).checkObjectInstanceHandle(objectInstanceHandle2);
-
     federateAmbassadors.get(3).checkObjectClassHandle(objectInstanceHandle1, testObjectClassHandle);
     federateAmbassadors.get(3).checkObjectClassHandle(objectInstanceHandle2, testObjectClassHandle);
     federateAmbassadors.get(3).checkObjectClassHandle(objectInstanceHandle3, testObjectClassHandle);
+    federateAmbassadors.get(3).checkProducingFederateHandle(objectInstanceHandle1, federateHandles.get(0));
+    federateAmbassadors.get(3).checkProducingFederateHandle(objectInstanceHandle2, federateHandles.get(1));
+    federateAmbassadors.get(3).checkProducingFederateHandle(objectInstanceHandle3, federateHandles.get(0));
 
+    federateAmbassadors.get(4).checkObjectInstanceHandle(objectInstanceHandle2);
     federateAmbassadors.get(4).checkObjectClassHandle(objectInstanceHandle2, testObjectClassHandle2);
+    federateAmbassadors.get(4).checkProducingFederateHandle(objectInstanceHandle2, federateHandles.get(1));
 
     federateAmbassadors.get(3).checkObjectInstanceName(objectInstanceHandle3, TEST_OBJECT);
   }
@@ -325,6 +332,12 @@ public class RegistrationTestNG
       throws Exception
     {
       assert objectInstances.get(objectInstanceHandle).getObjectInstanceName().equals(objectInstanceName);
+    }
+
+    public void checkProducingFederateHandle(ObjectInstanceHandle objectInstanceHandle, FederateHandle federateHandle)
+      throws Exception
+    {
+      assert objectInstances.get(objectInstanceHandle).getProducingFederateHandle().equals(federateHandle);
     }
 
     @Override
