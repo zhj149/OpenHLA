@@ -82,7 +82,8 @@ public class DiscoverObjectInstance
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federate.discoverObjectInstance(objectInstanceHandle, objectClassHandle, objectInstanceName, producingFederateHandle);
+    federate.discoverObjectInstance(
+      objectInstanceHandle, objectClassHandle, objectInstanceName, producingFederateHandle);
   }
 
   public void execute(Federate federate)

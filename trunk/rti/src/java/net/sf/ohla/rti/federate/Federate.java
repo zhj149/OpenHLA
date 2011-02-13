@@ -298,7 +298,9 @@ public class Federate
 
   private final LogicalTimeFactory logicalTimeFactory;
 
-  protected final Marker marker;
+  private final Marker marker;
+
+  private boolean conveyProducingFederate = true;
 
   public Federate(String federateName, String federateType, String federationExecutionName,
                   List<FDD> additionalFDDs, FederateAmbassador federateAmbassador, CallbackManager callbackManager,
@@ -432,6 +434,11 @@ public class Federate
   public boolean isAsynchronousDeliveryEnabled()
   {
     return asynchronousDeliveryEnabled;
+  }
+
+  public boolean isConveyProducingFederate()
+  {
+    return conveyProducingFederate;
   }
 
   public void fddUpdated(FDD fdd)

@@ -25,16 +25,16 @@ public class TestObjectInstance
   private final ObjectInstanceHandle objectInstanceHandle;
   private final ObjectClassHandle objectClassHandle;
   private final String objectInstanceName;
-  private final FederateHandle federateHandle;
+  private final FederateHandle producingFederateHandle;
 
   public TestObjectInstance(
     ObjectInstanceHandle objectInstanceHandle, ObjectClassHandle objectClassHandle, String objectInstanceName,
-    FederateHandle federateHandle)
+    FederateHandle producingFederateHandle)
   {
     this.objectInstanceHandle = objectInstanceHandle;
     this.objectClassHandle = objectClassHandle;
     this.objectInstanceName = objectInstanceName;
-    this.federateHandle = federateHandle;
+    this.producingFederateHandle = producingFederateHandle;
   }
 
   public ObjectInstanceHandle getObjectInstanceHandle()
@@ -52,8 +52,8 @@ public class TestObjectInstance
     return objectInstanceName;
   }
 
-  public FederateHandle getFederateHandle()
+  public FederateHandle getProducingFederateHandle()
   {
-    return federateHandle;
+    return producingFederateHandle;
   }
 }
