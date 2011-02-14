@@ -19,6 +19,7 @@ package net.sf.ohla.rti.messages.callbacks;
 import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.federate.Callback;
 import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eMessageRetractionHandle;
 import net.sf.ohla.rti.messages.FederateMessage;
 import net.sf.ohla.rti.messages.MessageType;
@@ -43,15 +44,20 @@ public class RemoveObjectInstance
   private final OrderType sentOrderType;
   private final LogicalTime time;
   private final MessageRetractionHandle messageRetractionHandle;
+  private final FederateHandle producingFederateHandle;
 
   private Federate federate;
 
   private OrderType receivedOrderType;
-  private FederateHandle producingFederateHandle;
+
+  public RemoveObjectInstance(ObjectInstanceHandle objectInstanceHandle, FederateHandle producingFederateHandle)
+  {
+    this(objectInstanceHandle, null, OrderType.RECEIVE, null, null, producingFederateHandle);
+  }
 
   public RemoveObjectInstance(
     ObjectInstanceHandle objectInstanceHandle, byte[] tag, OrderType sentOrderType, LogicalTime time,
-    MessageRetractionHandle messageRetractionHandle)
+    MessageRetractionHandle messageRetractionHandle, FederateHandle producingFederateHandle)
   {
     super(MessageType.REMOVE_OBJECT_INSTANCE, objectInstanceHandle);
 
@@ -59,11 +65,13 @@ public class RemoveObjectInstance
     this.sentOrderType = sentOrderType;
     this.time = time;
     this.messageRetractionHandle = messageRetractionHandle;
+    this.producingFederateHandle = producingFederateHandle;
 
     Protocol.encodeBytes(buffer, tag);
     Protocol.encodeEnum(buffer, sentOrderType);
     Protocol.encodeTime(buffer, time);
     IEEE1516eMessageRetractionHandle.encode(buffer, messageRetractionHandle);
+    IEEE1516eFederateHandle.encode(buffer, producingFederateHandle);
 
     encodingFinished();
   }
@@ -76,6 +84,7 @@ public class RemoveObjectInstance
     sentOrderType = Protocol.decodeEnum(buffer, OrderType.values());
     time = Protocol.decodeTime(buffer, logicalTimeFactory);
     messageRetractionHandle = IEEE1516eMessageRetractionHandle.decode(buffer);
+    producingFederateHandle = IEEE1516eFederateHandle.decode(buffer);
   }
 
   public OrderType getSentOrderType()
@@ -96,11 +105,6 @@ public class RemoveObjectInstance
   public void setReceivedOrderType(OrderType receivedOrderType)
   {
     this.receivedOrderType = receivedOrderType;
-  }
-
-  public void setProducingFederateHandle(FederateHandle producingFederateHandle)
-  {
-    this.producingFederateHandle = producingFederateHandle;
   }
 
   public MessageType getType()

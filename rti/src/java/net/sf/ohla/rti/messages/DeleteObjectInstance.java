@@ -35,7 +35,7 @@ public class DeleteObjectInstance
 {
   private final byte[] tag;
   private final OrderType sentOrderType;
-  private final LogicalTime deleteTime;
+  private final LogicalTime time;
   private final MessageRetractionHandle messageRetractionHandle;
 
   public DeleteObjectInstance(ObjectInstanceHandle objectInstanceHandle, byte[] tag)
@@ -45,29 +45,31 @@ public class DeleteObjectInstance
     this.tag = tag;
 
     sentOrderType = OrderType.RECEIVE;
-    deleteTime = null;
+    time = null;
     messageRetractionHandle = null;
 
     Protocol.encodeBytes(buffer, tag);
     Protocol.encodeEnum(buffer, sentOrderType);
     Protocol.encodeNullTime(buffer);
     IEEE1516eMessageRetractionHandle.encode(buffer, messageRetractionHandle);
+
+    encodingFinished();
   }
 
   public DeleteObjectInstance(
-    ObjectInstanceHandle objectInstanceHandle, byte[] tag, OrderType sentOrderType, LogicalTime deleteTime,
+    ObjectInstanceHandle objectInstanceHandle, byte[] tag, OrderType sentOrderType, LogicalTime time,
     MessageRetractionHandle messageRetractionHandle)
   {
     super(MessageType.DELETE_OBJECT_INSTANCE, objectInstanceHandle);
 
     this.tag = tag;
     this.sentOrderType = sentOrderType;
-    this.deleteTime = deleteTime;
+    this.time = time;
     this.messageRetractionHandle = messageRetractionHandle;
 
     Protocol.encodeBytes(buffer, tag);
     Protocol.encodeEnum(buffer, sentOrderType);
-    Protocol.encodeTime(buffer, deleteTime);
+    Protocol.encodeTime(buffer, time);
     IEEE1516eMessageRetractionHandle.encode(buffer, messageRetractionHandle);
 
     encodingFinished();
@@ -79,7 +81,7 @@ public class DeleteObjectInstance
 
     tag = Protocol.decodeBytes(buffer);
     sentOrderType = Protocol.decodeEnum(buffer, OrderType.values());
-    deleteTime = Protocol.decodeTime(buffer, logicalTimeFactory);
+    time = Protocol.decodeTime(buffer, logicalTimeFactory);
     messageRetractionHandle = IEEE1516eMessageRetractionHandle.decode(buffer);
   }
 
@@ -98,9 +100,9 @@ public class DeleteObjectInstance
     return sentOrderType;
   }
 
-  public LogicalTime getDeleteTime()
+  public LogicalTime getTime()
   {
-    return deleteTime;
+    return time;
   }
 
   public MessageRetractionHandle getMessageRetractionHandle()

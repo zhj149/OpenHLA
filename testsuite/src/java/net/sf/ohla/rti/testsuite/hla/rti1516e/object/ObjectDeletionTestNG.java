@@ -31,7 +31,6 @@ import org.testng.annotations.Test;
 
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleSet;
-import hla.rti1516e.AttributeHandleValueMap;
 import hla.rti1516e.CallbackModel;
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.NullFederateAmbassador;
@@ -40,28 +39,23 @@ import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.OrderType;
 import hla.rti1516e.RTIambassador;
 import hla.rti1516e.ResignAction;
-import hla.rti1516e.TransportationTypeHandle;
-import hla.rti1516e.exceptions.AttributeNotDefined;
-import hla.rti1516e.exceptions.AttributeNotOwned;
+import hla.rti1516e.exceptions.DeletePrivilegeNotHeld;
 import hla.rti1516e.exceptions.FederateInternalError;
 import hla.rti1516e.exceptions.ObjectInstanceNotKnown;
 
 @Test
-public class ObjectUpdateTestNG
+public class ObjectDeletionTestNG
   extends BaseTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA Object Update Test Federation";
+  private static final String FEDERATION_NAME = "OHLA Object Deletion Test Federation";
 
   private final List<FederateHandle> federateHandles = new ArrayList<FederateHandle>(4);
   private final List<TestFederateAmbassador> federateAmbassadors = new ArrayList<TestFederateAmbassador>(4);
 
-  private AttributeHandleValueMap testObjectAttributeValues;
-  private AttributeHandleValueMap testObjectAttributeValues2;
-
   private ObjectInstanceHandle testObjectInstanceHandle;
   private ObjectInstanceHandle testObjectInstanceHandle2;
 
-  public ObjectUpdateTestNG()
+  public ObjectDeletionTestNG()
   {
     super(4);
   }
@@ -108,20 +102,6 @@ public class ObjectUpdateTestNG
     testObjectAttributeHandles2.add(attributeHandle5);
     testObjectAttributeHandles2.add(attributeHandle6);
 
-    testObjectAttributeValues = rtiAmbassadors.get(0).getAttributeHandleValueMapFactory().create(3);
-    testObjectAttributeValues2 = rtiAmbassadors.get(0).getAttributeHandleValueMapFactory().create(3);
-
-    testObjectAttributeValues.put(attributeHandle1, ATTRIBUTE1_VALUE.getBytes());
-    testObjectAttributeValues.put(attributeHandle2, ATTRIBUTE2_VALUE.getBytes());
-    testObjectAttributeValues.put(attributeHandle3, ATTRIBUTE3_VALUE.getBytes());
-
-    testObjectAttributeValues2.put(attributeHandle1, ATTRIBUTE1_VALUE.getBytes());
-    testObjectAttributeValues2.put(attributeHandle2, ATTRIBUTE2_VALUE.getBytes());
-    testObjectAttributeValues2.put(attributeHandle3, ATTRIBUTE3_VALUE.getBytes());
-    testObjectAttributeValues2.put(attributeHandle4, ATTRIBUTE4_VALUE.getBytes());
-    testObjectAttributeValues2.put(attributeHandle5, ATTRIBUTE5_VALUE.getBytes());
-    testObjectAttributeValues2.put(attributeHandle6, ATTRIBUTE6_VALUE.getBytes());
-
     rtiAmbassadors.get(0).publishObjectClassAttributes(testObjectClassHandle, testObjectAttributeHandles);
     rtiAmbassadors.get(0).publishObjectClassAttributes(testObjectClassHandle2, testObjectAttributeHandles2);
 
@@ -142,7 +122,6 @@ public class ObjectUpdateTestNG
   public void teardown()
     throws Exception
   {
-    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
     rtiAmbassadors.get(1).resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
     rtiAmbassadors.get(2).resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
     rtiAmbassadors.get(3).resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
@@ -160,43 +139,43 @@ public class ObjectUpdateTestNG
   }
 
   @Test
-  public void testUpdateAttributeValues()
+  public void testDeleteObjectInstance()
     throws Exception
   {
-    rtiAmbassadors.get(0).updateAttributeValues(testObjectInstanceHandle2, testObjectAttributeValues2, TAG);
+    rtiAmbassadors.get(0).deleteObjectInstance(testObjectInstanceHandle2, TAG);
 
-    federateAmbassadors.get(1).checkAttributeValues(
-      testObjectInstanceHandle2, testObjectAttributeValues, federateHandles.get(0), TAG);
-    federateAmbassadors.get(2).checkAttributeValues(
-      testObjectInstanceHandle2, testObjectAttributeValues2, federateHandles.get(0), TAG);
+    federateAmbassadors.get(1).checkRemoved(testObjectInstanceHandle2, TAG, federateHandles.get(0));
+    federateAmbassadors.get(2).checkRemoved(testObjectInstanceHandle2, TAG, federateHandles.get(0));
   }
 
   @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
-  public void testUpdateAttributeValuesWithNullObjectInstanceHandle()
+  public void testDeleteObjectInstanceWithNullObjectInstanceHandle()
     throws Exception
   {
-    rtiAmbassadors.get(0).updateAttributeValues(null, testObjectAttributeValues2, null);
+    rtiAmbassadors.get(0).deleteObjectInstance(null, TAG);
   }
 
-  @Test(expectedExceptions = {AttributeNotDefined.class})
-  public void testUpdateAttributeValuesWithUndefinedAttributes()
+  @Test(expectedExceptions = {DeletePrivilegeNotHeld.class})
+  public void testDeleteUnownedObjectInstance()
     throws Exception
   {
-    rtiAmbassadors.get(0).updateAttributeValues(testObjectInstanceHandle, testObjectAttributeValues2, null);
-  }
-
-  @Test(expectedExceptions = {AttributeNotOwned.class})
-  public void testUpdateAttributeValuesOfUnownedAttribute()
-    throws Exception
-  {
-    rtiAmbassadors.get(1).updateAttributeValues(testObjectInstanceHandle, testObjectAttributeValues, null);
+    rtiAmbassadors.get(1).deleteObjectInstance(testObjectInstanceHandle, TAG);
   }
 
   @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
-  public void testUpdateAttributeValuesOfUnknownObject()
+  public void testDeleteUnknownObject()
     throws Exception
   {
-    rtiAmbassadors.get(3).updateAttributeValues(testObjectInstanceHandle, testObjectAttributeValues, null);
+    rtiAmbassadors.get(3).deleteObjectInstance(testObjectInstanceHandle, TAG);
+  }
+
+  @Test(dependsOnMethods = {"testDeleteObjectInstance", "testDeleteUnownedObjectInstance"})
+  public void testDeleteObjectInstanceByResigning()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.DELETE_OBJECTS);
+
+    federateAmbassadors.get(1).checkRemoved(testObjectInstanceHandle, null, federateHandles.get(0));
   }
 
   private static class TestFederateAmbassador
@@ -211,6 +190,7 @@ public class ObjectUpdateTestNG
     {
       this.rtiAmbassador = rtiAmbassador;
     }
+
     public void checkObjectInstanceHandle(ObjectInstanceHandle objectInstanceHandle)
       throws Exception
     {
@@ -221,20 +201,16 @@ public class ObjectUpdateTestNG
       assert objectInstances.containsKey(objectInstanceHandle);
     }
 
-    public void checkAttributeValues(
-      ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues, FederateHandle federateHandle,
-      byte[] tag)
+    public void checkRemoved(ObjectInstanceHandle objectInstanceHandle, byte[] tag, FederateHandle federateHandle)
       throws Exception
     {
-      for (int i = 0; i < 5 && objectInstances.get(objectInstanceHandle).getAttributeValues() == null; i++)
+      for (int i = 0; i < 5 && !objectInstances.get(objectInstanceHandle).isRemoved(); i++)
       {
         rtiAmbassador.evokeCallback(1.0);
       }
       TestObjectInstance objectInstance = objectInstances.get(objectInstanceHandle);
-      assert objectInstance.getAttributeValues() != null &&
-             objectInstance.getAttributeValues().equals(attributeValues) &&
-             Arrays.equals(tag, objectInstance.getTag()) &&
-             objectInstance.getUpdatingFederateHandle().equals(federateHandle);
+      assert objectInstance.isRemoved() && Arrays.equals(tag, objectInstance.getTag()) &&
+             objectInstance.getDeletingFederateHandle().equals(federateHandle);
     }
 
     @Override
@@ -248,14 +224,11 @@ public class ObjectUpdateTestNG
     }
 
     @Override
-    public void reflectAttributeValues(
-      ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues,
-      byte[] tag, OrderType sentOrderType, TransportationTypeHandle transportationTypeHandle,
-      SupplementalReflectInfo reflectInfo)
+    public void removeObjectInstance(
+      ObjectInstanceHandle objectInstanceHandle, byte[] tag, OrderType sentOrderType, SupplementalRemoveInfo removeInfo)
       throws FederateInternalError
     {
-      objectInstances.get(objectInstanceHandle).setAttributeValues(
-        attributeValues, tag, reflectInfo.getProducingFederate());
+      objectInstances.get(objectInstanceHandle).setRemoved(tag, removeInfo.getProducingFederate());
     }
   }
 }

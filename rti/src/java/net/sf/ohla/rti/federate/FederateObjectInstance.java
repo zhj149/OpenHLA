@@ -48,9 +48,6 @@ import net.sf.ohla.rti.messages.UnconditionalAttributeOwnershipDivestiture;
 import net.sf.ohla.rti.messages.UpdateAttributeValues;
 import net.sf.ohla.rti.messages.callbacks.ReflectAttributeValues;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.AttributeHandleValueMap;
@@ -83,8 +80,6 @@ import hla.rti1516e.exceptions.RTIinternalError;
 public class FederateObjectInstance
   implements Serializable
 {
-  private static final Logger log = LoggerFactory.getLogger(FederateObjectInstance.class);
-
   private final FederateHandle producingFederateHandle;
   private final ObjectInstanceHandle objectInstanceHandle;
   private final ObjectClass objectClass;
@@ -155,8 +150,7 @@ public class FederateObjectInstance
       objectClass.getAttributeSafely(FDD.HLA_PRIVILEGE_TO_DELETE_OBJECT);
     if (!attributes.containsKey(privilegeToDeleteObjectAttribute.getAttributeHandle()))
     {
-      // create an attribute instance for the HLA privilege to delete
-      // object attribute
+      // create an attribute instance for the HLA privilege to delete object attribute
       //
       attributes.put(privilegeToDeleteObjectAttribute.getAttributeHandle(),
                      new FederateAttributeInstance(privilegeToDeleteObjectAttribute));
@@ -781,6 +775,22 @@ public class FederateObjectInstance
     }
   }
 
+  public void checkIfFederateOwnsAttributesWithoutOwningPrivilegeToDelete()
+    throws FederateOwnsAttributes
+  {
+    // dangerous method, must be called with proper protection
+
+    if (attributes.size() > 0)
+    {
+      Attribute privilegeToDeleteObjectAttribute =
+        objectClass.getAttributeSafely(FDD.HLA_PRIVILEGE_TO_DELETE_OBJECT);
+      if (!attributes.containsKey(privilegeToDeleteObjectAttribute.getAttributeHandle()) && attributes.size() > 1)
+      {
+        throw new FederateOwnsAttributes(this + " - " + attributes.keySet());
+      }
+    }
+  }
+
   public void checkIfFederateOwnsAttributes()
     throws FederateOwnsAttributes
   {
@@ -788,8 +798,7 @@ public class FederateObjectInstance
 
     if (!attributes.isEmpty())
     {
-      throw new FederateOwnsAttributes(String.format(
-        "%s - %s", objectInstanceHandle, attributes.keySet()));
+      throw new FederateOwnsAttributes(this + " - " + attributes.keySet());
     }
   }
 
@@ -819,8 +828,7 @@ public class FederateObjectInstance
 
   public String toString()
   {
-    return String.format("%s (%s, %s)", objectInstanceHandle, objectInstanceName,
-                         objectClass);
+    return String.format("%s (%s, %s)", objectInstanceHandle, objectInstanceName, objectClass);
   }
 
   protected boolean equals(FederateObjectInstance rhs)

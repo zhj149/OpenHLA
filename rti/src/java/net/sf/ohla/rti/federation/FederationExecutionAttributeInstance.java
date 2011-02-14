@@ -16,8 +16,6 @@
 
 package net.sf.ohla.rti.federation;
 
-import java.io.Serializable;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -38,7 +36,6 @@ import hla.rti1516e.exceptions.AttributeAlreadyBeingDivested;
 import hla.rti1516e.exceptions.AttributeDivestitureWasNotRequested;
 
 public class FederationExecutionAttributeInstance
-  implements Serializable
 {
   private final Attribute attribute;
 

@@ -723,7 +723,7 @@ public class IEEE1516eRTIambassador
   {
     if (resignAction == null)
     {
-      throw new InvalidResignAction("null");
+      throw new InvalidResignAction("resignAction cannot be null");
     }
 
     checkIfCallNotAllowedFromWithinCallback();
@@ -1941,6 +1941,11 @@ public class IEEE1516eRTIambassador
     throws DeletePrivilegeNotHeld, ObjectInstanceNotKnown, SaveInProgress, RestoreInProgress,
            FederateNotExecutionMember, NotConnected, RTIinternalError
   {
+    if (objectInstanceHandle == null)
+    {
+      throw new ObjectInstanceNotKnown("objectInstanceHandle cannot be null");
+    }
+
     connectLock.readLock().lock();
     try
     {

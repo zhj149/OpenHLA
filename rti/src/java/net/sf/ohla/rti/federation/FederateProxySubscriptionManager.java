@@ -23,7 +23,6 @@ import java.util.Map;
 import net.sf.ohla.rti.SubscriptionManager;
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleValueMap;
-import net.sf.ohla.rti.messages.RegisterObjectInstance;
 import net.sf.ohla.rti.messages.SendInteraction;
 import net.sf.ohla.rti.messages.UpdateAttributeValues;
 import net.sf.ohla.rti.messages.callbacks.DiscoverObjectInstance;
@@ -41,16 +40,7 @@ import hla.rti1516e.RegionHandle;
 public class FederateProxySubscriptionManager
   extends SubscriptionManager
 {
-  public DiscoverObjectInstance transform(
-    FederateProxy federateProxy, FederationExecutionObjectInstance objectInstance,
-    RegisterObjectInstance registerObjectInstance)
-  {
-    return transform(federateProxy.getFederateHandle(), objectInstance, registerObjectInstance);
-  }
-
-  public DiscoverObjectInstance transform(
-    FederateHandle producingFederateHandle, FederationExecutionObjectInstance objectInstance,
-    RegisterObjectInstance registerObjectInstance)
+  public DiscoverObjectInstance discoverObjectInstance(FederationExecutionObjectInstance objectInstance)
   {
     DiscoverObjectInstance discoverObjectInstance;
 
@@ -63,14 +53,14 @@ public class FederateProxySubscriptionManager
     else
     {
       discoverObjectInstance = new DiscoverObjectInstance(
-        registerObjectInstance.getObjectInstanceHandle(), registerObjectInstance.getObjectClassHandle(),
-        registerObjectInstance.getObjectInstanceName(), producingFederateHandle);
+        objectInstance.getObjectInstanceHandle(), objectInstance.getObjectClass().getObjectClassHandle(),
+        objectInstance.getObjectInstanceName(), objectInstance.getProducingFederateHandle());
     }
 
     return discoverObjectInstance;
   }
 
-  public ReflectAttributeValues transform(
+  public ReflectAttributeValues reflectAttributeValues(
     FederateProxy federateProxy, FederationExecutionObjectInstance objectInstance,
     UpdateAttributeValues updateAttributeValues)
   {
@@ -145,7 +135,7 @@ public class FederateProxySubscriptionManager
     return reflectAttributeValues;
   }
 
-  public ReceiveInteraction transform(
+  public ReceiveInteraction receiveInteraction(
     FederateProxy federateProxy, InteractionClass interactionClass, SendInteraction sendInteraction)
   {
     ReceiveInteraction receiveInteraction;

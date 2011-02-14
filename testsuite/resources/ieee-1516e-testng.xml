@@ -34,8 +34,9 @@
     <classes>
       <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516e.object.NameReservationTestNG"/>-->
       <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516e.object.RegistrationTestNG"/>-->
-      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.object.ObjectUpdateTestNG"/>
-      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.object.InteractionTestNG"/>
+      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516e.object.ObjectUpdateTestNG"/>-->
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.object.ObjectDeletionTestNG"/>
+      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516e.object.InteractionTestNG"/>-->
     </classes>
   </test>
   <!--<test name="IEEE 1516e - Support Services">-->

@@ -33,11 +33,13 @@ import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.fdd.TransportationType;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectInstanceHandle;
 import net.sf.ohla.rti.messages.DeleteObjectInstance;
+import net.sf.ohla.rti.messages.LocalDeleteObjectInstance;
 import net.sf.ohla.rti.messages.RegisterObjectInstance;
 import net.sf.ohla.rti.messages.ReleaseMultipleObjectInstanceName;
 import net.sf.ohla.rti.messages.ReleaseObjectInstanceName;
 import net.sf.ohla.rti.messages.ReserveMultipleObjectInstanceName;
 import net.sf.ohla.rti.messages.ReserveObjectInstanceName;
+import net.sf.ohla.rti.messages.ResignFederationExecution;
 import net.sf.ohla.rti.messages.SendInteraction;
 import net.sf.ohla.rti.messages.SubscribeInteractionClass;
 import net.sf.ohla.rti.messages.SubscribeObjectClassAttributes;
@@ -121,7 +123,6 @@ public class FederateObjectManager
   private final Map<String, FederateObjectInstance> objectsByName = new HashMap<String, FederateObjectInstance>();
   private final Map<ObjectClassHandle, Set<ObjectInstanceHandle>> objectsByObjectClassHandle =
     new HashMap<ObjectClassHandle, Set<ObjectInstanceHandle>>();
-  private final Set<ObjectInstanceHandle> removedObjects = new HashSet<ObjectInstanceHandle>();
 
   private int objectInstanceCount;
 
@@ -136,31 +137,45 @@ public class FederateObjectManager
     objectsLock.writeLock().lock();
     try
     {
-      for (FederateObjectInstance objectInstance : objects.values())
+      switch (resignAction)
       {
-        switch (resignAction)
-        {
-          case UNCONDITIONALLY_DIVEST_ATTRIBUTES:
+        case UNCONDITIONALLY_DIVEST_ATTRIBUTES:
+          for (FederateObjectInstance objectInstance : objects.values())
+          {
             objectInstance.checkIfOwnershipAcquisitionPending();
-            break;
-          case DELETE_OBJECTS:
+          }
+          break;
+        case DELETE_OBJECTS:
+          for (FederateObjectInstance objectInstance : objects.values())
+          {
+            objectInstance.checkIfFederateOwnsAttributesWithoutOwningPrivilegeToDelete();
+            objectInstance.checkIfOwnershipAcquisitionPending();
+          }
+          break;
+        case CANCEL_PENDING_OWNERSHIP_ACQUISITIONS:
+          for (FederateObjectInstance objectInstance : objects.values())
+          {
+            objectInstance.checkIfFederateOwnsAttributes();
+          }
+          break;
+        case DELETE_OBJECTS_THEN_DIVEST:
+          for (FederateObjectInstance objectInstance : objects.values())
+          {
+            objectInstance.checkIfOwnershipAcquisitionPending();
+          }
+          break;
+        case CANCEL_THEN_DELETE_THEN_DIVEST:
+          break;
+        case NO_ACTION:
+          for (FederateObjectInstance objectInstance : objects.values())
+          {
             objectInstance.checkIfFederateOwnsAttributes();
             objectInstance.checkIfOwnershipAcquisitionPending();
-            break;
-          case CANCEL_PENDING_OWNERSHIP_ACQUISITIONS:
-            objectInstance.checkIfFederateOwnsAttributes();
-            break;
-          case DELETE_OBJECTS_THEN_DIVEST:
-            objectInstance.checkIfOwnershipAcquisitionPending();
-            break;
-          case CANCEL_THEN_DELETE_THEN_DIVEST:
-            objectInstance.checkIfOwnershipAcquisitionPending();
-            break;
-          case NO_ACTION:
-            objectInstance.checkIfFederateOwnsAttributes();
-            break;
-        }
+          }
+          break;
       }
+
+      federate.getRTIChannel().write(new ResignFederationExecution(resignAction));
     }
     finally
     {
@@ -854,16 +869,21 @@ public class FederateObjectManager
   }
 
   public void localDeleteObjectInstance(ObjectInstanceHandle objectInstanceHandle)
-    throws ObjectInstanceNotKnown, FederateOwnsAttributes
+    throws ObjectInstanceNotKnown, FederateOwnsAttributes, OwnershipAcquisitionPending
   {
     objectsLock.writeLock().lock();
     try
     {
       FederateObjectInstance objectInstance = getObjectInstance(objectInstanceHandle);
       objectInstance.checkIfFederateOwnsAttributes();
+      objectInstance.checkIfOwnershipAcquisitionPending();
 
       objects.remove(objectInstanceHandle);
       objectsByName.remove(objectInstance.getObjectInstanceName());
+      getObjectsByClassHandle(objectInstance.getObjectClassHandle()).remove(
+        objectInstance.getObjectInstanceHandle());
+
+      federate.getRTIChannel().write(new LocalDeleteObjectInstance(objectInstanceHandle));
     }
     finally
     {
@@ -1726,7 +1746,6 @@ public class FederateObjectManager
     objectsByName.remove(objectInstance.getObjectInstanceName());
     getObjectsByClassHandle(objectInstance.getObjectClassHandle()).remove(
       objectInstance.getObjectInstanceHandle());
-    removedObjects.add(objectInstance.getObjectInstanceHandle());
 
     reservedObjectInstanceNamesLock.lock();
     try

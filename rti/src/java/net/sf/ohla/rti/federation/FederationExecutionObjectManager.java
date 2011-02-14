@@ -18,6 +18,7 @@ package net.sf.ohla.rti.federation;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
@@ -28,9 +29,12 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.messages.AssociateRegionsForUpdates;
 import net.sf.ohla.rti.messages.AssociateRegionsForUpdatesResponse;
+import net.sf.ohla.rti.messages.DeleteObjectInstance;
+import net.sf.ohla.rti.messages.LocalDeleteObjectInstance;
 import net.sf.ohla.rti.messages.RequestObjectClassAttributeValueUpdate;
 import net.sf.ohla.rti.messages.RequestObjectClassAttributeValueUpdateWithRegions;
 import net.sf.ohla.rti.messages.RequestObjectInstanceAttributeValueUpdate;
+import net.sf.ohla.rti.messages.ResignFederationExecution;
 import net.sf.ohla.rti.messages.UnassociateRegionsForUpdates;
 import net.sf.ohla.rti.messages.UnassociateRegionsForUpdatesResponse;
 import net.sf.ohla.rti.messages.UpdateAttributeValues;
@@ -78,6 +82,140 @@ public class FederationExecutionObjectManager
     return federationExecution;
   }
 
+  public void resignFederationExecution(
+    FederateProxy federateProxy, ResignFederationExecution resignFederationExecution)
+  {
+    objectsLock.writeLock().lock();
+    try
+    {
+      switch (resignFederationExecution.getResignAction())
+      {
+        case UNCONDITIONALLY_DIVEST_ATTRIBUTES:
+          for (FederationExecutionObjectInstance objectInstance : objects.values())
+          {
+            objectInstance.unconditionallyDivestAttributes(federateProxy);
+          }
+          break;
+        case DELETE_OBJECTS:
+          for (Iterator<FederationExecutionObjectInstance> i = objects.values().iterator(); i.hasNext();)
+          {
+            FederationExecutionObjectInstance objectInstance = i.next();
+            if (objectInstance.isOwner(federateProxy))
+            {
+              i.remove();
+
+              for (FederateProxy fp : federationExecution.getFederates().values())
+              {
+                fp.removeObjectInstance(objectInstance.getObjectInstanceHandle(), federateProxy.getFederateHandle());
+              }
+            }
+          }
+          break;
+        case CANCEL_PENDING_OWNERSHIP_ACQUISITIONS:
+          for (FederationExecutionObjectInstance objectInstance : objects.values())
+          {
+            objectInstance.cancelPendingOwnershipAcquisitions(federateProxy);
+          }
+          break;
+        case DELETE_OBJECTS_THEN_DIVEST:
+          for (Iterator<FederationExecutionObjectInstance> i = objects.values().iterator(); i.hasNext();)
+          {
+            FederationExecutionObjectInstance objectInstance = i.next();
+            if (objectInstance.isOwner(federateProxy))
+            {
+              i.remove();
+
+              for (FederateProxy fp : federationExecution.getFederates().values())
+              {
+                fp.removeObjectInstance(objectInstance.getObjectInstanceHandle(), federateProxy.getFederateHandle());
+              }
+            }
+            else
+            {
+              objectInstance.unconditionallyDivestAttributes(federateProxy);
+            }
+          }
+          break;
+        case CANCEL_THEN_DELETE_THEN_DIVEST:
+          for (Iterator<FederationExecutionObjectInstance> i = objects.values().iterator(); i.hasNext();)
+          {
+            FederationExecutionObjectInstance objectInstance = i.next();
+
+            objectInstance.cancelPendingOwnershipAcquisitions(federateProxy);
+
+            if (objectInstance.isOwner(federateProxy))
+            {
+              i.remove();
+
+              for (FederateProxy fp : federationExecution.getFederates().values())
+              {
+                fp.removeObjectInstance(objectInstance.getObjectInstanceHandle(), federateProxy.getFederateHandle());
+              }
+            }
+            else
+            {
+              objectInstance.unconditionallyDivestAttributes(federateProxy);
+            }
+          }
+          break;
+      }
+    }
+    finally
+    {
+      objectsLock.writeLock().unlock();
+    }
+  }
+
+  public void localDeleteObjectInstance(
+    FederateProxy federateProxy, LocalDeleteObjectInstance localDeleteObjectInstance)
+  {
+    objectsLock.readLock().lock();
+    try
+    {
+      ObjectInstanceHandle objectInstanceHandle = localDeleteObjectInstance.getObjectInstanceHandle();
+
+      FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
+      if (objectInstance == null)
+      {
+        log.trace(marker, "dropping local delete object instance, object has been deleted: {}", objectInstanceHandle);
+      }
+      else
+      {
+        federateProxy.rediscoverObjectInstance(objectInstance);
+      }
+    }
+    finally
+    {
+      objectsLock.readLock().unlock();
+    }
+  }
+
+  public void deleteObjectInstance(FederateProxy federateProxy, DeleteObjectInstance deleteObjectInstance)
+  {
+    objectsLock.writeLock().lock();
+    try
+    {
+      if (deleteObjectInstance.getSentOrderType() == OrderType.TIMESTAMP)
+      {
+        // TODO: track for future federates?
+      }
+
+      objects.remove(deleteObjectInstance.getObjectInstanceHandle());
+
+      for (FederateProxy fp : federationExecution.getFederates().values())
+      {
+        if (fp != federateProxy)
+        {
+          fp.removeObjectInstance(deleteObjectInstance, federateProxy.getFederateHandle());
+        }
+      }
+    }
+    finally
+    {
+      objectsLock.writeLock().unlock();
+    }
+  }
+
   public void requestObjectInstanceAttributeValueUpdate(
     FederateProxy federateProxy, RequestObjectInstanceAttributeValueUpdate requestObjectInstanceAttributeValueUpdate)
   {
@@ -89,7 +227,8 @@ public class FederationExecutionObjectManager
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
       if (objectInstance == null)
       {
-        log.trace("dropping request object instance value update, object has been deleted: {}", objectInstanceHandle);
+        log.trace(marker, "dropping request object instance value update, object has been deleted: {}",
+                  objectInstanceHandle);
       }
       else
       {
@@ -399,7 +538,12 @@ public class FederationExecutionObjectManager
     try
     {
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
-      if (objectInstance != null)
+      if (objectInstance == null)
+      {
+        log.trace(marker, "dropping attribute ownership acquisition, object has been deleted: {}",
+                  objectInstanceHandle);
+      }
+      else
       {
         objectInstance.attributeOwnershipAcquisition(acquiree, attributeHandles, tag);
       }
@@ -417,7 +561,12 @@ public class FederationExecutionObjectManager
     try
     {
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
-      if (objectInstance != null)
+      if (objectInstance == null)
+      {
+        log.trace(marker, "dropping attribute ownership acquisition, object has been deleted: {}",
+                  objectInstanceHandle);
+      }
+      else
       {
         objectInstance.attributeOwnershipAcquisitionIfAvailable(acquiree, attributeHandles);
       }
@@ -514,9 +663,7 @@ public class FederationExecutionObjectManager
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
       if (objectInstance == null)
       {
-        // the object was deleted after an associate was issued...
-
-        log.trace("dropping associate regions for updates, object has been deleted: {}", objectInstanceHandle);
+        log.trace(marker, "dropping associate regions for updates, object has been deleted: {}", objectInstanceHandle);
 
         federateProxy.getFederateChannel().write(new AssociateRegionsForUpdatesResponse(
           associateRegionsForUpdates.getId(), AssociateRegionsForUpdatesResponse.Response.OBJECT_INSTANCE_NOT_KNOWN));

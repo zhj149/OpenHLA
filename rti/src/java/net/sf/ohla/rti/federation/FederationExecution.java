@@ -64,6 +64,7 @@ import net.sf.ohla.rti.messages.GetFederateName;
 import net.sf.ohla.rti.messages.GetFederateNameResponse;
 import net.sf.ohla.rti.messages.JoinFederationExecution;
 import net.sf.ohla.rti.messages.JoinFederationExecutionResponse;
+import net.sf.ohla.rti.messages.LocalDeleteObjectInstance;
 import net.sf.ohla.rti.messages.Message;
 import net.sf.ohla.rti.messages.ModifyLookahead;
 import net.sf.ohla.rti.messages.NegotiatedAttributeOwnershipDivestiture;
@@ -353,7 +354,7 @@ public class FederationExecution
 
       resignedFederates.put(federateProxy.getFederateHandle(), new ResignedFederate(federateProxy));
 
-      // TODO: take appropriate resign action
+      objectManager.resignFederationExecution(federateProxy, resignFederationExecution);
 
       federateProxy.resignFederationExecution(resignFederationExecution.getResignAction());
     }
@@ -866,7 +867,7 @@ public class FederationExecution
       {
         if (f != federateProxy)
         {
-          f.registerObjectInstance(federateProxy, objectInstance, registerObjectInstance);
+          f.discoverObjectInstance(objectInstance);
         }
       }
     }
@@ -921,23 +922,21 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      if (deleteObjectInstance.getSentOrderType() == OrderType.TIMESTAMP)
-      {
-        // TODO: track for future federates
-      }
+      objectManager.deleteObjectInstance(federateProxy, deleteObjectInstance);
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
 
-      RemoveObjectInstance removeObjectInstance = new RemoveObjectInstance(
-          deleteObjectInstance.getObjectInstanceHandle(), deleteObjectInstance.getTag(),
-          deleteObjectInstance.getSentOrderType(), deleteObjectInstance.getDeleteTime(),
-          deleteObjectInstance.getMessageRetractionHandle());
-
-      for (FederateProxy f : federates.values())
-      {
-        if (f != federateProxy)
-        {
-          f.removeObjectInstance(removeObjectInstance);
-        }
-      }
+  public void localDeleteObjectInstance(
+    FederateProxy federateProxy, LocalDeleteObjectInstance localDeleteObjectInstance)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+      objectManager.localDeleteObjectInstance(federateProxy, localDeleteObjectInstance);
     }
     finally
     {

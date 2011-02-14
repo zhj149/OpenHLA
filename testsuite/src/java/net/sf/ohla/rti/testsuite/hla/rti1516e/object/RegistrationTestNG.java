@@ -43,6 +43,7 @@ import hla.rti1516e.exceptions.FederateInternalError;
 import hla.rti1516e.exceptions.ObjectClassNotDefined;
 import hla.rti1516e.exceptions.ObjectClassNotPublished;
 import hla.rti1516e.exceptions.ObjectInstanceNameInUse;
+import hla.rti1516e.exceptions.ObjectInstanceNameNotReserved;
 
 @Test
 public class RegistrationTestNG
@@ -54,15 +55,9 @@ public class RegistrationTestNG
   private final List<TestFederateAmbassador> federateAmbassadors = new ArrayList<TestFederateAmbassador>(5);
 
   private ObjectClassHandle testObjectClassHandle;
-  private AttributeHandle attributeHandle1;
-  private AttributeHandle attributeHandle2;
-  private AttributeHandle attributeHandle3;
   private AttributeHandleSet testObjectAttributeHandles;
 
   private ObjectClassHandle testObjectClassHandle2;
-  private AttributeHandle attributeHandle4;
-  private AttributeHandle attributeHandle5;
-  private AttributeHandle attributeHandle6;
   private AttributeHandleSet testObjectAttributeHandles2;
 
   private ObjectInstanceHandle objectInstanceHandle1;
@@ -99,18 +94,18 @@ public class RegistrationTestNG
     federateHandles.add(rtiAmbassadors.get(4).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME));
 
     testObjectClassHandle = rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT);
-    attributeHandle1 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle, ATTRIBUTE1);
-    attributeHandle2 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle, ATTRIBUTE2);
-    attributeHandle3 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle, ATTRIBUTE3);
+    AttributeHandle attributeHandle1 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle, ATTRIBUTE1);
+    AttributeHandle attributeHandle2 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle, ATTRIBUTE2);
+    AttributeHandle attributeHandle3 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle, ATTRIBUTE3);
     testObjectAttributeHandles = rtiAmbassadors.get(0).getAttributeHandleSetFactory().create();
     testObjectAttributeHandles.add(attributeHandle1);
     testObjectAttributeHandles.add(attributeHandle2);
     testObjectAttributeHandles.add(attributeHandle3);
 
     testObjectClassHandle2 = rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT2);
-    attributeHandle4 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle2, ATTRIBUTE4);
-    attributeHandle5 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle2, ATTRIBUTE5);
-    attributeHandle6 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle2, ATTRIBUTE6);
+    AttributeHandle attributeHandle4 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle2, ATTRIBUTE4);
+    AttributeHandle attributeHandle5 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle2, ATTRIBUTE5);
+    AttributeHandle attributeHandle6 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle2, ATTRIBUTE6);
     testObjectAttributeHandles2 = rtiAmbassadors.get(0).getAttributeHandleSetFactory().create();
     testObjectAttributeHandles2.add(attributeHandle1);
     testObjectAttributeHandles2.add(attributeHandle2);
@@ -226,6 +221,13 @@ public class RegistrationTestNG
     throws Exception
   {
     rtiAmbassadors.get(0).registerObjectInstance(testObjectClassHandle, TEST_OBJECT);
+  }
+
+  @Test(expectedExceptions = {ObjectInstanceNameNotReserved.class})
+  public void testRegisterObjectInstanceWithUnreservedName()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).registerObjectInstance(testObjectClassHandle, "xxx");
   }
 
   @Test(dependsOnMethods = {"testRegisterObjectInstance", "testRegisterObjectInstanceChild", "testRegisterObjectInstanceByName"})
