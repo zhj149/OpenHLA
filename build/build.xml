@@ -349,7 +349,7 @@
         <pathelement location="${output.lib}/${ieee-1516e.jar}"/>
         <pathelement location="${output.lib}/${rti.jar}"/>
         <pathelement location="${output}/testsuite/classes"/>
-        <pathelement location="${resources.ieee-1516}"/>
+        <pathelement location="${resources.ieee-1516e}"/>
         <pathelement location="${testsuite.resources}"/>
         <pathelement location="${rti.resources}"/>
       </classpath>
@@ -376,6 +376,7 @@
         <pathelement location="${output.lib}/${rti.jar}"/>
         <pathelement location="${output}/testsuite/classes"/>
         <pathelement location="${testsuite.resources}"/>
+        <pathelement location="${rti.resources}"/>
       </classpath>
       <xmlfileset dir="${testsuite.resources}" includes="ieee-1516-testng.xml"/>
 
@@ -400,6 +401,7 @@
         <pathelement location="${output.lib}/${rti.jar}"/>
         <pathelement location="${output}/testsuite/classes"/>
         <pathelement location="${testsuite.resources}"/>
+        <pathelement location="${rti.resources}"/>
       </classpath>
       <xmlfileset dir="${testsuite.resources}" includes="hla-1.3-testng.xml"/>
 
