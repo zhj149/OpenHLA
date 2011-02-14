@@ -28,6 +28,7 @@ import net.sf.ohla.rti.RTIChannelUpstreamHandler;
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.federate.Federate;
 import net.sf.ohla.rti.federate.TimeAdvanceType;
+import net.sf.ohla.rti.messages.DeleteObjectInstance;
 import net.sf.ohla.rti.messages.FederateRestoreComplete;
 import net.sf.ohla.rti.messages.FederateRestoreNotComplete;
 import net.sf.ohla.rti.messages.FederateSaveBegun;
@@ -36,7 +37,6 @@ import net.sf.ohla.rti.messages.FederateSaveNotComplete;
 import net.sf.ohla.rti.messages.GALTAdvanced;
 import net.sf.ohla.rti.messages.GALTUndefined;
 import net.sf.ohla.rti.messages.QueryInteractionTransportationType;
-import net.sf.ohla.rti.messages.RegisterObjectInstance;
 import net.sf.ohla.rti.messages.Retract;
 import net.sf.ohla.rti.messages.SendInteraction;
 import net.sf.ohla.rti.messages.SubscribeInteractionClass;
@@ -295,11 +295,22 @@ public class FederateProxy
     restoreStatus = RestoreStatus.NO_RESTORE_IN_PROGRESS;
   }
 
+  public void rediscoverObjectInstance(FederationExecutionObjectInstance objectInstance)
+  {
+    // this is triggered by a local delete object instance, of which only one thread can change at a time
+
+    DiscoverObjectInstance discoverObjectInstance = subscriptionManager.discoverObjectInstance(objectInstance);
+    if (discoverObjectInstance != null)
+    {
+      federateChannel.write(discoverObjectInstance);
+    }
+  }
+
   public void discoverObjectInstance(FederationExecutionObjectInstance objectInstance)
   {
     // this is triggered by a subscription change, of which only one thread can change at a time
 
-    if (!discoveredObjects.contains(objectInstance.getObjectInstanceHandle()))
+    if (discoveredObjects.add(objectInstance.getObjectInstanceHandle()))
     {
       federateChannel.write(new DiscoverObjectInstance(
         objectInstance.getObjectInstanceHandle(), objectInstance.getObjectClass().getObjectClassHandle(),
@@ -307,17 +318,12 @@ public class FederateProxy
     }
   }
 
-  public void registerObjectInstance(
-    FederateProxy federateProxy, FederationExecutionObjectInstance objectInstance,
-    RegisterObjectInstance registerObjectInstance)
+  public void discoverObjectInstance(FederateProxy federateProxy, FederationExecutionObjectInstance objectInstance)
   {
-    DiscoverObjectInstance discoverObjectInstance;
-
     subscriptionLock.readLock().lock();
     try
     {
-      discoverObjectInstance = subscriptionManager.transform(federateProxy, objectInstance, registerObjectInstance);
-
+      DiscoverObjectInstance discoverObjectInstance = subscriptionManager.discoverObjectInstance(objectInstance);
       if (discoverObjectInstance != null)
       {
         discoveredObjects.add(discoverObjectInstance.getObjectInstanceHandle());
@@ -340,7 +346,8 @@ public class FederateProxy
     subscriptionLock.readLock().lock();
     try
     {
-      reflectAttributeValues = subscriptionManager.transform(federateProxy, objectInstance, updateAttributeValues);
+      reflectAttributeValues = subscriptionManager.reflectAttributeValues(
+        federateProxy, objectInstance, updateAttributeValues);
     }
     finally
     {
@@ -366,7 +373,7 @@ public class FederateProxy
     subscriptionLock.readLock().lock();
     try
     {
-      receiveInteraction = subscriptionManager.transform(federateProxy, interactionClass, sendInteraction);
+      receiveInteraction = subscriptionManager.receiveInteraction(federateProxy, interactionClass, sendInteraction);
     }
     finally
     {
@@ -384,9 +391,23 @@ public class FederateProxy
     }
   }
 
-  public void removeObjectInstance(RemoveObjectInstance removeObjectInstance)
+  public void removeObjectInstance(ObjectInstanceHandle objectInstanceHandle, FederateHandle federateHandle)
   {
-    federateChannel.write(removeObjectInstance);
+    if (discoveredObjects.contains(objectInstanceHandle))
+    {
+      federateChannel.write(new RemoveObjectInstance(objectInstanceHandle, federateHandle));
+    }
+  }
+
+  public void removeObjectInstance(DeleteObjectInstance deleteObjectInstance, FederateHandle federateHandle)
+  {
+    if (discoveredObjects.contains(deleteObjectInstance.getObjectInstanceHandle()))
+    {
+      federateChannel.write(new RemoveObjectInstance(
+        deleteObjectInstance.getObjectInstanceHandle(), deleteObjectInstance.getTag(),
+        deleteObjectInstance.getSentOrderType(), deleteObjectInstance.getTime(),
+        deleteObjectInstance.getMessageRetractionHandle(), federateHandle));
+    }
   }
 
   public void provideAttributeValueUpdate(ProvideAttributeValueUpdate provideAttributeValueUpdate)

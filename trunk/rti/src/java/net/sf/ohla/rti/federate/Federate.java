@@ -46,7 +46,6 @@ import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandleFactory;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectInstanceHandleFactory;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandleFactory;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandleValueMapFactory;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRTIambassador;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandleSetFactory;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandleFactory;
 import net.sf.ohla.rti.messages.AbortFederationRestore;
@@ -655,8 +654,6 @@ public class Federate
       objectManager.resignFederationExecution(resignAction);
 
       federateState = FederateState.RESIGNED;
-
-      rtiChannel.write(new ResignFederationExecution(resignAction));
 
       rtiChannel.getPipeline().remove(FederateChannelUpstreamHandler.NAME);
     }

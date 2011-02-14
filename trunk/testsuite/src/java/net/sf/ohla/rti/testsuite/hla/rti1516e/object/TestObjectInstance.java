@@ -28,9 +28,12 @@ public class TestObjectInstance
   private final String objectInstanceName;
   private final FederateHandle producingFederateHandle;
 
-  private AttributeHandleValueMap attributeValues;
   private byte[] tag;
+
+  private AttributeHandleValueMap attributeValues;
   private FederateHandle updatingFederateHandle;
+
+  private FederateHandle deletingFederateHandle;
 
   private boolean removed;
 
@@ -92,8 +95,16 @@ public class TestObjectInstance
     return removed;
   }
 
-  public void setRemoved(boolean removed)
+  public void setRemoved(byte[] tag, FederateHandle deletingFederateHandle)
   {
-    this.removed = removed;
+    removed = true;
+
+    this.tag = tag;
+    this.deletingFederateHandle = deletingFederateHandle;
+  }
+
+  public FederateHandle getDeletingFederateHandle()
+  {
+    return deletingFederateHandle;
   }
 }
