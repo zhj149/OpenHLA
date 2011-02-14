@@ -37,7 +37,7 @@ import hla.rti1516e.exceptions.IllegalName;
 import hla.rti1516e.exceptions.ObjectInstanceNameNotReserved;
 
 @Test
-public class NameReservationTestNG
+public class ObjectNameReservationTestNG
   extends BaseTestNG
 {
   private static final String FEDERATION_NAME = "OHLA Object Name Reservation Test Federation";
@@ -54,7 +54,7 @@ public class NameReservationTestNG
 
   private final List<TestFederateAmbassador> federateAmbassadors = new ArrayList<TestFederateAmbassador>(3);
 
-  public NameReservationTestNG()
+  public ObjectNameReservationTestNG()
   {
     super(3);
   }
