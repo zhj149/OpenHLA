@@ -46,7 +46,7 @@ import hla.rti1516e.exceptions.ObjectInstanceNameInUse;
 import hla.rti1516e.exceptions.ObjectInstanceNameNotReserved;
 
 @Test
-public class RegistrationTestNG
+public class ObjectRegistrationTestNG
   extends BaseTestNG
 {
   private static final String FEDERATION_NAME = "OHLA Object Registration Test Federation";
@@ -64,7 +64,7 @@ public class RegistrationTestNG
   private ObjectInstanceHandle objectInstanceHandle2;
   private ObjectInstanceHandle objectInstanceHandle3;
 
-  public RegistrationTestNG()
+  public ObjectRegistrationTestNG()
   {
     super(5);
   }
