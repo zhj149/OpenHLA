@@ -639,7 +639,7 @@ public class FederationExecutionObjectManager
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
       if (objectInstance == null)
       {
-        // the object was deleted after a query was issued...
+        log.trace(marker, "dropping query attribute ownership, object has been deleted: {}", objectInstanceHandle);
       }
       else
       {

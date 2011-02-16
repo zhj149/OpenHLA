@@ -2455,6 +2455,15 @@ public class IEEE1516eRTIambassador
     throws AttributeNotDefined, ObjectInstanceNotKnown, SaveInProgress, RestoreInProgress, FederateNotExecutionMember,
            NotConnected, RTIinternalError
   {
+    if (objectInstanceHandle == null)
+    {
+      throw new ObjectInstanceNotKnown("objectInstanceHandle cannot be null");
+    }
+    else if (attributeHandle == null)
+    {
+      throw new AttributeNotDefined("attributeHandle cannot be null");
+    }
+
     connectLock.readLock().lock();
     try
     {
@@ -2482,6 +2491,15 @@ public class IEEE1516eRTIambassador
     throws AttributeNotDefined, ObjectInstanceNotKnown, SaveInProgress, RestoreInProgress, FederateNotExecutionMember,
            NotConnected, RTIinternalError
   {
+    if (objectInstanceHandle == null)
+    {
+      throw new ObjectInstanceNotKnown("objectInstanceHandle cannot be null");
+    }
+    else if (attributeHandle == null)
+    {
+      throw new AttributeNotDefined("attributeHandle cannot be null");
+    }
+
     connectLock.readLock().lock();
     try
     {
