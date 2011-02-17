@@ -2299,31 +2299,43 @@ public class IEEE1516eRTIambassador
            ObjectInstanceNotKnown, SaveInProgress, RestoreInProgress, FederateNotExecutionMember, NotConnected,
            RTIinternalError
   {
-    connectLock.readLock().lock();
-    try
+    if (objectInstanceHandle == null)
     {
-      checkIfNotConnected();
-
-      joinResignLock.readLock().lock();
+      throw new ObjectInstanceNotKnown("objectInstanceHandle cannot be null");
+    }
+    else if (attributeHandles == null || attributeHandles.isEmpty())
+    {
+      log.warn("attempting to unconditionally divest attribrutes with null or empty attribute handles: {}",
+               objectInstanceHandle);
+    }
+    else
+    {
+      connectLock.readLock().lock();
       try
       {
-        checkIfFederateNotExecutionMember();
+        checkIfNotConnected();
 
-        federate.attributeOwnershipAcquisition(objectInstanceHandle, attributeHandles, tag);
+        joinResignLock.readLock().lock();
+        try
+        {
+          checkIfFederateNotExecutionMember();
+
+          federate.attributeOwnershipAcquisition(objectInstanceHandle, attributeHandles, tag);
+        }
+        finally
+        {
+          joinResignLock.readLock().unlock();
+        }
       }
       finally
       {
-        joinResignLock.readLock().unlock();
+        connectLock.readLock().unlock();
       }
-    }
-    finally
-    {
-      connectLock.readLock().unlock();
     }
   }
 
-  public void attributeOwnershipAcquisitionIfAvailable(ObjectInstanceHandle objectInstanceHandle,
-                                                       AttributeHandleSet attributeHandles)
+  public void attributeOwnershipAcquisitionIfAvailable(
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
     throws AttributeAlreadyBeingAcquired, AttributeNotPublished, ObjectClassNotPublished, FederateOwnsAttributes,
            AttributeNotDefined, ObjectInstanceNotKnown, SaveInProgress, RestoreInProgress, FederateNotExecutionMember,
            NotConnected, RTIinternalError
