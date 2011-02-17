@@ -17,6 +17,7 @@
 package net.sf.ohla.rti.testsuite.hla.rti1516e.ownership;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,14 +39,15 @@ import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.RTIambassador;
 import hla.rti1516e.ResignAction;
 import hla.rti1516e.exceptions.AttributeNotDefined;
+import hla.rti1516e.exceptions.AttributeNotPublished;
 import hla.rti1516e.exceptions.FederateInternalError;
 import hla.rti1516e.exceptions.ObjectInstanceNotKnown;
 
 @Test
-public class AttributeDivestitureTestNG
+public class AttributeAcquisitionTestNG
   extends BaseTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA Attribute Ownership Divesture Test Federation";
+  private static final String FEDERATION_NAME = "OHLA Attribute Ownership Acquisition Test Federation";
 
   private final List<FederateHandle> federateHandles = new ArrayList<FederateHandle>(3);
   private final List<TestFederateAmbassador> federateAmbassadors = new ArrayList<TestFederateAmbassador>(3);
@@ -58,7 +60,7 @@ public class AttributeDivestitureTestNG
   private AttributeHandle attributeHandle3;
   private AttributeHandle attributeHandle4;
 
-  public AttributeDivestitureTestNG()
+  public AttributeAcquisitionTestNG()
   {
     super(3);
   }
@@ -87,20 +89,25 @@ public class AttributeDivestitureTestNG
     attributeHandle1 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle, ATTRIBUTE1);
     attributeHandle2 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle, ATTRIBUTE2);
     attributeHandle3 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle, ATTRIBUTE3);
-
-    // only explicitly publish 2 attributes, the third will start unowned
-    //
-    AttributeHandleSet testObjectAttributeHandles = rtiAmbassadors.get(0).getAttributeHandleSetFactory().create();
-    testObjectAttributeHandles.add(attributeHandle1);
-    testObjectAttributeHandles.add(attributeHandle2);
-
     attributeHandle4 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle2, ATTRIBUTE4);
 
-    rtiAmbassadors.get(0).publishObjectClassAttributes(testObjectClassHandle, testObjectAttributeHandles);
-    rtiAmbassadors.get(1).publishObjectClassAttributes(testObjectClassHandle, testObjectAttributeHandles);
+    AttributeHandleSet subscribedObjectAttributeHandles = rtiAmbassadors.get(0).getAttributeHandleSetFactory().create();
+    subscribedObjectAttributeHandles.add(attributeHandle1);
+    subscribedObjectAttributeHandles.add(attributeHandle2);
+    subscribedObjectAttributeHandles.add(attributeHandle3);
 
-    rtiAmbassadors.get(0).subscribeObjectClassAttributes(testObjectClassHandle, testObjectAttributeHandles);
-    rtiAmbassadors.get(1).subscribeObjectClassAttributes(testObjectClassHandle, testObjectAttributeHandles);
+    AttributeHandleSet publishedObjectAttributeHandles = rtiAmbassadors.get(0).getAttributeHandleSetFactory().create();
+    publishedObjectAttributeHandles.add(attributeHandle1);
+
+    rtiAmbassadors.get(0).publishObjectClassAttributes(testObjectClassHandle, publishedObjectAttributeHandles);
+
+    AttributeHandleSet publishedObjectAttributeHandles2 = rtiAmbassadors.get(0).getAttributeHandleSetFactory().create();
+    publishedObjectAttributeHandles2.add(attributeHandle2);
+    publishedObjectAttributeHandles2.add(attributeHandle3);
+    rtiAmbassadors.get(1).publishObjectClassAttributes(testObjectClassHandle, publishedObjectAttributeHandles2);
+
+    rtiAmbassadors.get(0).subscribeObjectClassAttributes(testObjectClassHandle, subscribedObjectAttributeHandles);
+    rtiAmbassadors.get(1).subscribeObjectClassAttributes(testObjectClassHandle, subscribedObjectAttributeHandles);
 
     testObjectInstanceHandle = rtiAmbassadors.get(0).registerObjectInstance(testObjectClassHandle);
     testObjectInstanceHandle2 = rtiAmbassadors.get(1).registerObjectInstance(testObjectClassHandle);
@@ -131,55 +138,61 @@ public class AttributeDivestitureTestNG
   }
 
   @Test
-  public void testUnconditionalAttributeOwnershipDivestiture()
+  public void testUnownedAttributeOwnershipAcquisition()
     throws Exception
   {
     AttributeHandleSet attributeHandles = rtiAmbassadors.get(0).getAttributeHandleSetFactory().create();
     attributeHandles.add(attributeHandle1);
-    attributeHandles.add(attributeHandle2);
 
-    rtiAmbassadors.get(0).unconditionalAttributeOwnershipDivestiture(testObjectInstanceHandle, attributeHandles);
+    rtiAmbassadors.get(0).attributeOwnershipAcquisition(testObjectInstanceHandle2, attributeHandles, TAG);
 
-    assert !rtiAmbassadors.get(0).isAttributeOwnedByFederate(testObjectInstanceHandle, attributeHandle1);
-    assert !rtiAmbassadors.get(0).isAttributeOwnedByFederate(testObjectInstanceHandle, attributeHandle2);
+    federateAmbassadors.get(0).checkAttributesAcquired(testObjectInstanceHandle2, attributeHandles, TAG);
 
-    rtiAmbassadors.get(0).queryAttributeOwnership(testObjectInstanceHandle, attributeHandle1);
-    rtiAmbassadors.get(0).queryAttributeOwnership(testObjectInstanceHandle, attributeHandle2);
+    assert rtiAmbassadors.get(0).isAttributeOwnedByFederate(testObjectInstanceHandle2, attributeHandle1);
 
-    federateAmbassadors.get(0).checkAttributeIsUnowned(testObjectInstanceHandle, attributeHandle1);
-    federateAmbassadors.get(0).checkAttributeIsUnowned(testObjectInstanceHandle, attributeHandle2);
+    rtiAmbassadors.get(0).queryAttributeOwnership(testObjectInstanceHandle2, attributeHandle1);
+    federateAmbassadors.get(0).checkAttributeIsOwnedByFederate(
+      testObjectInstanceHandle2, attributeHandle1, federateHandles.get(0));
   }
 
   @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
-  public void testUnconditionalAttributeOwnershipDivestitureWithNullObjectInstanceHandle()
+  public void testAttributeOwnershipAcquisitionWithNullObjectInstanceHandle()
     throws Exception
   {
     AttributeHandleSet attributeHandles = rtiAmbassadors.get(0).getAttributeHandleSetFactory().create();
     attributeHandles.add(attributeHandle1);
-    attributeHandles.add(attributeHandle2);
 
-    rtiAmbassadors.get(0).unconditionalAttributeOwnershipDivestiture(null, attributeHandles);
+    rtiAmbassadors.get(0).attributeOwnershipAcquisition(null, attributeHandles, TAG);
   }
 
   @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
-  public void testUnconditionalAttributeOwnershipDivestitureWithUnknownObjectInstanceHandle()
+  public void testAttributeOwnershipAcquisitionWithUnknownObjectInstanceHandle()
     throws Exception
   {
     AttributeHandleSet attributeHandles = rtiAmbassadors.get(0).getAttributeHandleSetFactory().create();
     attributeHandles.add(attributeHandle1);
-    attributeHandles.add(attributeHandle2);
 
-    rtiAmbassadors.get(2).unconditionalAttributeOwnershipDivestiture(testObjectInstanceHandle, attributeHandles);
+    rtiAmbassadors.get(2).attributeOwnershipAcquisition(testObjectInstanceHandle, attributeHandles, TAG);
   }
 
   @Test(expectedExceptions = {AttributeNotDefined.class})
-  public void testUnconditionalAttributeOwnershipDivestitureWithUndefinedAttributeHandle()
+  public void testAttributeOwnershipAcquisitionWithUndefinedAttributeHandle()
     throws Exception
   {
     AttributeHandleSet attributeHandles = rtiAmbassadors.get(0).getAttributeHandleSetFactory().create();
     attributeHandles.add(attributeHandle4);
 
-    rtiAmbassadors.get(1).unconditionalAttributeOwnershipDivestiture(testObjectInstanceHandle, attributeHandles);
+    rtiAmbassadors.get(1).attributeOwnershipAcquisition(testObjectInstanceHandle, attributeHandles, TAG);
+  }
+
+  @Test(expectedExceptions = {AttributeNotPublished.class})
+  public void testUnpublishedAttributeOwnershipAcquisition()
+    throws Exception
+  {
+    AttributeHandleSet attributeHandles = rtiAmbassadors.get(1).getAttributeHandleSetFactory().create();
+    attributeHandles.add(attributeHandle1);
+
+    rtiAmbassadors.get(1).attributeOwnershipAcquisition(testObjectInstanceHandle, attributeHandles, TAG);
   }
 
   private static class TestFederateAmbassador
@@ -189,6 +202,9 @@ public class AttributeDivestitureTestNG
 
     private final Map<ObjectInstanceHandle, Map<AttributeHandle, Object>> objectInstances =
       new HashMap<ObjectInstanceHandle, Map<AttributeHandle, Object>>();
+
+    private final Map<ObjectInstanceHandle, Object[]> acquiredAttributes =
+      new HashMap<ObjectInstanceHandle, Object[]>();
 
     public TestFederateAmbassador(RTIambassador rtiAmbassador)
     {
@@ -203,6 +219,19 @@ public class AttributeDivestitureTestNG
         rtiAmbassador.evokeCallback(1.0);
       }
       assert objectInstances.containsKey(objectInstanceHandle);
+    }
+
+    public void checkAttributesAcquired(
+      ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
+      throws Exception
+    {
+      for (int i = 0; i < 5 && !acquiredAttributes.containsKey(objectInstanceHandle); i++)
+      {
+        rtiAmbassador.evokeCallback(1.0);
+      }
+      Object[] acquisition = acquiredAttributes.get(objectInstanceHandle);
+      assert acquisition != null && attributeHandles.equals((AttributeHandleSet) acquisition[0]) &&
+             Arrays.equals(tag, (byte[]) acquisition[1]);
     }
 
     public void checkAttributeIsOwnedByFederate(
@@ -243,6 +272,14 @@ public class AttributeDivestitureTestNG
       throws FederateInternalError
     {
       objectInstances.put(objectInstanceHandle, new HashMap<AttributeHandle, Object>());
+    }
+
+    @Override
+    public void attributeOwnershipAcquisitionNotification(
+      ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
+      throws FederateInternalError
+    {
+      acquiredAttributes.put(objectInstanceHandle, new Object[] { attributeHandles, tag });
     }
 
     @Override

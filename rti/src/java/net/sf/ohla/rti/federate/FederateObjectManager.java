@@ -1674,7 +1674,7 @@ public class FederateObjectManager
     AttributeHandleSet publishedAttributeHandles = publishedObjectClasses.get(objectClassHandle);
     if (publishedAttributeHandles == null)
     {
-      throw new ObjectClassNotPublished(String.format("%s", objectClassHandle));
+      throw new ObjectClassNotPublished(objectClassHandle.toString());
     }
     else
     {
@@ -1682,10 +1682,11 @@ public class FederateObjectManager
       {
         if (!publishedAttributeHandles.contains(attributeHandle))
         {
-          ObjectClass objectClass = federate.getFDD().getObjectClasses().get(objectClassHandle);
-          assert objectClass != null;
+          // it is either unpublished or not defined
+          //
+          federate.getFDD().getObjectClassSafely(objectClassHandle).checkIfAttributeNotDefined(attributeHandle);
 
-          objectClass.checkIfAttributeNotDefined(attributeHandle);
+          throw new AttributeNotPublished(attributeHandle.toString());
         }
       }
     }
