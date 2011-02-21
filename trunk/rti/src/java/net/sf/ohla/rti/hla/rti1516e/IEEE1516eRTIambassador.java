@@ -2241,26 +2241,37 @@ public class IEEE1516eRTIambassador
     throws AttributeAlreadyBeingDivested, AttributeNotOwned, AttributeNotDefined, ObjectInstanceNotKnown,
            SaveInProgress, RestoreInProgress, FederateNotExecutionMember, NotConnected, RTIinternalError
   {
-    connectLock.readLock().lock();
-    try
+    if (objectInstanceHandle == null)
     {
-      checkIfNotConnected();
-
-      joinResignLock.readLock().lock();
+      throw new ObjectInstanceNotKnown("objectInstanceHandle cannot be null");
+    }
+    else if (attributeHandles == null || attributeHandles.isEmpty())
+    {
+      log.warn("attempting to divest attribrutes with null or empty attribute handles: {}", objectInstanceHandle);
+    }
+    else
+    {
+      connectLock.readLock().lock();
       try
       {
-        checkIfFederateNotExecutionMember();
+        checkIfNotConnected();
 
-        federate.negotiatedAttributeOwnershipDivestiture(objectInstanceHandle, attributeHandles, tag);
+        joinResignLock.readLock().lock();
+        try
+        {
+          checkIfFederateNotExecutionMember();
+
+          federate.negotiatedAttributeOwnershipDivestiture(objectInstanceHandle, attributeHandles, tag);
+        }
+        finally
+        {
+          joinResignLock.readLock().unlock();
+        }
       }
       finally
       {
-        joinResignLock.readLock().unlock();
+        connectLock.readLock().unlock();
       }
-    }
-    finally
-    {
-      connectLock.readLock().unlock();
     }
   }
 

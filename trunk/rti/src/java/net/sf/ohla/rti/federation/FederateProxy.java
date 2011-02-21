@@ -26,8 +26,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.sf.ohla.rti.RTIChannelUpstreamHandler;
 import net.sf.ohla.rti.fdd.InteractionClass;
+import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.federate.Federate;
 import net.sf.ohla.rti.federate.TimeAdvanceType;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSetFactory;
 import net.sf.ohla.rti.messages.DeleteObjectInstance;
 import net.sf.ohla.rti.messages.FederateRestoreComplete;
 import net.sf.ohla.rti.messages.FederateRestoreNotComplete;
@@ -36,6 +38,7 @@ import net.sf.ohla.rti.messages.FederateSaveComplete;
 import net.sf.ohla.rti.messages.FederateSaveNotComplete;
 import net.sf.ohla.rti.messages.GALTAdvanced;
 import net.sf.ohla.rti.messages.GALTUndefined;
+import net.sf.ohla.rti.messages.PublishObjectClassAttributes;
 import net.sf.ohla.rti.messages.QueryInteractionTransportationType;
 import net.sf.ohla.rti.messages.Retract;
 import net.sf.ohla.rti.messages.SendInteraction;
@@ -58,6 +61,7 @@ import net.sf.ohla.rti.messages.callbacks.ReceiveInteraction;
 import net.sf.ohla.rti.messages.callbacks.ReflectAttributeValues;
 import net.sf.ohla.rti.messages.callbacks.RemoveObjectInstance;
 import net.sf.ohla.rti.messages.callbacks.ReportInteractionTransportationType;
+import net.sf.ohla.rti.messages.callbacks.RequestAttributeOwnershipAssumption;
 import net.sf.ohla.rti.messages.callbacks.TimeAdvanceGrant;
 import net.sf.ohla.rti.messages.callbacks.TimeConstrainedEnabled;
 import net.sf.ohla.rti.messages.callbacks.TimeRegulationEnabled;
@@ -68,10 +72,13 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
+import hla.rti1516e.AttributeHandle;
+import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.InteractionClassHandle;
 import hla.rti1516e.LogicalTime;
 import hla.rti1516e.LogicalTimeInterval;
+import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.OrderType;
 import hla.rti1516e.ResignAction;
@@ -94,6 +101,10 @@ public class FederateProxy
    * The {@code Channel} back to the Federate.
    */
   private final Channel federateChannel;
+
+  private final ReadWriteLock publicationLock = new ReentrantReadWriteLock(true);
+  private final Map<ObjectClassHandle, AttributeHandleSet> publishedObjectClasses =
+    new HashMap<ObjectClassHandle, AttributeHandleSet>();
 
   private final ReadWriteLock subscriptionLock = new ReentrantReadWriteLock(true);
   private final FederateProxySubscriptionManager subscriptionManager = new FederateProxySubscriptionManager();
@@ -420,6 +431,80 @@ public class FederateProxy
     federateChannel.write(retract);
   }
 
+  public void negotiatedAttributeOwnershipDivestiture(
+    FederationExecutionObjectInstance objectInstance, AttributeHandleSet attributeHandles, byte[] tag)
+  {
+    publicationLock.readLock().lock();
+    try
+    {
+      AttributeHandleSet candidateAttributeHandles = null;
+
+      // search the whole object class hierarchy for any published attributes
+      //
+      ObjectClass objectClass = objectInstance.getObjectClass();
+      do
+      {
+        AttributeHandleSet publishedAttributeHandles = publishedObjectClasses.get(objectClass.getObjectClassHandle());
+        if (publishedAttributeHandles != null)
+        {
+          for (AttributeHandle attributeHandle : attributeHandles)
+          {
+            if (publishedAttributeHandles.contains(attributeHandle))
+            {
+              if (candidateAttributeHandles == null)
+              {
+                candidateAttributeHandles = IEEE1516eAttributeHandleSetFactory.INSTANCE.create();
+              }
+              candidateAttributeHandles.add(attributeHandle);
+            }
+          }
+        }
+      } while ((objectClass = objectClass.getSuperObjectClass()) != null);
+
+      if (candidateAttributeHandles != null)
+      {
+        federateChannel.write(new RequestAttributeOwnershipAssumption(
+          objectInstance.getObjectInstanceHandle(), candidateAttributeHandles, tag));
+      }
+    }
+    finally
+    {
+      publicationLock.readLock().unlock();
+    }
+  }
+
+  public void requestAttributeOwnershipAssumption(
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
+  {
+    // this should only be called when a federate updates its publishing object classes and there is an object with an
+    // attribute that is willing to be divested
+
+    federateChannel.write(new RequestAttributeOwnershipAssumption(objectInstanceHandle, attributeHandles, tag));
+  }
+
+  public void publishObjectClassAttributes(PublishObjectClassAttributes publishObjectClassAttributes)
+  {
+    ObjectClassHandle objectClassHandle = publishObjectClassAttributes.getObjectClassHandle();
+
+    publicationLock.writeLock().lock();
+    try
+    {
+      AttributeHandleSet publishedAttributeHandles = publishedObjectClasses.get(objectClassHandle);
+      if (publishedAttributeHandles == null)
+      {
+        publishedObjectClasses.put(objectClassHandle, publishObjectClassAttributes.getAttributeHandles());
+      }
+      else
+      {
+        publishedAttributeHandles.addAll(publishObjectClassAttributes.getAttributeHandles());
+      }
+    }
+    finally
+    {
+      publicationLock.writeLock().unlock();
+    }
+  }
+
   public void subscribeObjectClassAttributes(SubscribeObjectClassAttributes subscribeObjectClassAttributes)
   {
     subscriptionLock.writeLock().lock();
@@ -543,6 +628,7 @@ public class FederateProxy
     }
   }
 
+  @SuppressWarnings("unchecked")
   public void enableTimeRegulation(LogicalTimeInterval lookahead, LogicalTime federateTime)
     throws IllegalTimeArithmetic, InvalidLogicalTimeInterval
   {
@@ -577,6 +663,7 @@ public class FederateProxy
     log.debug(marker, "time regulation disabled: {}");
   }
 
+  @SuppressWarnings("unchecked")
   public void enableTimeConstrained()
   {
     if (galt == null || federateTime.compareTo(galt) <= 0)
@@ -605,6 +692,7 @@ public class FederateProxy
     log.debug(marker, "time constrained disabled: {}", this);
   }
 
+  @SuppressWarnings("unchecked")
   public void timeAdvanceRequest(LogicalTime time)
     throws IllegalTimeArithmetic, InvalidLogicalTimeInterval
   {
@@ -631,6 +719,7 @@ public class FederateProxy
     }
   }
 
+  @SuppressWarnings("unchecked")
   public void timeAdvanceRequestAvailable(LogicalTime time)
     throws IllegalTimeArithmetic, InvalidLogicalTimeInterval
   {
@@ -657,6 +746,7 @@ public class FederateProxy
     }
   }
 
+  @SuppressWarnings("unchecked")
   public void nextMessageRequest(LogicalTime time)
     throws IllegalTimeArithmetic, InvalidLogicalTimeInterval
   {
@@ -734,6 +824,7 @@ public class FederateProxy
     }
   }
 
+  @SuppressWarnings("unchecked")
   public void nextMessageRequestAvailable(LogicalTime time)
     throws IllegalTimeArithmetic, InvalidLogicalTimeInterval
   {
@@ -811,6 +902,7 @@ public class FederateProxy
     }
   }
 
+  @SuppressWarnings("unchecked")
   public void flushQueueRequest(LogicalTime time)
     throws IllegalTimeArithmetic, InvalidLogicalTimeInterval
   {
@@ -830,6 +922,7 @@ public class FederateProxy
     federateChannel.write(new TimeAdvanceGrant(federateTime));
   }
 
+  @SuppressWarnings("unchecked")
   public void galtAdvanced(LogicalTime galt)
     throws IllegalTimeArithmetic
   {
@@ -960,6 +1053,7 @@ public class FederateProxy
     federateChannel.write(new GALTUndefined());
   }
 
+  @SuppressWarnings("unchecked")
   public void updateLITS(LogicalTime time)
   {
     federationExecution.getTimeManager().getTimeLock().writeLock().lock();

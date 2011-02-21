@@ -44,6 +44,7 @@
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.ownership.AttributeOwnershipTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.ownership.AttributeDivestitureTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.ownership.AttributeAcquisitionTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.ownership.NegotiatedAttributeDivestitureTestNG"/>
     </classes>
   </test>
   <test name="IEEE 1516e - Support Services">

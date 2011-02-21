@@ -49,6 +49,8 @@ public class FederationExecutionAttributeInstance
    */
   private boolean wantsToDivest;
 
+  private byte[] divestingTag;
+
   /**
    * The 'ownership' line. When federates request ownership of this attribute they are placed into a line and given
    * ownership based upon when they entered the line.
@@ -163,9 +165,19 @@ public class FederationExecutionAttributeInstance
     this.owner = owner;
   }
 
+  public boolean isUnowned()
+  {
+    return owner == null;
+  }
+
   public boolean wantsToDivest()
   {
     return wantsToDivest;
+  }
+
+  public byte[] getDivestingTag()
+  {
+    return divestingTag;
   }
 
   public void checkIfAttributeDivestitureWasNotRequested()
@@ -180,30 +192,44 @@ public class FederationExecutionAttributeInstance
     // TODO: check status
   }
 
-  public FederateProxy unconditionalAttributeOwnershipDivestiture()
+  public Divestiture unconditionalAttributeOwnershipDivestiture()
   {
     // same behavior
     //
     return confirmDivestiture();
   }
 
+  /**
+   * Puts this {@code FederationExecutionAttributeInstance} into the divesting state. Returns {@code true} if there are
+   * federates willing to take ownership of this attribute; {@code false} otherwise.
+   *
+   * @param tag data specified by the divesting federate
+   * @return {@code true} if there are federates willing to take ownership of this attribute; {@code false} otherwise
+   */
   public boolean negotiatedAttributeOwnershipDivestiture(byte[] tag)
   {
     wantsToDivest = true;
+    divestingTag = tag;
 
     return !requestingOwnerships.isEmpty();
   }
 
-  public FederateProxy confirmDivestiture()
+  public Divestiture confirmDivestiture()
   {
-    owner = null;
+    byte[] divestingTag = this.divestingTag;
+
     wantsToDivest = false;
+    this.divestingTag = null;
     regionRealizations.clear();
 
-    // give ownership to the next in line
-    //
-    if (!requestingOwnerships.isEmpty())
+    if (requestingOwnerships.isEmpty())
     {
+      owner = null;
+    }
+    else
+    {
+      // give ownership to the next in line
+
       Iterator<FederateProxy> i = requestingOwnerships.iterator();
       owner = i.next();
       i.remove();
@@ -211,7 +237,7 @@ public class FederationExecutionAttributeInstance
       newOwner();
     }
 
-    return owner;
+    return owner == null ? null : new Divestiture(owner, divestingTag);
   }
 
   public boolean attributeOwnershipAcquisitionIfAvailable(FederateProxy acquiree)
@@ -222,6 +248,7 @@ public class FederationExecutionAttributeInstance
       //
       owner = acquiree;
       wantsToDivest = false;
+      divestingTag = null;
 
       newOwner();
     }
@@ -253,6 +280,7 @@ public class FederationExecutionAttributeInstance
       i.remove();
 
       wantsToDivest = false;
+      divestingTag = null;
 
       newOwner();
     }
@@ -270,6 +298,7 @@ public class FederationExecutionAttributeInstance
     if (this.owner == owner)
     {
       wantsToDivest = false;
+      divestingTag = null;
     }
   }
 
@@ -284,6 +313,18 @@ public class FederationExecutionAttributeInstance
     if (associatedRegions != null)
     {
       this.regionRealizations.putAll(associatedRegions);
+    }
+  }
+
+  public static class Divestiture
+  {
+    public final FederateProxy newOwner;
+    public final byte[] tag;
+
+    public Divestiture(FederateProxy newOwner, byte[] tag)
+    {
+      this.newOwner = newOwner;
+      this.tag = tag;
     }
   }
 }

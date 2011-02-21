@@ -305,7 +305,7 @@ public class FederateObjectInstance
 
   public void negotiatedAttributeOwnershipDivestiture(
     AttributeHandleSet attributeHandles, byte[] tag, Federate federate)
-    throws AttributeNotDefined, AttributeNotOwned, AttributeAlreadyBeingDivested, RTIinternalError
+    throws AttributeAlreadyBeingDivested, AttributeNotOwned, AttributeNotDefined, RTIinternalError
   {
     objectLock.writeLock().lock();
     try
@@ -317,7 +317,8 @@ public class FederateObjectInstance
         getAttributeInstance(attributeHandle).negotiatedAttributeOwnershipDivestiture();
       }
 
-      federate.getRTIChannel().write(new NegotiatedAttributeOwnershipDivestiture(objectInstanceHandle, attributeHandles, tag));
+      federate.getRTIChannel().write(
+        new NegotiatedAttributeOwnershipDivestiture(objectInstanceHandle, attributeHandles, tag));
     }
     finally
     {
@@ -867,9 +868,8 @@ public class FederateObjectInstance
     }
   }
 
-  protected void checkIfAttributeAlreadyBeingDivested(
-    Set<AttributeHandle> attributeHandles)
-    throws AttributeNotDefined, AttributeNotOwned, AttributeAlreadyBeingDivested
+  protected void checkIfAttributeAlreadyBeingDivested(Set<AttributeHandle> attributeHandles)
+    throws AttributeAlreadyBeingDivested, AttributeNotOwned, AttributeNotDefined
   {
     for (AttributeHandle attributeHandle : attributeHandles)
     {
@@ -877,20 +877,16 @@ public class FederateObjectInstance
     }
   }
 
-  protected void checkIfAttributeDivestitureWasNotRequested(
-    Set<AttributeHandle> attributeHandles)
-    throws AttributeNotDefined, AttributeNotOwned,
-           AttributeDivestitureWasNotRequested
+  protected void checkIfAttributeDivestitureWasNotRequested(Set<AttributeHandle> attributeHandles)
+    throws AttributeNotDefined, AttributeNotOwned, AttributeDivestitureWasNotRequested
   {
     for (AttributeHandle attributeHandle : attributeHandles)
     {
-      getAttributeInstance(
-        attributeHandle).checkIfAttributeDivestitureWasNotRequested();
+      getAttributeInstance(attributeHandle).checkIfAttributeDivestitureWasNotRequested();
     }
   }
 
-  protected void checkIfFederateOwnsAttributes(
-    Set<AttributeHandle> attributeHandles)
+  protected void checkIfFederateOwnsAttributes(Set<AttributeHandle> attributeHandles)
     throws FederateOwnsAttributes
   {
     Set<AttributeHandle> ownedAttributeHandles = null;

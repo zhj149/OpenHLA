@@ -79,6 +79,7 @@ import net.sf.ohla.rti.messages.callbacks.ReceiveInteraction;
 import net.sf.ohla.rti.messages.callbacks.ReflectAttributeValues;
 import net.sf.ohla.rti.messages.callbacks.RemoveObjectInstance;
 import net.sf.ohla.rti.messages.callbacks.ReportInteractionTransportationType;
+import net.sf.ohla.rti.messages.callbacks.RequestDivestitureConfirmation;
 import net.sf.ohla.rti.messages.callbacks.TimeAdvanceGrant;
 
 import org.jboss.netty.channel.Channel;
@@ -1640,7 +1641,7 @@ public class Federate
 
   public void negotiatedAttributeOwnershipDivestiture(
     ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned, AttributeAlreadyBeingDivested,
+    throws AttributeAlreadyBeingDivested, AttributeNotOwned, AttributeNotDefined, ObjectInstanceNotKnown,
            SaveInProgress, RestoreInProgress, RTIinternalError
   {
     federateStateLock.readLock().lock();
