@@ -72,6 +72,7 @@ import net.sf.ohla.rti.messages.NextMessageRequest;
 import net.sf.ohla.rti.messages.NextMessageRequestAvailable;
 import net.sf.ohla.rti.messages.NextMessageRequestAvailableTimeAdvanceGrant;
 import net.sf.ohla.rti.messages.NextMessageRequestTimeAdvanceGrant;
+import net.sf.ohla.rti.messages.PublishObjectClassAttributes;
 import net.sf.ohla.rti.messages.QueryAttributeOwnership;
 import net.sf.ohla.rti.messages.QueryFederationRestoreStatus;
 import net.sf.ohla.rti.messages.QueryFederationSaveStatus;
@@ -771,31 +772,6 @@ public class FederationExecution
     }
   }
 
-  public void unpublishObjectClass(FederateProxy federateProxy, UnpublishObjectClass unpublishObjectClass)
-  {
-    federationExecutionStateLock.readLock().lock();
-    try
-    {
-    }
-    finally
-    {
-      federationExecutionStateLock.readLock().unlock();
-    }
-  }
-
-  public void unpublishObjectClassAttributes(
-    FederateProxy federateProxy, UnpublishObjectClassAttributes unpublishObjectClassAttributes)
-  {
-    federationExecutionStateLock.readLock().lock();
-    try
-    {
-    }
-    finally
-    {
-      federationExecutionStateLock.readLock().unlock();
-    }
-  }
-
   public void reserveObjectInstanceName(
     FederateProxy federateProxy, ReserveObjectInstanceName reserveObjectInstanceName)
   {
@@ -1007,6 +983,50 @@ public class FederationExecution
     }
   }
 
+  public void publishObjectClassAttributes(
+    FederateProxy federateProxy, PublishObjectClassAttributes publishObjectClassAttributes)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+      ObjectClass objectClass = fdd.getObjectClassSafely(publishObjectClassAttributes.getObjectClassHandle());
+
+      federateProxy.publishObjectClassAttributes(publishObjectClassAttributes);
+
+      objectManager.publishObjectClassAttributes(
+        federateProxy, objectClass, publishObjectClassAttributes.getAttributeHandles());
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
+  public void unpublishObjectClass(FederateProxy federateProxy, UnpublishObjectClass unpublishObjectClass)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
+  public void unpublishObjectClassAttributes(
+    FederateProxy federateProxy, UnpublishObjectClassAttributes unpublishObjectClassAttributes)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
   public void subscribeObjectClassAttributes(
     FederateProxy federateProxy, SubscribeObjectClassAttributes subscribeObjectClassAttributes)
   {
@@ -1145,8 +1165,7 @@ public class FederationExecution
   }
 
   public void negotiatedAttributeOwnershipDivestiture(
-    FederateProxy federateProxy,
-    NegotiatedAttributeOwnershipDivestiture negotiatedAttributeOwnershipDivestiture)
+    FederateProxy federateProxy, NegotiatedAttributeOwnershipDivestiture negotiatedAttributeOwnershipDivestiture)
   {
     federationExecutionStateLock.readLock().lock();
     try

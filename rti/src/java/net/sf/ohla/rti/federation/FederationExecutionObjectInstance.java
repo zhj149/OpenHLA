@@ -19,6 +19,7 @@ package net.sf.ohla.rti.federation;
 import java.io.Serializable;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -274,107 +275,170 @@ public class FederationExecutionObjectInstance
     }
   }
 
-  public void unconditionalAttributeOwnershipDivestiture(FederateProxy owner, AttributeHandleSet attributeHandles)
+  public void publishObjectClassAttributes(FederateProxy federateProxy, AttributeHandleSet attributeHandles)
   {
     objectLock.readLock().lock();
     try
     {
-      Map<FederateProxy, AttributeHandleSet> newOwners = new HashMap<FederateProxy, AttributeHandleSet>();
+      Map<byte[], AttributeHandleSet> ownershipCandidates = null;
+
       for (AttributeHandle attributeHandle : attributeHandles)
       {
-        FederateProxy newOwner = attributes.get(attributeHandle).unconditionalAttributeOwnershipDivestiture();
-        if (newOwner != null)
+        FederationExecutionAttributeInstance attributeInstance = attributes.get(attributeHandle);
+        if (attributeInstance.wantsToDivest() || attributeInstance.isUnowned())
         {
-          AttributeHandleSet acquiredAttributes = newOwners.get(newOwner);
-          if (acquiredAttributes == null)
+          AttributeHandleSet candidateAttributeHandles;
+          if (ownershipCandidates == null)
           {
-            acquiredAttributes = IEEE1516eAttributeHandleSetFactory.INSTANCE.create();
-            newOwners.put(newOwner, acquiredAttributes);
+            ownershipCandidates = new HashMap<byte[], AttributeHandleSet>();
+            candidateAttributeHandles = IEEE1516eAttributeHandleSetFactory.INSTANCE.create();
+            ownershipCandidates.put(attributeInstance.getDivestingTag(), attributeHandles);
           }
-          acquiredAttributes.add(attributeHandle);
+          else
+          {
+            candidateAttributeHandles = ownershipCandidates.get(attributeInstance.getDivestingTag());
+          }
+          candidateAttributeHandles.add(attributeHandle);
         }
       }
 
-      // notify the new owners
-      //
-      for (Map.Entry<FederateProxy, AttributeHandleSet> entry : newOwners.entrySet())
+      if (ownershipCandidates != null)
       {
-        entry.getKey().getFederateChannel().write(
-          new AttributeOwnershipAcquisitionNotification(objectInstanceHandle, entry.getValue(), null));
+        for (Map.Entry<byte[], AttributeHandleSet> entry : ownershipCandidates.entrySet())
+        {
+          federateProxy.requestAttributeOwnershipAssumption(objectInstanceHandle, entry.getValue(), entry.getKey());
+        }
       }
     }
     finally
     {
       objectLock.readLock().unlock();
+    }
+  }
+
+  public void unconditionalAttributeOwnershipDivestiture(FederateProxy owner, AttributeHandleSet attributeHandles)
+  {
+    objectLock.writeLock().lock();
+    try
+    {
+      Map<FederateProxy, Object[]> newOwners = new HashMap<FederateProxy, Object[]>();
+      for (AttributeHandle attributeHandle : attributeHandles)
+      {
+        FederationExecutionAttributeInstance.Divestiture divestiture =
+          attributes.get(attributeHandle).unconditionalAttributeOwnershipDivestiture();
+        if (divestiture != null)
+        {
+          Object[] acquiredAttributes = newOwners.get(divestiture.newOwner);
+          if (acquiredAttributes == null)
+          {
+            acquiredAttributes = new Object[] { IEEE1516eAttributeHandleSetFactory.INSTANCE.create(), divestiture.tag };
+            newOwners.put(divestiture.newOwner, acquiredAttributes);
+          }
+          ((AttributeHandleSet) acquiredAttributes[0]).add(attributeHandle);
+        }
+      }
+
+      // notify the new owners
+      //
+      for (Map.Entry<FederateProxy, Object[]> entry : newOwners.entrySet())
+      {
+        entry.getKey().getFederateChannel().write(new AttributeOwnershipAcquisitionNotification(
+          objectInstanceHandle, (AttributeHandleSet) entry.getValue()[0], (byte[]) entry.getValue()[1]));
+      }
+    }
+    finally
+    {
+      objectLock.writeLock().unlock();
     }
   }
 
   public void negotiatedAttributeOwnershipDivestiture(
     FederateProxy owner, AttributeHandleSet attributeHandles, byte[] tag)
   {
-    objectLock.readLock().lock();
+    objectLock.writeLock().lock();
     try
     {
-      AttributeHandleSet divestableAttributeHandles = IEEE1516eAttributeHandleSetFactory.INSTANCE.create();
-      for (AttributeHandle attributeHandle : attributeHandles)
+      AttributeHandleSet attributeHandlesThatCanBeImmediatelyDivested = null;
+
+      for (Iterator<AttributeHandle> i = attributeHandles.iterator(); i.hasNext();)
       {
+        AttributeHandle attributeHandle = i.next();
         if (attributes.get(attributeHandle).negotiatedAttributeOwnershipDivestiture(tag))
         {
-          divestableAttributeHandles.add(attributeHandle);
+          i.remove();
+
+          if (attributeHandlesThatCanBeImmediatelyDivested == null)
+          {
+            attributeHandlesThatCanBeImmediatelyDivested = IEEE1516eAttributeHandleSetFactory.INSTANCE.create();
+          }
+          attributeHandlesThatCanBeImmediatelyDivested.add(attributeHandle);
         }
       }
 
-      if (!divestableAttributeHandles.isEmpty())
+      // notify the divesting federate of the attributes that can be divested
+      //
+      if (attributeHandlesThatCanBeImmediatelyDivested != null)
       {
         owner.getFederateChannel().write(new RequestDivestitureConfirmation(
-          objectInstanceHandle, divestableAttributeHandles));
+          objectInstanceHandle, attributeHandlesThatCanBeImmediatelyDivested));
+      }
+
+      // notify other federates that some attributes are available for acquisition
+      //
+      for (FederateProxy federateProxy : owner.getFederationExecution().getFederates().values())
+      {
+        if (federateProxy != owner)
+        {
+          federateProxy.negotiatedAttributeOwnershipDivestiture(this, attributeHandles, tag);
+        }
       }
     }
     finally
     {
-      objectLock.readLock().unlock();
+      objectLock.writeLock().unlock();
     }
   }
 
   public void confirmDivestiture(FederateProxy owner, AttributeHandleSet attributeHandles)
   {
-    objectLock.readLock().lock();
+    objectLock.writeLock().lock();
     try
     {
-      Map<FederateProxy, AttributeHandleSet> newOwners = new HashMap<FederateProxy, AttributeHandleSet>();
+      Map<FederateProxy, Object[]> newOwners = new HashMap<FederateProxy, Object[]>();
       for (AttributeHandle attributeHandle : attributeHandles)
       {
-        FederateProxy newOwner = attributes.get(attributeHandle).confirmDivestiture();
-        if (newOwner != null)
+        FederationExecutionAttributeInstance.Divestiture divestiture =
+          attributes.get(attributeHandle).confirmDivestiture();
+        if (divestiture != null)
         {
-          AttributeHandleSet acquiredAttributes = newOwners.get(newOwner);
+          Object[] acquiredAttributes = newOwners.get(divestiture.newOwner);
           if (acquiredAttributes == null)
           {
-            acquiredAttributes = IEEE1516eAttributeHandleSetFactory.INSTANCE.create();
-            newOwners.put(newOwner, acquiredAttributes);
+            acquiredAttributes = new Object[] { IEEE1516eAttributeHandleSetFactory.INSTANCE.create(), divestiture.tag };
+            newOwners.put(divestiture.newOwner, acquiredAttributes);
           }
-          acquiredAttributes.add(attributeHandle);
+          ((AttributeHandleSet) acquiredAttributes[0]).add(attributeHandle);
         }
       }
 
       // notify the new owners
       //
-      for (Map.Entry<FederateProxy, AttributeHandleSet> entry : newOwners.entrySet())
+      for (Map.Entry<FederateProxy, Object[]> entry : newOwners.entrySet())
       {
-        entry.getKey().getFederateChannel().write(
-          new AttributeOwnershipAcquisitionNotification(objectInstanceHandle, entry.getValue(), null));
+        entry.getKey().getFederateChannel().write(new AttributeOwnershipAcquisitionNotification(
+          objectInstanceHandle, (AttributeHandleSet) entry.getValue()[0], (byte[]) entry.getValue()[1]));
       }
     }
     finally
     {
-      objectLock.readLock().unlock();
+      objectLock.writeLock().unlock();
     }
   }
 
   public void attributeOwnershipAcquisition(
     FederateProxy acquiree, AttributeHandleSet attributeHandles, byte[] tag)
   {
-    objectLock.readLock().lock();
+    objectLock.writeLock().lock();
     try
     {
       AttributeHandleSet acquiredAttributeHandles = IEEE1516eAttributeHandleSetFactory.INSTANCE.create();
@@ -388,7 +452,7 @@ public class FederationExecutionObjectInstance
         FederationExecutionAttributeInstance federationExecutionAttributeInstance = attributes.get(attributeHandle);
 
         FederateProxy owner = federationExecutionAttributeInstance.attributeOwnershipAcquisition(acquiree);
-        if (acquiree.equals(owner))
+        if (acquiree == owner)
         {
           // the attribute was unowned and therefore immediately acquired
           //
@@ -401,7 +465,7 @@ public class FederationExecutionObjectInstance
           AttributeHandleSet divestingAttributeHandles = federatesThatNeedToConfirmDivestiture.get(owner);
           if (divestingAttributeHandles == null)
           {
-            divestingAttributeHandles = new IEEE1516eAttributeHandleSet();
+            divestingAttributeHandles = IEEE1516eAttributeHandleSetFactory.INSTANCE.create();
             federatesThatNeedToConfirmDivestiture.put(owner, divestingAttributeHandles);
           }
           divestingAttributeHandles.add(attributeHandle);
@@ -413,7 +477,7 @@ public class FederationExecutionObjectInstance
           AttributeHandleSet releasingAttributeHandles = federatesThatNeedToRelease.get(owner);
           if (releasingAttributeHandles == null)
           {
-            releasingAttributeHandles = new IEEE1516eAttributeHandleSet();
+            releasingAttributeHandles = IEEE1516eAttributeHandleSetFactory.INSTANCE.create();
             federatesThatNeedToRelease.put(owner, releasingAttributeHandles);
           }
           releasingAttributeHandles.add(attributeHandle);
@@ -440,13 +504,13 @@ public class FederationExecutionObjectInstance
     }
     finally
     {
-      objectLock.readLock().unlock();
+      objectLock.writeLock().unlock();
     }
   }
 
   public void attributeOwnershipAcquisitionIfAvailable(FederateProxy acquiree, AttributeHandleSet attributeHandles)
   {
-    objectLock.readLock().lock();
+    objectLock.writeLock().lock();
     try
     {
       AttributeHandleSet acquiredAttributeHandles = new IEEE1516eAttributeHandleSet();
@@ -475,14 +539,14 @@ public class FederationExecutionObjectInstance
     }
     finally
     {
-      objectLock.readLock().unlock();
+      objectLock.writeLock().unlock();
     }
   }
 
   public Map<AttributeHandle, FederateProxy> attributeOwnershipDivestitureIfWanted(
     FederateProxy owner, AttributeHandleSet attributeHandles)
   {
-    objectLock.readLock().lock();
+    objectLock.writeLock().lock();
     try
     {
       Map<AttributeHandle, FederateProxy> newOwners = new HashMap<AttributeHandle, FederateProxy>();
@@ -498,13 +562,13 @@ public class FederationExecutionObjectInstance
     }
     finally
     {
-      objectLock.readLock().unlock();
+      objectLock.writeLock().unlock();
     }
   }
 
   public void cancelNegotiatedAttributeOwnershipDivestiture(FederateProxy owner, AttributeHandleSet attributeHandles)
   {
-    objectLock.readLock().lock();
+    objectLock.writeLock().lock();
     try
     {
       for (AttributeHandle attributeHandle : attributeHandles)
@@ -514,13 +578,13 @@ public class FederationExecutionObjectInstance
     }
     finally
     {
-      objectLock.readLock().unlock();
+      objectLock.writeLock().unlock();
     }
   }
 
   public void cancelAttributeOwnershipAcquisition(FederateProxy acquiree, AttributeHandleSet attributeHandles)
   {
-    objectLock.readLock().lock();
+    objectLock.writeLock().lock();
     try
     {
       AttributeHandleSet canceledAcquisitionAttributeHandles = new IEEE1516eAttributeHandleSet();
@@ -540,7 +604,7 @@ public class FederationExecutionObjectInstance
     }
     finally
     {
-      objectLock.readLock().unlock();
+      objectLock.writeLock().unlock();
     }
   }
 
@@ -651,31 +715,32 @@ public class FederationExecutionObjectInstance
   {
     // dangerous method, must be called with proper protection
 
-    Map<FederateProxy, AttributeHandleSet> newOwners = new HashMap<FederateProxy, AttributeHandleSet>();
+    Map<FederateProxy, Object[]> newOwners = new HashMap<FederateProxy, Object[]>();
     for (FederationExecutionAttributeInstance attributeInstance : attributes.values())
     {
       if (attributeInstance.getOwner() == federateProxy)
       {
-        FederateProxy newOwner = attributeInstance.unconditionalAttributeOwnershipDivestiture();
-        if (newOwner != null)
+        FederationExecutionAttributeInstance.Divestiture divestiture =
+          attributeInstance.unconditionalAttributeOwnershipDivestiture();
+        if (divestiture != null)
         {
-          AttributeHandleSet acquiredAttributes = newOwners.get(newOwner);
+          Object[] acquiredAttributes = newOwners.get(divestiture.newOwner);
           if (acquiredAttributes == null)
           {
-            acquiredAttributes = IEEE1516eAttributeHandleSetFactory.INSTANCE.create();
-            newOwners.put(newOwner, acquiredAttributes);
+            acquiredAttributes = new Object[] { IEEE1516eAttributeHandleSetFactory.INSTANCE.create(), divestiture.tag };
+            newOwners.put(divestiture.newOwner, acquiredAttributes);
           }
-          acquiredAttributes.add(attributeInstance.getAttributeHandle());
+          ((AttributeHandleSet) acquiredAttributes[0]).add(attributeInstance.getAttributeHandle());
         }
       }
     }
 
     // notify the new owners
     //
-    for (Map.Entry<FederateProxy, AttributeHandleSet> entry : newOwners.entrySet())
+    for (Map.Entry<FederateProxy, Object[]> entry : newOwners.entrySet())
     {
-      entry.getKey().getFederateChannel().write(
-        new AttributeOwnershipAcquisitionNotification(objectInstanceHandle, entry.getValue(), null));
+      entry.getKey().getFederateChannel().write(new AttributeOwnershipAcquisitionNotification(
+        objectInstanceHandle, (AttributeHandleSet) entry.getValue()[0], (byte[]) entry.getValue()[1]));
     }
   }
 

@@ -39,6 +39,8 @@ public class FederateAttributeInstance
   private TransportationTypeHandle transportationTypeHandle;
   private OrderType orderType;
 
+  private boolean divesting;
+
   public FederateAttributeInstance(Attribute attribute)
   {
     this.attribute = attribute;
@@ -94,17 +96,17 @@ public class FederateAttributeInstance
 
   public void negotiatedAttributeOwnershipDivestiture()
   {
-    // TODO
+    divesting = true;
   }
 
   public void confirmDivestiture()
   {
-    // TODO
+    divesting = false;
   }
 
   public void cancelNegotiatedAttributeOwnershipDivestiture()
   {
-    // TODO
+    divesting = false;
   }
 
   public void cancelAttributeOwnershipAcquisition()
@@ -121,7 +123,10 @@ public class FederateAttributeInstance
   public void checkIfAttributeAlreadyBeingDivested()
     throws AttributeAlreadyBeingDivested
   {
-    // TODO: check status
+    if (divesting)
+    {
+      throw new AttributeAlreadyBeingDivested("");
+    }
   }
 
   public void checkIfAttributeAlreadyBeingChanged()

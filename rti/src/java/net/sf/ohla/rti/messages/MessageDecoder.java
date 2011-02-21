@@ -243,6 +243,9 @@ public class MessageDecoder
       case QUERY_FEDERATION_RESTORE_STATUS:
         message = new QueryFederationRestoreStatus(buffer);
         break;
+      case PUBLISH_OBJECT_CLASS_ATTRIBUTES:
+        message = new PublishObjectClassAttributes(buffer);
+        break;
       case UNPUBLISH_OBJECT_CLASS:
         message = new UnpublishObjectClass(buffer);
         break;

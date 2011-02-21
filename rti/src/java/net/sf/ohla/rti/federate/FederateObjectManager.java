@@ -34,6 +34,7 @@ import net.sf.ohla.rti.fdd.TransportationType;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectInstanceHandle;
 import net.sf.ohla.rti.messages.DeleteObjectInstance;
 import net.sf.ohla.rti.messages.LocalDeleteObjectInstance;
+import net.sf.ohla.rti.messages.PublishObjectClassAttributes;
 import net.sf.ohla.rti.messages.RegisterObjectInstance;
 import net.sf.ohla.rti.messages.ReleaseMultipleObjectInstanceName;
 import net.sf.ohla.rti.messages.ReleaseObjectInstanceName;
@@ -197,6 +198,8 @@ public class FederateObjectManager
       {
         publishedAttributeHandles.addAll(attributeHandles);
       }
+
+      federate.getRTIChannel().write(new PublishObjectClassAttributes(objectClassHandle, attributeHandles));
     }
     finally
     {
@@ -1438,7 +1441,7 @@ public class FederateObjectManager
 
   public void negotiatedAttributeOwnershipDivestiture(
     ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned, AttributeAlreadyBeingDivested,
+    throws AttributeAlreadyBeingDivested, AttributeNotOwned, AttributeNotDefined, ObjectInstanceNotKnown,
            RTIinternalError
   {
     objectsLock.readLock().lock();

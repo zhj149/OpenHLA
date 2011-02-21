@@ -290,6 +290,27 @@ public class FederationExecutionObjectManager
     }
   }
 
+  public void publishObjectClassAttributes(
+    FederateProxy federateProxy, ObjectClass objectClass, AttributeHandleSet attributeHandles)
+  {
+    objectsLock.readLock().lock();
+    try
+    {
+      for (FederationExecutionObjectInstance objectInstance : objects.values())
+      {
+        if (!federateProxy.getFederateHandle().equals(objectInstance.getProducingFederateHandle()) &&
+            objectClass.isAssignableFrom(objectInstance.getObjectClass()))
+        {
+          objectInstance.publishObjectClassAttributes(federateProxy, attributeHandles);
+        }
+      }
+    }
+    finally
+    {
+      objectsLock.readLock().unlock();
+    }
+  }
+
   public void subscribeObjectClassAttributes(FederateProxy federateProxy, ObjectClass objectClass)
   {
     objectsLock.readLock().lock();
@@ -502,7 +523,12 @@ public class FederationExecutionObjectManager
     try
     {
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
-      if (objectInstance != null)
+      if (objectInstance == null)
+      {
+        log.trace(marker, "dropping negotiated attribute ownership divestiture, object has been deleted: {}",
+                  objectInstanceHandle);
+      }
+      else
       {
         objectInstance.negotiatedAttributeOwnershipDivestiture(owner, attributeHandles, tag);
       }
@@ -520,7 +546,11 @@ public class FederationExecutionObjectManager
     try
     {
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
-      if (objectInstance != null)
+      if (objectInstance == null)
+      {
+        log.trace(marker, "dropping confirm divestiture, object has been deleted: {}", objectInstanceHandle);
+      }
+      else
       {
         objectInstance.confirmDivestiture(owner, attributeHandles);
       }

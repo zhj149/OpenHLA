@@ -75,7 +75,7 @@ public class AttributeAcquisitionTestNG
 
     rtiAmbassadors.get(0).connect(federateAmbassadors.get(0), CallbackModel.HLA_EVOKED);
     rtiAmbassadors.get(1).connect(federateAmbassadors.get(1), CallbackModel.HLA_EVOKED);
-    rtiAmbassadors.get(2).connect(federateAmbassadors.get(1), CallbackModel.HLA_EVOKED);
+    rtiAmbassadors.get(2).connect(federateAmbassadors.get(2), CallbackModel.HLA_EVOKED);
 
     rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
 
@@ -230,7 +230,7 @@ public class AttributeAcquisitionTestNG
         rtiAmbassador.evokeCallback(1.0);
       }
       Object[] acquisition = acquiredAttributes.get(objectInstanceHandle);
-      assert acquisition != null && attributeHandles.equals((AttributeHandleSet) acquisition[0]) &&
+      assert acquisition != null && attributeHandles.equals(acquisition[0]) &&
              Arrays.equals(tag, (byte[]) acquisition[1]);
     }
 
