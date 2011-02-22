@@ -2401,33 +2401,50 @@ public class IEEE1516eRTIambassador
     }
   }
 
-  public AttributeHandleSet attributeOwnershipDivestitureIfWanted(ObjectInstanceHandle objectInstanceHandle,
-                                                                  AttributeHandleSet attributeHandles)
+  public AttributeHandleSet attributeOwnershipDivestitureIfWanted(
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
     throws AttributeNotOwned, AttributeNotDefined, ObjectInstanceNotKnown, SaveInProgress, RestoreInProgress,
            FederateNotExecutionMember, NotConnected, RTIinternalError
   {
-    connectLock.readLock().lock();
-    try
-    {
-      checkIfNotConnected();
+    AttributeHandleSet divestedAttributeHandles;
 
-      joinResignLock.readLock().lock();
+    if (objectInstanceHandle == null)
+    {
+      throw new ObjectInstanceNotKnown("objectInstanceHandle cannot be null");
+    }
+    else if (attributeHandles == null || attributeHandles.isEmpty())
+    {
+      log.warn("attempting to divest attribrutes with null or empty attribute handles: {}", objectInstanceHandle);
+
+      divestedAttributeHandles = IEEE1516eAttributeHandleSetFactory.INSTANCE.create();
+    }
+    else
+    {
+      connectLock.readLock().lock();
       try
       {
-        checkIfFederateNotExecutionMember();
+        checkIfNotConnected();
 
-        federate.attributeOwnershipDivestitureIfWanted(objectInstanceHandle, attributeHandles);
+        joinResignLock.readLock().lock();
+        try
+        {
+          checkIfFederateNotExecutionMember();
+
+          divestedAttributeHandles = federate.attributeOwnershipDivestitureIfWanted(
+            objectInstanceHandle, attributeHandles);
+        }
+        finally
+        {
+          joinResignLock.readLock().unlock();
+        }
       }
       finally
       {
-        joinResignLock.readLock().unlock();
+        connectLock.readLock().unlock();
       }
     }
-    finally
-    {
-      connectLock.readLock().unlock();
-    }
-    return null;
+
+    return divestedAttributeHandles;
   }
 
   public void cancelNegotiatedAttributeOwnershipDivestiture(ObjectInstanceHandle objectInstanceHandle,
