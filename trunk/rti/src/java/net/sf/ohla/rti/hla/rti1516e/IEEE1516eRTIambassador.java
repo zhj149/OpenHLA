@@ -3095,26 +3095,33 @@ public class IEEE1516eRTIambassador
     throws InvalidDimensionHandle, SaveInProgress, RestoreInProgress, FederateNotExecutionMember, NotConnected,
            RTIinternalError
   {
-    connectLock.readLock().lock();
-    try
+    if (dimensionHandles == null || dimensionHandles.isEmpty())
     {
-      checkIfNotConnected();
-
-      joinResignLock.readLock().lock();
+      throw new InvalidDimensionHandle("dimensionHandles cannot be null or empty");
+    }
+    else
+    {
+      connectLock.readLock().lock();
       try
       {
-        checkIfFederateNotExecutionMember();
+        checkIfNotConnected();
 
-        return federate.createRegion(dimensionHandles);
+        joinResignLock.readLock().lock();
+        try
+        {
+          checkIfFederateNotExecutionMember();
+
+          return federate.createRegion(dimensionHandles);
+        }
+        finally
+        {
+          joinResignLock.readLock().unlock();
+        }
       }
       finally
       {
-        joinResignLock.readLock().unlock();
+        connectLock.readLock().unlock();
       }
-    }
-    finally
-    {
-      connectLock.readLock().unlock();
     }
   }
 
@@ -3122,26 +3129,33 @@ public class IEEE1516eRTIambassador
     throws RegionNotCreatedByThisFederate, InvalidRegion, SaveInProgress, RestoreInProgress, FederateNotExecutionMember,
            NotConnected, RTIinternalError
   {
-    connectLock.readLock().lock();
-    try
+    if (regionHandles == null || regionHandles.isEmpty())
     {
-      checkIfNotConnected();
-
-      joinResignLock.readLock().lock();
+      log.warn("attempting to commit region modififcations with null or empty regionHandles values");
+    }
+    else
+    {
+      connectLock.readLock().lock();
       try
       {
-        checkIfFederateNotExecutionMember();
+        checkIfNotConnected();
 
-        federate.commitRegionModifications(regionHandles);
+        joinResignLock.readLock().lock();
+        try
+        {
+          checkIfFederateNotExecutionMember();
+
+          federate.commitRegionModifications(regionHandles);
+        }
+        finally
+        {
+          joinResignLock.readLock().unlock();
+        }
       }
       finally
       {
-        joinResignLock.readLock().unlock();
+        connectLock.readLock().unlock();
       }
-    }
-    finally
-    {
-      connectLock.readLock().unlock();
     }
   }
 
@@ -4377,6 +4391,15 @@ public class IEEE1516eRTIambassador
     throws RegionDoesNotContainSpecifiedDimension, InvalidRegion, SaveInProgress, RestoreInProgress,
            FederateNotExecutionMember, NotConnected, RTIinternalError
   {
+    if (regionHandle == null)
+    {
+      throw new InvalidRegion("regionHandle cannot be null");
+    }
+    else if (dimensionHandle == null)
+    {
+      throw new RegionDoesNotContainSpecifiedDimension("dimensionHandle cannot be null");
+    }
+
     connectLock.readLock().lock();
     try
     {
@@ -4404,6 +4427,28 @@ public class IEEE1516eRTIambassador
     throws InvalidRangeBound, RegionDoesNotContainSpecifiedDimension, RegionNotCreatedByThisFederate, InvalidRegion,
            SaveInProgress, RestoreInProgress, FederateNotExecutionMember, NotConnected, RTIinternalError
   {
+    if (regionHandle == null)
+    {
+      throw new InvalidRegion("regionHandle cannot be null");
+    }
+    else if (dimensionHandle == null)
+    {
+      throw new RegionDoesNotContainSpecifiedDimension("dimensionHandle cannot be null");
+    }
+    else if (rangeBounds == null)
+    {
+      throw new InvalidRangeBound("rangeBounds cannot be null");
+    }
+    else if (rangeBounds.lower < 0L)
+    {
+      throw new InvalidRangeBound("rangeBounds.lower is < 0: " + rangeBounds.lower);
+    }
+    else if (rangeBounds.lower >= rangeBounds.upper)
+    {
+      throw new InvalidRangeBound(
+        "rangeBounds.lower must be < rangeBounds.upper: " + rangeBounds.lower + " >= " + rangeBounds.upper);
+    }
+
     connectLock.readLock().lock();
     try
     {
