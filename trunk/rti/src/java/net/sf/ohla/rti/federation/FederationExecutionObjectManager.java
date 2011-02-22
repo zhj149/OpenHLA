@@ -505,7 +505,12 @@ public class FederationExecutionObjectManager
     try
     {
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
-      if (objectInstance != null)
+      if (objectInstance == null)
+      {
+        log.trace(marker, "dropping negotiated attribute ownership divestiture, object has been deleted: {}",
+                  objectInstanceHandle);
+      }
+      else
       {
         objectInstance.unconditionalAttributeOwnershipDivestiture(owner, attributeHandles);
       }
@@ -593,7 +598,7 @@ public class FederationExecutionObjectManager
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
       if (objectInstance == null)
       {
-        log.trace(marker, "dropping attribute ownership acquisition, object has been deleted: {}",
+        log.trace(marker, "dropping attribute ownership acquisition if available, object has been deleted: {}",
                   objectInstanceHandle);
       }
       else
@@ -607,21 +612,33 @@ public class FederationExecutionObjectManager
     }
   }
 
-  public Map<AttributeHandle, FederateProxy> attributeOwnershipDivestitureIfWanted(
+  public Map<AttributeHandle, FederationExecutionAttributeInstance.Divestiture> attributeOwnershipDivestitureIfWanted(
     FederateProxy owner, ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
   {
+    Map<AttributeHandle, FederationExecutionAttributeInstance.Divestiture> divestitures;
+
     objectsLock.readLock().lock();
     try
     {
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
-      return objectInstance != null ?
-        objectInstance.attributeOwnershipDivestitureIfWanted(owner, attributeHandles) :
-        (Map<AttributeHandle, FederateProxy>) Collections.EMPTY_MAP;
+      if (objectInstance == null)
+      {
+        log.trace(marker, "dropping attribute ownership acquisition, object has been deleted: {}",
+                  objectInstanceHandle);
+
+        divestitures = Collections.emptyMap();
+      }
+      else
+      {
+        divestitures = objectInstance.attributeOwnershipDivestitureIfWanted(owner, attributeHandles);
+      }
     }
     finally
     {
       objectsLock.readLock().unlock();
     }
+
+    return divestitures;
   }
 
   public void cancelNegotiatedAttributeOwnershipDivestiture(

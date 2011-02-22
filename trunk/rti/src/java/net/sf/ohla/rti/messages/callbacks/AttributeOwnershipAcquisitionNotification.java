@@ -39,12 +39,6 @@ public class AttributeOwnershipAcquisitionNotification
   private Federate federate;
 
   public AttributeOwnershipAcquisitionNotification(
-    ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
-  {
-    this(objectInstanceHandle, attributeHandles, null);
-  }
-
-  public AttributeOwnershipAcquisitionNotification(
     ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
   {
     super(MessageType.ATTRIBUTE_OWNERSHIP_ACQUISITION_NOTIFICATION, objectInstanceHandle, attributeHandles);

@@ -267,9 +267,11 @@ public class FederationExecutionAttributeInstance
     return owner;
   }
 
-  public FederateProxy attributeOwnershipDivestitureIfWanted()
+  public Divestiture attributeOwnershipDivestitureIfWanted()
   {
     boolean divested = !requestingOwnerships.isEmpty();
+
+    byte[] divestingTag = this.divestingTag;
 
     // give ownership to the next in line
     //
@@ -280,12 +282,12 @@ public class FederationExecutionAttributeInstance
       i.remove();
 
       wantsToDivest = false;
-      divestingTag = null;
+      this.divestingTag = null;
 
       newOwner();
     }
 
-    return divested ? owner : null;
+    return divested ? new Divestiture(owner, divestingTag) : null;
   }
 
   public boolean cancelAttributeOwnershipAcquisition(FederateProxy acquiree)

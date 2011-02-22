@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import net.sf.ohla.rti.AttributeHandleSetTagPair;
 import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.fdd.ObjectClass;
@@ -119,7 +120,6 @@ import net.sf.ohla.rti.messages.callbacks.FederationSaveStatusResponse;
 import net.sf.ohla.rti.messages.callbacks.FederationSaved;
 import net.sf.ohla.rti.messages.callbacks.FederationSynchronized;
 import net.sf.ohla.rti.messages.callbacks.InitiateFederateSave;
-import net.sf.ohla.rti.messages.callbacks.RemoveObjectInstance;
 import net.sf.ohla.rti.messages.callbacks.ReportInteractionTransportationType;
 import net.sf.ohla.rti.messages.callbacks.SynchronizationPointRegistrationFailed;
 import net.sf.ohla.rti.messages.callbacks.SynchronizationPointRegistrationSucceeded;
@@ -133,7 +133,6 @@ import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
 import hla.rti1516e.AttributeHandle;
-import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.FederateHandleSaveStatusPair;
 import hla.rti1516e.FederateHandleSet;
@@ -1234,35 +1233,39 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      Map<AttributeHandle, FederateProxy> newOwners = objectManager.attributeOwnershipDivestitureIfWanted(
-        federateProxy, attributeOwnershipDivestitureIfWanted.getObjectInstanceHandle(),
-        attributeOwnershipDivestitureIfWanted.getAttributeHandles());
+      Map<AttributeHandle, FederationExecutionAttributeInstance.Divestiture> divestitures =
+        objectManager.attributeOwnershipDivestitureIfWanted(
+          federateProxy, attributeOwnershipDivestitureIfWanted.getObjectInstanceHandle(),
+          attributeOwnershipDivestitureIfWanted.getAttributeHandles());
 
       // notify the divestee what attributes were divested
       //
       federateProxy.getFederateChannel().write(new AttributeOwnershipDivestitureIfWantedResponse(
-        attributeOwnershipDivestitureIfWanted.getId(), new IEEE1516eAttributeHandleSet(newOwners.keySet())));
+        attributeOwnershipDivestitureIfWanted.getId(), new IEEE1516eAttributeHandleSet(divestitures.keySet())));
 
       // divide up the divested attributes by owner
       //
-      Map<FederateProxy, AttributeHandleSet> newOwnerAcquisitions = new HashMap<FederateProxy, AttributeHandleSet>();
-      for (Map.Entry<AttributeHandle, FederateProxy> entry : newOwners.entrySet())
+      Map<FederateProxy, AttributeHandleSetTagPair> newOwnerAcquisitions =
+        new HashMap<FederateProxy, AttributeHandleSetTagPair>();
+      for (Map.Entry<AttributeHandle, FederationExecutionAttributeInstance.Divestiture> entry : divestitures.entrySet())
       {
-        AttributeHandleSet acquiredAttributeHandles = newOwnerAcquisitions.get(entry.getValue());
-        if (acquiredAttributeHandles == null)
+        FederationExecutionAttributeInstance.Divestiture divestiture = entry.getValue();
+        AttributeHandleSetTagPair acquiredAttributes = newOwnerAcquisitions.get(divestiture.newOwner);
+        if (acquiredAttributes == null)
         {
-          acquiredAttributeHandles = new IEEE1516eAttributeHandleSet();
-          newOwnerAcquisitions.put(entry.getValue(), acquiredAttributeHandles);
+          acquiredAttributes = new AttributeHandleSetTagPair(divestiture.tag);
+          newOwnerAcquisitions.put(divestiture.newOwner, acquiredAttributes);
         }
-        acquiredAttributeHandles.add(entry.getKey());
+        acquiredAttributes.attributeHandles.add(entry.getKey());
       }
 
       // notify the new owners
       //
-      for (Map.Entry<FederateProxy, AttributeHandleSet> entry : newOwnerAcquisitions.entrySet())
+      for (Map.Entry<FederateProxy, AttributeHandleSetTagPair> entry : newOwnerAcquisitions.entrySet())
       {
         entry.getKey().getFederateChannel().write(new AttributeOwnershipAcquisitionNotification(
-          attributeOwnershipDivestitureIfWanted.getObjectInstanceHandle(), entry.getValue()));
+          attributeOwnershipDivestitureIfWanted.getObjectInstanceHandle(), entry.getValue().attributeHandles,
+          entry.getValue().tag));
       }
     }
     finally
