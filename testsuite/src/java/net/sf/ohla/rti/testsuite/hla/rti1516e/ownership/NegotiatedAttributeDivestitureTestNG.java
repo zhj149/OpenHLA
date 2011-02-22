@@ -47,7 +47,7 @@ import hla.rti1516e.exceptions.ObjectInstanceNotKnown;
 public class NegotiatedAttributeDivestitureTestNG
   extends BaseTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA Attribute Ownership Divesture Test Federation";
+  private static final String FEDERATION_NAME = "OHLA Negotiated Attribute Ownership Divesture Test Federation";
 
   private final List<FederateHandle> federateHandles = new ArrayList<FederateHandle>(5);
   private final List<TestFederateAmbassador> federateAmbassadors = new ArrayList<TestFederateAmbassador>(5);

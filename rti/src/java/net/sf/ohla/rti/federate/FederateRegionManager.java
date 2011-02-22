@@ -19,13 +19,11 @@ package net.sf.ohla.rti.federate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandle;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandleSetFactory;
 import net.sf.ohla.rti.messages.CommitRegionModifications;
 import net.sf.ohla.rti.messages.CreateRegion;
 import net.sf.ohla.rti.messages.DeleteRegion;
