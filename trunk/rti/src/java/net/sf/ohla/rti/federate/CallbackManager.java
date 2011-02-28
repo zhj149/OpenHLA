@@ -24,14 +24,15 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import net.sf.ohla.rti.i18n.I18nLogger;
+
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import hla.rti1516e.FederateAmbassador;
 
 public class CallbackManager
 {
-  private static final Logger log = LoggerFactory.getLogger(CallbackManager.class);
+  private static final Logger log = I18nLogger.getLogger(CallbackManager.class);
 
   private final FederateAmbassador federateAmbassador;
 

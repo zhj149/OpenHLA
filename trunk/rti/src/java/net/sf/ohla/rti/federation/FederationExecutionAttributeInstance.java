@@ -39,6 +39,8 @@ public class FederationExecutionAttributeInstance
 {
   private final Attribute attribute;
 
+  private double updateRate;
+
   private TransportationTypeHandle transportationTypeHandle;
   private OrderType orderType;
 
@@ -74,6 +76,11 @@ public class FederationExecutionAttributeInstance
   public Attribute getAttribute()
   {
     return attribute;
+  }
+
+  public double getUpdateRate()
+  {
+    return updateRate;
   }
 
   public AttributeHandle getAttributeHandle()
@@ -152,7 +159,8 @@ public class FederationExecutionAttributeInstance
 
   public boolean regionsIntersect(FederationExecutionRegionManager regionManager, Set<RegionHandle> regionHandles)
   {
-    return regionManager.intersectsOnly(regionHandles, regionRealizations.keySet(), attribute);
+    return (regionHandles.isEmpty() && regionRealizations.isEmpty()) ||
+           regionManager.intersectsOnly(regionHandles, regionRealizations.keySet(), attribute);
   }
 
   public FederateProxy getOwner()

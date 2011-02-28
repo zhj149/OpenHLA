@@ -17,12 +17,11 @@
 package net.sf.ohla.rti.federation;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import net.sf.ohla.rti.SubscriptionManager;
 import net.sf.ohla.rti.fdd.InteractionClass;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleValueMap;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleValueMapFactory;
 import net.sf.ohla.rti.messages.SendInteraction;
 import net.sf.ohla.rti.messages.UpdateAttributeValues;
 import net.sf.ohla.rti.messages.callbacks.DiscoverObjectInstance;
@@ -32,7 +31,6 @@ import net.sf.ohla.rti.messages.callbacks.ReflectAttributeValues;
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleValueMap;
 import hla.rti1516e.DimensionHandle;
-import hla.rti1516e.FederateHandle;
 import hla.rti1516e.ParameterHandleValueMap;
 import hla.rti1516e.RangeBounds;
 import hla.rti1516e.RegionHandle;
@@ -74,58 +72,66 @@ public class FederateProxySubscriptionManager
     }
     else
     {
-      Map<RegionHandle, Map<DimensionHandle, RangeBounds>> sentRegions = federateProxy.isConveyRegionDesignatorSets() ?
-        new HashMap<RegionHandle, Map<DimensionHandle, RangeBounds>>() : null;
+      Map<RegionHandle, Map<DimensionHandle, RangeBounds>> sentRegions = null;
 
-      AttributeHandleValueMap attributeValues =
-        new IEEE1516eAttributeHandleValueMap(updateAttributeValues.getAttributeValues());
+      AttributeHandleValueMap trimmedAttributeValues = null;
 
-      // go through and remove any attributes that are not subscribed
-      //
-      for (Iterator<AttributeHandle> i = attributeValues.keySet().iterator(); i.hasNext();)
+      for (Map.Entry<AttributeHandle, byte[]> entry : updateAttributeValues.getAttributeValues().entrySet())
       {
-        AttributeHandle attributeHandle = i.next();
+        AttributeHandle attributeHandle = entry.getKey();
 
         AttributeSubscription attributeSubscription = objectClassSubscription.getAttributeSubscription(attributeHandle);
-        if (attributeSubscription == null)
+        if (attributeSubscription != null)
         {
-          i.remove();
-        }
-        else if (attributeSubscription.getSubscribedRegionHandles().size() > 0)
-        {
-          if (sentRegions == null)
+          if (federateProxy.isConveyRegionDesignatorSets() &&
+              attributeSubscription.getSubscribedRegionHandles().size() > 0)
           {
-            // just check for intersection
-
-            if (!objectInstance.regionsIntersect(
-              attributeHandle, federateProxy.getFederationExecution().getRegionManager(),
-              attributeSubscription.getSubscribedRegionHandles()))
+            if (sentRegions == null)
             {
-              i.remove();
+              sentRegions = new HashMap<RegionHandle, Map<DimensionHandle, RangeBounds>>();
+            }
+
+            // copy all the regions
+
+            if (objectInstance.regionsIntersect(
+              attributeHandle, federateProxy.getFederationExecution().getRegionManager(),
+              attributeSubscription.getSubscribedRegionHandles(), sentRegions))
+            {
+              if (trimmedAttributeValues == null)
+              {
+                trimmedAttributeValues = IEEE1516eAttributeHandleValueMapFactory.INSTANCE.create(
+                  updateAttributeValues.getAttributeValues().size());
+              }
+              trimmedAttributeValues.put(attributeHandle, entry.getValue());
             }
           }
           else
           {
-            // copy all the regions
+            // just check for intersection
 
-            if (!objectInstance.regionsIntersect(
+            if (objectInstance.regionsIntersect(
               attributeHandle, federateProxy.getFederationExecution().getRegionManager(),
-              attributeSubscription.getSubscribedRegionHandles(), sentRegions))
+              attributeSubscription.getSubscribedRegionHandles()))
             {
-              i.remove();
+              if (trimmedAttributeValues == null)
+              {
+                trimmedAttributeValues = IEEE1516eAttributeHandleValueMapFactory.INSTANCE.create(
+                  updateAttributeValues.getAttributeValues().size());
+              }
+              trimmedAttributeValues.put(attributeHandle, entry.getValue());
             }
           }
         }
       }
 
-      if (attributeValues.isEmpty())
+      if (trimmedAttributeValues == null)
       {
         reflectAttributeValues = null;
       }
       else
       {
         reflectAttributeValues = new ReflectAttributeValues(
-          updateAttributeValues.getObjectInstanceHandle(), attributeValues, updateAttributeValues.getTag(),
+          updateAttributeValues.getObjectInstanceHandle(), trimmedAttributeValues, updateAttributeValues.getTag(),
           updateAttributeValues.getSentOrderType(), updateAttributeValues.getTransportationTypeHandle(),
           updateAttributeValues.getTime(), updateAttributeValues.getMessageRetractionHandle(),
           federateProxy.getFederateHandle(), sentRegions);

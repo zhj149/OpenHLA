@@ -32,7 +32,13 @@ public class SubscribeInteractionClass
 
   public SubscribeInteractionClass(InteractionClassHandle interactionClassHandle, boolean passive)
   {
-    this(MessageType.SUBSCRIBE_INTERACTION_CLASS, interactionClassHandle, passive, true);
+    super(MessageType.SUBSCRIBE_INTERACTION_CLASS, interactionClassHandle);
+
+    this.passive = passive;
+
+    Protocol.encodeBoolean(buffer, passive);
+
+    encodingFinished();
   }
 
   public SubscribeInteractionClass(ChannelBuffer buffer)
@@ -40,21 +46,6 @@ public class SubscribeInteractionClass
     super(buffer);
 
     passive = Protocol.decodeBoolean(buffer);
-  }
-
-  protected SubscribeInteractionClass(
-    MessageType messageType, InteractionClassHandle interactionClassHandle, boolean passive, boolean encodingFinished)
-  {
-    super(messageType, interactionClassHandle);
-
-    this.passive = passive;
-
-    Protocol.encodeBoolean(buffer, passive);
-
-    if (encodingFinished)
-    {
-      encodingFinished();
-    }
   }
 
   public boolean isPassive()

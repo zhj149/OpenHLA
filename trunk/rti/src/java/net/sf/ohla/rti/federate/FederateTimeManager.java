@@ -19,6 +19,9 @@ package net.sf.ohla.rti.federate;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
+import net.sf.ohla.rti.i18n.I18nLogger;
 import net.sf.ohla.rti.messages.DisableTimeConstrained;
 import net.sf.ohla.rti.messages.DisableTimeRegulation;
 import net.sf.ohla.rti.messages.EnableTimeConstrained;
@@ -32,9 +35,6 @@ import net.sf.ohla.rti.messages.NextMessageRequestTimeAdvanceGrant;
 import net.sf.ohla.rti.messages.TimeAdvanceRequest;
 import net.sf.ohla.rti.messages.TimeAdvanceRequestAvailable;
 import net.sf.ohla.rti.messages.UpdateLITS;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.LogicalTime;
@@ -58,51 +58,51 @@ import hla.rti1516e.exceptions.TimeRegulationIsNotEnabled;
 
 public class FederateTimeManager
 {
-  private static final Logger log = LoggerFactory.getLogger(FederateTimeManager.class);
-
-  protected enum TemporalState
+  private enum TemporalState
   {
     TIME_ADVANCING, TIME_GRANTED
   }
 
-  protected enum TimeRegulatingState
+  private enum TimeRegulatingState
   {
     TIME_REGULATING, BECOMING_TIME_REGULATING, NOT_TIME_REGULATING
   }
 
-  protected enum TimeConstrainedState
+  private enum TimeConstrainedState
   {
     TIME_CONSTRAINED, BECOMING_TIME_CONSTRAINED, NOT_TIME_CONSTRAINED
   }
 
   private final Federate federate;
-  private final LogicalTimeFactory logicalTimeFactory;
+
+  private final I18nLogger log;
 
   private final LogicalTimeInterval epsilon;
 
   private final ReadWriteLock timeLock = new ReentrantReadWriteLock(true);
 
-  protected TemporalState temporalState = TemporalState.TIME_GRANTED;
-  protected TimeRegulatingState timeRegulatingState = TimeRegulatingState.NOT_TIME_REGULATING;
-  protected TimeConstrainedState timeConstrainedState = TimeConstrainedState.NOT_TIME_CONSTRAINED;
+  private TemporalState temporalState = TemporalState.TIME_GRANTED;
+  private TimeRegulatingState timeRegulatingState = TimeRegulatingState.NOT_TIME_REGULATING;
+  private TimeConstrainedState timeConstrainedState = TimeConstrainedState.NOT_TIME_CONSTRAINED;
 
-  protected LogicalTime federateTime;
-  protected LogicalTime galt;
+  private LogicalTime federateTime;
+  private LogicalTime galt;
 
-  protected LogicalTimeInterval lookahead;
+  private LogicalTimeInterval lookahead;
 
   /**
    * Least Outgoing Time Stamp.
    */
-  protected LogicalTime lots;
+  private LogicalTime lots;
 
-  protected LogicalTime advanceRequestTime;
-  protected TimeAdvanceType advanceRequestType = TimeAdvanceType.NONE;
+  private LogicalTime advanceRequestTime;
+  private TimeAdvanceType advanceRequestType = TimeAdvanceType.NONE;
 
   public FederateTimeManager(Federate federate, LogicalTimeFactory logicalTimeFactory)
   {
     this.federate = federate;
-    this.logicalTimeFactory = logicalTimeFactory;
+
+    log = I18nLogger.getLogger(federate.getMarker(), getClass());
 
     epsilon = logicalTimeFactory.makeEpsilon();
 
@@ -154,7 +154,7 @@ public class FederateTimeManager
     {
       if (timeRegulatingState == TimeRegulatingState.TIME_REGULATING)
       {
-        throw new TimeRegulationAlreadyEnabled("");
+        throw new TimeRegulationAlreadyEnabled(I18n.getMessage(ExceptionMessages.TIME_REGULATION_ALREADY_ENABLED));
       }
 
       checkIfInvalidLookahead(lookahead);
@@ -202,7 +202,7 @@ public class FederateTimeManager
     {
       if (timeConstrainedState == TimeConstrainedState.TIME_CONSTRAINED)
       {
-        throw new TimeConstrainedAlreadyEnabled("");
+        throw new TimeConstrainedAlreadyEnabled(I18n.getMessage(ExceptionMessages.TIME_CONSTRAINED_ALREADY_ENABLED));
       }
 
       checkIfInTimeAdvancingState();
@@ -238,6 +238,7 @@ public class FederateTimeManager
     }
   }
 
+  @SuppressWarnings("unchecked")
   public void timeAdvanceRequest(LogicalTime time)
     throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState, RequestForTimeRegulationPending,
            RequestForTimeConstrainedPending, RTIinternalError
@@ -261,11 +262,11 @@ public class FederateTimeManager
         }
         catch (IllegalTimeArithmetic ita)
         {
-          throw new InvalidLogicalTime("", ita);
+          throw new InvalidLogicalTime(ita.getMessage(), ita);
         }
         catch (InvalidLogicalTimeInterval ilti)
         {
-          throw new InvalidLogicalTime("", ilti);
+          throw new InvalidLogicalTime(ilti.getMessage(), ilti);
         }
       }
 
@@ -284,6 +285,7 @@ public class FederateTimeManager
     }
   }
 
+  @SuppressWarnings("unchecked")
   public void timeAdvanceRequestAvailable(LogicalTime time)
     throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState, RequestForTimeRegulationPending,
            RequestForTimeConstrainedPending, RTIinternalError
@@ -307,11 +309,11 @@ public class FederateTimeManager
         }
         catch (IllegalTimeArithmetic ita)
         {
-          throw new InvalidLogicalTime("", ita);
+          throw new InvalidLogicalTime(ita.getMessage(), ita);
         }
         catch (InvalidLogicalTimeInterval ilti)
         {
-          throw new InvalidLogicalTime("", ilti);
+          throw new InvalidLogicalTime(ilti.getMessage(), ilti);
         }
       }
 
@@ -330,6 +332,7 @@ public class FederateTimeManager
     }
   }
 
+  @SuppressWarnings("unchecked")
   public void nextMessageRequest(LogicalTime time)
     throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState, RequestForTimeRegulationPending,
            RequestForTimeConstrainedPending, RTIinternalError
@@ -353,11 +356,11 @@ public class FederateTimeManager
         }
         catch (IllegalTimeArithmetic ita)
         {
-          throw new InvalidLogicalTime("", ita);
+          throw new InvalidLogicalTime(ita.getMessage(), ita);
         }
         catch (InvalidLogicalTimeInterval ilti)
         {
-          throw new InvalidLogicalTime("", ilti);
+          throw new InvalidLogicalTime(ilti.getMessage(), ilti);
         }
       }
 
@@ -376,6 +379,7 @@ public class FederateTimeManager
     }
   }
 
+  @SuppressWarnings("unchecked")
   public void nextMessageRequestAvailable(LogicalTime time)
     throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState, RequestForTimeRegulationPending,
            RequestForTimeConstrainedPending, RTIinternalError
@@ -399,11 +403,11 @@ public class FederateTimeManager
         }
         catch (IllegalTimeArithmetic ita)
         {
-          throw new InvalidLogicalTime("", ita);
+          throw new InvalidLogicalTime(ita.getMessage(), ita);
         }
         catch (InvalidLogicalTimeInterval ilti)
         {
-          throw new InvalidLogicalTime("", ilti);
+          throw new InvalidLogicalTime(ilti.getMessage(), ilti);
         }
       }
 
@@ -422,6 +426,7 @@ public class FederateTimeManager
     }
   }
 
+  @SuppressWarnings("unchecked")
   public void flushQueueRequest(LogicalTime time)
     throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState, RequestForTimeRegulationPending,
            RequestForTimeConstrainedPending, RTIinternalError
@@ -445,11 +450,11 @@ public class FederateTimeManager
         }
         catch (IllegalTimeArithmetic ita)
         {
-          throw new InvalidLogicalTime("", ita);
+          throw new InvalidLogicalTime(ita.getMessage(), ita);
         }
         catch (InvalidLogicalTimeInterval ilti)
         {
-          throw new InvalidLogicalTime("", ilti);
+          throw new InvalidLogicalTime(ilti.getMessage(), ilti);
         }
       }
 
@@ -496,6 +501,7 @@ public class FederateTimeManager
     }
   }
 
+  @SuppressWarnings("unchecked")
   public TimeQueryReturn queryLITS()
     throws RTIinternalError
   {
@@ -570,6 +576,7 @@ public class FederateTimeManager
     }
   }
 
+  @SuppressWarnings("unchecked")
   public void timeRegulationEnabled(LogicalTime time, FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
@@ -645,6 +652,7 @@ public class FederateTimeManager
     }
   }
 
+  @SuppressWarnings("unchecked")
   public void galtAdvanced(LogicalTime galt)
   {
     timeLock.writeLock().lock();
@@ -652,7 +660,7 @@ public class FederateTimeManager
     {
       this.galt = galt;
 
-      log.debug(federate.getMarker(), "GALT advanced: {}", galt);
+      log.debug("GALT advanced: {}", galt);
 
       LogicalTime maxFutureTaskTimestamp;
 
@@ -692,7 +700,7 @@ public class FederateTimeManager
     timeLock.writeLock().lock();
     try
     {
-      log.debug(federate.getMarker(), "GALT undefined");
+      log.debug("GALT undefined");
 
       galt = null;
 
@@ -709,7 +717,7 @@ public class FederateTimeManager
   {
     if (isTimeAdvancing())
     {
-      throw new InTimeAdvancingState("");
+      throw new InTimeAdvancingState(I18n.getMessage(ExceptionMessages.IN_TIME_ADVANCING_STATE));
     }
   }
 
@@ -718,7 +726,7 @@ public class FederateTimeManager
   {
     if (!isTimeRegulating())
     {
-      throw new TimeRegulationIsNotEnabled("");
+      throw new TimeRegulationIsNotEnabled(I18n.getMessage(ExceptionMessages.TIME_REGULATION_IS_NOT_ENABLED));
     }
   }
 
@@ -727,7 +735,7 @@ public class FederateTimeManager
   {
     if (timeRegulatingState == TimeRegulatingState.BECOMING_TIME_REGULATING)
     {
-      throw new RequestForTimeRegulationPending("");
+      throw new RequestForTimeRegulationPending(I18n.getMessage(ExceptionMessages.REQUEST_FOR_TIME_REGULATION_PENDING));
     }
   }
 
@@ -736,7 +744,7 @@ public class FederateTimeManager
   {
     if (!isTimeConstrained())
     {
-      throw new TimeConstrainedIsNotEnabled("");
+      throw new TimeConstrainedIsNotEnabled(I18n.getMessage(ExceptionMessages.TIME_CONSTRAINED_IS_NOT_ENABLED));
     }
   }
 
@@ -745,16 +753,19 @@ public class FederateTimeManager
   {
     if (timeConstrainedState == TimeConstrainedState.BECOMING_TIME_CONSTRAINED)
     {
-      throw new RequestForTimeConstrainedPending("");
+      throw new RequestForTimeConstrainedPending(I18n.getMessage(
+        ExceptionMessages.REQUEST_FOR_TIME_CONSTRAINED_PENDING));
     }
   }
 
+  @SuppressWarnings("unchecked")
   public void checkIfLogicalTimeAlreadyPassed(LogicalTime time)
     throws LogicalTimeAlreadyPassed
   {
     if (time.compareTo(federateTime) < 0)
     {
-      throw new LogicalTimeAlreadyPassed(String.format("%s < %s", time, federateTime));
+      throw new LogicalTimeAlreadyPassed(I18n.getMessage(
+        ExceptionMessages.LOGICAL_TIME_ALREADY_PASSED, time, federateTime));
     }
   }
 
@@ -763,7 +774,7 @@ public class FederateTimeManager
   {
     if (time == null)
     {
-      throw new InvalidLogicalTime("null");
+      throw new InvalidLogicalTime(I18n.getMessage(ExceptionMessages.LOGICAL_TIME_IS_NULL));
     }
 
     // TODO: check against factory type?
@@ -774,7 +785,7 @@ public class FederateTimeManager
   {
     if (lookahead == null)
     {
-      throw new InvalidLookahead("null");
+      throw new InvalidLookahead(I18n.getMessage(ExceptionMessages.LOGICAL_TIME_IS_NULL));
     }
 
     // TODO: check against factory type?
@@ -798,7 +809,8 @@ public class FederateTimeManager
     checkIfInvalidTimestamp(deleteTime);
   }
 
-  protected LogicalTime handleNextMessageRequestGALTAdvanced(LogicalTime galt)
+  @SuppressWarnings("unchecked")
+  private LogicalTime handleNextMessageRequestGALTAdvanced(LogicalTime galt)
   {
     LogicalTime maxFutureTaskTimestamp;
 
@@ -841,7 +853,8 @@ public class FederateTimeManager
     return maxFutureTaskTimestamp;
   }
 
-  protected LogicalTime handleNextMessageRequestAvailableGALTAdvanced(LogicalTime galt)
+  @SuppressWarnings("unchecked")
+  private LogicalTime handleNextMessageRequestAvailableGALTAdvanced(LogicalTime galt)
   {
     LogicalTime maxFutureTaskTimestamp;
 
@@ -884,7 +897,8 @@ public class FederateTimeManager
     return maxFutureTaskTimestamp;
   }
 
-  protected void checkIfInvalidTimestamp(LogicalTime time)
+  @SuppressWarnings("unchecked")
+  private void checkIfInvalidTimestamp(LogicalTime time)
     throws InvalidLogicalTime
   {
     checkIfInvalidLogicalTime(time);
@@ -893,17 +907,18 @@ public class FederateTimeManager
     {
       if (time.compareTo(lots) < 0)
       {
-        throw new InvalidLogicalTime(String.format("%s <= %s", time, lots));
+        throw new InvalidLogicalTime(I18n.getMessage(ExceptionMessages.LOGICAL_TIME_IS_LESS_THAN_LOTS, time, lots));
       }
     }
     else
     {
-      // TODO: is validating the timestamp required for non time regulating
+      // TODO: is validating the timestamp required for non time regulating?
 
       LogicalTime minimumTime = isTimeAdvancing() ? advanceRequestTime : federateTime;
       if (time.compareTo(minimumTime) <= 0)
       {
-        throw new InvalidLogicalTime(String.format("%s <= %s", time, minimumTime));
+        throw new InvalidLogicalTime(I18n.getMessage(
+          ExceptionMessages.LOGICAL_TIME_IS_LESS_THAN_OR_EQUAL_TO_MINIMUM_TIME, time, minimumTime));
       }
     }
   }

@@ -51,6 +51,8 @@
   <test name="IEEE 1516e - Data Distribution Management">
     <classes>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.datadistribution.RegionSupportTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.datadistribution.ObjectRegionTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.datadistribution.InteractionRegionTestNG"/>
     </classes>
   </test>
   <test name="IEEE 1516e - Support Services">

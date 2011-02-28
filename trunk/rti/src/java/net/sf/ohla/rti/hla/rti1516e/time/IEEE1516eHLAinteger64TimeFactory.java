@@ -16,6 +16,9 @@
 
 package net.sf.ohla.rti.hla.rti1516e.time;
 
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
+
 import hla.rti1516e.exceptions.CouldNotDecode;
 import hla.rti1516e.time.HLAinteger64Interval;
 import hla.rti1516e.time.HLAinteger64Time;
@@ -29,11 +32,11 @@ public class IEEE1516eHLAinteger64TimeFactory
   {
     if (buffer == null)
     {
-      throw new CouldNotDecode("buffer cannot be null");
+      throw new CouldNotDecode(I18n.getMessage(ExceptionMessages.DECODE_BUFFER_IS_NULL));
     }
     else if ((buffer.length - offset) < 8)
     {
-      throw new CouldNotDecode("buffer is too short");
+      throw new CouldNotDecode(I18n.getMessage(ExceptionMessages.DECODE_BUFFER_IS_TOO_SHORT));
     }
 
     long l = (((long) buffer[offset++] << 56) +
@@ -52,11 +55,11 @@ public class IEEE1516eHLAinteger64TimeFactory
   {
     if (buffer == null)
     {
-      throw new CouldNotDecode("buffer cannot be null");
+      throw new CouldNotDecode(I18n.getMessage(ExceptionMessages.DECODE_BUFFER_IS_NULL));
     }
     else if ((buffer.length - offset) < 8)
     {
-      throw new CouldNotDecode("buffer is too short");
+      throw new CouldNotDecode(I18n.getMessage(ExceptionMessages.DECODE_BUFFER_IS_TOO_SHORT));
     }
 
     long l = (((long) buffer[offset++] << 56) +

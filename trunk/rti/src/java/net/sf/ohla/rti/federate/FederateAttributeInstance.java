@@ -19,11 +19,11 @@ package net.sf.ohla.rti.federate;
 import java.io.Serializable;
 
 import net.sf.ohla.rti.fdd.Attribute;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandleSet;
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
 
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.OrderType;
-import hla.rti1516e.RegionHandleSet;
 import hla.rti1516e.TransportationTypeHandle;
 import hla.rti1516e.exceptions.AttributeAlreadyBeingChanged;
 import hla.rti1516e.exceptions.AttributeAlreadyBeingDivested;
@@ -33,8 +33,6 @@ public class FederateAttributeInstance
   implements Serializable
 {
   private final Attribute attribute;
-
-  private final RegionHandleSet associatedRegions = new IEEE1516eRegionHandleSet();
 
   private TransportationTypeHandle transportationTypeHandle;
   private OrderType orderType;
@@ -79,21 +77,6 @@ public class FederateAttributeInstance
     this.orderType = orderType;
   }
 
-  public RegionHandleSet getAssociatedRegions()
-  {
-    return associatedRegions;
-  }
-
-  public void associateRegionsForUpdates(RegionHandleSet regionHandles)
-  {
-    associatedRegions.addAll(regionHandles);
-  }
-
-  public void unassociateRegionsForUpdates(RegionHandleSet regionHandles)
-  {
-    associatedRegions.removeAll(regionHandles);
-  }
-
   public void negotiatedAttributeOwnershipDivestiture()
   {
     divesting = true;
@@ -109,15 +92,14 @@ public class FederateAttributeInstance
     divesting = false;
   }
 
-  public void cancelAttributeOwnershipAcquisition()
-  {
-    // TODO
-  }
-
   public void checkIfAttributeDivestitureWasNotRequested()
     throws AttributeDivestitureWasNotRequested
   {
-    // TODO: check status
+    if (!divesting)
+    {
+      throw new AttributeDivestitureWasNotRequested(I18n.getMessage(
+        ExceptionMessages.ATTRIBUTE_DIVESTITURE_WAS_NOT_REQUESTED, attribute));
+    }
   }
 
   public void checkIfAttributeAlreadyBeingDivested()
@@ -125,7 +107,8 @@ public class FederateAttributeInstance
   {
     if (divesting)
     {
-      throw new AttributeAlreadyBeingDivested("");
+      throw new AttributeAlreadyBeingDivested(I18n.getMessage(
+        ExceptionMessages.ATTRIBUTE_ALREADY_BEING_DIVESTED, attribute));
     }
   }
 
@@ -133,5 +116,11 @@ public class FederateAttributeInstance
     throws AttributeAlreadyBeingChanged
   {
     // TODO: check status
+  }
+
+  @Override
+  public String toString()
+  {
+    return attribute.toString();
   }
 }

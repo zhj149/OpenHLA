@@ -18,9 +18,11 @@ package net.sf.ohla.rti.federate;
 
 import java.io.Serializable;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -32,6 +34,8 @@ import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.fdd.TransportationType;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSet;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSetFactory;
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
 import net.sf.ohla.rti.messages.AssociateRegionsForUpdates;
 import net.sf.ohla.rti.messages.AssociateRegionsForUpdatesResponse;
 import net.sf.ohla.rti.messages.AttributeOwnershipAcquisition;
@@ -40,6 +44,8 @@ import net.sf.ohla.rti.messages.AttributeOwnershipDivestitureIfWanted;
 import net.sf.ohla.rti.messages.CancelAttributeOwnershipAcquisition;
 import net.sf.ohla.rti.messages.CancelNegotiatedAttributeOwnershipDivestiture;
 import net.sf.ohla.rti.messages.ConfirmDivestiture;
+import net.sf.ohla.rti.messages.GetUpdateRateValueForAttribute;
+import net.sf.ohla.rti.messages.GetUpdateRateValueForAttributeResponse;
 import net.sf.ohla.rti.messages.NegotiatedAttributeOwnershipDivestiture;
 import net.sf.ohla.rti.messages.QueryAttributeOwnership;
 import net.sf.ohla.rti.messages.RequestObjectInstanceAttributeValueUpdate;
@@ -160,15 +166,6 @@ public class FederateObjectInstance
     {
       for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
       {
-        for (AttributeHandle attributeHandle : attributeRegionAssociation.ahset)
-        {
-          FederateAttributeInstance attribute = attributes.get(attributeHandle);
-          if (attribute != null)
-          {
-            attribute.associateRegionsForUpdates(attributeRegionAssociation.rhset);
-          }
-        }
-
         for (RegionHandle regionHandle : attributeRegionAssociation.rhset)
         {
           FederateRegion region = federate.getRegionManager().getRegionSafely(regionHandle);
@@ -252,7 +249,8 @@ public class FederateObjectInstance
     {
       if (!attributes.isEmpty())
       {
-        throw new FederateOwnsAttributes(String.format("%s - %s", objectInstanceHandle, attributes.keySet()));
+        throw new FederateOwnsAttributes(I18n.getMessage(
+          ExceptionMessages.FEDERATE_OWNS_ATTRIBUTES, this, attributes.values()));
       }
     }
     finally
@@ -372,30 +370,41 @@ public class FederateObjectInstance
     objectLock.writeLock().lock();
     try
     {
-      Set<AttributeHandle> ownedAttributeHandles = new HashSet<AttributeHandle>();
-      Set<AttributeHandle> attributeHandlesAlreadyBeingAcquired = new HashSet<AttributeHandle>();
+      Collection<FederateAttributeInstance> ownedAttributes = null;
+      Collection<AttributeHandle> attributeHandlesAlreadyBeingAcquired = null;
 
       for (AttributeHandle attributeHandle : attributeHandles)
       {
         objectClass.checkIfAttributeNotDefined(attributeHandle);
 
-        if (attributes.containsKey(attributeHandle))
+        FederateAttributeInstance attributeInstance = attributes.get(attributeHandle);
+        if (attributeInstance != null)
         {
-          ownedAttributeHandles.add(attributeHandle);
+          if (ownedAttributes == null)
+          {
+            ownedAttributes = new LinkedList<FederateAttributeInstance>();
+          }
+          ownedAttributes.add(attributeInstance);
         }
         else if (attributeHandlesBeingAcquiredIfAvailable.contains(attributeHandle))
         {
+          if (attributeHandlesAlreadyBeingAcquired == null)
+          {
+            attributeHandlesAlreadyBeingAcquired = new LinkedList<AttributeHandle>();
+          }
           attributeHandlesAlreadyBeingAcquired.add(attributeHandle);
         }
       }
 
-      if (!ownedAttributeHandles.isEmpty())
+      if (ownedAttributes != null)
       {
-        throw new FederateOwnsAttributes(String.format("%s - %s", objectInstanceHandle, ownedAttributeHandles));
+        throw new FederateOwnsAttributes(I18n.getMessage(
+          ExceptionMessages.FEDERATE_OWNS_ATTRIBUTES, this, ownedAttributes));
       }
-      else if (!attributeHandlesAlreadyBeingAcquired.isEmpty())
+      else if (attributeHandlesAlreadyBeingAcquired != null)
       {
-        throw new AttributeAlreadyBeingAcquired(attributeHandlesAlreadyBeingAcquired.toString());
+        throw new AttributeAlreadyBeingAcquired(I18n.getMessage(
+          ExceptionMessages.ATTRIBUTE_ALREADY_BEING_ACQUIRED, attributeHandlesAlreadyBeingAcquired));
       }
 
       attributeHandlesBeingAcquiredIfAvailable.addAll(attributeHandles);
@@ -483,21 +492,19 @@ public class FederateObjectInstance
         FederateAttributeInstance attributeInstance = attributes.get(attributeHandle);
         if (attributeInstance != null)
         {
-          throw new AttributeAlreadyOwned(objectClass.getAttributeName(attributeHandle));
+          throw new AttributeAlreadyOwned(I18n.getMessage(
+            ExceptionMessages.ATTRIBUTE_ALREADY_OWNED, attributeInstance.getAttribute()));
         }
         else if (!attributeHandlesBeingAcquired.contains(attributeHandle))
         {
-          throw new AttributeAcquisitionWasNotRequested(objectClass.getAttributeName(attributeHandle));
+          throw new AttributeAcquisitionWasNotRequested(I18n.getMessage(
+            ExceptionMessages.ATTRIBUTE_ACQUISITION_WAS_NOT_REQUESTED,
+            objectClass.getAttributeSafely(attributeHandle)));
         }
         else
         {
           objectClass.checkIfAttributeNotDefined(attributeHandle);
         }
-      }
-
-      for (AttributeHandle attributeHandle : attributeHandles)
-      {
-        attributes.get(attributeHandle).cancelAttributeOwnershipAcquisition();
       }
 
       federate.getRTIChannel().write(new CancelAttributeOwnershipAcquisition(objectInstanceHandle, attributeHandles));
@@ -547,6 +554,47 @@ public class FederateObjectInstance
     return owned;
   }
 
+  public double getUpdateRateValueForAttribute(AttributeHandle attributeHandle, Federate federate)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, RTIinternalError
+  {
+    double updateRate;
+
+    objectLock.readLock().lock();
+    try
+    {
+      FederateAttributeInstance attributeInstance = attributes.get(attributeHandle);
+      if (attributeInstance == null)
+      {
+        // it might not be defined
+        //
+        objectClass.checkIfAttributeNotDefined(attributeHandle);
+      }
+
+      GetUpdateRateValueForAttribute getUpdateRateValueForAttribute =
+        new GetUpdateRateValueForAttribute(objectInstanceHandle, attributeHandle);
+      federate.getRTIChannel().write(getUpdateRateValueForAttribute);
+
+      GetUpdateRateValueForAttributeResponse response = getUpdateRateValueForAttribute.getResponse();
+      switch (response.getResponse())
+      {
+        case OBJECT_INSTANCE_NOT_KNOWN:
+          throw new ObjectInstanceNotKnown(I18n.getMessage(
+            ExceptionMessages.OBJECT_INSTANCE_HANDLE_NOT_KNOWN, objectInstanceHandle));
+        case SUCCESS:
+          updateRate = response.getUpdateRate();
+          break;
+        default:
+          throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION));
+      }
+    }
+    finally
+    {
+      objectLock.readLock().unlock();
+    }
+
+    return updateRate;
+  }
+
   public void changeAttributeOrderType(Set<AttributeHandle> attributeHandles, OrderType orderType)
     throws AttributeNotDefined, AttributeNotOwned
   {
@@ -580,7 +628,8 @@ public class FederateObjectInstance
           //
           objectClass.checkIfAttributeNotDefined(attributeHandle);
 
-          throw new AttributeNotOwned(attributeHandle.toString());
+          throw new AttributeNotOwned(I18n.getMessage(
+            ExceptionMessages.ATTRIBUTE_NOT_OWNED, objectClass.getAttributeSafely(attributeHandle)));
         }
         else
         {
@@ -657,15 +706,6 @@ public class FederateObjectInstance
     {
       for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
       {
-        for (AttributeHandle attributeHandle : attributeRegionAssociation.ahset)
-        {
-          FederateAttributeInstance attribute = attributes.get(attributeHandle);
-          if (attribute != null)
-          {
-            attribute.associateRegionsForUpdates(attributeRegionAssociation.rhset);
-          }
-        }
-
         for (RegionHandle regionHandle : attributeRegionAssociation.rhset)
         {
           FederateRegion region = federate.getRegionManager().getRegionSafely(regionHandle);
@@ -682,11 +722,12 @@ public class FederateObjectInstance
       switch (response.getResponse())
       {
         case OBJECT_INSTANCE_NOT_KNOWN:
-          throw new ObjectInstanceNotKnown(objectInstanceHandle.toString());
+          throw new ObjectInstanceNotKnown(
+            I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_HANDLE_NOT_KNOWN, objectInstanceHandle));
         case SUCCESS:
           break;
         default:
-          throw new RTIinternalError("");
+          throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION));
       }
     }
     finally
@@ -703,15 +744,6 @@ public class FederateObjectInstance
     {
       for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
       {
-        for (AttributeHandle attributeHandle : attributeRegionAssociation.ahset)
-        {
-          FederateAttributeInstance attribute = attributes.get(attributeHandle);
-          if (attribute != null)
-          {
-            attribute.unassociateRegionsForUpdates(attributeRegionAssociation.rhset);
-          }
-        }
-
         for (RegionHandle regionHandle : attributeRegionAssociation.rhset)
         {
           FederateRegion region = federate.getRegionManager().getRegions().get(regionHandle);
@@ -743,11 +775,9 @@ public class FederateObjectInstance
 
     if (attributeHandlesBeingAcquired.size() > 0 || attributeHandlesBeingAcquiredIfAvailable.size() > 0)
     {
-      AttributeHandleSet allAttributeHandlesBeingAcquired =
-        IEEE1516eAttributeHandleSetFactory.INSTANCE.create();
-      allAttributeHandlesBeingAcquired.addAll(attributeHandlesBeingAcquired);
-      allAttributeHandlesBeingAcquired.addAll(attributeHandlesBeingAcquiredIfAvailable);
-      throw new OwnershipAcquisitionPending(allAttributeHandlesBeingAcquired.toString());
+      throw new OwnershipAcquisitionPending(I18n.getMessage(
+        ExceptionMessages.OWNERSHIP_ACQUISITION_PENDING, this,
+        objectClass.getAttributeNamesSafely(attributeHandlesBeingAcquired, attributeHandlesBeingAcquiredIfAvailable)));
     }
   }
 
@@ -772,7 +802,9 @@ public class FederateObjectInstance
 
     if (allAttributeHandlesBeingAcquired != null)
     {
-      throw new OwnershipAcquisitionPending(allAttributeHandlesBeingAcquired.toString());
+      throw new OwnershipAcquisitionPending(I18n.getMessage(
+        ExceptionMessages.OWNERSHIP_ACQUISITION_PENDING, this,
+        objectClass.getAttributeNamesSafely(allAttributeHandlesBeingAcquired)));
     }
   }
 
@@ -787,7 +819,8 @@ public class FederateObjectInstance
         objectClass.getAttributeSafely(FDD.HLA_PRIVILEGE_TO_DELETE_OBJECT);
       if (!attributes.containsKey(privilegeToDeleteObjectAttribute.getAttributeHandle()) && attributes.size() > 1)
       {
-        throw new FederateOwnsAttributes(this + " - " + attributes.keySet());
+        throw new FederateOwnsAttributes(I18n.getMessage(
+          ExceptionMessages.FEDERATE_OWNS_ATTRIBUTES, this, attributes.values()));
       }
     }
   }
@@ -799,7 +832,8 @@ public class FederateObjectInstance
 
     if (!attributes.isEmpty())
     {
-      throw new FederateOwnsAttributes(this + " - " + attributes.keySet());
+      throw new FederateOwnsAttributes(I18n.getMessage(
+        ExceptionMessages.FEDERATE_OWNS_ATTRIBUTES, this, attributes.values()));
     }
   }
 
@@ -812,7 +846,7 @@ public class FederateObjectInstance
       objectClass.getAttributeSafely(FDD.HLA_PRIVILEGE_TO_DELETE_OBJECT);
     if (!attributes.containsKey(privilegeToDeleteObjectAttribute.getAttributeHandle()))
     {
-      throw new DeletePrivilegeNotHeld(objectInstanceHandle.toString());
+      throw new DeletePrivilegeNotHeld(I18n.getMessage(ExceptionMessages.DELETE_PRIVILEGE_NOT_HELD, this));
     }
   }
 
@@ -823,13 +857,13 @@ public class FederateObjectInstance
 
   public boolean equals(Object rhs)
   {
-    return rhs instanceof FederateObjectInstance &&
-           equals((FederateObjectInstance) rhs);
+    return this == rhs || (rhs instanceof FederateObjectInstance && equals((FederateObjectInstance) rhs));
   }
 
   public String toString()
   {
-    return String.format("%s (%s, %s)", objectInstanceHandle, objectInstanceName, objectClass);
+    return new StringBuilder(objectInstanceHandle.toString()).append("/").append(objectInstanceName).append("/").append(
+      objectClass.getObjectClassName()).toString();
   }
 
   protected boolean equals(FederateObjectInstance rhs)
@@ -847,7 +881,8 @@ public class FederateObjectInstance
       //
       objectClass.checkIfAttributeNotDefined(attributeHandle);
 
-      throw new AttributeNotOwned(objectClass.getAttributeName(attributeHandle));
+      throw new AttributeNotOwned(I18n.getMessage(
+        ExceptionMessages.ATTRIBUTE_NOT_OWNED, objectClass.getAttributeName(attributeHandle)));
     }
     return attributeInstance;
   }
@@ -863,7 +898,8 @@ public class FederateObjectInstance
         //
         objectClass.checkIfAttributeNotDefined(attributeHandle);
 
-        throw new AttributeNotOwned(String.format("%s", attributeHandle));
+        throw new AttributeNotOwned(I18n.getMessage(
+          ExceptionMessages.ATTRIBUTE_NOT_OWNED, objectClass.getAttributeName(attributeHandle)));
       }
     }
   }
@@ -889,22 +925,23 @@ public class FederateObjectInstance
   protected void checkIfFederateOwnsAttributes(Set<AttributeHandle> attributeHandles)
     throws FederateOwnsAttributes
   {
-    Set<AttributeHandle> ownedAttributeHandles = null;
+    Collection<FederateAttributeInstance> ownedAttributes = null;
     for (AttributeHandle attributeHandle : attributeHandles)
     {
-      if (attributes.containsKey(attributeHandle))
+      FederateAttributeInstance attributeInstance = attributes.get(attributeHandle);
+      if (attributeInstance != null)
       {
-        if (ownedAttributeHandles == null)
+        if (ownedAttributes == null)
         {
-          ownedAttributeHandles = new HashSet<AttributeHandle>();
+          ownedAttributes = new LinkedList<FederateAttributeInstance>();
         }
-        ownedAttributeHandles.add(attributeHandle);
+        ownedAttributes.add(attributeInstance);
       }
     }
-    if (ownedAttributeHandles != null)
+    if (ownedAttributes != null)
     {
-      throw new FederateOwnsAttributes(String.format(
-        "%s - %s", objectInstanceHandle, ownedAttributeHandles));
+      throw new FederateOwnsAttributes(I18n.getMessage(
+        ExceptionMessages.FEDERATE_OWNS_ATTRIBUTES, this, ownedAttributes));
     }
   }
 
@@ -1013,8 +1050,7 @@ public class FederateObjectInstance
         attributes.put(attributeHandle, new FederateAttributeInstance(attribute));
       }
 
-      federateAmbassador.attributeOwnershipAcquisitionNotification(
-        objectInstanceHandle, attributeHandles, tag);
+      federateAmbassador.attributeOwnershipAcquisitionNotification(objectInstanceHandle, attributeHandles, tag);
     }
     finally
     {

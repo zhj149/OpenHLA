@@ -268,11 +268,18 @@ public class ObjectRegistrationTestNG
     rtiAmbassadors.get(0).registerObjectInstance(null, TEST_OBJECT);
   }
 
-  @Test(expectedExceptions = {IllegalArgumentException.class})
+  @Test(expectedExceptions = {ObjectInstanceNameNotReserved.class})
   public void testRegisterObjectInstanceByNameWithNullObjectInstanceName()
     throws Exception
   {
     rtiAmbassadors.get(0).registerObjectInstance(testObjectClassHandle, null);
+  }
+
+  @Test(expectedExceptions = {ObjectInstanceNameNotReserved.class})
+  public void testRegisterObjectInstanceByNameWithEmptyObjectInstanceName()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).registerObjectInstance(testObjectClassHandle, "");
   }
 
   @Test(expectedExceptions = {ObjectClassNotPublished.class})

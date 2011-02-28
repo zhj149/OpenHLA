@@ -34,6 +34,10 @@ import net.sf.ohla.rti.federate.CallbackManager;
 import net.sf.ohla.rti.federate.CallbackManagerChannelUpstreamHandler;
 import net.sf.ohla.rti.federate.Federate;
 import net.sf.ohla.rti.federate.FederateChannelPipelineFactory;
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
+import net.sf.ohla.rti.i18n.I18nLogger;
+import net.sf.ohla.rti.i18n.LogMessages;
 import net.sf.ohla.rti.messages.CreateFederationExecution;
 import net.sf.ohla.rti.messages.DestroyFederationExecution;
 import net.sf.ohla.rti.messages.ListFederationExecutions;
@@ -43,8 +47,6 @@ import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleFactory;
@@ -192,7 +194,7 @@ import hla.rti1516e.exceptions.UnsupportedCallbackModel;
 public class IEEE1516eRTIambassador
   implements RTIambassador
 {
-  private static final Logger log = LoggerFactory.getLogger(IEEE1516eRTIambassador.class);
+  private static final I18nLogger log = I18nLogger.getLogger(IEEE1516eRTIambassador.class);
 
   public static final String HLA_STANDARD_MIM = "HLAstandardMIM.xml";
 
@@ -237,7 +239,7 @@ public class IEEE1516eRTIambassador
     }
     catch (CouldNotCreateLogicalTimeFactory cncltf)
     {
-      throw new RTIinternalError("", cncltf);
+      throw new RTIinternalError(cncltf.getMessage(), cncltf);
     }
   }
 
@@ -260,9 +262,11 @@ public class IEEE1516eRTIambassador
       switch (createFederationExecution.getResponse().getResponse())
       {
         case FEDERATION_EXECUTION_ALREADY_EXISTS:
-          throw new FederationExecutionAlreadyExists(federationExecutionName);
+          throw new FederationExecutionAlreadyExists(
+            I18n.getMessage(ExceptionMessages.FEDERATION_EXECUTION_ALREADY_EXISTS, federationExecutionName));
         case COULD_NOT_CREATE_LOGICAL_TIME_FACTORY:
-          throw new CouldNotCreateLogicalTimeFactory(logicalTimeImplementationName);
+          throw new CouldNotCreateLogicalTimeFactory(
+            I18n.getMessage(ExceptionMessages.COULD_NOT_CREATE_LOGICAL_TIME_FACTORY, logicalTimeImplementationName));
         case SUCCESS:
           break;
       }
@@ -280,11 +284,11 @@ public class IEEE1516eRTIambassador
   {
     if (federateAmbassador == null)
     {
-      throw new IllegalArgumentException("federateAmbassador cannot be null");
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATE_AMBASSADOR_IS_NULL));
     }
     else if (callbackModel == null)
     {
-      throw new IllegalArgumentException("callbackModel cannot be null");
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.CALLBACK_MODEL_IS_NULL));
     }
 
     String host;
@@ -354,12 +358,12 @@ public class IEEE1516eRTIambassador
         }
         else
         {
-          throw new ConnectionFailed(future.getCause().getMessage(), future.getCause());
+          throw new ConnectionFailed(I18n.getMessage(ExceptionMessages.CONNECTION_FAILED), future.getCause());
         }
       }
       else
       {
-        throw new AlreadyConnected("");
+        throw new AlreadyConnected(I18n.getMessage(ExceptionMessages.ALREADY_CONNECTED));
       }
     }
     finally
@@ -385,11 +389,11 @@ public class IEEE1516eRTIambassador
     {
       if (rtiChannel == null)
       {
-        log.warn("not connected");
+        log.warn(LogMessages.NOT_CONNECTED);
       }
       else if (federate == null)
       {
-        log.info("disconnecting from the RTI: {}", rtiChannel.getLocalAddress());
+        log.info(LogMessages.DISCONNECTING, rtiChannel.getRemoteAddress());
 
         rtiChannel.close();
 
@@ -397,7 +401,8 @@ public class IEEE1516eRTIambassador
       }
       else
       {
-        throw new FederateIsExecutionMember("federate is execution member");
+        throw new FederateIsExecutionMember(I18n.getMessage(
+          ExceptionMessages.FEDERATE_IS_EXECUTION_MEMBER, federate.getFederateHandle(), federate.getFederateName()));
       }
     }
     finally
@@ -413,15 +418,15 @@ public class IEEE1516eRTIambassador
   {
     if (fomModules == null)
     {
-      throw new CouldNotOpenFDD("FOM modules cannot be null");
+      throw new CouldNotOpenFDD(I18n.getMessage(ExceptionMessages.FOM_MODULES_IS_NULL));
     }
     else if (fomModules.length == 0)
     {
-      throw new CouldNotOpenFDD("at least 1 FOM module required");
+      throw new CouldNotOpenFDD(I18n.getMessage(ExceptionMessages.FOM_MODULES_IS_EMPTY));
     }
     else if (mimModule == null)
     {
-      throw new CouldNotOpenMIM("MIM module cannot be null");
+      throw new CouldNotOpenMIM(I18n.getMessage(ExceptionMessages.MIM_MODULE_IS_NULL));
     }
 
     FDD mim = IEEE1516eFDDParser.parseMIM(mimModule);
@@ -437,17 +442,17 @@ public class IEEE1516eRTIambassador
   {
     if (fomModules == null)
     {
-      throw new CouldNotOpenFDD("FOM modules cannot be null");
+      throw new CouldNotOpenFDD(I18n.getMessage(ExceptionMessages.FOM_MODULES_IS_NULL));
     }
     else if (fomModules.length == 0)
     {
-      throw new CouldNotOpenFDD("at least 1 FOM module required");
+      throw new CouldNotOpenFDD(I18n.getMessage(ExceptionMessages.FOM_MODULES_IS_EMPTY));
     }
 
     URL mimModule = Thread.currentThread().getContextClassLoader().getResource(HLA_STANDARD_MIM);
     if (mimModule == null)
     {
-      throw new RTIinternalError("could not locate MIM: " + HLA_STANDARD_MIM);
+      throw new RTIinternalError(I18n.getMessage(ExceptionMessages.COULD_NOT_LOCATE_MIM, HLA_STANDARD_MIM));
     }
     FDD mim = IEEE1516eFDDParser.parseFDD(mimModule);
     FDD fdd = mim.merge(IEEE1516eFDDParser.parseFDDs(fomModules));
@@ -461,15 +466,15 @@ public class IEEE1516eRTIambassador
   {
     if (fomModules == null)
     {
-      throw new CouldNotOpenFDD("FOM modules cannot be null");
+      throw new CouldNotOpenFDD(I18n.getMessage(ExceptionMessages.FOM_MODULES_IS_NULL));
     }
     else if (fomModules.length == 0)
     {
-      throw new CouldNotOpenFDD("at least 1 FOM module required");
+      throw new CouldNotOpenFDD(I18n.getMessage(ExceptionMessages.FOM_MODULES_IS_EMPTY));
     }
     else if (mimModule == null)
     {
-      throw new CouldNotOpenMIM("MIM module cannot be null");
+      throw new CouldNotOpenMIM(I18n.getMessage(ExceptionMessages.MIM_MODULE_IS_NULL));
     }
 
     FDD fdd = IEEE1516eFDDParser.parseMIM(mimModule);
@@ -484,17 +489,17 @@ public class IEEE1516eRTIambassador
   {
     if (fomModules == null)
     {
-      throw new CouldNotOpenFDD("FOM modules cannot be null");
+      throw new CouldNotOpenFDD(I18n.getMessage(ExceptionMessages.FOM_MODULES_IS_NULL));
     }
     else if (fomModules.length == 0)
     {
-      throw new CouldNotOpenFDD("at least 1 FOM module required");
+      throw new CouldNotOpenFDD(I18n.getMessage(ExceptionMessages.FOM_MODULES_IS_EMPTY));
     }
 
     URL mimModule = Thread.currentThread().getContextClassLoader().getResource(HLA_STANDARD_MIM);
     if (mimModule == null)
     {
-      throw new RTIinternalError("could not locate MIM: " + HLA_STANDARD_MIM);
+      throw new RTIinternalError(I18n.getMessage(ExceptionMessages.COULD_NOT_LOCATE_MIM, HLA_STANDARD_MIM));
     }
     FDD mim = IEEE1516eFDDParser.parseFDD(mimModule);
     FDD fdd = mim.merge(IEEE1516eFDDParser.parseFDDs(fomModules));
@@ -508,21 +513,21 @@ public class IEEE1516eRTIambassador
   {
     if (federationExecutionName == null)
     {
-      throw new IllegalArgumentException("federationExecutionName cannot be null");
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATION_EXECUTION_NAME_IS_NULL));
     }
     else if (federationExecutionName.isEmpty())
     {
-      throw new IllegalArgumentException("federationExecutionName cannot be empty");
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATION_EXECUTION_NAME_IS_EMPTY));
     }
     else if (fomModule == null)
     {
-      throw new CouldNotOpenFDD("FOM module cannot be null");
+      throw new CouldNotOpenFDD(I18n.getMessage(ExceptionMessages.FOM_MODULE_IS_NULL));
     }
 
     URL mimModule = Thread.currentThread().getContextClassLoader().getResource(HLA_STANDARD_MIM);
     if (mimModule == null)
     {
-      throw new RTIinternalError("could not locate MIM: " + HLA_STANDARD_MIM);
+      throw new RTIinternalError(I18n.getMessage(ExceptionMessages.COULD_NOT_LOCATE_MIM, HLA_STANDARD_MIM));
     }
     FDD mim = IEEE1516eFDDParser.parseFDD(mimModule);
     FDD fdd = mim.merge(IEEE1516eFDDParser.parseFDD(fomModule));
@@ -535,11 +540,11 @@ public class IEEE1516eRTIambassador
   {
     if (federationExecutionName == null)
     {
-      throw new IllegalArgumentException("federationExecutionName cannot be null");
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATION_EXECUTION_NAME_IS_NULL));
     }
     else if (federationExecutionName.isEmpty())
     {
-      throw new IllegalArgumentException("federationExecutionName cannot be empty");
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATION_EXECUTION_NAME_IS_EMPTY));
     }
 
     connectLock.readLock().lock();
@@ -554,10 +559,12 @@ public class IEEE1516eRTIambassador
       switch (destroyFederationExecution.getResponse().getResponse())
       {
         case FEDERATES_CURRENTLY_JOINED:
-          throw new FederatesCurrentlyJoined(
-            destroyFederationExecution.getResponse().getCurrentlyJoinedFederates().toString());
+          throw new FederatesCurrentlyJoined(I18n.getMessage(
+            ExceptionMessages.FEDERATES_CURRENTLY_JOINED,
+            destroyFederationExecution.getResponse().getCurrentlyJoinedFederates()));
         case FEDERATION_EXECUTION_DOES_NOT_EXIST:
-          throw new FederationExecutionDoesNotExist(federationExecutionName);
+          throw new FederationExecutionDoesNotExist(I18n.getMessage(
+            ExceptionMessages.FEDERATION_EXECUTION_DOES_NOT_EXIST, federationExecutionName));
         case SUCCESS:
           break;
       }
@@ -604,7 +611,9 @@ public class IEEE1516eRTIambassador
       {
         if (federate != null)
         {
-          throw new FederateAlreadyExecutionMember("");
+          throw new FederateAlreadyExecutionMember(I18n.getMessage(
+            ExceptionMessages.FEDERATE_ALREADY_EXECUTION_MEMBER, federate.getFederateHandle(),
+            federate.getFederateName()));
         }
 
         federate = new Federate(
@@ -632,11 +641,19 @@ public class IEEE1516eRTIambassador
   {
     if (federateType == null)
     {
-      throw new IllegalArgumentException("federateType cannot be null");
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATE_TYPE_IS_NULL));
+    }
+    else if (federateType.isEmpty())
+    {
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATE_TYPE_IS_EMPTY));
     }
     else if (federationExecutionName == null)
     {
-      throw new IllegalArgumentException("federationExecutionName cannot be null");
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATION_EXECUTION_NAME_IS_NULL));
+    }
+    else if (federationExecutionName.isEmpty())
+    {
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATION_EXECUTION_NAME_IS_EMPTY));
     }
 
     try
@@ -645,7 +662,7 @@ public class IEEE1516eRTIambassador
     }
     catch (FederateNameAlreadyInUse fnaiu)
     {
-      throw new RTIinternalError("unexpected exception", fnaiu);
+      throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION), fnaiu);
     }
   }
 
@@ -657,11 +674,19 @@ public class IEEE1516eRTIambassador
   {
     if (federateType == null)
     {
-      throw new IllegalArgumentException("federateType cannot be null");
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATE_TYPE_IS_NULL));
+    }
+    else if (federateType.isEmpty())
+    {
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATE_TYPE_IS_EMPTY));
     }
     else if (federationExecutionName == null)
     {
-      throw new IllegalArgumentException("federationExecutionName cannot be null");
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATION_EXECUTION_NAME_IS_NULL));
+    }
+    else if (federationExecutionName.isEmpty())
+    {
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATION_EXECUTION_NAME_IS_EMPTY));
     }
 
     try
@@ -670,15 +695,15 @@ public class IEEE1516eRTIambassador
     }
     catch (InconsistentFDD ifdd)
     {
-      throw new RTIinternalError("unexpected exception", ifdd);
+      throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION), ifdd);
     }
     catch (ErrorReadingFDD erfdd)
     {
-      throw new RTIinternalError("unexpected exception", erfdd);
+      throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION), erfdd);
     }
     catch (CouldNotOpenFDD cnofdd)
     {
-      throw new RTIinternalError("unexpected exception", cnofdd);
+      throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION), cnofdd);
     }
   }
 
@@ -688,11 +713,19 @@ public class IEEE1516eRTIambassador
   {
     if (federateType == null)
     {
-      throw new IllegalArgumentException("federateType cannot be null");
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATE_TYPE_IS_NULL));
+    }
+    else if (federateType.isEmpty())
+    {
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATE_TYPE_IS_EMPTY));
     }
     else if (federationExecutionName == null)
     {
-      throw new IllegalArgumentException("federationExecutionName cannot be null");
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATION_EXECUTION_NAME_IS_NULL));
+    }
+    else if (federationExecutionName.isEmpty())
+    {
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATION_EXECUTION_NAME_IS_EMPTY));
     }
 
     try
@@ -701,19 +734,19 @@ public class IEEE1516eRTIambassador
     }
     catch (FederateNameAlreadyInUse fnaiu)
     {
-      throw new RTIinternalError("unexpected exception", fnaiu);
+      throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION), fnaiu);
     }
     catch (InconsistentFDD ifdd)
     {
-      throw new RTIinternalError("unexpected exception", ifdd);
+      throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION), ifdd);
     }
     catch (ErrorReadingFDD erfdd)
     {
-      throw new RTIinternalError("unexpected exception", erfdd);
+      throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION), erfdd);
     }
     catch (CouldNotOpenFDD cnofdd)
     {
-      throw new RTIinternalError("unexpected exception", cnofdd);
+      throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION), cnofdd);
     }
   }
 
@@ -723,7 +756,7 @@ public class IEEE1516eRTIambassador
   {
     if (resignAction == null)
     {
-      throw new InvalidResignAction("resignAction cannot be null");
+      throw new InvalidResignAction(I18n.getMessage(ExceptionMessages.RESIGN_ACTION_IS_NULL));
     }
 
     checkIfCallNotAllowedFromWithinCallback();
@@ -762,7 +795,7 @@ public class IEEE1516eRTIambassador
     }
     catch (InvalidFederateHandle ifh)
     {
-      throw new RTIinternalError("", ifh);
+      throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION), ifh);
     }
   }
 
@@ -1029,9 +1062,11 @@ public class IEEE1516eRTIambassador
         switch (requestFederationRestore.getResponse().getResponse())
         {
           case SAVE_IN_PROGRESS:
-            throw new SaveInProgress(federate.getFederationExecutionName());
+            throw new SaveInProgress(I18n.getMessage(
+              ExceptionMessages.SAVE_IN_PROGRESS, federate.getFederationExecutionName()));
           case RESTORE_IN_PROGRESS:
-            throw new RestoreInProgress(federate.getFederationExecutionName());
+            throw new RestoreInProgress(I18n.getMessage(
+              ExceptionMessages.RESTORE_IN_PROGRESS, federate.getFederationExecutionName()));
           case SUCCESS:
             break;
         }
@@ -1157,7 +1192,7 @@ public class IEEE1516eRTIambassador
   {
     if (objectClassHandle == null)
     {
-      throw new ObjectClassNotDefined("objectClassHandle cannot be null");
+      throw new ObjectClassNotDefined(I18n.getMessage(ExceptionMessages.OBJECT_CLASS_HANDLE_IS_NULL));
     }
     else if (attributeHandles != null && attributeHandles.size() > 0)
     {
@@ -1191,7 +1226,7 @@ public class IEEE1516eRTIambassador
   {
     if (objectClassHandle == null)
     {
-      throw new ObjectClassNotDefined("objectClassHandle cannot be null");
+      throw new ObjectClassNotDefined(I18n.getMessage(ExceptionMessages.OBJECT_CLASS_HANDLE_IS_NULL));
     }
 
     connectLock.readLock().lock();
@@ -1223,7 +1258,7 @@ public class IEEE1516eRTIambassador
   {
     if (objectClassHandle == null)
     {
-      throw new ObjectClassNotDefined("objectClassHandle cannot be null");
+      throw new ObjectClassNotDefined(I18n.getMessage(ExceptionMessages.OBJECT_CLASS_HANDLE_IS_NULL));
     }
 
     connectLock.readLock().lock();
@@ -1255,7 +1290,7 @@ public class IEEE1516eRTIambassador
   {
     if (interactionClassHandle == null)
     {
-      throw new InteractionClassNotDefined("interactionClassHandle cannot be null");
+      throw new InteractionClassNotDefined(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
     }
 
     connectLock.readLock().lock();
@@ -1287,7 +1322,7 @@ public class IEEE1516eRTIambassador
   {
     if (interactionClassHandle == null)
     {
-      throw new InteractionClassNotDefined("interactionClassHandle cannot be null");
+      throw new InteractionClassNotDefined(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
     }
 
     connectLock.readLock().lock();
@@ -1481,6 +1516,11 @@ public class IEEE1516eRTIambassador
     throws FederateServiceInvocationsAreBeingReportedViaMOM, InteractionClassNotDefined, SaveInProgress,
            RestoreInProgress, FederateNotExecutionMember, NotConnected, RTIinternalError
   {
+    if (interactionClassHandle == null)
+    {
+      throw new InteractionClassNotDefined(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
+    }
+
     connectLock.readLock().lock();
     try
     {
@@ -1508,6 +1548,11 @@ public class IEEE1516eRTIambassador
     throws FederateServiceInvocationsAreBeingReportedViaMOM, InteractionClassNotDefined, SaveInProgress,
            RestoreInProgress, FederateNotExecutionMember, NotConnected, RTIinternalError
   {
+    if (interactionClassHandle == null)
+    {
+      throw new InteractionClassNotDefined(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
+    }
+
     connectLock.readLock().lock();
     try
     {
@@ -1535,6 +1580,11 @@ public class IEEE1516eRTIambassador
     throws InteractionClassNotDefined, SaveInProgress, RestoreInProgress, FederateNotExecutionMember, NotConnected,
            RTIinternalError
   {
+    if (interactionClassHandle == null)
+    {
+      throw new InteractionClassNotDefined(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
+    }
+
     connectLock.readLock().lock();
     try
     {
@@ -1563,11 +1613,16 @@ public class IEEE1516eRTIambassador
   {
     if (objectInstanceName == null)
     {
-      throw new IllegalName("objectInstanceName cannot be null");
+      throw new IllegalName(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_NAME_IS_NULL));
+    }
+    else if (objectInstanceName.isEmpty())
+    {
+      throw new IllegalName(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_NAME_IS_EMPTY));
     }
     else if (objectInstanceName.startsWith("HLA"))
     {
-      throw new IllegalName(objectInstanceName);
+      throw new IllegalName(I18n.getMessage(
+        ExceptionMessages.OBJECT_INSTANCE_NAME_STARTS_WITH_HLA, objectInstanceName));
     }
 
     connectLock.readLock().lock();
@@ -1593,7 +1648,7 @@ public class IEEE1516eRTIambassador
     }
   }
 
-  public void releaseObjectInstanceName(String name)
+  public void releaseObjectInstanceName(String objectInstanceName)
     throws ObjectInstanceNameNotReserved, SaveInProgress, RestoreInProgress, FederateNotExecutionMember, NotConnected,
            RTIinternalError
   {
@@ -1607,7 +1662,7 @@ public class IEEE1516eRTIambassador
       {
         checkIfFederateNotExecutionMember();
 
-        federate.releaseObjectInstanceName(name);
+        federate.releaseObjectInstanceName(objectInstanceName);
       }
       finally
       {
@@ -1620,25 +1675,26 @@ public class IEEE1516eRTIambassador
     }
   }
 
-  public void reserveMultipleObjectInstanceName(Set<String> names)
+  public void reserveMultipleObjectInstanceName(Set<String> objectInstanceNames)
     throws IllegalName, NameSetWasEmpty, SaveInProgress, RestoreInProgress, FederateNotExecutionMember, NotConnected,
            RTIinternalError
   {
-    if (names == null)
+    if (objectInstanceNames == null)
     {
-      throw new NameSetWasEmpty("names cannot be null");
+      throw new NameSetWasEmpty(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_NAME_SET_IS_NULL));
     }
-    else if (names.isEmpty())
+    else if (objectInstanceNames.isEmpty())
     {
-      throw new NameSetWasEmpty("names cannot be empty");
+      throw new NameSetWasEmpty(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_NAME_SET_IS_EMPTY));
     }
     else
     {
-      for (String name : names)
+      for (String objectInstanceName : objectInstanceNames)
       {
-        if (name.startsWith("HLA"))
+        if (objectInstanceName.startsWith("HLA"))
         {
-          throw new IllegalName(name);
+          throw new IllegalName(I18n.getMessage(
+            ExceptionMessages.OBJECT_INSTANCE_NAME_STARTS_WITH_HLA, objectInstanceName));
         }
       }
     }
@@ -1653,7 +1709,7 @@ public class IEEE1516eRTIambassador
       {
         checkIfFederateNotExecutionMember();
 
-        federate.reserveMultipleObjectInstanceName(names);
+        federate.reserveMultipleObjectInstanceName(objectInstanceNames);
       }
       finally
       {
@@ -1666,7 +1722,7 @@ public class IEEE1516eRTIambassador
     }
   }
 
-  public void releaseMultipleObjectInstanceName(Set<String> names)
+  public void releaseMultipleObjectInstanceName(Set<String> objectInstanceNames)
     throws ObjectInstanceNameNotReserved, SaveInProgress, RestoreInProgress, FederateNotExecutionMember, NotConnected,
            RTIinternalError
   {
@@ -1680,7 +1736,7 @@ public class IEEE1516eRTIambassador
       {
         checkIfFederateNotExecutionMember();
 
-        federate.releaseMultipleObjectInstanceName(names);
+        federate.releaseMultipleObjectInstanceName(objectInstanceNames);
       }
       finally
       {
@@ -1699,7 +1755,7 @@ public class IEEE1516eRTIambassador
   {
     if (objectClassHandle == null)
     {
-      throw new ObjectClassNotDefined("objectClassHandle cannot be null");
+      throw new ObjectClassNotDefined(I18n.getMessage(ExceptionMessages.OBJECT_CLASS_HANDLE_IS_NULL));
     }
 
     connectLock.readLock().lock();
@@ -1731,11 +1787,15 @@ public class IEEE1516eRTIambassador
   {
     if (objectClassHandle == null)
     {
-      throw new ObjectClassNotDefined("objectClassHandle cannot be null");
+      throw new ObjectClassNotDefined(I18n.getMessage(ExceptionMessages.OBJECT_CLASS_HANDLE_IS_NULL));
     }
     else if (objectInstanceName == null)
     {
-      throw new IllegalArgumentException("objectInstanceName cannot be null");
+      throw new ObjectInstanceNameNotReserved(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_NAME_IS_NULL));
+    }
+    else if (objectInstanceName.isEmpty())
+    {
+      throw new ObjectInstanceNameNotReserved(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_NAME_IS_EMPTY));
     }
 
     connectLock.readLock().lock();
@@ -1768,11 +1828,15 @@ public class IEEE1516eRTIambassador
   {
     if (objectInstanceHandle == null)
     {
-      throw new ObjectInstanceNotKnown("objectInstanceHandle cannot be null");
+      throw new ObjectInstanceNotKnown(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_HANDLE_IS_NULL));
     }
-    else if (attributeValues == null || attributeValues.isEmpty())
+    else if (attributeValues == null)
     {
-      log.warn("attempting to update object instance with null or empty attribute values: {}", objectInstanceHandle);
+      log.warn(LogMessages.UPDATE_ATTRIBUTE_VALUES_WITH_NULL_ATTRIBUTE_VALUES, objectInstanceHandle);
+    }
+    else if (attributeValues.isEmpty())
+    {
+      log.warn(LogMessages.UPDATE_ATTRIBUTE_VALUES_WITH_EMPTY_ATTRIBUTE_VALUES, objectInstanceHandle);
     }
     else
     {
@@ -1809,15 +1873,21 @@ public class IEEE1516eRTIambassador
 
     if (objectInstanceHandle == null)
     {
-      throw new ObjectInstanceNotKnown("objectInstanceHandle cannot be null");
+      throw new ObjectInstanceNotKnown(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_HANDLE_IS_NULL));
     }
     else if (time == null)
     {
-      throw new InvalidLogicalTime("time cannot be null");
+      throw new InvalidLogicalTime(I18n.getMessage(ExceptionMessages.LOGICAL_TIME_IS_NULL));
     }
-    else if (attributeValues == null || attributeValues.isEmpty())
+    else if (attributeValues == null)
     {
-      log.warn("attempting to update object instance with null or empty attribute values: {}", objectInstanceHandle);
+      log.warn(LogMessages.UPDATE_ATTRIBUTE_VALUES_WITH_NULL_ATTRIBUTE_VALUES, objectInstanceHandle);
+
+      messageRetractionReturn = new MessageRetractionReturn(false, null);
+    }
+    else if (attributeValues.isEmpty())
+    {
+      log.warn(LogMessages.UPDATE_ATTRIBUTE_VALUES_WITH_EMPTY_ATTRIBUTE_VALUES, objectInstanceHandle);
 
       messageRetractionReturn = new MessageRetractionReturn(false, null);
     }
@@ -1855,11 +1925,15 @@ public class IEEE1516eRTIambassador
   {
     if (interactionClassHandle == null)
     {
-      throw new InteractionClassNotDefined("interactionClassHandle cannot be null");
+      throw new InteractionClassNotDefined(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
     }
-    else if (parameterValues == null || parameterValues.isEmpty())
+    else if (parameterValues == null)
     {
-      log.warn("attempting to send interaction with null or empty parameter values: {}", interactionClassHandle);
+      log.warn(LogMessages.SEND_INTERACTION_WITH_NULL_PARAMETER_VALUES, interactionClassHandle);
+    }
+    else if (parameterValues.isEmpty())
+    {
+      log.warn(LogMessages.SEND_INTERACTION_WITH_EMPTY_PARAMETER_VALUES, interactionClassHandle);
     }
     else
     {
@@ -1897,15 +1971,21 @@ public class IEEE1516eRTIambassador
 
     if (interactionClassHandle == null)
     {
-      throw new InteractionClassNotDefined("interactionClassHandle cannot be null");
+      throw new InteractionClassNotDefined(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
     }
     else if (time == null)
     {
-      throw new InvalidLogicalTime("time cannot be null");
+      throw new InvalidLogicalTime(I18n.getMessage(ExceptionMessages.LOGICAL_TIME_IS_NULL));
     }
-    else if (parameterValues == null || parameterValues.isEmpty())
+    else if (parameterValues == null)
     {
-      log.warn("attempting to send interaction with null or empty parameter values: {}", interactionClassHandle);
+      log.warn(LogMessages.SEND_INTERACTION_WITH_NULL_PARAMETER_VALUES, interactionClassHandle);
+
+      messageRetractionReturn = new MessageRetractionReturn(false, null);
+    }
+    else if (parameterValues.isEmpty())
+    {
+      log.warn(LogMessages.SEND_INTERACTION_WITH_EMPTY_PARAMETER_VALUES, interactionClassHandle);
 
       messageRetractionReturn = new MessageRetractionReturn(false, null);
     }
@@ -1943,7 +2023,7 @@ public class IEEE1516eRTIambassador
   {
     if (objectInstanceHandle == null)
     {
-      throw new ObjectInstanceNotKnown("objectInstanceHandle cannot be null");
+      throw new ObjectInstanceNotKnown(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_HANDLE_IS_NULL));
     }
 
     connectLock.readLock().lock();
@@ -2145,6 +2225,15 @@ public class IEEE1516eRTIambassador
            InvalidTransportationType, SaveInProgress, RestoreInProgress, FederateNotExecutionMember, NotConnected,
            RTIinternalError
   {
+    if (interactionClassHandle == null)
+    {
+      throw new InteractionClassNotDefined(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
+    }
+    else if (transportationTypeHandle == null)
+    {
+      throw new InvalidTransportationType(I18n.getMessage(ExceptionMessages.TRANSPORTATION_TYPE_HANDLE_IS_NULL));
+    }
+
     connectLock.readLock().lock();
     try
     {
@@ -2173,6 +2262,15 @@ public class IEEE1516eRTIambassador
     throws InteractionClassNotDefined, SaveInProgress, RestoreInProgress, FederateNotExecutionMember, NotConnected,
            RTIinternalError
   {
+    if (federateHandle == null)
+    {
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATE_HANDLE_IS_NULL));
+    }
+    else if (interactionClassHandle == null)
+    {
+      throw new InteractionClassNotDefined(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
+    }
+
     connectLock.readLock().lock();
     try
     {
@@ -2203,11 +2301,16 @@ public class IEEE1516eRTIambassador
   {
     if (objectInstanceHandle == null)
     {
-      throw new ObjectInstanceNotKnown("objectInstanceHandle cannot be null");
+      throw new ObjectInstanceNotKnown(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_HANDLE_IS_NULL));
     }
-    else if (attributeHandles == null || attributeHandles.isEmpty())
+    else if (attributeHandles == null)
     {
-      log.warn("attempting to unconditionally divest attribrutes with null or empty attribute handles: {}",
+      log.warn(LogMessages.UNCONDITIONAL_ATTRIBUTE_OWNERSHIP_DIVESTITURE_WITH_NULL_ATTRIBUTE_HANDLES,
+               objectInstanceHandle);
+    }
+    else if (attributeHandles.isEmpty())
+    {
+      log.warn(LogMessages.UNCONDITIONAL_ATTRIBUTE_OWNERSHIP_DIVESTITURE_WITH_EMPTY_ATTRIBUTE_HANDLES,
                objectInstanceHandle);
     }
     else
@@ -2243,11 +2346,17 @@ public class IEEE1516eRTIambassador
   {
     if (objectInstanceHandle == null)
     {
-      throw new ObjectInstanceNotKnown("objectInstanceHandle cannot be null");
+      throw new ObjectInstanceNotKnown(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_HANDLE_IS_NULL));
     }
-    else if (attributeHandles == null || attributeHandles.isEmpty())
+    else if (attributeHandles == null)
     {
-      log.warn("attempting to divest attribrutes with null or empty attribute handles: {}", objectInstanceHandle);
+      log.warn(LogMessages.NEGOTIATED_ATTRIBUTE_OWNERSHIP_DIVESTITURE_WITH_NULL_ATTRIBUTE_HANDLES,
+               objectInstanceHandle);
+    }
+    else if (attributeHandles.isEmpty())
+    {
+      log.warn(LogMessages.NEGOTIATED_ATTRIBUTE_OWNERSHIP_DIVESTITURE_WITH_EMPTY_ATTRIBUTE_HANDLES,
+               objectInstanceHandle);
     }
     else
     {
@@ -2312,12 +2421,15 @@ public class IEEE1516eRTIambassador
   {
     if (objectInstanceHandle == null)
     {
-      throw new ObjectInstanceNotKnown("objectInstanceHandle cannot be null");
+      throw new ObjectInstanceNotKnown(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_HANDLE_IS_NULL));
     }
-    else if (attributeHandles == null || attributeHandles.isEmpty())
+    else if (attributeHandles == null)
     {
-      log.warn("attempting to unconditionally divest attribrutes with null or empty attribute handles: {}",
-               objectInstanceHandle);
+      log.warn(LogMessages.ATTRIBUTE_OWNERSHIP_ACQUISITION_WITH_NULL_ATTRIBUTE_HANDLES, objectInstanceHandle);
+    }
+    else if (attributeHandles.isEmpty())
+    {
+      log.warn(LogMessages.ATTRIBUTE_OWNERSHIP_ACQUISITION_WITH_EMPTY_ATTRIBUTE_HANDLES, objectInstanceHandle);
     }
     else
     {
@@ -2410,11 +2522,17 @@ public class IEEE1516eRTIambassador
 
     if (objectInstanceHandle == null)
     {
-      throw new ObjectInstanceNotKnown("objectInstanceHandle cannot be null");
+      throw new ObjectInstanceNotKnown(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_HANDLE_IS_NULL));
     }
-    else if (attributeHandles == null || attributeHandles.isEmpty())
+    else if (attributeHandles == null)
     {
-      log.warn("attempting to divest attribrutes with null or empty attribute handles: {}", objectInstanceHandle);
+      log.warn(LogMessages.ATTRIBUTE_OWNERSHIP_ACQUISITION_WITH_NULL_ATTRIBUTE_HANDLES, objectInstanceHandle);
+
+      divestedAttributeHandles = IEEE1516eAttributeHandleSetFactory.INSTANCE.create();
+    }
+    else if (attributeHandles.isEmpty())
+    {
+      log.warn(LogMessages.ATTRIBUTE_OWNERSHIP_ACQUISITION_WITH_EMPTY_ATTRIBUTE_HANDLES, objectInstanceHandle);
 
       divestedAttributeHandles = IEEE1516eAttributeHandleSetFactory.INSTANCE.create();
     }
@@ -2509,11 +2627,11 @@ public class IEEE1516eRTIambassador
   {
     if (objectInstanceHandle == null)
     {
-      throw new ObjectInstanceNotKnown("objectInstanceHandle cannot be null");
+      throw new ObjectInstanceNotKnown(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_HANDLE_IS_NULL));
     }
     else if (attributeHandle == null)
     {
-      throw new AttributeNotDefined("attributeHandle cannot be null");
+      throw new AttributeNotDefined(I18n.getMessage(ExceptionMessages.ATTRIBUTE_HANDLE_IS_NULL));
     }
 
     connectLock.readLock().lock();
@@ -2545,11 +2663,11 @@ public class IEEE1516eRTIambassador
   {
     if (objectInstanceHandle == null)
     {
-      throw new ObjectInstanceNotKnown("objectInstanceHandle cannot be null");
+      throw new ObjectInstanceNotKnown(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_HANDLE_IS_NULL));
     }
     else if (attributeHandle == null)
     {
-      throw new AttributeNotDefined("attributeHandle cannot be null");
+      throw new AttributeNotDefined(I18n.getMessage(ExceptionMessages.ATTRIBUTE_HANDLE_IS_NULL));
     }
 
     connectLock.readLock().lock();
@@ -3064,10 +3182,19 @@ public class IEEE1516eRTIambassador
     }
   }
 
-  public void changeInteractionOrderType(InteractionClassHandle interactionClassHandle, OrderType theType)
+  public void changeInteractionOrderType(InteractionClassHandle interactionClassHandle, OrderType orderType)
     throws InteractionClassNotPublished, InteractionClassNotDefined, SaveInProgress, RestoreInProgress,
            FederateNotExecutionMember, NotConnected, RTIinternalError
   {
+    if (interactionClassHandle == null)
+    {
+      throw new InteractionClassNotDefined(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
+    }
+    else if (orderType == null)
+    {
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.ORDER_TYPE_IS_NULL));
+    }
+
     connectLock.readLock().lock();
     try
     {
@@ -3078,7 +3205,7 @@ public class IEEE1516eRTIambassador
       {
         checkIfFederateNotExecutionMember();
 
-        federate.changeInteractionOrderType(interactionClassHandle, theType);
+        federate.changeInteractionOrderType(interactionClassHandle, orderType);
       }
       finally
       {
@@ -3095,9 +3222,13 @@ public class IEEE1516eRTIambassador
     throws InvalidDimensionHandle, SaveInProgress, RestoreInProgress, FederateNotExecutionMember, NotConnected,
            RTIinternalError
   {
-    if (dimensionHandles == null || dimensionHandles.isEmpty())
+    if (dimensionHandles == null)
     {
-      throw new InvalidDimensionHandle("dimensionHandles cannot be null or empty");
+      throw new InvalidDimensionHandle(I18n.getMessage(ExceptionMessages.CREATE_REGION_WITH_NULL_DIMENSION_HANDLES));
+    }
+    else if (dimensionHandles.isEmpty())
+    {
+      throw new InvalidDimensionHandle(I18n.getMessage(ExceptionMessages.CREATE_REGION_WITH_EMPTY_DIMENSION_HANDLES));
     }
     else
     {
@@ -3129,9 +3260,13 @@ public class IEEE1516eRTIambassador
     throws RegionNotCreatedByThisFederate, InvalidRegion, SaveInProgress, RestoreInProgress, FederateNotExecutionMember,
            NotConnected, RTIinternalError
   {
-    if (regionHandles == null || regionHandles.isEmpty())
+    if (regionHandles == null)
     {
-      log.warn("attempting to commit region modififcations with null or empty regionHandles values");
+      log.warn(LogMessages.COMMIT_REGION_MODIFICATIONS_WITH_NULL_ATTRIBUTE_HANDLES);
+    }
+    else if (regionHandles.isEmpty())
+    {
+      log.warn(LogMessages.COMMIT_REGION_MODIFICATIONS_WITH_EMPTY_ATTRIBUTE_HANDLES);
     }
     else
     {
@@ -3192,6 +3327,11 @@ public class IEEE1516eRTIambassador
            ObjectClassNotPublished, AttributeNotDefined, ObjectClassNotDefined, SaveInProgress, RestoreInProgress,
            FederateNotExecutionMember, NotConnected, RTIinternalError
   {
+    if (objectClassHandle == null)
+    {
+      throw new ObjectClassNotDefined(I18n.getMessage(ExceptionMessages.OBJECT_CLASS_HANDLE_IS_NULL));
+    }
+
     connectLock.readLock().lock();
     try
     {
@@ -3216,11 +3356,24 @@ public class IEEE1516eRTIambassador
   }
 
   public ObjectInstanceHandle registerObjectInstanceWithRegions(
-    ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions, String name)
+    ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions, String objectInstanceName)
     throws ObjectInstanceNameInUse, ObjectInstanceNameNotReserved, InvalidRegionContext, RegionNotCreatedByThisFederate,
            InvalidRegion, AttributeNotPublished, ObjectClassNotPublished, AttributeNotDefined, ObjectClassNotDefined,
            SaveInProgress, RestoreInProgress, FederateNotExecutionMember, NotConnected, RTIinternalError
   {
+    if (objectClassHandle == null)
+    {
+      throw new ObjectClassNotDefined(I18n.getMessage(ExceptionMessages.OBJECT_CLASS_HANDLE_IS_NULL));
+    }
+    else if (objectInstanceName == null)
+    {
+      throw new ObjectInstanceNameNotReserved(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_NAME_IS_NULL));
+    }
+    else if (objectInstanceName.isEmpty())
+    {
+      throw new ObjectInstanceNameNotReserved(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_NAME_IS_EMPTY));
+    }
+
     connectLock.readLock().lock();
     try
     {
@@ -3231,7 +3384,7 @@ public class IEEE1516eRTIambassador
       {
         checkIfFederateNotExecutionMember();
 
-        return federate.registerObjectInstanceWithRegions(objectClassHandle, attributesAndRegions, name);
+        return federate.registerObjectInstanceWithRegions(objectClassHandle, attributesAndRegions, objectInstanceName);
       }
       finally
       {
@@ -3454,6 +3607,11 @@ public class IEEE1516eRTIambassador
            InvalidRegion, InteractionClassNotDefined, SaveInProgress, RestoreInProgress, FederateNotExecutionMember,
            NotConnected, RTIinternalError
   {
+    if (interactionClassHandle == null)
+    {
+      throw new InteractionClassNotDefined(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
+    }
+
     connectLock.readLock().lock();
     try
     {
@@ -3483,6 +3641,11 @@ public class IEEE1516eRTIambassador
            InvalidRegion, InteractionClassNotDefined, SaveInProgress, RestoreInProgress, FederateNotExecutionMember,
            NotConnected, RTIinternalError
   {
+    if (interactionClassHandle == null)
+    {
+      throw new InteractionClassNotDefined(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
+    }
+
     connectLock.readLock().lock();
     try
     {
@@ -3511,6 +3674,11 @@ public class IEEE1516eRTIambassador
     throws RegionNotCreatedByThisFederate, InvalidRegion, InteractionClassNotDefined, SaveInProgress, RestoreInProgress,
            FederateNotExecutionMember, NotConnected, RTIinternalError
   {
+    if (interactionClassHandle == null)
+    {
+      throw new InteractionClassNotDefined(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
+    }
+
     connectLock.readLock().lock();
     try
     {
@@ -3541,39 +3709,49 @@ public class IEEE1516eRTIambassador
            InteractionParameterNotDefined, InteractionClassNotDefined, SaveInProgress, RestoreInProgress,
            FederateNotExecutionMember, NotConnected, RTIinternalError
   {
-    if (regionHandles == null)
+    if (interactionClassHandle == null)
     {
-      // TODO: check the spec
-
-      throw new InvalidRegion("sent regions is null");
+      throw new InteractionClassNotDefined(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
+    }
+    else if (regionHandles == null)
+    {
+      log.warn(LogMessages.SEND_INTERACTION_WITH_NULL_REGION_HANDLES, interactionClassHandle);
     }
     else if (regionHandles.isEmpty())
     {
-      // TODO: check the spec
-
-      throw new InvalidRegion("sent regions is empty");
+      log.warn(LogMessages.SEND_INTERACTION_WITH_NULL_REGION_HANDLES, interactionClassHandle);
     }
-
-    connectLock.readLock().lock();
-    try
+    else if (parameterValues == null)
     {
-      checkIfNotConnected();
-
-      joinResignLock.readLock().lock();
+      log.warn(LogMessages.SEND_INTERACTION_WITH_NULL_PARAMETER_VALUES, interactionClassHandle);
+    }
+    else if (parameterValues.isEmpty())
+    {
+      log.warn(LogMessages.SEND_INTERACTION_WITH_EMPTY_PARAMETER_VALUES, interactionClassHandle);
+    }
+    else
+    {
+      connectLock.readLock().lock();
       try
       {
-        checkIfFederateNotExecutionMember();
+        checkIfNotConnected();
 
-        federate.sendInteractionWithRegions(interactionClassHandle, parameterValues, regionHandles, tag);
+        joinResignLock.readLock().lock();
+        try
+        {
+          checkIfFederateNotExecutionMember();
+
+          federate.sendInteractionWithRegions(interactionClassHandle, parameterValues, regionHandles, tag);
+        }
+        finally
+        {
+          joinResignLock.readLock().unlock();
+        }
       }
       finally
       {
-        joinResignLock.readLock().unlock();
+        connectLock.readLock().unlock();
       }
-    }
-    finally
-    {
-      connectLock.readLock().unlock();
     }
   }
 
@@ -3584,27 +3762,67 @@ public class IEEE1516eRTIambassador
            InteractionClassNotPublished, InteractionParameterNotDefined, InteractionClassNotDefined, SaveInProgress,
            RestoreInProgress, FederateNotExecutionMember, NotConnected, RTIinternalError
   {
-    connectLock.readLock().lock();
-    try
-    {
-      checkIfNotConnected();
+    MessageRetractionReturn messageRetractionReturn;
 
-      joinResignLock.readLock().lock();
+    if (interactionClassHandle == null)
+    {
+      throw new InteractionClassNotDefined(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
+    }
+    else if (time == null)
+    {
+      throw new InvalidLogicalTime(I18n.getMessage(ExceptionMessages.LOGICAL_TIME_IS_NULL));
+    }
+    else if (regionHandles == null)
+    {
+      log.warn(LogMessages.SEND_INTERACTION_WITH_NULL_REGION_HANDLES, interactionClassHandle);
+
+      messageRetractionReturn = new MessageRetractionReturn(false, null);
+    }
+    else if (regionHandles.isEmpty())
+    {
+      log.warn(LogMessages.SEND_INTERACTION_WITH_NULL_REGION_HANDLES, interactionClassHandle);
+
+      messageRetractionReturn = new MessageRetractionReturn(false, null);
+    }
+    else if (parameterValues == null)
+    {
+      log.warn(LogMessages.SEND_INTERACTION_WITH_NULL_PARAMETER_VALUES, interactionClassHandle);
+
+      messageRetractionReturn = new MessageRetractionReturn(false, null);
+    }
+    else if (parameterValues.isEmpty())
+    {
+      log.warn(LogMessages.SEND_INTERACTION_WITH_EMPTY_PARAMETER_VALUES, interactionClassHandle);
+
+      messageRetractionReturn = new MessageRetractionReturn(false, null);
+    }
+    else
+    {
+      connectLock.readLock().lock();
       try
       {
-        checkIfFederateNotExecutionMember();
+        checkIfNotConnected();
 
-        return federate.sendInteractionWithRegions(interactionClassHandle, parameterValues, regionHandles, tag, time);
+        joinResignLock.readLock().lock();
+        try
+        {
+          checkIfFederateNotExecutionMember();
+
+          messageRetractionReturn = federate.sendInteractionWithRegions(
+            interactionClassHandle, parameterValues, regionHandles, tag, time);
+        }
+        finally
+        {
+          joinResignLock.readLock().unlock();
+        }
       }
       finally
       {
-        joinResignLock.readLock().unlock();
+        connectLock.readLock().unlock();
       }
     }
-    finally
-    {
-      connectLock.readLock().unlock();
-    }
+
+    return messageRetractionReturn;
   }
 
   public void requestAttributeValueUpdateWithRegions(
@@ -3693,7 +3911,11 @@ public class IEEE1516eRTIambassador
   {
     if (federateName == null)
     {
-      throw new IllegalArgumentException("federateName cannot be null");
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATE_NAME_IS_NULL));
+    }
+    else if (federateName.isEmpty())
+    {
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATE_NAME_IS_NULL));
     }
 
     connectLock.readLock().lock();
@@ -3724,7 +3946,7 @@ public class IEEE1516eRTIambassador
   {
     if (federateHandle == null)
     {
-      throw new InvalidFederateHandle("null");
+      throw new InvalidFederateHandle(I18n.getMessage(ExceptionMessages.FEDERATE_HANDLE_IS_NULL));
     }
 
     connectLock.readLock().lock();
@@ -3781,7 +4003,7 @@ public class IEEE1516eRTIambassador
   {
     if (objectClassHandle == null)
     {
-      throw new InvalidObjectClassHandle("objectClassHandle cannot be null");
+      throw new InvalidObjectClassHandle(I18n.getMessage(ExceptionMessages.OBJECT_CLASS_HANDLE_IS_NULL));
     }
 
     connectLock.readLock().lock();
@@ -3917,11 +4139,11 @@ public class IEEE1516eRTIambassador
   {
     if (objectClassHandle == null)
     {
-      throw new InvalidObjectClassHandle("objectClassHandle cannot be null");
+      throw new InvalidObjectClassHandle(I18n.getMessage(ExceptionMessages.OBJECT_CLASS_HANDLE_IS_NULL));
     }
     else if (attributeHandle == null)
     {
-      throw new InvalidAttributeHandle("objectClassHandle cannot be null");
+      throw new InvalidAttributeHandle(I18n.getMessage(ExceptionMessages.ATTRIBUTE_HANDLE_IS_NULL));
     }
 
     connectLock.readLock().lock();
@@ -4052,7 +4274,7 @@ public class IEEE1516eRTIambassador
     }
   }
 
-  public ParameterHandle getParameterHandle(InteractionClassHandle interactionClassHandle, String name)
+  public ParameterHandle getParameterHandle(InteractionClassHandle interactionClassHandle, String parameterName)
     throws NameNotFound, InvalidInteractionClassHandle, FederateNotExecutionMember, NotConnected, RTIinternalError
   {
     connectLock.readLock().lock();
@@ -4065,7 +4287,7 @@ public class IEEE1516eRTIambassador
       {
         checkIfFederateNotExecutionMember();
 
-        return federate.getParameterHandle(interactionClassHandle, name);
+        return federate.getParameterHandle(interactionClassHandle, parameterName);
       }
       finally
       {
@@ -4110,7 +4332,7 @@ public class IEEE1516eRTIambassador
   {
     if (orderTypeName == null)
     {
-      throw new InvalidOrderName("orderTypeName cannot be null");
+      throw new InvalidOrderName(I18n.getMessage(ExceptionMessages.ORDER_TYPE_NAME_IS_NULL));
     }
 
     connectLock.readLock().lock();
@@ -4141,7 +4363,7 @@ public class IEEE1516eRTIambassador
   {
     if (orderType == null)
     {
-      throw new InvalidOrderType("orderType cannot be null");
+      throw new InvalidOrderType(I18n.getMessage(ExceptionMessages.ORDER_TYPE_IS_NULL));
     }
 
     connectLock.readLock().lock();
@@ -4172,7 +4394,7 @@ public class IEEE1516eRTIambassador
   {
     if (transportationTypeName == null)
     {
-      throw new InvalidTransportationName("transportationTypeName cannot be null");
+      throw new InvalidTransportationName(I18n.getMessage(ExceptionMessages.TRANSPORTATION_TYPE_NAME_IS_NULL));
     }
 
     connectLock.readLock().lock();
@@ -4203,7 +4425,7 @@ public class IEEE1516eRTIambassador
   {
     if (transportationTypeHandle == null)
     {
-      throw new InvalidTransportationType("transportationTypeHandle cannot be null");
+      throw new InvalidTransportationType(I18n.getMessage(ExceptionMessages.TRANSPORTATION_TYPE_HANDLE_IS_NULL));
     }
 
     connectLock.readLock().lock();
@@ -4393,11 +4615,11 @@ public class IEEE1516eRTIambassador
   {
     if (regionHandle == null)
     {
-      throw new InvalidRegion("regionHandle cannot be null");
+      throw new InvalidRegion(I18n.getMessage(ExceptionMessages.REGION_HANDLE_IS_NULL));
     }
     else if (dimensionHandle == null)
     {
-      throw new RegionDoesNotContainSpecifiedDimension("dimensionHandle cannot be null");
+      throw new RegionDoesNotContainSpecifiedDimension(I18n.getMessage(ExceptionMessages.DIMENSION_HANDLE_IS_NULL));
     }
 
     connectLock.readLock().lock();
@@ -4429,24 +4651,25 @@ public class IEEE1516eRTIambassador
   {
     if (regionHandle == null)
     {
-      throw new InvalidRegion("regionHandle cannot be null");
+      throw new InvalidRegion(I18n.getMessage(ExceptionMessages.REGION_HANDLE_IS_NULL));
     }
     else if (dimensionHandle == null)
     {
-      throw new RegionDoesNotContainSpecifiedDimension("dimensionHandle cannot be null");
+      throw new RegionDoesNotContainSpecifiedDimension(I18n.getMessage(ExceptionMessages.DIMENSION_HANDLE_IS_NULL));
     }
     else if (rangeBounds == null)
     {
-      throw new InvalidRangeBound("rangeBounds cannot be null");
+      throw new InvalidRangeBound(I18n.getMessage(ExceptionMessages.RANGE_BOUNDS_IS_NULL));
     }
     else if (rangeBounds.lower < 0L)
     {
-      throw new InvalidRangeBound("rangeBounds.lower is < 0: " + rangeBounds.lower);
+      throw new InvalidRangeBound(I18n.getMessage(
+        ExceptionMessages.RANGE_BOUNDS_LOWER_LESS_THAN_ZERO, rangeBounds.lower));
     }
     else if (rangeBounds.lower >= rangeBounds.upper)
     {
-      throw new InvalidRangeBound(
-        "rangeBounds.lower must be < rangeBounds.upper: " + rangeBounds.lower + " >= " + rangeBounds.upper);
+      throw new InvalidRangeBound(I18n.getMessage(
+        ExceptionMessages.RANGE_BOUNDS_LOWER_GREATER_THAN_OR_EQUAL_TO_UPPER, rangeBounds.lower, rangeBounds.upper));
     }
 
     connectLock.readLock().lock();
@@ -5279,7 +5502,7 @@ public class IEEE1516eRTIambassador
   {
     if (rtiChannel == null)
     {
-      throw new NotConnected("");
+      throw new NotConnected(I18n.getMessage(ExceptionMessages.NOT_CONNECTED));
     }
   }
 
@@ -5288,7 +5511,7 @@ public class IEEE1516eRTIambassador
   {
     if (federate == null)
     {
-      throw new FederateNotExecutionMember("");
+      throw new FederateNotExecutionMember(I18n.getMessage(ExceptionMessages.FEDERATE_IS_EXECUTION_MEMBER));
     }
   }
 
@@ -5297,7 +5520,8 @@ public class IEEE1516eRTIambassador
   {
     if (callbackMonitor.get())
     {
-      throw new CallNotAllowedFromWithinCallback(Thread.currentThread().getName());
+      throw new CallNotAllowedFromWithinCallback(I18n.getMessage(
+        ExceptionMessages.CALL_NOT_ALLOWED_FROM_WITHIN_CALLBACK, Thread.currentThread()));
     }
   }
 }

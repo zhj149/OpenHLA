@@ -34,6 +34,8 @@ import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSet;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSetFactory;
 import net.sf.ohla.rti.messages.AssociateRegionsForUpdates;
 import net.sf.ohla.rti.messages.AssociateRegionsForUpdatesResponse;
+import net.sf.ohla.rti.messages.GetUpdateRateValueForAttribute;
+import net.sf.ohla.rti.messages.GetUpdateRateValueForAttributeResponse;
 import net.sf.ohla.rti.messages.RequestObjectClassAttributeValueUpdate;
 import net.sf.ohla.rti.messages.RequestObjectClassAttributeValueUpdateWithRegions;
 import net.sf.ohla.rti.messages.RequestObjectInstanceAttributeValueUpdate;
@@ -52,6 +54,7 @@ import net.sf.ohla.rti.messages.callbacks.RequestDivestitureConfirmation;
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.AttributeRegionAssociation;
+import hla.rti1516e.AttributeSetRegionSetPairList;
 import hla.rti1516e.DimensionHandle;
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.ObjectInstanceHandle;
@@ -74,7 +77,8 @@ public class FederationExecutionObjectInstance
 
   public FederationExecutionObjectInstance(
     ObjectInstanceHandle objectInstanceHandle, ObjectClass objectClass,
-    String objectInstanceName, Set<AttributeHandle> publishedAttributeHandles, FederateProxy owner)
+    String objectInstanceName, Set<AttributeHandle> publishedAttributeHandles,
+    AttributeSetRegionSetPairList attributesAndRegions, FederateProxy owner)
   {
     this.objectInstanceHandle = objectInstanceHandle;
     this.objectClass = objectClass;
@@ -98,6 +102,23 @@ public class FederationExecutionObjectInstance
     Attribute privilegeToDeleteObjectAttribute =
       objectClass.getAttributeSafely(FDD.HLA_PRIVILEGE_TO_DELETE_OBJECT);
     attributes.get(privilegeToDeleteObjectAttribute.getAttributeHandle()).setOwner(owner);
+
+    if (attributesAndRegions != null)
+    {
+      Map<RegionHandle, FederationExecutionRegion> regions =
+        owner.getFederationExecution().getRegionManager().getRegions();
+      for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
+      {
+        for (AttributeHandle attributeHandle : attributeRegionAssociation.ahset)
+        {
+          FederationExecutionAttributeInstance attribute = attributes.get(attributeHandle);
+          for (RegionHandle regionHandle : attributeRegionAssociation.rhset)
+          {
+            attribute.associateRegionForUpdate(owner, regions.get(regionHandle));
+          }
+        }
+      }
+    }
   }
 
   public ObjectInstanceHandle getObjectInstanceHandle()
@@ -700,14 +721,29 @@ public class FederationExecutionObjectInstance
     }
   }
 
+  public void getUpdateRateValueForAttribute(
+    FederateProxy federateProxy, GetUpdateRateValueForAttribute getUpdateRateValueForAttribute)
+  {
+    objectLock.readLock().lock();
+    try
+    {
+      federateProxy.getFederateChannel().write(new GetUpdateRateValueForAttributeResponse(
+        getUpdateRateValueForAttribute.getId(),
+        attributes.get(getUpdateRateValueForAttribute.getAttributeHandle()).getUpdateRate()));
+    }
+    finally
+    {
+      objectLock.readLock().unlock();
+    }
+  }
+
   public boolean regionsIntersect(
     AttributeHandle attributeHandle, FederationExecutionRegionManager regionManager, Set<RegionHandle> regionHandles,
     Map<RegionHandle, Map<DimensionHandle, RangeBounds>> regions)
   {
     // dangerous method, must be called with proper protection
 
-    FederationExecutionAttributeInstance attributeInstance = attributes.get(attributeHandle);
-    return attributeInstance != null && attributeInstance.regionsIntersect(regionManager, regionHandles, regions);
+    return attributes.get(attributeHandle).regionsIntersect(regionManager, regionHandles, regions);
   }
 
   public boolean regionsIntersect(
@@ -715,8 +751,7 @@ public class FederationExecutionObjectInstance
   {
     // dangerous method, must be called with proper protection
 
-    FederationExecutionAttributeInstance attributeInstance = attributes.get(attributeHandle);
-    return attributeInstance != null && attributeInstance.regionsIntersect(regionManager, regionHandles);
+    return attributes.get(attributeHandle).regionsIntersect(regionManager, regionHandles);
   }
 
   public void unconditionallyDivestAttributes(FederateProxy federateProxy)

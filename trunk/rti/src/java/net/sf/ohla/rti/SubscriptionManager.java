@@ -24,7 +24,7 @@ import java.util.Set;
 
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.fdd.ObjectClass;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandleValueMap;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandleValueMapFactory;
 
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleSet;
@@ -33,6 +33,7 @@ import hla.rti1516e.AttributeRegionAssociation;
 import hla.rti1516e.AttributeSetRegionSetPairList;
 import hla.rti1516e.InteractionClassHandle;
 import hla.rti1516e.ObjectClassHandle;
+import hla.rti1516e.ParameterHandle;
 import hla.rti1516e.ParameterHandleValueMap;
 import hla.rti1516e.RegionHandle;
 import hla.rti1516e.RegionHandleSet;
@@ -73,10 +74,15 @@ public class SubscriptionManager
   }
 
   public void subscribeObjectClassAttributes(
-    ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions, boolean passive)
+    ObjectClass objectClass, AttributeSetRegionSetPairList attributesAndRegions, boolean passive)
   {
-    ObjectClassSubscription objectClassSubscription = subscribedObjectClasses.get(objectClassHandle);
-    if (objectClassSubscription != null)
+    ObjectClassSubscription objectClassSubscription = subscribedObjectClasses.get(objectClass.getObjectClassHandle());
+    if (objectClassSubscription == null)
+    {
+      subscribedObjectClasses.put(
+        objectClass.getObjectClassHandle(), new ObjectClassSubscription(objectClass, attributesAndRegions, passive));
+    }
+    else
     {
       objectClassSubscription.subscribe(attributesAndRegions, passive);
     }
@@ -153,7 +159,7 @@ public class SubscriptionManager
     }
     else
     {
-      interactionClassSubscription.subscribe(passive);
+      interactionClassSubscription.subscribe(regionHandles, passive);
     }
   }
 
@@ -260,28 +266,6 @@ public class SubscriptionManager
       } while (interactionClassSubscription == null && interactionClass.hasSuperInteractionClass());
     }
     return interactionClassSubscription;
-  }
-
-  protected boolean containsAny(final Collection lhs, final Collection rhs)
-  {
-    boolean containsAny = false;
-
-    if (lhs.size() < rhs.size())
-    {
-      for (Iterator i = lhs.iterator(); !containsAny && i.hasNext();)
-      {
-        containsAny = rhs.contains(i.next());
-      }
-    }
-    else
-    {
-      for (Iterator i = rhs.iterator(); !containsAny && i.hasNext();)
-      {
-        containsAny = lhs.contains(i.next());
-      }
-    }
-
-    return containsAny;
   }
 
   protected class ObjectClassSubscription
@@ -518,11 +502,14 @@ public class SubscriptionManager
       }
       else
       {
-        trimmedParameterValues = new IEEE1516eParameterHandleValueMap(parameterValues);
+        trimmedParameterValues = IEEE1516eParameterHandleValueMapFactory.INSTANCE.create(parameterValues.size());
 
         // keep the parameters only at the interaction level that is subscribed
         //
-        trimmedParameterValues.keySet().retainAll(this.interactionClass.getParameters().keySet());
+        for (ParameterHandle parameterHandle : this.interactionClass.getParameters().keySet())
+        {
+          trimmedParameterValues.put(parameterHandle, parameterValues.get(parameterHandle));
+        }
       }
       return trimmedParameterValues;
     }

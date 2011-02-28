@@ -63,6 +63,7 @@ import net.sf.ohla.rti.messages.GetFederateHandle;
 import net.sf.ohla.rti.messages.GetFederateHandleResponse;
 import net.sf.ohla.rti.messages.GetFederateName;
 import net.sf.ohla.rti.messages.GetFederateNameResponse;
+import net.sf.ohla.rti.messages.GetUpdateRateValueForAttribute;
 import net.sf.ohla.rti.messages.JoinFederationExecution;
 import net.sf.ohla.rti.messages.JoinFederationExecutionResponse;
 import net.sf.ohla.rti.messages.LocalDeleteObjectInstance;
@@ -832,11 +833,13 @@ public class FederationExecution
   public void registerObjectInstance(FederateProxy federateProxy, RegisterObjectInstance registerObjectInstance)
   {
     federationExecutionStateLock.readLock().lock();
+    regionManager.getRegionsLock().readLock().lock();
     try
     {
       FederationExecutionObjectInstance objectInstance = objectManager.registerObjectInstance(
         federateProxy, registerObjectInstance.getObjectInstanceHandle(), registerObjectInstance.getObjectClassHandle(),
-        registerObjectInstance.getObjectInstanceName(), registerObjectInstance.getPublishedAttributeHandles());
+        registerObjectInstance.getObjectInstanceName(), registerObjectInstance.getPublishedAttributeHandles(),
+        registerObjectInstance.getAttributesAndRegions());
 
       for (FederateProxy f : federates.values())
       {
@@ -848,6 +851,7 @@ public class FederationExecution
     }
     finally
     {
+      regionManager.getRegionsLock().readLock().unlock();
       federationExecutionStateLock.readLock().unlock();
     }
   }
@@ -873,7 +877,7 @@ public class FederationExecution
     {
       if (sendInteraction.getSentOrderType() == OrderType.TIMESTAMP)
       {
-        // TODO: track for future federates
+        // TODO: track for future federates?
       }
 
       InteractionClass interactionClass = fdd.getInteractionClassSafely(sendInteraction.getInteractionClassHandle());
@@ -1113,19 +1117,7 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-    }
-    finally
-    {
-      federationExecutionStateLock.readLock().unlock();
-    }
-  }
-
-  public void unsubscribeInteractionClassWithRegions(
-    FederateProxy federateProxy, UnsubscribeInteractionClassWithRegions unsubscribeInteractionClassWithRegions)
-  {
-    federationExecutionStateLock.readLock().lock();
-    try
-    {
+      federateProxy.unsubscribeInteractionClass(unsubscribeInteractionClass);
     }
     finally
     {
@@ -1139,6 +1131,21 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
+      federateProxy.subscribeInteractionClassWithRegions(subscribeInteractionClassWithRegions);
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
+  public void unsubscribeInteractionClassWithRegions(
+    FederateProxy federateProxy, UnsubscribeInteractionClassWithRegions unsubscribeInteractionClassWithRegions)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+      federateProxy.unsubscribeInteractionClassWithRegions(unsubscribeInteractionClassWithRegions);
     }
     finally
     {
@@ -1633,6 +1640,20 @@ public class FederationExecution
         federateProxy.getFederateChannel().write(new GetFederateNameResponse(
           getFederateName.getId(), f.getFederateName()));
       }
+    }
+    finally
+    {
+      federationExecutionStateLock.readLock().unlock();
+    }
+  }
+
+  public void getUpdateRateValueForAttribute(
+    FederateProxy federateProxy, GetUpdateRateValueForAttribute getUpdateRateValueForAttribute)
+  {
+    federationExecutionStateLock.readLock().lock();
+    try
+    {
+      objectManager.getUpdateRateValueForAttribute(federateProxy, getUpdateRateValueForAttribute);
     }
     finally
     {

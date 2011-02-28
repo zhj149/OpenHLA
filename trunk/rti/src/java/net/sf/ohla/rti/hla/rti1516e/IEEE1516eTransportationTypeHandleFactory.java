@@ -41,7 +41,7 @@ public class IEEE1516eTransportationTypeHandleFactory
     }
     catch (Throwable t)
     {
-      throw new CouldNotDecode("", t);
+      throw new CouldNotDecode(t.getMessage(), t);
     }
   }
 

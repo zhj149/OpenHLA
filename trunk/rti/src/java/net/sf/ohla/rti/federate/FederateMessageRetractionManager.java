@@ -26,6 +26,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eMessageRetractionHandle;
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
 
 import hla.rti1516e.LogicalTime;
 import hla.rti1516e.MessageRetractionHandle;
@@ -85,7 +87,8 @@ public class FederateMessageRetractionManager
       MessageRetraction messageRetraction = messageRetractions.get(messageRetractionHandle);
       if (messageRetraction == null)
       {
-        throw new MessageCanNoLongerBeRetracted(messageRetractionHandle.toString());
+        throw new MessageCanNoLongerBeRetracted(I18n.getMessage(
+          ExceptionMessages.MESSAGE_ALREADY_PROCESSED, messageRetractionHandle));
       }
       messageRetraction.retract(time);
     }
@@ -124,18 +127,19 @@ public class FederateMessageRetractionManager
       return expiration;
     }
 
+    @SuppressWarnings("unchecked")
     public void retract(LogicalTime time)
       throws MessageCanNoLongerBeRetracted
     {
       if (expiration.compareTo(time) <= 0)
       {
-        throw new MessageCanNoLongerBeRetracted(String.format(
-          "message retraction expired: %s <= %s", expiration, time));
+        throw new MessageCanNoLongerBeRetracted(I18n.getMessage(
+          ExceptionMessages.MESSAGE_RETRACTION_EXPIRED, expiration, time));
       }
       else if (future != null && !future.cancel(false))
       {
-        throw new MessageCanNoLongerBeRetracted(String.format(
-          "message already processed: %s", messageRetractionHandle));
+        throw new MessageCanNoLongerBeRetracted(I18n.getMessage(
+          ExceptionMessages.MESSAGE_ALREADY_PROCESSED, messageRetractionHandle));
       }
     }
 
@@ -144,6 +148,7 @@ public class FederateMessageRetractionManager
       return compareTo((MessageRetraction) rhs);
     }
 
+    @SuppressWarnings("unchecked")
     public int compareTo(MessageRetraction rhs)
     {
       return expiration.compareTo(rhs.expiration);
