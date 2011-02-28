@@ -370,8 +370,8 @@ public class FederateObjectInstance
     objectLock.writeLock().lock();
     try
     {
-      Collection<FederateAttributeInstance> ownedAttributes = null;
-      Collection<AttributeHandle> attributeHandlesAlreadyBeingAcquired = null;
+      Collection<Attribute> ownedAttributes = null;
+      Collection<Attribute> attributesAlreadyBeingAcquired = null;
 
       for (AttributeHandle attributeHandle : attributeHandles)
       {
@@ -382,17 +382,17 @@ public class FederateObjectInstance
         {
           if (ownedAttributes == null)
           {
-            ownedAttributes = new LinkedList<FederateAttributeInstance>();
+            ownedAttributes = new LinkedList<Attribute>();
           }
-          ownedAttributes.add(attributeInstance);
+          ownedAttributes.add(attributeInstance.getAttribute());
         }
         else if (attributeHandlesBeingAcquiredIfAvailable.contains(attributeHandle))
         {
-          if (attributeHandlesAlreadyBeingAcquired == null)
+          if (attributesAlreadyBeingAcquired == null)
           {
-            attributeHandlesAlreadyBeingAcquired = new LinkedList<AttributeHandle>();
+            attributesAlreadyBeingAcquired = new LinkedList<Attribute>();
           }
-          attributeHandlesAlreadyBeingAcquired.add(attributeHandle);
+          attributesAlreadyBeingAcquired.add(objectClass.getAttributeSafely(attributeHandle));
         }
       }
 
@@ -401,10 +401,10 @@ public class FederateObjectInstance
         throw new FederateOwnsAttributes(I18n.getMessage(
           ExceptionMessages.FEDERATE_OWNS_ATTRIBUTES, this, ownedAttributes));
       }
-      else if (attributeHandlesAlreadyBeingAcquired != null)
+      else if (attributesAlreadyBeingAcquired != null)
       {
         throw new AttributeAlreadyBeingAcquired(I18n.getMessage(
-          ExceptionMessages.ATTRIBUTE_ALREADY_BEING_ACQUIRED, attributeHandlesAlreadyBeingAcquired));
+          ExceptionMessages.ATTRIBUTE_ALREADY_BEING_ACQUIRED, attributesAlreadyBeingAcquired));
       }
 
       attributeHandlesBeingAcquiredIfAvailable.addAll(attributeHandles);
@@ -777,7 +777,7 @@ public class FederateObjectInstance
     {
       throw new OwnershipAcquisitionPending(I18n.getMessage(
         ExceptionMessages.OWNERSHIP_ACQUISITION_PENDING, this,
-        objectClass.getAttributeNamesSafely(attributeHandlesBeingAcquired, attributeHandlesBeingAcquiredIfAvailable)));
+        objectClass.getAttributesSafely(attributeHandlesBeingAcquired, attributeHandlesBeingAcquiredIfAvailable)));
     }
   }
 
@@ -820,7 +820,7 @@ public class FederateObjectInstance
       if (!attributes.containsKey(privilegeToDeleteObjectAttribute.getAttributeHandle()) && attributes.size() > 1)
       {
         throw new FederateOwnsAttributes(I18n.getMessage(
-          ExceptionMessages.FEDERATE_OWNS_ATTRIBUTES, this, attributes.values()));
+          ExceptionMessages.FEDERATE_OWNS_ATTRIBUTES, this, objectClass.getAttributesSafely(attributes.keySet())));
       }
     }
   }
@@ -833,7 +833,7 @@ public class FederateObjectInstance
     if (!attributes.isEmpty())
     {
       throw new FederateOwnsAttributes(I18n.getMessage(
-        ExceptionMessages.FEDERATE_OWNS_ATTRIBUTES, this, attributes.values()));
+        ExceptionMessages.FEDERATE_OWNS_ATTRIBUTES, this, objectClass.getAttributesSafely(attributes.keySet())));
     }
   }
 
@@ -882,7 +882,7 @@ public class FederateObjectInstance
       objectClass.checkIfAttributeNotDefined(attributeHandle);
 
       throw new AttributeNotOwned(I18n.getMessage(
-        ExceptionMessages.ATTRIBUTE_NOT_OWNED, objectClass.getAttributeName(attributeHandle)));
+        ExceptionMessages.ATTRIBUTE_NOT_OWNED, objectClass.getAttributeSafely(attributeHandle)));
     }
     return attributeInstance;
   }
@@ -899,7 +899,7 @@ public class FederateObjectInstance
         objectClass.checkIfAttributeNotDefined(attributeHandle);
 
         throw new AttributeNotOwned(I18n.getMessage(
-          ExceptionMessages.ATTRIBUTE_NOT_OWNED, objectClass.getAttributeName(attributeHandle)));
+          ExceptionMessages.ATTRIBUTE_NOT_OWNED, objectClass.getAttributeSafely(attributeHandle)));
       }
     }
   }
@@ -925,7 +925,7 @@ public class FederateObjectInstance
   protected void checkIfFederateOwnsAttributes(Set<AttributeHandle> attributeHandles)
     throws FederateOwnsAttributes
   {
-    Collection<FederateAttributeInstance> ownedAttributes = null;
+    Collection<Attribute> ownedAttributes = null;
     for (AttributeHandle attributeHandle : attributeHandles)
     {
       FederateAttributeInstance attributeInstance = attributes.get(attributeHandle);
@@ -933,9 +933,9 @@ public class FederateObjectInstance
       {
         if (ownedAttributes == null)
         {
-          ownedAttributes = new LinkedList<FederateAttributeInstance>();
+          ownedAttributes = new LinkedList<Attribute>();
         }
-        ownedAttributes.add(attributeInstance);
+        ownedAttributes.add(attributeInstance.getAttribute());
       }
     }
     if (ownedAttributes != null)

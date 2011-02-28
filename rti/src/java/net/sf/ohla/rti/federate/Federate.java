@@ -790,7 +790,7 @@ public class Federate
     {
       if (saveStatus != SaveStatus.FEDERATE_INSTRUCTED_TO_SAVE)
       {
-        throw new SaveNotInitiated(I18n.getMessage(ExceptionMessages.SAVE_NOT_INITIATED, fullFederateName));
+        throw new SaveNotInitiated(I18n.getMessage(ExceptionMessages.SAVE_NOT_INITIATED, this));
       }
 
       saveStatus = SaveStatus.FEDERATE_SAVING;
@@ -813,8 +813,7 @@ public class Federate
 
       if (saveStatus != SaveStatus.FEDERATE_SAVING)
       {
-        throw new FederateHasNotBegunSave(I18n.getMessage(
-          ExceptionMessages.FEDERATE_HAS_NOT_BEGUN_SAVE, fullFederateName));
+        throw new FederateHasNotBegunSave(I18n.getMessage(ExceptionMessages.FEDERATE_HAS_NOT_BEGUN_SAVE, this));
       }
 
       saveStatus = SaveStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_SAVE;
@@ -841,8 +840,7 @@ public class Federate
 
       if (saveStatus != SaveStatus.FEDERATE_SAVING)
       {
-        throw new FederateHasNotBegunSave(I18n.getMessage(
-          ExceptionMessages.FEDERATE_HAS_NOT_BEGUN_SAVE, fullFederateName));
+        throw new FederateHasNotBegunSave(I18n.getMessage(ExceptionMessages.FEDERATE_HAS_NOT_BEGUN_SAVE, this));
       }
 
       saveStatus = SaveStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_SAVE;
@@ -868,7 +866,7 @@ public class Federate
       switch (abortFederationSave.getResponse().getResponse())
       {
         case SAVE_NOT_IN_PROGRESS:
-          throw new SaveNotInProgress(I18n.getMessage(ExceptionMessages.SAVE_NOT_IN_PROGRESS, federationExecutionName));
+          throw new SaveNotInProgress(I18n.getMessage(ExceptionMessages.SAVE_NOT_IN_PROGRESS, this));
         case SUCCESS:
           break;
       }
@@ -1102,7 +1100,7 @@ public class Federate
     subscribeObjectClassAttributes(objectClassHandle, attributeHandles, true);
   }
 
-  protected void subscribeObjectClassAttributes(
+  private void subscribeObjectClassAttributes(
     ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles, boolean passive)
     throws ObjectClassNotDefined, AttributeNotDefined, SaveInProgress, RestoreInProgress, RTIinternalError
   {
@@ -1177,7 +1175,7 @@ public class Federate
     subscribeInteractionClass(interactionClassHandle, true);
   }
 
-  protected void subscribeInteractionClass(InteractionClassHandle interactionClassHandle, boolean passive)
+  private void subscribeInteractionClass(InteractionClassHandle interactionClassHandle, boolean passive)
     throws InteractionClassNotDefined, FederateServiceInvocationsAreBeingReportedViaMOM, SaveInProgress,
            RestoreInProgress, RTIinternalError
   {
@@ -1987,7 +1985,7 @@ public class Federate
       if (isAsynchronousDeliveryEnabled())
       {
         throw new AsynchronousDeliveryAlreadyEnabled(I18n.getMessage(
-          ExceptionMessages.ASYNCHRONOUS_DELIVERY_ALREADY_ENABLED, fullFederateName));
+          ExceptionMessages.ASYNCHRONOUS_DELIVERY_ALREADY_ENABLED, this));
       }
 
       asynchronousDeliveryEnabled = true;
@@ -2009,7 +2007,7 @@ public class Federate
       if (!isAsynchronousDeliveryEnabled())
       {
         throw new AsynchronousDeliveryAlreadyDisabled(I18n.getMessage(
-          ExceptionMessages.ASYNCHRONOUS_DELIVERY_ALREADY_DISABLED, fullFederateName));
+          ExceptionMessages.ASYNCHRONOUS_DELIVERY_ALREADY_DISABLED, this));
       }
 
       asynchronousDeliveryEnabled = false;
@@ -2378,7 +2376,7 @@ public class Federate
     subscribeInteractionClassWithRegions(interactionClassHandle, regionHandles, true);
   }
 
-  protected void subscribeInteractionClassWithRegions(
+  private void subscribeInteractionClassWithRegions(
     InteractionClassHandle interactionClassHandle, RegionHandleSet regionHandles, boolean passive)
     throws InteractionClassNotDefined, InvalidRegion, RegionNotCreatedByThisFederate, InvalidRegionContext,
            FederateServiceInvocationsAreBeingReportedViaMOM, SaveInProgress, RestoreInProgress, RTIinternalError
@@ -3237,7 +3235,13 @@ public class Federate
     }
   }
 
-  protected void checkIfSaveInProgress()
+  @Override
+  public String toString()
+  {
+    return new StringBuilder(federateName).append(":").append(federateHandle).toString();
+  }
+
+  private void checkIfSaveInProgress()
     throws SaveInProgress
   {
     if (federateState == FederateState.SAVE_IN_PROGRESS)
@@ -3246,7 +3250,7 @@ public class Federate
     }
   }
 
-  protected void checkIfRestoreInProgress()
+  private void checkIfRestoreInProgress()
     throws RestoreInProgress
   {
     if (federateState == FederateState.RESTORE_IN_PROGRESS)
@@ -3255,7 +3259,7 @@ public class Federate
     }
   }
 
-  protected void checkIfActive()
+  private void checkIfActive()
     throws SaveInProgress, RestoreInProgress
   {
     switch (federateState)
@@ -3270,7 +3274,7 @@ public class Federate
     }
   }
 
-  protected Future<Object> schedule(LogicalTime time, Callable<Object> callable)
+  private Future<Object> schedule(LogicalTime time, Callable<Object> callable)
   {
     log.debug("scheduling task: {} at {}", callable, time);
 
@@ -3289,11 +3293,11 @@ public class Federate
     return future;
   }
 
-  protected class TimestampedFutureTask
+  private class TimestampedFutureTask
     extends FutureTask<Object>
     implements Comparable<TimestampedFutureTask>
   {
-    protected LogicalTime time;
+    private final LogicalTime time;
 
     public TimestampedFutureTask(LogicalTime time, Callable<Object> callable)
     {
@@ -3314,10 +3318,10 @@ public class Federate
     }
   }
 
-  protected class AddCallback
+  private class AddCallback
     implements Callable<Object>
   {
-    protected Callback callback;
+    private final Callback callback;
 
     public AddCallback(Callback callback)
     {
@@ -3343,11 +3347,11 @@ public class Federate
     }
   }
 
-  protected class ScheduledDeleteObjectInstance
+  private class ScheduledDeleteObjectInstance
     implements Callable<Object>
   {
-    protected final ObjectInstanceHandle objectInstanceHandle;
-    protected final byte[] tag;
+    private final ObjectInstanceHandle objectInstanceHandle;
+    private final byte[] tag;
 
     public ScheduledDeleteObjectInstance(
       ObjectInstanceHandle objectInstanceHandle, byte[] tag)

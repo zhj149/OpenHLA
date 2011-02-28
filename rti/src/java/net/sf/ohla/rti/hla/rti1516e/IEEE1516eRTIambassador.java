@@ -401,8 +401,7 @@ public class IEEE1516eRTIambassador
       }
       else
       {
-        throw new FederateIsExecutionMember(I18n.getMessage(
-          ExceptionMessages.FEDERATE_IS_EXECUTION_MEMBER, federate.getFederateHandle(), federate.getFederateName()));
+        throw new FederateIsExecutionMember(I18n.getMessage(ExceptionMessages.FEDERATE_IS_EXECUTION_MEMBER, federate));
       }
     }
     finally
@@ -612,8 +611,7 @@ public class IEEE1516eRTIambassador
         if (federate != null)
         {
           throw new FederateAlreadyExecutionMember(I18n.getMessage(
-            ExceptionMessages.FEDERATE_ALREADY_EXECUTION_MEMBER, federate.getFederateHandle(),
-            federate.getFederateName()));
+            ExceptionMessages.FEDERATE_ALREADY_EXECUTION_MEMBER, federate));
         }
 
         federate = new Federate(
@@ -5511,7 +5509,7 @@ public class IEEE1516eRTIambassador
   {
     if (federate == null)
     {
-      throw new FederateNotExecutionMember(I18n.getMessage(ExceptionMessages.FEDERATE_IS_EXECUTION_MEMBER));
+      throw new FederateNotExecutionMember(I18n.getMessage(ExceptionMessages.FEDERATE_NOT_EXECUTION_MEMBER));
     }
   }
 

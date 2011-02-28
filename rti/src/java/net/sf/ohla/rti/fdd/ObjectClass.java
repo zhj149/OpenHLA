@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
@@ -38,7 +39,6 @@ import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.OrderType;
 import hla.rti1516e.TransportationTypeHandle;
 import hla.rti1516e.exceptions.AttributeNotDefined;
-import hla.rti1516e.exceptions.ErrorReadingFDD;
 import hla.rti1516e.exceptions.InconsistentFDD;
 import hla.rti1516e.exceptions.NameNotFound;
 
@@ -236,6 +236,19 @@ public class ObjectClass
     Attribute attribute = attributesByName.get(attributeName);
     assert attribute != null;
     return attribute;
+  }
+
+  public Collection<Attribute> getAttributesSafely(Collection<AttributeHandle>... attributeHandles)
+  {
+    Collection<Attribute> attributes = new LinkedList<Attribute>();
+    for (Collection<AttributeHandle> c : attributeHandles)
+    {
+      for (AttributeHandle attributeHandle : c)
+      {
+        attributes.add(getAttributeSafely(attributeHandle));
+      }
+    }
+    return attributes;
   }
 
   public String getAttributeName(AttributeHandle attributeHandle)

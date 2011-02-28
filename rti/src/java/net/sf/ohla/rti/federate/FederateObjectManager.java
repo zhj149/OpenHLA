@@ -776,8 +776,8 @@ public class FederateObjectManager
               //
               objectClass.checkIfAttributeNotDefined(attributeHandle);
 
-              throw new AttributeNotPublished(
-                I18n.getMessage(ExceptionMessages.ATTRIBUTE_NOT_PUBLISHED, objectClass, attributeHandle));
+              throw new AttributeNotPublished(I18n.getMessage(
+                ExceptionMessages.ATTRIBUTE_NOT_PUBLISHED, objectClass.getAttributeSafely(attributeHandle)));
             }
           }
 
@@ -845,8 +845,8 @@ public class FederateObjectManager
               //
               objectClass.checkIfAttributeNotDefined(attributeHandle);
 
-              throw new AttributeNotPublished(
-                I18n.getMessage(ExceptionMessages.ATTRIBUTE_NOT_PUBLISHED, objectClass, attributeHandle));
+              throw new AttributeNotPublished(I18n.getMessage(
+                ExceptionMessages.ATTRIBUTE_NOT_PUBLISHED, objectClass.getAttributeSafely(attributeHandle)));
             }
           }
 
@@ -1777,7 +1777,7 @@ public class FederateObjectManager
     if (publishedAttributeHandles == null)
     {
       throw new ObjectClassNotPublished(I18n.getMessage(
-        ExceptionMessages.OBJECT_CLASS_NOT_PUBLISHED, objectClassHandle));
+        ExceptionMessages.OBJECT_CLASS_NOT_PUBLISHED, federate.getFDD().getObjectClassSafely(objectClassHandle)));
     }
     return publishedAttributeHandles;
   }
@@ -1833,7 +1833,8 @@ public class FederateObjectManager
     if (!publishedInteractionClasses.contains(interactionClassHandle))
     {
       throw new InteractionClassNotPublished(I18n.getMessage(
-        ExceptionMessages.INTERACTION_CLASS_NOT_PUBLISHED, interactionClassHandle));
+        ExceptionMessages.INTERACTION_CLASS_NOT_PUBLISHED,
+        federate.getFDD().getInteractionClassSafely(interactionClassHandle)));
     }
   }
 
@@ -1845,7 +1846,7 @@ public class FederateObjectManager
     if (publishedAttributeHandles == null)
     {
       throw new ObjectClassNotPublished(I18n.getMessage(
-        ExceptionMessages.OBJECT_CLASS_NOT_PUBLISHED, objectClassHandle));
+        ExceptionMessages.OBJECT_CLASS_NOT_PUBLISHED, federate.getFDD().getObjectClassSafely(objectClassHandle)));
     }
     else
     {
@@ -1858,8 +1859,8 @@ public class FederateObjectManager
           ObjectClass objectClass = federate.getFDD().getObjectClassSafely(objectClassHandle);
           objectClass.checkIfAttributeNotDefined(attributeHandle);
 
-          throw new AttributeNotPublished(
-            I18n.getMessage(ExceptionMessages.ATTRIBUTE_NOT_PUBLISHED, objectClass, attributeHandle));
+          throw new AttributeNotPublished(I18n.getMessage(
+            ExceptionMessages.ATTRIBUTE_NOT_PUBLISHED, objectClass.getAttributeSafely(attributeHandle)));
         }
       }
     }
