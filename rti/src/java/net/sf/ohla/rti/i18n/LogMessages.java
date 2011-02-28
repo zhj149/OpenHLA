@@ -1,0 +1,46 @@
+/*
+ * Copyright (c) 2005-2011, Michael Newcomb
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package net.sf.ohla.rti.i18n;
+
+import ch.qos.cal10n.BaseName;
+
+@BaseName("ohla_rti_log_messages")
+public enum LogMessages
+{
+  NOT_CONNECTED,
+  DISCONNECTING,
+
+  UPDATE_ATTRIBUTE_VALUES_WITH_NULL_ATTRIBUTE_VALUES,
+  UPDATE_ATTRIBUTE_VALUES_WITH_EMPTY_ATTRIBUTE_VALUES,
+
+  SEND_INTERACTION_WITH_NULL_PARAMETER_VALUES,
+  SEND_INTERACTION_WITH_EMPTY_PARAMETER_VALUES,
+  SEND_INTERACTION_WITH_NULL_REGION_HANDLES,
+  SEND_INTERACTION_WITH_EMPTY_REGION_HANDLES,
+
+  UNCONDITIONAL_ATTRIBUTE_OWNERSHIP_DIVESTITURE_WITH_NULL_ATTRIBUTE_HANDLES,
+  UNCONDITIONAL_ATTRIBUTE_OWNERSHIP_DIVESTITURE_WITH_EMPTY_ATTRIBUTE_HANDLES,
+
+  NEGOTIATED_ATTRIBUTE_OWNERSHIP_DIVESTITURE_WITH_NULL_ATTRIBUTE_HANDLES,
+  NEGOTIATED_ATTRIBUTE_OWNERSHIP_DIVESTITURE_WITH_EMPTY_ATTRIBUTE_HANDLES,
+
+  ATTRIBUTE_OWNERSHIP_ACQUISITION_WITH_NULL_ATTRIBUTE_HANDLES,
+  ATTRIBUTE_OWNERSHIP_ACQUISITION_WITH_EMPTY_ATTRIBUTE_HANDLES,
+
+  COMMIT_REGION_MODIFICATIONS_WITH_NULL_ATTRIBUTE_HANDLES,
+  COMMIT_REGION_MODIFICATIONS_WITH_EMPTY_ATTRIBUTE_HANDLES,
+}

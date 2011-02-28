@@ -140,7 +140,7 @@ public class FederateProxy
    */
   private LogicalTime lots;
 
-  private boolean conveyRegionDesignatorSets;
+  private boolean conveyRegionDesignatorSets = true;
 
   private final Marker marker;
 
@@ -541,7 +541,7 @@ public class FederateProxy
     try
     {
       subscriptionManager.subscribeObjectClassAttributes(
-        subscribeObjectClassAttributesWithRegions.getObjectClassHandle(),
+        federationExecution.getFDD().getObjectClassSafely(subscribeObjectClassAttributesWithRegions.getObjectClassHandle()),
         subscribeObjectClassAttributesWithRegions.getAttributesAndRegions(),
         subscribeObjectClassAttributesWithRegions.isPassive());
     }

@@ -32,6 +32,8 @@ import net.sf.ohla.rti.fdd.Dimension;
 import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.fdd.ObjectClass;
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -261,7 +263,8 @@ public class IEEE1516eFDDParser
 
             if (!FDD.HLA_OBJECT_ROOT.equals(objectClassName))
             {
-              throw new SAXException(new ErrorReadingFDD(objectClassName + " does not have parent ObjectClass"));
+              throw new SAXException(new ErrorReadingFDD(I18n.getMessage(
+                ExceptionMessages.ROOT_OBJECT_CLASS_IS_NOT_HLA_OBJECT_ROOT, objectClassName)));
             }
           }
 

@@ -48,6 +48,9 @@ import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandleFactory;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandleValueMapFactory;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandleSetFactory;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandleFactory;
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
+import net.sf.ohla.rti.i18n.I18nLogger;
 import net.sf.ohla.rti.messages.AbortFederationRestore;
 import net.sf.ohla.rti.messages.AbortFederationSave;
 import net.sf.ohla.rti.messages.FederateRestoreComplete;
@@ -79,12 +82,9 @@ import net.sf.ohla.rti.messages.callbacks.ReceiveInteraction;
 import net.sf.ohla.rti.messages.callbacks.ReflectAttributeValues;
 import net.sf.ohla.rti.messages.callbacks.RemoveObjectInstance;
 import net.sf.ohla.rti.messages.callbacks.ReportInteractionTransportationType;
-import net.sf.ohla.rti.messages.callbacks.RequestDivestitureConfirmation;
 import net.sf.ohla.rti.messages.callbacks.TimeAdvanceGrant;
 
 import org.jboss.netty.channel.Channel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
@@ -217,8 +217,6 @@ import hla.rti1516e.exceptions.TimeRegulationIsNotEnabled;
 
 public class Federate
 {
-  private static final Logger log = LoggerFactory.getLogger(Federate.class);
-
   private final String federateName;
   private final String federateType;
   private final String federationExecutionName;
@@ -299,6 +297,7 @@ public class Federate
   private final LogicalTimeFactory logicalTimeFactory;
 
   private final Marker marker;
+  private final I18nLogger log;
 
   private boolean conveyProducingFederate = true;
 
@@ -323,11 +322,12 @@ public class Federate
     switch (response.getResponse())
     {
       case FEDERATION_EXECUTION_DOES_NOT_EXIST:
-        throw new FederationExecutionDoesNotExist(federationExecutionName);
+        throw new FederationExecutionDoesNotExist(I18n.getMessage(
+          ExceptionMessages.FEDERATION_EXECUTION_DOES_NOT_EXIST, federationExecutionName));
       case SAVE_IN_PROGRESS:
-        throw new SaveInProgress(federationExecutionName);
+        throw new SaveInProgress(I18n.getMessage(ExceptionMessages.SAVE_IN_PROGRESS, federationExecutionName));
       case RESTORE_IN_PROGRESS:
-        throw new RestoreInProgress(federationExecutionName);
+        throw new RestoreInProgress(I18n.getMessage(ExceptionMessages.RESTORE_IN_PROGRESS, federationExecutionName));
       case INCONSISTENT_FDD:
         // TODO: provide more useful information
         //
@@ -342,6 +342,7 @@ public class Federate
         fullFederateName = federationExecutionName + "." + federateName;
 
         marker = MarkerFactory.getMarker(fullFederateName);
+        log = I18nLogger.getLogger(marker, getClass());
 
         fdd = response.getFDD();
 
@@ -352,7 +353,8 @@ public class Federate
         {
           rtiChannel.write(new ResignFederationExecution(ResignAction.NO_ACTION));
 
-          throw new CouldNotCreateLogicalTimeFactory(response.getLogicalTimeImplementationName());
+          throw new CouldNotCreateLogicalTimeFactory(I18n.getMessage(
+            ExceptionMessages.COULD_NOT_CREATE_LOGICAL_TIME_FACTORY, response.getLogicalTimeImplementationName()));
         }
         else
         {
@@ -367,7 +369,7 @@ public class Federate
         }
         break;
       default:
-        throw new RTIinternalError("");
+        throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION));
     }
   }
 
@@ -446,18 +448,19 @@ public class Federate
     this.fdd = fdd;
   }
 
+  @SuppressWarnings("unchecked")
   public void processFutureTasks(LogicalTime maxFutureTaskTimestamp)
   {
     futureTasksLock.lock();
     try
     {
-      log.debug(marker, "processing future tasks: {}", maxFutureTaskTimestamp);
+      log.debug("processing future tasks: {}", maxFutureTaskTimestamp);
 
       for (TimestampedFutureTask timestampedFutureTask = futureTasks.peek();
            timestampedFutureTask != null && timestampedFutureTask.getTime().compareTo(maxFutureTaskTimestamp) <= 0;
            timestampedFutureTask = futureTasks.peek())
       {
-        log.debug(marker, "processing future task: {}", timestampedFutureTask);
+        log.debug("processing future task: {}", timestampedFutureTask);
 
         try
         {
@@ -465,7 +468,7 @@ public class Federate
         }
         catch (Throwable t)
         {
-          log.error(marker, String.format("unable to execute scheduled task: %s", timestampedFutureTask), t);
+          log.error(String.format("unable to execute scheduled task: %s", timestampedFutureTask), t);
         }
 
         futureTasks.poll();
@@ -482,13 +485,13 @@ public class Federate
     futureTasksLock.lock();
     try
     {
-      log.debug(marker, "clearing future tasks");
+      log.debug("clearing future tasks");
 
       for (TimestampedFutureTask timestampedFutureTask = futureTasks.poll();
            timestampedFutureTask != null;
            timestampedFutureTask = futureTasks.poll())
       {
-        log.debug(marker, "processing future task: {}", timestampedFutureTask);
+        log.debug("processing future task: {}", timestampedFutureTask);
 
         try
         {
@@ -496,9 +499,8 @@ public class Federate
         }
         catch (Throwable t)
         {
-          log.error(marker, "unable to execute scheduled task: {}",
-                    timestampedFutureTask);
-          log.error(marker, "", t);
+          log.error("unable to execute scheduled task: {}", timestampedFutureTask);
+          log.error("", t);
         }
       }
     }
@@ -694,7 +696,8 @@ public class Federate
         FederateSynchronizationPoint federateSynchronizationPoint = synchronizationPoints.get(label);
         if (federateSynchronizationPoint == null)
         {
-          throw new SynchronizationPointLabelNotAnnounced(label);
+          throw new SynchronizationPointLabelNotAnnounced(I18n.getMessage(
+            ExceptionMessages.SYNCHRONIZATION_POINT_LABEL_NOT_ANNOUNCED, label));
         }
         else if (federateSynchronizationPoint.synchronizationPointAchieved())
         {
@@ -702,7 +705,7 @@ public class Federate
         }
         else
         {
-          log.debug(marker, "synchronization point already achieved: {}", label);
+          log.debug("synchronization point already achieved: {}", label);
         }
       }
       finally
@@ -731,9 +734,9 @@ public class Federate
       switch (requestFederationSave.getResponse().getResponse())
       {
         case SAVE_IN_PROGRESS:
-          throw new SaveInProgress(federationExecutionName);
+          throw new SaveInProgress(I18n.getMessage(ExceptionMessages.SAVE_IN_PROGRESS, federationExecutionName));
         case RESTORE_IN_PROGRESS:
-          throw new RestoreInProgress(federationExecutionName);
+          throw new RestoreInProgress(I18n.getMessage(ExceptionMessages.RESTORE_IN_PROGRESS, federationExecutionName));
         case SUCCESS:
           break;
       }
@@ -766,9 +769,9 @@ public class Federate
         case LOGICAL_TIME_ALREADY_PASSED:
           throw new LogicalTimeAlreadyPassed(time.toString());
         case SAVE_IN_PROGRESS:
-          throw new SaveInProgress(federationExecutionName);
+          throw new SaveInProgress(I18n.getMessage(ExceptionMessages.SAVE_IN_PROGRESS, federationExecutionName));
         case RESTORE_IN_PROGRESS:
-          throw new RestoreInProgress(federationExecutionName);
+          throw new RestoreInProgress(I18n.getMessage(ExceptionMessages.RESTORE_IN_PROGRESS, federationExecutionName));
         case SUCCESS:
           break;
       }
@@ -787,7 +790,7 @@ public class Federate
     {
       if (saveStatus != SaveStatus.FEDERATE_INSTRUCTED_TO_SAVE)
       {
-        throw new SaveNotInitiated(fullFederateName);
+        throw new SaveNotInitiated(I18n.getMessage(ExceptionMessages.SAVE_NOT_INITIATED, fullFederateName));
       }
 
       saveStatus = SaveStatus.FEDERATE_SAVING;
@@ -810,7 +813,8 @@ public class Federate
 
       if (saveStatus != SaveStatus.FEDERATE_SAVING)
       {
-        throw new FederateHasNotBegunSave(fullFederateName);
+        throw new FederateHasNotBegunSave(I18n.getMessage(
+          ExceptionMessages.FEDERATE_HAS_NOT_BEGUN_SAVE, fullFederateName));
       }
 
       saveStatus = SaveStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_SAVE;
@@ -837,7 +841,8 @@ public class Federate
 
       if (saveStatus != SaveStatus.FEDERATE_SAVING)
       {
-        throw new FederateHasNotBegunSave(fullFederateName);
+        throw new FederateHasNotBegunSave(I18n.getMessage(
+          ExceptionMessages.FEDERATE_HAS_NOT_BEGUN_SAVE, fullFederateName));
       }
 
       saveStatus = SaveStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_SAVE;
@@ -863,7 +868,7 @@ public class Federate
       switch (abortFederationSave.getResponse().getResponse())
       {
         case SAVE_NOT_IN_PROGRESS:
-          throw new SaveNotInProgress(federationExecutionName);
+          throw new SaveNotInProgress(I18n.getMessage(ExceptionMessages.SAVE_NOT_IN_PROGRESS, federationExecutionName));
         case SUCCESS:
           break;
       }
@@ -900,7 +905,8 @@ public class Federate
 
       if (restoreStatus != RestoreStatus.FEDERATE_RESTORING)
       {
-        throw new RestoreNotRequested(fullFederateName);
+        throw new RestoreNotRequested(I18n.getMessage(
+          ExceptionMessages.RESTORE_NOT_IN_PROGRESS, federationExecutionName));
       }
 
       restoreStatus = RestoreStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_RESTORE;
@@ -923,7 +929,8 @@ public class Federate
 
       if (restoreStatus != RestoreStatus.FEDERATE_RESTORING)
       {
-        throw new RestoreNotRequested(fullFederateName);
+        throw new RestoreNotRequested(I18n.getMessage(
+          ExceptionMessages.RESTORE_NOT_IN_PROGRESS, federationExecutionName));
       }
 
       restoreStatus = RestoreStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_RESTORE;
@@ -949,7 +956,8 @@ public class Federate
       switch (abortFederationRestore.getResponse().getResponse())
       {
         case RESTORE_NOT_IN_PROGRESS:
-          throw new RestoreNotInProgress(federationExecutionName);
+          throw new RestoreNotInProgress(I18n.getMessage(
+            ExceptionMessages.RESTORE_NOT_IN_PROGRESS, federationExecutionName));
         case SUCCESS:
           break;
       }
@@ -1978,7 +1986,8 @@ public class Federate
 
       if (isAsynchronousDeliveryEnabled())
       {
-        throw new AsynchronousDeliveryAlreadyEnabled("");
+        throw new AsynchronousDeliveryAlreadyEnabled(I18n.getMessage(
+          ExceptionMessages.ASYNCHRONOUS_DELIVERY_ALREADY_ENABLED, fullFederateName));
       }
 
       asynchronousDeliveryEnabled = true;
@@ -1999,7 +2008,8 @@ public class Federate
 
       if (!isAsynchronousDeliveryEnabled())
       {
-        throw new AsynchronousDeliveryAlreadyDisabled("");
+        throw new AsynchronousDeliveryAlreadyDisabled(I18n.getMessage(
+          ExceptionMessages.ASYNCHRONOUS_DELIVERY_ALREADY_DISABLED, fullFederateName));
       }
 
       asynchronousDeliveryEnabled = false;
@@ -2326,7 +2336,7 @@ public class Federate
     {
       checkIfActive();
 
-      regionManager.subscribeObjectClassAttributesWithRegions(objectClassHandle, attributesAndRegions, passive);
+      objectManager.subscribeObjectClassAttributesWithRegions(objectClassHandle, attributesAndRegions, passive);
     }
     finally
     {
@@ -2344,7 +2354,7 @@ public class Federate
     {
       checkIfActive();
 
-      regionManager.unsubscribeObjectClassAttributesWithRegions(objectClassHandle, attributesAndRegions);
+      objectManager.unsubscribeObjectClassAttributesWithRegions(objectClassHandle, attributesAndRegions);
     }
     finally
     {
@@ -2373,14 +2383,14 @@ public class Federate
     throws InteractionClassNotDefined, InvalidRegion, RegionNotCreatedByThisFederate, InvalidRegionContext,
            FederateServiceInvocationsAreBeingReportedViaMOM, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    fdd.checkIfInteractionClassNotDefined(interactionClassHandle);
+    InteractionClass interactionClass = fdd.getInteractionClass(interactionClassHandle);
 
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      regionManager.subscribeInteractionClassWithRegions(interactionClassHandle, regionHandles, passive);
+      objectManager.subscribeInteractionClassWithRegions(interactionClass, regionHandles, passive);
     }
     finally
     {
@@ -2400,7 +2410,7 @@ public class Federate
     {
       checkIfActive();
 
-      regionManager.unsubscribeInteractionClassWithRegions(interactionClassHandle, regionHandles);
+      objectManager.unsubscribeInteractionClassWithRegions(interactionClassHandle, regionHandles);
     }
     finally
     {
@@ -2416,14 +2426,15 @@ public class Federate
   {
     // ensure we have a valid interaction class and parameter handles
     //
-    fdd.checkIfInteractionParameterNotDefined(interactionClassHandle, parameterValues.keySet());
+    InteractionClass interactionClass = fdd.getInteractionClass(interactionClassHandle);
+    interactionClass.checkIfInteractionParameterNotDefined(parameterValues.keySet());
 
     federateStateLock.readLock().lock();
     try
     {
       checkIfActive();
 
-      objectManager.sendInteractionWithRegions(interactionClassHandle, parameterValues, regionHandles, tag);
+      objectManager.sendInteractionWithRegions(interactionClass, parameterValues, regionHandles, tag);
     }
     finally
     {
@@ -2440,7 +2451,8 @@ public class Federate
   {
     // ensure we have a valid interaction class and parameter handles
     //
-    fdd.checkIfInteractionParameterNotDefined(interactionClassHandle, parameterValues.keySet());
+    InteractionClass interactionClass = fdd.getInteractionClass(interactionClassHandle);
+    interactionClass.checkIfInteractionParameterNotDefined(parameterValues.keySet());
 
     federateStateLock.readLock().lock();
     try
@@ -2467,7 +2479,7 @@ public class Federate
         }
 
         objectManager.sendInteractionWithRegions(
-          interactionClassHandle, parameterValues, regionHandles, tag, time, messageRetractionHandle, sentOrderType);
+          interactionClass, parameterValues, regionHandles, tag, time, messageRetractionHandle, sentOrderType);
       }
       finally
       {
@@ -2550,12 +2562,12 @@ public class Federate
         switch (response.getResponse())
         {
           case NAME_NOT_FOUND:
-            throw new NameNotFound(federateName);
+            throw new NameNotFound(I18n.getMessage(ExceptionMessages.FEDERATE_NAME_NOT_FOUND, federateName));
           case SUCCESS:
             federateHandle = response.getFederateHandle();
             break;
           default:
-            throw new RTIinternalError("");
+            throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION));
         }
       }
       return federateHandle;
@@ -2586,12 +2598,13 @@ public class Federate
         switch (response.getResponse())
         {
           case FEDERATE_HANDLE_NOT_KNOWN:
-            throw new FederateHandleNotKnown(federateHandle.toString());
+            throw new FederateHandleNotKnown(I18n.getMessage(
+              ExceptionMessages.FEDERATE_HANDLE_NOT_KNOWN, federateHandle));
           case SUCCESS:
             federateName = response.getFederateName();
             break;
           default:
-            throw new RTIinternalError("");
+            throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION));
         }
       }
       return federateName;
@@ -2636,9 +2649,7 @@ public class Federate
     ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle)
     throws ObjectInstanceNotKnown, AttributeNotDefined, RTIinternalError
   {
-    objectManager.getObjectInstance(objectInstanceHandle);
-
-    return 0.0;
+    return objectManager.getUpdateRateValueForAttribute(objectInstanceHandle, attributeHandle);
   }
 
   public InteractionClassHandle getInteractionClassHandle(String name)
@@ -3231,7 +3242,7 @@ public class Federate
   {
     if (federateState == FederateState.SAVE_IN_PROGRESS)
     {
-      throw new SaveInProgress("");
+      throw new SaveInProgress(I18n.getMessage(ExceptionMessages.SAVE_IN_PROGRESS, federationExecutionName));
     }
   }
 
@@ -3240,7 +3251,7 @@ public class Federate
   {
     if (federateState == FederateState.RESTORE_IN_PROGRESS)
     {
-      throw new RestoreInProgress("");
+      throw new RestoreInProgress(I18n.getMessage(ExceptionMessages.RESTORE_IN_PROGRESS, federationExecutionName));
     }
   }
 
@@ -3250,9 +3261,9 @@ public class Federate
     switch (federateState)
     {
       case SAVE_IN_PROGRESS:
-        throw new SaveInProgress("");
+        throw new SaveInProgress(I18n.getMessage(ExceptionMessages.SAVE_IN_PROGRESS, federationExecutionName));
       case RESTORE_IN_PROGRESS:
-        throw new RestoreInProgress("");
+        throw new RestoreInProgress(I18n.getMessage(ExceptionMessages.RESTORE_IN_PROGRESS, federationExecutionName));
       default:
         assert federateState == FederateState.ACTIVE;
         break;
@@ -3261,7 +3272,7 @@ public class Federate
 
   protected Future<Object> schedule(LogicalTime time, Callable<Object> callable)
   {
-    log.debug(marker, "scheduling task: {} at {}", callable, time);
+    log.debug("scheduling task: {} at {}", callable, time);
 
     TimestampedFutureTask future = new TimestampedFutureTask(time, callable);
 

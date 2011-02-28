@@ -23,14 +23,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import net.sf.ohla.rti.fdd.InteractionClass;
+import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandle;
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
 import net.sf.ohla.rti.messages.CommitRegionModifications;
 import net.sf.ohla.rti.messages.CreateRegion;
 import net.sf.ohla.rti.messages.DeleteRegion;
 import net.sf.ohla.rti.messages.SubscribeInteractionClassWithRegions;
-import net.sf.ohla.rti.messages.SubscribeObjectClassAttributesWithRegions;
 import net.sf.ohla.rti.messages.UnsubscribeInteractionClassWithRegions;
-import net.sf.ohla.rti.messages.UnsubscribeObjectClassAttributesWithRegions;
 
 import hla.rti1516e.AttributeRegionAssociation;
 import hla.rti1516e.AttributeSetRegionSetPairList;
@@ -38,7 +40,6 @@ import hla.rti1516e.DimensionHandle;
 import hla.rti1516e.DimensionHandleSet;
 import hla.rti1516e.InteractionClassHandle;
 import hla.rti1516e.ObjectClassHandle;
-import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.ParameterHandleValueMap;
 import hla.rti1516e.RangeBounds;
 import hla.rti1516e.RegionHandle;
@@ -63,6 +64,7 @@ public class FederateRegionManager
 
   private final ReadWriteLock regionsLock = new ReentrantReadWriteLock(true);
   private final Map<RegionHandle, FederateRegion> regions = new HashMap<RegionHandle, FederateRegion>();
+  private final Map<RegionHandle, FederateRegion> temporaryRegions = new HashMap<RegionHandle, FederateRegion>();
 
   private final AtomicInteger regionCount = new AtomicInteger();
 
@@ -114,7 +116,7 @@ public class FederateRegionManager
       {
         IEEE1516eRegionHandle regionHandle = new IEEE1516eRegionHandle(
           federate.getFederateHandle(), regionCount.incrementAndGet());
-        this.regions.put(regionHandle, new FederateRegion(regionHandle, region));
+        temporaryRegions.put(regionHandle, new FederateRegion(regionHandle, region));
         regionHandles.add(regionHandle);
       }
     }
@@ -131,7 +133,7 @@ public class FederateRegionManager
     regionsLock.writeLock().lock();
     try
     {
-      regions.keySet().removeAll(regionHandles);
+      temporaryRegions.keySet().removeAll(regionHandles);
     }
     finally
     {
@@ -150,12 +152,14 @@ public class FederateRegionManager
       FederateRegion region = regions.get(regionHandle);
       if (region == null)
       {
-        throw new InvalidRegion(regionHandle.toString());
+        region = temporaryRegions.get(regionHandle);
+        if (region == null)
+        {
+          throw new InvalidRegion(I18n.getMessage(ExceptionMessages.INVALID_REGION, regionHandle));
+        }
       }
-      else
-      {
-        rangeBounds = region.getRangeBounds(dimensionHandle);
-      }
+
+      rangeBounds = region.getRangeBounds(dimensionHandle);
     }
     finally
     {
@@ -166,12 +170,19 @@ public class FederateRegionManager
   }
 
   public void setRangeBounds(RegionHandle regionHandle, DimensionHandle dimensionHandle, RangeBounds rangeBounds)
-    throws RegionNotCreatedByThisFederate, RegionDoesNotContainSpecifiedDimension
+    throws InvalidRegion, RegionNotCreatedByThisFederate, RegionDoesNotContainSpecifiedDimension
   {
     regionsLock.readLock().lock();
     try
     {
-      getRegion(regionHandle).setRangeBounds(dimensionHandle, rangeBounds);
+      if (temporaryRegions.containsKey(regionHandle))
+      {
+        throw new InvalidRegion(I18n.getMessage(ExceptionMessages.SET_RANGE_BOUNDS_ON_TEMPORARY_REGION, regionHandle));
+      }
+      else
+      {
+        getRegion(regionHandle).setRangeBounds(dimensionHandle, rangeBounds);
+      }
     }
     finally
     {
@@ -185,7 +196,16 @@ public class FederateRegionManager
     regionsLock.writeLock().lock();
     try
     {
-      checkIfRegionNotCreatedByThisFederate(regionHandles);
+      for (RegionHandle regionHandle : regionHandles)
+      {
+        if (temporaryRegions.containsKey(regionHandle))
+        {
+          throw new InvalidRegion(I18n.getMessage(
+            ExceptionMessages.COMMIT_REGION_MODIFICATIONS_ON_TEMPORARY_REGION, regionHandle));
+        }
+
+        checkIfRegionNotCreatedByThisFederate(regionHandle);
+      }
 
       Map<RegionHandle, Map<DimensionHandle, RangeBounds>> regionModifications =
         new HashMap<RegionHandle, Map<DimensionHandle, RangeBounds>>();
@@ -214,37 +234,22 @@ public class FederateRegionManager
     regionsLock.writeLock().lock();
     try
     {
-      FederateRegion region = getRegion(regionHandle);
-      region.checkIfInUse();
-
-      regions.remove(regionHandle);
-
-      federate.getRTIChannel().write(new DeleteRegion(regionHandle));
-    }
-    finally
-    {
-      regionsLock.writeLock().unlock();
-    }
-  }
-
-  public void unassociateRegionsForUpdates(
-    ObjectInstanceHandle objectInstanceHandle, AttributeRegionAssociation attributeRegionAssociation)
-    throws RegionNotCreatedByThisFederate
-  {
-    regionsLock.readLock().lock();
-    try
-    {
-      checkIfRegionNotCreatedByThisFederate(attributeRegionAssociation.rhset);
-
-      for (RegionHandle regionHandle : attributeRegionAssociation.rhset)
+      if (temporaryRegions.containsKey(regionHandle))
       {
-        regions.get(regionHandle).unassociateRegionsForUpdates(
-          objectInstanceHandle, attributeRegionAssociation.ahset);
+        throw new InvalidRegion(I18n.getMessage(ExceptionMessages.DELETE_TEMPORARY_REGION, regionHandle));
+      }
+      else
+      {
+        getRegion(regionHandle).checkIfInUse();
+
+        regions.remove(regionHandle);
+
+        federate.getRTIChannel().write(new DeleteRegion(regionHandle));
       }
     }
     finally
     {
-      regionsLock.readLock().unlock();
+      regionsLock.writeLock().unlock();
     }
   }
 
@@ -253,27 +258,41 @@ public class FederateRegionManager
     throws ObjectClassNotDefined, AttributeNotDefined, InvalidRegion, RegionNotCreatedByThisFederate,
            InvalidRegionContext, RTIinternalError
   {
-    regionsLock.readLock().lock();
-    try
+    // dangerous method, must be called with proper protection
+
+    for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
     {
-      checkIfAttributeNotDefinedOrRegionNotCreatedByThisFederate(objectClassHandle, attributesAndRegions);
+      ObjectClass objectClass = federate.getFDD().getObjectClass(objectClassHandle);
+      objectClass.checkIfAttributeNotDefined(attributeRegionAssociation.ahset);
 
-      for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
+      for (RegionHandle regionHandle : attributeRegionAssociation.rhset)
       {
-        for (RegionHandle regionHandle : attributeRegionAssociation.rhset)
+        if (temporaryRegions.containsKey(regionHandle))
         {
-          // TODO: don't forget passive
+          throw new InvalidRegion(I18n.getMessage(ExceptionMessages.SUBSCRIBE_TO_TEMPORARY_REGION, regionHandle));
+        }
+        else
+        {
+          FederateRegion federateRegion = regions.get(regionHandle);
+          if (federateRegion == null)
+          {
+            throw new RegionNotCreatedByThisFederate(I18n.getMessage(
+              ExceptionMessages.REGION_NOT_CREATED_BY_THIS_FEDERATE, regionHandle));
+          }
 
-          regions.get(regionHandle).subscribe(objectClassHandle, attributeRegionAssociation.ahset);
+          federateRegion.checkIfInvalidRegionContext(objectClass, attributeRegionAssociation.ahset);
         }
       }
-
-      federate.getRTIChannel().write(
-        new SubscribeObjectClassAttributesWithRegions(objectClassHandle, attributesAndRegions, passive));
     }
-    finally
+
+    for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
     {
-      regionsLock.readLock().unlock();
+      for (RegionHandle regionHandle : attributeRegionAssociation.rhset)
+      {
+        // TODO: don't forget passive
+
+        regions.get(regionHandle).subscribe(objectClassHandle, attributeRegionAssociation.ahset);
+      }
     }
   }
 
@@ -281,50 +300,62 @@ public class FederateRegionManager
     ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions)
     throws ObjectClassNotDefined, AttributeNotDefined, InvalidRegion, RegionNotCreatedByThisFederate, RTIinternalError
   {
-    regionsLock.readLock().lock();
-    try
-    {
-      checkIfAttributeNotDefinedOrRegionNotCreatedByThisFederate(objectClassHandle, attributesAndRegions);
+    // dangerous method, must be called with proper protection
 
-      for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
+    for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
+    {
+      federate.getFDD().checkIfAttributeNotDefined(objectClassHandle, attributeRegionAssociation.ahset);
+
+      for (RegionHandle regionHandle : attributeRegionAssociation.rhset)
       {
-        for (RegionHandle regionHandle : attributeRegionAssociation.rhset)
+        if (temporaryRegions.containsKey(regionHandle))
         {
-          regions.get(regionHandle).unsubscribe(objectClassHandle, attributeRegionAssociation.ahset);
+          throw new InvalidRegion(I18n.getMessage(ExceptionMessages.UNSUBSCRIBE_FROM_TEMPORARY_REGION, regionHandle));
         }
-      }
 
-      federate.getRTIChannel().write(
-        new UnsubscribeObjectClassAttributesWithRegions(objectClassHandle, attributesAndRegions));
+        checkIfRegionNotCreatedByThisFederate(regionHandle);
+      }
     }
-    finally
+
+    for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
     {
-      regionsLock.readLock().unlock();
+      for (RegionHandle regionHandle : attributeRegionAssociation.rhset)
+      {
+        regions.get(regionHandle).unsubscribe(objectClassHandle, attributeRegionAssociation.ahset);
+      }
     }
   }
 
   public void subscribeInteractionClassWithRegions(
-    InteractionClassHandle interactionClassHandle, RegionHandleSet regionHandles, boolean passive)
-    throws InvalidRegion, RegionNotCreatedByThisFederate
+    InteractionClass interactionClass, RegionHandleSet regionHandles, boolean passive)
+    throws InvalidRegion, RegionNotCreatedByThisFederate, InvalidRegionContext
   {
-    regionsLock.readLock().lock();
-    try
-    {
-      checkIfRegionNotCreatedByThisFederate(regionHandles);
+    // dangerous method, must be called with proper protection
 
-      for (RegionHandle regionHandle : regionHandles)
+    for (RegionHandle regionHandle : regionHandles)
+    {
+      if (temporaryRegions.containsKey(regionHandle))
       {
-        // TODO: don't forget passive
-
-        regions.get(regionHandle).subscribe(interactionClassHandle);
+        throw new InvalidRegion(I18n.getMessage(ExceptionMessages.SUBSCRIBE_TO_TEMPORARY_REGION, regionHandle));
       }
+      else
+      {
+        FederateRegion federateRegion = regions.get(regionHandle);
+        if (federateRegion == null)
+        {
+          throw new RegionNotCreatedByThisFederate(I18n.getMessage(
+            ExceptionMessages.REGION_NOT_CREATED_BY_THIS_FEDERATE, regionHandle));
+        }
 
-      federate.getRTIChannel().write(
-        new SubscribeInteractionClassWithRegions(interactionClassHandle, regionHandles, passive));
+        federateRegion.checkIfInvalidRegionContext(interactionClass);
+      }
     }
-    finally
+
+    for (RegionHandle regionHandle : regionHandles)
     {
-      regionsLock.readLock().unlock();
+      // TODO: don't forget passive
+
+      regions.get(regionHandle).subscribe(interactionClass.getInteractionClassHandle());
     }
   }
 
@@ -332,22 +363,21 @@ public class FederateRegionManager
     InteractionClassHandle interactionClassHandle, RegionHandleSet regionHandles)
     throws InvalidRegion, RegionNotCreatedByThisFederate
   {
-    regionsLock.readLock().lock();
-    try
-    {
-      checkIfRegionNotCreatedByThisFederate(regionHandles);
+    // dangerous method, must be called with proper protection
 
-      for (RegionHandle regionHandle : regionHandles)
+    for (RegionHandle regionHandle : regionHandles)
+    {
+      if (temporaryRegions.containsKey(regionHandle))
       {
-        regions.get(regionHandle).unsubscribe(interactionClassHandle);
+        throw new InvalidRegion(I18n.getMessage(ExceptionMessages.UNSUBSCRIBE_FROM_TEMPORARY_REGION, regionHandle));
       }
 
-      federate.getRTIChannel().write(
-        new UnsubscribeInteractionClassWithRegions(interactionClassHandle, regionHandles));
+      checkIfRegionNotCreatedByThisFederate(regionHandle);
     }
-    finally
+
+    for (RegionHandle regionHandle : regionHandles)
     {
-      regionsLock.readLock().unlock();
+      regions.get(regionHandle).unsubscribe(interactionClassHandle);
     }
   }
 
@@ -366,43 +396,114 @@ public class FederateRegionManager
     return region;
   }
 
-  protected FederateRegion getRegion(RegionHandle regionHandle)
+  public void checkIfCanAssociateRegionForUpdates(
+    ObjectClass objectClass, AttributeRegionAssociation attributeRegionAssociation)
+    throws InvalidRegion, RegionNotCreatedByThisFederate, InvalidRegionContext
+  {
+    for (RegionHandle regionHandle : attributeRegionAssociation.rhset)
+    {
+      if (temporaryRegions.containsKey(regionHandle))
+      {
+        throw new InvalidRegion(I18n.getMessage(
+          ExceptionMessages.ASSOCIATE_ATTRIBUTES_TO_TEMPORARY_REGION, regionHandle));
+      }
+      else
+      {
+        FederateRegion federateRegion = regions.get(regionHandle);
+        if (federateRegion == null)
+        {
+          throw new RegionNotCreatedByThisFederate(I18n.getMessage(
+            ExceptionMessages.REGION_NOT_CREATED_BY_THIS_FEDERATE, regionHandle));
+        }
+
+        federateRegion.checkIfInvalidRegionContext(objectClass, attributeRegionAssociation.ahset);
+      }
+    }
+  }
+
+  public void checkIfCanRegisterObjectInstanceWithRegions(
+    ObjectClass objectClass, AttributeRegionAssociation attributeRegionAssociation)
+    throws InvalidRegion, RegionNotCreatedByThisFederate, InvalidRegionContext
+  {
+    for (RegionHandle regionHandle : attributeRegionAssociation.rhset)
+    {
+      if (temporaryRegions.containsKey(regionHandle))
+      {
+        throw new InvalidRegion(I18n.getMessage(
+          ExceptionMessages.REGISTER_OBJECT_INSTANCE_WITH_TEMPORARY_REGION, regionHandle));
+      }
+      else
+      {
+        FederateRegion federateRegion = regions.get(regionHandle);
+        if (federateRegion == null)
+        {
+          throw new RegionNotCreatedByThisFederate(I18n.getMessage(
+            ExceptionMessages.REGION_NOT_CREATED_BY_THIS_FEDERATE, regionHandle));
+        }
+
+        federateRegion.checkIfInvalidRegionContext(objectClass, attributeRegionAssociation.ahset);
+      }
+    }
+  }
+
+  public void checkIfCanUnassociateRegionForUpdates(RegionHandleSet regionHandles)
+    throws InvalidRegion, RegionNotCreatedByThisFederate
+  {
+    for (RegionHandle regionHandle : regionHandles)
+    {
+      if (temporaryRegions.containsKey(regionHandle))
+      {
+        throw new InvalidRegion(I18n.getMessage(
+          ExceptionMessages.UNASSOCIATE_ATTRIBUTES_TO_TEMPORARY_REGION, regionHandle));
+      }
+
+      checkIfRegionNotCreatedByThisFederate(regionHandle);
+    }
+  }
+
+  public void checkIfCanSendInteractionWithRegions(InteractionClass interactionClass, RegionHandleSet regionHandles)
+    throws InvalidRegion, RegionNotCreatedByThisFederate, InvalidRegionContext
+  {
+    for (RegionHandle regionHandle : regionHandles)
+    {
+      if (temporaryRegions.containsKey(regionHandle))
+      {
+        throw new InvalidRegion(I18n.getMessage(
+          ExceptionMessages.SEND_INTERACTION_WITH_TEMPORARY_REGION, regionHandle));
+      }
+      else
+      {
+        FederateRegion federateRegion = regions.get(regionHandle);
+        if (federateRegion == null)
+        {
+          throw new RegionNotCreatedByThisFederate(I18n.getMessage(
+            ExceptionMessages.REGION_NOT_CREATED_BY_THIS_FEDERATE, regionHandle));
+        }
+
+        federateRegion.checkIfInvalidRegionContext(interactionClass);
+      }
+    }
+  }
+
+  private FederateRegion getRegion(RegionHandle regionHandle)
     throws RegionNotCreatedByThisFederate
   {
     FederateRegion region = regions.get(regionHandle);
     if (region == null)
     {
-      throw new RegionNotCreatedByThisFederate(regionHandle.toString());
+      throw new RegionNotCreatedByThisFederate(I18n.getMessage(
+        ExceptionMessages.REGION_NOT_CREATED_BY_THIS_FEDERATE, regionHandle));
     }
     return region;
   }
 
-  protected void checkIfRegionNotCreatedByThisFederate(RegionHandle regionHandle)
+  private void checkIfRegionNotCreatedByThisFederate(RegionHandle regionHandle)
     throws RegionNotCreatedByThisFederate
   {
     if (!regions.containsKey(regionHandle))
     {
-      throw new RegionNotCreatedByThisFederate(regionHandle.toString());
-    }
-  }
-
-  protected void checkIfRegionNotCreatedByThisFederate(RegionHandleSet regionHandles)
-    throws RegionNotCreatedByThisFederate
-  {
-    for (RegionHandle regionHandle : regionHandles)
-    {
-      checkIfRegionNotCreatedByThisFederate(regionHandle);
-    }
-  }
-
-  private void checkIfAttributeNotDefinedOrRegionNotCreatedByThisFederate(
-    ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions)
-    throws AttributeNotDefined, ObjectClassNotDefined, RegionNotCreatedByThisFederate
-  {
-    for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
-    {
-      federate.getFDD().checkIfAttributeNotDefined(objectClassHandle, attributeRegionAssociation.ahset);
-      checkIfRegionNotCreatedByThisFederate(attributeRegionAssociation.rhset);
+      throw new RegionNotCreatedByThisFederate(I18n.getMessage(
+        ExceptionMessages.REGION_NOT_CREATED_BY_THIS_FEDERATE, regionHandle));
     }
   }
 }

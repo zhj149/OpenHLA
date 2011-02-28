@@ -16,6 +16,9 @@
 
 package net.sf.ohla.rti.hla.rti1516e.time;
 
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
+
 import hla.rti1516e.exceptions.CouldNotEncode;
 import hla.rti1516e.exceptions.IllegalTimeArithmetic;
 import hla.rti1516e.time.HLAfloat64Interval;
@@ -50,11 +53,13 @@ public class IEEE1516eHLAfloat64Time
     double result = time + interval.getValue();
     if (Double.isNaN(result))
     {
-      throw new IllegalTimeArithmetic(time + " + " + interval.getValue() + " is NaN");
+      throw new IllegalTimeArithmetic(I18n.getMessage(
+        ExceptionMessages.LOGICAL_TIME_ADDITION_IS_NAN, time, interval.getValue()));
     }
     else if (Double.isInfinite(result))
     {
-      throw new IllegalTimeArithmetic(time + " + " + interval.getValue() + " is infinite");
+      throw new IllegalTimeArithmetic(I18n.getMessage(
+        ExceptionMessages.LOGICAL_TIME_ADDITION_IS_INFINITE, time, interval.getValue()));
     }
     return new IEEE1516eHLAfloat64Time(result);
   }
@@ -65,15 +70,18 @@ public class IEEE1516eHLAfloat64Time
     double result = time - interval.getValue();
     if (Double.isNaN(result))
     {
-      throw new IllegalTimeArithmetic(time + " - " + interval.getValue() + " is NaN");
+      throw new IllegalTimeArithmetic(I18n.getMessage(
+        ExceptionMessages.LOGICAL_TIME_SUBTRACTION_IS_NAN, time, interval.getValue()));
     }
     else if (Double.isInfinite(result))
     {
-      throw new IllegalTimeArithmetic(time + " - " + interval.getValue() + " is infinite");
+      throw new IllegalTimeArithmetic(I18n.getMessage(
+        ExceptionMessages.LOGICAL_TIME_SUBTRACTION_IS_INFINITE, time, interval.getValue()));
     }
     else if (result < INITIAL.time)
     {
-      throw new IllegalTimeArithmetic(time + " - " + interval.getValue() + " is < " + INITIAL.time);
+      throw new IllegalTimeArithmetic(I18n.getMessage(
+        ExceptionMessages.LOGICAL_TIME_SUBTRACTION_IS_LESS_THAN_INITIAL_TIME, time, interval.getValue(), INITIAL.time));
     }
     return new IEEE1516eHLAfloat64Time(result);
   }
@@ -98,11 +106,11 @@ public class IEEE1516eHLAfloat64Time
   {
     if (buffer == null)
     {
-      throw new CouldNotEncode("buffer cannot be null");
+      throw new CouldNotEncode(I18n.getMessage(ExceptionMessages.ENCODE_BUFFER_IS_NULL));
     }
     else if ((buffer.length - offset) < 8)
     {
-      throw new CouldNotEncode("buffer is too short");
+      throw new CouldNotEncode(I18n.getMessage(ExceptionMessages.ENCODE_BUFFER_IS_TOO_SHORT));
     }
 
     long l = Double.doubleToLongBits(time);

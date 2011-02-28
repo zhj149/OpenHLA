@@ -16,6 +16,9 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
+import java.util.Set;
+
+import hla.rti1516e.DimensionHandle;
 import hla.rti1516e.DimensionHandleSet;
 import hla.rti1516e.DimensionHandleSetFactory;
 
@@ -31,6 +34,11 @@ public class IEEE1516eDimensionHandleSetFactory
   public DimensionHandleSet create()
   {
     return new IEEE1516eDimensionHandleSet();
+  }
+
+  public DimensionHandleSet create(Set<DimensionHandle> dimensionHandles)
+  {
+    return new IEEE1516eDimensionHandleSet(dimensionHandles);
   }
 
   private Object readResolve()

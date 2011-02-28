@@ -18,10 +18,13 @@ package net.sf.ohla.rti.fdd;
 
 import java.io.Serializable;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
@@ -239,6 +242,19 @@ public class ObjectClass
     throws AttributeNotDefined
   {
     return getAttribute(attributeHandle).getAttributeName();
+  }
+
+  public SortedSet<String> getAttributeNamesSafely(Collection<AttributeHandle>... attributeHandles)
+  {
+    SortedSet<String> attributeNames = new TreeSet<String>();
+    for (Collection<AttributeHandle> c : attributeHandles)
+    {
+      for (AttributeHandle attributeHandle : c)
+      {
+        attributeNames.add(attributes.get(attributeHandle).getAttributeName());
+      }
+    }
+    return attributeNames;
   }
 
   public AttributeHandle getAttributeHandle(String name)

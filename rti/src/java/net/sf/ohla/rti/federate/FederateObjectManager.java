@@ -32,6 +32,9 @@ import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.fdd.TransportationType;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectInstanceHandle;
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
+import net.sf.ohla.rti.i18n.I18nLogger;
 import net.sf.ohla.rti.messages.DeleteObjectInstance;
 import net.sf.ohla.rti.messages.LocalDeleteObjectInstance;
 import net.sf.ohla.rti.messages.PublishObjectClassAttributes;
@@ -43,16 +46,17 @@ import net.sf.ohla.rti.messages.ReserveObjectInstanceName;
 import net.sf.ohla.rti.messages.ResignFederationExecution;
 import net.sf.ohla.rti.messages.SendInteraction;
 import net.sf.ohla.rti.messages.SubscribeInteractionClass;
+import net.sf.ohla.rti.messages.SubscribeInteractionClassWithRegions;
 import net.sf.ohla.rti.messages.SubscribeObjectClassAttributes;
+import net.sf.ohla.rti.messages.SubscribeObjectClassAttributesWithRegions;
 import net.sf.ohla.rti.messages.UnpublishObjectClass;
 import net.sf.ohla.rti.messages.UnpublishObjectClassAttributes;
 import net.sf.ohla.rti.messages.UnsubscribeInteractionClass;
+import net.sf.ohla.rti.messages.UnsubscribeInteractionClassWithRegions;
 import net.sf.ohla.rti.messages.UnsubscribeObjectClassAttributes;
+import net.sf.ohla.rti.messages.UnsubscribeObjectClassAttributesWithRegions;
 import net.sf.ohla.rti.messages.callbacks.ReceiveInteraction;
 import net.sf.ohla.rti.messages.callbacks.ReflectAttributeValues;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleSet;
@@ -103,8 +107,6 @@ import hla.rti1516e.exceptions.SaveInProgress;
 
 public class FederateObjectManager
 {
-  private static final Logger log = LoggerFactory.getLogger(FederateObjectManager.class);
-
   private final Federate federate;
 
   private final ReadWriteLock publicationLock = new ReentrantReadWriteLock(true);
@@ -125,11 +127,15 @@ public class FederateObjectManager
   private final Map<ObjectClassHandle, Set<ObjectInstanceHandle>> objectsByObjectClassHandle =
     new HashMap<ObjectClassHandle, Set<ObjectInstanceHandle>>();
 
+  private final I18nLogger log;
+
   private int objectInstanceCount;
 
   public FederateObjectManager(Federate federate)
   {
     this.federate = federate;
+
+    log = I18nLogger.getLogger(federate.getMarker(), getClass());
   }
 
   public void resignFederationExecution(ResignAction resignAction)
@@ -425,6 +431,97 @@ public class FederateObjectManager
     }
   }
 
+  public void subscribeObjectClassAttributesWithRegions(
+    ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions, boolean passive)
+    throws ObjectClassNotDefined, AttributeNotDefined, InvalidRegion, RegionNotCreatedByThisFederate,
+           InvalidRegionContext, RTIinternalError
+  {
+    subscriptionLock.writeLock().lock();
+    federate.getRegionManager().getRegionsLock().readLock().lock();
+    try
+    {
+      federate.getRegionManager().subscribeObjectClassAttributesWithRegions(
+        objectClassHandle, attributesAndRegions, passive);
+
+      subscriptionManager.subscribeObjectClassAttributes(
+        federate.getFDD().getObjectClassSafely(objectClassHandle), attributesAndRegions, passive);
+
+      federate.getRTIChannel().write(new SubscribeObjectClassAttributesWithRegions(
+        objectClassHandle, attributesAndRegions, passive));
+    }
+    finally
+    {
+      federate.getRegionManager().getRegionsLock().readLock().unlock();
+      subscriptionLock.writeLock().unlock();
+    }
+  }
+
+  public void unsubscribeObjectClassAttributesWithRegions(
+    ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions)
+    throws ObjectClassNotDefined, AttributeNotDefined, InvalidRegion, RegionNotCreatedByThisFederate, RTIinternalError
+  {
+    subscriptionLock.writeLock().lock();
+    federate.getRegionManager().getRegionsLock().readLock().lock();
+    try
+    {
+      federate.getRegionManager().unsubscribeObjectClassAttributesWithRegions(objectClassHandle, attributesAndRegions);
+
+      subscriptionManager.unsubscribeObjectClassAttributes(objectClassHandle, attributesAndRegions);
+
+      federate.getRTIChannel().write(
+        new UnsubscribeObjectClassAttributesWithRegions(objectClassHandle, attributesAndRegions));
+    }
+    finally
+    {
+      federate.getRegionManager().getRegionsLock().readLock().unlock();
+      subscriptionLock.writeLock().unlock();
+    }
+  }
+
+  public void subscribeInteractionClassWithRegions(
+    InteractionClass interactionClass, RegionHandleSet regionHandles, boolean passive)
+    throws InvalidRegion, RegionNotCreatedByThisFederate, InvalidRegionContext
+  {
+    subscriptionLock.writeLock().lock();
+    federate.getRegionManager().getRegionsLock().readLock().lock();
+    try
+    {
+      federate.getRegionManager().subscribeInteractionClassWithRegions(interactionClass, regionHandles, passive);
+
+      subscriptionManager.subscribeInteractionClass(interactionClass, regionHandles, passive);
+
+      federate.getRTIChannel().write(
+        new SubscribeInteractionClassWithRegions(interactionClass.getInteractionClassHandle(), regionHandles, passive));
+    }
+    finally
+    {
+      federate.getRegionManager().getRegionsLock().readLock().unlock();
+      subscriptionLock.writeLock().unlock();
+    }
+  }
+
+  public void unsubscribeInteractionClassWithRegions(
+    InteractionClassHandle interactionClassHandle, RegionHandleSet regionHandles)
+    throws InvalidRegion, RegionNotCreatedByThisFederate
+  {
+    subscriptionLock.writeLock().lock();
+    federate.getRegionManager().getRegionsLock().readLock().lock();
+    try
+    {
+      federate.getRegionManager().unsubscribeInteractionClassWithRegions(interactionClassHandle, regionHandles);
+
+      subscriptionManager.unsubscribeInteractionClass(interactionClassHandle, regionHandles);
+
+      federate.getRTIChannel().write(
+        new UnsubscribeInteractionClassWithRegions(interactionClassHandle, regionHandles));
+    }
+    finally
+    {
+      federate.getRegionManager().getRegionsLock().readLock().unlock();
+      subscriptionLock.writeLock().unlock();
+    }
+  }
+
   public ObjectClassHandle getObjectClassHandle(ObjectInstanceHandle objectInstanceHandle)
     throws ObjectInstanceNotKnown
   {
@@ -475,7 +572,8 @@ public class FederateObjectManager
     {
       if (objectInstanceNamesBeingReserved.contains(objectInstanceName))
       {
-        throw new IllegalName("object instance name already being reserved: " + objectInstanceName);
+        throw new IllegalName(I18n.getMessage(
+          ExceptionMessages.OBJECT_INSTANCE_NAME_ALREADY_BEING_RESERVED, objectInstanceName));
       }
 
       objectInstanceNamesBeingReserved.add(objectInstanceName);
@@ -500,7 +598,8 @@ public class FederateObjectManager
       }
       else
       {
-        throw new ObjectInstanceNameNotReserved(objectInstanceName);
+        throw new ObjectInstanceNameNotReserved(I18n.getMessage(
+          ExceptionMessages.OBJECT_INSTANCE_NAME_NOT_RESERVED, objectInstanceName));
       }
     }
     finally
@@ -515,11 +614,12 @@ public class FederateObjectManager
     reservedObjectInstanceNamesLock.lock();
     try
     {
-      for (String name : objectInstanceNames)
+      for (String objectInstanceName : objectInstanceNames)
       {
-        if (objectInstanceNamesBeingReserved.contains(name))
+        if (objectInstanceNamesBeingReserved.contains(objectInstanceName))
         {
-          throw new IllegalName("object instance name already being reserved: " + name);
+          throw new IllegalName(I18n.getMessage(
+            ExceptionMessages.OBJECT_INSTANCE_NAME_ALREADY_BEING_RESERVED, objectInstanceName));
         }
       }
 
@@ -539,11 +639,12 @@ public class FederateObjectManager
     reservedObjectInstanceNamesLock.lock();
     try
     {
-      for (String name : objectInstanceNames)
+      for (String objectInstanceName : objectInstanceNames)
       {
-        if (!reservedObjectInstanceNames.contains(name))
+        if (!reservedObjectInstanceNames.contains(objectInstanceName))
         {
-          throw new ObjectInstanceNameNotReserved(name);
+          throw new ObjectInstanceNameNotReserved(I18n.getMessage(
+            ExceptionMessages.OBJECT_INSTANCE_NAME_NOT_RESERVED, objectInstanceName));
         }
       }
 
@@ -607,14 +708,20 @@ public class FederateObjectManager
     {
       AttributeHandleSet publishedAttributeHandles = getPublishedObjectClassAttributes(objectClassHandle);
 
+      reservedObjectInstanceNamesLock.lock();
       objectsLock.writeLock().lock();
       try
       {
-        checkIfObjectInstanceNameNotReserved(objectInstanceName);
+        if (!reservedObjectInstanceNames.contains(objectInstanceName))
+        {
+          throw new ObjectInstanceNameNotReserved(I18n.getMessage(
+            ExceptionMessages.OBJECT_INSTANCE_NAME_NOT_RESERVED, objectInstanceName));
+        }
 
         if (objectsByName.containsKey(objectInstanceName))
         {
-          throw new ObjectInstanceNameInUse(objectInstanceName);
+          throw new ObjectInstanceNameInUse(I18n.getMessage(
+            ExceptionMessages.OBJECT_INSTANCE_NAME_IN_USE, objectInstanceName));
         }
 
         IEEE1516eObjectInstanceHandle objectInstanceHandle =
@@ -635,6 +742,7 @@ public class FederateObjectManager
       finally
       {
         objectsLock.writeLock().unlock();
+        reservedObjectInstanceNamesLock.unlock();
       }
     }
     finally
@@ -658,8 +766,24 @@ public class FederateObjectManager
       federate.getRegionManager().getRegionsLock().readLock().lock();
       try
       {
-        checkIfAttributeNotDefinedOrAttributeNotPublishedOrRegionNotCreatedByThisFederate(
-          objectClass, publishedAttributeHandles, attributesAndRegions);
+        for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
+        {
+          for (AttributeHandle attributeHandle : attributeRegionAssociation.ahset)
+          {
+            if (!publishedAttributeHandles.contains(attributeHandle))
+            {
+              // it is either unpublished or not defined
+              //
+              objectClass.checkIfAttributeNotDefined(attributeHandle);
+
+              throw new AttributeNotPublished(
+                I18n.getMessage(ExceptionMessages.ATTRIBUTE_NOT_PUBLISHED, objectClass, attributeHandle));
+            }
+          }
+
+          federate.getRegionManager().checkIfCanRegisterObjectInstanceWithRegions(
+            objectClass, attributeRegionAssociation);
+        }
 
         objectsLock.writeLock().lock();
         try
@@ -711,17 +835,39 @@ public class FederateObjectManager
       federate.getRegionManager().getRegionsLock().readLock().lock();
       try
       {
-        checkIfAttributeNotDefinedOrAttributeNotPublishedOrRegionNotCreatedByThisFederate(
-          objectClass, publishedAttributeHandles, attributesAndRegions);
+        for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
+        {
+          for (AttributeHandle attributeHandle : attributeRegionAssociation.ahset)
+          {
+            if (!publishedAttributeHandles.contains(attributeHandle))
+            {
+              // it is either unpublished or not defined
+              //
+              objectClass.checkIfAttributeNotDefined(attributeHandle);
 
+              throw new AttributeNotPublished(
+                I18n.getMessage(ExceptionMessages.ATTRIBUTE_NOT_PUBLISHED, objectClass, attributeHandle));
+            }
+          }
+
+          federate.getRegionManager().checkIfCanRegisterObjectInstanceWithRegions(
+            objectClass, attributeRegionAssociation);
+        }
+
+        reservedObjectInstanceNamesLock.lock();
         objectsLock.writeLock().lock();
         try
         {
-          checkIfObjectInstanceNameNotReserved(objectInstanceName);
+          if (!reservedObjectInstanceNames.contains(objectInstanceName))
+          {
+            throw new ObjectInstanceNameNotReserved(I18n.getMessage(
+              ExceptionMessages.OBJECT_INSTANCE_NAME_NOT_RESERVED, objectInstanceName));
+          }
 
           if (objectsByName.containsKey(objectInstanceName))
           {
-            throw new ObjectInstanceNameInUse(objectInstanceName);
+            throw new ObjectInstanceNameInUse(I18n.getMessage(
+              ExceptionMessages.OBJECT_INSTANCE_NAME_IN_USE, objectInstanceName));
           }
 
           IEEE1516eObjectInstanceHandle objectInstanceHandle =
@@ -744,6 +890,7 @@ public class FederateObjectManager
         finally
         {
           objectsLock.writeLock().unlock();
+          reservedObjectInstanceNamesLock.unlock();
         }
       }
       finally
@@ -1306,7 +1453,8 @@ public class FederateObjectManager
 
   public void associateRegionsForUpdates(
     ObjectInstanceHandle objectInstanceHandle, AttributeSetRegionSetPairList attributesAndRegions)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, RegionNotCreatedByThisFederate, RTIinternalError
+    throws ObjectInstanceNotKnown, AttributeNotDefined, InvalidRegion, RegionNotCreatedByThisFederate,
+           InvalidRegionContext, RTIinternalError
   {
     federate.getRegionManager().getRegionsLock().readLock().lock();
     try
@@ -1316,8 +1464,13 @@ public class FederateObjectManager
       {
         FederateObjectInstance objectInstance = getObjectInstance(objectInstanceHandle);
 
-        checkIfAttributeNotDefinedOrRegionNotCreatedByThisFederate(
-          objectInstance.getObjectClass(), attributesAndRegions);
+        for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
+        {
+          objectInstance.getObjectClass().checkIfAttributeNotDefined(attributeRegionAssociation.ahset);
+
+          federate.getRegionManager().checkIfCanAssociateRegionForUpdates(
+            objectInstance.getObjectClass(), attributeRegionAssociation);
+        }
 
         objectInstance.associateRegionsForUpdates(attributesAndRegions, federate);
       }
@@ -1334,7 +1487,7 @@ public class FederateObjectManager
 
   public void unassociateRegionsForUpdates(
     ObjectInstanceHandle objectInstanceHandle, AttributeSetRegionSetPairList attributesAndRegions)
-    throws ObjectInstanceNotKnown, AttributeNotDefined, RegionNotCreatedByThisFederate, RTIinternalError
+    throws ObjectInstanceNotKnown, AttributeNotDefined, InvalidRegion, RegionNotCreatedByThisFederate, RTIinternalError
   {
     federate.getRegionManager().getRegionsLock().readLock().lock();
     try
@@ -1344,8 +1497,12 @@ public class FederateObjectManager
       {
         FederateObjectInstance objectInstance = getObjectInstance(objectInstanceHandle);
 
-        checkIfAttributeNotDefinedOrRegionNotCreatedByThisFederate(
-          objectInstance.getObjectClass(), attributesAndRegions);
+        for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
+        {
+          objectInstance.getObjectClass().checkIfAttributeNotDefined(attributeRegionAssociation.ahset);
+
+          federate.getRegionManager().checkIfCanUnassociateRegionForUpdates(attributeRegionAssociation.rhset);
+        }
 
         objectInstance.unassociateRegionsForUpdates(attributesAndRegions, federate);
       }
@@ -1361,24 +1518,24 @@ public class FederateObjectManager
   }
 
   public void sendInteractionWithRegions(
-    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues,
-    RegionHandleSet regionHandles, byte[] tag)
-    throws InteractionClassNotDefined, InteractionClassNotPublished, InteractionParameterNotDefined, InvalidRegion,
-           RegionNotCreatedByThisFederate, InvalidRegionContext, SaveInProgress, RestoreInProgress, RTIinternalError
+    InteractionClass interactionClass, ParameterHandleValueMap parameterValues, RegionHandleSet regionHandles,
+    byte[] tag)
+    throws InteractionClassNotPublished, InvalidRegion, RegionNotCreatedByThisFederate, InvalidRegionContext,
+           SaveInProgress, RestoreInProgress, RTIinternalError
   {
     publicationLock.readLock().lock();
     try
     {
-      checkIfInteractionClassNotPublished(interactionClassHandle);
+      checkIfInteractionClassNotPublished(interactionClass.getInteractionClassHandle());
 
       federate.getRegionManager().getRegionsLock().readLock().lock();
       try
       {
-        federate.getRegionManager().checkIfRegionNotCreatedByThisFederate(regionHandles);
+        federate.getRegionManager().checkIfCanSendInteractionWithRegions(interactionClass, regionHandles);
 
         federate.getRTIChannel().write(new SendInteraction(
-          interactionClassHandle, parameterValues, tag, TransportationType.HLA_RELIABLE.getTransportationTypeHandle(),
-          regionHandles));
+          interactionClass.getInteractionClassHandle(), parameterValues, tag,
+          TransportationType.HLA_RELIABLE.getTransportationTypeHandle(), regionHandles));
       }
       finally
       {
@@ -1392,9 +1549,8 @@ public class FederateObjectManager
   }
 
   public void sendInteractionWithRegions(
-    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues,
-    RegionHandleSet regionHandles, byte[] tag, LogicalTime time, MessageRetractionHandle messageRetractionHandle,
-    OrderType sentOrderType)
+    InteractionClass interactionClass, ParameterHandleValueMap parameterValues, RegionHandleSet regionHandles,
+    byte[] tag, LogicalTime time, MessageRetractionHandle messageRetractionHandle, OrderType sentOrderType)
     throws InteractionClassNotDefined, InteractionClassNotPublished, InteractionParameterNotDefined, InvalidRegion,
            RegionNotCreatedByThisFederate, InvalidRegionContext, InvalidLogicalTime, SaveInProgress, RestoreInProgress,
            RTIinternalError
@@ -1402,15 +1558,15 @@ public class FederateObjectManager
     publicationLock.readLock().lock();
     try
     {
-      checkIfInteractionClassNotPublished(interactionClassHandle);
+      checkIfInteractionClassNotPublished(interactionClass.getInteractionClassHandle());
 
       federate.getRegionManager().getRegionsLock().readLock().lock();
       try
       {
-        federate.getRegionManager().checkIfRegionNotCreatedByThisFederate(regionHandles);
+        federate.getRegionManager().checkIfCanSendInteractionWithRegions(interactionClass, regionHandles);
 
         federate.getRTIChannel().write(new SendInteraction(
-          interactionClassHandle, parameterValues, tag, sentOrderType,
+          interactionClass.getInteractionClassHandle(), parameterValues, tag, sentOrderType,
           TransportationType.HLA_RELIABLE.getTransportationTypeHandle(), time, messageRetractionHandle, regionHandles));
       }
       finally
@@ -1607,29 +1763,38 @@ public class FederateObjectManager
     }
   }
 
-  protected AttributeHandleSet getPublishedObjectClassAttributes(ObjectClassHandle objectClassHandle)
+  public double getUpdateRateValueForAttribute(
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle)
+    throws ObjectInstanceNotKnown, AttributeNotDefined, RTIinternalError
+  {
+    return getObjectInstance(objectInstanceHandle).getUpdateRateValueForAttribute(attributeHandle, federate);
+  }
+
+  private AttributeHandleSet getPublishedObjectClassAttributes(ObjectClassHandle objectClassHandle)
     throws ObjectClassNotPublished
   {
     AttributeHandleSet publishedAttributeHandles = publishedObjectClasses.get(objectClassHandle);
     if (publishedAttributeHandles == null)
     {
-      throw new ObjectClassNotPublished(String.format("%s", objectClassHandle));
+      throw new ObjectClassNotPublished(I18n.getMessage(
+        ExceptionMessages.OBJECT_CLASS_NOT_PUBLISHED, objectClassHandle));
     }
     return publishedAttributeHandles;
   }
 
-  protected FederateObjectInstance getObjectInstance(ObjectInstanceHandle objectInstanceHandle)
+  private FederateObjectInstance getObjectInstance(ObjectInstanceHandle objectInstanceHandle)
     throws ObjectInstanceNotKnown
   {
     FederateObjectInstance objectInstance = objects.get(objectInstanceHandle);
     if (objectInstance == null)
     {
-      throw new ObjectInstanceNotKnown(objectInstanceHandle.toString());
+      throw new ObjectInstanceNotKnown(
+        I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_HANDLE_NOT_KNOWN, objectInstanceHandle));
     }
     return objectInstance;
   }
 
-  protected FederateObjectInstance getObjectInstanceSafely(ObjectInstanceHandle objectInstanceHandle)
+  private FederateObjectInstance getObjectInstanceSafely(ObjectInstanceHandle objectInstanceHandle)
   {
     FederateObjectInstance objectInstance = objects.get(objectInstanceHandle);
 
@@ -1638,18 +1803,19 @@ public class FederateObjectManager
     return objectInstance;
   }
 
-  protected FederateObjectInstance getObjectInstance(String name)
+  private FederateObjectInstance getObjectInstance(String objectInstanceName)
     throws ObjectInstanceNotKnown
   {
-    FederateObjectInstance objectInstance = objectsByName.get(name);
+    FederateObjectInstance objectInstance = objectsByName.get(objectInstanceName);
     if (objectInstance == null)
     {
-      throw new ObjectInstanceNotKnown(name);
+      throw new ObjectInstanceNotKnown(
+        I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_NAME_NOT_KNOWN, objectInstanceName));
     }
     return objectInstance;
   }
 
-  protected Set<ObjectInstanceHandle> getObjectsByClassHandle(
+  private Set<ObjectInstanceHandle> getObjectsByClassHandle(
     ObjectClassHandle objectClassHandle)
   {
     Set<ObjectInstanceHandle> objectInstanceHandles = objectsByObjectClassHandle.get(objectClassHandle);
@@ -1661,23 +1827,25 @@ public class FederateObjectManager
     return objectInstanceHandles;
   }
 
-  protected void checkIfInteractionClassNotPublished(InteractionClassHandle interactionClassHandle)
+  private void checkIfInteractionClassNotPublished(InteractionClassHandle interactionClassHandle)
     throws InteractionClassNotPublished
   {
     if (!publishedInteractionClasses.contains(interactionClassHandle))
     {
-      throw new InteractionClassNotPublished(interactionClassHandle.toString());
+      throw new InteractionClassNotPublished(I18n.getMessage(
+        ExceptionMessages.INTERACTION_CLASS_NOT_PUBLISHED, interactionClassHandle));
     }
   }
 
-  protected void checkIfAttributeNotPublished(
+  private void checkIfAttributeNotPublished(
     ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles)
     throws ObjectClassNotPublished, AttributeNotDefined, AttributeNotPublished
   {
     AttributeHandleSet publishedAttributeHandles = publishedObjectClasses.get(objectClassHandle);
     if (publishedAttributeHandles == null)
     {
-      throw new ObjectClassNotPublished(objectClassHandle.toString());
+      throw new ObjectClassNotPublished(I18n.getMessage(
+        ExceptionMessages.OBJECT_CLASS_NOT_PUBLISHED, objectClassHandle));
     }
     else
     {
@@ -1687,64 +1855,17 @@ public class FederateObjectManager
         {
           // it is either unpublished or not defined
           //
-          federate.getFDD().getObjectClassSafely(objectClassHandle).checkIfAttributeNotDefined(attributeHandle);
+          ObjectClass objectClass = federate.getFDD().getObjectClassSafely(objectClassHandle);
+          objectClass.checkIfAttributeNotDefined(attributeHandle);
 
-          throw new AttributeNotPublished(attributeHandle.toString());
+          throw new AttributeNotPublished(
+            I18n.getMessage(ExceptionMessages.ATTRIBUTE_NOT_PUBLISHED, objectClass, attributeHandle));
         }
       }
     }
   }
 
-  protected void checkIfObjectInstanceNameNotReserved(String name)
-    throws ObjectInstanceNameNotReserved
-  {
-    reservedObjectInstanceNamesLock.lock();
-    try
-    {
-      if (!reservedObjectInstanceNames.contains(name))
-      {
-        throw new ObjectInstanceNameNotReserved(name);
-      }
-    }
-    finally
-    {
-      reservedObjectInstanceNamesLock.unlock();
-    }
-  }
-
-  protected void checkIfAttributeNotDefinedOrRegionNotCreatedByThisFederate(
-    ObjectClass objectClass, AttributeSetRegionSetPairList attributesAndRegions)
-  throws AttributeNotDefined, RegionNotCreatedByThisFederate
-  {
-    for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
-    {
-      objectClass.checkIfAttributeNotDefined(attributeRegionAssociation.ahset);
-      federate.getRegionManager().checkIfRegionNotCreatedByThisFederate(attributeRegionAssociation.rhset);
-    }
-  }
-
-  protected void checkIfAttributeNotDefinedOrAttributeNotPublishedOrRegionNotCreatedByThisFederate(
-    ObjectClass objectClass, AttributeHandleSet publishedAttributeHandles,
-    AttributeSetRegionSetPairList attributesAndRegions)
-  throws AttributeNotDefined, AttributeNotPublished, RegionNotCreatedByThisFederate
-  {
-    for (AttributeRegionAssociation attributeRegionAssociation : attributesAndRegions)
-    {
-      for (AttributeHandle attributeHandle : attributeRegionAssociation.ahset)
-      {
-        objectClass.checkIfAttributeNotDefined(attributeHandle);
-
-        if (!publishedAttributeHandles.contains(attributeHandle))
-        {
-          throw new AttributeNotPublished(attributeHandle.toString());
-        }
-      }
-
-      federate.getRegionManager().checkIfRegionNotCreatedByThisFederate(attributeRegionAssociation.rhset);
-    }
-  }
-
-  protected void removeObjectInstance(FederateObjectInstance objectInstance)
+  private void removeObjectInstance(FederateObjectInstance objectInstance)
   {
     objects.remove(objectInstance.getObjectInstanceHandle());
     objectsByName.remove(objectInstance.getObjectInstanceName());

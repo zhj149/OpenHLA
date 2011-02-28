@@ -19,6 +19,7 @@ package net.sf.ohla.rti.fdd;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSet;
@@ -280,6 +281,15 @@ public class InteractionClass
       {
         lhsSubInteractionClass.merge(rhsSubInteractionClass, fdd);
       }
+    }
+  }
+
+  public void checkIfInteractionParameterNotDefined(Set<ParameterHandle> parameterHandles)
+    throws InteractionParameterNotDefined
+  {
+    for (ParameterHandle parameterHandle : parameterHandles)
+    {
+      getParameter(parameterHandle);
     }
   }
 

@@ -38,7 +38,7 @@ public class IEEE1516eObjectClassHandleFactory
     }
     catch (Throwable t)
     {
-      throw new CouldNotDecode("", t);
+      throw new CouldNotDecode(t.getMessage(), t);
     }
   }
 

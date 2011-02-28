@@ -24,9 +24,15 @@ import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import net.sf.ohla.rti.fdd.Attribute;
 import net.sf.ohla.rti.fdd.FDD;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSet;
+import net.sf.ohla.rti.fdd.InteractionClass;
+import net.sf.ohla.rti.fdd.ObjectClass;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSetFactory;
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
 
+import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.DimensionHandle;
 import hla.rti1516e.DimensionHandleSet;
@@ -35,7 +41,7 @@ import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.RangeBounds;
 import hla.rti1516e.RegionHandle;
-import hla.rti1516e.exceptions.RTIinternalError;
+import hla.rti1516e.exceptions.InvalidRegionContext;
 import hla.rti1516e.exceptions.RegionDoesNotContainSpecifiedDimension;
 import hla.rti1516e.exceptions.RegionInUseForUpdateOrSubscription;
 import hla.rti1516e.exceptions.RegionNotCreatedByThisFederate;
@@ -78,7 +84,7 @@ public class FederateRegion
     this.regionHandle = regionHandle;
     this.rangeBounds.putAll(rangeBounds);
 
-    dimensionHandles = new IEEE1516eDimensionHandleSet(rangeBounds.keySet());
+    dimensionHandles = IEEE1516eDimensionHandleSetFactory.INSTANCE.create(rangeBounds.keySet());
   }
 
   public RegionHandle getRegionHandle()
@@ -100,7 +106,8 @@ public class FederateRegion
       RangeBounds rangeBounds = this.rangeBounds.get(dimensionHandle);
       if (rangeBounds == null)
       {
-        throw new RegionDoesNotContainSpecifiedDimension(dimensionHandle.toString());
+        throw new RegionDoesNotContainSpecifiedDimension(I18n.getMessage(
+          ExceptionMessages.REGION_DOES_NOT_CONTAIN_SPECIFIED_DIMENSION, dimensionHandle));
       }
       return clone(rangeBounds);
     }
@@ -153,10 +160,33 @@ public class FederateRegion
   {
     if (!associatedObjects.isEmpty() || !subscribedObjectClasses.isEmpty() || !subscribedInteractionClasses.isEmpty())
     {
-      throw new RegionInUseForUpdateOrSubscription(String.format(
-        "associated objects(%d), subscribed object classes(%d), subscribed interaction classes(%d)",
-        associatedObjects.size(), subscribedObjectClasses.size(),
-        subscribedInteractionClasses.size()));
+      throw new RegionInUseForUpdateOrSubscription(I18n.getMessage(
+        ExceptionMessages.REGION_IN_USE_FOR_UPDATE_OR_SUBSCRIPTION, regionHandle));
+    }
+  }
+
+  public void checkIfInvalidRegionContext(ObjectClass objectClass, AttributeHandleSet attributeHandles)
+    throws InvalidRegionContext
+  {
+    for (AttributeHandle attributeHandle : attributeHandles)
+    {
+      Attribute attribute = objectClass.getAttributeSafely(attributeHandle);
+      if (!attribute.getDimensionHandles().containsAll(dimensionHandles))
+      {
+        throw new InvalidRegionContext(I18n.getMessage(
+          ExceptionMessages.INVALID_REGION_CONTEXT, regionHandle, dimensionHandles, attribute.getDimensionHandles()));
+      }
+    }
+  }
+
+  public void checkIfInvalidRegionContext(InteractionClass interactionClass)
+    throws InvalidRegionContext
+  {
+    if (!interactionClass.getDimensionHandles().containsAll(dimensionHandles))
+    {
+      throw new InvalidRegionContext(I18n.getMessage(
+        ExceptionMessages.INVALID_REGION_CONTEXT, regionHandle, dimensionHandles,
+        interactionClass.getDimensionHandles()));
     }
   }
 
@@ -290,7 +320,7 @@ public class FederateRegion
            lhs.lower == rhs.lower;
   }
 
-  protected RangeBounds clone(RangeBounds rangeBounds)
+  private RangeBounds clone(RangeBounds rangeBounds)
   {
     return new RangeBounds(rangeBounds.lower, rangeBounds.upper);
   }

@@ -395,10 +395,10 @@ public class FDD
     return interactionClass;
   }
 
-  public Parameter addParameter(InteractionClass interactionClass, String name)
+  public Parameter addParameter(InteractionClass interactionClass, String interactionClassName)
     throws InconsistentFDD
   {
-    return interactionClass.addParameter(name);
+    return interactionClass.addParameter(interactionClassName);
   }
 
   public Dimension addDimension(String dimensionName)
@@ -451,10 +451,10 @@ public class FDD
     return objectClass;
   }
 
-  public ObjectClassHandle getObjectClassHandle(String name)
+  public ObjectClassHandle getObjectClassHandle(String objectClassName)
     throws NameNotFound
   {
-    return getObjectClass(name).getObjectClassHandle();
+    return getObjectClass(objectClassName).getObjectClassHandle();
   }
 
   public String getObjectClassName(ObjectClassHandle objectClassHandle)
@@ -470,10 +470,10 @@ public class FDD
     }
   }
 
-  public Attribute getAttribute(ObjectClassHandle objectClassHandle, String name)
+  public Attribute getAttribute(ObjectClassHandle objectClassHandle, String attributeName)
     throws NameNotFound, ObjectClassNotDefined
   {
-    return getObjectClass(objectClassHandle).getAttribute(name);
+    return getObjectClass(objectClassHandle).getAttribute(attributeName);
   }
 
   public Attribute getAttribute(ObjectClassHandle objectClassHandle, AttributeHandle attributeHandle)
@@ -482,12 +482,12 @@ public class FDD
     return getObjectClass(objectClassHandle).getAttribute(attributeHandle);
   }
 
-  public AttributeHandle getAttributeHandle(ObjectClassHandle objectClassHandle, String name)
+  public AttributeHandle getAttributeHandle(ObjectClassHandle objectClassHandle, String attributeName)
     throws NameNotFound, InvalidObjectClassHandle
   {
     try
     {
-      return getAttribute(objectClassHandle, name).getAttributeHandle();
+      return getAttribute(objectClassHandle, attributeName).getAttributeHandle();
     }
     catch (ObjectClassNotDefined ocnd)
     {
@@ -530,28 +530,28 @@ public class FDD
     return interactionClass;
   }
 
-  public InteractionClass getInteractionClass(String name)
+  public InteractionClass getInteractionClass(String interactionClassName)
     throws NameNotFound
   {
-    if (name.startsWith(HLA_INTERACTION_ROOT_PREFIX))
+    if (interactionClassName.startsWith(HLA_INTERACTION_ROOT_PREFIX))
     {
       // strip off the root prefix
       //
-      name = name.substring(HLA_INTERACTION_ROOT_PREFIX.length());
+      interactionClassName = interactionClassName.substring(HLA_INTERACTION_ROOT_PREFIX.length());
     }
 
-    InteractionClass interactionClass = interactionClassesByName.get(name);
+    InteractionClass interactionClass = interactionClassesByName.get(interactionClassName);
     if (interactionClass == null)
     {
-      throw new NameNotFound(String.format("interaction class name not found: %s", name));
+      throw new NameNotFound(String.format("interaction class name not found: %s", interactionClassName));
     }
     return interactionClass;
   }
 
-  public InteractionClassHandle getInteractionClassHandle(String name)
+  public InteractionClassHandle getInteractionClassHandle(String interactionClassName)
     throws NameNotFound
   {
-    return getInteractionClass(name).getInteractionClassHandle();
+    return getInteractionClass(interactionClassName).getInteractionClassHandle();
   }
 
   public String getInteractionClassName(InteractionClassHandle interactionClassHandle)
@@ -568,10 +568,10 @@ public class FDD
     }
   }
 
-  public Parameter getParameter(InteractionClassHandle interactionClassHandle, String name)
+  public Parameter getParameter(InteractionClassHandle interactionClassHandle, String parameterName)
     throws NameNotFound, InteractionClassNotDefined
   {
-    return getInteractionClass(interactionClassHandle).getParameter(name);
+    return getInteractionClass(interactionClassHandle).getParameter(parameterName);
   }
 
   public Parameter getParameter(InteractionClassHandle interactionClassHandle, ParameterHandle parameterHandle)
@@ -580,13 +580,12 @@ public class FDD
     return getInteractionClass(interactionClassHandle).getParameter(parameterHandle);
   }
 
-  public ParameterHandle getParameterHandle(
-    InteractionClassHandle interactionClassHandle, String name)
+  public ParameterHandle getParameterHandle(InteractionClassHandle interactionClassHandle, String parameterName)
     throws NameNotFound, InvalidInteractionClassHandle
   {
     try
     {
-      return getParameter(interactionClassHandle, name).getParameterHandle();
+      return getParameter(interactionClassHandle, parameterName).getParameterHandle();
     }
     catch (InteractionClassNotDefined icnd)
     {

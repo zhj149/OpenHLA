@@ -30,6 +30,8 @@ import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.messages.AssociateRegionsForUpdates;
 import net.sf.ohla.rti.messages.AssociateRegionsForUpdatesResponse;
 import net.sf.ohla.rti.messages.DeleteObjectInstance;
+import net.sf.ohla.rti.messages.GetUpdateRateValueForAttribute;
+import net.sf.ohla.rti.messages.GetUpdateRateValueForAttributeResponse;
 import net.sf.ohla.rti.messages.LocalDeleteObjectInstance;
 import net.sf.ohla.rti.messages.RequestObjectClassAttributeValueUpdate;
 import net.sf.ohla.rti.messages.RequestObjectClassAttributeValueUpdateWithRegions;
@@ -453,7 +455,8 @@ public class FederationExecutionObjectManager
 
   public FederationExecutionObjectInstance registerObjectInstance(
     FederateProxy federateProxy, ObjectInstanceHandle objectInstanceHandle, ObjectClassHandle objectClassHandle,
-    String objectInstanceName, AttributeHandleSet publishedAttributeHandles)
+    String objectInstanceName, AttributeHandleSet publishedAttributeHandles,
+    AttributeSetRegionSetPairList attributesAndRegions)
   {
     ObjectClass objectClass = federationExecution.getFDD().getObjectClassSafely(objectClassHandle);
 
@@ -461,7 +464,8 @@ public class FederationExecutionObjectManager
            federateProxy.equals(reservedObjectInstanceNames.get(objectInstanceName));
 
     FederationExecutionObjectInstance objectInstance = new FederationExecutionObjectInstance(
-      objectInstanceHandle, objectClass, objectInstanceName, publishedAttributeHandles, federateProxy);
+      objectInstanceHandle, objectClass, objectInstanceName, publishedAttributeHandles, attributesAndRegions,
+      federateProxy);
 
     objectsLock.writeLock().lock();
     try
@@ -745,6 +749,33 @@ public class FederationExecutionObjectManager
       else
       {
         objectInstance.unassociateRegionsForUpdates(federateProxy, unassociateRegionsForUpdates);
+      }
+    }
+    finally
+    {
+      objectsLock.readLock().unlock();
+    }
+  }
+
+  public void getUpdateRateValueForAttribute(
+    FederateProxy federateProxy, GetUpdateRateValueForAttribute getUpdateRateValueForAttribute)
+  {
+    objectsLock.readLock().lock();
+    try
+    {
+      FederationExecutionObjectInstance objectInstance =
+        objects.get(getUpdateRateValueForAttribute.getObjectInstanceHandle());
+      if (objectInstance == null)
+      {
+        // the object was deleted after an associate was issued...
+
+        federateProxy.getFederateChannel().write(new GetUpdateRateValueForAttributeResponse(
+          getUpdateRateValueForAttribute.getId(),
+          GetUpdateRateValueForAttributeResponse.Response.OBJECT_INSTANCE_NOT_KNOWN));
+      }
+      else
+      {
+        objectInstance.getUpdateRateValueForAttribute(federateProxy, getUpdateRateValueForAttribute);
       }
     }
     finally

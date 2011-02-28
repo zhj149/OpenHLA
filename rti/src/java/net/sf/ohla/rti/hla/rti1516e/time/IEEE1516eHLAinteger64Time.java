@@ -16,6 +16,9 @@
 
 package net.sf.ohla.rti.hla.rti1516e.time;
 
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
+
 import hla.rti1516e.exceptions.CouldNotEncode;
 import hla.rti1516e.time.HLAinteger64Interval;
 import hla.rti1516e.time.HLAinteger64Time;
@@ -74,11 +77,11 @@ public class IEEE1516eHLAinteger64Time
   {
     if (buffer == null)
     {
-      throw new CouldNotEncode("buffer cannot be null");
+      throw new CouldNotEncode(I18n.getMessage(ExceptionMessages.ENCODE_BUFFER_IS_NULL));
     }
     else if ((buffer.length - offset) < 8)
     {
-      throw new CouldNotEncode("buffer is too short");
+      throw new CouldNotEncode(I18n.getMessage(ExceptionMessages.ENCODE_BUFFER_IS_TOO_SHORT));
     }
 
     buffer[offset++] = (byte) (time >>> 56);

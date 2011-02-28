@@ -16,6 +16,9 @@
 
 package net.sf.ohla.rti.hla.rti1516e.time;
 
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
+
 import hla.rti1516e.exceptions.CouldNotEncode;
 import hla.rti1516e.exceptions.IllegalTimeArithmetic;
 import hla.rti1516e.time.HLAfloat64Interval;
@@ -49,11 +52,13 @@ public class IEEE1516eHLAfloat64Interval
     double result = this.interval + interval.getValue();
     if (Double.isNaN(result))
     {
-      throw new IllegalTimeArithmetic(this.interval + " + " + interval.getValue() + " is NaN");
+      throw new IllegalTimeArithmetic(I18n.getMessage(
+        ExceptionMessages.LOGICAL_TIME_INTERVAL_ADDITION_IS_NAN, this.interval, interval.getValue()));
     }
     else if (Double.isInfinite(result))
     {
-      throw new IllegalTimeArithmetic(this.interval + " + " + interval.getValue() + " is infinite");
+      throw new IllegalTimeArithmetic(I18n.getMessage(
+        ExceptionMessages.LOGICAL_TIME_INTERVAL_ADDITION_IS_INFINITE, this.interval, interval.getValue()));
     }
     return new IEEE1516eHLAfloat64Interval(result);
   }
@@ -64,11 +69,13 @@ public class IEEE1516eHLAfloat64Interval
     double result = this.interval - interval.getValue();
     if (Double.isNaN(result))
     {
-      throw new IllegalTimeArithmetic(this.interval + " - " + interval.getValue() + " is NaN");
+      throw new IllegalTimeArithmetic(I18n.getMessage(
+        ExceptionMessages.LOGICAL_TIME_INTERVAL_SUBTRACTION_IS_NAN, this.interval, interval.getValue()));
     }
     else if (Double.isInfinite(result))
     {
-      throw new IllegalTimeArithmetic(this.interval + " - " + interval.getValue() + " is infinite");
+      throw new IllegalTimeArithmetic(I18n.getMessage(
+        ExceptionMessages.LOGICAL_TIME_INTERVAL_SUBTRACTION_IS_INFINITE, this.interval, interval.getValue()));
     }
     return new IEEE1516eHLAfloat64Interval(result);
   }
@@ -88,11 +95,11 @@ public class IEEE1516eHLAfloat64Interval
   {
     if (buffer == null)
     {
-      throw new CouldNotEncode("buffer cannot be null");
+      throw new CouldNotEncode(I18n.getMessage(ExceptionMessages.ENCODE_BUFFER_IS_NULL));
     }
     else if ((buffer.length - offset) < 8)
     {
-      throw new CouldNotEncode("buffer is too short");
+      throw new CouldNotEncode(I18n.getMessage(ExceptionMessages.ENCODE_BUFFER_IS_TOO_SHORT));
     }
 
     long l = Double.doubleToLongBits(interval);

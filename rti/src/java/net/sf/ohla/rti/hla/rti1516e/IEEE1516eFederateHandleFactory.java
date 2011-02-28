@@ -38,7 +38,7 @@ public class IEEE1516eFederateHandleFactory
     }
     catch (Throwable t)
     {
-      throw new CouldNotDecode("", t);
+      throw new CouldNotDecode(t.getMessage(), t);
     }
   }
 

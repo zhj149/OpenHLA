@@ -161,6 +161,16 @@ public class Protocol
     return values[decodeVarInt(buffer)];
   }
 
+  public static void encodeDouble(ChannelBuffer buffer, double value)
+  {
+    buffer.writeDouble(value);
+  }
+
+  public static double decodeDouble(ChannelBuffer buffer)
+  {
+    return buffer.readDouble();
+  }
+
   public static int encodedVarIntSize(int value)
   {
     int encodedSize = 0;
