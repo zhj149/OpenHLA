@@ -107,7 +107,7 @@ public class FederateRegion
       if (rangeBounds == null)
       {
         throw new RegionDoesNotContainSpecifiedDimension(I18n.getMessage(
-          ExceptionMessages.REGION_DOES_NOT_CONTAIN_SPECIFIED_DIMENSION, dimensionHandle));
+          ExceptionMessages.REGION_DOES_NOT_CONTAIN_SPECIFIED_DIMENSION, regionHandle, dimensionHandle));
       }
       return clone(rangeBounds);
     }
