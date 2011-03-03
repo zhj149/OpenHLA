@@ -30,6 +30,7 @@ import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.federate.Federate;
 import net.sf.ohla.rti.federate.TimeAdvanceType;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSetFactory;
+import net.sf.ohla.rti.i18n.I18nLogger;
 import net.sf.ohla.rti.messages.DeleteObjectInstance;
 import net.sf.ohla.rti.messages.FederateRestoreComplete;
 import net.sf.ohla.rti.messages.FederateRestoreNotComplete;
@@ -90,8 +91,6 @@ import hla.rti1516e.exceptions.InvalidLogicalTimeInterval;
 
 public class FederateProxy
 {
-  private static final Logger log = LoggerFactory.getLogger(FederateProxy.class);
-
   private final FederationExecution federationExecution;
   private final FederateHandle federateHandle;
   private final String federateName;
@@ -143,6 +142,7 @@ public class FederateProxy
   private boolean conveyRegionDesignatorSets = true;
 
   private final Marker marker;
+  private final I18nLogger log;
 
   public FederateProxy(
     FederationExecution federationExecution, FederateHandle federateHandle, String federateName, String federateType,
@@ -164,6 +164,7 @@ public class FederateProxy
       RTIChannelUpstreamHandler.NAME, FederateProxyChannelHandler.NAME, new FederateProxyChannelHandler(this));
 
     marker = MarkerFactory.getMarker(federationExecution.getName() + "." + this.federateName);
+    log = I18nLogger.getLogger(marker, FederateProxy.class);
 
     log.debug(marker, "federate joined: {}", this.federateName);
   }

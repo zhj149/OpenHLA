@@ -21,9 +21,7 @@ import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
+import net.sf.ohla.rti.i18n.I18nLogger;
 
 import hla.rti1516e.LogicalTime;
 import hla.rti1516e.LogicalTimeFactory;
@@ -33,8 +31,6 @@ import hla.rti1516e.exceptions.InvalidLogicalTimeInterval;
 
 public class FederationExecutionTimeManager
 {
-  private static final Logger log = LoggerFactory.getLogger(FederationExecutionTimeManager.class);
-
   private final FederationExecution federationExecution;
   private final LogicalTimeFactory logicalTimeFactory;
   private final LogicalTime initialTime;
@@ -44,14 +40,14 @@ public class FederationExecutionTimeManager
   /**
    * The federation-wide GALT. Used for all non-regulating federates.
    */
-  protected LogicalTime galt;
+  private LogicalTime galt;
 
   private final ReadWriteLock timeLock = new ReentrantReadWriteLock(true);
 
   private final Set<FederateProxy> timeRegulatingFederates = new HashSet<FederateProxy>();
   private final Set<FederateProxy> timeConstrainedFederates = new HashSet<FederateProxy>();
 
-  private final Marker marker;
+  private final I18nLogger log;
 
   public FederationExecutionTimeManager(FederationExecution federationExecution, LogicalTimeFactory logicalTimeFactory)
   {
@@ -62,7 +58,7 @@ public class FederationExecutionTimeManager
     finalTime = logicalTimeFactory.makeFinal();
     epsilon = logicalTimeFactory.makeEpsilon();
 
-    marker = federationExecution.getMarker();
+    log = I18nLogger.getLogger(federationExecution.getMarker(), FederationExecutionTimeManager.class);
   }
 
   public LogicalTimeFactory getLogicalTimeFactory()
@@ -80,6 +76,7 @@ public class FederationExecutionTimeManager
     return galt;
   }
 
+  @SuppressWarnings("unchecked")
   public void enableTimeRegulation(FederateProxy federateProxy, LogicalTimeInterval lookahead)
   {
     timeLock.writeLock().lock();
@@ -217,11 +214,11 @@ public class FederationExecutionTimeManager
     }
     catch (IllegalTimeArithmetic ita)
     {
-      log.error(marker, "unable to enable time regulation", ita);
+      log.error("unable to enable time regulation", ita);
     }
     catch (InvalidLogicalTimeInterval ilti)
     {
-      log.error(marker, "unable to enable time regulation", ilti);
+      log.error("unable to enable time regulation", ilti);
     }
     finally
     {
@@ -229,6 +226,7 @@ public class FederationExecutionTimeManager
     }
   }
 
+  @SuppressWarnings("unchecked")
   public void disableTimeRegulation(FederateProxy federateProxy)
   {
     timeLock.writeLock().lock();
@@ -342,7 +340,7 @@ public class FederationExecutionTimeManager
     }
     catch (IllegalTimeArithmetic ita)
     {
-      log.error(marker, "unable to disable time regulation", ita);
+      log.error("unable to disable time regulation", ita);
     }
     finally
     {
@@ -407,11 +405,11 @@ public class FederationExecutionTimeManager
     }
     catch (IllegalTimeArithmetic ita)
     {
-      log.error(marker, "unable to request time advance", ita);
+      log.error("unable to request time advance", ita);
     }
     catch (InvalidLogicalTimeInterval ilti)
     {
-      log.error(marker, "unable to request time advance", ilti);
+      log.error("unable to request time advance", ilti);
     }
     finally
     {
@@ -433,11 +431,11 @@ public class FederationExecutionTimeManager
     }
     catch (IllegalTimeArithmetic ita)
     {
-      log.error(marker, "unable to request time advance", ita);
+      log.error("unable to request time advance", ita);
     }
     catch (InvalidLogicalTimeInterval ilti)
     {
-      log.error(marker, "unable to request time advance", ilti);
+      log.error("unable to request time advance", ilti);
     }
     finally
     {
@@ -459,11 +457,11 @@ public class FederationExecutionTimeManager
     }
     catch (IllegalTimeArithmetic ita)
     {
-      log.error(marker, "unable to request time advance", ita);
+      log.error("unable to request time advance", ita);
     }
     catch (InvalidLogicalTimeInterval ilti)
     {
-      log.error(marker, "unable to request time advance", ilti);
+      log.error("unable to request time advance", ilti);
     }
     finally
     {
@@ -486,11 +484,11 @@ public class FederationExecutionTimeManager
     }
     catch (IllegalTimeArithmetic ita)
     {
-      log.error(marker, "unable to request time advance", ita);
+      log.error("unable to request time advance", ita);
     }
     catch (InvalidLogicalTimeInterval ilti)
     {
-      log.error(marker, "unable to request time advance", ilti);
+      log.error("unable to request time advance", ilti);
     }
     finally
     {
@@ -513,11 +511,11 @@ public class FederationExecutionTimeManager
     }
     catch (IllegalTimeArithmetic ita)
     {
-      log.error(marker, "unable to request time advance", ita);
+      log.error("unable to request time advance", ita);
     }
     catch (InvalidLogicalTimeInterval ilti)
     {
-      log.error(marker, "unable to request time advance", ilti);
+      log.error("unable to request time advance", ilti);
     }
     finally
     {
@@ -540,11 +538,11 @@ public class FederationExecutionTimeManager
     }
     catch (IllegalTimeArithmetic ita)
     {
-      log.error(marker, "unable to request time advance", ita);
+      log.error("unable to request time advance", ita);
     }
     catch (InvalidLogicalTimeInterval ilti)
     {
-      log.error(marker, "unable to request time advance", ilti);
+      log.error("unable to request time advance", ilti);
     }
     finally
     {
@@ -566,11 +564,11 @@ public class FederationExecutionTimeManager
     }
     catch (IllegalTimeArithmetic ita)
     {
-      log.error(marker, "unable to request time advance", ita);
+      log.error("unable to request time advance", ita);
     }
     catch (InvalidLogicalTimeInterval ilti)
     {
-      log.error(marker, "unable to request time advance", ilti);
+      log.error("unable to request time advance", ilti);
     }
     finally
     {
@@ -578,7 +576,8 @@ public class FederationExecutionTimeManager
     }
   }
 
-  protected void recalculateGALT(FederateProxy federateProxy)
+  @SuppressWarnings("unchecked")
+  private void recalculateGALT(FederateProxy federateProxy)
     throws IllegalTimeArithmetic
   {
     if (timeRegulatingFederates.size() == 1)
@@ -637,12 +636,14 @@ public class FederationExecutionTimeManager
     }
   }
 
-  protected LogicalTime min(LogicalTime lhs, LogicalTime rhs)
+  @SuppressWarnings("unchecked")
+  private LogicalTime min(LogicalTime lhs, LogicalTime rhs)
   {
     return lhs.compareTo(rhs) <= 0 ? lhs : rhs;
   }
 
-  protected LogicalTime max(LogicalTime lhs, LogicalTime rhs)
+  @SuppressWarnings("unchecked")
+  private LogicalTime max(LogicalTime lhs, LogicalTime rhs)
   {
     return lhs.compareTo(rhs) >= 0 ? lhs : rhs;
   }

@@ -29,17 +29,12 @@ import net.sf.ohla.rti.messages.CommitRegionModifications;
 import net.sf.ohla.rti.messages.CreateRegion;
 import net.sf.ohla.rti.messages.DeleteRegion;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import hla.rti1516e.DimensionHandle;
 import hla.rti1516e.RangeBounds;
 import hla.rti1516e.RegionHandle;
 
 public class FederationExecutionRegionManager
 {
-  private static final Logger log = LoggerFactory.getLogger(FederationExecutionRegionManager.class);
-
   private final FederationExecution federationExecution;
 
   private final ReadWriteLock regionsLock = new ReentrantReadWriteLock(true);

@@ -25,8 +25,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import net.sf.ohla.rti.i18n.I18nLogger;
-
-import org.slf4j.Logger;
+import net.sf.ohla.rti.i18n.LogMessages;
 
 import hla.rti1516e.FederateAmbassador;
 
@@ -250,8 +249,7 @@ public class CallbackManager
       }
       catch (Throwable t)
       {
-        log.warn("error invoking callback: {}", callback);
-        log.warn("", t);
+        log.warn(LogMessages.ERROR_INVOKING_CALLBACK, t, callback);
       }
     }
 
@@ -290,8 +288,7 @@ public class CallbackManager
       }
       catch (Throwable t)
       {
-        log.warn("error invoking callback: {}", callback);
-        log.warn("", t);
+        log.warn(LogMessages.ERROR_INVOKING_CALLBACK, t, callback);
       }
     }
 

@@ -43,38 +43,22 @@ PARSER_BEGIN(FEDParser)
 
 package net.sf.ohla.rti.fed.javacc;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
-
 import java.net.URL;
 
-import net.sf.ohla.rti.fed.FED;
-import net.sf.ohla.rti.fed.RoutingSpace;
-
-import net.sf.ohla.rti.fdd.Attribute;
-import net.sf.ohla.rti.fdd.Dimension;
 import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.fdd.ObjectClass;
-import net.sf.ohla.rti.fdd.Parameter;
-
-import net.sf.ohla.rti.i18n.ExceptionMessage;
+import net.sf.ohla.rti.fed.FED;
+import net.sf.ohla.rti.fed.RoutingSpace;
+import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import hla.rti.CouldNotOpenFED;
 import hla.rti.ErrorReadingFED;
-import hla.rti.NameNotFound;
-
-import hla.rti1516.ErrorReadingFDD;
 
 public class FEDParser
 {
-  private static Logger log = LoggerFactory.getLogger(FEDParser.class);
-
   private FED fed;
 
   public FEDParser(URL source)
@@ -96,11 +80,11 @@ public class FEDParser
     }
     catch (IOException ioe)
     {
-      throw new CouldNotOpenFED(I18n.getMessage(ExceptionMessage.COULD_NOT_OPEN_FED, source.toString()), ioe);
+      throw new CouldNotOpenFED(I18n.getMessage(ExceptionMessages.COULD_NOT_OPEN_FED, source.toString()), ioe);
     }
     catch (ParseException pe)
     {
-      throw new ErrorReadingFED(I18n.getMessage(ExceptionMessage.ERROR_READING_FED, source.toString()), pe);
+      throw new ErrorReadingFED(I18n.getMessage(ExceptionMessages.ERROR_READING_FED, source.toString()), pe);
     }
   }
 }
@@ -201,7 +185,7 @@ void Space()
     if (routingSpaceName.startsWith("HLA"))
     {
       throw new ErrorReadingFED(I18n.getMessage(
-        ExceptionMessage.ERROR_READING_FED_ROUTING_SPACE_STARTS_WITH_HLA, routingSpaceName));
+        ExceptionMessages.ERROR_READING_FED_ROUTING_SPACE_STARTS_WITH_HLA, routingSpaceName));
     }
 
     routingSpace = fed.addRoutingSpace(routingSpaceName);
@@ -259,7 +243,7 @@ void ObjectRoot()
     else
     {
       throw new ErrorReadingFED(I18n.getMessage(
-        ExceptionMessage.ERROR_READING_FED_INVALID_ROOT_OBJECT, net.sf.ohla.rti.fed.FED.OBJECT_ROOT, objectClassName));
+        ExceptionMessages.ERROR_READING_FED_INVALID_OBJECT_ROOT, net.sf.ohla.rti.fed.FED.OBJECT_ROOT, objectClassName));
     }
   }
   PriviledgeToDeleteAttribute(objectRoot)
@@ -286,7 +270,7 @@ void PriviledgeToDeleteAttribute(ObjectClass objectRoot)
     else
     {
       throw new ErrorReadingFED(I18n.getMessage(
-        ExceptionMessage.ERROR_READING_FED_INVALID_PRIVILEGE_TO_DELETE, objectRoot,
+        ExceptionMessages.ERROR_READING_FED_INVALID_PRIVILEGE_TO_DELETE, objectRoot,
         net.sf.ohla.rti.fed.FED.PRIVILEGE_TO_DELETE, attributeName));
     }
   }
@@ -307,7 +291,7 @@ void RTIprivateObject(ObjectClass objectRoot)
     else
     {
       throw new ErrorReadingFED(I18n.getMessage(
-        ExceptionMessage.ERROR_READING_FED_INVALID_RTI_PRIVATE, net.sf.ohla.rti.fed.FED.RTI_PRIVATE, objectClassName));
+        ExceptionMessages.ERROR_READING_FED_INVALID_RTI_PRIVATE, net.sf.ohla.rti.fed.FED.RTI_PRIVATE, objectClassName));
     }
   }
 }
@@ -369,7 +353,7 @@ void InteractionRoot()
     else
     {
       throw new ErrorReadingFED(I18n.getMessage(
-        ExceptionMessage.ERROR_READING_FED_INVALID_INTERACTION_ROOT, net.sf.ohla.rti.fed.FED.INTERACTION_ROOT,
+        ExceptionMessages.ERROR_READING_FED_INVALID_INTERACTION_ROOT, net.sf.ohla.rti.fed.FED.INTERACTION_ROOT,
         interactionClassName));
     }
   }
@@ -396,7 +380,7 @@ void RTIprivateInteraction(InteractionClass interactionRoot)
     else
     {
       throw new ErrorReadingFED(I18n.getMessage(
-        ExceptionMessage.ERROR_READING_FED_INVALID_RTI_PRIVATE, net.sf.ohla.rti.fed.FED.RTI_PRIVATE,
+        ExceptionMessages.ERROR_READING_FED_INVALID_RTI_PRIVATE, net.sf.ohla.rti.fed.FED.RTI_PRIVATE,
         interactionClassName));
     }
   }

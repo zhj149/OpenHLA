@@ -26,6 +26,7 @@ import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRTIambassador;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandle;
+import net.sf.ohla.rti.i18n.I18nLogger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -166,7 +167,7 @@ import hla.rti1516e.exceptions.NotConnected;
 public class IEEE1516RTIambassador
   implements RTIambassador
 {
-  private static final Logger log = LoggerFactory.getLogger(IEEE1516RTIambassador.class);
+  private static final I18nLogger log = I18nLogger.getLogger(IEEE1516RTIambassador.class);
 
   private final IEEE1516eRTIambassador rtiAmbassador = new IEEE1516eRTIambassador();
 

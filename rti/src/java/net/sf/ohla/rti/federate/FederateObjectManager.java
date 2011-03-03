@@ -35,6 +35,7 @@ import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectInstanceHandle;
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
 import net.sf.ohla.rti.i18n.I18nLogger;
+import net.sf.ohla.rti.i18n.LogMessages;
 import net.sf.ohla.rti.messages.DeleteObjectInstance;
 import net.sf.ohla.rti.messages.LocalDeleteObjectInstance;
 import net.sf.ohla.rti.messages.PublishObjectClassAttributes;
@@ -1121,7 +1122,7 @@ public class FederateObjectManager
 
       if (knownObjectClass == null)
       {
-        log.trace("dropping discover object instance, no longer subscribed: {} - {}",
+        log.trace(LogMessages.DROPPING_DISCOVER_OBJECT_INSTANCE_NO_LONGER_SUBSCRIBED,
                   objectInstanceHandle, objectClass);
       }
       else
@@ -1172,7 +1173,7 @@ public class FederateObjectManager
         FederateObjectInstance objectInstance = objects.get(reflectAttributeValues.getObjectInstanceHandle());
         if (objectInstance == null)
         {
-          log.trace("dropping reflect attribute values, object instance no longer known: {}",
+          log.trace(LogMessages.DROPPING_REFLECT_ATTRIBUTE_VALUES_OBJECT_NO_LONGER_KNOWN,
                     reflectAttributeValues.getObjectInstanceHandle());
         }
         else
@@ -1182,18 +1183,33 @@ public class FederateObjectManager
 
           if (subscribedObjectClass == null)
           {
-            log.trace("dropping reflect attribute values, no longer subscribed: {}", objectInstance);
+            log.trace(LogMessages.DROPPING_REFLECT_ATTRIBUTE_VALUES_NO_LONGER_SUBSCRIBED_TO_OBJECT_CLASS,
+                      objectInstance, objectClass);
           }
           else
           {
-            if (!subscribedObjectClass.equals(objectClass))
+            // trim any unsubscribed attributes, this is necessary because the federate might have changed subscriptions
+            // from the time these attributes were passed from the RTI to the federate
+            //
+            if (subscriptionManager.trim(
+              reflectAttributeValues.getAttributeValues(), subscribedObjectClass.getObjectClassHandle()) &&
+                reflectAttributeValues.getAttributeValues().isEmpty())
             {
-              subscriptionManager.trim(
-                reflectAttributeValues.getAttributeValues(), subscribedObjectClass.getObjectClassHandle());
-            }
+              // all the AttributeHandles have been trimmed, recreate the message so we can get the AttributeHandles
+              // that are no longer subscribed
+              //
+              reflectAttributeValues = new ReflectAttributeValues(
+                reflectAttributeValues.getBuffer(), federate.getLogicalTimeFactory());
 
-            objectInstance.fireReflectAttributeValues(
-              reflectAttributeValues, federateAmbassador, federate.getRegionManager());
+              log.trace(LogMessages.DROPPING_REFLECT_ATTRIBUTE_VALUES_NO_LONGER_SUBSCRIBED_TO_ATTRIBUTES,
+                        objectInstance,
+                        objectClass.getAttributesSafely(reflectAttributeValues.getAttributeValues().keySet()));
+            }
+            else
+            {
+              objectInstance.fireReflectAttributeValues(
+                reflectAttributeValues, federateAmbassador, federate.getRegionManager());
+            }
           }
         }
       }
@@ -1223,7 +1239,7 @@ public class FederateObjectManager
 
       if (subscribedInteractionClass == null)
       {
-        log.trace("dropping receive interaction, no longer subscribed: {}", interactionClass);
+        log.trace(LogMessages.DROPPING_RECEIVE_INTERACTION_NO_LONGER_SUBSCRIBED, interactionClass);
       }
       else
       {
@@ -1301,7 +1317,7 @@ public class FederateObjectManager
       FederateObjectInstance objectInstance = objects.remove(objectInstanceHandle);
       if (objectInstance == null)
       {
-        log.trace("dropping remove object instance, object instance no longer known: {}", objectInstanceHandle);
+        log.trace(LogMessages.DROPPING_REMOVE_OBJECT_INSTANCE_OBJECT_NO_LONGER_KNOWN, objectInstanceHandle);
       }
       else
       {

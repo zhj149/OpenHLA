@@ -41,9 +41,7 @@ import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRTIambassador;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandleSet;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandle;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import net.sf.ohla.rti.i18n.I18nLogger;
 
 import hla.rti.ArrayIndexOutOfBounds;
 import hla.rti.AsynchronousDeliveryAlreadyDisabled;
@@ -192,7 +190,7 @@ import hla.rti1516e.exceptions.UnsupportedCallbackModel;
 public class HLA13RTIambassador
   implements RTIambassadorEx
 {
-  private static final Logger log = LoggerFactory.getLogger(HLA13RTIambassador.class);
+  private static final I18nLogger log = I18nLogger.getLogger(HLA13RTIambassador.class);
 
   public static final String OHLA_HLA13_FEDERATION_EXECUTION_LOGICAL_TIME_IMPLEMENTATION_PROPERTY =
     "ohla.hla13.federationExecution.%s.logicalTimeImplementation";

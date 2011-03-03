@@ -3913,7 +3913,7 @@ public class IEEE1516eRTIambassador
     }
     else if (federateName.isEmpty())
     {
-      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATE_NAME_IS_NULL));
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATE_NAME_IS_EMPTY));
     }
 
     connectLock.readLock().lock();

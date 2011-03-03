@@ -18,7 +18,6 @@ package net.sf.ohla.rti;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -223,12 +222,12 @@ public class SubscriptionManager
     return subscribed ? interactionClass : null;
   }
 
-  public void trim(AttributeHandleValueMap attributeValues, ObjectClassHandle objectClassHandle)
+  public boolean trim(AttributeHandleValueMap attributeValues, ObjectClassHandle objectClassHandle)
   {
     ObjectClassSubscription objectClassSubscription = subscribedObjectClasses.get(objectClassHandle);
     assert objectClassSubscription != null;
 
-    objectClassSubscription.trim(attributeValues);
+    return objectClassSubscription.trim(attributeValues);
   }
 
   protected ObjectClassSubscription getSubscribedObjectClassSubscription(ObjectClass objectClass)
@@ -370,9 +369,9 @@ public class SubscriptionManager
       return attributeSubscriptions.isEmpty();
     }
 
-    public void trim(AttributeHandleValueMap attributeValues)
+    public boolean trim(AttributeHandleValueMap attributeValues)
     {
-      attributeValues.keySet().retainAll(attributeSubscriptions.keySet());
+      return attributeValues.keySet().retainAll(attributeSubscriptions.keySet());
     }
 
     public AttributeSubscription getAttributeSubscription(AttributeHandle attributeHandle)

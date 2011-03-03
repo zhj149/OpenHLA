@@ -28,6 +28,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import net.sf.ohla.rti.federation.FederationExecution;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederationExecutionInformationSet;
+import net.sf.ohla.rti.i18n.I18nLogger;
+import net.sf.ohla.rti.i18n.LogMessages;
 import net.sf.ohla.rti.messages.CreateFederationExecution;
 import net.sf.ohla.rti.messages.CreateFederationExecutionResponse;
 import net.sf.ohla.rti.messages.DestroyFederationExecution;
@@ -40,8 +42,6 @@ import net.sf.ohla.rti.messages.callbacks.ReportFederationExecutions;
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import hla.rti1516e.FederationExecutionInformationSet;
 import hla.rti1516e.LogicalTimeFactory;
@@ -56,7 +56,7 @@ public class RTI
 
   public static final int DEFAULT_PORT = 15000;
 
-  private static final Logger log = LoggerFactory.getLogger(RTI.class);
+  private static final I18nLogger log = I18nLogger.getLogger(RTI.class);
 
   private final Map<String, ServerBootstrap> serverBootstraps = new HashMap<String, ServerBootstrap>();
 
@@ -92,7 +92,7 @@ public class RTI
     CreateFederationExecutionResponse.Response response;
 
     String federationExecutionName = createFederationExecution.getFederationExecutionName();
-    log.debug("create federation execution: {}", federationExecutionName);
+    log.debug(LogMessages.CREATE_FEDERATION_EXECUTION, federationExecutionName);
 
     String logicalTimeImplementationName = createFederationExecution.getLogicalTimeImplementationName();
 
@@ -100,7 +100,7 @@ public class RTI
       LogicalTimeFactoryFactory.getLogicalTimeFactory(logicalTimeImplementationName);
     if (logicalTimeFactory == null || !Protocol.testLogicalTimeFactory(logicalTimeFactory))
     {
-      log.debug("create federation execution failed, could not obtain logical time factory: {} - {}",
+      log.debug(LogMessages.CREATE_FEDERATION_EXECUTION_FAILED_COULD_NOT_CREATE_LOGICAL_TIME_FACTORY,
                 federationExecutionName, logicalTimeImplementationName);
 
       response = CreateFederationExecutionResponse.Response.COULD_NOT_CREATE_LOGICAL_TIME_FACTORY;
@@ -114,7 +114,7 @@ public class RTI
       {
         if (federationExecutions.containsKey(federationExecutionName))
         {
-          log.debug("create federation execution failed, federation execution already exists: {}",
+          log.debug(LogMessages.CREATE_FEDERATION_EXECUTION_FAILED_FEDERATION_EXECUTION_ALREADY_EXISTS,
                     federationExecutionName);
 
           response = CreateFederationExecutionResponse.Response.FEDERATION_EXECUTION_ALREADY_EXISTS;
@@ -141,7 +141,7 @@ public class RTI
     ChannelHandlerContext context, DestroyFederationExecution destroyFederationExecution)
   {
     String federationExecutionName = destroyFederationExecution.getFederationExecutionName();
-    log.debug("destroy federation execution: {}", federationExecutionName);
+    log.debug(LogMessages.DESTROY_FEDERATION_EXECUTION, federationExecutionName);
 
     DestroyFederationExecutionResponse response;
 
@@ -151,7 +151,7 @@ public class RTI
       FederationExecution federationExecution = federationExecutions.get(federationExecutionName);
       if (federationExecution == null)
       {
-        log.debug("destroy federation execution failed, federation execution does not exist: {}",
+        log.debug(LogMessages.DESTROY_FEDERATION_EXECUTION_FEDERATION_EXECUTION_DOES_NOT_EXIST,
                   federationExecutionName);
 
         response = new DestroyFederationExecutionResponse(
@@ -186,7 +186,8 @@ public class RTI
       FederationExecution federationExecution = federationExecutions.get(federationExecutionName);
       if (federationExecution == null)
       {
-        log.info("join federation execution failed, federation execution does not exist: {}", federationExecutionName);
+        log.info(LogMessages.JOIN_FEDERATION_EXECUTION_FAILED_FEDERATION_EXECUTION_DOES_NOT_EXIST,
+                 federationExecutionName);
 
         context.getChannel().write(new JoinFederationExecutionResponse(
           joinFederationExecution.getId(),
