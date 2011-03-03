@@ -30,6 +30,8 @@ import java.util.TreeSet;
 import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
@@ -40,6 +42,7 @@ import hla.rti1516e.OrderType;
 import hla.rti1516e.TransportationTypeHandle;
 import hla.rti1516e.exceptions.AttributeNotDefined;
 import hla.rti1516e.exceptions.InconsistentFDD;
+import hla.rti1516e.exceptions.InvalidAttributeHandle;
 import hla.rti1516e.exceptions.NameNotFound;
 
 public class ObjectClass
@@ -157,7 +160,8 @@ public class ObjectClass
   {
     if (attributesByName.containsKey(attributeName))
     {
-      throw new InconsistentFDD(attributeName + " already exists in " + objectClassName);
+      throw new InconsistentFDD(I18n.getMessage(
+        ExceptionMessages.INCONSISTENT_FDD_ATTRIBUTE_ALREADY_DEFINED, this, attributeName));
     }
 
     AttributeHandle attributeHandle = new IEEE1516eAttributeHandle(attributes.size() + 1);
@@ -202,13 +206,25 @@ public class ObjectClass
     return attributes.containsKey(attributeHandle);
   }
 
-  public Attribute getAttribute(String name)
+  public Attribute getAttribute(String attributeName)
     throws NameNotFound
   {
-    Attribute attribute = attributesByName.get(name);
+    Attribute attribute = attributesByName.get(attributeName);
     if (attribute == null)
     {
-      throw new NameNotFound(String.format("attribute name not found: %s (%s)", name, this.objectClassName));
+      throw new NameNotFound(I18n.getMessage(ExceptionMessages.ATTRIBUTE_NAME_NOT_FOUND, this, attributeName));
+    }
+    return attribute;
+  }
+
+  public Attribute getValidAttribute(AttributeHandle attributeHandle)
+    throws InvalidAttributeHandle
+  {
+    Attribute attribute = attributes.get(attributeHandle);
+    if (attribute == null)
+    {
+      throw new InvalidAttributeHandle(
+        I18n.getMessage(ExceptionMessages.INVALID_ATTRIBUTE_HANDLE, this, attributeHandle));
     }
     return attribute;
   }
@@ -219,7 +235,7 @@ public class ObjectClass
     Attribute attribute = attributes.get(attributeHandle);
     if (attribute == null)
     {
-      throw new AttributeNotDefined(String.format("attribute not defined: %s (%s)", attributeHandle, this.objectClassName));
+      throw new AttributeNotDefined(I18n.getMessage(ExceptionMessages.ATTRIBUTE_NOT_DEFINED, this, attributeHandle));
     }
     return attribute;
   }
@@ -296,7 +312,9 @@ public class ObjectClass
   {
     if (rhsObjectClass.declaredAttributes.size() > 0 && !declaredAttributes.equals(rhsObjectClass.declaredAttributes))
     {
-      throw new InconsistentFDD("inconsistent ObjectClass: " + rhsObjectClass.objectClassName);
+      throw new InconsistentFDD(I18n.getMessage(
+        ExceptionMessages.INCONSISTENT_FDD_ATTRIBUTE_MISMATCH, this, declaredAttributes,
+        rhsObjectClass.declaredAttributes));
     }
 
     for (ObjectClass rhsSubObjectClass : rhsObjectClass.subObjectClasses.values())

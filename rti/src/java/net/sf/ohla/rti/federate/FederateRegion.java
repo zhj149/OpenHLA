@@ -120,13 +120,25 @@ public class FederateRegion
   public void setRangeBounds(DimensionHandle dimensionHandle, RangeBounds rangeBounds)
     throws RegionDoesNotContainSpecifiedDimension
   {
-    // make sure we have this range bound
-    //
-    getRangeBounds(dimensionHandle);
+    rangeBoundsLock.writeLock().lock();
+    try
+    {
+      // make sure we have this range bound
+      //
+      if (!this.rangeBounds.containsKey(dimensionHandle))
+      {
+        throw new RegionDoesNotContainSpecifiedDimension(I18n.getMessage(
+          ExceptionMessages.REGION_DOES_NOT_CONTAIN_SPECIFIED_DIMENSION, regionHandle, dimensionHandle));
+      }
 
-    // hold onto it until a commit occurs
-    //
-    uncommittedRangeBounds.put(dimensionHandle, clone(rangeBounds));
+      // hold onto it until a commit occurs
+      //
+      uncommittedRangeBounds.put(dimensionHandle, clone(rangeBounds));
+    }
+    finally
+    {
+      rangeBoundsLock.writeLock().unlock();
+    }
   }
 
   public AttributeHandleSet getAssociatedAttributeHandles(ObjectInstanceHandle objectInstanceHandle)

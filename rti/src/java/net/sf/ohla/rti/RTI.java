@@ -17,7 +17,6 @@
 package net.sf.ohla.rti;
 
 import java.net.InetSocketAddress;
-import java.net.SocketException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -66,7 +65,6 @@ public class RTI
     new TreeMap<String, FederationExecution>();
 
   public RTI()
-    throws SocketException
   {
     // TODO: read from configuration file
 

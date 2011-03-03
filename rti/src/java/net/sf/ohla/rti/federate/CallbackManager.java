@@ -32,7 +32,7 @@ import hla.rti1516e.FederateAmbassador;
 
 public class CallbackManager
 {
-  private static final Logger log = I18nLogger.getLogger(CallbackManager.class);
+  private static final I18nLogger log = I18nLogger.getLogger(CallbackManager.class);
 
   private final FederateAmbassador federateAmbassador;
 

@@ -24,6 +24,8 @@ import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.fdd.Dimension;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSetFactory;
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
@@ -119,7 +121,7 @@ public class RoutingSpace
   {
     if (dimensionHandle < 0 || dimensionHandle >= dimensions.size())
     {
-      throw new DimensionNotDefined(Integer.toString(dimensionHandle));
+      throw new DimensionNotDefined(I18n.getMessage(ExceptionMessages.DIMENSION_NOT_DEFINED, dimensionHandle));
     }
     return dimensions.get(dimensionHandle);
   }
@@ -130,7 +132,7 @@ public class RoutingSpace
     int index = aliases.indexOf(alias);
     if (index == -1)
     {
-      throw new NameNotFound(alias);
+      throw new NameNotFound(I18n.getMessage(ExceptionMessages.ROUTING_SPACE_DIMENSION_NAME_NOT_FOUND, alias));
     }
     return index;
   }
@@ -140,7 +142,8 @@ public class RoutingSpace
   {
     if (dimensionHandle < 0 || dimensionHandle >= aliases.size())
     {
-      throw new DimensionNotDefined(Integer.toString(dimensionHandle));
+      throw new DimensionNotDefined(I18n.getMessage(
+        ExceptionMessages.ROUTING_SPACE_DIMENSION_NOT_DEFINED, dimensionHandle));
     }
     return aliases.get(dimensionHandle);
   }
