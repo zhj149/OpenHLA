@@ -27,6 +27,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.sf.ohla.rti.fdd.ObjectClass;
+import net.sf.ohla.rti.i18n.I18nLogger;
 import net.sf.ohla.rti.messages.AssociateRegionsForUpdates;
 import net.sf.ohla.rti.messages.AssociateRegionsForUpdatesResponse;
 import net.sf.ohla.rti.messages.DeleteObjectInstance;
@@ -45,10 +46,6 @@ import net.sf.ohla.rti.messages.callbacks.MultipleObjectInstanceNameReservationS
 import net.sf.ohla.rti.messages.callbacks.ObjectInstanceNameReservationFailed;
 import net.sf.ohla.rti.messages.callbacks.ObjectInstanceNameReservationSucceeded;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
-
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.AttributeSetRegionSetPairList;
@@ -58,8 +55,6 @@ import hla.rti1516e.OrderType;
 
 public class FederationExecutionObjectManager
 {
-  private static final Logger log = LoggerFactory.getLogger(FederationExecutionObjectManager.class);
-
   private final FederationExecution federationExecution;
 
   private final Lock objectInstanceNamesLock = new ReentrantLock(true);
@@ -70,13 +65,13 @@ public class FederationExecutionObjectManager
   private final Map<ObjectInstanceHandle, FederationExecutionObjectInstance> objects =
     new HashMap<ObjectInstanceHandle, FederationExecutionObjectInstance>();
 
-  private final Marker marker;
+  private final I18nLogger log;
 
   public FederationExecutionObjectManager(FederationExecution federationExecution)
   {
     this.federationExecution = federationExecution;
 
-    marker = federationExecution.getMarker();
+    log = I18nLogger.getLogger(federationExecution.getMarker(), FederationExecutionObjectManager.class);
   }
 
   public FederationExecution getFederationExecution()
@@ -179,7 +174,7 @@ public class FederationExecutionObjectManager
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
       if (objectInstance == null)
       {
-        log.trace(marker, "dropping local delete object instance, object has been deleted: {}", objectInstanceHandle);
+        log.trace("dropping local delete object instance, object has been deleted: {}", objectInstanceHandle);
       }
       else
       {
@@ -229,7 +224,7 @@ public class FederationExecutionObjectManager
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
       if (objectInstance == null)
       {
-        log.trace(marker, "dropping request object instance value update, object has been deleted: {}",
+        log.trace("dropping request object instance value update, object has been deleted: {}",
                   objectInstanceHandle);
       }
       else
@@ -374,7 +369,7 @@ public class FederationExecutionObjectManager
       }
       else
       {
-        log.debug(marker, "reserve object instance name failed, name already reserved: {} by {}",
+        log.debug("reserve object instance name failed, name already reserved: {} by {}",
                   name, reservingFederateProxy);
 
         federateProxy.getFederateChannel().write(new ObjectInstanceNameReservationFailed(name));
@@ -428,7 +423,7 @@ public class FederationExecutionObjectManager
       }
       else
       {
-        log.debug(marker, "reserve multiple object instance name failed, names already reserved: {}",
+        log.debug("reserve multiple object instance name failed, names already reserved: {}",
                   alreadyReservedObjectInstanceNames);
 
         federateProxy.getFederateChannel().write(new MultipleObjectInstanceNameReservationFailed(objectInstanceNames));
@@ -511,7 +506,7 @@ public class FederationExecutionObjectManager
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
       if (objectInstance == null)
       {
-        log.trace(marker, "dropping negotiated attribute ownership divestiture, object has been deleted: {}",
+        log.trace("dropping negotiated attribute ownership divestiture, object has been deleted: {}",
                   objectInstanceHandle);
       }
       else
@@ -534,7 +529,7 @@ public class FederationExecutionObjectManager
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
       if (objectInstance == null)
       {
-        log.trace(marker, "dropping negotiated attribute ownership divestiture, object has been deleted: {}",
+        log.trace("dropping negotiated attribute ownership divestiture, object has been deleted: {}",
                   objectInstanceHandle);
       }
       else
@@ -557,7 +552,7 @@ public class FederationExecutionObjectManager
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
       if (objectInstance == null)
       {
-        log.trace(marker, "dropping confirm divestiture, object has been deleted: {}", objectInstanceHandle);
+        log.trace("dropping confirm divestiture, object has been deleted: {}", objectInstanceHandle);
       }
       else
       {
@@ -579,7 +574,7 @@ public class FederationExecutionObjectManager
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
       if (objectInstance == null)
       {
-        log.trace(marker, "dropping attribute ownership acquisition, object has been deleted: {}",
+        log.trace("dropping attribute ownership acquisition, object has been deleted: {}",
                   objectInstanceHandle);
       }
       else
@@ -602,7 +597,7 @@ public class FederationExecutionObjectManager
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
       if (objectInstance == null)
       {
-        log.trace(marker, "dropping attribute ownership acquisition if available, object has been deleted: {}",
+        log.trace("dropping attribute ownership acquisition if available, object has been deleted: {}",
                   objectInstanceHandle);
       }
       else
@@ -627,7 +622,7 @@ public class FederationExecutionObjectManager
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
       if (objectInstance == null)
       {
-        log.trace(marker, "dropping attribute ownership acquisition, object has been deleted: {}",
+        log.trace("dropping attribute ownership acquisition, object has been deleted: {}",
                   objectInstanceHandle);
 
         divestitures = Collections.emptyMap();
@@ -690,7 +685,7 @@ public class FederationExecutionObjectManager
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
       if (objectInstance == null)
       {
-        log.trace(marker, "dropping query attribute ownership, object has been deleted: {}", objectInstanceHandle);
+        log.trace("dropping query attribute ownership, object has been deleted: {}", objectInstanceHandle);
       }
       else
       {
@@ -714,7 +709,7 @@ public class FederationExecutionObjectManager
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
       if (objectInstance == null)
       {
-        log.trace(marker, "dropping associate regions for updates, object has been deleted: {}", objectInstanceHandle);
+        log.trace("dropping associate regions for updates, object has been deleted: {}", objectInstanceHandle);
 
         federateProxy.getFederateChannel().write(new AssociateRegionsForUpdatesResponse(
           associateRegionsForUpdates.getId(), AssociateRegionsForUpdatesResponse.Response.OBJECT_INSTANCE_NOT_KNOWN));

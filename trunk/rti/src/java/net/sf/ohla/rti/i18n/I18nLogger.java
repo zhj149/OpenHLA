@@ -22,8 +22,6 @@ import org.slf4j.Marker;
 import org.slf4j.ext.LoggerWrapper;
 import org.slf4j.spi.LocationAwareLogger;
 
-import ch.qos.cal10n.MessageParameterObj;
-
 public class I18nLogger
   extends LoggerWrapper
   implements Logger
@@ -39,20 +37,82 @@ public class I18nLogger
     this.marker = marker;
   }
 
+  public void trace(Enum<?> key, Object arg)
+  {
+    if (logger.isTraceEnabled())
+    {
+      String translatedMessage = I18n.MESSAGE_CONVEYOR.getMessage(key, arg);
+      if (instanceofLAL)
+      {
+        ((LocationAwareLogger) logger).log(marker, FQCN, LocationAwareLogger.TRACE_INT, translatedMessage, null, null);
+      }
+      else
+      {
+        logger.trace(marker, translatedMessage);
+      }
+    }
+  }
+
+  public void trace(Enum<?> key, Object arg1, Object arg2)
+  {
+    if (logger.isTraceEnabled())
+    {
+      String translatedMessage = I18n.MESSAGE_CONVEYOR.getMessage(key, arg1, arg2);
+      if (instanceofLAL)
+      {
+        ((LocationAwareLogger) logger).log(marker, FQCN, LocationAwareLogger.TRACE_INT, translatedMessage, null, null);
+      }
+      else
+      {
+        logger.trace(marker, translatedMessage);
+      }
+    }
+  }
+
   public void trace(Enum<?> key, Object... args)
   {
     if (logger.isTraceEnabled())
     {
       String translatedMessage = I18n.MESSAGE_CONVEYOR.getMessage(key, args);
-      MessageParameterObj mpo = new MessageParameterObj(key, args);
-
       if (instanceofLAL)
       {
-        ((LocationAwareLogger) logger).log(marker, FQCN, LocationAwareLogger.TRACE_INT, translatedMessage, args, null);
+        ((LocationAwareLogger) logger).log(marker, FQCN, LocationAwareLogger.TRACE_INT, translatedMessage, null, null);
       }
       else
       {
-        logger.trace(marker, translatedMessage, mpo);
+        logger.trace(marker, translatedMessage);
+      }
+    }
+  }
+
+  public void debug(Enum<?> key, Object arg)
+  {
+    if (logger.isDebugEnabled())
+    {
+      String translatedMessage = I18n.MESSAGE_CONVEYOR.getMessage(key, arg);
+      if (instanceofLAL)
+      {
+        ((LocationAwareLogger) logger).log(marker, FQCN, LocationAwareLogger.DEBUG_INT, translatedMessage, null, null);
+      }
+      else
+      {
+        logger.debug(marker, translatedMessage);
+      }
+    }
+  }
+
+  public void debug(Enum<?> key, Object arg1, Object arg2)
+  {
+    if (logger.isDebugEnabled())
+    {
+      String translatedMessage = I18n.MESSAGE_CONVEYOR.getMessage(key, arg1, arg2);
+      if (instanceofLAL)
+      {
+        ((LocationAwareLogger) logger).log(marker, FQCN, LocationAwareLogger.DEBUG_INT, translatedMessage, null, null);
+      }
+      else
+      {
+        logger.debug(marker, translatedMessage);
       }
     }
   }
@@ -62,15 +122,13 @@ public class I18nLogger
     if (logger.isDebugEnabled())
     {
       String translatedMessage = I18n.MESSAGE_CONVEYOR.getMessage(key, args);
-      MessageParameterObj mpo = new MessageParameterObj(key, args);
-
       if (instanceofLAL)
       {
-        ((LocationAwareLogger) logger).log(marker, FQCN, LocationAwareLogger.DEBUG_INT, translatedMessage, args, null);
+        ((LocationAwareLogger) logger).log(marker, FQCN, LocationAwareLogger.DEBUG_INT, translatedMessage, null, null);
       }
       else
       {
-        logger.debug(marker, translatedMessage, mpo);
+        logger.debug(marker, translatedMessage);
       }
     }
   }
@@ -80,33 +138,44 @@ public class I18nLogger
     if (logger.isInfoEnabled())
     {
       String translatedMessage = I18n.MESSAGE_CONVEYOR.getMessage(key, args);
-      MessageParameterObj mpo = new MessageParameterObj(key, args);
-
       if (instanceofLAL)
       {
-        ((LocationAwareLogger) logger).log(marker, FQCN, LocationAwareLogger.INFO_INT, translatedMessage, args, null);
+        ((LocationAwareLogger) logger).log(marker, FQCN, LocationAwareLogger.INFO_INT, translatedMessage, null, null);
       }
       else
       {
-        logger.info(marker, translatedMessage, mpo);
+        logger.info(marker, translatedMessage);
       }
     }
   }
 
   public void warn(Enum<?> key, Object... args)
   {
-    if (!logger.isWarnEnabled())
+    if (logger.isWarnEnabled())
     {
       String translatedMessage = I18n.MESSAGE_CONVEYOR.getMessage(key, args);
-      MessageParameterObj mpo = new MessageParameterObj(key, args);
-
       if (instanceofLAL)
       {
-        ((LocationAwareLogger) logger).log(marker, FQCN, LocationAwareLogger.WARN_INT, translatedMessage, args, null);
+        ((LocationAwareLogger) logger).log(marker, FQCN, LocationAwareLogger.WARN_INT, translatedMessage, null, null);
       }
       else
       {
-        logger.warn(marker, translatedMessage, mpo);
+        logger.warn(marker, translatedMessage);
+      }
+    }
+  }
+  public void warn(Enum<?> key, Throwable t, Object... args)
+  {
+    if (logger.isWarnEnabled())
+    {
+      String translatedMessage = I18n.MESSAGE_CONVEYOR.getMessage(key, args);
+      if (instanceofLAL)
+      {
+        ((LocationAwareLogger) logger).log(marker, FQCN, LocationAwareLogger.WARN_INT, translatedMessage, null, t);
+      }
+      else
+      {
+        logger.warn(marker, translatedMessage, t);
       }
     }
   }
@@ -116,15 +185,29 @@ public class I18nLogger
     if (logger.isErrorEnabled())
     {
       String translatedMessage = I18n.MESSAGE_CONVEYOR.getMessage(key, args);
-      MessageParameterObj mpo = new MessageParameterObj(key, args);
-
       if (instanceofLAL)
       {
-        ((LocationAwareLogger) logger).log(marker, FQCN, LocationAwareLogger.ERROR_INT, translatedMessage, args, null);
+        ((LocationAwareLogger) logger).log(marker, FQCN, LocationAwareLogger.ERROR_INT, translatedMessage, null, null);
       }
       else
       {
-        logger.error(marker, translatedMessage, mpo);
+        logger.error(marker, translatedMessage);
+      }
+    }
+  }
+
+  public void error(Enum<?> key, Throwable t, Object... args)
+  {
+    if (logger.isErrorEnabled())
+    {
+      String translatedMessage = I18n.MESSAGE_CONVEYOR.getMessage(key, args);
+      if (instanceofLAL)
+      {
+        ((LocationAwareLogger) logger).log(marker, FQCN, LocationAwareLogger.ERROR_INT, translatedMessage, null, t);
+      }
+      else
+      {
+        logger.error(marker, translatedMessage, t);
       }
     }
   }

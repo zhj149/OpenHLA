@@ -31,6 +31,7 @@ import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSet;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandleSet;
+import net.sf.ohla.rti.i18n.I18nLogger;
 import net.sf.ohla.rti.messages.AbortFederationRestore;
 import net.sf.ohla.rti.messages.AbortFederationSave;
 import net.sf.ohla.rti.messages.AssociateRegionsForUpdates;
@@ -128,8 +129,6 @@ import net.sf.ohla.rti.messages.callbacks.SynchronizationPointRegistrationSuccee
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
@@ -150,8 +149,6 @@ import hla.rti1516e.exceptions.InconsistentFDD;
 
 public class FederationExecution
 {
-  private static final Logger log = LoggerFactory.getLogger(FederationExecution.class);
-
   private final String name;
 
   private volatile FDD fdd;
@@ -182,6 +179,7 @@ public class FederationExecution
   private final AtomicInteger federateCount = new AtomicInteger();
 
   private final Marker marker;
+  private final I18nLogger log;
 
   public FederationExecution(String name, FDD fdd, LogicalTimeFactory logicalTimeFactory)
   {
@@ -191,8 +189,9 @@ public class FederationExecution
     timeManager = new FederationExecutionTimeManager(this, logicalTimeFactory);
 
     marker = MarkerFactory.getMarker(name);
+    log = I18nLogger.getLogger(marker, FederationExecution.class);
 
-    log.debug(marker, "federation execution created");
+    log.debug("federation execution created");
   }
 
   public String getName()
@@ -246,7 +245,7 @@ public class FederationExecution
     {
       if (federates.isEmpty())
       {
-        log.debug(marker, "federation execution destroyed");
+        log.debug("federation execution destroyed");
 
         response = new DestroyFederationExecutionResponse(
           destroyFederationExecution.getId(), DestroyFederationExecutionResponse.Response.SUCCESS);
@@ -259,7 +258,7 @@ public class FederationExecution
           currentlyJoinedFederates.add(federate.getFederateName());
         }
 
-        log.debug(marker, "destroy federation execution failed, federates currently joined: {}",
+        log.debug("destroy federation execution failed, federates currently joined: {}",
                   currentlyJoinedFederates);
 
         response = new DestroyFederationExecutionResponse(destroyFederationExecution.getId(), currentlyJoinedFederates);
@@ -278,21 +277,21 @@ public class FederationExecution
     String federateName = joinFederationExecution.getFederateName();
     String federateType = joinFederationExecution.getFederateType();
 
-    log.debug(marker, "join federation execution: {} - {}", federateType, federateName);
+    log.debug("join federation execution: {} - {}", federateType, federateName);
 
     federationExecutionStateLock.writeLock().lock();
     try
     {
       if (saveInProgress())
       {
-        log.debug(marker, "join federation execution failed, save in progress: {}", federateName);
+        log.debug("join federation execution failed, save in progress: {}", federateName);
 
         context.getChannel().write(new JoinFederationExecutionResponse(
           joinFederationExecution.getId(), JoinFederationExecutionResponse.Response.SAVE_IN_PROGRESS));
       }
       else if (restoreInProgress())
       {
-        log.debug(marker, "join federation execution failed, restore in progress: {}", federateName);
+        log.debug("join federation execution failed, restore in progress: {}", federateName);
 
         context.getChannel().write(new JoinFederationExecutionResponse(
           joinFederationExecution.getId(), JoinFederationExecutionResponse.Response.RESTORE_IN_PROGRESS));
@@ -329,7 +328,7 @@ public class FederationExecution
         }
         catch (InconsistentFDD iFDD)
         {
-          log.debug(marker, "join federation execution failed, inconsistent FDD", iFDD);
+          log.debug("join federation execution failed, inconsistent FDD", iFDD);
 
           // TODO: response needs a message about the failure
 
@@ -372,7 +371,7 @@ public class FederationExecution
     byte[] tag = registerFederationSynchronizationPoint.getTag();
     FederateHandleSet federateHandles = registerFederationSynchronizationPoint.getFederateHandles();
 
-    log.debug(marker, "register federation synchronization point: {}", label);
+    log.debug("register federation synchronization point: {}", label);
 
     federationExecutionStateLock.writeLock().lock();
     try
@@ -381,7 +380,7 @@ public class FederationExecution
         synchronizationPoints.get(label);
       if (federationExecutionSynchronizationPoint != null)
       {
-        log.debug(marker, "register federation synchronization point failed, label not unique: {}", label);
+        log.debug("register federation synchronization point failed, label not unique: {}", label);
 
         federateProxy.getFederateChannel().write(new SynchronizationPointRegistrationFailed(
           label, SynchronizationPointFailureReason.SYNCHRONIZATION_POINT_LABEL_NOT_UNIQUE));
@@ -401,7 +400,7 @@ public class FederationExecution
         if (!federateHandlesValid  && !federates.keySet().containsAll(federateHandles))
         {
           log.debug(
-            marker, "register federation synchronization point failed, synchonization set member not joined: {}, {} not in {}",
+            "register federation synchronization point failed, synchonization set member not joined: {}, {} not in {}",
             new Object[] { label, federateHandles, federates.keySet() });
 
           federateProxy.getFederateChannel().write(new SynchronizationPointRegistrationFailed(
@@ -450,7 +449,7 @@ public class FederationExecution
           FederateProxy synchronizedFederateProxy = federates.get(federateHandle);
           if (synchronizedFederateProxy == null)
           {
-            log.warn(marker, "federate unable to complete synchronization, federate has resigned: {}",
+            log.warn("federate unable to complete synchronization, federate has resigned: {}",
                      resignedFederates.get(federateHandle));
           }
           else

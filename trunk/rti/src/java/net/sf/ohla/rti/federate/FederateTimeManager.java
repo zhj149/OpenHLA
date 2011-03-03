@@ -22,6 +22,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
 import net.sf.ohla.rti.i18n.I18nLogger;
+import net.sf.ohla.rti.i18n.LogMessages;
 import net.sf.ohla.rti.messages.DisableTimeConstrained;
 import net.sf.ohla.rti.messages.DisableTimeRegulation;
 import net.sf.ohla.rti.messages.EnableTimeConstrained;
@@ -660,7 +661,7 @@ public class FederateTimeManager
     {
       this.galt = galt;
 
-      log.debug("GALT advanced: {}", galt);
+      log.debug(LogMessages.GALT_ADVANCED, galt);
 
       LogicalTime maxFutureTaskTimestamp;
 
@@ -700,7 +701,7 @@ public class FederateTimeManager
     timeLock.writeLock().lock();
     try
     {
-      log.debug("GALT undefined");
+      log.debug(LogMessages.GALT_UNDEFINED);
 
       galt = null;
 

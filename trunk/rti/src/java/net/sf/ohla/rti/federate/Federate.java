@@ -51,6 +51,7 @@ import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandleFactory;
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
 import net.sf.ohla.rti.i18n.I18nLogger;
+import net.sf.ohla.rti.i18n.LogMessages;
 import net.sf.ohla.rti.messages.AbortFederationRestore;
 import net.sf.ohla.rti.messages.AbortFederationSave;
 import net.sf.ohla.rti.messages.FederateRestoreComplete;
@@ -454,13 +455,13 @@ public class Federate
     futureTasksLock.lock();
     try
     {
-      log.debug("processing future tasks: {}", maxFutureTaskTimestamp);
+      log.debug(LogMessages.PROCESSING_FUTURE_TASKS, maxFutureTaskTimestamp);
 
       for (TimestampedFutureTask timestampedFutureTask = futureTasks.peek();
            timestampedFutureTask != null && timestampedFutureTask.getTime().compareTo(maxFutureTaskTimestamp) <= 0;
            timestampedFutureTask = futureTasks.peek())
       {
-        log.debug("processing future task: {}", timestampedFutureTask);
+        log.debug(LogMessages.PROCESSING_FUTURE_TASK, timestampedFutureTask);
 
         try
         {
@@ -468,7 +469,7 @@ public class Federate
         }
         catch (Throwable t)
         {
-          log.error(String.format("unable to execute scheduled task: %s", timestampedFutureTask), t);
+          log.error(LogMessages.UNABLE_TO_EXECUTE_SCHEDULED_TASK, t, timestampedFutureTask);
         }
 
         futureTasks.poll();
@@ -485,13 +486,12 @@ public class Federate
     futureTasksLock.lock();
     try
     {
-      log.debug("clearing future tasks");
+      log.debug(LogMessages.CLEARING_FUTURE_TASKS, futureTasks.size());
 
       for (TimestampedFutureTask timestampedFutureTask = futureTasks.poll();
-           timestampedFutureTask != null;
-           timestampedFutureTask = futureTasks.poll())
+           timestampedFutureTask != null; timestampedFutureTask = futureTasks.poll())
       {
-        log.debug("processing future task: {}", timestampedFutureTask);
+        log.debug(LogMessages.PROCESSING_FUTURE_TASK, timestampedFutureTask);
 
         try
         {
@@ -499,8 +499,7 @@ public class Federate
         }
         catch (Throwable t)
         {
-          log.error("unable to execute scheduled task: {}", timestampedFutureTask);
-          log.error("", t);
+          log.error(LogMessages.UNABLE_TO_EXECUTE_SCHEDULED_TASK, t, timestampedFutureTask);
         }
       }
     }
@@ -705,7 +704,7 @@ public class Federate
         }
         else
         {
-          log.debug("synchronization point already achieved: {}", label);
+          log.debug(LogMessages.SYNCHRONIZATION_POINT_ALREADY_ACHIEVED, label);
         }
       }
       finally
@@ -3276,7 +3275,7 @@ public class Federate
 
   private Future<Object> schedule(LogicalTime time, Callable<Object> callable)
   {
-    log.debug("scheduling task: {} at {}", callable, time);
+    log.debug(LogMessages.SCHEDULING_TASK, callable, time);
 
     TimestampedFutureTask future = new TimestampedFutureTask(time, callable);
 
