@@ -33,6 +33,8 @@ import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSet;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eInteractionClassHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
@@ -277,7 +279,8 @@ public class FDD
 
     if (objectClassesByName.containsKey(objectClassName))
     {
-      throw new InconsistentFDD(objectClassName + " already exists");
+      throw new InconsistentFDD(I18n.getMessage(
+        ExceptionMessages.INCONSISTENT_FDD_OBJECT_CLASS_ALREADY_DEFINED, objectClassName));
     }
 
     ObjectClassHandle objectClassHandle = new IEEE1516eObjectClassHandle(objectClasses.size() + 1);
@@ -353,7 +356,8 @@ public class FDD
 
     if (interactionClassesByName.containsKey(interactionClassName))
     {
-      throw new InconsistentFDD(interactionClassName + " already exists");
+      throw new InconsistentFDD(I18n.getMessage(
+        ExceptionMessages.INCONSISTENT_FDD_INTERACTION_CLASS_ALREADY_DEFINED, interactionClassName));
     }
 
     TransportationType transportationType = transportationTypesByName.get(transportationTypeName);
@@ -415,13 +419,25 @@ public class FDD
     return dimension;
   }
 
+  public ObjectClass getValidObjectClass(ObjectClassHandle objectClassHandle)
+    throws InvalidObjectClassHandle
+  {
+    ObjectClass objectClass = objectClasses.get(objectClassHandle);
+    if (objectClass == null)
+    {
+      throw new InvalidObjectClassHandle(I18n.getMessage(
+        ExceptionMessages.INVALID_OBJECT_CLASS_HANDLE, objectClassHandle));
+    }
+    return objectClass;
+  }
+
   public ObjectClass getObjectClass(ObjectClassHandle objectClassHandle)
     throws ObjectClassNotDefined
   {
     ObjectClass objectClass = objectClasses.get(objectClassHandle);
     if (objectClass == null)
     {
-      throw new ObjectClassNotDefined(String.format("object class not defined: %s", objectClassHandle));
+      throw new ObjectClassNotDefined(I18n.getMessage(ExceptionMessages.OBJECT_CLASS_NOT_DEFINED, objectClassHandle));
     }
     return objectClass;
   }
@@ -446,7 +462,7 @@ public class FDD
     ObjectClass objectClass = objectClassesByName.get(objectClassName);
     if (objectClass == null)
     {
-      throw new NameNotFound(String.format("object class name not found: %s", objectClassName));
+      throw new NameNotFound(I18n.getMessage(ExceptionMessages.OBJECT_CLASS_NAME_NOT_FOUND, objectClassName));
     }
     return objectClass;
   }
@@ -460,14 +476,7 @@ public class FDD
   public String getObjectClassName(ObjectClassHandle objectClassHandle)
     throws InvalidObjectClassHandle
   {
-    try
-    {
-      return getObjectClass(objectClassHandle).getObjectClassName();
-    }
-    catch (ObjectClassNotDefined ocnd)
-    {
-      throw new InvalidObjectClassHandle(String.format("invalid object class handle: %s", objectClassHandle), ocnd);
-    }
+    return getValidObjectClass(objectClassHandle).getObjectClassName();
   }
 
   public Attribute getAttribute(ObjectClassHandle objectClassHandle, String attributeName)
@@ -485,31 +494,25 @@ public class FDD
   public AttributeHandle getAttributeHandle(ObjectClassHandle objectClassHandle, String attributeName)
     throws NameNotFound, InvalidObjectClassHandle
   {
-    try
-    {
-      return getAttribute(objectClassHandle, attributeName).getAttributeHandle();
-    }
-    catch (ObjectClassNotDefined ocnd)
-    {
-      throw new InvalidObjectClassHandle(String.format("invalid object class handle: %s", objectClassHandle), ocnd);
-    }
+    return getValidObjectClass(objectClassHandle).getAttribute(attributeName).getAttributeHandle();
   }
 
   public String getAttributeName(ObjectClassHandle objectClassHandle, AttributeHandle attributeHandle)
     throws InvalidAttributeHandle, InvalidObjectClassHandle
   {
-    try
+    return getValidObjectClass(objectClassHandle).getValidAttribute(attributeHandle).getAttributeName();
+  }
+
+  public InteractionClass getValidInteractionClass(InteractionClassHandle interactionClassHandle)
+    throws InvalidInteractionClassHandle
+  {
+    InteractionClass interactionClass = interactionClasses.get(interactionClassHandle);
+    if (interactionClass == null)
     {
-      return getAttribute(objectClassHandle, attributeHandle).getAttributeName();
+      throw new InvalidInteractionClassHandle(I18n.getMessage(
+        ExceptionMessages.INVALID_INTERACTION_CLASS_HANDLE, interactionClassHandle));
     }
-    catch (AttributeNotDefined and)
-    {
-      throw new InvalidAttributeHandle(String.format("invalid attribute handle: %s", attributeHandle), and);
-    }
-    catch (ObjectClassNotDefined ocnd)
-    {
-      throw new InvalidObjectClassHandle(String.format("invalid object class handle: %s", objectClassHandle), ocnd);
-    }
+    return interactionClass;
   }
 
   public InteractionClass getInteractionClass(InteractionClassHandle interactionClassHandle)
@@ -518,7 +521,8 @@ public class FDD
     InteractionClass interactionClass = interactionClasses.get(interactionClassHandle);
     if (interactionClass == null)
     {
-      throw new InteractionClassNotDefined(String.format("interaction class not defined: %s", interactionClassHandle));
+      throw new InteractionClassNotDefined(I18n.getMessage(
+        ExceptionMessages.INTERACTION_CLASS_NOT_DEFINED, interactionClassHandle));
     }
     return interactionClass;
   }
@@ -543,7 +547,7 @@ public class FDD
     InteractionClass interactionClass = interactionClassesByName.get(interactionClassName);
     if (interactionClass == null)
     {
-      throw new NameNotFound(String.format("interaction class name not found: %s", interactionClassName));
+      throw new NameNotFound(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_NAME_NOT_FOUND, interactionClassName));
     }
     return interactionClass;
   }
@@ -557,15 +561,7 @@ public class FDD
   public String getInteractionClassName(InteractionClassHandle interactionClassHandle)
     throws InvalidInteractionClassHandle
   {
-    try
-    {
-      return getInteractionClass(interactionClassHandle).getInteractionClassName();
-    }
-    catch (InteractionClassNotDefined icnd)
-    {
-      throw new InvalidInteractionClassHandle(
-        String.format("invalid interaction class handle: %s", interactionClassHandle), icnd);
-    }
+    return getValidInteractionClass(interactionClassHandle).getInteractionClassName();
   }
 
   public Parameter getParameter(InteractionClassHandle interactionClassHandle, String parameterName)
@@ -583,42 +579,22 @@ public class FDD
   public ParameterHandle getParameterHandle(InteractionClassHandle interactionClassHandle, String parameterName)
     throws NameNotFound, InvalidInteractionClassHandle
   {
-    try
-    {
-      return getParameter(interactionClassHandle, parameterName).getParameterHandle();
-    }
-    catch (InteractionClassNotDefined icnd)
-    {
-      throw new InvalidInteractionClassHandle(
-        String.format("invalid interaction class handle: %s", interactionClassHandle), icnd);
-    }
+    return getValidInteractionClass(interactionClassHandle).getParameter(parameterName).getParameterHandle();
   }
 
   public String getParameterName(InteractionClassHandle interactionClassHandle, ParameterHandle parameterHandle)
     throws InvalidParameterHandle, InvalidInteractionClassHandle
   {
-    try
-    {
-      return getParameter(interactionClassHandle, parameterHandle).getParameterName();
-    }
-    catch (InteractionParameterNotDefined ipnd)
-    {
-      throw new InvalidParameterHandle(String.format("invalid parameter handle: %s", parameterHandle), ipnd);
-    }
-    catch (InteractionClassNotDefined icnd)
-    {
-      throw new InvalidInteractionClassHandle(
-        String.format("invalid interaction class handle: %s", interactionClassHandle), icnd);
-    }
+    return getValidInteractionClass(interactionClassHandle).getValidParameter(parameterHandle).getParameterName();
   }
 
-  public Dimension getDimension(String name)
+  public Dimension getDimension(String dimensionName)
     throws NameNotFound
   {
-    Dimension dimension = dimensionsByName.get(name);
+    Dimension dimension = dimensionsByName.get(dimensionName);
     if (dimension == null)
     {
-      throw new NameNotFound(String.format("dimension name not found: %s", name));
+      throw new NameNotFound(I18n.getMessage(ExceptionMessages.DIMENSION_NAME_NOT_FOUND, dimensionName));
     }
     return dimension;
   }
@@ -636,7 +612,7 @@ public class FDD
     Dimension dimension = dimensions.get(dimensionHandle);
     if (dimension == null)
     {
-      throw new InvalidDimensionHandle(String.format("invalid dimension handle: %s", dimensionHandle));
+      throw new InvalidDimensionHandle(I18n.getMessage(ExceptionMessages.INVALID_DIMENSION_HANDLE, dimensionHandle));
     }
     return dimension;
   }
@@ -682,30 +658,14 @@ public class FDD
     ObjectClassHandle objectClassHandle, AttributeHandle attributeHandle)
     throws InvalidObjectClassHandle, InvalidAttributeHandle, AttributeNotDefined
   {
-    try
-    {
-      return getAttribute(objectClassHandle, attributeHandle).getDimensionHandles();
-    }
-    catch (ObjectClassNotDefined ocnd)
-    {
-      throw new InvalidObjectClassHandle(
-        String.format("invalid object class handle: %s", objectClassHandle), ocnd);
-    }
+    return getValidObjectClass(objectClassHandle).getValidAttribute(attributeHandle).getDimensionHandles();
   }
 
   public DimensionHandleSet getAvailableDimensionsForInteractionClass(
     InteractionClassHandle interactionClassHandle, DimensionHandleSet dimensionHandles)
     throws InvalidInteractionClassHandle
   {
-    try
-    {
-      return getInteractionClass(interactionClassHandle).getDimensionHandles();
-    }
-    catch (InteractionClassNotDefined icnd)
-    {
-      throw new InvalidInteractionClassHandle(
-        String.format("invalid interaction class handle: %s", interactionClassHandle));
-    }
+    return getValidInteractionClass(interactionClassHandle).getDimensionHandles();
   }
 
   public void changeInteractionOrderType(InteractionClassHandle interactionClassHandle, OrderType orderType)
@@ -721,13 +681,14 @@ public class FDD
     getInteractionClass(interactionClassHandle).setTransportationTypeHandle(transportationTypeHandle);
   }
 
-  public TransportationTypeHandle getTransportationTypeHandle(String name)
+  public TransportationTypeHandle getTransportationTypeHandle(String transportationTypeName)
     throws InvalidTransportationName
   {
-    TransportationType transportationType = transportationTypesByName.get(name);
+    TransportationType transportationType = transportationTypesByName.get(transportationTypeName);
     if (transportationType == null)
     {
-      throw new InvalidTransportationName(name);
+      throw new InvalidTransportationName(I18n.getMessage(
+        ExceptionMessages.INVALID_TRANSPORTATION_NAME, transportationTypeName));
     }
     return transportationType.getTransportationTypeHandle();
   }
@@ -738,18 +699,19 @@ public class FDD
     TransportationType transportationType = transportationTypes.get(transportationTypeHandle);
     if (transportationType == null)
     {
-      throw new InvalidTransportationType(transportationTypeHandle.toString());
+      throw new InvalidTransportationType(I18n.getMessage(
+        ExceptionMessages.INVALID_TRANSPORTATION_TYPE_HANDLE, transportationTypeHandle));
     }
     return transportationType.getName();
   }
 
-  public OrderType getOrderType(String name)
+  public OrderType getOrderType(String orderName)
     throws InvalidOrderName
   {
-    OrderType orderType = orderTypesByName.get(name);
+    OrderType orderType = orderTypesByName.get(orderName);
     if (orderType == null)
     {
-      throw new InvalidOrderName(name);
+      throw new InvalidOrderName(I18n.getMessage(ExceptionMessages.INVALID_ORDER_NAME, orderType));
     }
     return orderType;
   }
@@ -757,12 +719,12 @@ public class FDD
   public String getOrderName(OrderType orderType)
     throws InvalidOrderType
   {
-    String name = orderTypeNames.get(orderType);
-    if (name == null)
+    String orderName = orderTypeNames.get(orderType);
+    if (orderName == null)
     {
-      throw new InvalidOrderType(orderType.toString());
+      throw new InvalidOrderType(I18n.getMessage(ExceptionMessages.INVALID_ORDER_TYPE, orderType));
     }
-    return name;
+    return orderName;
   }
 
   public void checkIfObjectClassNotDefined(ObjectClassHandle objectClassHandle)
@@ -822,7 +784,7 @@ public class FDD
     }
     catch (InvalidDimensionHandle idh)
     {
-      throw new InvalidRangeBound("", idh);
+      throw new InvalidRangeBound(idh.getMessage(), idh);
     }
   }
 

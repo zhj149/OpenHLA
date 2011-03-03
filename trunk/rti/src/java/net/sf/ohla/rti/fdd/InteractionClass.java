@@ -27,6 +27,8 @@ import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSetFactory;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eInteractionClassHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandle;
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
@@ -38,6 +40,8 @@ import hla.rti1516e.ParameterHandle;
 import hla.rti1516e.TransportationTypeHandle;
 import hla.rti1516e.exceptions.InconsistentFDD;
 import hla.rti1516e.exceptions.InteractionParameterNotDefined;
+import hla.rti1516e.exceptions.InvalidInteractionClassHandle;
+import hla.rti1516e.exceptions.InvalidParameterHandle;
 import hla.rti1516e.exceptions.NameNotFound;
 
 public class InteractionClass
@@ -185,7 +189,8 @@ public class InteractionClass
   {
     if (parametersByName.containsKey(parameterName))
     {
-      throw new InconsistentFDD(parameterName + " already exists in " + interactionClassName);
+      throw new InconsistentFDD(I18n.getMessage(
+        ExceptionMessages.INCONSISTENT_FDD_PARAMETER_ALREADY_DEFINED, this, parameterName));
     }
 
     ParameterHandle parameterHandle = new IEEE1516eParameterHandle(parameters.size() + 1);
@@ -226,14 +231,25 @@ public class InteractionClass
     return parameters.containsKey(parameterHandle);
   }
 
-  public Parameter getParameter(String name)
+  public Parameter getParameter(String parameterName)
     throws NameNotFound
   {
-    Parameter parameter = parametersByName.get(name);
+    Parameter parameter = parametersByName.get(parameterName);
     if (parameter == null)
     {
-      throw new NameNotFound(
-        String.format("parameter name not found: %s", name));
+      throw new NameNotFound(I18n.getMessage(ExceptionMessages.PARAMETER_NAME_NOT_FOUND, this, parameterName));
+    }
+    return parameter;
+  }
+
+  public Parameter getValidParameter(ParameterHandle parameterHandle)
+    throws InvalidParameterHandle
+  {
+    Parameter parameter = parameters.get(parameterHandle);
+    if (parameter == null)
+    {
+      throw new InvalidParameterHandle(I18n.getMessage(
+        ExceptionMessages.INVALID_PARAMETER_HANDLE, this, parameterHandle));
     }
     return parameter;
   }
@@ -244,8 +260,8 @@ public class InteractionClass
     Parameter parameter = parameters.get(parameterHandle);
     if (parameter == null)
     {
-      throw new InteractionParameterNotDefined(String.format(
-        "interaction parameter not defined: %s", parameterHandle));
+      throw new InteractionParameterNotDefined(I18n.getMessage(
+        ExceptionMessages.INTERACTION_PARAMETER_NOT_DEFINED, this, parameterHandle));
     }
     return parameter;
   }
@@ -266,7 +282,9 @@ public class InteractionClass
     if (rhsInteractionClass.declaredParameters.size() > 0 &&
         !declaredParameters.equals(rhsInteractionClass.declaredParameters))
     {
-      throw new InconsistentFDD("inconsistent InteractionClass: " + rhsInteractionClass.interactionClassName);
+      throw new InconsistentFDD(I18n.getMessage(
+        ExceptionMessages.INCONSISTENT_FDD_PARAMETER_MISMATCH, this, declaredParameters,
+        rhsInteractionClass.declaredParameters));
     }
 
     for (InteractionClass rhsSubInteractionClass : rhsInteractionClass.subInteractionClasses.values())

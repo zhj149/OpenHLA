@@ -90,7 +90,7 @@ public abstract class AbstractRequest<R>
 
     if (response == null)
     {
-      throw new RTIinternalError("connection closed", cause);
+      throw new RTIinternalError(cause.getMessage(), cause);
     }
     return response;
   }

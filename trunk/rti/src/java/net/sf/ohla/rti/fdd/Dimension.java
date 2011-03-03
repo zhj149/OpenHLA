@@ -18,6 +18,8 @@ package net.sf.ohla.rti.fdd;
 
 import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandle;
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
@@ -81,8 +83,8 @@ public class Dimension
   {
     if (rangeBounds.upper > upperBound)
     {
-      throw new InvalidRangeBound(String.format(
-        "invalid range bound: %d > %d", rangeBounds.upper, upperBound));
+      throw new InvalidRangeBound(I18n.getMessage(
+        ExceptionMessages.INVALID_RANGE_BOUND, this, rangeBounds.upper, upperBound));
     }
   }
 
@@ -91,7 +93,8 @@ public class Dimension
   {
     if (upperBound != dimension.upperBound)
     {
-      throw new InconsistentFDD("inconsistent Dimension: " + dimensionName + " upperBound mismatch");
+      throw new InconsistentFDD(I18n.getMessage(
+        ExceptionMessages.INCONSISTENT_FDD_DIMENSION_UPPER_BOUND_MISMATCH, this, upperBound, dimension.upperBound));
     }
   }
 

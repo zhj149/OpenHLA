@@ -26,7 +26,7 @@ options
 
 PARSER_BEGIN(FEDParser)
 /**
- * Copyright 2005 Michael Newcomb
+ * Copyright 2005-2011 Michael Newcomb
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,6 +58,9 @@ import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.fdd.Parameter;
+
+import net.sf.ohla.rti.i18n.ExceptionMessage;
+import net.sf.ohla.rti.i18n.I18n;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,11 +96,11 @@ public class FEDParser
     }
     catch (IOException ioe)
     {
-      throw new CouldNotOpenFED(source.toString(), ioe);
+      throw new CouldNotOpenFED(I18n.getMessage(ExceptionMessage.COULD_NOT_OPEN_FED, source.toString()), ioe);
     }
     catch (ParseException pe)
     {
-      throw new ErrorReadingFED(source.toString(), pe);
+      throw new ErrorReadingFED(I18n.getMessage(ExceptionMessage.ERROR_READING_FED, source.toString()), pe);
     }
   }
 }
@@ -197,7 +200,8 @@ void Space()
   {
     if (routingSpaceName.startsWith("HLA"))
     {
-      throw new ErrorReadingFED("routing space begins with 'HLA': " + routingSpaceName);
+      throw new ErrorReadingFED(I18n.getMessage(
+        ExceptionMessage.ERROR_READING_FED_ROUTING_SPACE_STARTS_WITH_HLA, routingSpaceName));
     }
 
     routingSpace = fed.addRoutingSpace(routingSpaceName);
@@ -254,7 +258,8 @@ void ObjectRoot()
     }
     else
     {
-      throw new ErrorReadingFED("invalid root object: " + objectClassName + " (must be " + net.sf.ohla.rti.fed.FED.OBJECT_ROOT + ")");
+      throw new ErrorReadingFED(I18n.getMessage(
+        ExceptionMessage.ERROR_READING_FED_INVALID_ROOT_OBJECT, net.sf.ohla.rti.fed.FED.OBJECT_ROOT, objectClassName));
     }
   }
   PriviledgeToDeleteAttribute(objectRoot)
@@ -280,7 +285,9 @@ void PriviledgeToDeleteAttribute(ObjectClass objectRoot)
     }
     else
     {
-      throw new ErrorReadingFED("invalid attribute: " + attributeName + " (must be " + net.sf.ohla.rti.fed.FED.PRIVILEGE_TO_DELETE + ")");
+      throw new ErrorReadingFED(I18n.getMessage(
+        ExceptionMessage.ERROR_READING_FED_INVALID_PRIVILEGE_TO_DELETE, objectRoot,
+        net.sf.ohla.rti.fed.FED.PRIVILEGE_TO_DELETE, attributeName));
     }
   }
 }
@@ -299,7 +306,8 @@ void RTIprivateObject(ObjectClass objectRoot)
     }
     else
     {
-      throw new ErrorReadingFED("invalid object: " + objectClassName + " (must be " + net.sf.ohla.rti.fed.FED.RTI_PRIVATE + ")");
+      throw new ErrorReadingFED(I18n.getMessage(
+        ExceptionMessage.ERROR_READING_FED_INVALID_RTI_PRIVATE, net.sf.ohla.rti.fed.FED.RTI_PRIVATE, objectClassName));
     }
   }
 }
@@ -360,8 +368,9 @@ void InteractionRoot()
     }
     else
     {
-      throw new ErrorReadingFED(
-        "invalid root interaction: " + interactionClassName + " (must be " + net.sf.ohla.rti.fed.FED.INTERACTION_ROOT + ")");
+      throw new ErrorReadingFED(I18n.getMessage(
+        ExceptionMessage.ERROR_READING_FED_INVALID_INTERACTION_ROOT, net.sf.ohla.rti.fed.FED.INTERACTION_ROOT,
+        interactionClassName));
     }
   }
   RTIprivateInteraction(interactionRoot)
@@ -386,8 +395,9 @@ void RTIprivateInteraction(InteractionClass interactionRoot)
     }
     else
     {
-      throw new ErrorReadingFED(
-        "invalid interaction: " + interactionClassName + " (must be " + net.sf.ohla.rti.fed.FED.RTI_PRIVATE + ")");
+      throw new ErrorReadingFED(I18n.getMessage(
+        ExceptionMessage.ERROR_READING_FED_INVALID_RTI_PRIVATE, net.sf.ohla.rti.fed.FED.RTI_PRIVATE,
+        interactionClassName));
     }
   }
 }

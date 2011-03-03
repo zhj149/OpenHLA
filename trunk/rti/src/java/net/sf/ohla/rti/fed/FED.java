@@ -28,6 +28,8 @@ import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.fdd.Parameter;
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
@@ -45,7 +47,6 @@ import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.DimensionHandleSet;
 import hla.rti1516e.InteractionClassHandle;
 import hla.rti1516e.ObjectClassHandle;
-import hla.rti1516e.exceptions.ErrorReadingFDD;
 import hla.rti1516e.exceptions.InconsistentFDD;
 
 public class FED
@@ -134,7 +135,9 @@ public class FED
       RoutingSpace routingSpace = routingSpacesByName.get(routingSpaceName);
       if (routingSpace == null)
       {
-        throw new ErrorReadingFED("unknown routing space: " + routingSpaceName + " for attribute " + attributeName);
+        throw new ErrorReadingFED(I18n.getMessage(
+          ExceptionMessages.ERROR_READING_FED_UNKNOWN_ATTRIBUTE_ROUTING_SPACE, objectClass, attributeName,
+          routingSpaceName));
       }
       dimensionHandles = routingSpace.getDimensionHandles();
     }
@@ -165,8 +168,9 @@ public class FED
       RoutingSpace routingSpace = routingSpacesByName.get(routingSpaceName);
       if (routingSpace == null)
       {
-        throw new ErrorReadingFED(
-          "unknown routing space: " + routingSpaceName + " for attribute " + interactionClassName);
+        throw new ErrorReadingFED(I18n.getMessage(
+          ExceptionMessages.ERROR_READING_FED_UNKNOWN_INTERACTION_CLASS_ROUTING_SPACE, interactionClassName,
+          routingSpaceName));
       }
       dimensionHandles = routingSpace.getDimensionHandles();
     }
@@ -219,13 +223,13 @@ public class FED
     return dimension;
   }
 
-  public RoutingSpace getRoutingSpace(String name)
+  public RoutingSpace getRoutingSpace(String routingSpaceName)
     throws NameNotFound
   {
-    RoutingSpace routingSpace = routingSpacesByName.get(name);
+    RoutingSpace routingSpace = routingSpacesByName.get(routingSpaceName);
     if (routingSpace == null)
     {
-      throw new NameNotFound(name);
+      throw new NameNotFound(I18n.getMessage(ExceptionMessages.ROUTING_SPACE_NAME_NOT_FOUND, routingSpaceName));
     }
     return routingSpace;
   }
@@ -236,7 +240,7 @@ public class FED
     RoutingSpace routingSpace = routingSpaces.get(routingSpaceHandle);
     if (routingSpace == null)
     {
-      throw new SpaceNotDefined(Integer.toString(routingSpaceHandle));
+      throw new SpaceNotDefined(I18n.getMessage(ExceptionMessages.SPACE_NOT_DEFINED, routingSpaceHandle));
     }
     return routingSpace;
   }
@@ -270,11 +274,13 @@ public class FED
   {
     try
     {
-      Attribute attribute = fdd.getAttribute(objectClassHandle, attributeHandle);
+      ObjectClass objectClass = fdd.getObjectClass(objectClassHandle);
+      Attribute attribute = objectClass.getAttribute(attributeHandle);
 
       if (attribute.getDimensionHandles().isEmpty())
       {
-        throw new RTIinternalError("no Routing Space defined for attribute: " + attribute);
+        throw new RTIinternalError(I18n.getMessage(
+          ExceptionMessages.NO_ROUTING_SPACE_DEFINED_FOR_ATTRIBUTE, objectClass, attribute));
       }
       else
       {
@@ -282,7 +288,8 @@ public class FED
           fdd.getDimensionSafely(attribute.getDimensionHandles().iterator().next()));
         if (routingSpace == null)
         {
-          throw new RTIinternalError("no Routing Space defined for attribute: " + attribute);
+          throw new RTIinternalError(I18n.getMessage(
+            ExceptionMessages.NO_ROUTING_SPACE_DEFINED_FOR_ATTRIBUTE, objectClass, attribute));
         }
         else
         {
@@ -309,7 +316,8 @@ public class FED
 
       if (interactionClass.getDimensionHandles().isEmpty())
       {
-        throw new RTIinternalError("no Routing Space defined for Interaction Class: " + interactionClass);
+        throw new RTIinternalError(I18n.getMessage(
+          ExceptionMessages.NO_ROUTING_SPACE_DEFINED_FOR_INTERACTION_CLASS, interactionClass));
       }
       else
       {
@@ -317,7 +325,8 @@ public class FED
           fdd.getDimensionSafely(interactionClass.getDimensionHandles().iterator().next()));
         if (routingSpace == null)
         {
-          throw new RTIinternalError("no Routing Space defined for Interaction Class: " + interactionClass);
+          throw new RTIinternalError(I18n.getMessage(
+            ExceptionMessages.NO_ROUTING_SPACE_DEFINED_FOR_INTERACTION_CLASS, interactionClass));
         }
         else
         {

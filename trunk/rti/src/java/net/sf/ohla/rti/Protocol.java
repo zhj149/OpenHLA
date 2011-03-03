@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
@@ -32,7 +31,6 @@ import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandle;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
 import org.jboss.netty.buffer.ChannelBufferOutputStream;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import hla.rti1516e.DimensionHandle;
@@ -810,8 +808,7 @@ public class Protocol
     }
     catch (IOException ioe)
     {
-      Logger log = LoggerFactory.getLogger(Protocol.class);
-      log.error("unable to encode String", ioe);
+      LoggerFactory.getLogger(Protocol.class).error("unable to encode String", ioe);
 
       throw new RuntimeException(ioe);
     }
@@ -827,8 +824,7 @@ public class Protocol
     }
     catch (IOException ioe)
     {
-      Logger log = LoggerFactory.getLogger(Protocol.class);
-      log.error("unable to decode String", ioe);
+      LoggerFactory.getLogger(Protocol.class).error("unable to decode String", ioe);
 
       throw new RuntimeException(ioe);
     }
@@ -852,8 +848,7 @@ public class Protocol
     }
     catch (IOException ioe)
     {
-      Logger log = LoggerFactory.getLogger(Protocol.class);
-      log.error("unable to encode String", ioe);
+      LoggerFactory.getLogger(Protocol.class).error("unable to encode String", ioe);
 
       throw new RuntimeException(ioe);
     }
@@ -868,8 +863,7 @@ public class Protocol
     }
     catch (IOException ioe)
     {
-      Logger log = LoggerFactory.getLogger(Protocol.class);
-      log.error("unable to decode String", ioe);
+      LoggerFactory.getLogger(Protocol.class).error("unable to decode String", ioe);
 
       throw new RuntimeException(ioe);
     }
@@ -895,8 +889,7 @@ public class Protocol
       }
       catch (IOException ioe)
       {
-        Logger log = LoggerFactory.getLogger(Protocol.class);
-        log.error("unable to encode Strings", ioe);
+        LoggerFactory.getLogger(Protocol.class).error("unable to encode Strings", ioe);
 
         throw new RuntimeException(ioe);
       }
@@ -927,8 +920,7 @@ public class Protocol
       }
       catch (IOException ioe)
       {
-        Logger log = LoggerFactory.getLogger(Protocol.class);
-        log.error("unable to decode Strings", ioe);
+        LoggerFactory.getLogger(Protocol.class).error("unable to decode Strings", ioe);
 
         throw new RuntimeException(ioe);
       }
