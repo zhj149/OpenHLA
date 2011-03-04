@@ -151,7 +151,7 @@ public class RTI
       FederationExecution federationExecution = federationExecutions.get(federationExecutionName);
       if (federationExecution == null)
       {
-        log.debug(LogMessages.DESTROY_FEDERATION_EXECUTION_FEDERATION_EXECUTION_DOES_NOT_EXIST,
+        log.debug(LogMessages.DESTROY_FEDERATION_EXECUTION_FAILED_FEDERATION_EXECUTION_DOES_NOT_EXIST,
                   federationExecutionName);
 
         response = new DestroyFederationExecutionResponse(

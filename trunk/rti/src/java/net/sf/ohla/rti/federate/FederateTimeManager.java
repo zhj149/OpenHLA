@@ -659,9 +659,9 @@ public class FederateTimeManager
     timeLock.writeLock().lock();
     try
     {
-      this.galt = galt;
+      log.trace(LogMessages.GALT_ADVANCED, this.galt, galt);
 
-      log.debug(LogMessages.GALT_ADVANCED, galt);
+      this.galt = galt;
 
       LogicalTime maxFutureTaskTimestamp;
 

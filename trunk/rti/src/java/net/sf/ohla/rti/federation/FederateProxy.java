@@ -31,6 +31,7 @@ import net.sf.ohla.rti.federate.Federate;
 import net.sf.ohla.rti.federate.TimeAdvanceType;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSetFactory;
 import net.sf.ohla.rti.i18n.I18nLogger;
+import net.sf.ohla.rti.i18n.LogMessages;
 import net.sf.ohla.rti.messages.DeleteObjectInstance;
 import net.sf.ohla.rti.messages.FederateRestoreComplete;
 import net.sf.ohla.rti.messages.FederateRestoreNotComplete;
@@ -68,8 +69,6 @@ import net.sf.ohla.rti.messages.callbacks.TimeConstrainedEnabled;
 import net.sf.ohla.rti.messages.callbacks.TimeRegulationEnabled;
 
 import org.jboss.netty.channel.Channel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
@@ -166,7 +165,7 @@ public class FederateProxy
     marker = MarkerFactory.getMarker(federationExecution.getName() + "." + this.federateName);
     log = I18nLogger.getLogger(marker, FederateProxy.class);
 
-    log.debug(marker, "federate joined: {}", this.federateName);
+    log.debug(LogMessages.FEDERATE_JOINED);
   }
 
   public FederationExecution getFederationExecution()
@@ -248,7 +247,7 @@ public class FederateProxy
   {
     federateChannel.getPipeline().remove(FederateProxyChannelHandler.NAME);
 
-    log.debug(marker, "federate resigned: {} ({})", federateName, resignAction);
+    log.debug(LogMessages.FEDERATE_RESIGNED, resignAction);
   }
 
   public void announceSynchronizationPoint(AnnounceSynchronizationPoint announceSynchronizationPoint)
@@ -649,7 +648,7 @@ public class FederateProxy
   {
     timeRegulationEnabled = true;
 
-    log.debug(marker, "time regulation enabled: {}", this);
+    log.debug(LogMessages.TIME_REGULATION_ENABLED, federateTime);
 
     federateChannel.write(new TimeRegulationEnabled(federateTime));
   }
@@ -661,7 +660,7 @@ public class FederateProxy
     lookahead = null;
     lots = null;
 
-    log.debug(marker, "time regulation disabled: {}");
+    log.debug(LogMessages.TIME_REGULATION_DISABLED);
   }
 
   @SuppressWarnings("unchecked")
@@ -673,7 +672,7 @@ public class FederateProxy
 
       timeConstrainedEnabled = true;
 
-      log.debug(marker, "time constrained enabled: {}", this);
+      log.debug(LogMessages.TIME_CONSTRAINED_ENABLED, federateTime);
 
       federateChannel.write(new TimeConstrainedEnabled(federateTime));
     }
@@ -681,7 +680,7 @@ public class FederateProxy
     {
       timeConstrainedPending = true;
 
-      log.debug(marker, "enable time constrained pending: {}", this);
+      log.debug(LogMessages.ENABLE_TIME_CONSTRAINED_PENDING);
     }
   }
 
@@ -690,14 +689,14 @@ public class FederateProxy
     timeConstrainedEnabled = false;
     lits = null;
 
-    log.debug(marker, "time constrained disabled: {}", this);
+    log.debug(LogMessages.TIME_CONSTRAINED_DISABLED);
   }
 
   @SuppressWarnings("unchecked")
   public void timeAdvanceRequest(LogicalTime time)
     throws IllegalTimeArithmetic, InvalidLogicalTimeInterval
   {
-    log.debug(marker, "time advance request: {}", time);
+    log.debug(LogMessages.TIME_ADVANCE_REQUEST, time);
 
     advanceRequestTime = time;
     advanceRequestType = TimeAdvanceType.TIME_ADVANCE_REQUEST;
@@ -706,7 +705,7 @@ public class FederateProxy
     {
       lots = advanceRequestTime.add(lookahead.isZero() ? epsilon : lookahead);
 
-      log.debug(marker, "LOTS: {}", lots);
+      log.debug(LogMessages.LOTS_ADVANCED, lots);
     }
 
     if (!timeConstrainedEnabled || galt == null || advanceRequestTime.compareTo(galt) < 0)
@@ -724,7 +723,7 @@ public class FederateProxy
   public void timeAdvanceRequestAvailable(LogicalTime time)
     throws IllegalTimeArithmetic, InvalidLogicalTimeInterval
   {
-    log.debug(marker, "time advance request available: {}", time);
+    log.debug(LogMessages.TIME_ADVANCE_REQUEST_AVAILABLE, time);
 
     advanceRequestTime = time;
     advanceRequestType = TimeAdvanceType.TIME_ADVANCE_REQUEST_AVAILABLE;
@@ -733,7 +732,7 @@ public class FederateProxy
     {
       lots = advanceRequestTime.add(lookahead);
 
-      log.debug(marker, "LOTS: {}", lots);
+      log.debug(LogMessages.LOTS_ADVANCED, lots);
     }
 
     if (!timeConstrainedEnabled || galt == null || advanceRequestTime.compareTo(galt) <= 0)
@@ -751,7 +750,7 @@ public class FederateProxy
   public void nextMessageRequest(LogicalTime time)
     throws IllegalTimeArithmetic, InvalidLogicalTimeInterval
   {
-    log.debug(marker, "next message request: {}", time);
+    log.debug(LogMessages.NEXT_MESSAGE_REQUEST, time);
 
     advanceRequestType = TimeAdvanceType.NEXT_MESSAGE_REQUEST;
 
@@ -763,7 +762,7 @@ public class FederateProxy
       {
         lots = time.add(lookahead.isZero() ? epsilon : lookahead);
 
-        log.debug(marker, "LOTS: {}", lots);
+        log.debug(LogMessages.LOTS_ADVANCED, lots);
       }
 
       // immediately grant the request
@@ -784,7 +783,7 @@ public class FederateProxy
       {
         lots = time.add(lookahead.isZero() ? epsilon : lookahead);
 
-        log.debug(marker, "LOTS: {}", lots);
+        log.debug(LogMessages.LOTS_ADVANCED, lots);
       }
 
       // immediately grant the request
@@ -801,7 +800,7 @@ public class FederateProxy
       {
         lots = lits.add(lookahead.isZero() ? epsilon : lookahead);
 
-        log.debug(marker, "LOTS: {}", lots);
+        log.debug(LogMessages.LOTS_ADVANCED, lots);
       }
 
       // immediately grant the request
@@ -820,7 +819,7 @@ public class FederateProxy
 
         lots = galt.add(lookahead.isZero() ? epsilon : lookahead);
 
-        log.debug(marker, "LOTS: {}", lots);
+        log.debug(LogMessages.LOTS_ADVANCED, lots);
       }
     }
   }
@@ -829,7 +828,7 @@ public class FederateProxy
   public void nextMessageRequestAvailable(LogicalTime time)
     throws IllegalTimeArithmetic, InvalidLogicalTimeInterval
   {
-    log.debug(marker, "next message request available: {}", time);
+    log.debug(LogMessages.NEXT_MESSAGE_REQUEST_AVAILABLE, time);
 
     advanceRequestType = TimeAdvanceType.NEXT_MESSAGE_REQUEST_AVAILABLE;
 
@@ -841,7 +840,7 @@ public class FederateProxy
       {
         lots = time.add(lookahead);
 
-        log.debug(marker, "LOTS: {}", lots);
+        log.debug(LogMessages.LOTS_ADVANCED, lots);
       }
 
       // immediately grant the request
@@ -862,7 +861,7 @@ public class FederateProxy
       {
         lots = time.add(lookahead);
 
-        log.debug(marker, "LOTS: {}", lots);
+        log.debug(LogMessages.LOTS_ADVANCED, lots);
       }
 
       // immediately grant the request
@@ -879,7 +878,7 @@ public class FederateProxy
       {
         lots = lits.add(lookahead);
 
-        log.debug(marker, "LOTS: {}", lots);
+        log.debug(LogMessages.LOTS_ADVANCED, lots);
       }
 
       // immediately grant the request
@@ -898,7 +897,7 @@ public class FederateProxy
 
         lots = galt.add(lookahead);
 
-        log.debug(marker, "LOTS: {}", lots);
+        log.debug(LogMessages.LOTS_ADVANCED, lots);
       }
     }
   }
@@ -907,7 +906,7 @@ public class FederateProxy
   public void flushQueueRequest(LogicalTime time)
     throws IllegalTimeArithmetic, InvalidLogicalTimeInterval
   {
-    log.debug(marker, "flush queue request: {}", time);
+    log.debug(LogMessages.FLUSH_QUEUE_REQUEST, time);
 
     advanceRequestType = TimeAdvanceType.FLUSH_QUEUE_REQUEST;
 
@@ -917,7 +916,7 @@ public class FederateProxy
     {
       lots = federateTime.add(lookahead);
 
-      log.debug(marker, "LOTS: {}", lots);
+      log.debug(LogMessages.LOTS_ADVANCED, lots);
     }
 
     federateChannel.write(new TimeAdvanceGrant(federateTime));
@@ -929,13 +928,13 @@ public class FederateProxy
   {
     if (this.galt == null)
     {
-      log.debug(marker, "GALT defined: {}", galt);
+      log.debug(LogMessages.GALT_DEFINED, galt);
     }
     else
     {
       assert this.galt.compareTo(galt) < 0;
 
-      log.debug(marker, "GALT advanced: {} to {}", this.galt, galt);
+      log.debug(LogMessages.GALT_ADVANCED, this.galt, galt);
     }
 
     this.galt = galt;
@@ -947,7 +946,7 @@ public class FederateProxy
       timeConstrainedPending = false;
       timeConstrainedEnabled = true;
 
-      log.debug(marker, "time constrained enabled: {}", federateTime);
+      log.debug(LogMessages.TIME_CONSTRAINED_ENABLED, federateTime);
 
       federateChannel.write(new TimeConstrainedEnabled(federateTime));
     }
@@ -1066,7 +1065,7 @@ public class FederateProxy
         {
           lits = time;
 
-          log.trace(marker, "LITS: {}", lits);
+          log.debug(LogMessages.LITS_ADVANCED, lots);
         }
       }
     }

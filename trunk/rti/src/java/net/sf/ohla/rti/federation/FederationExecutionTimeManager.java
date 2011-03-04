@@ -22,6 +22,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.sf.ohla.rti.i18n.I18nLogger;
+import net.sf.ohla.rti.i18n.LogMessages;
 
 import hla.rti1516e.LogicalTime;
 import hla.rti1516e.LogicalTimeFactory;
@@ -214,11 +215,11 @@ public class FederationExecutionTimeManager
     }
     catch (IllegalTimeArithmetic ita)
     {
-      log.error("unable to enable time regulation", ita);
+      log.error(LogMessages.UNABLE_TO_ENABLE_TIME_REGULATION, ita);
     }
     catch (InvalidLogicalTimeInterval ilti)
     {
-      log.error("unable to enable time regulation", ilti);
+      log.error(LogMessages.UNABLE_TO_ENABLE_TIME_REGULATION, ilti);
     }
     finally
     {
@@ -340,7 +341,7 @@ public class FederationExecutionTimeManager
     }
     catch (IllegalTimeArithmetic ita)
     {
-      log.error("unable to disable time regulation", ita);
+      log.error(LogMessages.UNABLE_TO_DISABLE_TIME_REGULATION, ita);
     }
     finally
     {
@@ -405,11 +406,11 @@ public class FederationExecutionTimeManager
     }
     catch (IllegalTimeArithmetic ita)
     {
-      log.error("unable to request time advance", ita);
+      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ita);
     }
     catch (InvalidLogicalTimeInterval ilti)
     {
-      log.error("unable to request time advance", ilti);
+      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ilti);
     }
     finally
     {
@@ -431,11 +432,11 @@ public class FederationExecutionTimeManager
     }
     catch (IllegalTimeArithmetic ita)
     {
-      log.error("unable to request time advance", ita);
+      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ita);
     }
     catch (InvalidLogicalTimeInterval ilti)
     {
-      log.error("unable to request time advance", ilti);
+      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ilti);
     }
     finally
     {
@@ -457,11 +458,11 @@ public class FederationExecutionTimeManager
     }
     catch (IllegalTimeArithmetic ita)
     {
-      log.error("unable to request time advance", ita);
+      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ita);
     }
     catch (InvalidLogicalTimeInterval ilti)
     {
-      log.error("unable to request time advance", ilti);
+      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ilti);
     }
     finally
     {
@@ -484,11 +485,11 @@ public class FederationExecutionTimeManager
     }
     catch (IllegalTimeArithmetic ita)
     {
-      log.error("unable to request time advance", ita);
+      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ita);
     }
     catch (InvalidLogicalTimeInterval ilti)
     {
-      log.error("unable to request time advance", ilti);
+      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ilti);
     }
     finally
     {
@@ -511,11 +512,11 @@ public class FederationExecutionTimeManager
     }
     catch (IllegalTimeArithmetic ita)
     {
-      log.error("unable to request time advance", ita);
+      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ita);
     }
     catch (InvalidLogicalTimeInterval ilti)
     {
-      log.error("unable to request time advance", ilti);
+      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ilti);
     }
     finally
     {
@@ -538,11 +539,11 @@ public class FederationExecutionTimeManager
     }
     catch (IllegalTimeArithmetic ita)
     {
-      log.error("unable to request time advance", ita);
+      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ita);
     }
     catch (InvalidLogicalTimeInterval ilti)
     {
-      log.error("unable to request time advance", ilti);
+      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ilti);
     }
     finally
     {
@@ -564,11 +565,11 @@ public class FederationExecutionTimeManager
     }
     catch (IllegalTimeArithmetic ita)
     {
-      log.error("unable to request time advance", ita);
+      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ita);
     }
     catch (InvalidLogicalTimeInterval ilti)
     {
-      log.error("unable to request time advance", ilti);
+      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ilti);
     }
     finally
     {

@@ -41,6 +41,8 @@ import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRTIambassador;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandleSet;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandle;
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
 import net.sf.ohla.rti.i18n.I18nLogger;
 
 import hla.rti.ArrayIndexOutOfBounds;
@@ -502,10 +504,13 @@ public class HLA13RTIambassador
   public void registerFederationSynchronizationPoint(String label, byte[] tag, FederateHandleSet federateHandles)
     throws FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
-    if (!HLA13FederateHandleSet.class.isInstance(federateHandles))
+    if (federateHandles == null)
     {
-      throw new RTIinternalError(String.format(
-        "invalid FederateHandleSet: %s", federateHandles));
+      throw new RTIinternalError(I18n.getMessage(ExceptionMessages.FEDERATE_HANDLE_SET_IS_NULL));
+    }
+    else if (!HLA13FederateHandleSet.class.isInstance(federateHandles))
+    {
+      throw new RTIinternalError(I18n.getMessage(ExceptionMessages.INVALID_FEDERATE_HANDLE_SET_TYPE));
     }
 
     try
@@ -2845,12 +2850,13 @@ public class HLA13RTIambassador
     }
   }
 
-  public void retract(hla.rti.EventRetractionHandle eventRetractionHandle)
+  public void retract(EventRetractionHandle eventRetractionHandle)
     throws InvalidRetractionHandle, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
     if (eventRetractionHandle == null)
     {
-      throw new InvalidRetractionHandle("null");
+      throw new InvalidRetractionHandle(I18n.getMessage(
+        ExceptionMessages.INVALID_RETRACTION_HANDLE_RETRACTION_HANDLE_IS_NULL));
     }
     else if (eventRetractionHandle instanceof HLA13EventRetractionHandle)
     {
@@ -2894,7 +2900,8 @@ public class HLA13RTIambassador
     }
     else
     {
-      throw new InvalidRetractionHandle(eventRetractionHandle.toString());
+      throw new InvalidRetractionHandle(I18n.getMessage(
+        ExceptionMessages.INVALID_RETRACTION_HANDLE_INVALID_TYPE, eventRetractionHandle.getClass()));
     }
   }
 
@@ -2985,14 +2992,13 @@ public class HLA13RTIambassador
     throws SpaceNotDefined, InvalidExtents, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
-    if (numberOfExtents <= 0)
-    {
-      throw new InvalidExtents(String.format("%d <= 0", numberOfExtents));
-    }
-
     RoutingSpace routingSpace = fed.getRoutingSpace(routingSpaceHandle);
 
-    log.debug("creating region in {}, with {} extent(s)", routingSpace.getRoutingSpaceName(), numberOfExtents);
+    if (numberOfExtents <= 0)
+    {
+      throw new InvalidExtents(I18n.getMessage(
+        ExceptionMessages.INVALID_EXTENTS_LESS_THAN_ONE, routingSpace, numberOfExtents));
+    }
 
     // create an IEEE 1516e region for each extent
     //
@@ -3051,11 +3057,12 @@ public class HLA13RTIambassador
   {
     if (region == null)
     {
-      throw new RegionNotKnown("null");
+      throw new RegionNotKnown(I18n.getMessage(ExceptionMessages.REGION_NOT_KNOWN_REGION_IS_NULL));
     }
     else if (!HLA13Region.class.isInstance(region))
     {
-      throw new RegionNotKnown(String.format("invalid region type: %s", region.getClass()));
+      throw new RegionNotKnown(I18n.getMessage(
+        ExceptionMessages.REGION_NOT_KNOWN_INVALID_REGION_TYPE, region.getClass()));
     }
 
     HLA13Region ohlaRegion = (HLA13Region) region;
@@ -3130,17 +3137,15 @@ public class HLA13RTIambassador
   {
     if (region == null)
     {
-      throw new RegionNotKnown("null");
+      throw new RegionNotKnown(I18n.getMessage(ExceptionMessages.REGION_NOT_KNOWN_REGION_IS_NULL));
     }
     else if (!HLA13Region.class.isInstance(region))
     {
-      throw new RegionNotKnown(String.format(
-        "invalid region type: %s", region.getClass()));
+      throw new RegionNotKnown(I18n.getMessage(
+        ExceptionMessages.REGION_NOT_KNOWN_INVALID_REGION_TYPE, region.getClass()));
     }
 
     HLA13Region ohlaRegion = (HLA13Region) region;
-
-    log.debug("deleting region: {}", region);
 
     try
     {
@@ -3192,12 +3197,12 @@ public class HLA13RTIambassador
     {
       if (region == null)
       {
-        throw new RegionNotKnown("null");
+        throw new RegionNotKnown(I18n.getMessage(ExceptionMessages.REGION_NOT_KNOWN_REGION_IS_NULL));
       }
       else if (!HLA13Region.class.isInstance(region))
       {
-        throw new RegionNotKnown(String.format(
-          "invalid region type: %s", region.getClass()));
+        throw new RegionNotKnown(I18n.getMessage(
+          ExceptionMessages.REGION_NOT_KNOWN_INVALID_REGION_TYPE, region.getClass()));
       }
 
       regionHandles.addAll(((HLA13Region) region).getRegionHandles());
@@ -3279,12 +3284,12 @@ public class HLA13RTIambassador
     {
       if (region == null)
       {
-        throw new RegionNotKnown("null");
+        throw new RegionNotKnown(I18n.getMessage(ExceptionMessages.REGION_NOT_KNOWN_REGION_IS_NULL));
       }
       else if (!HLA13Region.class.isInstance(region))
       {
-        throw new RegionNotKnown(String.format(
-          "invalid region type: %s", region.getClass()));
+        throw new RegionNotKnown(I18n.getMessage(
+          ExceptionMessages.REGION_NOT_KNOWN_INVALID_REGION_TYPE, region.getClass()));
       }
 
       regionHandles.addAll(((HLA13Region) region).getRegionHandles());
@@ -3369,12 +3374,12 @@ public class HLA13RTIambassador
   {
     if (region == null)
     {
-      throw new RegionNotKnown("null");
+      throw new RegionNotKnown(I18n.getMessage(ExceptionMessages.REGION_NOT_KNOWN_REGION_IS_NULL));
     }
     else if (!HLA13Region.class.isInstance(region))
     {
-      throw new RegionNotKnown(String.format(
-        "invalid region type: %s", region.getClass()));
+      throw new RegionNotKnown(I18n.getMessage(
+        ExceptionMessages.REGION_NOT_KNOWN_INVALID_REGION_TYPE, region.getClass()));
     }
 
     hla.rti1516e.AttributeSetRegionSetPairList asrspl = new IEEE1516eAttributeSetRegionSetPairList();
@@ -3434,12 +3439,12 @@ public class HLA13RTIambassador
   {
     if (region == null)
     {
-      throw new RegionNotKnown("null");
+      throw new RegionNotKnown(I18n.getMessage(ExceptionMessages.REGION_NOT_KNOWN_REGION_IS_NULL));
     }
     else if (!HLA13Region.class.isInstance(region))
     {
-      throw new RegionNotKnown(String.format(
-        "invalid region type: %s", region.getClass()));
+      throw new RegionNotKnown(I18n.getMessage(
+        ExceptionMessages.REGION_NOT_KNOWN_INVALID_REGION_TYPE, region.getClass()));
     }
 
     try
@@ -3503,12 +3508,12 @@ public class HLA13RTIambassador
   {
     if (region == null)
     {
-      throw new RegionNotKnown("null");
+      throw new RegionNotKnown(I18n.getMessage(ExceptionMessages.REGION_NOT_KNOWN_REGION_IS_NULL));
     }
     else if (!HLA13Region.class.isInstance(region))
     {
-      throw new RegionNotKnown(String.format(
-        "invalid region type: %s", region.getClass()));
+      throw new RegionNotKnown(I18n.getMessage(
+        ExceptionMessages.REGION_NOT_KNOWN_INVALID_REGION_TYPE, region.getClass()));
     }
 
     try
@@ -3571,11 +3576,12 @@ public class HLA13RTIambassador
   {
     if (region == null)
     {
-      throw new RegionNotKnown("null");
+      throw new RegionNotKnown(I18n.getMessage(ExceptionMessages.REGION_NOT_KNOWN_REGION_IS_NULL));
     }
     else if (!HLA13Region.class.isInstance(region))
     {
-      throw new RegionNotKnown(String.format("invalid region type: %s", region.getClass()));
+      throw new RegionNotKnown(I18n.getMessage(
+        ExceptionMessages.REGION_NOT_KNOWN_INVALID_REGION_TYPE, region.getClass()));
     }
 
     try
@@ -3636,11 +3642,12 @@ public class HLA13RTIambassador
   {
     if (region == null)
     {
-      throw new RegionNotKnown("null");
+      throw new RegionNotKnown(I18n.getMessage(ExceptionMessages.REGION_NOT_KNOWN_REGION_IS_NULL));
     }
     else if (!HLA13Region.class.isInstance(region))
     {
-      throw new RegionNotKnown(String.format("invalid region type: %s", region.getClass()));
+      throw new RegionNotKnown(I18n.getMessage(
+        ExceptionMessages.REGION_NOT_KNOWN_INVALID_REGION_TYPE, region.getClass()));
     }
 
     ObjectClass objectClass;
@@ -3706,11 +3713,12 @@ public class HLA13RTIambassador
   {
     if (region == null)
     {
-      throw new RegionNotKnown("null");
+      throw new RegionNotKnown(I18n.getMessage(ExceptionMessages.REGION_NOT_KNOWN_REGION_IS_NULL));
     }
     else if (!HLA13Region.class.isInstance(region))
     {
-      throw new RegionNotKnown(String.format("invalid region type: %s", region.getClass()));
+      throw new RegionNotKnown(I18n.getMessage(
+        ExceptionMessages.REGION_NOT_KNOWN_INVALID_REGION_TYPE, region.getClass()));
     }
 
     try
@@ -3766,11 +3774,12 @@ public class HLA13RTIambassador
   {
     if (region == null)
     {
-      throw new RegionNotKnown("null");
+      throw new RegionNotKnown(I18n.getMessage(ExceptionMessages.REGION_NOT_KNOWN_REGION_IS_NULL));
     }
     else if (!HLA13Region.class.isInstance(region))
     {
-      throw new RegionNotKnown(String.format("invalid region type: %s", region.getClass()));
+      throw new RegionNotKnown(I18n.getMessage(
+        ExceptionMessages.REGION_NOT_KNOWN_INVALID_REGION_TYPE, region.getClass()));
     }
 
     try
@@ -3826,11 +3835,12 @@ public class HLA13RTIambassador
   {
     if (region == null)
     {
-      throw new RegionNotKnown("null");
+      throw new RegionNotKnown(I18n.getMessage(ExceptionMessages.REGION_NOT_KNOWN_REGION_IS_NULL));
     }
     else if (!HLA13Region.class.isInstance(region))
     {
-      throw new RegionNotKnown(String.format("invalid region type: %s", region.getClass()));
+      throw new RegionNotKnown(I18n.getMessage(
+        ExceptionMessages.REGION_NOT_KNOWN_INVALID_REGION_TYPE, region.getClass()));
     }
 
     try
@@ -3879,11 +3889,12 @@ public class HLA13RTIambassador
   {
     if (region == null)
     {
-      throw new RegionNotKnown("null");
+      throw new RegionNotKnown(I18n.getMessage(ExceptionMessages.REGION_NOT_KNOWN_REGION_IS_NULL));
     }
     else if (!HLA13Region.class.isInstance(region))
     {
-      throw new RegionNotKnown(String.format("invalid region type: %s", region.getClass()));
+      throw new RegionNotKnown(I18n.getMessage(
+        ExceptionMessages.REGION_NOT_KNOWN_INVALID_REGION_TYPE, region.getClass()));
     }
 
     try
@@ -3948,11 +3959,12 @@ public class HLA13RTIambassador
   {
     if (region == null)
     {
-      throw new RegionNotKnown("null");
+      throw new RegionNotKnown(I18n.getMessage(ExceptionMessages.REGION_NOT_KNOWN_REGION_IS_NULL));
     }
     else if (!HLA13Region.class.isInstance(region))
     {
-      throw new RegionNotKnown(String.format("invalid region type: %s", region.getClass()));
+      throw new RegionNotKnown(I18n.getMessage(
+        ExceptionMessages.REGION_NOT_KNOWN_INVALID_REGION_TYPE, region.getClass()));
     }
 
     try
@@ -4019,11 +4031,12 @@ public class HLA13RTIambassador
   {
     if (region == null)
     {
-      throw new RegionNotKnown("null");
+      throw new RegionNotKnown(I18n.getMessage(ExceptionMessages.REGION_NOT_KNOWN_REGION_IS_NULL));
     }
     else if (!HLA13Region.class.isInstance(region))
     {
-      throw new RegionNotKnown(String.format("invalid region type: %s", region.getClass()));
+      throw new RegionNotKnown(I18n.getMessage(
+        ExceptionMessages.REGION_NOT_KNOWN_INVALID_REGION_TYPE, region.getClass()));
     }
 
     hla.rti1516e.AttributeSetRegionSetPairList asrspl = new IEEE1516eAttributeSetRegionSetPairList();
@@ -4790,7 +4803,7 @@ public class HLA13RTIambassador
       HLA13Region region = regions.get(regionToken);
       if (region == null)
       {
-        throw new RegionNotKnown(Integer.toString(regionToken));
+        throw new RegionNotKnown(I18n.getMessage(ExceptionMessages.REGION_NOT_KNOWN_REGION_TOKEN_NOT_KNOWN));
       }
 
       try
@@ -4865,11 +4878,12 @@ public class HLA13RTIambassador
   {
     if (region == null)
     {
-      throw new RegionNotKnown("null");
+      throw new RegionNotKnown(I18n.getMessage(ExceptionMessages.REGION_NOT_KNOWN_REGION_IS_NULL));
     }
     else if (!HLA13Region.class.isInstance(region))
     {
-      throw new RegionNotKnown(String.format("invalid region type: %s", region.getClass()));
+      throw new RegionNotKnown(I18n.getMessage(
+        ExceptionMessages.REGION_NOT_KNOWN_INVALID_REGION_TYPE, region.getClass()));
     }
 
     return ((HLA13Region) region).getToken();
