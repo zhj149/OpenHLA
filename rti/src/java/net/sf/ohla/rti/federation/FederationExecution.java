@@ -32,6 +32,7 @@ import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSet;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandleSet;
 import net.sf.ohla.rti.i18n.I18nLogger;
+import net.sf.ohla.rti.i18n.LogMessages;
 import net.sf.ohla.rti.messages.AbortFederationRestore;
 import net.sf.ohla.rti.messages.AbortFederationSave;
 import net.sf.ohla.rti.messages.AssociateRegionsForUpdates;
@@ -191,7 +192,7 @@ public class FederationExecution
     marker = MarkerFactory.getMarker(name);
     log = I18nLogger.getLogger(marker, FederationExecution.class);
 
-    log.debug("federation execution created");
+    log.debug(LogMessages.FEDERATION_EXECUTION_CREATED);
   }
 
   public String getName()
@@ -245,7 +246,7 @@ public class FederationExecution
     {
       if (federates.isEmpty())
       {
-        log.debug("federation execution destroyed");
+        log.debug(LogMessages.FEDERATION_EXECUTION_DESTROYED);
 
         response = new DestroyFederationExecutionResponse(
           destroyFederationExecution.getId(), DestroyFederationExecutionResponse.Response.SUCCESS);
@@ -258,8 +259,7 @@ public class FederationExecution
           currentlyJoinedFederates.add(federate.getFederateName());
         }
 
-        log.debug("destroy federation execution failed, federates currently joined: {}",
-                  currentlyJoinedFederates);
+        log.debug(LogMessages.DESTROY_FEDERATION_EXECUTION_FAILED_FEDERATES_CURRENTLY_JOINED, currentlyJoinedFederates);
 
         response = new DestroyFederationExecutionResponse(destroyFederationExecution.getId(), currentlyJoinedFederates);
       }
@@ -277,21 +277,19 @@ public class FederationExecution
     String federateName = joinFederationExecution.getFederateName();
     String federateType = joinFederationExecution.getFederateType();
 
-    log.debug("join federation execution: {} - {}", federateType, federateName);
-
     federationExecutionStateLock.writeLock().lock();
     try
     {
       if (saveInProgress())
       {
-        log.debug("join federation execution failed, save in progress: {}", federateName);
+        log.debug(LogMessages.JOIN_FEDERATION_EXECUTION_FAILED_SAVE_IN_PROGRESS, federateName);
 
         context.getChannel().write(new JoinFederationExecutionResponse(
           joinFederationExecution.getId(), JoinFederationExecutionResponse.Response.SAVE_IN_PROGRESS));
       }
       else if (restoreInProgress())
       {
-        log.debug("join federation execution failed, restore in progress: {}", federateName);
+        log.debug(LogMessages.JOIN_FEDERATION_EXECUTION_FAILED_RESTORE_IN_PROGRESS, federateName);
 
         context.getChannel().write(new JoinFederationExecutionResponse(
           joinFederationExecution.getId(), JoinFederationExecutionResponse.Response.RESTORE_IN_PROGRESS));
@@ -328,7 +326,7 @@ public class FederationExecution
         }
         catch (InconsistentFDD iFDD)
         {
-          log.debug("join federation execution failed, inconsistent FDD", iFDD);
+          log.warn(LogMessages.JOIN_FEDERATION_EXECUTION_FAILED_INCONSISTENT_FDD, iFDD, federateName);
 
           // TODO: response needs a message about the failure
 
@@ -371,8 +369,6 @@ public class FederationExecution
     byte[] tag = registerFederationSynchronizationPoint.getTag();
     FederateHandleSet federateHandles = registerFederationSynchronizationPoint.getFederateHandles();
 
-    log.debug("register federation synchronization point: {}", label);
-
     federationExecutionStateLock.writeLock().lock();
     try
     {
@@ -380,7 +376,7 @@ public class FederationExecution
         synchronizationPoints.get(label);
       if (federationExecutionSynchronizationPoint != null)
       {
-        log.debug("register federation synchronization point failed, label not unique: {}", label);
+        log.debug(LogMessages.REGISTER_FEDERATION_SYNCHRONIZATION_POINT_LABEL_NOT_UNIQUE, label);
 
         federateProxy.getFederateChannel().write(new SynchronizationPointRegistrationFailed(
           label, SynchronizationPointFailureReason.SYNCHRONIZATION_POINT_LABEL_NOT_UNIQUE));
@@ -397,19 +393,17 @@ public class FederationExecution
 
         // verify all the federates in the set are joined
         //
-        if (!federateHandlesValid  && !federates.keySet().containsAll(federateHandles))
+        if (!federateHandlesValid && !federates.keySet().containsAll(federateHandles))
         {
-          log.debug(
-            "register federation synchronization point failed, synchonization set member not joined: {}, {} not in {}",
-            new Object[] { label, federateHandles, federates.keySet() });
+          log.debug(LogMessages.REGISTER_FEDERATION_SYNCHRONIZATION_POINT_SYNCHRONIZATION_SET_MEMBER_NOT_JOINED,
+                    label, federateHandles, federates.keySet());
 
           federateProxy.getFederateChannel().write(new SynchronizationPointRegistrationFailed(
             label, SynchronizationPointFailureReason.SYNCHRONIZATION_SET_MEMBER_NOT_JOINED));
         }
         else
         {
-          synchronizationPoints.put(
-            label, new FederationExecutionSynchronizationPoint(label, tag, federateHandles));
+          synchronizationPoints.put(label, new FederationExecutionSynchronizationPoint(label, tag, federateHandles));
 
           federateProxy.getFederateChannel().write(new SynchronizationPointRegistrationSucceeded(label));
 
@@ -449,7 +443,7 @@ public class FederationExecution
           FederateProxy synchronizedFederateProxy = federates.get(federateHandle);
           if (synchronizedFederateProxy == null)
           {
-            log.warn("federate unable to complete synchronization, federate has resigned: {}",
+            log.warn(LogMessages.FEDERATE_UNABLE_TO_COMPLETE_SYNCHRONIZATION_FEDERATE_RESIGNED,
                      resignedFederates.get(federateHandle));
           }
           else
@@ -486,7 +480,7 @@ public class FederationExecution
 
       if (federationExecutionSave != null)
       {
-        log.info("replacing federation execution save: {}", federationExecutionSave.getLabel());
+        // TODO: not sure what I was thinking here
       }
 
       federationExecutionSave = new FederationExecutionSave(label, time);
@@ -503,8 +497,7 @@ public class FederationExecution
       }
       else
       {
-        // this is a psuedo save-in-progress... it will only prevent joins
-        // and new requests to save/restore
+        // this is a psuedo save-in-progress... it will only prevent joins and new requests to save/restore
         //
         federationExecutionState = FederationExecutionState.SAVE_IN_PROGRESS;
 

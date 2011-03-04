@@ -1,6 +1,10 @@
 0.5 alpha
   - ported to Netty
   - added IEEE 1516 'Evolved' support
+  - added Internationalization support
+  - performance improvements
+  - completed proper DDM implementation
+  - completed ownership management implementation
 
 0.4 alpha
 

@@ -28,6 +28,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.i18n.I18nLogger;
+import net.sf.ohla.rti.i18n.LogMessages;
 import net.sf.ohla.rti.messages.AssociateRegionsForUpdates;
 import net.sf.ohla.rti.messages.AssociateRegionsForUpdatesResponse;
 import net.sf.ohla.rti.messages.DeleteObjectInstance;
@@ -174,7 +175,7 @@ public class FederationExecutionObjectManager
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
       if (objectInstance == null)
       {
-        log.trace("dropping local delete object instance, object has been deleted: {}", objectInstanceHandle);
+        log.trace(LogMessages.DROPPING_LOCAL_DELETE_OBJECT_INSTANCE_OBJECT_DELETED, objectInstanceHandle);
       }
       else
       {
@@ -224,7 +225,7 @@ public class FederationExecutionObjectManager
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
       if (objectInstance == null)
       {
-        log.trace("dropping request object instance value update, object has been deleted: {}",
+        log.trace(LogMessages.DROPPING_REQUEST_OBJECT_INSTANCE_ATTRIBUTE_VALUE_UPDATE_OBJECT_INSTANCE_DELETED,
                   objectInstanceHandle);
       }
       else
@@ -369,7 +370,7 @@ public class FederationExecutionObjectManager
       }
       else
       {
-        log.debug("reserve object instance name failed, name already reserved: {} by {}",
+        log.debug(LogMessages.RESERVE_OBJECT_INSTANCE_NAME_FAILED_NAME_ALREADY_RESERVED,
                   name, reservingFederateProxy);
 
         federateProxy.getFederateChannel().write(new ObjectInstanceNameReservationFailed(name));
@@ -423,7 +424,7 @@ public class FederationExecutionObjectManager
       }
       else
       {
-        log.debug("reserve multiple object instance name failed, names already reserved: {}",
+        log.debug(LogMessages.RESERVE_OBJECT_INSTANCE_NAMES_FAILED_NAME_ALREADY_RESERVED,
                   alreadyReservedObjectInstanceNames);
 
         federateProxy.getFederateChannel().write(new MultipleObjectInstanceNameReservationFailed(objectInstanceNames));
@@ -506,7 +507,7 @@ public class FederationExecutionObjectManager
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
       if (objectInstance == null)
       {
-        log.trace("dropping negotiated attribute ownership divestiture, object has been deleted: {}",
+        log.trace(LogMessages.DROPPING_UNCONDITIONAL_ATTRIBUTE_OWNERSHIP_DIVESTITURE_OBJECT_INSTANCE_OBJECT_DELETED,
                   objectInstanceHandle);
       }
       else
@@ -529,7 +530,7 @@ public class FederationExecutionObjectManager
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
       if (objectInstance == null)
       {
-        log.trace("dropping negotiated attribute ownership divestiture, object has been deleted: {}",
+        log.trace(LogMessages.DROPPING_NEGOTIATED_ATTRIBUTE_OWNERSHIP_DIVESTITURE_OBJECT_INSTANCE_OBJECT_DELETED,
                   objectInstanceHandle);
       }
       else
@@ -552,7 +553,7 @@ public class FederationExecutionObjectManager
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
       if (objectInstance == null)
       {
-        log.trace("dropping confirm divestiture, object has been deleted: {}", objectInstanceHandle);
+        log.trace(LogMessages.DROPPING_CONFIRM_DIVESTITURE_INSTANCE_OBJECT_DELETED, objectInstanceHandle);
       }
       else
       {
@@ -574,7 +575,7 @@ public class FederationExecutionObjectManager
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
       if (objectInstance == null)
       {
-        log.trace("dropping attribute ownership acquisition, object has been deleted: {}",
+        log.trace(LogMessages.DROPPING_ATTRIBUTE_OWNERSHIP_ACQUISITION_OBJECT_INSTANCE_OBJECT_DELETED,
                   objectInstanceHandle);
       }
       else
@@ -597,7 +598,7 @@ public class FederationExecutionObjectManager
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
       if (objectInstance == null)
       {
-        log.trace("dropping attribute ownership acquisition if available, object has been deleted: {}",
+        log.trace(LogMessages.DROPPING_UNCONDITIONAL_ATTRIBUTE_OWNERSHIP_DIVESTITURE_IF_AVAILABLE_OBJECT_INSTANCE_OBJECT_DELETED,
                   objectInstanceHandle);
       }
       else
@@ -622,7 +623,7 @@ public class FederationExecutionObjectManager
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
       if (objectInstance == null)
       {
-        log.trace("dropping attribute ownership acquisition, object has been deleted: {}",
+        log.trace(LogMessages.DROPPING_ATTRIBUTE_OWNERSHIP_DIVESTITURE_IF_WANTED_OBJECT_INSTANCE_OBJECT_DELETED,
                   objectInstanceHandle);
 
         divestitures = Collections.emptyMap();
@@ -685,7 +686,7 @@ public class FederationExecutionObjectManager
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
       if (objectInstance == null)
       {
-        log.trace("dropping query attribute ownership, object has been deleted: {}", objectInstanceHandle);
+        log.trace(LogMessages.DROPPING_QUERY_ATTRIBUTE_OWNERSHIP_OBJECT_INSTANCE_OBJECT_DELETED, objectInstanceHandle);
       }
       else
       {
@@ -709,7 +710,8 @@ public class FederationExecutionObjectManager
       FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
       if (objectInstance == null)
       {
-        log.trace("dropping associate regions for updates, object has been deleted: {}", objectInstanceHandle);
+        log.trace(LogMessages.DROPPING_ASSOCIATE_REGIONS_FOR_UPDATES_OBJECT_INSTANCE_OBJECT_DELETED,
+                  objectInstanceHandle);
 
         federateProxy.getFederateChannel().write(new AssociateRegionsForUpdatesResponse(
           associateRegionsForUpdates.getId(), AssociateRegionsForUpdatesResponse.Response.OBJECT_INSTANCE_NOT_KNOWN));
