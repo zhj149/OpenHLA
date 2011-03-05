@@ -27,10 +27,8 @@ public class Integer64TimeInterval
 {
   private static final byte ENCODED_LENGTH = Long.SIZE / 8;
 
-  public static final Integer64TimeInterval ZERO =
-    new Integer64TimeInterval(0);
-  public static final Integer64TimeInterval EPSILON =
-    new Integer64TimeInterval(1);
+  public static final Integer64TimeInterval ZERO = new Integer64TimeInterval(0);
+  public static final Integer64TimeInterval EPSILON = new Integer64TimeInterval(1);
 
   public final long interval;
 
@@ -64,10 +62,9 @@ public class Integer64TimeInterval
 
   public LogicalTimeInterval subtract(LogicalTimeInterval lti)
   {
-    assert lti instanceof Integer64TimeInterval : String.format("%s", lti);
+    assert lti instanceof Integer64TimeInterval;
 
-    return new Integer64TimeInterval(
-      interval - ((Integer64TimeInterval) lti).interval);
+    return new Integer64TimeInterval(interval - ((Integer64TimeInterval) lti).interval);
   }
 
   public int encodedLength()
@@ -88,14 +85,13 @@ public class Integer64TimeInterval
   public int compareTo(Integer64TimeInterval rhs)
   {
     long diff = interval - rhs.interval;
-    return diff > 0l ? 1 : diff < 0l ? -1 : 0;
+    return diff > 0L ? 1 : diff < 0L ? -1 : 0;
   }
 
   @Override
   public boolean equals(Object rhs)
   {
-    return rhs instanceof Integer64TimeInterval &&
-           interval == ((Integer64TimeInterval) rhs).interval;
+    return this == rhs || (rhs instanceof Integer64TimeInterval && interval == ((Integer64TimeInterval) rhs).interval);
   }
 
   @Override
