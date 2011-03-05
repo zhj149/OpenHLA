@@ -33,13 +33,13 @@ import hla.rti.jlc.RtiFactoryFactory;
 public abstract class BaseTestNG
   implements TestConstants
 {
+  protected final int rtiAmbassadorCount;
+  protected final List<RTIambassadorEx> rtiAmbassadors;
+
   protected URL fed;
   protected URL badFED;
 
   protected RtiFactory rtiFactory;
-
-  protected int rtiAmbassadorCount;
-  protected List<RTIambassadorEx> rtiAmbassadors;
 
   protected BaseTestNG()
   {
@@ -60,12 +60,10 @@ public abstract class BaseTestNG
     fed = Thread.currentThread().getContextClassLoader().getResource(FED);
     assert fed != null : "could not locate: " + FED;
 
-    badFED =
-      Thread.currentThread().getContextClassLoader().getResource(BAD_FED);
+    badFED = Thread.currentThread().getContextClassLoader().getResource(BAD_FED);
     assert badFED != null : "could not locate: " + BAD_FED;
 
     rtiFactory = RtiFactoryFactory.getRtiFactory();
-
     for (int count = rtiAmbassadorCount; count >= 1; count--)
     {
       rtiAmbassadors.add(rtiFactory.createRtiAmbassador());

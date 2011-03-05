@@ -280,11 +280,28 @@ public class HLA13RTIambassador
   public void createFederationExecution(String federationExecutionName, URL fed)
     throws FederationExecutionAlreadyExists, CouldNotOpenFED, ErrorReadingFED, RTIinternalError
   {
-    String logicalTimeImplementationName = getIEEE1516eLogicalTimeImplementationName(federationExecutionName);
+    if (federationExecutionName == null)
+    {
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATION_EXECUTION_NAME_IS_NULL));
+    }
+    else if (federationExecutionName.isEmpty())
+    {
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATION_EXECUTION_NAME_IS_EMPTY));
+    }
+    else if (fed == null)
+    {
+      throw new CouldNotOpenFED(I18n.getMessage(ExceptionMessages.FED_IS_NULL));
+    }
 
+    String logicalTimeImplementationName = getIEEE1516eLogicalTimeImplementationName(federationExecutionName);
     try
     {
-      rtiAmbassador.createFederationExecution(federationExecutionName, FEDParser.parseFED(fed).getFDD());
+      rtiAmbassador.createFederationExecution(
+        federationExecutionName, FEDParser.parseFED(fed).getFDD(), logicalTimeImplementationName);
+    }
+    catch (CouldNotCreateLogicalTimeFactory cncltf)
+    {
+      throw new RTIinternalError(cncltf);
     }
     catch (hla.rti1516e.exceptions.FederationExecutionAlreadyExists feae)
     {
@@ -300,12 +317,12 @@ public class HLA13RTIambassador
     }
   }
 
-  public void destroyFederationExecution(String name)
+  public void destroyFederationExecution(String federationExecutionName)
     throws FederatesCurrentlyJoined, FederationExecutionDoesNotExist, RTIinternalError
   {
     try
     {
-      rtiAmbassador.destroyFederationExecution(name);
+      rtiAmbassador.destroyFederationExecution(federationExecutionName);
     }
     catch (hla.rti1516e.exceptions.FederatesCurrentlyJoined fcj)
     {
@@ -5204,13 +5221,10 @@ public class HLA13RTIambassador
   {
     String logicalTimeFactoryClassNameProperty = String.format(
       OHLA_HLA13_FEDERATION_EXECUTION_LOGICAL_TIME_IMPLEMENTATION_PROPERTY, federationExecutionName);
-    String logicalTimeImplementationName = System.getProperty(logicalTimeFactoryClassNameProperty);
-    if (logicalTimeImplementationName == null)
-    {
-      throw new RTIinternalError(I18n.getMessage(
-        ExceptionMessages.UNABLE_TO_DETERMINE_HLA13_LOGICAL_TIME_FACTORY_FOR_FEDERATION, federationExecutionName));
-    }
-    return logicalTimeImplementationName;
+
+    // TODO: log this
+
+    return System.getProperty(logicalTimeFactoryClassNameProperty);
   }
 
   private static class ReserveObjectInstanceNameResult

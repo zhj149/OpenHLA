@@ -18,31 +18,7 @@
 <suite name="OHLA HLA 1.3 Testsuite" parallel="false" verbose="5">
   <test name="HLA 1.3 - Federation Management">
     <classes>
-      <class name="net.sf.ohla.rti.testsuite.hla.rti.FederationManagementTestNG"/>
-    </classes>
-  </test>
-
-  <test name="HLA 1.3 - Support Services">
-    <classes>
-      <class name="net.sf.ohla.rti.testsuite.hla.rti.SupportServicesTestNG"/>
-    </classes>
-  </test>
-
-  <test name="HLA 1.3 - Declaration Management">
-    <classes>
-      <class name="net.sf.ohla.rti.testsuite.hla.rti.DeclarationManagementTestNG"/>
-    </classes>
-  </test>
-
-  <test name="HLA 1.3 - Object Management">
-    <classes>
-      <class name="net.sf.ohla.rti.testsuite.hla.rti.ObjectManagementTestNG"/>
-    </classes>
-  </test>
-
-  <test name="HLA 1.3 - Ownership Management">
-    <classes>
-      <class name="net.sf.ohla.rti.testsuite.hla.rti.OwnershipManagementTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti.federation.CreationTestNG"/>
     </classes>
   </test>
 </suite>

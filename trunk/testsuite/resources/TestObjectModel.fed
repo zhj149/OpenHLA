@@ -12,6 +12,7 @@
   (objects
     (class objectRoot
       (attribute privilegeToDelete HLAreliable TimeStamp)
+      (class RTIprivate)
 
       (class TestObject
         (attribute Attribute1 HLAreliable TimeStamp TestRoutingSpace)
