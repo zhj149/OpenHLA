@@ -43,7 +43,6 @@ import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandleSet;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandle;
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
-import net.sf.ohla.rti.i18n.I18nLogger;
 
 import hla.rti.ArrayIndexOutOfBounds;
 import hla.rti.AsynchronousDeliveryAlreadyDisabled;
@@ -192,8 +191,6 @@ import hla.rti1516e.exceptions.UnsupportedCallbackModel;
 public class HLA13RTIambassador
   implements RTIambassadorEx
 {
-  private static final I18nLogger log = I18nLogger.getLogger(HLA13RTIambassador.class);
-
   public static final String OHLA_HLA13_FEDERATION_EXECUTION_LOGICAL_TIME_IMPLEMENTATION_PROPERTY =
     "ohla.hla13.federationExecution.%s.logicalTimeImplementation";
 
@@ -510,7 +507,8 @@ public class HLA13RTIambassador
     }
     else if (!HLA13FederateHandleSet.class.isInstance(federateHandles))
     {
-      throw new RTIinternalError(I18n.getMessage(ExceptionMessages.INVALID_FEDERATE_HANDLE_SET_TYPE));
+      throw new RTIinternalError(I18n.getMessage(
+        ExceptionMessages.INVALID_FEDERATE_HANDLE_SET_TYPE, federateHandles.getClass()));
     }
 
     try
@@ -4936,10 +4934,11 @@ public class HLA13RTIambassador
   public hla.rti1516e.AttributeHandleSet convert(AttributeHandleSet attributeHandles)
     throws RTIinternalError
   {
-    if (attributeHandles != null && !hla.rti1516e.AttributeHandleSet.class.isInstance(attributeHandles))
+    if (attributeHandles != null && !HLA13AttributeHandleSet.class.isInstance(attributeHandles))
     {
-      throw new RTIinternalError(String.format("invalid AttributeHandleSet: %s", attributeHandles.getClass()));
+      throw new RTIinternalError(I18n.getMessage(ExceptionMessages.INVALID_ATTRIBUTE_HANDLE_SET_TYPE));
     }
+
     return (hla.rti1516e.AttributeHandleSet) attributeHandles;
   }
 
@@ -4955,7 +4954,8 @@ public class HLA13RTIambassador
   {
     if (federateHandles != null && !hla.rti1516e.FederateHandleSet.class.isInstance(federateHandles))
     {
-      throw new RTIinternalError(String.format("invalid FederateHandleSet: %s", federateHandles.getClass()));
+      throw new RTIinternalError(I18n.getMessage(
+        ExceptionMessages.INVALID_FEDERATE_HANDLE_SET_TYPE, federateHandles.getClass()));
     }
     return (hla.rti1516e.FederateHandleSet) federateHandles;
   }
@@ -5131,7 +5131,8 @@ public class HLA13RTIambassador
   {
     if (orderTypeHandle < 0 || orderTypeHandle >= OrderType.values().length)
     {
-      throw new InvalidOrderingHandle(Integer.toString(orderTypeHandle));
+      throw new InvalidOrderingHandle(I18n.getMessage(
+        ExceptionMessages.INVALID_HLA13_ORDER_TYPE_HANDLE, orderTypeHandle));
     }
 
     return OrderType.values()[orderTypeHandle];
@@ -5142,7 +5143,7 @@ public class HLA13RTIambassador
   {
     if (resignAction < 0 || resignAction >= ResignAction.values().length)
     {
-      throw new InvalidResignAction(Integer.toString(resignAction));
+      throw new InvalidResignAction(I18n.getMessage(ExceptionMessages.INVALID_HLA13_RESIGN_ACTION, resignAction));
     }
 
     return ResignAction.values()[resignAction];
@@ -5159,9 +5160,8 @@ public class HLA13RTIambassador
     String value = System.getProperty(logicalTimeFactoryClassNameProperty);
     if (value == null)
     {
-      throw new RTIinternalError(String.format(
-        "HLA 1.3 Logical Time Implementation could not be determined for IEEE 1516e Logical Time Implementation: %s",
-        ieee1516eLogicalTimeFactory.getName()));
+      throw new RTIinternalError(I18n.getMessage(
+        ExceptionMessages.UNABLE_TO_DETERMINE_HLA13_LOGICAL_TIME_FACTORY, ieee1516eLogicalTimeFactory.getName()));
     }
     else
     {
@@ -5184,25 +5184,17 @@ public class HLA13RTIambassador
             logicalTimeIntervalFactory = ((Class<LogicalTimeIntervalFactory>) clazz).newInstance();
           }
         }
-        catch (ClassNotFoundException cnfe)
+        catch (Throwable t)
         {
-          throw new RTIinternalError(String.format("class not found: %s", className), cnfe);
-        }
-        catch (InstantiationException ie)
-        {
-          throw new RTIinternalError(String.format("unable to instantiate: %s", className), ie);
-        }
-        catch (IllegalAccessException iae)
-        {
-          throw new RTIinternalError(String.format("unable to access: %s", className), iae);
+          throw new RTIinternalError(I18n.getMessage(
+            ExceptionMessages.UNABLE_TO_DETERMINE_HLA13_LOGICAL_TIME_FACTORY, ieee1516eLogicalTimeFactory.getName()), t);
         }
       }
 
       if (logicalTimeFactory == null || logicalTimeIntervalFactory == null)
       {
-        throw new RTIinternalError(String.format(
-          "HLA 1.3 Logical Time Implementation could not be determined for IEEE 1516e Logical Time Implementation: %s",
-          ieee1516eLogicalTimeFactory.getName()));
+        throw new RTIinternalError(I18n.getMessage(
+          ExceptionMessages.UNABLE_TO_DETERMINE_HLA13_LOGICAL_TIME_FACTORY, ieee1516eLogicalTimeFactory.getName()));
       }
     }
   }
@@ -5215,8 +5207,8 @@ public class HLA13RTIambassador
     String logicalTimeImplementationName = System.getProperty(logicalTimeFactoryClassNameProperty);
     if (logicalTimeImplementationName == null)
     {
-      throw new RTIinternalError(String.format(
-        "IEEE 1516e Logical Time Implementation could not be determined for Federation: %s", federationExecutionName));
+      throw new RTIinternalError(I18n.getMessage(
+        ExceptionMessages.UNABLE_TO_DETERMINE_HLA13_LOGICAL_TIME_FACTORY_FOR_FEDERATION, federationExecutionName));
     }
     return logicalTimeImplementationName;
   }

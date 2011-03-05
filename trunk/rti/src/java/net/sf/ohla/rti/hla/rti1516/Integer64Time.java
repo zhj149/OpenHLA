@@ -19,6 +19,9 @@ package net.sf.ohla.rti.hla.rti1516;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
+
 import hla.rti1516.CouldNotDecode;
 import hla.rti1516.IllegalTimeArithmetic;
 import hla.rti1516.LogicalTime;
@@ -73,7 +76,8 @@ public class Integer64Time
     }
     else
     {
-      throw new IllegalTimeArithmetic(String.format("%s", lti));
+      throw new IllegalTimeArithmetic(I18n.getMessage(
+        ExceptionMessages.ILLEGAL_TIME_ARITHMETIC_INVALID_LOGICAL_TIME_INTERVAL_TYPE, lti.getClass()));
     }
 
     return lt;
@@ -90,7 +94,8 @@ public class Integer64Time
     }
     else
     {
-      throw new IllegalTimeArithmetic(String.format("%s", lti));
+      throw new IllegalTimeArithmetic(I18n.getMessage(
+        ExceptionMessages.ILLEGAL_TIME_ARITHMETIC_INVALID_LOGICAL_TIME_INTERVAL_TYPE, lti.getClass()));
     }
 
     return lt;
