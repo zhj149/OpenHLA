@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2006-2007, Michael Newcomb
+ * Copyright (c) 2005-2011, Michael Newcomb
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,22 +16,24 @@
 
 package net.sf.ohla.rti.hla.rti;
 
+import java.nio.ByteBuffer;
+
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
 
 import hla.rti.LogicalTimeInterval;
 
-public class Integer64TimeInterval
+public class Float64TimeInterval
   implements LogicalTimeInterval
 {
-  public static final byte ENCODED_LENGTH = Long.SIZE / 8;
+  private static final byte ENCODED_LENGTH = Long.SIZE / 8;
 
-  public static final long ZERO = 0L;
-  public static final long EPSILON = 1L;
+  public static final double ZERO = 0.0;
+  public static final double EPSILON = Double.MIN_NORMAL;
 
-  public long interval;
+  public double interval;
 
-  public Integer64TimeInterval(long interval)
+  public Float64TimeInterval(double interval)
   {
     this.interval = interval;
   }
@@ -88,9 +90,9 @@ public class Integer64TimeInterval
 
   public void setTo(LogicalTimeInterval rhs)
   {
-    if (rhs instanceof Integer64TimeInterval)
+    if (rhs instanceof Float64TimeInterval)
     {
-      interval = ((Integer64TimeInterval) rhs).interval;
+      interval = ((Float64TimeInterval) rhs).interval;
     }
     else if (rhs == null)
     {
@@ -117,14 +119,16 @@ public class Integer64TimeInterval
         ENCODED_LENGTH, buffer.length - offset));
     }
 
-    buffer[offset++] = (byte) (interval >>> 56);
-    buffer[offset++] = (byte) (interval >>> 48);
-    buffer[offset++] = (byte) (interval >>> 40);
-    buffer[offset++] = (byte) (interval >>> 32);
-    buffer[offset++] = (byte) (interval >>> 24);
-    buffer[offset++] = (byte) (interval >>> 16);
-    buffer[offset++] = (byte) (interval >>> 8);
-    buffer[offset] = (byte) interval;
+    long l = Double.doubleToRawLongBits(interval);
+
+    buffer[offset++] = (byte) (l >>> 56);
+    buffer[offset++] = (byte) (l >>> 48);
+    buffer[offset++] = (byte) (l >>> 40);
+    buffer[offset++] = (byte) (l >>> 32);
+    buffer[offset++] = (byte) (l >>> 24);
+    buffer[offset++] = (byte) (l >>> 16);
+    buffer[offset++] = (byte) (l >>> 8);
+    buffer[offset] = (byte) l;
   }
 
   public int compareTo(Object rhs)
@@ -134,7 +138,7 @@ public class Integer64TimeInterval
 
   public int compareTo(Integer64TimeInterval rhs)
   {
-    long diff = interval - rhs.interval;
+    long diff = (long) (interval - rhs.interval);
     return diff > 0L ? 1 : diff < 0L ? -1 : 0;
   }
 
@@ -153,6 +157,6 @@ public class Integer64TimeInterval
   @Override
   public String toString()
   {
-    return Long.toString(interval);
+    return Double.toString(interval);
   }
 }

@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2006-2007, Michael Newcomb
+ * Copyright (c) 2005-2011, Michael Newcomb
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,17 +23,17 @@ import hla.rti.IllegalTimeArithmetic;
 import hla.rti.LogicalTime;
 import hla.rti.LogicalTimeInterval;
 
-public class Integer64Time
+public class Float64Time
   implements LogicalTime
 {
-  public static final byte ENCODED_LENGTH = Long.SIZE / 8;
+  public static final byte ENCODED_LENGTH = Double.SIZE / 8;
 
-  public static final long INITIAL = 0L;
-  public static final long FINAL = Long.MAX_VALUE;
+  public static final double INITIAL = 0.0;
+  public static final double FINAL = Double.MAX_VALUE;
 
-  public long time;
+  public double time;
 
-  public Integer64Time(long time)
+  public Float64Time(double time)
   {
     this.time = time;
   }
@@ -41,9 +41,9 @@ public class Integer64Time
   public void decreaseBy(LogicalTimeInterval logicalTimeInterval)
     throws IllegalTimeArithmetic
   {
-    if (logicalTimeInterval instanceof Integer64TimeInterval)
+    if (logicalTimeInterval instanceof Float64TimeInterval)
     {
-      time -= ((Integer64TimeInterval) logicalTimeInterval).interval;
+      time -= ((Float64TimeInterval) logicalTimeInterval).interval;
     }
     else if (logicalTimeInterval == null)
     {
@@ -59,9 +59,9 @@ public class Integer64Time
   public void increaseBy(LogicalTimeInterval logicalTimeInterval)
     throws IllegalTimeArithmetic
   {
-    if (logicalTimeInterval instanceof Integer64TimeInterval)
+    if (logicalTimeInterval instanceof Float64TimeInterval)
     {
-      time += ((Integer64TimeInterval) logicalTimeInterval).interval;
+      time += ((Float64TimeInterval) logicalTimeInterval).interval;
     }
     else if (logicalTimeInterval == null)
     {
@@ -121,9 +121,9 @@ public class Integer64Time
 
   public void setTo(LogicalTime rhs)
   {
-    if (rhs instanceof Integer64Time)
+    if (rhs instanceof Float64Time)
     {
-      time = ((Integer64Time) rhs).time;
+      time = ((Float64Time) rhs).time;
     }
     else if (rhs == null)
     {
@@ -138,9 +138,9 @@ public class Integer64Time
   public LogicalTimeInterval subtract(LogicalTime logicalTime)
   {
     LogicalTimeInterval logicalTimeInterval;
-    if (logicalTime instanceof Integer64Time)
+    if (logicalTime instanceof Float64Time)
     {
-      logicalTimeInterval = new Integer64TimeInterval(time - ((Integer64Time) logicalTime).time);
+      logicalTimeInterval = new Float64TimeInterval(time - ((Float64Time) logicalTime).time);
     }
     else if (logicalTime == null)
     {
@@ -171,31 +171,33 @@ public class Integer64Time
         ExceptionMessages.LOGICAL_TIME_ENCODE_BUFFER_NOT_ENOUGH_SPACE, ENCODED_LENGTH, buffer.length - offset));
     }
 
-    buffer[offset++] = (byte) (time >>> 56);
-    buffer[offset++] = (byte) (time >>> 48);
-    buffer[offset++] = (byte) (time >>> 40);
-    buffer[offset++] = (byte) (time >>> 32);
-    buffer[offset++] = (byte) (time >>> 24);
-    buffer[offset++] = (byte) (time >>> 16);
-    buffer[offset++] = (byte) (time >>> 8);
-    buffer[offset] = (byte) time;
+    long l = Double.doubleToRawLongBits(time);
+
+    buffer[offset++] = (byte) (l >>> 56);
+    buffer[offset++] = (byte) (l >>> 48);
+    buffer[offset++] = (byte) (l >>> 40);
+    buffer[offset++] = (byte) (l >>> 32);
+    buffer[offset++] = (byte) (l >>> 24);
+    buffer[offset++] = (byte) (l >>> 16);
+    buffer[offset++] = (byte) (l >>> 8);
+    buffer[offset] = (byte) l;
   }
 
   public int compareTo(Object rhs)
   {
-    return compareTo((Integer64Time) rhs);
+    return compareTo((Float64Time) rhs);
   }
 
-  public int compareTo(Integer64Time rhs)
+  public int compareTo(Float64Time rhs)
   {
-    long diff = time - rhs.time;
+    double diff = time - rhs.time;
     return diff > 0L ? 1 : diff < 0L ? -1 : 0;
   }
 
   @Override
   public boolean equals(Object rhs)
   {
-    return this == rhs || (rhs instanceof Integer64Time && time == ((Integer64Time) rhs).time);
+    return this == rhs || (rhs instanceof Float64Time && time == ((Float64Time) rhs).time);
   }
 
   @Override
@@ -207,6 +209,6 @@ public class Integer64Time
   @Override
   public String toString()
   {
-    return Long.toString(time);
+    return Double.toString(time);
   }
 }

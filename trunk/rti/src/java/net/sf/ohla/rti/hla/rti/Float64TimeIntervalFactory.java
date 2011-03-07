@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2006-2007, Michael Newcomb
+ * Copyright (c) 2005-2011, Michael Newcomb
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,10 +20,10 @@ import hla.rti.CouldNotDecode;
 import hla.rti.LogicalTimeInterval;
 import hla.rti.LogicalTimeIntervalFactory;
 
-public class Integer64TimeIntervalFactory
+public class Float64TimeIntervalFactory
   implements LogicalTimeIntervalFactory
 {
-  public static final Integer64TimeIntervalFactory INSTANCE = new Integer64TimeIntervalFactory();
+  public static final Float64TimeIntervalFactory INSTANCE = new Float64TimeIntervalFactory();
 
   public LogicalTimeInterval decode(byte[] buffer, int offset)
     throws CouldNotDecode
@@ -46,11 +46,11 @@ public class Integer64TimeIntervalFactory
              ((long) buffer[offset++] & 0xFF) << 8 |
              ((long) buffer[offset] & 0xFF);
 
-    return new Integer64TimeInterval(l);
+    return new Float64TimeInterval(Double.longBitsToDouble(l));
   }
 
   public LogicalTimeInterval makeZero()
   {
-    return new Integer64TimeInterval(Integer64TimeInterval.ZERO);
+    return new Float64TimeInterval(Float64TimeInterval.ZERO);
   }
 }

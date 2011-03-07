@@ -187,6 +187,8 @@ import hla.rti1516e.exceptions.RequestForTimeRegulationPending;
 import hla.rti1516e.exceptions.TimeConstrainedIsNotEnabled;
 import hla.rti1516e.exceptions.TimeRegulationIsNotEnabled;
 import hla.rti1516e.exceptions.UnsupportedCallbackModel;
+import hla.rti1516e.time.HLAfloat64TimeFactory;
+import hla.rti1516e.time.HLAinteger64TimeFactory;
 
 public class HLA13RTIambassador
   implements RTIambassadorEx
@@ -347,6 +349,11 @@ public class HLA13RTIambassador
     throws FederateAlreadyExecutionMember, FederationExecutionDoesNotExist, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
+    if (federateAmbassador == null)
+    {
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATE_AMBASSADOR_IS_NULL));
+    }
+
     try
     {
       FederateHandle federateHandle = rtiAmbassador.joinFederationExecution(federateType, federationExecutionName);
@@ -5177,8 +5184,21 @@ public class HLA13RTIambassador
     String value = System.getProperty(logicalTimeFactoryClassNameProperty);
     if (value == null)
     {
-      throw new RTIinternalError(I18n.getMessage(
-        ExceptionMessages.UNABLE_TO_DETERMINE_HLA13_LOGICAL_TIME_FACTORY, ieee1516eLogicalTimeFactory.getName()));
+      if (HLAfloat64TimeFactory.NAME.equals(ieee1516eLogicalTimeFactory.getName()))
+      {
+        logicalTimeFactory = Float64TimeFactory.INSTANCE;
+        logicalTimeIntervalFactory = Float64TimeIntervalFactory.INSTANCE;
+      }
+      else if (HLAinteger64TimeFactory.NAME.equals(ieee1516eLogicalTimeFactory.getName()))
+      {
+        logicalTimeFactory = Integer64TimeFactory.INSTANCE;
+        logicalTimeIntervalFactory = Integer64TimeIntervalFactory.INSTANCE;
+      }
+      else
+      {
+        throw new RTIinternalError(I18n.getMessage(
+          ExceptionMessages.UNABLE_TO_DETERMINE_HLA13_LOGICAL_TIME_FACTORY, ieee1516eLogicalTimeFactory.getName()));
+      }
     }
     else
     {
@@ -5207,12 +5227,12 @@ public class HLA13RTIambassador
             ExceptionMessages.UNABLE_TO_DETERMINE_HLA13_LOGICAL_TIME_FACTORY, ieee1516eLogicalTimeFactory.getName()), t);
         }
       }
+    }
 
-      if (logicalTimeFactory == null || logicalTimeIntervalFactory == null)
-      {
-        throw new RTIinternalError(I18n.getMessage(
-          ExceptionMessages.UNABLE_TO_DETERMINE_HLA13_LOGICAL_TIME_FACTORY, ieee1516eLogicalTimeFactory.getName()));
-      }
+    if (logicalTimeFactory == null || logicalTimeIntervalFactory == null)
+    {
+      throw new RTIinternalError(I18n.getMessage(
+        ExceptionMessages.UNABLE_TO_DETERMINE_HLA13_LOGICAL_TIME_FACTORY, ieee1516eLogicalTimeFactory.getName()));
     }
   }
 
