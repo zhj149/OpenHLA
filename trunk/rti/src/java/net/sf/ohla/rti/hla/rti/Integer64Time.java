@@ -163,12 +163,12 @@ public class Integer64Time
   {
     if (buffer == null)
     {
-      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.LOGICAL_TIME_ENCODE_BUFFER_IS_NULL));
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.ENCODE_BUFFER_IS_NULL));
     }
     else if ((buffer.length - offset) < ENCODED_LENGTH)
     {
       throw new IllegalArgumentException(I18n.getMessage(
-        ExceptionMessages.LOGICAL_TIME_ENCODE_BUFFER_NOT_ENOUGH_SPACE, ENCODED_LENGTH, buffer.length - offset));
+        ExceptionMessages.ENCODE_BUFFER_IS_TOO_SHORT, ENCODED_LENGTH, buffer.length - offset));
     }
 
     buffer[offset++] = (byte) (time >>> 56);
@@ -184,12 +184,6 @@ public class Integer64Time
   public int compareTo(Object rhs)
   {
     return compareTo((Integer64Time) rhs);
-  }
-
-  public int compareTo(Integer64Time rhs)
-  {
-    long diff = time - rhs.time;
-    return diff > 0L ? 1 : diff < 0L ? -1 : 0;
   }
 
   @Override
@@ -208,5 +202,10 @@ public class Integer64Time
   public String toString()
   {
     return Long.toString(time);
+  }
+
+  private int compareTo(Integer64Time rhs)
+  {
+    return Math.round(time - rhs.time);
   }
 }

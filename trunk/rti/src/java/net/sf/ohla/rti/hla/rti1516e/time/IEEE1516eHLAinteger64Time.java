@@ -20,12 +20,15 @@ import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
 
 import hla.rti1516e.exceptions.CouldNotEncode;
+import hla.rti1516e.exceptions.IllegalTimeArithmetic;
 import hla.rti1516e.time.HLAinteger64Interval;
 import hla.rti1516e.time.HLAinteger64Time;
 
 public class IEEE1516eHLAinteger64Time
   implements HLAinteger64Time
 {
+  public static final byte ENCODED_LENGTH = Long.SIZE / 8;
+
   public static final IEEE1516eHLAinteger64Time INITIAL = new IEEE1516eHLAinteger64Time(0L);
   public static final IEEE1516eHLAinteger64Time FINAL = new IEEE1516eHLAinteger64Time(Long.MAX_VALUE);
 
@@ -47,13 +50,41 @@ public class IEEE1516eHLAinteger64Time
   }
 
   public HLAinteger64Time add(HLAinteger64Interval interval)
+    throws IllegalTimeArithmetic
   {
-    return new IEEE1516eHLAinteger64Time(time + interval.getValue());
+    long result = time + interval.getValue();
+
+    if (result < INITIAL.time)
+    {
+      throw new IllegalTimeArithmetic(I18n.getMessage(
+        ExceptionMessages.ILLEGAL_TIME_ARITHMETIC_RESULT_LESS_THAN_INITIAL, result, INITIAL));
+    }
+    else if (result > FINAL.time)
+    {
+      throw new IllegalTimeArithmetic(I18n.getMessage(
+        ExceptionMessages.ILLEGAL_TIME_ARITHMETIC_RESULT_GREATER_THAN_FINAL, result, FINAL));
+    }
+
+    return new IEEE1516eHLAinteger64Time(result);
   }
 
   public HLAinteger64Time subtract(HLAinteger64Interval interval)
+    throws IllegalTimeArithmetic
   {
-    return new IEEE1516eHLAinteger64Time(time - interval.getValue());
+    long result = time - interval.getValue();
+
+    if (result < INITIAL.time)
+    {
+      throw new IllegalTimeArithmetic(I18n.getMessage(
+        ExceptionMessages.ILLEGAL_TIME_ARITHMETIC_RESULT_LESS_THAN_INITIAL, result, INITIAL));
+    }
+    else if (result > FINAL.time)
+    {
+      throw new IllegalTimeArithmetic(I18n.getMessage(
+        ExceptionMessages.ILLEGAL_TIME_ARITHMETIC_RESULT_GREATER_THAN_FINAL, result, FINAL));
+    }
+
+    return new IEEE1516eHLAinteger64Time(result);
   }
 
   public HLAinteger64Interval distance(HLAinteger64Time time)
@@ -69,7 +100,7 @@ public class IEEE1516eHLAinteger64Time
 
   public int encodedLength()
   {
-    return 8;
+    return ENCODED_LENGTH;
   }
 
   public void encode(byte[] buffer, int offset)
@@ -77,11 +108,12 @@ public class IEEE1516eHLAinteger64Time
   {
     if (buffer == null)
     {
-      throw new CouldNotEncode(I18n.getMessage(ExceptionMessages.ENCODE_BUFFER_IS_NULL));
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.ENCODE_BUFFER_IS_NULL));
     }
-    else if ((buffer.length - offset) < 8)
+    else if ((buffer.length - offset) < ENCODED_LENGTH)
     {
-      throw new CouldNotEncode(I18n.getMessage(ExceptionMessages.ENCODE_BUFFER_IS_TOO_SHORT));
+      throw new IllegalArgumentException(I18n.getMessage(
+        ExceptionMessages.ENCODE_BUFFER_IS_TOO_SHORT, ENCODED_LENGTH, buffer.length - offset));
     }
 
     buffer[offset++] = (byte) (time >>> 56);

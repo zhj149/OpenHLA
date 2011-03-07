@@ -14,63 +14,41 @@
  * limitations under the License.
  */
 
-package net.sf.ohla.rti.hla.rti;
+package net.sf.ohla.rti.hla.rti1516;
 
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
 
-import hla.rti.IllegalTimeArithmetic;
-import hla.rti.LogicalTime;
-import hla.rti.LogicalTimeInterval;
+import hla.rti1516.IllegalTimeArithmetic;
+import hla.rti1516.LogicalTime;
+import hla.rti1516.LogicalTimeInterval;
 
 public class Float64Time
   implements LogicalTime
 {
   public static final byte ENCODED_LENGTH = Double.SIZE / 8;
 
-  public static final double INITIAL = 0.0;
-  public static final double FINAL = Double.MAX_VALUE;
+  public static final Float64Time INITIAL = new Float64Time(0.0);
+  public static final Float64Time FINAL = new Float64Time(Double.MAX_VALUE);
 
-  public double time;
+  public final double time;
 
   public Float64Time(double time)
   {
     this.time = time;
   }
 
-  public void decreaseBy(LogicalTimeInterval logicalTimeInterval)
-    throws IllegalTimeArithmetic
+  public boolean isInitial()
   {
-    double result;
-    if (logicalTimeInterval instanceof Float64TimeInterval)
-    {
-      result = time - ((Float64TimeInterval) logicalTimeInterval).interval;
-    }
-    else if (logicalTimeInterval == null)
-    {
-      throw new IllegalTimeArithmetic(I18n.getMessage(ExceptionMessages.LOGICAL_TIME_INTERVAL_IS_NULL));
-    }
-    else
-    {
-      throw new IllegalTimeArithmetic(I18n.getMessage(
-        ExceptionMessages.ILLEGAL_TIME_ARITHMETIC_INVALID_LOGICAL_TIME_INTERVAL_TYPE));
-    }
-
-    if (result < INITIAL)
-    {
-      throw new IllegalTimeArithmetic(I18n.getMessage(
-        ExceptionMessages.ILLEGAL_TIME_ARITHMETIC_RESULT_LESS_THAN_INITIAL, result, INITIAL));
-    }
-    else if (result > FINAL)
-    {
-      throw new IllegalTimeArithmetic(I18n.getMessage(
-        ExceptionMessages.ILLEGAL_TIME_ARITHMETIC_RESULT_GREATER_THAN_FINAL, result, FINAL));
-    }
-
-    time = result;
+    return time == INITIAL.time;
   }
 
-  public void increaseBy(LogicalTimeInterval logicalTimeInterval)
+  public boolean isFinal()
+  {
+    return time == FINAL.time;
+  }
+
+  public LogicalTime add(LogicalTimeInterval logicalTimeInterval)
     throws IllegalTimeArithmetic
   {
     double result;
@@ -88,82 +66,53 @@ public class Float64Time
         ExceptionMessages.ILLEGAL_TIME_ARITHMETIC_INVALID_LOGICAL_TIME_INTERVAL_TYPE, logicalTimeInterval.getClass()));
     }
 
-    if (result < INITIAL)
+    if (result < INITIAL.time)
     {
       throw new IllegalTimeArithmetic(I18n.getMessage(
         ExceptionMessages.ILLEGAL_TIME_ARITHMETIC_RESULT_LESS_THAN_INITIAL, result, INITIAL));
     }
-    else if (result > FINAL)
+    else if (result > FINAL.time)
     {
       throw new IllegalTimeArithmetic(I18n.getMessage(
         ExceptionMessages.ILLEGAL_TIME_ARITHMETIC_RESULT_GREATER_THAN_FINAL, result, FINAL));
     }
 
-    time = result;
+    return new Float64Time(result);
   }
 
-  public boolean isInitial()
+  public LogicalTime subtract(LogicalTimeInterval logicalTimeInterval)
+    throws IllegalTimeArithmetic
   {
-    return time == INITIAL;
-  }
-
-  public boolean isFinal()
-  {
-    return time == FINAL;
-  }
-
-  public boolean isEqualTo(LogicalTime rhs)
-  {
-    return equals(rhs);
-  }
-
-  public boolean isGreaterThan(LogicalTime rhs)
-  {
-    return compareTo(rhs) > 0;
-  }
-
-  public boolean isGreaterThanOrEqualTo(LogicalTime rhs)
-  {
-    return compareTo(rhs) >= 0;
-  }
-
-  public boolean isLessThan(LogicalTime rhs)
-  {
-    return compareTo(rhs) < 0;
-  }
-
-  public boolean isLessThanOrEqualTo(LogicalTime rhs)
-  {
-    return compareTo(rhs) <= 0;
-  }
-
-  public void setFinal()
-  {
-    time = FINAL;
-  }
-
-  public void setInitial()
-  {
-    time = INITIAL;
-  }
-
-  public void setTo(LogicalTime rhs)
-  {
-    if (rhs instanceof Float64Time)
+    double result;
+    if (logicalTimeInterval instanceof Float64TimeInterval)
     {
-      time = ((Float64Time) rhs).time;
+      result = time - ((Float64TimeInterval) logicalTimeInterval).interval;
     }
-    else if (rhs == null)
+    else if (logicalTimeInterval == null)
     {
-      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.LOGICAL_TIME_IS_NULL));
+      throw new IllegalTimeArithmetic(I18n.getMessage(ExceptionMessages.LOGICAL_TIME_INTERVAL_IS_NULL));
     }
     else
     {
-      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.INVALID_LOGICAL_TIME_TYPE, rhs.getClass()));
+      throw new IllegalTimeArithmetic(I18n.getMessage(
+        ExceptionMessages.ILLEGAL_TIME_ARITHMETIC_INVALID_LOGICAL_TIME_INTERVAL_TYPE));
     }
+
+    if (result < INITIAL.time)
+    {
+      throw new IllegalTimeArithmetic(I18n.getMessage(
+        ExceptionMessages.ILLEGAL_TIME_ARITHMETIC_RESULT_LESS_THAN_INITIAL, result, INITIAL));
+    }
+    else if (result > FINAL.time)
+    {
+      throw new IllegalTimeArithmetic(I18n.getMessage(
+        ExceptionMessages.ILLEGAL_TIME_ARITHMETIC_RESULT_GREATER_THAN_FINAL, result, FINAL));
+    }
+
+    return new Float64Time(result);
   }
 
-  public LogicalTimeInterval subtract(LogicalTime logicalTime)
+  public LogicalTimeInterval distance(LogicalTime logicalTime)
   {
     LogicalTimeInterval logicalTimeInterval;
     if (logicalTime instanceof Float64Time)

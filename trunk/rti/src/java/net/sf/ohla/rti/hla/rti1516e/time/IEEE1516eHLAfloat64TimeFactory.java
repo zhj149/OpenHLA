@@ -34,19 +34,21 @@ public class IEEE1516eHLAfloat64TimeFactory
     {
       throw new CouldNotDecode(I18n.getMessage(ExceptionMessages.DECODE_BUFFER_IS_NULL));
     }
-    else if ((buffer.length - offset) < 8)
+    else if ((buffer.length - offset) < IEEE1516eHLAfloat64Time.ENCODED_LENGTH)
     {
-      throw new CouldNotDecode(I18n.getMessage(ExceptionMessages.DECODE_BUFFER_IS_TOO_SHORT));
+      throw new CouldNotDecode(I18n.getMessage(
+        ExceptionMessages.DECODE_BUFFER_IS_TOO_SHORT, IEEE1516eHLAfloat64Time.ENCODED_LENGTH, buffer.length - offset));
     }
 
-    long l = (((long) buffer[offset++] << 56) +
-              ((long) (buffer[offset++] & 255) << 48) +
-              ((long) (buffer[offset++] & 255) << 40) +
-              ((long) (buffer[offset++] & 255) << 32) +
-              ((long) (buffer[offset++] & 255) << 24) +
-              ((buffer[offset++] & 255) << 16) +
-              ((buffer[offset++] & 255) <<  8) +
-              ((buffer[offset] & 255) <<  0));
+    long l = ((long) buffer[offset++] & 0xFF) << 56 |
+             ((long) buffer[offset++] & 0xFF) << 48 |
+             ((long) buffer[offset++] & 0xFF) << 40 |
+             ((long) buffer[offset++] & 0xFF) << 32 |
+             ((long) buffer[offset++] & 0xFF) << 24 |
+             ((long) buffer[offset++] & 0xFF) << 16 |
+             ((long) buffer[offset++] & 0xFF) << 8 |
+             ((long) buffer[offset] & 0xFF);
+
     return new IEEE1516eHLAfloat64Time(Double.longBitsToDouble(l));
   }
 
@@ -59,17 +61,19 @@ public class IEEE1516eHLAfloat64TimeFactory
     }
     else if ((buffer.length - offset) < 8)
     {
-      throw new CouldNotDecode(I18n.getMessage(ExceptionMessages.DECODE_BUFFER_IS_TOO_SHORT));
+      throw new CouldNotDecode(I18n.getMessage(
+        ExceptionMessages.DECODE_BUFFER_IS_TOO_SHORT, IEEE1516eHLAfloat64Interval.ENCODED_LENGTH, buffer.length - offset));
     }
 
-    long l = (((long) buffer[offset++] << 56) +
-              ((long) (buffer[offset++] & 255) << 48) +
-              ((long) (buffer[offset++] & 255) << 40) +
-              ((long) (buffer[offset++] & 255) << 32) +
-              ((long) (buffer[offset++] & 255) << 24) +
-              ((buffer[offset++] & 255) << 16) +
-              ((buffer[offset++] & 255) <<  8) +
-              ((buffer[offset] & 255) <<  0));
+    long l = ((long) buffer[offset++] & 0xFF) << 56 |
+             ((long) buffer[offset++] & 0xFF) << 48 |
+             ((long) buffer[offset++] & 0xFF) << 40 |
+             ((long) buffer[offset++] & 0xFF) << 32 |
+             ((long) buffer[offset++] & 0xFF) << 24 |
+             ((long) buffer[offset++] & 0xFF) << 16 |
+             ((long) buffer[offset++] & 0xFF) << 8 |
+             ((long) buffer[offset] & 0xFF);
+
     return new IEEE1516eHLAfloat64Interval(Double.longBitsToDouble(l));
   }
 

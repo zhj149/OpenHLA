@@ -16,13 +16,9 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
-import java.nio.BufferUnderflowException;
-import java.nio.ByteBuffer;
-
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
 
-import hla.rti1516.CouldNotDecode;
 import hla.rti1516.IllegalTimeArithmetic;
 import hla.rti1516.LogicalTime;
 import hla.rti1516.LogicalTimeInterval;
@@ -30,7 +26,7 @@ import hla.rti1516.LogicalTimeInterval;
 public class Integer64Time
   implements LogicalTime
 {
-  private static final byte ENCODED_LENGTH = Long.SIZE / 8;
+  public static final byte ENCODED_LENGTH = Long.SIZE / 8;
 
   public static final Integer64Time INITIAL = new Integer64Time(0);
   public static final Integer64Time FINAL = new Integer64Time(Long.MAX_VALUE);
@@ -40,19 +36,6 @@ public class Integer64Time
   public Integer64Time(long time)
   {
     this.time = time;
-  }
-
-  public Integer64Time(byte[] buffer, int offset)
-    throws CouldNotDecode
-  {
-    try
-    {
-      time = ByteBuffer.wrap(buffer, offset, ENCODED_LENGTH).getLong();
-    }
-    catch (BufferUnderflowException bue)
-    {
-      throw new CouldNotDecode(bue);
-    }
   }
 
   public boolean isInitial()
@@ -65,47 +48,87 @@ public class Integer64Time
     return time == FINAL.time;
   }
 
-  public LogicalTime add(LogicalTimeInterval lti)
+  public LogicalTime add(LogicalTimeInterval logicalTimeInterval)
     throws IllegalTimeArithmetic
   {
-    LogicalTime lt;
-
-    if (lti instanceof Integer64TimeInterval)
+    long result;
+    if (logicalTimeInterval instanceof Integer64TimeInterval)
     {
-      lt = new Integer64Time(time + ((Integer64TimeInterval) lti).interval);
+      result = time + ((Integer64TimeInterval) logicalTimeInterval).interval;
+    }
+    else if (logicalTimeInterval == null)
+    {
+      throw new IllegalTimeArithmetic(I18n.getMessage(ExceptionMessages.LOGICAL_TIME_INTERVAL_IS_NULL));
     }
     else
     {
       throw new IllegalTimeArithmetic(I18n.getMessage(
-        ExceptionMessages.ILLEGAL_TIME_ARITHMETIC_INVALID_LOGICAL_TIME_INTERVAL_TYPE, lti.getClass()));
+        ExceptionMessages.ILLEGAL_TIME_ARITHMETIC_INVALID_LOGICAL_TIME_INTERVAL_TYPE, logicalTimeInterval.getClass()));
     }
 
-    return lt;
+    if (result < INITIAL.time)
+    {
+      throw new IllegalTimeArithmetic(I18n.getMessage(
+        ExceptionMessages.ILLEGAL_TIME_ARITHMETIC_RESULT_LESS_THAN_INITIAL, result, INITIAL));
+    }
+    else if (result > FINAL.time)
+    {
+      throw new IllegalTimeArithmetic(I18n.getMessage(
+        ExceptionMessages.ILLEGAL_TIME_ARITHMETIC_RESULT_GREATER_THAN_FINAL, result, FINAL));
+    }
+
+    return new Integer64Time(result);
   }
 
-  public LogicalTime subtract(LogicalTimeInterval lti)
+  public LogicalTime subtract(LogicalTimeInterval logicalTimeInterval)
     throws IllegalTimeArithmetic
   {
-    LogicalTime lt;
-
-    if (lti instanceof Integer64TimeInterval)
+    long result;
+    if (logicalTimeInterval instanceof Integer64TimeInterval)
     {
-      lt = new Integer64Time(time - ((Integer64TimeInterval) lti).interval);
+      result = time - ((Integer64TimeInterval) logicalTimeInterval).interval;
+    }
+    else if (logicalTimeInterval == null)
+    {
+      throw new IllegalTimeArithmetic(I18n.getMessage(ExceptionMessages.LOGICAL_TIME_INTERVAL_IS_NULL));
     }
     else
     {
       throw new IllegalTimeArithmetic(I18n.getMessage(
-        ExceptionMessages.ILLEGAL_TIME_ARITHMETIC_INVALID_LOGICAL_TIME_INTERVAL_TYPE, lti.getClass()));
+        ExceptionMessages.ILLEGAL_TIME_ARITHMETIC_INVALID_LOGICAL_TIME_INTERVAL_TYPE));
     }
 
-    return lt;
+    if (result < INITIAL.time)
+    {
+      throw new IllegalTimeArithmetic(I18n.getMessage(
+        ExceptionMessages.ILLEGAL_TIME_ARITHMETIC_RESULT_LESS_THAN_INITIAL, result, INITIAL));
+    }
+    else if (result > FINAL.time)
+    {
+      throw new IllegalTimeArithmetic(I18n.getMessage(
+        ExceptionMessages.ILLEGAL_TIME_ARITHMETIC_RESULT_GREATER_THAN_FINAL, result, FINAL));
+    }
+
+    return new Integer64Time(result);
   }
 
-  public LogicalTimeInterval distance(LogicalTime lt)
+  public LogicalTimeInterval distance(LogicalTime logicalTime)
   {
-    assert lt instanceof Integer64Time : String.format("%s", lt);
-
-    return new Integer64TimeInterval(time - ((Integer64Time) lt).time);
+    LogicalTimeInterval logicalTimeInterval;
+    if (logicalTime instanceof Integer64Time)
+    {
+      logicalTimeInterval = new Integer64TimeInterval(time - ((Integer64Time) logicalTime).time);
+    }
+    else if (logicalTime == null)
+    {
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.LOGICAL_TIME_IS_NULL));
+    }
+    else
+    {
+      throw new IllegalArgumentException(I18n.getMessage(
+        ExceptionMessages.INVALID_LOGICAL_TIME_TYPE, logicalTime.getClass()));
+    }
+    return logicalTimeInterval;
   }
 
   public int encodedLength()
@@ -115,7 +138,24 @@ public class Integer64Time
 
   public void encode(byte[] buffer, int offset)
   {
-    ByteBuffer.wrap(buffer, offset, ENCODED_LENGTH).putLong(time);
+    if (buffer == null)
+    {
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.ENCODE_BUFFER_IS_NULL));
+    }
+    else if ((buffer.length - offset) < ENCODED_LENGTH)
+    {
+      throw new IllegalArgumentException(I18n.getMessage(
+        ExceptionMessages.ENCODE_BUFFER_IS_TOO_SHORT, ENCODED_LENGTH, buffer.length - offset));
+    }
+
+    buffer[offset++] = (byte) (time >>> 56);
+    buffer[offset++] = (byte) (time >>> 48);
+    buffer[offset++] = (byte) (time >>> 40);
+    buffer[offset++] = (byte) (time >>> 32);
+    buffer[offset++] = (byte) (time >>> 24);
+    buffer[offset++] = (byte) (time >>> 16);
+    buffer[offset++] = (byte) (time >>> 8);
+    buffer[offset] = (byte) time;
   }
 
   public int compareTo(Object rhs)
@@ -123,16 +163,10 @@ public class Integer64Time
     return compareTo((Integer64Time) rhs);
   }
 
-  public int compareTo(Integer64Time rhs)
-  {
-    long diff = time - rhs.time;
-    return diff > 0l ? 1 : diff < 0l ? -1 : 0;
-  }
-
   @Override
   public boolean equals(Object rhs)
   {
-    return rhs instanceof Integer64Time && time == ((Integer64Time) rhs).time;
+    return this == rhs || (rhs instanceof Integer64Time && time == ((Integer64Time) rhs).time);
   }
 
   @Override
@@ -145,5 +179,10 @@ public class Integer64Time
   public String toString()
   {
     return Long.toString(time);
+  }
+
+  private int compareTo(Integer64Time rhs)
+  {
+    return Math.round(time - rhs.time);
   }
 }

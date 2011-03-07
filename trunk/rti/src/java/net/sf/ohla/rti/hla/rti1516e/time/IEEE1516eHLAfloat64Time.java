@@ -27,6 +27,8 @@ import hla.rti1516e.time.HLAfloat64Time;
 public class IEEE1516eHLAfloat64Time
   implements HLAfloat64Time
 {
+  public static final byte ENCODED_LENGTH = Double.SIZE / 8;
+
   public static final IEEE1516eHLAfloat64Time INITIAL = new IEEE1516eHLAfloat64Time(0.0);
   public static final IEEE1516eHLAfloat64Time FINAL = new IEEE1516eHLAfloat64Time(Double.MAX_VALUE);
 
@@ -51,6 +53,7 @@ public class IEEE1516eHLAfloat64Time
     throws IllegalTimeArithmetic
   {
     double result = time + interval.getValue();
+
     if (Double.isNaN(result))
     {
       throw new IllegalTimeArithmetic(I18n.getMessage(
@@ -61,6 +64,17 @@ public class IEEE1516eHLAfloat64Time
       throw new IllegalTimeArithmetic(I18n.getMessage(
         ExceptionMessages.LOGICAL_TIME_ADDITION_IS_INFINITE, time, interval.getValue()));
     }
+    else if (result < INITIAL.time)
+    {
+      throw new IllegalTimeArithmetic(I18n.getMessage(
+        ExceptionMessages.ILLEGAL_TIME_ARITHMETIC_RESULT_LESS_THAN_INITIAL, result, INITIAL));
+    }
+    else if (result > FINAL.time)
+    {
+      throw new IllegalTimeArithmetic(I18n.getMessage(
+        ExceptionMessages.ILLEGAL_TIME_ARITHMETIC_RESULT_GREATER_THAN_FINAL, result, FINAL));
+    }
+
     return new IEEE1516eHLAfloat64Time(result);
   }
 
@@ -68,6 +82,7 @@ public class IEEE1516eHLAfloat64Time
     throws IllegalTimeArithmetic
   {
     double result = time - interval.getValue();
+
     if (Double.isNaN(result))
     {
       throw new IllegalTimeArithmetic(I18n.getMessage(
@@ -81,8 +96,14 @@ public class IEEE1516eHLAfloat64Time
     else if (result < INITIAL.time)
     {
       throw new IllegalTimeArithmetic(I18n.getMessage(
-        ExceptionMessages.LOGICAL_TIME_SUBTRACTION_IS_LESS_THAN_INITIAL_TIME, time, interval.getValue(), INITIAL.time));
+        ExceptionMessages.ILLEGAL_TIME_ARITHMETIC_RESULT_LESS_THAN_INITIAL, result, INITIAL));
     }
+    else if (result > FINAL.time)
+    {
+      throw new IllegalTimeArithmetic(I18n.getMessage(
+        ExceptionMessages.ILLEGAL_TIME_ARITHMETIC_RESULT_GREATER_THAN_FINAL, result, FINAL));
+    }
+
     return new IEEE1516eHLAfloat64Time(result);
   }
 
@@ -98,7 +119,7 @@ public class IEEE1516eHLAfloat64Time
 
   public int encodedLength()
   {
-    return 8;
+    return ENCODED_LENGTH;
   }
 
   public void encode(byte[] buffer, int offset)
@@ -108,20 +129,22 @@ public class IEEE1516eHLAfloat64Time
     {
       throw new CouldNotEncode(I18n.getMessage(ExceptionMessages.ENCODE_BUFFER_IS_NULL));
     }
-    else if ((buffer.length - offset) < 8)
+    else if ((buffer.length - offset) < ENCODED_LENGTH)
     {
-      throw new CouldNotEncode(I18n.getMessage(ExceptionMessages.ENCODE_BUFFER_IS_TOO_SHORT));
+      throw new CouldNotEncode(I18n.getMessage(
+        ExceptionMessages.ENCODE_BUFFER_IS_TOO_SHORT, ENCODED_LENGTH, buffer.length - offset));
     }
 
     long l = Double.doubleToLongBits(time);
-    buffer[offset++] = (byte)(l >>> 56);
-    buffer[offset++] = (byte)(l >>> 48);
-    buffer[offset++] = (byte)(l >>> 40);
-    buffer[offset++] = (byte)(l >>> 32);
-    buffer[offset++] = (byte)(l >>> 24);
-    buffer[offset++] = (byte)(l >>> 16);
-    buffer[offset++] = (byte)(l >>> 8);
-    buffer[offset] = (byte)(l >>> 0);
+
+    buffer[offset++] = (byte) (l >>> 56);
+    buffer[offset++] = (byte) (l >>> 48);
+    buffer[offset++] = (byte) (l >>> 40);
+    buffer[offset++] = (byte) (l >>> 32);
+    buffer[offset++] = (byte) (l >>> 24);
+    buffer[offset++] = (byte) (l >>> 16);
+    buffer[offset++] = (byte) (l >>> 8);
+    buffer[offset] = (byte) l;
   }
 
   public double getValue()

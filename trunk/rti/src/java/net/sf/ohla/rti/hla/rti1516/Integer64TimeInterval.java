@@ -16,16 +16,15 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
-import java.nio.BufferUnderflowException;
-import java.nio.ByteBuffer;
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
 
-import hla.rti1516.CouldNotDecode;
 import hla.rti1516.LogicalTimeInterval;
 
 public class Integer64TimeInterval
   implements LogicalTimeInterval
 {
-  private static final byte ENCODED_LENGTH = Long.SIZE / 8;
+  public static final byte ENCODED_LENGTH = Long.SIZE / 8;
 
   public static final Integer64TimeInterval ZERO = new Integer64TimeInterval(0);
   public static final Integer64TimeInterval EPSILON = new Integer64TimeInterval(1);
@@ -35,19 +34,6 @@ public class Integer64TimeInterval
   public Integer64TimeInterval(long interval)
   {
     this.interval = interval;
-  }
-
-  public Integer64TimeInterval(byte[] buffer, int offset)
-    throws CouldNotDecode
-  {
-    try
-    {
-      interval = ByteBuffer.wrap(buffer, offset, ENCODED_LENGTH).getLong();
-    }
-    catch (BufferUnderflowException bue)
-    {
-      throw new CouldNotDecode(bue);
-    }
   }
 
   public boolean isZero()
@@ -74,18 +60,29 @@ public class Integer64TimeInterval
 
   public void encode(byte[] buffer, int offset)
   {
-    ByteBuffer.wrap(buffer, offset, ENCODED_LENGTH).putLong(interval);
+    if (buffer == null)
+    {
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.ENCODE_BUFFER_IS_NULL));
+    }
+    else if ((buffer.length - offset) < ENCODED_LENGTH)
+    {
+      throw new IllegalArgumentException(I18n.getMessage(
+        ExceptionMessages.ENCODE_BUFFER_IS_TOO_SHORT, ENCODED_LENGTH, buffer.length - offset));
+    }
+
+    buffer[offset++] = (byte) (interval >>> 56);
+    buffer[offset++] = (byte) (interval >>> 48);
+    buffer[offset++] = (byte) (interval >>> 40);
+    buffer[offset++] = (byte) (interval >>> 32);
+    buffer[offset++] = (byte) (interval >>> 24);
+    buffer[offset++] = (byte) (interval >>> 16);
+    buffer[offset++] = (byte) (interval >>> 8);
+    buffer[offset] = (byte) interval;
   }
 
   public int compareTo(Object rhs)
   {
     return compareTo((Integer64TimeInterval) rhs);
-  }
-
-  public int compareTo(Integer64TimeInterval rhs)
-  {
-    long diff = interval - rhs.interval;
-    return diff > 0L ? 1 : diff < 0L ? -1 : 0;
   }
 
   @Override
@@ -104,5 +101,10 @@ public class Integer64TimeInterval
   public String toString()
   {
     return Long.toString(interval);
+  }
+
+  private int compareTo(Integer64TimeInterval rhs)
+  {
+    return Math.round(interval - rhs.interval);
   }
 }
