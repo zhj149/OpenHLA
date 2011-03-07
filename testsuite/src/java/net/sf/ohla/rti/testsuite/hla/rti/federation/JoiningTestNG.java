@@ -31,7 +31,7 @@ import hla.rti.jlc.NullFederateAmbassador;
 public class JoiningTestNG
   extends BaseTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA Joining Test Federation";
+  private static final String FEDERATION_NAME = "OHLA HLA 1.3 Joining Test Federation";
 
   @BeforeClass
   public void setup()
