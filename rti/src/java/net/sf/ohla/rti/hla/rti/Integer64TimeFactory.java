@@ -23,14 +23,34 @@ import hla.rti.LogicalTimeFactory;
 public class Integer64TimeFactory
   implements LogicalTimeFactory
 {
+  public static final Integer64TimeFactory INSTANCE = new Integer64TimeFactory();
+
   public LogicalTime decode(byte[] buffer, int offset)
     throws CouldNotDecode
   {
-    return new Integer64Time(buffer, offset);
+    if (buffer == null)
+    {
+      throw new CouldNotDecode();
+    }
+    else if (buffer.length < Float64Time.ENCODED_LENGTH)
+    {
+      throw new CouldNotDecode();
+    }
+
+    long l = ((long) buffer[offset++] & 0xFF) << 56 |
+             ((long) buffer[offset++] & 0xFF) << 48 |
+             ((long) buffer[offset++] & 0xFF) << 40 |
+             ((long) buffer[offset++] & 0xFF) << 32 |
+             ((long) buffer[offset++] & 0xFF) << 24 |
+             ((long) buffer[offset++] & 0xFF) << 16 |
+             ((long) buffer[offset++] & 0xFF) << 8 |
+             ((long) buffer[offset] & 0xFF);
+
+    return new Integer64Time(l);
   }
 
   public LogicalTime makeInitial()
   {
-    return new Integer64Time(Integer64Time.INITIAL.time);
+    return new Integer64Time(Integer64Time.INITIAL);
   }
 }
