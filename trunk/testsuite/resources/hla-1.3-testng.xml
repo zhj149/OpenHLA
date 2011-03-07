@@ -23,4 +23,14 @@
       <class name="net.sf.ohla.rti.testsuite.hla.rti.federation.SynchronizationTestNG"/>
     </classes>
   </test>
+  <test name="IEEE 1516e - Support Services">
+    <classes>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.support.FederateSupportTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.support.OrderSupportTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.support.TransportationSupportTestNG"/>
+      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516e.support.ObjectSupportTestNG"/>-->
+      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516e.support.InteractionSupportTestNG"/>-->
+      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516e.support.DimensionSupportTestNG"/>-->
+    </classes>
+  </test>
 </suite>
