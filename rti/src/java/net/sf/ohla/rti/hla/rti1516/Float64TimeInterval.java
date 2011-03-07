@@ -14,26 +14,54 @@
  * limitations under the License.
  */
 
-package net.sf.ohla.rti.hla.rti;
+package net.sf.ohla.rti.hla.rti1516;
 
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
 
-import hla.rti.LogicalTimeInterval;
+import hla.rti1516.LogicalTimeInterval;
 
 public class Float64TimeInterval
   implements LogicalTimeInterval
 {
   public static final byte ENCODED_LENGTH = Long.SIZE / 8;
 
-  public static final double ZERO = 0.0;
-  public static final double EPSILON = Double.MIN_NORMAL;
+  public static final Float64TimeInterval ZERO = new Float64TimeInterval(0.0);
+  public static final Float64TimeInterval EPSILON = new Float64TimeInterval(Double.MIN_NORMAL);
 
-  public double interval;
+  public final double interval;
 
   public Float64TimeInterval(double interval)
   {
     this.interval = interval;
+  }
+
+  public boolean isEpsilon()
+  {
+    return interval == EPSILON.interval;
+  }
+
+  public boolean isZero()
+  {
+    return interval == ZERO.interval;
+  }
+
+  public LogicalTimeInterval subtract(LogicalTimeInterval logicalTimeInterval)
+  {
+    double result;
+    if (logicalTimeInterval instanceof Float64TimeInterval)
+    {
+      result = interval - ((Float64TimeInterval) logicalTimeInterval).interval;
+    }
+    else if (logicalTimeInterval == null)
+    {
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.LOGICAL_TIME_INTERVAL_IS_NULL));
+    }
+    else
+    {
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.INVALID_LOGICAL_TIME_INTERVAL_TYPE));
+    }
+    return new Float64TimeInterval(result);
   }
 
   public int encodedLength()
@@ -41,74 +69,11 @@ public class Float64TimeInterval
     return ENCODED_LENGTH;
   }
 
-  public boolean isEpsilon()
-  {
-    return interval == EPSILON;
-  }
-
-  public boolean isZero()
-  {
-    return interval == ZERO;
-  }
-
-  public boolean isEqualTo(LogicalTimeInterval rhs)
-  {
-    return equals(rhs);
-  }
-
-  public boolean isGreaterThan(LogicalTimeInterval rhs)
-  {
-    return compareTo(rhs) > 0;
-  }
-
-  public boolean isGreaterThanOrEqualTo(LogicalTimeInterval rhs)
-  {
-    return compareTo(rhs) >= 0;
-  }
-
-  public boolean isLessThan(LogicalTimeInterval rhs)
-  {
-    return compareTo(rhs) < 0;
-  }
-
-  public boolean isLessThanOrEqualTo(LogicalTimeInterval rhs)
-  {
-    return compareTo(rhs) <= 0;
-  }
-
-  public void setEpsilon()
-  {
-    interval = EPSILON;
-  }
-
-  public void setZero()
-  {
-    interval = ZERO;
-  }
-
-  public void setTo(LogicalTimeInterval rhs)
-  {
-    if (rhs instanceof Float64TimeInterval)
-    {
-      interval = ((Float64TimeInterval) rhs).interval;
-    }
-    else if (rhs == null)
-    {
-      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.LOGICAL_TIME_INTERVAL_IS_NULL));
-    }
-    else
-    {
-      throw new IllegalArgumentException(I18n.getMessage(
-        ExceptionMessages.INVALID_LOGICAL_TIME_INTERVAL_TYPE, rhs.getClass()));
-    }
-  }
-
   public void encode(byte[] buffer, int offset)
   {
     if (buffer == null)
     {
-      throw new IllegalArgumentException(I18n.getMessage(
-        ExceptionMessages.ENCODE_BUFFER_IS_NULL));
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.ENCODE_BUFFER_IS_NULL));
     }
     else if ((buffer.length - offset) < ENCODED_LENGTH)
     {
@@ -130,7 +95,7 @@ public class Float64TimeInterval
 
   public int compareTo(Object rhs)
   {
-    return compareTo((Integer64TimeInterval) rhs);
+    return compareTo((Float64TimeInterval) rhs);
   }
 
   @Override
@@ -151,7 +116,7 @@ public class Float64TimeInterval
     return Double.toString(interval);
   }
 
-  private int compareTo(Integer64TimeInterval rhs)
+  private int compareTo(Float64TimeInterval rhs)
   {
     return (int) Math.round(interval - rhs.interval);
   }

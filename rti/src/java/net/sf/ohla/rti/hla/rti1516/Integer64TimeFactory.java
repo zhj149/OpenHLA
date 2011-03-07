@@ -16,6 +16,9 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
+
 import hla.rti1516.CouldNotDecode;
 import hla.rti1516.LogicalTime;
 import hla.rti1516.LogicalTimeFactory;
@@ -23,10 +26,31 @@ import hla.rti1516.LogicalTimeFactory;
 public class Integer64TimeFactory
   implements LogicalTimeFactory
 {
+  public static final Integer64TimeFactory INSTANCE = new Integer64TimeFactory();
+
   public LogicalTime decode(byte[] buffer, int offset)
     throws CouldNotDecode
   {
-    return new Integer64Time(buffer, offset);
+    if (buffer == null)
+    {
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.DECODE_BUFFER_IS_NULL));
+    }
+    else if ((buffer.length - offset) < Integer64Time.ENCODED_LENGTH)
+    {
+      throw new IllegalArgumentException(I18n.getMessage(
+        ExceptionMessages.DECODE_BUFFER_IS_TOO_SHORT, Integer64Time.ENCODED_LENGTH, buffer.length - offset));
+    }
+
+    long l = ((long) buffer[offset++] & 0xFF) << 56 |
+             ((long) buffer[offset++] & 0xFF) << 48 |
+             ((long) buffer[offset++] & 0xFF) << 40 |
+             ((long) buffer[offset++] & 0xFF) << 32 |
+             ((long) buffer[offset++] & 0xFF) << 24 |
+             ((long) buffer[offset++] & 0xFF) << 16 |
+             ((long) buffer[offset++] & 0xFF) << 8 |
+             ((long) buffer[offset] & 0xFF);
+
+    return new Integer64Time(l);
   }
 
   public LogicalTime makeInitial()

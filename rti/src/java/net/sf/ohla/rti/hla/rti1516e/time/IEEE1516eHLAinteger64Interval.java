@@ -25,6 +25,8 @@ import hla.rti1516e.time.HLAinteger64Interval;
 public class IEEE1516eHLAinteger64Interval
   implements HLAinteger64Interval
 {
+  public static final byte ENCODED_LENGTH = Long.SIZE / 8;
+
   public static final IEEE1516eHLAinteger64Interval ZERO = new IEEE1516eHLAinteger64Interval(0L);
   public static final IEEE1516eHLAinteger64Interval EPSILON = new IEEE1516eHLAinteger64Interval(1L);
 
@@ -63,7 +65,7 @@ public class IEEE1516eHLAinteger64Interval
 
   public int encodedLength()
   {
-    return 8;
+    return ENCODED_LENGTH;
   }
 
   public void encode(byte[] buffer, int offset)
@@ -71,11 +73,12 @@ public class IEEE1516eHLAinteger64Interval
   {
     if (buffer == null)
     {
-      throw new CouldNotEncode(I18n.getMessage(ExceptionMessages.ENCODE_BUFFER_IS_NULL));
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.ENCODE_BUFFER_IS_NULL));
     }
-    else if ((buffer.length - offset) < 8)
+    else if ((buffer.length - offset) < ENCODED_LENGTH)
     {
-      throw new CouldNotEncode(I18n.getMessage(ExceptionMessages.ENCODE_BUFFER_IS_TOO_SHORT));
+      throw new IllegalArgumentException(I18n.getMessage(
+        ExceptionMessages.ENCODE_BUFFER_IS_TOO_SHORT, ENCODED_LENGTH, buffer.length - offset));
     }
 
     buffer[offset++] = (byte) (interval >>> 56);

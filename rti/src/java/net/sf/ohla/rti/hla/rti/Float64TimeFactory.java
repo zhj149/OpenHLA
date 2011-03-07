@@ -16,6 +16,9 @@
 
 package net.sf.ohla.rti.hla.rti;
 
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
+
 import hla.rti.CouldNotDecode;
 import hla.rti.LogicalTime;
 import hla.rti.LogicalTimeFactory;
@@ -30,11 +33,12 @@ public class Float64TimeFactory
   {
     if (buffer == null)
     {
-      throw new CouldNotDecode();
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.DECODE_BUFFER_IS_NULL));
     }
-    else if (buffer.length < Float64Time.ENCODED_LENGTH)
+    else if ((buffer.length - offset) < Float64Time.ENCODED_LENGTH)
     {
-      throw new CouldNotDecode();
+      throw new IllegalArgumentException(I18n.getMessage(
+        ExceptionMessages.DECODE_BUFFER_IS_TOO_SHORT, Float64Time.ENCODED_LENGTH, buffer.length - offset));
     }
 
     long l = ((long) buffer[offset++] & 0xFF) << 56 |
