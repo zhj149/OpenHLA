@@ -4112,12 +4112,12 @@ public class HLA13RTIambassador
     }
   }
 
-  public int getObjectClassHandle(String name)
+  public int getObjectClassHandle(String objectClassName)
     throws NameNotFound, FederateNotExecutionMember, RTIinternalError
   {
     try
     {
-      return convert(rtiAmbassador.getObjectClassHandle(name));
+      return convert(rtiAmbassador.getObjectClassHandle(objectClassName));
     }
     catch (hla.rti1516e.exceptions.NameNotFound nnf)
     {
