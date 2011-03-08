@@ -59,6 +59,8 @@ public interface TestConstants
   static final String TEST_INTERACTION = "TestInteraction";
   static final String TEST_INTERACTION2 = "TestInteraction.TestInteraction2";
 
+  static final String UNKNOWN_INTERACTION = "UnknownInteraction";
+
   static final String PARAMETER1 = "Parameter1";
   static final String PARAMETER2 = "Parameter2";
   static final String PARAMETER3 = "Parameter3";
@@ -76,6 +78,8 @@ public interface TestConstants
   static final String PARAMETER6_VALUE = "Parameter6Value";
 
   static final String ROUTING_SPACE = "TestRoutingSpace";
+
+  static final String UNKNOWN_ROUTING_SPACE = "UnknownRoutingSpace";
 
   static final String DIMENSION1 = "Dimension1";
   static final String DIMENSION2 = "Dimension2";

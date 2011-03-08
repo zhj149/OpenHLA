@@ -4002,9 +4002,18 @@ public class IEEE1516eRTIambassador
     }
   }
 
-  public ObjectClassHandle getObjectClassHandle(String name)
+  public ObjectClassHandle getObjectClassHandle(String objectClassName)
     throws NameNotFound, FederateNotExecutionMember, NotConnected, RTIinternalError
   {
+    if (objectClassName == null)
+    {
+      throw new NameNotFound(I18n.getMessage(ExceptionMessages.OBJECT_CLASS_NAME_IS_NULL));
+    }
+    else if (objectClassName.isEmpty())
+    {
+      throw new NameNotFound(I18n.getMessage(ExceptionMessages.OBJECT_CLASS_NAME_IS_EMPTY));
+    }
+
     connectLock.readLock().lock();
     try
     {
@@ -4015,7 +4024,7 @@ public class IEEE1516eRTIambassador
       {
         checkIfFederateNotExecutionMember();
 
-        return federate.getObjectClassHandle(name);
+        return federate.getObjectClassHandle(objectClassName);
       }
       finally
       {
