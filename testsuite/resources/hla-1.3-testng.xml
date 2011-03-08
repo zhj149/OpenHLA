@@ -23,6 +23,12 @@
       <class name="net.sf.ohla.rti.testsuite.hla.rti.federation.SynchronizationTestNG"/>
     </classes>
   </test>
+  <test name="IEEE 1516e - Declaration Management">
+    <classes>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.declaration.ObjectDeclarationTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.declaration.InteractionDeclarationTestNG"/>
+    </classes>
+  </test>
   <test name="IEEE 1516e - Support Services">
     <classes>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.support.FederateSupportTestNG"/>
