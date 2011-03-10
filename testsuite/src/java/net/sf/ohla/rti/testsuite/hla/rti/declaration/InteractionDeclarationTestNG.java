@@ -25,7 +25,7 @@ import hla.rti.InteractionClassNotDefined;
 public class InteractionDeclarationTestNG
   extends BaseDeclarationTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA Interaction Declaration Test Federation";
+  private static final String FEDERATION_NAME = "OHLA HLA 1.3 Interaction Declaration Test Federation";
 
   private int testInteractionClassHandle;
 

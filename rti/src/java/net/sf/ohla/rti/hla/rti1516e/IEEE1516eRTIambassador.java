@@ -225,6 +225,11 @@ public class IEEE1516eRTIambassador
     }
   };
 
+  public Channel getRTIChannel()
+  {
+    return rtiChannel;
+  }
+
   public Federate getFederate()
   {
     return federate;
@@ -4261,7 +4266,7 @@ public class IEEE1516eRTIambassador
     }
   }
 
-  public InteractionClassHandle getInteractionClassHandle(String name)
+  public InteractionClassHandle getInteractionClassHandle(String interactionClassName)
     throws NameNotFound, FederateNotExecutionMember, NotConnected, RTIinternalError
   {
     connectLock.readLock().lock();
@@ -4274,7 +4279,7 @@ public class IEEE1516eRTIambassador
       {
         checkIfFederateNotExecutionMember();
 
-        return federate.getInteractionClassHandle(name);
+        return federate.getInteractionClassHandle(interactionClassName);
       }
       finally
       {

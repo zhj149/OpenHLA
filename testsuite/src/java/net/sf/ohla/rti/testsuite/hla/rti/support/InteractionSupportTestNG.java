@@ -61,7 +61,7 @@ public class InteractionSupportTestNG
     int interactionClassHandle = rtiAmbassadors.get(0).getInteractionClassHandle(TEST_INTERACTION);
     int parameterHandle = rtiAmbassadors.get(0).getParameterHandle(PARAMETER1, interactionClassHandle);
 
-    assert PARAMETER1.equals(rtiAmbassadors.get(0).getParameterName(interactionClassHandle, parameterHandle));
+    assert PARAMETER1.equals(rtiAmbassadors.get(0).getParameterName(parameterHandle, interactionClassHandle));
   }
 
   @Test(expectedExceptions = {InteractionClassNotDefined.class})

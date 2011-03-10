@@ -70,7 +70,7 @@ public class ObjectSupportTestNG
     int objectClassHandle = rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT);
     int attributeHandle = rtiAmbassadors.get(0).getAttributeHandle(ATTRIBUTE1, objectClassHandle);
 
-    assert ATTRIBUTE1.equals(rtiAmbassadors.get(0).getAttributeName(objectClassHandle, attributeHandle));
+    assert ATTRIBUTE1.equals(rtiAmbassadors.get(0).getAttributeName(attributeHandle, objectClassHandle));
   }
 
   @Test(expectedExceptions = {ObjectClassNotDefined.class})
@@ -95,7 +95,7 @@ public class ObjectSupportTestNG
     int objectClassHandle = rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT);
     int attributeHandle = rtiAmbassadors.get(0).getAttributeHandle(ATTRIBUTE1, objectClassHandle);
 
-    rtiAmbassadors.get(0).getAttributeName(-1, attributeHandle);
+    rtiAmbassadors.get(0).getAttributeName(attributeHandle, -1);
   }
 
   @Test(expectedExceptions = {AttributeNotDefined.class})

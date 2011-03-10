@@ -44,6 +44,7 @@ import hla.rti.RTIinternalError;
 import hla.rti.SpaceNotDefined;
 
 import hla.rti1516e.AttributeHandle;
+import hla.rti1516e.DimensionHandle;
 import hla.rti1516e.DimensionHandleSet;
 import hla.rti1516e.InteractionClassHandle;
 import hla.rti1516e.ObjectClassHandle;
@@ -56,13 +57,17 @@ public class FED
 
   public static final String INTERACTION_ROOT = "interactionRoot";
 
+  public static final String OBJECT_ROOT_PREFIX = "objectRoot.";
+  public static final String INTERACTION_ROOT_PREFIX = "interactionRoot.";
+
   public static final String RTI_PRIVATE= "RTIprivate";
 
   private final FDD fdd;
 
   private final Map<Integer, RoutingSpace> routingSpaces = new HashMap<Integer, RoutingSpace>();
   private final Map<String, RoutingSpace> routingSpacesByName = new HashMap<String, RoutingSpace>();
-  private final Map<Dimension, RoutingSpace> routingSpacesByDimension = new HashMap<Dimension, RoutingSpace>();
+  private final Map<DimensionHandle, RoutingSpace> routingSpacesByDimensionHandle =
+    new HashMap<DimensionHandle, RoutingSpace>();
 
   private String fedName;
 
@@ -88,6 +93,11 @@ public class FED
 
       routingSpaces.put(routingSpace.getRoutingSpaceHandle(), routingSpace);
       routingSpacesByName.put(routingSpace.getRoutingSpaceName(), routingSpace);
+
+      for (DimensionHandle dimensionHandle : routingSpace.getDimensionHandles())
+      {
+        routingSpacesByDimensionHandle.put(dimensionHandle, routingSpace);
+      }
     }
   }
 
@@ -218,7 +228,7 @@ public class FED
 
     routingSpace.addDimension(dimensionName, dimension);
 
-    routingSpacesByDimension.put(dimension, routingSpace);
+    routingSpacesByDimensionHandle.put(dimension.getDimensionHandle(), routingSpace);
 
     return dimension;
   }
@@ -284,8 +294,7 @@ public class FED
       }
       else
       {
-        RoutingSpace routingSpace = routingSpacesByDimension.get(
-          fdd.getDimensionSafely(attribute.getDimensionHandles().iterator().next()));
+        RoutingSpace routingSpace = routingSpacesByDimensionHandle.get(attribute.getDimensionHandles().iterator().next());
         if (routingSpace == null)
         {
           throw new RTIinternalError(I18n.getMessage(
@@ -321,8 +330,8 @@ public class FED
       }
       else
       {
-        RoutingSpace routingSpace = routingSpacesByDimension.get(
-          fdd.getDimensionSafely(interactionClass.getDimensionHandles().iterator().next()));
+        RoutingSpace routingSpace = routingSpacesByDimensionHandle.get(
+          interactionClass.getDimensionHandles().iterator().next());
         if (routingSpace == null)
         {
           throw new RTIinternalError(I18n.getMessage(
