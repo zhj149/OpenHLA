@@ -107,6 +107,7 @@ public class RoutingSpace
   public void addDimension(String alias, Dimension dimension)
   {
     dimensions.add(dimension);
+    dimensionHandles.add(dimension.getDimensionHandle());
     aliases.add(alias);
   }
 

@@ -51,6 +51,6 @@ public class FederateSupportTestNG
   public void testResignFederationExecutionWithInvalidResignAction()
     throws Exception
   {
-    rtiAmbassadors.get(0).resignFederationExecution(0);
+    rtiAmbassadors.get(0).resignFederationExecution(-1);
   }
 }

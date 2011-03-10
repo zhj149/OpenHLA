@@ -28,10 +28,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.fed.FED;
 import net.sf.ohla.rti.fed.RoutingSpace;
 import net.sf.ohla.rti.fed.javacc.FEDParser;
+import net.sf.ohla.rti.federate.FederateChannelUpstreamHandler;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeSetRegionSetPairList;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
@@ -43,6 +45,14 @@ import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandleSet;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandle;
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
+import net.sf.ohla.rti.messages.Message;
+import net.sf.ohla.rti.messages.callbacks.ObjectInstanceNameReservationFailed;
+import net.sf.ohla.rti.messages.callbacks.ObjectInstanceNameReservationSucceeded;
+
+import org.jboss.netty.channel.ChannelEvent;
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.ChannelUpstreamHandler;
+import org.jboss.netty.channel.MessageEvent;
 
 import hla.rti.ArrayIndexOutOfBounds;
 import hla.rti.AsynchronousDeliveryAlreadyDisabled;
@@ -149,6 +159,7 @@ import hla.rti1516e.exceptions.ConnectionFailed;
 import hla.rti1516e.exceptions.CouldNotCreateLogicalTimeFactory;
 import hla.rti1516e.exceptions.CouldNotEncode;
 import hla.rti1516e.exceptions.FederateHasNotBegunSave;
+import hla.rti1516e.exceptions.FederateInternalError;
 import hla.rti1516e.exceptions.FederateServiceInvocationsAreBeingReportedViaMOM;
 import hla.rti1516e.exceptions.FederateUnableToUseTime;
 import hla.rti1516e.exceptions.IllegalName;
@@ -269,16 +280,6 @@ public class HLA13RTIambassador
     return federateAmbassador;
   }
 
-  public void objectInstanceNameReservationSucceeded(String name)
-  {
-    objectInstanceNameReservations.remove(name).objectInstanceNameReservationSucceeded();
-  }
-
-  public void objectInstanceNameReservationFailed(String name)
-  {
-    objectInstanceNameReservations.remove(name).objectInstanceNameReservationFailed();
-  }
-
   public void createFederationExecution(String federationExecutionName, URL fed)
     throws FederationExecutionAlreadyExists, CouldNotOpenFED, ErrorReadingFED, RTIinternalError
   {
@@ -358,6 +359,10 @@ public class HLA13RTIambassador
     {
       FederateHandle federateHandle = rtiAmbassador.joinFederationExecution(federateType, federationExecutionName);
 
+      rtiAmbassador.getRTIChannel().getPipeline().addBefore(
+        FederateChannelUpstreamHandler.NAME, ObjectNameReservationChannelUpstreamHandler.NAME,
+        new ObjectNameReservationChannelUpstreamHandler());
+
       setIEEE1516eLogicalTimeFactory(rtiAmbassador.getFederate().getLogicalTimeFactory());
 
       fed = rtiAmbassador.getFederate().getFDD().getFED();
@@ -412,6 +417,10 @@ public class HLA13RTIambassador
     {
       FederateHandle federateHandle = rtiAmbassador.joinFederationExecution(federateType, federationExecutionName);
 
+      rtiAmbassador.getRTIChannel().getPipeline().addBefore(
+        FederateChannelUpstreamHandler.NAME, ObjectNameReservationChannelUpstreamHandler.NAME,
+        new ObjectNameReservationChannelUpstreamHandler());
+
       setIEEE1516eLogicalTimeFactory(rtiAmbassador.getFederate().getLogicalTimeFactory());
 
       fed = rtiAmbassador.getFederate().getFDD().getFED();
@@ -462,6 +471,8 @@ public class HLA13RTIambassador
     try
     {
       rtiAmbassador.resignFederationExecution(getResignAction(resignAction));
+
+      rtiAmbassador.getRTIChannel().getPipeline().remove(ObjectNameReservationChannelUpstreamHandler.NAME);
     }
     catch (hla.rti1516e.exceptions.InvalidResignAction ira)
     {
@@ -1259,7 +1270,20 @@ public class HLA13RTIambassador
       objectInstanceNameReservationsLock.lock();
       try
       {
-        if (objectInstanceNameReservations.containsKey(objectInstanceName))
+        if (objectInstanceName == null)
+        {
+          throw new RTIinternalError(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_NAME_IS_NULL));
+        }
+        else if (objectInstanceName.isEmpty())
+        {
+          throw new RTIinternalError(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_NAME_IS_EMPTY));
+        }
+        else if (objectInstanceName.startsWith("HLA"))
+        {
+          throw new RTIinternalError(I18n.getMessage(
+            ExceptionMessages.OBJECT_INSTANCE_NAME_STARTS_WITH_HLA, objectInstanceName));
+        }
+        else if (objectInstanceNameReservations.containsKey(objectInstanceName))
         {
           throw new ObjectAlreadyRegistered(objectInstanceName);
         }
@@ -1277,12 +1301,31 @@ public class HLA13RTIambassador
 
       if (result.wasSuccessful())
       {
+        try
+        {
+          rtiAmbassador.getFederate().objectInstanceNameReservationSucceeded(objectInstanceName);
+        }
+        catch (FederateInternalError fie)
+        {
+          throw new RTIinternalError(fie.getMessage(), fie);
+        }
+
         return add(rtiAmbassador.registerObjectInstance(
           convertToObjectClassHandle(objectClassHandle), objectInstanceName));
       }
       else
       {
-        throw new ObjectAlreadyRegistered(objectInstanceName);
+        try
+        {
+          rtiAmbassador.getFederate().objectInstanceNameReservationFailed(objectInstanceName);
+        }
+        catch (FederateInternalError fie)
+        {
+          throw new RTIinternalError(fie.getMessage(), fie);
+        }
+
+        throw new ObjectAlreadyRegistered(I18n.getMessage(
+          ExceptionMessages.OBJECT_ALREADY_REGISTERED, objectInstanceName));
       }
     }
     catch (IllegalName in)
@@ -4115,6 +4158,12 @@ public class HLA13RTIambassador
   public int getObjectClassHandle(String objectClassName)
     throws NameNotFound, FederateNotExecutionMember, RTIinternalError
   {
+    if (objectClassName != null && objectClassName.startsWith(FED.OBJECT_ROOT))
+    {
+      objectClassName = objectClassName.length() > FED.OBJECT_ROOT.length() ?
+        objectClassName.substring(FED.OBJECT_ROOT_PREFIX.length()) : FDD.HLA_OBJECT_ROOT;
+    }
+
     try
     {
       return convert(rtiAmbassador.getObjectClassHandle(objectClassName));
@@ -4140,9 +4189,10 @@ public class HLA13RTIambassador
   public String getObjectClassName(int objectClassHandle)
     throws ObjectClassNotDefined, FederateNotExecutionMember, RTIinternalError
   {
+    String objectClassName;
     try
     {
-      return rtiAmbassador.getObjectClassName(convertToObjectClassHandle(objectClassHandle));
+      objectClassName = rtiAmbassador.getObjectClassName(convertToObjectClassHandle(objectClassHandle));
     }
     catch (InvalidObjectClassHandle ioch)
     {
@@ -4160,14 +4210,26 @@ public class HLA13RTIambassador
     {
       throw new RTIinternalError(rtiie);
     }
+
+    if (objectClassName.startsWith(FDD.HLA_OBJECT_ROOT))
+    {
+      objectClassName = objectClassName.length() > FDD.HLA_OBJECT_ROOT.length() ?
+        objectClassName.substring(FDD.HLA_OBJECT_ROOT_PREFIX.length()) : FED.OBJECT_ROOT;
+    }
+    return objectClassName;
   }
 
-  public int getAttributeHandle(String name, int objectClassHandle)
+  public int getAttributeHandle(String attributeName, int objectClassHandle)
     throws ObjectClassNotDefined, NameNotFound, FederateNotExecutionMember, RTIinternalError
   {
+    if (FED.PRIVILEGE_TO_DELETE.equals(attributeName))
+    {
+      attributeName = FDD.HLA_PRIVILEGE_TO_DELETE_OBJECT;
+    }
+
     try
     {
-      return convert(rtiAmbassador.getAttributeHandle(convertToObjectClassHandle(objectClassHandle), name));
+      return convert(rtiAmbassador.getAttributeHandle(convertToObjectClassHandle(objectClassHandle), attributeName));
     }
     catch (hla.rti1516e.exceptions.NameNotFound nnf)
     {
@@ -4194,9 +4256,10 @@ public class HLA13RTIambassador
   public String getAttributeName(int attributeHandle, int objectClassHandle)
     throws ObjectClassNotDefined, AttributeNotDefined, FederateNotExecutionMember, RTIinternalError
   {
+    String attributeName;
     try
     {
-      return rtiAmbassador.getAttributeName(
+      attributeName = rtiAmbassador.getAttributeName(
         convertToObjectClassHandle(objectClassHandle), convertToAttributeHandle(attributeHandle));
     }
     catch (hla.rti1516e.exceptions.AttributeNotDefined and)
@@ -4223,14 +4286,26 @@ public class HLA13RTIambassador
     {
       throw new RTIinternalError(rtiie);
     }
+
+    if (FDD.HLA_PRIVILEGE_TO_DELETE_OBJECT.equals(attributeName))
+    {
+      attributeName = FED.PRIVILEGE_TO_DELETE;
+    }
+    return attributeName;
   }
 
-  public int getInteractionClassHandle(String name)
+  public int getInteractionClassHandle(String interactionClassName)
     throws NameNotFound, FederateNotExecutionMember, RTIinternalError
   {
+    if (interactionClassName != null && interactionClassName.startsWith(FED.INTERACTION_ROOT))
+    {
+      interactionClassName = interactionClassName.length() > FED.INTERACTION_ROOT.length() ?
+        interactionClassName.substring(FED.INTERACTION_ROOT_PREFIX.length()) : FDD.HLA_INTERACTION_ROOT;
+    }
+
     try
     {
-      return convert(rtiAmbassador.getInteractionClassHandle(name));
+      return convert(rtiAmbassador.getInteractionClassHandle(interactionClassName));
     }
     catch (hla.rti1516e.exceptions.NameNotFound nnf)
     {
@@ -4253,9 +4328,11 @@ public class HLA13RTIambassador
   public String getInteractionClassName(int interactionClassHandle)
     throws InteractionClassNotDefined, FederateNotExecutionMember, RTIinternalError
   {
+    String interactionClassName;
     try
     {
-      return rtiAmbassador.getInteractionClassName(convertToInteractionClassHandle(interactionClassHandle));
+      interactionClassName = rtiAmbassador.getInteractionClassName(
+        convertToInteractionClassHandle(interactionClassHandle));
     }
     catch (InvalidInteractionClassHandle iich)
     {
@@ -4273,6 +4350,13 @@ public class HLA13RTIambassador
     {
       throw new RTIinternalError(rtiie);
     }
+
+    if (interactionClassName.startsWith(FDD.HLA_INTERACTION_ROOT))
+    {
+      interactionClassName = interactionClassName.length() > FDD.HLA_INTERACTION_ROOT.length() ?
+        interactionClassName.substring(FDD.HLA_INTERACTION_ROOT_PREFIX.length()) : FED.INTERACTION_ROOT;
+    }
+    return interactionClassName;
   }
 
   public int getParameterHandle(String name, int interactionClassHandle)
@@ -5165,12 +5249,26 @@ public class HLA13RTIambassador
   protected ResignAction getResignAction(int resignAction)
     throws InvalidResignAction
   {
-    if (resignAction < 0 || resignAction >= ResignAction.values().length)
+    ResignAction ieee1516eResignAction;
+    switch (resignAction)
     {
-      throw new InvalidResignAction(I18n.getMessage(ExceptionMessages.INVALID_HLA13_RESIGN_ACTION, resignAction));
+      case hla.rti.ResignAction.RELEASE_ATTRIBUTES:
+        ieee1516eResignAction = ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES;
+        break;
+      case hla.rti.ResignAction.DELETE_OBJECTS:
+        ieee1516eResignAction = ResignAction.DELETE_OBJECTS;
+        break;
+      case hla.rti.ResignAction.DELETE_OBJECTS_AND_RELEASE_ATTRIBUTES:
+        ieee1516eResignAction = ResignAction.DELETE_OBJECTS_THEN_DIVEST;
+        break;
+      case hla.rti.ResignAction.NO_ACTION:
+        ieee1516eResignAction = ResignAction.NO_ACTION;
+        break;
+      default:
+        throw new InvalidResignAction(I18n.getMessage(ExceptionMessages.INVALID_HLA13_RESIGN_ACTION, resignAction));
     }
 
-    return ResignAction.values()[resignAction];
+    return ieee1516eResignAction;
   }
 
   @SuppressWarnings("unchecked")
@@ -5247,21 +5345,67 @@ public class HLA13RTIambassador
     return System.getProperty(logicalTimeFactoryClassNameProperty);
   }
 
+  private class ObjectNameReservationChannelUpstreamHandler
+    implements ChannelUpstreamHandler
+  {
+    public static final String NAME = "ObjectNameReservationChannelUpstreamHandler";
+
+    public void handleUpstream(ChannelHandlerContext context, ChannelEvent event)
+      throws Exception
+    {
+      if (event instanceof MessageEvent)
+      {
+        assert ((MessageEvent) event).getMessage() instanceof Message;
+
+        Message message = (Message) ((MessageEvent) event).getMessage();
+
+        switch (message.getType())
+        {
+          case OBJECT_INSTANCE_NAME_RESERVATION_SUCCEEDED:
+            objectInstanceNameReservationsLock.lock();
+            try
+            {
+              objectInstanceNameReservations.remove(
+                ((ObjectInstanceNameReservationSucceeded) message).getObjectInstanceName()).complete(true);
+            }
+            finally
+            {
+              objectInstanceNameReservationsLock.unlock();
+            }
+            break;
+          case OBJECT_INSTANCE_NAME_RESERVATION_FAILED:
+            objectInstanceNameReservationsLock.lock();
+            try
+            {
+              objectInstanceNameReservations.remove(
+                ((ObjectInstanceNameReservationFailed) message).getName()).complete(false);
+            }
+            finally
+            {
+              objectInstanceNameReservationsLock.unlock();
+            }
+            break;
+          default:
+            context.sendUpstream(event);
+        }
+      }
+      else
+      {
+        context.sendUpstream(event);
+      }
+    }
+  }
+
   private static class ReserveObjectInstanceNameResult
   {
     private final CountDownLatch latch = new CountDownLatch(1);
 
     private Boolean succeeded;
 
-    public void objectInstanceNameReservationSucceeded()
+    public void complete(boolean succeeded)
     {
-      succeeded = true;
+      this.succeeded = succeeded;
 
-      latch.countDown();
-    }
-
-    public void objectInstanceNameReservationFailed()
-    {
       latch.countDown();
     }
 

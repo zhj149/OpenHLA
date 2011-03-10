@@ -221,7 +221,7 @@ public class FEDParser implements FEDParserConstants {
     jj_consume_token(RPAREN);
     if (net.sf.ohla.rti.fed.FED.PRIVILEGE_TO_DELETE.equals(attributeName))
     {
-      fed.addAttribute(objectRoot, attributeName, transport, order, spaceName);
+      fed.addAttribute(objectRoot, FDD.HLA_PRIVILEGE_TO_DELETE_OBJECT, transport, order, spaceName);
     }
     else
     {

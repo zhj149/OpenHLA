@@ -99,12 +99,6 @@ public class Dimension
   }
 
   @Override
-  public int hashCode()
-  {
-    return dimensionHandle.hashCode();
-  }
-
-  @Override
   public String toString()
   {
     return dimensionName;

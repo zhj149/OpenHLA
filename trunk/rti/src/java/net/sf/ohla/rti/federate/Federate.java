@@ -231,8 +231,6 @@ public class Federate
    */
   private final Channel rtiChannel;
 
-  private final String fullFederateName;
-
   private volatile FDD fdd;
 
   private FederateHandle federateHandle;
@@ -340,9 +338,7 @@ public class Federate
         //
         this.federateName = federateName == null ? defaultFederateName(federateHandle) : federateName;
 
-        fullFederateName = federationExecutionName + "." + federateName;
-
-        marker = MarkerFactory.getMarker(fullFederateName);
+        marker = MarkerFactory.getMarker(federationExecutionName + "." + federateName);
         log = I18nLogger.getLogger(marker, getClass());
 
         fdd = response.getFDD();
@@ -2649,10 +2645,10 @@ public class Federate
     return objectManager.getUpdateRateValueForAttribute(objectInstanceHandle, attributeHandle);
   }
 
-  public InteractionClassHandle getInteractionClassHandle(String name)
+  public InteractionClassHandle getInteractionClassHandle(String interactionClassName)
     throws NameNotFound, RTIinternalError
   {
-    return fdd.getInteractionClassHandle(name);
+    return fdd.getInteractionClassHandle(interactionClassName);
   }
 
   public String getInteractionClassName(InteractionClassHandle interactionClassHandle)
@@ -3138,37 +3134,37 @@ public class Federate
     }
   }
 
-  public void objectInstanceNameReservationSucceeded(String name)
+  public void objectInstanceNameReservationSucceeded(String objectInstanceName)
     throws FederateInternalError
   {
-    objectManager.objectInstanceNameReservationSucceeded(name, federateAmbassador);
+    objectManager.objectInstanceNameReservationSucceeded(objectInstanceName, federateAmbassador);
   }
 
-  public void multipleObjectInstanceNameReservationSucceeded(Set<String> names)
+  public void multipleObjectInstanceNameReservationSucceeded(Set<String> objectInstanceNames)
     throws FederateInternalError
   {
-    objectManager.multipleObjectInstanceNameReservationSucceeded(names, federateAmbassador);
+    objectManager.multipleObjectInstanceNameReservationSucceeded(objectInstanceNames, federateAmbassador);
   }
 
-  public void objectInstanceNameReservationFailed(String name)
+  public void objectInstanceNameReservationFailed(String objectInstanceName)
     throws FederateInternalError
   {
-    objectManager.objectInstanceNameReservationFailed(name, federateAmbassador);
+    objectManager.objectInstanceNameReservationFailed(objectInstanceName, federateAmbassador);
   }
 
-  public void multipleObjectInstanceNameReservationFailed(Set<String> names)
+  public void multipleObjectInstanceNameReservationFailed(Set<String> objectInstanceNames)
     throws FederateInternalError
   {
-    objectManager.multipleObjectInstanceNameReservationFailed(names, federateAmbassador);
+    objectManager.multipleObjectInstanceNameReservationFailed(objectInstanceNames, federateAmbassador);
   }
 
   public void discoverObjectInstance(
-    ObjectInstanceHandle objectInstanceHandle, ObjectClassHandle objectClassHandle, String name,
+    ObjectInstanceHandle objectInstanceHandle, ObjectClassHandle objectClassHandle, String objectInstanceName,
     FederateHandle producingFederateHandle)
     throws FederateInternalError
   {
     objectManager.discoverObjectInstance(
-      objectInstanceHandle, objectClassHandle, name, producingFederateHandle, federateAmbassador);
+      objectInstanceHandle, objectClassHandle, objectInstanceName, producingFederateHandle, federateAmbassador);
   }
 
   public void fireReflectAttributeValues(ReflectAttributeValues reflectAttributeValues)

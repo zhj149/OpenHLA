@@ -360,7 +360,6 @@ public class HLA13FederateAmbassadorBridge
   public void objectInstanceNameReservationSucceeded(String name)
     throws FederateInternalError
   {
-    rtiAmbassador.objectInstanceNameReservationSucceeded(name);
   }
 
   public void multipleObjectInstanceNameReservationSucceeded(Set<String> objectNames)
@@ -371,7 +370,6 @@ public class HLA13FederateAmbassadorBridge
   public void objectInstanceNameReservationFailed(String name)
     throws FederateInternalError
   {
-    rtiAmbassador.objectInstanceNameReservationFailed(name);
   }
 
   public void multipleObjectInstanceNameReservationFailed(Set<String> objectNames)
