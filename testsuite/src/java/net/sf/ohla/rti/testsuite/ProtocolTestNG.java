@@ -36,4 +36,16 @@ public class ProtocolTestNG
     Protocol.encodeVarLong(buffer, 0, Long.MAX_VALUE);
     assert Long.MAX_VALUE == Protocol.decodeVarLong(buffer, 0);
   }
+
+  @Test
+  public void testVarInt()
+  {
+    ChannelBuffer channelBuffer = ChannelBuffers.dynamicBuffer();
+    Protocol.encodeVarInt(channelBuffer, Integer.MAX_VALUE);
+    assert Integer.MAX_VALUE == Protocol.decodeVarInt(channelBuffer);
+
+    byte[] buffer = new byte[5];
+    Protocol.encodeVarInt(buffer, 0, Integer.MAX_VALUE);
+    assert Integer.MAX_VALUE == Protocol.decodeVarInt(buffer, 0);
+  }
 }
