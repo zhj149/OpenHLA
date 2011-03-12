@@ -3214,6 +3214,8 @@ public class HLA13RTIambassador
 
     try
     {
+      // TODO: need atomic operation for this
+
       for (RegionHandle regionHandle : ohlaRegion.getRegionHandles())
       {
         rtiAmbassador.deleteRegion(regionHandle);
@@ -4914,8 +4916,7 @@ public class HLA13RTIambassador
 
       try
       {
-        RoutingSpace routingSpace =
-          fed.getRoutingSpace(region.getSpaceHandle());
+        RoutingSpace routingSpace = fed.getRoutingSpace(region.getSpaceHandle());
 
         HLA13Region snapshot = new HLA13Region(region);
         for (HLA13Region.Extent extent : snapshot.getExtents())

@@ -388,7 +388,7 @@ public class Protocol
       }
       else
       {
-        buffer[index++] = (byte) ((value & 0x7F) | 0x80);
+        buffer[index++] = (byte) ((value & 0x7FL) | 0x80L);
 
         value >>>= 7;
       }
@@ -421,7 +421,7 @@ public class Protocol
   {
     long result;
 
-    byte b = buffer[offset];
+    long b = buffer[offset];
     if (b >= 0)
     {
       result = b;
@@ -478,15 +478,7 @@ public class Protocol
                   else
                   {
                     result |= (b & 0x7FL) << 49;
-                    if ((b = buffer[++offset]) >= 0)
-                    {
-                      result |= b << 56;
-                    }
-                    else
-                    {
-                      result |= (b & 0x7FL) << 56;
-                      result |= buffer[offset] << 63;
-                    }
+                    result |= ((long) buffer[++offset]) << 56;
                   }
                 }
               }
@@ -503,7 +495,7 @@ public class Protocol
   {
     long result;
 
-    byte b = buffer.readByte();
+    long b = buffer.readByte();
     if (b >= 0)
     {
       result = b;
@@ -560,97 +552,7 @@ public class Protocol
                   else
                   {
                     result |= (b & 0x7FL) << 49;
-                    if ((b = buffer.readByte()) >= 0)
-                    {
-                      result |= b << 56;
-                    }
-                    else
-                    {
-                      result |= (b & 0x7FL) << 56;
-                      result |= buffer.readByte() << 63;
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    return result;
-  }
-
-  public static long decodeVarLong(ChannelBuffer buffer, int offset)
-  {
-    long result;
-
-    byte b = buffer.getByte(offset);
-    if (b >= 0)
-    {
-      result = b;
-    }
-    else
-    {
-      result = b & 0x7FL;
-      if ((b = buffer.getByte(++offset)) >= 0)
-      {
-        result |= b << 7;
-      }
-      else
-      {
-        result |= (b & 0x7FL) << 7;
-        if ((b = buffer.getByte(++offset)) >= 0)
-        {
-          result |= b << 14;
-        }
-        else
-        {
-          result |= (b & 0x7FL) << 14;
-          if ((b = buffer.getByte(++offset)) >= 0)
-          {
-            result |= b << 21;
-          }
-          else
-          {
-            result |= (b & 0x7FL) << 21;
-            if ((b = buffer.getByte(++offset)) >= 0)
-            {
-              result |= b << 28;
-            }
-            else
-            {
-              result |= (b & 0x7FL) << 28;
-              if ((b = buffer.getByte(++offset)) >= 0)
-              {
-                result |= b << 35;
-              }
-              else
-              {
-                result |= (b & 0x7FL) << 35;
-                if ((b = buffer.getByte(++offset)) >= 0)
-                {
-                  result |= b << 42;
-                }
-                else
-                {
-                  result |= (b & 0x7FL) << 42;
-                  if ((b = buffer.getByte(++offset)) >= 0)
-                  {
-                    result |= b << 49;
-                  }
-                  else
-                  {
-                    result |= (b & 0x7FL) << 49;
-                    if ((b = buffer.getByte(++offset)) >= 0)
-                    {
-                      result |= b << 56;
-                    }
-                    else
-                    {
-                      result |= (b & 0x7FL) << 56;
-                      result |= buffer.getByte(++offset) << 63;
-                    }
+                    result |= ((long) buffer.readByte()) << 56;
                   }
                 }
               }
