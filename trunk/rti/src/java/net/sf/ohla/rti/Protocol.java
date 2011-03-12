@@ -234,7 +234,7 @@ public class Protocol
   {
     int result;
 
-    byte b = buffer[offset];
+    int b = buffer[offset];
     if (b >= 0)
     {
       result = b;
@@ -263,7 +263,7 @@ public class Protocol
           else
           {
             result |= (b & 0x7F) << 21;
-            result |= buffer[offset] << 28;
+            result |= buffer[++offset] << 28;
           }
         }
       }
@@ -276,7 +276,7 @@ public class Protocol
   {
     int result;
 
-    byte b = buffer.readByte();
+    int b = buffer.readByte();
     if (b >= 0)
     {
       result = b;
@@ -318,7 +318,7 @@ public class Protocol
   {
     int result;
 
-    byte b = buffer.getByte(offset);
+    int b = buffer.getByte(offset);
     if (b >= 0)
     {
       result = b;

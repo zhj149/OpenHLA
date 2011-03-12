@@ -30,17 +30,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" readonly="true" id="c306879c-2744-4d82-a20f-7284eb5ea0e6" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/datadistribution" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/resources/ohla-testng.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/ProtocolTestNG.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/datadistribution/RegionSupportTestNG.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/OHLA.iws" afterPath="$PROJECT_DIR$/OHLA.iws" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/resources/ohla_rti_exception_messages_en_US.properties" afterPath="$PROJECT_DIR$/../../rti/resources/ohla_rti_exception_messages_en_US.properties" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/Protocol.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/Protocol.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/RoutingSpace.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/RoutingSpace.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13RTIambassador.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13RTIambassador.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13Region.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13Region.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/resources/hla-1.3-testng.xml" afterPath="$PROJECT_DIR$/../../testsuite/resources/hla-1.3-testng.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/ProtocolTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/ProtocolTestNG.java" />
     </list>
     <list id="b279f3ba-c417-49c1-bcc1-a24f5fc97d41" name="Failed commit: Default" comment="- removed log4j" />
     <list id="261d7dd6-cad7-41bb-912f-d59a03f7b57d" name="Failed commit: Default (2)" comment="- refactoring" />
@@ -148,7 +140,7 @@
       <file leaf-file-name="ProtocolTestNG.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/ProtocolTestNG.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="33" column="0" selection-start="1079" selection-end="1079" vertical-scroll-proportion="0.0">
+            <state line="48" column="47" selection-start="1611" selection-end="1611" vertical-scroll-proportion="0.0">
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -165,20 +157,22 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="hla-1.3-testng.xml" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="hla-1.3-testng.xml" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/../../testsuite/resources/hla-1.3-testng.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="55" column="0" selection-start="2773" selection-end="2773" vertical-scroll-proportion="0.530086">
+            <state line="55" column="0" selection-start="2773" selection-end="2773" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Protocol.java" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="Protocol.java" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/Protocol.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="480" column="47" selection-start="10332" selection-end="10332" vertical-scroll-proportion="0.0">
-              <folding />
+            <state line="265" column="31" selection-start="6177" selection-end="6177" vertical-scroll-proportion="1.0071633">
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -214,10 +208,10 @@
         <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/datadistribution/InteractionRegionTestNG.java" />
         <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/ProtocolTestNG.java" />
         <option value="$PROJECT_DIR$/../../testsuite/resources/ohla-testng.xml" />
-        <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/Protocol.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/ProtocolTestNG.java" />
         <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/datadistribution/RegionSupportTestNG.java" />
         <option value="$PROJECT_DIR$/../../testsuite/resources/hla-1.3-testng.xml" />
+        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/ProtocolTestNG.java" />
+        <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/Protocol.java" />
       </list>
     </option>
   </component>
@@ -504,7 +498,7 @@
       <recent name="net.sf.ohla.rti.testsuite.hla" />
     </key>
   </component>
-  <component name="RunManager" selected="TestNG.HLA 1.3 Testsuite">
+  <component name="RunManager" selected="TestNG.OHLA Testsuite">
     <configuration default="true" type="Remote" factoryName="Remote">
       <option name="USE_SOCKET_TRANSPORT" value="true" />
       <option name="SERVER_MODE" value="false" />
@@ -1103,7 +1097,7 @@
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32950467" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39913854" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.31227568" sideWeight="0.4662069" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.31227568" sideWeight="0.6262069" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Dependency Viewer" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32988507" sideWeight="0.5" order="15" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3737931" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -1364,22 +1358,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/Protocol.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="480" column="47" selection-start="10332" selection-end="10332" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/ProtocolTestNG.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="33" column="0" selection-start="1079" selection-end="1079" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/datadistribution/RegionSupportTestNG.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="115" column="44" selection-start="3749" selection-end="3749" vertical-scroll-proportion="0.0">
@@ -1389,8 +1367,26 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/../../testsuite/resources/hla-1.3-testng.xml">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="55" column="0" selection-start="2773" selection-end="2773" vertical-scroll-proportion="0.530086">
+        <state line="55" column="0" selection-start="2773" selection-end="2773" vertical-scroll-proportion="0.0">
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/ProtocolTestNG.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="48" column="47" selection-start="1611" selection-end="1611" vertical-scroll-proportion="0.0">
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/Protocol.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="265" column="31" selection-start="6177" selection-end="6177" vertical-scroll-proportion="1.0071633">
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
