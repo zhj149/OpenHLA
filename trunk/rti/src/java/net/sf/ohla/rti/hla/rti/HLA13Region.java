@@ -90,14 +90,12 @@ public class HLA13Region
   public Extent getExtent(int extentIndex)
     throws ArrayIndexOutOfBounds
   {
-    try
+    if (extentIndex < 0 || extentIndex >= extents.size())
     {
-      return extents.get(extentIndex);
+      throw new ArrayIndexOutOfBounds(Integer.toString(extentIndex));
     }
-    catch (IndexOutOfBoundsException ioobe)
-    {
-      throw new ArrayIndexOutOfBounds(ioobe);
-    }
+
+    return extents.get(extentIndex);
   }
 
   public int getSpaceHandle()
@@ -122,15 +120,18 @@ public class HLA13Region
     return getExtent(extentIndex).getRangeUpperBound(dimensionHandle);
   }
 
-  public void setRangeLowerBound(int extentIndex, int dimensionHandle,
-                                 long lowerBound)
+  public void setRangeLowerBound(int extentIndex, int dimensionHandle, long lowerBound)
     throws ArrayIndexOutOfBounds
   {
+    if (lowerBound < 0L)
+    {
+      lowerBound = 0L;
+    }
+
     getExtent(extentIndex).setRangeLowerBound(dimensionHandle, lowerBound);
   }
 
-  public void setRangeUpperBound(int extentIndex, int dimensionHandle,
-                                 long upperBound)
+  public void setRangeUpperBound(int extentIndex, int dimensionHandle, long upperBound)
     throws ArrayIndexOutOfBounds
   {
     getExtent(extentIndex).setRangeUpperBound(dimensionHandle, upperBound);
@@ -179,7 +180,7 @@ public class HLA13Region
     public RangeBounds getRangeBounds(int dimensionHandle)
       throws ArrayIndexOutOfBounds
     {
-      if (dimensionHandle >= rangeBounds.size())
+      if (dimensionHandle < 0 || dimensionHandle >= rangeBounds.size())
       {
         throw new ArrayIndexOutOfBounds(Integer.toString(dimensionHandle));
       }

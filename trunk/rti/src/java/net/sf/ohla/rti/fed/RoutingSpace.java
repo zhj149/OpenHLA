@@ -133,7 +133,7 @@ public class RoutingSpace
     int index = aliases.indexOf(alias);
     if (index == -1)
     {
-      throw new NameNotFound(I18n.getMessage(ExceptionMessages.ROUTING_SPACE_DIMENSION_NAME_NOT_FOUND, alias));
+      throw new NameNotFound(I18n.getMessage(ExceptionMessages.ROUTING_SPACE_DIMENSION_NAME_NOT_FOUND, this, alias));
     }
     return index;
   }

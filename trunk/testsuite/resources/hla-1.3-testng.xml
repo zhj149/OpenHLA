@@ -37,6 +37,13 @@
       <class name="net.sf.ohla.rti.testsuite.hla.rti.object.InteractionTestNG"/>
     </classes>
   </test>
+  <test name="HLA 1.3 - Data Distribution Management">
+    <classes>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti.datadistribution.RegionSupportTestNG"/>
+      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti.datadistribution.ObjectRegionTestNG"/>-->
+      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti.datadistribution.InteractionRegionTestNG"/>-->
+    </classes>
+  </test>
   <test name="IEEE 1516e - Support Services">
     <classes>
       <class name="net.sf.ohla.rti.testsuite.hla.rti.support.FederateSupportTestNG"/>
