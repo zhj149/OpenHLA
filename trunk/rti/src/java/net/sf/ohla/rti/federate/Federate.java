@@ -2210,6 +2210,23 @@ public class Federate
     }
   }
 
+  public void deleteRegions(RegionHandleSet regionHandles)
+    throws InvalidRegion, RegionNotCreatedByThisFederate, RegionInUseForUpdateOrSubscription, SaveInProgress,
+           RestoreInProgress, RTIinternalError
+  {
+    federateStateLock.readLock().lock();
+    try
+    {
+      checkIfActive();
+
+      regionManager.deleteRegions(regionHandles);
+    }
+    finally
+    {
+      federateStateLock.readLock().unlock();
+    }
+  }
+
   public ObjectInstanceHandle registerObjectInstanceWithRegions(
     ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions)
     throws ObjectClassNotDefined, ObjectClassNotPublished, AttributeNotDefined, AttributeNotPublished, InvalidRegion,

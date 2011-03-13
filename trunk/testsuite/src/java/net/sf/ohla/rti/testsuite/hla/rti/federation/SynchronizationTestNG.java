@@ -206,7 +206,8 @@ public class SynchronizationTestNG
     public void checkSynchronizationPointRegistrationSucceeded(String label)
       throws Exception
     {
-      for (int i = 0; i < 5 && !successfullyRegisteredSynchronizationPoints.contains(label); i++)
+      int i = 0;
+      for (; i < 5 && !successfullyRegisteredSynchronizationPoints.contains(label); i++)
       {
         rtiAmbassador.tick(.01, 1.0);
       }

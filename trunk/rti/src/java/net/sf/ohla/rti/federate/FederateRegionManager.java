@@ -32,8 +32,6 @@ import net.sf.ohla.rti.i18n.I18n;
 import net.sf.ohla.rti.messages.CommitRegionModifications;
 import net.sf.ohla.rti.messages.CreateRegion;
 import net.sf.ohla.rti.messages.DeleteRegion;
-import net.sf.ohla.rti.messages.SubscribeInteractionClassWithRegions;
-import net.sf.ohla.rti.messages.UnsubscribeInteractionClassWithRegions;
 
 import hla.rti1516e.AttributeRegionAssociation;
 import hla.rti1516e.AttributeSetRegionSetPairList;
@@ -41,14 +39,10 @@ import hla.rti1516e.DimensionHandle;
 import hla.rti1516e.DimensionHandleSet;
 import hla.rti1516e.InteractionClassHandle;
 import hla.rti1516e.ObjectClassHandle;
-import hla.rti1516e.ParameterHandleValueMap;
 import hla.rti1516e.RangeBounds;
 import hla.rti1516e.RegionHandle;
 import hla.rti1516e.RegionHandleSet;
 import hla.rti1516e.exceptions.AttributeNotDefined;
-import hla.rti1516e.exceptions.InteractionClassNotDefined;
-import hla.rti1516e.exceptions.InteractionClassNotPublished;
-import hla.rti1516e.exceptions.InteractionParameterNotDefined;
 import hla.rti1516e.exceptions.InvalidRegion;
 import hla.rti1516e.exceptions.InvalidRegionContext;
 import hla.rti1516e.exceptions.ObjectClassNotDefined;
@@ -56,8 +50,6 @@ import hla.rti1516e.exceptions.RTIinternalError;
 import hla.rti1516e.exceptions.RegionDoesNotContainSpecifiedDimension;
 import hla.rti1516e.exceptions.RegionInUseForUpdateOrSubscription;
 import hla.rti1516e.exceptions.RegionNotCreatedByThisFederate;
-import hla.rti1516e.exceptions.RestoreInProgress;
-import hla.rti1516e.exceptions.SaveInProgress;
 
 public class FederateRegionManager
 {
@@ -254,6 +246,37 @@ public class FederateRegionManager
     }
   }
 
+  public void deleteRegions(RegionHandleSet regionHandles)
+    throws InvalidRegion, RegionNotCreatedByThisFederate, RegionInUseForUpdateOrSubscription, RTIinternalError
+  {
+    regionsLock.writeLock().lock();
+    try
+    {
+      for (RegionHandle regionHandle : regionHandles)
+      {
+        if (temporaryRegions.containsKey(regionHandle))
+        {
+          throw new InvalidRegion(I18n.getMessage(ExceptionMessages.DELETE_TEMPORARY_REGION, regionHandle));
+        }
+        else
+        {
+          getRegion(regionHandle).checkIfInUse();
+        }
+      }
+
+      for (RegionHandle regionHandle : regionHandles)
+      {
+        regions.remove(regionHandle);
+
+        federate.getRTIChannel().write(new DeleteRegion(regionHandle));
+      }
+    }
+    finally
+    {
+      regionsLock.writeLock().unlock();
+    }
+  }
+
   public void subscribeObjectClassAttributesWithRegions(
     ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions, boolean passive)
     throws ObjectClassNotDefined, AttributeNotDefined, InvalidRegion, RegionNotCreatedByThisFederate,
@@ -387,7 +410,12 @@ public class FederateRegionManager
     // dangerous method, must be called with proper protection
 
     FederateRegion region = regions.get(regionHandle);
-    assert region != null;
+    if (region == null)
+    {
+      region = temporaryRegions.get(regionHandle);
+
+      assert region != null;
+    }
     return region;
   }
 
@@ -400,7 +428,12 @@ public class FederateRegionManager
       for (RegionHandle regionHandle : regionHandles)
       {
         FederateRegion region = this.regions.get(regionHandle);
-        assert region != null;
+        if (region == null)
+        {
+          region = temporaryRegions.get(regionHandle);
+
+          assert region != null;
+        }
         regions.add(region);
       }
     }

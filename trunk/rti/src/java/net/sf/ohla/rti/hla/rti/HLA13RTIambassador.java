@@ -35,6 +35,7 @@ import net.sf.ohla.rti.fed.RoutingSpace;
 import net.sf.ohla.rti.fed.javacc.FEDParser;
 import net.sf.ohla.rti.federate.FederateChannelUpstreamHandler;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSet;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeSetRegionSetPairList;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eInteractionClassHandle;
@@ -144,7 +145,6 @@ import hla.rti1516e.OrderType;
 import hla.rti1516e.ParameterHandle;
 import hla.rti1516e.ParameterHandleValueMap;
 import hla.rti1516e.RangeBounds;
-import hla.rti1516e.RegionHandle;
 import hla.rti1516e.RegionHandleSet;
 import hla.rti1516e.ResignAction;
 import hla.rti1516e.TimeQueryReturn;
@@ -3261,15 +3261,14 @@ public class HLA13RTIambassador
     }
 
     HLA13Region ohlaRegion = (HLA13Region) region;
+    if (temporaryRegions.containsKey(ohlaRegion.getToken()))
+    {
+      throw new RegionNotKnown(I18n.getMessage(ExceptionMessages.REGION_NOT_KNOWN_DELETE_TEMPORARY_REGION, ohlaRegion));
+    }
 
     try
     {
-      // TODO: need atomic operation for this
-
-      for (RegionHandle regionHandle : ohlaRegion.getRegionHandles())
-      {
-        rtiAmbassador.deleteRegion(regionHandle);
-      }
+      rtiAmbassador.deleteRegions(ohlaRegion.getRegionHandles());
     }
     catch (InvalidRegion ir)
     {
@@ -3570,9 +3569,9 @@ public class HLA13RTIambassador
         rtiAmbassador.getKnownObjectClassHandle(convertToObjectInstanceHandle(objectInstanceHandle)));
 
       hla.rti1516e.AttributeSetRegionSetPairList asrspl = new IEEE1516eAttributeSetRegionSetPairList();
-      AttributeRegionAssociation asrsp = new AttributeRegionAssociation(
-        new HLA13AttributeHandleSet(objectClass.getAttributes().keySet()), ((HLA13Region) region).getRegionHandles());
-      asrspl.add(asrsp);
+      asrspl.add(new AttributeRegionAssociation(
+        new IEEE1516eAttributeHandleSet(objectClass.getAttributes().keySet()),
+        ((HLA13Region) region).getRegionHandles()));
 
       rtiAmbassador.unassociateRegionsForUpdates(convertToObjectInstanceHandle(objectInstanceHandle), asrspl);
     }
@@ -3638,9 +3637,7 @@ public class HLA13RTIambassador
       ObjectClass objectClass = fed.getFDD().getObjectClass(convertToObjectClassHandle(objectClassHandle));
 
       hla.rti1516e.AttributeSetRegionSetPairList asrspl = new IEEE1516eAttributeSetRegionSetPairList();
-      AttributeRegionAssociation asrsp = new AttributeRegionAssociation(
-        new HLA13AttributeHandleSet(objectClass.getAttributes().keySet()), ((HLA13Region) region).getRegionHandles());
-      asrspl.add(asrsp);
+      asrspl.add(new AttributeRegionAssociation(convert(attributeHandles), ((HLA13Region) region).getRegionHandles()));
 
       rtiAmbassador.subscribeObjectClassAttributesWithRegions(convertToObjectClassHandle(objectClassHandle), asrspl);
     }
@@ -3778,9 +3775,9 @@ public class HLA13RTIambassador
     }
 
     hla.rti1516e.AttributeSetRegionSetPairList asrspl = new IEEE1516eAttributeSetRegionSetPairList();
-    AttributeRegionAssociation asrsp = new AttributeRegionAssociation(
-      new HLA13AttributeHandleSet(objectClass.getAttributes().keySet()), ((HLA13Region) region).getRegionHandles());
-    asrspl.add(asrsp);
+    asrspl.add(new AttributeRegionAssociation(
+      new IEEE1516eAttributeHandleSet(objectClass.getAttributes().keySet()),
+      ((HLA13Region) region).getRegionHandles()));
 
     try
     {
@@ -4961,7 +4958,11 @@ public class HLA13RTIambassador
       HLA13Region region = regions.get(regionToken);
       if (region == null)
       {
-        throw new RegionNotKnown(I18n.getMessage(ExceptionMessages.REGION_NOT_KNOWN_REGION_TOKEN_NOT_KNOWN));
+        region = temporaryRegions.get(regionToken);
+        if (region == null)
+        {
+          throw new RegionNotKnown(I18n.getMessage(ExceptionMessages.REGION_NOT_KNOWN_REGION_TOKEN_NOT_KNOWN));
+        }
       }
 
       try

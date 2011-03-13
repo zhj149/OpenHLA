@@ -196,6 +196,7 @@ public class InteractionRegionTestNG
         }
       }
       assert Arrays.equals(tag, this.tag);
+      assert receivedInteraction.getRegion() != null;
     }
 
     @Override

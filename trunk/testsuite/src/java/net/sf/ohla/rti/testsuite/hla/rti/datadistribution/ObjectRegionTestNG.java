@@ -206,7 +206,7 @@ public class ObjectRegionTestNG
           if (objectInstance.getReflectedAttributes().getAttributeHandle(i) == suppliedAttributes.getHandle(j))
           {
             assert Arrays.equals(objectInstance.getReflectedAttributes().getValue(i), suppliedAttributes.getValue(j));
-            assert (objectInstance.getReflectedAttributes().getRegion(i) != null && hasRegions) || !hasRegions;
+            assert (hasRegions && objectInstance.getReflectedAttributes().getRegion(i) != null) || !hasRegions;
           }
         }
       }

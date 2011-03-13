@@ -150,7 +150,7 @@ public class HLA13Region
     getExtent(extentIndex).setRangeUpperBound(dimensionHandle, upperBound);
   }
 
-  private class Extent
+  public class Extent
   {
     private final RegionHandle regionHandle;
     private final List<RangeBounds> rangeBounds;
