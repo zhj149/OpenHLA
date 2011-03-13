@@ -282,6 +282,33 @@ public class IEEE1516eRTIambassador
     }
   }
 
+  public void deleteRegions(RegionHandleSet regionHandles)
+    throws RegionInUseForUpdateOrSubscription, RegionNotCreatedByThisFederate, InvalidRegion, SaveInProgress,
+           RestoreInProgress, FederateNotExecutionMember, NotConnected, RTIinternalError
+  {
+    connectLock.readLock().lock();
+    try
+    {
+      checkIfNotConnected();
+
+      joinResignLock.readLock().lock();
+      try
+      {
+        checkIfFederateNotExecutionMember();
+
+        federate.deleteRegions(regionHandles);
+      }
+      finally
+      {
+        joinResignLock.readLock().unlock();
+      }
+    }
+    finally
+    {
+      connectLock.readLock().unlock();
+    }
+  }
+
   public void connect(
     FederateAmbassador federateAmbassador, CallbackModel callbackModel, String localSettingsDesignator)
     throws ConnectionFailed, InvalidLocalSettingsDesignator, UnsupportedCallbackModel, AlreadyConnected,
