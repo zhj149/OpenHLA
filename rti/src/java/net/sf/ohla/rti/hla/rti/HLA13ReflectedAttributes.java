@@ -16,64 +16,40 @@
 
 package net.sf.ohla.rti.hla.rti;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import hla.rti.ArrayIndexOutOfBounds;
 import hla.rti.ReflectedAttributes;
 import hla.rti.Region;
 
-import hla.rti1516e.AttributeHandle;
-import hla.rti1516e.AttributeHandleValueMap;
-
 public class HLA13ReflectedAttributes
   implements ReflectedAttributes
 {
-  private final AttributeHandleValueMap attributeValues;
-  private final List<AttributeHandle> attributeHandles;
+  private final int[] attributeHandles;
+  private final byte[][] attributeValues;
 
   private final int orderType;
   private final int transportationType;
 
-  private final Region region;
+  private final HLA13Region[] regions;
 
-  public HLA13ReflectedAttributes(AttributeHandleValueMap attributeValues, int orderType, int transportationType)
+  public HLA13ReflectedAttributes(
+    int[] attributeHandles, byte[][] attributeValues, int orderType, int transportationType)
   {
-    this(attributeValues, orderType, transportationType, null);
+    this(attributeHandles, attributeValues, orderType, transportationType, null);
   }
 
   public HLA13ReflectedAttributes(
-    AttributeHandleValueMap attributeValues, int orderType, int transportationType, Region region)
+    int[] attributeHandles, byte[][] attributeValues, int orderType, int transportationType, HLA13Region[] regions)
   {
+    this.attributeHandles = attributeHandles;
     this.attributeValues = attributeValues;
-
     this.orderType = orderType;
     this.transportationType = transportationType;
-
-    this.region = region;
-
-    // index the attribute handles
-    //
-    attributeHandles = new ArrayList<AttributeHandle>(attributeValues.size());
-    for (AttributeHandle attributeHandle : attributeValues.keySet())
-    {
-      attributeHandles.add(attributeHandle);
-    }
+    this.regions = regions;
   }
 
-  public int getOrderType()
+  public HLA13Region[] getRegions()
   {
-    return orderType;
-  }
-
-  public int getTransportType()
-  {
-    return transportationType;
-  }
-
-  public Region getRegion()
-  {
-    return region;
+    return regions;
   }
 
   public byte[] getValue(int index)
@@ -91,48 +67,57 @@ public class HLA13ReflectedAttributes
   public byte[] getValueReference(int index)
     throws ArrayIndexOutOfBounds
   {
-    try
-    {
-      return attributeValues.get(attributeHandles.get(index));
-    }
-    catch (IndexOutOfBoundsException ioobe)
-    {
-      throw new ArrayIndexOutOfBounds(ioobe);
-    }
+    checkRange(index);
+
+    return attributeValues[index];
   }
 
   public int getAttributeHandle(int index)
     throws ArrayIndexOutOfBounds
   {
-    return attributeHandles.get(index).hashCode();
+    checkRange(index);
+
+    return attributeHandles[index];
   }
 
   public Region getRegion(int index)
     throws ArrayIndexOutOfBounds
   {
-    // only one region for the entire collection
-    //
-    return getRegion();
+    if (regions == null)
+    {
+      throw new ArrayIndexOutOfBounds(Integer.toString(index));
+    }
+
+    checkRange(index);
+
+    return regions[index];
   }
 
   public int getOrderType(int index)
-    throws ArrayIndexOutOfBounds
   {
     // only one type for the entire collection
     //
-    return getOrderType();
+    return orderType;
   }
 
   public int getTransportType(int index)
-    throws ArrayIndexOutOfBounds
   {
     // only one type for the entire collection
     //
-    return getTransportType();
+    return transportationType;
   }
 
   public int size()
   {
-    return attributeValues.size();
+    return attributeHandles.length;
+  }
+
+  private void checkRange(int index)
+    throws ArrayIndexOutOfBounds
+  {
+    if (index < 0 || index >= attributeHandles.length)
+    {
+      throw new ArrayIndexOutOfBounds(Integer.toString(index));
+    }
   }
 }

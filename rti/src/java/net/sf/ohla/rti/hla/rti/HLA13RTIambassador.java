@@ -225,10 +225,11 @@ public class HLA13RTIambassador
   private final ConcurrentMap<Integer, ObjectInstanceHandle> ieee1516eObjectInstanceHandles =
     new ConcurrentHashMap<Integer, ObjectInstanceHandle>();
 
-  private AtomicInteger regionCount = new AtomicInteger();
+  private final AtomicInteger regionCount = new AtomicInteger();
 
   private final Lock regionsLock = new ReentrantLock(true);
   private final Map<Integer, HLA13Region> regions = new HashMap<Integer, HLA13Region>();
+  private final Map<Integer, HLA13Region> temporaryRegions = new HashMap<Integer, HLA13Region>();
 
   private LogicalTimeFactory logicalTimeFactory;
   private LogicalTimeIntervalFactory logicalTimeIntervalFactory;
@@ -278,6 +279,55 @@ public class HLA13RTIambassador
   public FederateAmbassador getHLA13FederateAmbassador()
   {
     return federateAmbassador;
+  }
+
+  public HLA13Region createTemporaryRegion(RoutingSpace routingSpace, RegionHandleSet regionHandles)
+  {
+    HLA13Region region = new HLA13Region(
+      regionCount.incrementAndGet(), routingSpace.getRoutingSpaceHandle(),
+      rtiAmbassador.getFederate().getRegionManager().getRegionsSafely(regionHandles));
+    regionsLock.lock();
+    try
+    {
+      temporaryRegions.put(region.getToken(), region);
+    }
+    finally
+    {
+      regionsLock.unlock();
+    }
+    return region;
+  }
+
+  public void deleteTemporaryRegion(HLA13Region region)
+  {
+    regionsLock.lock();
+    try
+    {
+      temporaryRegions.remove(region.getToken());
+    }
+    finally
+    {
+      regionsLock.unlock();
+    }
+  }
+
+  public void deleteTemporaryRegions(HLA13Region[] regions)
+  {
+    regionsLock.lock();
+    try
+    {
+      for (HLA13Region region : regions)
+      {
+        if (region != null)
+        {
+          temporaryRegions.remove(region.getToken());
+        }
+      }
+    }
+    finally
+    {
+      regionsLock.unlock();
+    }
   }
 
   public void createFederationExecution(String federationExecutionName, URL fed)

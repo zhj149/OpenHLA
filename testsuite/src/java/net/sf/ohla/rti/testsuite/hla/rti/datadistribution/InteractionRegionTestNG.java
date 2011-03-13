@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.sf.ohla.rti.testsuite.hla.rti.object;
+package net.sf.ohla.rti.testsuite.hla.rti.datadistribution;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,33 +27,34 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import hla.rti.FederateInternalError;
 import hla.rti.InteractionClassNotDefined;
-import hla.rti.InteractionClassNotKnown;
 import hla.rti.InteractionClassNotPublished;
 import hla.rti.InteractionParameterNotDefined;
-import hla.rti.InteractionParameterNotKnown;
 import hla.rti.ReceivedInteraction;
+import hla.rti.Region;
+import hla.rti.RegionNotKnown;
 import hla.rti.ResignAction;
 import hla.rti.SuppliedParameters;
 import hla.rti.jlc.NullFederateAmbassador;
 import hla.rti.jlc.RTIambassadorEx;
 
 @Test
-public class InteractionTestNG
+public class InteractionRegionTestNG
   extends BaseTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA HLA 1.3 Interaction Test Federation";
+  private static final String FEDERATION_NAME = "OHLA HLA 1.3 Interaction Region Test Federation";
 
   private final List<TestFederateAmbassador> federateAmbassadors = new ArrayList<TestFederateAmbassador>(3);
+
+  private Region region1;
 
   private int testInteractionClassHandle;
   private int testInteractionClassHandle2;
 
-  private SuppliedParameters testSuppliedParameters;
-  private SuppliedParameters testSuppliedParameters2;
+  private SuppliedParameters testParameterValues;
+  private SuppliedParameters testParameterValues2;
 
-  public InteractionTestNG()
+  public InteractionRegionTestNG()
   {
     super(3);
   }
@@ -72,34 +73,39 @@ public class InteractionTestNG
     rtiAmbassadors.get(1).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(1));
     rtiAmbassadors.get(2).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(2));
 
+    int routingSpaceHandle = rtiAmbassadors.get(0).getRoutingSpaceHandle(ROUTING_SPACE);
+
+    region1 = rtiAmbassadors.get(0).createRegion(routingSpaceHandle, 1);
+    Region region2 = rtiAmbassadors.get(1).createRegion(routingSpaceHandle, 1);
+
     testInteractionClassHandle = rtiAmbassadors.get(0).getInteractionClassHandle(TEST_INTERACTION);
+    testInteractionClassHandle2 = rtiAmbassadors.get(0).getInteractionClassHandle(TEST_INTERACTION2);
+
     int parameterHandle1 = rtiAmbassadors.get(0).getParameterHandle(PARAMETER1, testInteractionClassHandle);
     int parameterHandle2 = rtiAmbassadors.get(0).getParameterHandle(PARAMETER2, testInteractionClassHandle);
     int parameterHandle3 = rtiAmbassadors.get(0).getParameterHandle(PARAMETER3, testInteractionClassHandle);
 
-    testInteractionClassHandle2 = rtiAmbassadors.get(0).getInteractionClassHandle(TEST_INTERACTION2);
+    testParameterValues = rtiFactory.createSuppliedParameters();
+    testParameterValues.add(parameterHandle1, PARAMETER1_VALUE.getBytes());
+    testParameterValues.add(parameterHandle2, PARAMETER2_VALUE.getBytes());
+    testParameterValues.add(parameterHandle3, PARAMETER3_VALUE.getBytes());
+
     int parameterHandle4 = rtiAmbassadors.get(0).getParameterHandle(PARAMETER4, testInteractionClassHandle2);
     int parameterHandle5 = rtiAmbassadors.get(0).getParameterHandle(PARAMETER5, testInteractionClassHandle2);
     int parameterHandle6 = rtiAmbassadors.get(0).getParameterHandle(PARAMETER6, testInteractionClassHandle2);
 
-    testSuppliedParameters = rtiFactory.createSuppliedParameters();
-    testSuppliedParameters.add(parameterHandle1, PARAMETER1_VALUE.getBytes());
-    testSuppliedParameters.add(parameterHandle2, PARAMETER2_VALUE.getBytes());
-    testSuppliedParameters.add(parameterHandle3, PARAMETER3_VALUE.getBytes());
+    testParameterValues2 = rtiFactory.createSuppliedParameters();
+    testParameterValues2.add(parameterHandle1, PARAMETER1_VALUE.getBytes());
+    testParameterValues2.add(parameterHandle2, PARAMETER2_VALUE.getBytes());
+    testParameterValues2.add(parameterHandle3, PARAMETER3_VALUE.getBytes());
+    testParameterValues2.add(parameterHandle4, PARAMETER4_VALUE.getBytes());
+    testParameterValues2.add(parameterHandle5, PARAMETER5_VALUE.getBytes());
+    testParameterValues2.add(parameterHandle6, PARAMETER6_VALUE.getBytes());
 
-    testSuppliedParameters2 = rtiFactory.createSuppliedParameters();
-    testSuppliedParameters2.add(parameterHandle1, PARAMETER1_VALUE.getBytes());
-    testSuppliedParameters2.add(parameterHandle2, PARAMETER2_VALUE.getBytes());
-    testSuppliedParameters2.add(parameterHandle3, PARAMETER3_VALUE.getBytes());
-    testSuppliedParameters2.add(parameterHandle4, PARAMETER4_VALUE.getBytes());
-    testSuppliedParameters2.add(parameterHandle5, PARAMETER5_VALUE.getBytes());
-    testSuppliedParameters2.add(parameterHandle6, PARAMETER6_VALUE.getBytes());
-
-    rtiAmbassadors.get(0).publishInteractionClass(testInteractionClassHandle);
     rtiAmbassadors.get(0).publishInteractionClass(testInteractionClassHandle2);
+    rtiAmbassadors.get(2).publishInteractionClass(testInteractionClassHandle);
 
-    rtiAmbassadors.get(1).subscribeInteractionClass(testInteractionClassHandle);
-    rtiAmbassadors.get(2).subscribeInteractionClass(testInteractionClassHandle2);
+    rtiAmbassadors.get(1).subscribeInteractionClassWithRegion(testInteractionClassHandle, region2);
   }
 
   @AfterClass
@@ -118,34 +124,40 @@ public class InteractionTestNG
   }
 
   @Test
-  public void testSendInteraction()
+  public void testSendInteractionWithRegion()
     throws Exception
   {
-    rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle2, testSuppliedParameters2, TAG);
+    rtiAmbassadors.get(0).sendInteractionWithRegion(testInteractionClassHandle2, testParameterValues2, TAG, region1);
 
-    federateAmbassadors.get(1).checkSuppliedParameters(testInteractionClassHandle, testSuppliedParameters, TAG);
-    federateAmbassadors.get(2).checkSuppliedParameters(testInteractionClassHandle2, testSuppliedParameters2, TAG);
+    federateAmbassadors.get(1).checkSuppliedParameters(testInteractionClassHandle, testParameterValues, TAG);
   }
 
   @Test(expectedExceptions = {InteractionClassNotDefined.class})
-  public void testSendInteractionWithNullInteractionClassHandle()
+  public void testSendInteractionWithRegionWithInvalidInteractionClassHandle()
     throws Exception
   {
-    rtiAmbassadors.get(0).sendInteraction(-1, testSuppliedParameters, TAG);
+    rtiAmbassadors.get(0).sendInteractionWithRegion(-1, testParameterValues, TAG, region1);
+  }
+
+  @Test(expectedExceptions = {RegionNotKnown.class})
+  public void testSendInteractionWithRegionWithNullRegion()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).sendInteractionWithRegion(testInteractionClassHandle2, testParameterValues, TAG, null);
   }
 
   @Test(expectedExceptions = {InteractionClassNotPublished.class})
-  public void testSendUnpublishedInteraction()
+  public void testSendUnpublishedInteractionWithRegion()
     throws Exception
   {
-    rtiAmbassadors.get(2).sendInteraction(testInteractionClassHandle, testSuppliedParameters, TAG);
+    rtiAmbassadors.get(2).sendInteractionWithRegion(testInteractionClassHandle2, testParameterValues2, TAG, region1);
   }
 
   @Test(expectedExceptions = {InteractionParameterNotDefined.class})
-  public void testSendInteractionWithUndefinedParameters()
+  public void testSendInteractionWithRegionsWithUndefinedParameters()
     throws Exception
   {
-    rtiAmbassadors.get(2).sendInteraction(testInteractionClassHandle, testSuppliedParameters2, TAG);
+    rtiAmbassadors.get(2).sendInteractionWithRegion(testInteractionClassHandle, testParameterValues2, TAG, region1);
   }
 
   private static class TestFederateAmbassador
@@ -188,7 +200,6 @@ public class InteractionTestNG
 
     @Override
     public void receiveInteraction(int interactionClassHandle, ReceivedInteraction receivedInteraction, byte[] tag)
-      throws InteractionClassNotKnown, InteractionParameterNotKnown, FederateInternalError
     {
       this.interactionClassHandle = interactionClassHandle;
       this.receivedInteraction = receivedInteraction;

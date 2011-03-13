@@ -97,6 +97,21 @@ public class FederateRegion
     return dimensionHandles;
   }
 
+  public RangeBounds getRangeBoundsSafely(DimensionHandle dimensionHandle)
+  {
+    rangeBoundsLock.readLock().lock();
+    try
+    {
+      RangeBounds rangeBounds = this.rangeBounds.get(dimensionHandle);
+      assert rangeBounds != null;
+      return clone(rangeBounds);
+    }
+    finally
+    {
+      rangeBoundsLock.readLock().unlock();
+    }
+  }
+
   public RangeBounds getRangeBounds(DimensionHandle dimensionHandle)
     throws RegionDoesNotContainSpecifiedDimension
   {

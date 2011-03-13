@@ -16,17 +16,18 @@
 
 package net.sf.ohla.rti.hla.rti;
 
-import java.io.Serializable;
-
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import net.sf.ohla.rti.fdd.Dimension;
+import net.sf.ohla.rti.federate.FederateRegion;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandleSet;
 
 import hla.rti.ArrayIndexOutOfBounds;
 import hla.rti.Region;
 
+import hla.rti1516e.DimensionHandle;
 import hla.rti1516e.RangeBounds;
 import hla.rti1516e.RegionHandle;
 import hla.rti1516e.RegionHandleSet;
@@ -38,7 +39,7 @@ public class HLA13Region
   private final int routingSpaceHandle;
   private final List<Extent> extents;
 
-  protected transient RegionHandleSet regionHandles;
+  private RegionHandleSet regionHandles;
 
   public HLA13Region(int token, int routingSpaceHandle, List<Dimension> dimensions, RegionHandleSet regionHandles)
   {
@@ -53,7 +54,7 @@ public class HLA13Region
     }
   }
 
-  protected HLA13Region(HLA13Region region)
+  public HLA13Region(HLA13Region region)
   {
     token = region.token;
     routingSpaceHandle = region.routingSpaceHandle;
@@ -61,6 +62,18 @@ public class HLA13Region
     for (Extent extent : region.extents)
     {
       extents.add(new Extent(extent));
+    }
+  }
+
+  public HLA13Region(int token, int routingSpaceHandle, Collection<FederateRegion> regions)
+  {
+    this.token = token;
+    this.routingSpaceHandle = routingSpaceHandle;
+
+    extents = new ArrayList<Extent>(regions.size());
+    for (FederateRegion region : regions)
+    {
+      extents.add(new Extent(region));
     }
   }
 
@@ -137,13 +150,12 @@ public class HLA13Region
     getExtent(extentIndex).setRangeUpperBound(dimensionHandle, upperBound);
   }
 
-  public class Extent
-    implements Serializable
+  private class Extent
   {
-    protected RegionHandle regionHandle;
-    protected List<RangeBounds> rangeBounds;
+    private final RegionHandle regionHandle;
+    private final List<RangeBounds> rangeBounds;
 
-    protected Extent(Extent extent)
+    private Extent(Extent extent)
     {
       regionHandle = extent.regionHandle;
       rangeBounds = new ArrayList<RangeBounds>(extent.rangeBounds.size());
@@ -153,7 +165,7 @@ public class HLA13Region
       }
     }
 
-    protected Extent(RegionHandle regionHandle, List<Dimension> dimensions)
+    private Extent(RegionHandle regionHandle, List<Dimension> dimensions)
     {
       this.regionHandle = regionHandle;
 
@@ -164,6 +176,17 @@ public class HLA13Region
       for (Dimension dimension : dimensions)
       {
         rangeBounds.add(new RangeBounds(0L, dimension.getUpperBound()));
+      }
+    }
+
+    private Extent(FederateRegion region)
+    {
+      regionHandle = region.getRegionHandle();
+
+      rangeBounds = new ArrayList<RangeBounds>(region.getDimensionHandles().size());
+      for (DimensionHandle dimensionHandle : region.getDimensionHandles())
+      {
+        rangeBounds.add(region.getRangeBoundsSafely(dimensionHandle));
       }
     }
 
