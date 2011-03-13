@@ -16,6 +16,7 @@
 
 package net.sf.ohla.rti.federate;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -381,19 +382,33 @@ public class FederateRegionManager
     }
   }
 
-  public void sendInteractionWithRegions(
-    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues,
-    RegionHandleSet regionHandles, byte[] tag)
-    throws InteractionClassNotDefined, InteractionClassNotPublished, InteractionParameterNotDefined, InvalidRegion,
-           RegionNotCreatedByThisFederate, InvalidRegionContext, SaveInProgress, RestoreInProgress, RTIinternalError
-  {
-  }
-
   public FederateRegion getRegionSafely(RegionHandle regionHandle)
   {
+    // dangerous method, must be called with proper protection
+
     FederateRegion region = regions.get(regionHandle);
     assert region != null;
     return region;
+  }
+
+  public Collection<FederateRegion> getRegionsSafely(RegionHandleSet regionHandles)
+  {
+    Collection<FederateRegion> regions = new ArrayList<FederateRegion>(regionHandles.size());
+    regionsLock.readLock().lock();
+    try
+    {
+      for (RegionHandle regionHandle : regionHandles)
+      {
+        FederateRegion region = this.regions.get(regionHandle);
+        assert region != null;
+        regions.add(region);
+      }
+    }
+    finally
+    {
+      regionsLock.readLock().unlock();
+    }
+    return regions;
   }
 
   public void checkIfCanAssociateRegionForUpdates(

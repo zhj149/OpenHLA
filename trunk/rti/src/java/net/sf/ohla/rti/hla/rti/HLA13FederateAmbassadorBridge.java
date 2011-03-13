@@ -16,7 +16,11 @@
 
 package net.sf.ohla.rti.hla.rti;
 
+import java.util.Map;
 import java.util.Set;
+
+import net.sf.ohla.rti.fed.FED;
+import net.sf.ohla.rti.fed.RoutingSpace;
 
 import hla.rti.AttributeNotKnown;
 import hla.rti.CouldNotRestore;
@@ -44,6 +48,7 @@ import hla.rti1516e.MessageRetractionHandle;
 import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.OrderType;
+import hla.rti1516e.ParameterHandle;
 import hla.rti1516e.ParameterHandleValueMap;
 import hla.rti1516e.RestoreFailureReason;
 import hla.rti1516e.SaveFailureReason;
@@ -311,7 +316,8 @@ public class HLA13FederateAmbassadorBridge
   {
     try
     {
-      rtiAmbassador.getHLA13FederateAmbassador().stopRegistrationForObjectClass(rtiAmbassador.convert(objectClassHandle));
+      rtiAmbassador.getHLA13FederateAmbassador().stopRegistrationForObjectClass(
+        rtiAmbassador.convert(objectClassHandle));
     }
     catch (hla.rti.ObjectClassNotPublished ocnp)
     {
@@ -431,9 +437,26 @@ public class HLA13FederateAmbassadorBridge
   {
     try
     {
-      rtiAmbassador.getHLA13FederateAmbassador().reflectAttributeValues(
-        rtiAmbassador.convert(objectInstanceHandle), new HLA13ReflectedAttributes(
-          attributeValues, sentOrderType.ordinal(), rtiAmbassador.convert(transportationTypeHandle)), tag);
+      if (reflectInfo.hasSentRegions())
+      {
+        HLA13ReflectedAttributes reflectedAttributes = createReflectedAttributes(
+          objectInstanceHandle, attributeValues, sentOrderType, transportationTypeHandle, reflectInfo);
+        try
+        {
+          rtiAmbassador.getHLA13FederateAmbassador().reflectAttributeValues(
+            rtiAmbassador.convert(objectInstanceHandle), reflectedAttributes, tag);
+        }
+        finally
+        {
+          rtiAmbassador.deleteTemporaryRegions(reflectedAttributes.getRegions());
+        }
+      }
+      else
+      {
+        rtiAmbassador.getHLA13FederateAmbassador().reflectAttributeValues(
+          rtiAmbassador.convert(objectInstanceHandle), createReflectedAttributes(
+          attributeValues, sentOrderType, transportationTypeHandle), tag);
+      }
     }
     catch (ObjectNotKnown onk)
     {
@@ -456,14 +479,31 @@ public class HLA13FederateAmbassadorBridge
   public void reflectAttributeValues(
     ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues, byte[] tag,
     OrderType sentOrderType, TransportationTypeHandle transportationTypeHandle, hla.rti1516e.LogicalTime time,
-    OrderType receivedOrdering, SupplementalReflectInfo reflectInfo)
+    OrderType receivedOrderType, SupplementalReflectInfo reflectInfo)
     throws FederateInternalError
   {
     try
     {
-      rtiAmbassador.getHLA13FederateAmbassador().reflectAttributeValues(
-        rtiAmbassador.convert(objectInstanceHandle), new HLA13ReflectedAttributes(
-          attributeValues, receivedOrdering.ordinal(), rtiAmbassador.convert(transportationTypeHandle)), tag);
+      if (reflectInfo.hasSentRegions())
+      {
+        HLA13ReflectedAttributes reflectedAttributes = createReflectedAttributes(
+          objectInstanceHandle, attributeValues, receivedOrderType, transportationTypeHandle, reflectInfo);
+        try
+        {
+          rtiAmbassador.getHLA13FederateAmbassador().reflectAttributeValues(
+            rtiAmbassador.convert(objectInstanceHandle), reflectedAttributes, tag);
+        }
+        finally
+        {
+          rtiAmbassador.deleteTemporaryRegions(reflectedAttributes.getRegions());
+        }
+      }
+      else
+      {
+        rtiAmbassador.getHLA13FederateAmbassador().reflectAttributeValues(
+          rtiAmbassador.convert(objectInstanceHandle), createReflectedAttributes(
+          attributeValues, receivedOrderType, transportationTypeHandle), tag);
+      }
     }
     catch (ObjectNotKnown onk)
     {
@@ -491,10 +531,28 @@ public class HLA13FederateAmbassadorBridge
   {
     try
     {
-      rtiAmbassador.getHLA13FederateAmbassador().reflectAttributeValues(
-        rtiAmbassador.convert(objectInstanceHandle), new HLA13ReflectedAttributes(
-          attributeValues, receivedOrderType.ordinal(), rtiAmbassador.convert(transportationTypeHandle)),
-        tag, rtiAmbassador.convert(time), rtiAmbassador.convert(messageRetractionHandle));
+      if (reflectInfo.hasSentRegions())
+      {
+        HLA13ReflectedAttributes reflectedAttributes = createReflectedAttributes(
+          objectInstanceHandle, attributeValues, receivedOrderType, transportationTypeHandle, reflectInfo);
+        try
+        {
+          rtiAmbassador.getHLA13FederateAmbassador().reflectAttributeValues(
+            rtiAmbassador.convert(objectInstanceHandle), reflectedAttributes, tag, rtiAmbassador.convert(time),
+            rtiAmbassador.convert(messageRetractionHandle));
+        }
+        finally
+        {
+          rtiAmbassador.deleteTemporaryRegions(reflectedAttributes.getRegions());
+        }
+      }
+      else
+      {
+        rtiAmbassador.getHLA13FederateAmbassador().reflectAttributeValues(
+          rtiAmbassador.convert(objectInstanceHandle), createReflectedAttributes(
+          attributeValues, receivedOrderType, transportationTypeHandle), tag, rtiAmbassador.convert(time),
+          rtiAmbassador.convert(messageRetractionHandle));
+      }
     }
     catch (ObjectNotKnown onk)
     {
@@ -524,15 +582,35 @@ public class HLA13FederateAmbassadorBridge
 
   public void receiveInteraction(
     InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues,
-    byte[] tag, OrderType sentOrdering, TransportationTypeHandle transportationTypeHandle,
+    byte[] tag, OrderType sentOrderType, TransportationTypeHandle transportationTypeHandle,
     SupplementalReceiveInfo receiveInfo)
     throws FederateInternalError
   {
     try
     {
-      rtiAmbassador.getHLA13FederateAmbassador().receiveInteraction(
-        rtiAmbassador.convert(interactionClassHandle), new HLA13ReceivedInteraction(
-          parameterValues, sentOrdering.ordinal(), rtiAmbassador.convert(transportationTypeHandle)), tag);
+      if (receiveInfo.hasSentRegions())
+      {
+        HLA13ReceivedInteraction receivedInteraction = createReceivedInteraction(
+          interactionClassHandle, parameterValues, sentOrderType, transportationTypeHandle, receiveInfo);
+        try
+        {
+          rtiAmbassador.getHLA13FederateAmbassador().receiveInteraction(
+            rtiAmbassador.convert(interactionClassHandle), receivedInteraction, tag);
+        }
+        finally
+        {
+          if (receivedInteraction.getRegion() != null)
+          {
+            rtiAmbassador.deleteTemporaryRegion(receivedInteraction.getRegion());
+          }
+        }
+      }
+      else
+      {
+        rtiAmbassador.getHLA13FederateAmbassador().receiveInteraction(
+          rtiAmbassador.convert(interactionClassHandle), createReceivedInteraction(
+          parameterValues, sentOrderType, transportationTypeHandle), tag);
+      }
     }
     catch (InteractionClassNotKnown icnk)
     {
@@ -556,9 +634,29 @@ public class HLA13FederateAmbassadorBridge
   {
     try
     {
-      rtiAmbassador.getHLA13FederateAmbassador().receiveInteraction(
-        rtiAmbassador.convert(interactionClassHandle), new HLA13ReceivedInteraction(
-          parameterValues, receivedOrderType.ordinal(), rtiAmbassador.convert(transportationTypeHandle)), tag);
+      if (receiveInfo.hasSentRegions())
+      {
+        HLA13ReceivedInteraction receivedInteraction = createReceivedInteraction(
+          interactionClassHandle, parameterValues, receivedOrderType, transportationTypeHandle, receiveInfo);
+        try
+        {
+          rtiAmbassador.getHLA13FederateAmbassador().receiveInteraction(
+            rtiAmbassador.convert(interactionClassHandle), receivedInteraction, tag);
+        }
+        finally
+        {
+          if (receivedInteraction.getRegion() != null)
+          {
+            rtiAmbassador.deleteTemporaryRegion(receivedInteraction.getRegion());
+          }
+        }
+      }
+      else
+      {
+        rtiAmbassador.getHLA13FederateAmbassador().receiveInteraction(
+          rtiAmbassador.convert(interactionClassHandle), createReceivedInteraction(
+          parameterValues, receivedOrderType, transportationTypeHandle), tag);
+      }
     }
     catch (InteractionClassNotKnown icnk)
     {
@@ -582,10 +680,31 @@ public class HLA13FederateAmbassadorBridge
   {
     try
     {
-      rtiAmbassador.getHLA13FederateAmbassador().receiveInteraction(
-        rtiAmbassador.convert(interactionClassHandle), new HLA13ReceivedInteraction(
-          parameterValues, receivedOrderType.ordinal(), rtiAmbassador.convert(transportationTypeHandle)),
-        tag, rtiAmbassador.convert(time), rtiAmbassador.convert(messageRetractionHandle));
+      if (receiveInfo.hasSentRegions())
+      {
+        HLA13ReceivedInteraction receivedInteraction = createReceivedInteraction(
+          interactionClassHandle, parameterValues, receivedOrderType, transportationTypeHandle, receiveInfo);
+        try
+        {
+          rtiAmbassador.getHLA13FederateAmbassador().receiveInteraction(
+            rtiAmbassador.convert(interactionClassHandle), receivedInteraction, tag, rtiAmbassador.convert(time),
+            rtiAmbassador.convert(messageRetractionHandle));
+        }
+        finally
+        {
+          if (receivedInteraction.getRegion() != null)
+          {
+            rtiAmbassador.deleteTemporaryRegion(receivedInteraction.getRegion());
+          }
+        }
+      }
+      else
+      {
+        rtiAmbassador.getHLA13FederateAmbassador().receiveInteraction(
+          rtiAmbassador.convert(interactionClassHandle), createReceivedInteraction(
+          parameterValues, receivedOrderType, transportationTypeHandle), tag,
+          rtiAmbassador.convert(time), rtiAmbassador.convert(messageRetractionHandle));
+      }
     }
     catch (InteractionClassNotKnown icnk)
     {
@@ -735,7 +854,8 @@ public class HLA13FederateAmbassadorBridge
   {
     try
     {
-      rtiAmbassador.getHLA13FederateAmbassador().provideAttributeValueUpdate(rtiAmbassador.convert(objectInstanceHandle), rtiAmbassador.convert(
+      rtiAmbassador.getHLA13FederateAmbassador().provideAttributeValueUpdate(
+        rtiAmbassador.convert(objectInstanceHandle), rtiAmbassador.convert(
         attributeHandles));
     }
     catch (ObjectNotKnown onk)
@@ -766,7 +886,8 @@ public class HLA13FederateAmbassadorBridge
   {
     try
     {
-      rtiAmbassador.getHLA13FederateAmbassador().turnUpdatesOnForObjectInstance(rtiAmbassador.convert(objectInstanceHandle), rtiAmbassador.convert(
+      rtiAmbassador.getHLA13FederateAmbassador().turnUpdatesOnForObjectInstance(
+        rtiAmbassador.convert(objectInstanceHandle), rtiAmbassador.convert(
         attributeHandles));
     }
     catch (ObjectNotKnown onk)
@@ -793,7 +914,8 @@ public class HLA13FederateAmbassadorBridge
   {
     try
     {
-      rtiAmbassador.getHLA13FederateAmbassador().turnUpdatesOffForObjectInstance(rtiAmbassador.convert(objectInstanceHandle), rtiAmbassador.convert(
+      rtiAmbassador.getHLA13FederateAmbassador().turnUpdatesOffForObjectInstance(
+        rtiAmbassador.convert(objectInstanceHandle), rtiAmbassador.convert(
         attributeHandles));
     }
     catch (ObjectNotKnown onk)
@@ -1008,7 +1130,8 @@ public class HLA13FederateAmbassadorBridge
   {
     try
     {
-      rtiAmbassador.getHLA13FederateAmbassador().attributeOwnershipUnavailable(rtiAmbassador.convert(objectInstanceHandle), rtiAmbassador.convert(
+      rtiAmbassador.getHLA13FederateAmbassador().attributeOwnershipUnavailable(
+        rtiAmbassador.convert(objectInstanceHandle), rtiAmbassador.convert(
         attributeHandles));
     }
     catch (ObjectNotKnown onk)
@@ -1264,5 +1387,101 @@ public class HLA13FederateAmbassadorBridge
     {
       throw new FederateInternalError(fie.getMessage(), fie);
     }
+  }
+
+  private HLA13ReceivedInteraction createReceivedInteraction(
+    ParameterHandleValueMap parameterValues, OrderType orderType, TransportationTypeHandle transportationTypeHandle)
+  {
+    int[] handles = new int[parameterValues.size()];
+    byte[][] values = new byte[handles.length][];
+
+    int index = 0;
+    for (Map.Entry<ParameterHandle, byte[]> entry : parameterValues.entrySet())
+    {
+      handles[index] = rtiAmbassador.convert(entry.getKey());
+      values[index++] = entry.getValue();
+    }
+
+    return new HLA13ReceivedInteraction(
+      handles, values, orderType.ordinal(), rtiAmbassador.convert(transportationTypeHandle));
+  }
+
+  private HLA13ReceivedInteraction createReceivedInteraction(
+    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues, OrderType orderType,
+    TransportationTypeHandle transportationTypeHandle, SupplementalReceiveInfo receiveInfo)
+  {
+    int[] handles = new int[parameterValues.size()];
+    byte[][] values = new byte[handles.length][];
+
+    int index = 0;
+    for (Map.Entry<ParameterHandle, byte[]> entry : parameterValues.entrySet())
+    {
+      handles[index] = rtiAmbassador.convert(entry.getKey());
+      values[index++] = entry.getValue();
+    }
+
+    HLA13Region region;
+
+    RoutingSpace routingSpace =
+      rtiAmbassador.getIEEE1516eRTIambassador().getFederate().getFDD().getFED().getInteractionRoutingSpace(
+        interactionClassHandle);
+    if (routingSpace == null)
+    {
+      region = null;
+    }
+    else
+    {
+      region = rtiAmbassador.createTemporaryRegion(routingSpace, receiveInfo.getSentRegions());
+    }
+
+    return new HLA13ReceivedInteraction(
+      handles, values, orderType.ordinal(), rtiAmbassador.convert(transportationTypeHandle), region);
+  }
+
+  private HLA13ReflectedAttributes createReflectedAttributes(
+    AttributeHandleValueMap attributeValues, OrderType orderType, TransportationTypeHandle transportationTypeHandle)
+  {
+    int[] handles = new int[attributeValues.size()];
+    byte[][] values = new byte[handles.length][];
+
+    int index = 0;
+    for (Map.Entry<AttributeHandle, byte[]> entry : attributeValues.entrySet())
+    {
+      handles[index] = rtiAmbassador.convert(entry.getKey());
+      values[index++] = entry.getValue();
+    }
+
+    return new HLA13ReflectedAttributes(
+      handles, values, orderType.ordinal(), rtiAmbassador.convert(transportationTypeHandle));
+  }
+
+  private HLA13ReflectedAttributes createReflectedAttributes(
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues, OrderType orderType,
+    TransportationTypeHandle transportationTypeHandle, SupplementalReflectInfo reflectInfo)
+  {
+    FED fed = rtiAmbassador.getIEEE1516eRTIambassador().getFederate().getFDD().getFED();
+    ObjectClassHandle objectClassHandle =
+      rtiAmbassador.getIEEE1516eRTIambassador().getFederate().getObjectManager().getObjectClassHandleSafely(
+        objectInstanceHandle);
+
+    int[] handles = new int[attributeValues.size()];
+    byte[][] values = new byte[handles.length][];
+    HLA13Region[] regions = new HLA13Region[handles.length];
+
+    int index = 0;
+    for (Map.Entry<AttributeHandle, byte[]> entry : attributeValues.entrySet())
+    {
+      RoutingSpace routingSpace = fed.getAttributeRoutingSpace(entry.getKey(), objectClassHandle);
+      if (routingSpace != null)
+      {
+        regions[index] = rtiAmbassador.createTemporaryRegion(routingSpace, reflectInfo.getSentRegions());
+      }
+
+      handles[index] = rtiAmbassador.convert(entry.getKey());
+      values[index++] = entry.getValue();
+    }
+
+    return new HLA13ReflectedAttributes(
+      handles, values, orderType.ordinal(), rtiAmbassador.convert(transportationTypeHandle), regions);
   }
 }

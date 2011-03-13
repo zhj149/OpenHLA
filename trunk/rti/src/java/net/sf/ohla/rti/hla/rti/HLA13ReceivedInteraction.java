@@ -16,54 +16,39 @@
 
 package net.sf.ohla.rti.hla.rti;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import hla.rti.ArrayIndexOutOfBounds;
 import hla.rti.ReceivedInteraction;
-import hla.rti.Region;
-
-import hla.rti1516e.ParameterHandle;
-import hla.rti1516e.ParameterHandleValueMap;
 
 public class HLA13ReceivedInteraction
   implements ReceivedInteraction
 {
-  private final ParameterHandleValueMap parameterValues;
-  private final List<ParameterHandle> parameterHandles;
+  private final int[] parameterHandles;
+  private final byte[][] parameterValues;
 
   private final int orderType;
   private final int transportationType;
 
-  private final Region region;
+  private final HLA13Region region;
 
-  public HLA13ReceivedInteraction(ParameterHandleValueMap parameterValues, int orderType, int transportationType)
+  public HLA13ReceivedInteraction(
+    int[] parameterHandles, byte[][] parameterValues, int orderType, int transportationType)
   {
-    this(parameterValues, orderType, transportationType, null);
+    this(parameterHandles, parameterValues, orderType, transportationType, null);
   }
 
   public HLA13ReceivedInteraction(
-    ParameterHandleValueMap parameterValues, int orderType, int transportationType, Region region)
+    int[] parameterHandles, byte[][] parameterValues, int orderType, int transportationType, HLA13Region region)
   {
+    this.parameterHandles = parameterHandles;
     this.parameterValues = parameterValues;
-
     this.orderType = orderType;
     this.transportationType = transportationType;
-
     this.region = region;
-
-    // index the parameter handles
-    //
-    parameterHandles = new ArrayList<ParameterHandle>(parameterValues.size());
-    for (ParameterHandle parameterHandle : parameterValues.keySet())
-    {
-      parameterHandles.add(parameterHandle);
-    }
   }
 
   public int size()
   {
-    return parameterValues.size();
+    return parameterHandles.length;
   }
 
   public byte[] getValue(int index)
@@ -81,20 +66,17 @@ public class HLA13ReceivedInteraction
   public byte[] getValueReference(int index)
     throws ArrayIndexOutOfBounds
   {
-    try
-    {
-      return parameterValues.get(parameterHandles.get(index));
-    }
-    catch (IndexOutOfBoundsException ioobe)
-    {
-      throw new ArrayIndexOutOfBounds(ioobe);
-    }
+    checkRange(index);
+
+    return parameterValues[index];
   }
 
   public int getParameterHandle(int index)
     throws ArrayIndexOutOfBounds
   {
-    return parameterHandles.get(index).hashCode();
+    checkRange(index);
+
+    return parameterHandles[index];
   }
 
   public int getOrderType()
@@ -107,8 +89,17 @@ public class HLA13ReceivedInteraction
     return transportationType;
   }
 
-  public Region getRegion()
+  public HLA13Region getRegion()
   {
     return region;
+  }
+
+  private void checkRange(int index)
+    throws ArrayIndexOutOfBounds
+  {
+    if (index < 0 || index >= parameterHandles.length)
+    {
+      throw new ArrayIndexOutOfBounds(Integer.toString(index));
+    }
   }
 }

@@ -19,6 +19,7 @@ package net.sf.ohla.rti.fed;
 import java.net.URL;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import net.sf.ohla.rti.Protocol;
@@ -255,10 +256,10 @@ public class FED
     return routingSpace;
   }
 
-  public int getRoutingSpaceHandle(String name)
+  public int getRoutingSpaceHandle(String routingSpaceName)
     throws NameNotFound
   {
-    return getRoutingSpace(name).getRoutingSpaceHandle();
+    return getRoutingSpace(routingSpaceName).getRoutingSpaceHandle();
   }
 
   public String getRoutingSpaceName(int routingSpaceHandle)
@@ -277,6 +278,29 @@ public class FED
     throws SpaceNotDefined, DimensionNotDefined
   {
     return getRoutingSpace(routingSpaceHandle).getDimensionAlias(dimensionHandle);
+  }
+
+  public RoutingSpace getAttributeRoutingSpace(AttributeHandle attributeHandle, ObjectClassHandle objectClassHandle)
+  {
+    RoutingSpace routingSpace;
+
+    Attribute attribute = fdd.getObjectClassSafely(objectClassHandle).getAttributeSafely(attributeHandle);
+    if (attribute.getDimensionHandles().isEmpty())
+    {
+      // TODO: log that the Attribute has no Dimensions and therefore no HLA 1.3 RoutingSpace
+
+      routingSpace = null;
+    }
+    else
+    {
+      routingSpace = routingSpacesByDimensionHandle.get(attribute.getDimensionHandles().iterator().next());
+
+      if (routingSpace == null)
+      {
+        // TODO: log that the Attribute has no HLA 1.3 RoutingSpace
+      }
+    }
+    return routingSpace;
   }
 
   public int getAttributeRoutingSpaceHandle(AttributeHandle attributeHandle, ObjectClassHandle objectClassHandle)
@@ -314,6 +338,29 @@ public class FED
     {
       throw new ObjectClassNotDefined(ocnd);
     }
+  }
+
+  public RoutingSpace getInteractionRoutingSpace(InteractionClassHandle interactionClassHandle)
+  {
+    RoutingSpace routingSpace;
+
+    InteractionClass interactionClass = fdd.getInteractionClassSafely(interactionClassHandle);
+    if (interactionClass.getDimensionHandles().isEmpty())
+    {
+      // TODO: log that the InteractionClass has no Dimensions and therefore no HLA 1.3 RoutingSpace
+
+      routingSpace = null;
+    }
+    else
+    {
+      routingSpace = routingSpacesByDimensionHandle.get(interactionClass.getDimensionHandles().iterator().next());
+
+      if (routingSpace == null)
+      {
+        // TODO: log that the InteractionClass has no HLA 1.3 RoutingSpace
+      }
+    }
+    return routingSpace;
   }
 
   public int getInteractionRoutingSpaceHandle(InteractionClassHandle interactionClassHandle)

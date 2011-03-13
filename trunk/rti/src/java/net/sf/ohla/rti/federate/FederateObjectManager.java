@@ -537,6 +537,11 @@ public class FederateObjectManager
     }
   }
 
+  public ObjectClassHandle getObjectClassHandleSafely(ObjectInstanceHandle objectInstanceHandle)
+  {
+    return objects.get(objectInstanceHandle).getObjectClass().getObjectClassHandle();
+  }
+
   public ObjectInstanceHandle getObjectInstanceHandle(String name)
     throws ObjectInstanceNotKnown
   {
