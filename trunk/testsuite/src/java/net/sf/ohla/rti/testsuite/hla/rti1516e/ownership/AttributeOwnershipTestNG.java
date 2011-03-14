@@ -253,16 +253,6 @@ public class AttributeOwnershipTestNG
       assert federateHandle.equals(objectInstances.get(objectInstanceHandle).get(attributeHandle));
     }
 
-    public void checkAttributeIsOwnedByRTI(ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle)
-      throws Exception
-    {
-      for (int i = 0; i < 5 && (!objectInstances.containsKey(objectInstanceHandle) || objectInstances.get(objectInstanceHandle).get(attributeHandle) == null); i++)
-      {
-        rtiAmbassador.evokeCallback(1.0);
-      }
-      assert Boolean.TRUE.equals(objectInstances.get(objectInstanceHandle).get(attributeHandle));
-    }
-
     public void checkAttributeIsUnowned(ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle)
       throws Exception
     {
