@@ -42,8 +42,8 @@
       <class name="net.sf.ohla.rti.testsuite.hla.rti.ownership.AttributeOwnershipTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti.ownership.AttributeDivestitureTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti.ownership.AttributeAcquisitionTestNG"/>
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti.ownership.NegotiatedAttributeDivestitureTestNG"/>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti.ownership.IntrusiveAttributeAcquisitionTestNG"/>-->
+      <class name="net.sf.ohla.rti.testsuite.hla.rti.ownership.NegotiatedAttributeDivestitureTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti.ownership.IntrusiveAttributeAcquisitionTestNG"/>
     </classes>
   </test>
   <test name="HLA 1.3 - Data Distribution Management">
