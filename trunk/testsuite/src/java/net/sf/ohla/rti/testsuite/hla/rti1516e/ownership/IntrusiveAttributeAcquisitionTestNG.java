@@ -238,8 +238,8 @@ public class IntrusiveAttributeAcquisitionTestNG
       ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
       throws Exception
     {
-      for (int i = 0; i < 5 && !releaseRequestedAttributes.containsKey(objectInstanceHandle) ||
-                      !releaseRequestedAttributes.get(objectInstanceHandle).equals(attributeHandles, tag); i++)
+      for (int i = 0; i < 5 && (!releaseRequestedAttributes.containsKey(objectInstanceHandle) ||
+                                !releaseRequestedAttributes.get(objectInstanceHandle).equals(attributeHandles, tag)); i++)
       {
         rtiAmbassador.evokeCallback(1.0);
       }
@@ -251,7 +251,8 @@ public class IntrusiveAttributeAcquisitionTestNG
       ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
       throws Exception
     {
-      for (int i = 0; i < 5 && (!divestitureRequestedAttributes.containsKey(objectInstanceHandle) || !divestitureRequestedAttributes.get(objectInstanceHandle).equals(attributeHandles)); i++)
+      for (int i = 0; i < 5 && (!divestitureRequestedAttributes.containsKey(objectInstanceHandle) ||
+                                !divestitureRequestedAttributes.get(objectInstanceHandle).equals(attributeHandles)); i++)
       {
         rtiAmbassador.evokeCallback(1.0);
       }
@@ -263,8 +264,8 @@ public class IntrusiveAttributeAcquisitionTestNG
       ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
       throws Exception
     {
-      for (int i = 0; i < 5 && !acquiredAttributes.containsKey(objectInstanceHandle) ||
-                      !acquiredAttributes.get(objectInstanceHandle).equals(attributeHandles, tag); i++)
+      for (int i = 0; i < 5 && (!acquiredAttributes.containsKey(objectInstanceHandle) ||
+                                !acquiredAttributes.get(objectInstanceHandle).equals(attributeHandles, tag)); i++)
       {
         rtiAmbassador.evokeCallback(1.0);
       }
@@ -276,7 +277,8 @@ public class IntrusiveAttributeAcquisitionTestNG
       ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle, FederateHandle federateHandle)
       throws Exception
     {
-      for (int i = 0; i < 5 && (!objectInstances.containsKey(objectInstanceHandle) || objectInstances.get(objectInstanceHandle).get(attributeHandle) == null); i++)
+      for (int i = 0; i < 5 && (!objectInstances.containsKey(objectInstanceHandle) ||
+                                objectInstances.get(objectInstanceHandle).get(attributeHandle) == null); i++)
       {
         rtiAmbassador.evokeCallback(1.0);
       }
