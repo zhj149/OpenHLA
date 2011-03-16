@@ -26,26 +26,23 @@ import net.sf.ohla.rti.hla.rti1516.Integer64TimeIntervalFactory;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
 
 import hla.rti1516.MobileFederateServices;
 import hla.rti1516.RTIambassador;
 import hla.rti1516.jlc.RtiFactory;
 import hla.rti1516.jlc.RtiFactoryFactory;
 
-@Test(groups = {"IEEE 1516"})
 public abstract class BaseTestNG
   implements TestConstants
 {
+  protected final int rtiAmbassadorCount;
+  protected final List<RTIambassador> rtiAmbassadors;
+
   protected URL fdd;
   protected URL badFDD;
 
-  protected int rtiAmbassadorCount;
-  protected List<RTIambassador> rtiAmbassadors;
-
-  protected MobileFederateServices mobileFederateServices =
-    new MobileFederateServices(
-      new Integer64TimeFactory(), new Integer64TimeIntervalFactory());
+  protected final MobileFederateServices mobileFederateServices =
+    new MobileFederateServices(new Integer64TimeFactory(), new Integer64TimeIntervalFactory());
 
   protected BaseTestNG()
   {
@@ -63,12 +60,10 @@ public abstract class BaseTestNG
   public final void baseSetup()
     throws Exception
   {
-    fdd = Thread.currentThread().getContextClassLoader().getResource(
-      FDD);
+    fdd = Thread.currentThread().getContextClassLoader().getResource(FDD);
     assert fdd != null : "could not locate: " + FDD;
 
-    badFDD = Thread.currentThread().getContextClassLoader().getResource(
-      BAD_FDD);
+    badFDD = Thread.currentThread().getContextClassLoader().getResource(BAD_FDD);
     assert badFDD != null : "could not locate: " + BAD_FDD;
 
     RtiFactory rtiFactory = RtiFactoryFactory.getRtiFactory();

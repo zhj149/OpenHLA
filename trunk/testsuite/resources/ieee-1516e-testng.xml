@@ -15,7 +15,7 @@
   -->
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
-<suite name="OHLA IEEE 1516e Testsuite" verbose="5">
+<suite name="OHLA IEEE 1516e Testsuite" parallel="false" verbose="5">
   <test name="IEEE 1516e - Federation Management">
     <classes>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.federation.ConnectionTestNG"/>

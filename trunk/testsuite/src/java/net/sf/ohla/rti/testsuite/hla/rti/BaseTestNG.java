@@ -23,13 +23,11 @@ import java.util.List;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
 
 import hla.rti.jlc.RTIambassadorEx;
 import hla.rti.jlc.RtiFactory;
 import hla.rti.jlc.RtiFactoryFactory;
 
-@Test(groups = {"HLA 1.3"})
 public abstract class BaseTestNG
   implements TestConstants
 {

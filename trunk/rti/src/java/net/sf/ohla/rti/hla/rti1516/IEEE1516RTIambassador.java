@@ -26,6 +26,8 @@ import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRTIambassador;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandle;
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
 import net.sf.ohla.rti.i18n.I18nLogger;
 
 import org.slf4j.Logger;
@@ -155,14 +157,19 @@ import hla.rti1516.TimeRegulationAlreadyEnabled;
 import hla.rti1516.TimeRegulationIsNotEnabled;
 import hla.rti1516.TransportationType;
 
+import hla.rti1516e.CallbackModel;
 import hla.rti1516e.TransportationTypeHandle;
+import hla.rti1516e.exceptions.AlreadyConnected;
 import hla.rti1516e.exceptions.CallNotAllowedFromWithinCallback;
+import hla.rti1516e.exceptions.ConnectionFailed;
 import hla.rti1516e.exceptions.CouldNotCreateLogicalTimeFactory;
 import hla.rti1516e.exceptions.CouldNotEncode;
+import hla.rti1516e.exceptions.InvalidLocalSettingsDesignator;
 import hla.rti1516e.exceptions.InvalidResignAction;
 import hla.rti1516e.exceptions.InvalidServiceGroup;
 import hla.rti1516e.exceptions.NoAcquisitionPending;
 import hla.rti1516e.exceptions.NotConnected;
+import hla.rti1516e.exceptions.UnsupportedCallbackModel;
 
 public class IEEE1516RTIambassador
   implements RTIambassador
@@ -179,7 +186,36 @@ public class IEEE1516RTIambassador
   private FederateAmbassador federateAmbassador;
 
   public IEEE1516RTIambassador()
+    throws RTIinternalError
   {
+    try
+    {
+      rtiAmbassador.connect(new IEEE1516FederateAmbassadorBridge(this), CallbackModel.HLA_EVOKED);
+    }
+    catch (ConnectionFailed cf)
+    {
+      throw new RTIinternalError(cf.getMessage(), cf);
+    }
+    catch (InvalidLocalSettingsDesignator ilsd)
+    {
+      throw new RTIinternalError(ilsd.getMessage(), ilsd);
+    }
+    catch (UnsupportedCallbackModel ucm)
+    {
+      throw new RTIinternalError(ucm.getMessage(), ucm);
+    }
+    catch (AlreadyConnected ac)
+    {
+      throw new RTIinternalError(ac.getMessage(), ac);
+    }
+    catch (CallNotAllowedFromWithinCallback cnafwc)
+    {
+      throw new RTIinternalError(cnafwc.getMessage(), cnafwc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie.getMessage(), rtiie);
+    }
   }
 
   public FederateAmbassador getIEEE1516FederateAmbassador()
@@ -190,6 +226,11 @@ public class IEEE1516RTIambassador
   public void createFederationExecution(String federationExecutionName, URL fdd)
     throws FederationExecutionAlreadyExists, CouldNotOpenFDD, ErrorReadingFDD, RTIinternalError
   {
+    if (fdd == null)
+    {
+      throw new CouldNotOpenFDD(I18n.getMessage(ExceptionMessages.FOM_MODULE_IS_NULL));
+    }
+
     try
     {
       rtiAmbassador.createFederationExecution(federationExecutionName, IEEE1516FDDParser.parseFDD(fdd));
@@ -239,6 +280,8 @@ public class IEEE1516RTIambassador
     throws FederateAlreadyExecutionMember, FederationExecutionDoesNotExist, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
+    this.federateAmbassador = federateAmbassador;
+
     try
     {
       return convert(rtiAmbassador.joinFederationExecution(federateType, federationExecutionName));

@@ -251,6 +251,15 @@ public class IEEE1516eRTIambassador
   public void createFederationExecution(String federationExecutionName, FDD fdd, String logicalTimeImplementationName)
     throws CouldNotCreateLogicalTimeFactory, FederationExecutionAlreadyExists, NotConnected, RTIinternalError
   {
+    if (federationExecutionName == null)
+    {
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATION_EXECUTION_NAME_IS_NULL));
+    }
+    else if (federationExecutionName.isEmpty())
+    {
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATION_EXECUTION_NAME_IS_EMPTY));
+    }
+
     logicalTimeImplementationName =
       logicalTimeImplementationName == null ? "HLAfloat64Time" : logicalTimeImplementationName;
 
@@ -447,15 +456,7 @@ public class IEEE1516eRTIambassador
     throws CouldNotCreateLogicalTimeFactory, InconsistentFDD, ErrorReadingFDD, CouldNotOpenFDD, ErrorReadingMIM,
            CouldNotOpenMIM, DesignatorIsHLAstandardMIM, FederationExecutionAlreadyExists, NotConnected, RTIinternalError
   {
-    if (federationExecutionName == null)
-    {
-      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATION_EXECUTION_NAME_IS_NULL));
-    }
-    else if (federationExecutionName.isEmpty())
-    {
-      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATION_EXECUTION_NAME_IS_EMPTY));
-    }
-    else if (fomModules == null)
+    if (fomModules == null)
     {
       throw new CouldNotOpenFDD(I18n.getMessage(ExceptionMessages.FOM_MODULES_IS_NULL));
     }
@@ -479,15 +480,7 @@ public class IEEE1516eRTIambassador
     throws CouldNotCreateLogicalTimeFactory, InconsistentFDD, ErrorReadingFDD, CouldNotOpenFDD,
            FederationExecutionAlreadyExists, NotConnected, RTIinternalError
   {
-    if (federationExecutionName == null)
-    {
-      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATION_EXECUTION_NAME_IS_NULL));
-    }
-    else if (federationExecutionName.isEmpty())
-    {
-      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATION_EXECUTION_NAME_IS_EMPTY));
-    }
-    else if (fomModules == null)
+    if (fomModules == null)
     {
       throw new CouldNotOpenFDD(I18n.getMessage(ExceptionMessages.FOM_MODULES_IS_NULL));
     }
@@ -511,15 +504,7 @@ public class IEEE1516eRTIambassador
     throws InconsistentFDD, ErrorReadingFDD, CouldNotOpenFDD, ErrorReadingMIM, CouldNotOpenMIM,
            DesignatorIsHLAstandardMIM, FederationExecutionAlreadyExists, NotConnected, RTIinternalError
   {
-    if (federationExecutionName == null)
-    {
-      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATION_EXECUTION_NAME_IS_NULL));
-    }
-    else if (federationExecutionName.isEmpty())
-    {
-      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATION_EXECUTION_NAME_IS_EMPTY));
-    }
-    else if (fomModules == null)
+    if (fomModules == null)
     {
       throw new CouldNotOpenFDD(I18n.getMessage(ExceptionMessages.FOM_MODULES_IS_NULL));
     }
@@ -542,15 +527,7 @@ public class IEEE1516eRTIambassador
     throws InconsistentFDD, ErrorReadingFDD, CouldNotOpenFDD, FederationExecutionAlreadyExists, NotConnected,
            RTIinternalError
   {
-    if (federationExecutionName == null)
-    {
-      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATION_EXECUTION_NAME_IS_NULL));
-    }
-    else if (federationExecutionName.isEmpty())
-    {
-      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATION_EXECUTION_NAME_IS_EMPTY));
-    }
-    else if (fomModules == null)
+    if (fomModules == null)
     {
       throw new CouldNotOpenFDD(I18n.getMessage(ExceptionMessages.FOM_MODULES_IS_NULL));
     }
@@ -574,15 +551,7 @@ public class IEEE1516eRTIambassador
     throws InconsistentFDD, ErrorReadingFDD, CouldNotOpenFDD, FederationExecutionAlreadyExists, NotConnected,
            RTIinternalError
   {
-    if (federationExecutionName == null)
-    {
-      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATION_EXECUTION_NAME_IS_NULL));
-    }
-    else if (federationExecutionName.isEmpty())
-    {
-      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATION_EXECUTION_NAME_IS_EMPTY));
-    }
-    else if (fomModule == null)
+    if (fomModule == null)
     {
       throw new CouldNotOpenFDD(I18n.getMessage(ExceptionMessages.FOM_MODULE_IS_NULL));
     }

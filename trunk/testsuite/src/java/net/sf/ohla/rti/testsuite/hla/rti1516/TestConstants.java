@@ -22,13 +22,18 @@ public interface TestConstants
   static final String NONEXISTANT_FEDERATION_NAME =
     FEDERATION_NAME + " - Non-Existant Federation";
 
-  static final String FDD = "TestObjectModel.xml";
+  static final String FDD = "TestObjectModel-1516.xml";
   static final String BAD_FDD = FDD + ".bad";
 
   static final String FEDERATE_TYPE = "Test Federate";
 
   static final String SYNCHRONIZATION_POINT_1 = "Synchronization Point 1";
   static final String SYNCHRONIZATION_POINT_2 = "Synchronization Point 2";
+  static final String SYNCHRONIZATION_POINT_3 = "Synchronization Point 3";
+  static final String SYNCHRONIZATION_POINT_4 = "Synchronization Point 4";
+  static final String SYNCHRONIZATION_POINT_5 = "Synchronization Point 5";
+
+  static final byte[] TAG = new byte[] { (byte) Math.random(), (byte) Math.random(), (byte) Math.random() };
 
   static final String TEST_OBJECT = "TestObject";
   static final String TEST_OBJECT2 = "TestObject.TestObject2";
