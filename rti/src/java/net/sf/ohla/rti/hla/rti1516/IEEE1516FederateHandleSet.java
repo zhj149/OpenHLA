@@ -45,8 +45,7 @@ public class IEEE1516FederateHandleSet
     hla.rti1516e.FederateHandleSet ieee1516eFederateHandles = IEEE1516eFederateHandleSetFactory.INSTANCE.create();
     for (FederateHandle federateHandle : federateHandles)
     {
-      ieee1516eFederateHandles.add(
-        new IEEE1516eFederateHandle(((IEEE1516eFederateHandle) federateHandle).getHandle()));
+      ieee1516eFederateHandles.add(new IEEE1516eFederateHandle(((IEEE1516FederateHandle) federateHandle).getHandle()));
     }
     return ieee1516eFederateHandles;
   }

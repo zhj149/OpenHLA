@@ -93,10 +93,9 @@ public class IEEE1516FDDParser
     public void startElement(String uri, String localName, String qName, Attributes attributes)
       throws SAXException
     {
-      ContentHandler contentHandler = contentHandlerStack.peek();
-      if (contentHandler != null)
+      if (contentHandlerStack.size() > 0)
       {
-        contentHandler.startElement(uri, localName, qName, attributes);
+        contentHandlerStack.peek().startElement(uri, localName, qName, attributes);
       }
       else if (qName.equals("ObjectClass"))
       {
@@ -122,10 +121,9 @@ public class IEEE1516FDDParser
     public void endElement(String uri, String localName, String qName)
       throws SAXException
     {
-      ContentHandler contentHandler = contentHandlerStack.peek();
-      if (contentHandler != null)
+      if (contentHandlerStack.size() > 0)
       {
-        contentHandler.endElement(uri, localName, qName);
+        contentHandlerStack.peek().endElement(uri, localName, qName);
       }
     }
 
