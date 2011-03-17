@@ -23,12 +23,12 @@
       <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.federation.SynchronizationTestNG"/>-->
     <!--</classes>-->
   <!--</test>-->
-  <test name="IEEE 1516 - Declaration Management">
-    <classes>
-      <class name="net.sf.ohla.rti.testsuite.hla.rti1516.declaration.ObjectDeclarationTestNG"/>
-      <class name="net.sf.ohla.rti.testsuite.hla.rti1516.declaration.InteractionDeclarationTestNG"/>
-    </classes>
-  </test>
+  <!--<test name="IEEE 1516 - Declaration Management">-->
+    <!--<classes>-->
+      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.declaration.ObjectDeclarationTestNG"/>-->
+      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.declaration.InteractionDeclarationTestNG"/>-->
+    <!--</classes>-->
+  <!--</test>-->
   <!--<test name="IEEE 1516 - Object Management">-->
     <!--<classes>-->
       <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.object.ObjectRegistrationTestNG"/>-->
@@ -53,14 +53,14 @@
       <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.datadistribution.InteractionRegionTestNG"/>-->
     <!--</classes>-->
   <!--</test>-->
-  <!--<test name="IEEE 1516 - Support Services">-->
-    <!--<classes>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.support.FederateSupportTestNG"/>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.support.OrderSupportTestNG"/>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.support.TransportationSupportTestNG"/>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.support.ObjectSupportTestNG"/>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.support.InteractionSupportTestNG"/>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.support.RoutingSpaceSupportTestNG"/>-->
-    <!--</classes>-->
-  <!--</test>-->
+  <test name="IEEE 1516 - Support Services">
+    <classes>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516.support.FederateSupportTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516.support.OrderSupportTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516.support.TransportationSupportTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516.support.ObjectSupportTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516.support.InteractionSupportTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516.support.DimensionSupportTestNG"/>
+    </classes>
+  </test>
 </suite>

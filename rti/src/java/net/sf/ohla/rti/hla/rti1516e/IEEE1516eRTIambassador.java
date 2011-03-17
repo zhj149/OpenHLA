@@ -4574,6 +4574,11 @@ public class IEEE1516eRTIambassador
   public String getDimensionName(DimensionHandle dimensionHandle)
     throws InvalidDimensionHandle, FederateNotExecutionMember, NotConnected, RTIinternalError
   {
+    if (dimensionHandle == null)
+    {
+      throw new InvalidDimensionHandle(I18n.getMessage(ExceptionMessages.DIMENSION_HANDLE_IS_NULL));
+    }
+
     connectLock.readLock().lock();
     try
     {

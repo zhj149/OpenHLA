@@ -335,6 +335,10 @@ public class FederationExecution
         }
       }
     }
+    catch (Throwable t)
+    {
+      t.printStackTrace();
+    }
     finally
     {
       federationExecutionStateLock.writeLock().unlock();
