@@ -97,15 +97,15 @@ public class IEEE1516FDDParser
       {
         contentHandlerStack.peek().startElement(uri, localName, qName, attributes);
       }
-      else if (qName.equals("ObjectClass"))
+      else if (qName.equals("objectClass"))
       {
         contentHandlerStack.push(new ObjectClassHandler(attributes.getValue("name")));
       }
-      else if (qName.equals("InteractionClass"))
+      else if (qName.equals("interactionClass"))
       {
         contentHandlerStack.push(new InteractionClassHandler(attributes));
       }
-      else if (qName.equals("Dimension"))
+      else if (qName.equals("dimension"))
       {
         Dimension dimension = fdd.addDimension(attributes.getValue("name"));
 
@@ -212,7 +212,7 @@ public class IEEE1516FDDParser
       public void startElement(String uri, String localName, String qName, Attributes attributes)
         throws SAXException
       {
-        if (qName.equals("Attribute"))
+        if (qName.equals("attribute"))
         {
           try
           {
@@ -224,7 +224,7 @@ public class IEEE1516FDDParser
             throw new SAXException(ifdd);
           }
         }
-        else if (qName.equals("ObjectClass"))
+        else if (qName.equals("objectClass"))
         {
           contentHandlerStack.push(new ObjectClassHandler(attributes.getValue("name"), objectClass));
         }
@@ -234,7 +234,7 @@ public class IEEE1516FDDParser
       public void endElement(String uri, String localName, String qName)
         throws SAXException
       {
-        if (qName.equals("ObjectClass"))
+        if (qName.equals("objectClass"))
         {
           contentHandlerStack.pop();
         }
@@ -271,7 +271,7 @@ public class IEEE1516FDDParser
       public void startElement(String uri, String localName, String qName, Attributes attributes)
         throws SAXException
       {
-        if (qName.equals("Parameter"))
+        if (qName.equals("parameter"))
         {
           try
           {
@@ -282,7 +282,7 @@ public class IEEE1516FDDParser
             throw new SAXException(ifdd);
           }
         }
-        else if (qName.equals("InteractionClass"))
+        else if (qName.equals("interactionClass"))
         {
           contentHandlerStack.push(new InteractionClassHandler(attributes, interactionClass));
         }
@@ -292,7 +292,7 @@ public class IEEE1516FDDParser
       public void endElement(String uri, String localName, String qName)
         throws SAXException
       {
-        if (qName.equals("InteractionClass"))
+        if (qName.equals("interactionClass"))
         {
           contentHandlerStack.pop();
         }
@@ -330,7 +330,7 @@ public class IEEE1516FDDParser
         {
           dimension.setUpperBound(Long.parseLong(getContent()));
         }
-        else if (qName.equals("Dimension"))
+        else if (qName.equals("dimension"))
         {
           contentHandlerStack.pop();
         }

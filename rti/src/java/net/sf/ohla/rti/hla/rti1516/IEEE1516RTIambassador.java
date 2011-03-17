@@ -19,6 +19,7 @@ package net.sf.ohla.rti.hla.rti1516;
 import java.net.URL;
 
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSetFactory;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eInteractionClassHandle;
@@ -754,37 +755,44 @@ public class IEEE1516RTIambassador
     throws ObjectClassNotDefined, AttributeNotDefined, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
-    try
+    if (objectClassHandle == null)
     {
-      rtiAmbassador.publishObjectClassAttributes(convert(objectClassHandle), convert(attributeHandles));
+      throw new ObjectClassNotDefined(I18n.getMessage(ExceptionMessages.OBJECT_CLASS_HANDLE_IS_NULL));
     }
-    catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+    else if (attributeHandles != null && attributeHandles.size() > 0)
     {
-      throw new AttributeNotDefined(and);
-    }
-    catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
-    {
-      throw new ObjectClassNotDefined(ocnd);
-    }
-    catch (hla.rti1516e.exceptions.SaveInProgress sip)
-    {
-      throw new SaveInProgress(sip);
-    }
-    catch (hla.rti1516e.exceptions.RestoreInProgress rip)
-    {
-      throw new RestoreInProgress(rip);
-    }
-    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
-    {
-      throw new FederateNotExecutionMember(fnem);
-    }
-    catch (NotConnected nc)
-    {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      try
+      {
+        rtiAmbassador.publishObjectClassAttributes(convert(objectClassHandle), convert(attributeHandles));
+      }
+      catch (hla.rti1516e.exceptions.AttributeNotDefined and)
+      {
+        throw new AttributeNotDefined(and);
+      }
+      catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
+      {
+        throw new ObjectClassNotDefined(ocnd);
+      }
+      catch (hla.rti1516e.exceptions.SaveInProgress sip)
+      {
+        throw new SaveInProgress(sip);
+      }
+      catch (hla.rti1516e.exceptions.RestoreInProgress rip)
+      {
+        throw new RestoreInProgress(rip);
+      }
+      catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+      {
+        throw new FederateNotExecutionMember(fnem);
+      }
+      catch (NotConnected nc)
+      {
+        throw new RTIinternalError(nc);
+      }
+      catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+      {
+        throw new RTIinternalError(rtiie);
+      }
     }
   }
 
@@ -792,6 +800,11 @@ public class IEEE1516RTIambassador
     throws ObjectClassNotDefined, OwnershipAcquisitionPending, FederateNotExecutionMember, SaveInProgress,
            RestoreInProgress, RTIinternalError
   {
+    if (objectClassHandle == null)
+    {
+      throw new ObjectClassNotDefined(I18n.getMessage(ExceptionMessages.OBJECT_CLASS_HANDLE_IS_NULL));
+    }
+
     try
     {
       rtiAmbassador.unpublishObjectClass(convert(objectClassHandle));
@@ -872,6 +885,11 @@ public class IEEE1516RTIambassador
   public void publishInteractionClass(InteractionClassHandle interactionClassHandle)
     throws InteractionClassNotDefined, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
+    if (interactionClassHandle == null)
+    {
+      throw new InteractionClassNotDefined(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
+    }
+
     try
     {
       rtiAmbassador.publishInteractionClass(convert(interactionClassHandle));
@@ -905,6 +923,11 @@ public class IEEE1516RTIambassador
   public void unpublishInteractionClass(InteractionClassHandle interactionClassHandle)
     throws InteractionClassNotDefined, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
+    if (interactionClassHandle == null)
+    {
+      throw new InteractionClassNotDefined(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
+    }
+
     try
     {
       rtiAmbassador.unpublishInteractionClass(convert(interactionClassHandle));
@@ -939,9 +962,16 @@ public class IEEE1516RTIambassador
     throws ObjectClassNotDefined, AttributeNotDefined, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
+    if (objectClassHandle == null)
+    {
+      throw new ObjectClassNotDefined(I18n.getMessage(ExceptionMessages.OBJECT_CLASS_HANDLE_IS_NULL));
+    }
+
     try
     {
-      rtiAmbassador.subscribeObjectClassAttributes(convert(objectClassHandle), convert(attributeHandles));
+      rtiAmbassador.subscribeObjectClassAttributes(
+        convert(objectClassHandle), attributeHandles == null ?
+          IEEE1516eAttributeHandleSetFactory.INSTANCE.create() : convert(attributeHandles));
     }
     catch (hla.rti1516e.exceptions.AttributeNotDefined and)
     {
@@ -1015,6 +1045,11 @@ public class IEEE1516RTIambassador
   public void unsubscribeObjectClass(ObjectClassHandle objectClassHandle)
     throws ObjectClassNotDefined, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
+    if (objectClassHandle == null)
+    {
+      throw new ObjectClassNotDefined(I18n.getMessage(ExceptionMessages.OBJECT_CLASS_HANDLE_IS_NULL));
+    }
+
     try
     {
       rtiAmbassador.unsubscribeObjectClass(convert(objectClassHandle));
@@ -1087,6 +1122,11 @@ public class IEEE1516RTIambassador
     throws InteractionClassNotDefined, FederateServiceInvocationsAreBeingReportedViaMOM, FederateNotExecutionMember,
            SaveInProgress, RestoreInProgress, RTIinternalError
   {
+    if (interactionClassHandle == null)
+    {
+      throw new InteractionClassNotDefined(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
+    }
+
     try
     {
       rtiAmbassador.subscribeInteractionClass(convert(interactionClassHandle));
@@ -1125,6 +1165,11 @@ public class IEEE1516RTIambassador
     throws InteractionClassNotDefined, FederateServiceInvocationsAreBeingReportedViaMOM, FederateNotExecutionMember,
            SaveInProgress, RestoreInProgress, RTIinternalError
   {
+    if (interactionClassHandle == null)
+    {
+      throw new InteractionClassNotDefined(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
+    }
+
     try
     {
       rtiAmbassador.subscribeInteractionClassPassively(convert(interactionClassHandle));
@@ -1162,6 +1207,11 @@ public class IEEE1516RTIambassador
   public void unsubscribeInteractionClass(InteractionClassHandle interactionClassHandle)
     throws InteractionClassNotDefined, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
+    if (interactionClassHandle == null)
+    {
+      throw new InteractionClassNotDefined(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
+    }
+
     try
     {
       rtiAmbassador.unsubscribeInteractionClass(convert(interactionClassHandle));
@@ -5028,8 +5078,7 @@ public class IEEE1516RTIambassador
     return new IEEE1516InteractionClassHandle(interactionClassHandle);
   }
 
-  public hla.rti1516e.InteractionClassHandle convert(
-    InteractionClassHandle interactionClassHandle)
+  public hla.rti1516e.InteractionClassHandle convert(InteractionClassHandle interactionClassHandle)
   {
     return new IEEE1516eInteractionClassHandle(((IEEE1516InteractionClassHandle) interactionClassHandle).getHandle());
   }
