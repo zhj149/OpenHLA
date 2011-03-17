@@ -34,7 +34,7 @@ public class IEEE1516eTransportationTypeHandle
   {
     // TODO: get cache size from properties
 
-    cache = new IEEE1516eTransportationTypeHandle[8];
+    cache = new IEEE1516eTransportationTypeHandle[] { HLA_RELIABLE, HLA_BEST_EFFORT };
 
     for (int i = 1; i < cache.length; i++)
     {

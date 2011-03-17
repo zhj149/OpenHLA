@@ -23,10 +23,10 @@ import hla.rti1516e.TransportationTypeHandle;
 public class TransportationType
 {
   public static final TransportationType HLA_RELIABLE =
-    new TransportationType(new IEEE1516eTransportationTypeHandle(1), "HLAreliable", true);
+    new TransportationType(IEEE1516eTransportationTypeHandle.HLA_RELIABLE, "HLAreliable", true);
 
   public static final TransportationType HLA_BEST_EFFORT =
-    new TransportationType(new IEEE1516eTransportationTypeHandle(2), "HLAbestEffort", false);
+    new TransportationType(IEEE1516eTransportationTypeHandle.HLA_BEST_EFFORT, "HLAbestEffort", false);
 
   private final TransportationTypeHandle transportationTypeHandle;
   private final String name;

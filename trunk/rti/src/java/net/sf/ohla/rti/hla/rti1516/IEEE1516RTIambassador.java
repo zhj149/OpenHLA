@@ -324,6 +324,11 @@ public class IEEE1516RTIambassador
   public void resignFederationExecution(ResignAction resignAction)
     throws OwnershipAcquisitionPending, FederateOwnsAttributes, FederateNotExecutionMember, RTIinternalError
   {
+    if (resignAction == null)
+    {
+      throw new RTIinternalError(I18n.getMessage(ExceptionMessages.RESIGN_ACTION_IS_NULL));
+    }
+
     try
     {
       rtiAmbassador.resignFederationExecution(convert(resignAction));
@@ -3831,6 +3836,11 @@ public class IEEE1516RTIambassador
   public String getObjectClassName(ObjectClassHandle objectClassHandle)
     throws InvalidObjectClassHandle, FederateNotExecutionMember, RTIinternalError
   {
+    if (objectClassHandle == null)
+    {
+      throw new InvalidObjectClassHandle(I18n.getMessage(ExceptionMessages.OBJECT_CLASS_HANDLE_IS_NULL));
+    }
+
     try
     {
       return rtiAmbassador.getObjectClassName(convert(objectClassHandle));
@@ -3853,12 +3863,17 @@ public class IEEE1516RTIambassador
     }
   }
 
-  public AttributeHandle getAttributeHandle(ObjectClassHandle objectClassHandle, String name)
+  public AttributeHandle getAttributeHandle(ObjectClassHandle objectClassHandle, String attributeName)
     throws InvalidObjectClassHandle, NameNotFound, FederateNotExecutionMember, RTIinternalError
   {
+    if (objectClassHandle == null)
+    {
+      throw new InvalidObjectClassHandle(I18n.getMessage(ExceptionMessages.OBJECT_CLASS_HANDLE_IS_NULL));
+    }
+
     try
     {
-      return convert(rtiAmbassador.getAttributeHandle(convert(objectClassHandle), name));
+      return convert(rtiAmbassador.getAttributeHandle(convert(objectClassHandle), attributeName));
     }
     catch (hla.rti1516e.exceptions.NameNotFound nnf)
     {
@@ -3886,6 +3901,15 @@ public class IEEE1516RTIambassador
     throws InvalidObjectClassHandle, InvalidAttributeHandle, AttributeNotDefined, FederateNotExecutionMember,
            RTIinternalError
   {
+    if (objectClassHandle == null)
+    {
+      throw new InvalidObjectClassHandle(I18n.getMessage(ExceptionMessages.OBJECT_CLASS_HANDLE_IS_NULL));
+    }
+    else if (attributeHandle == null)
+    {
+      throw new InvalidAttributeHandle(I18n.getMessage(ExceptionMessages.ATTRIBUTE_HANDLE_IS_NULL));
+    }
+
     try
     {
       return rtiAmbassador.getAttributeName(convert(objectClassHandle), convert(attributeHandle));
@@ -3944,6 +3968,11 @@ public class IEEE1516RTIambassador
   public String getInteractionClassName(InteractionClassHandle interactionClassHandle)
     throws InvalidInteractionClassHandle, FederateNotExecutionMember, RTIinternalError
   {
+    if (interactionClassHandle == null)
+    {
+      throw new InvalidInteractionClassHandle(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
+    }
+
     try
     {
       return rtiAmbassador.getInteractionClassName(convert(interactionClassHandle));
@@ -3966,12 +3995,17 @@ public class IEEE1516RTIambassador
     }
   }
 
-  public ParameterHandle getParameterHandle(InteractionClassHandle interactionClassHandle, String name)
+  public ParameterHandle getParameterHandle(InteractionClassHandle interactionClassHandle, String parameterName)
     throws InvalidInteractionClassHandle, NameNotFound, FederateNotExecutionMember, RTIinternalError
   {
+    if (interactionClassHandle == null)
+    {
+      throw new InvalidInteractionClassHandle(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
+    }
+
     try
     {
-      return convert(rtiAmbassador.getParameterHandle(convert(interactionClassHandle), name));
+      return convert(rtiAmbassador.getParameterHandle(convert(interactionClassHandle), parameterName));
     }
     catch (hla.rti1516e.exceptions.NameNotFound nnf)
     {
@@ -3999,6 +4033,15 @@ public class IEEE1516RTIambassador
     throws InvalidInteractionClassHandle, InvalidParameterHandle, InteractionParameterNotDefined,
            FederateNotExecutionMember, RTIinternalError
   {
+    if (interactionClassHandle == null)
+    {
+      throw new InvalidInteractionClassHandle(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
+    }
+    else if (parameterHandle == null)
+    {
+      throw new InvalidParameterHandle(I18n.getMessage(ExceptionMessages.PARAMETER_HANDLE_IS_NULL));
+    }
+
     try
     {
       return rtiAmbassador.getParameterName(convert(interactionClassHandle), convert(parameterHandle));
@@ -4107,6 +4150,11 @@ public class IEEE1516RTIambassador
   public String getDimensionName(DimensionHandle dimensionHandle)
     throws InvalidDimensionHandle, FederateNotExecutionMember, RTIinternalError
   {
+    if (dimensionHandle == null)
+    {
+      throw new InvalidDimensionHandle(I18n.getMessage(ExceptionMessages.DIMENSION_HANDLE_IS_NULL));
+    }
+
     try
     {
       return rtiAmbassador.getDimensionName(convert(dimensionHandle));
@@ -4159,6 +4207,15 @@ public class IEEE1516RTIambassador
     throws InvalidObjectClassHandle, InvalidAttributeHandle, AttributeNotDefined, FederateNotExecutionMember,
            RTIinternalError
   {
+    if (objectClassHandle == null)
+    {
+      throw new InvalidObjectClassHandle(I18n.getMessage(ExceptionMessages.OBJECT_CLASS_HANDLE_IS_NULL));
+    }
+    else if (attributeHandle == null)
+    {
+      throw new InvalidAttributeHandle(I18n.getMessage(ExceptionMessages.ATTRIBUTE_HANDLE_IS_NULL));
+    }
+
     try
     {
       return convert(rtiAmbassador.getAvailableDimensionsForClassAttribute(
@@ -4218,6 +4275,11 @@ public class IEEE1516RTIambassador
   public DimensionHandleSet getAvailableDimensionsForInteractionClass(InteractionClassHandle interactionClassHandle)
     throws InvalidInteractionClassHandle, FederateNotExecutionMember, RTIinternalError
   {
+    if (interactionClassHandle == null)
+    {
+      throw new InvalidInteractionClassHandle(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
+    }
+
     try
     {
       return convert(rtiAmbassador.getAvailableDimensionsForInteractionClass(convert(interactionClassHandle)));
@@ -4240,12 +4302,12 @@ public class IEEE1516RTIambassador
     }
   }
 
-  public TransportationType getTransportationType(String name)
+  public TransportationType getTransportationType(String transportationTypeName)
     throws InvalidTransportationName, FederateNotExecutionMember, RTIinternalError
   {
     try
     {
-      return convert(rtiAmbassador.getTransportationTypeHandle(name));
+      return convert(rtiAmbassador.getTransportationTypeHandle(transportationTypeName));
     }
     catch (hla.rti1516e.exceptions.InvalidTransportationName itn)
     {
@@ -4268,6 +4330,11 @@ public class IEEE1516RTIambassador
   public String getTransportationName(TransportationType transportationType)
     throws InvalidTransportationType, FederateNotExecutionMember, RTIinternalError
   {
+    if (transportationType == null)
+    {
+      throw new InvalidTransportationType(I18n.getMessage(ExceptionMessages.TRANSPORTATION_TYPE_HANDLE_IS_NULL));
+    }
+
     try
     {
       return rtiAmbassador.getTransportationTypeName(convert(transportationType));
@@ -4318,6 +4385,11 @@ public class IEEE1516RTIambassador
   public String getOrderName(OrderType orderType)
     throws InvalidOrderType, FederateNotExecutionMember, RTIinternalError
   {
+    if (orderType == null)
+    {
+      throw new InvalidOrderType(I18n.getMessage(ExceptionMessages.ORDER_TYPE_IS_NULL));
+    }
+
     try
     {
       return rtiAmbassador.getOrderName(convert(orderType));
