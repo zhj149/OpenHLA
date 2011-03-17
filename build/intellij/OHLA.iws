@@ -30,26 +30,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" readonly="true" id="c306879c-2744-4d82-a20f-7284eb5ea0e6" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/support" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/support/BaseSupportTestNG.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/support/DimensionSupportTestNG.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/support/FederateSupportTestNG.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/support/InteractionSupportTestNG.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/support/ObjectSupportTestNG.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/support/OrderSupportTestNG.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/support/TransportationSupportTestNG.java" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.5\testsuite\src\java\net\sf\ohla\rti\testsuite\hla\rti1516\DeclarationManagementTestNG.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.5\testsuite\src\java\net\sf\ohla\rti\testsuite\hla\rti1516\FederationManagementTestNG.java" afterPath="" />
+      <change type="DELETED" beforePath="C:\projects\ohla-0.5\testsuite\src\java\net\sf\ohla\rti\testsuite\hla\rti1516\SupportServicesTestNG.java" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/OHLA.iws" afterPath="$PROJECT_DIR$/OHLA.iws" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/resources/ohla_rti_exception_messages_en_US.properties" afterPath="$PROJECT_DIR$/../../rti/resources/ohla_rti_exception_messages_en_US.properties" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/TransportationType.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/TransportationType.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecution.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecution.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516RTIambassador.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516RTIambassador.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eRTIambassador.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eRTIambassador.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eTransportationTypeHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eTransportationTypeHandle.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/i18n/ExceptionMessages.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/i18n/ExceptionMessages.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/resources/ieee-1516-testng.xml" afterPath="$PROJECT_DIR$/../../testsuite/resources/ieee-1516-testng.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/TestConstants.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/TestConstants.java" />
     </list>
     <list id="b279f3ba-c417-49c1-bcc1-a24f5fc97d41" name="Failed commit: Default" comment="- removed log4j" />
     <list id="261d7dd6-cad7-41bb-912f-d59a03f7b57d" name="Failed commit: Default (2)" comment="- refactoring" />
@@ -186,7 +168,7 @@
       <file leaf-file-name="RTIambassador.java" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/../../ieee-1516/src/java/hla/rti1516/RTIambassador.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="727" column="0" selection-start="36093" selection-end="36093" vertical-scroll-proportion="0.13529412">
+            <state line="739" column="0" selection-start="36625" selection-end="36625" vertical-scroll-proportion="0.43529412">
               <folding />
             </state>
           </provider>
@@ -600,44 +582,6 @@
               <option name="myItemId" value="hla" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="rti1516" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="support" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="OHLA" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="ohla-0.5" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="testsuite" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="java" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="testsuite" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="hla" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
           </PATH>
           <PATH>
             <PATH_ELEMENT>
@@ -680,36 +624,6 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="rti" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="OHLA" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="ohla-0.5" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="rti" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="java" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="rti" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="fdd" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -1737,7 +1651,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/../../ieee-1516/src/java/hla/rti1516/RTIambassador.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="727" column="0" selection-start="36093" selection-end="36093" vertical-scroll-proportion="0.13529412">
+        <state line="739" column="0" selection-start="36625" selection-end="36625" vertical-scroll-proportion="0.43529412">
           <folding />
         </state>
       </provider>
