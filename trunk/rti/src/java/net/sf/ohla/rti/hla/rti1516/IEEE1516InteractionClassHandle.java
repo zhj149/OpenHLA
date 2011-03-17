@@ -17,6 +17,7 @@
 package net.sf.ohla.rti.hla.rti1516;
 
 import net.sf.ohla.rti.IntegerHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eInteractionClassHandle;
 
 import hla.rti1516.CouldNotDecode;
 import hla.rti1516.InteractionClassHandle;
@@ -33,6 +34,6 @@ public class IEEE1516InteractionClassHandle
 
   public IEEE1516InteractionClassHandle(hla.rti1516e.InteractionClassHandle interactionClassHandle)
   {
-    super((IEEE1516InteractionClassHandle) interactionClassHandle);
+    super((IEEE1516eInteractionClassHandle) interactionClassHandle);
   }
 }
