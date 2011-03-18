@@ -32,4 +32,23 @@ public class IEEE1516RegionHandle
   {
     return regionHandle;
   }
+
+  @Override
+  public int hashCode()
+  {
+    return regionHandle.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object rhs)
+  {
+    return this == rhs || (rhs instanceof IEEE1516RegionHandle &&
+                           regionHandle.equals(((IEEE1516RegionHandle) rhs).regionHandle));
+  }
+
+  @Override
+  public String toString()
+  {
+    return regionHandle.toString();
+  }
 }

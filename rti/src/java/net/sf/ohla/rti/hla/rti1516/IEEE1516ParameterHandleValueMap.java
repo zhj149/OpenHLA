@@ -16,7 +16,9 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandle;
@@ -40,6 +42,26 @@ public class IEEE1516ParameterHandleValueMap
     {
       put(new IEEE1516ParameterHandle(entry.getKey()), entry.getValue());
     }
+  }
+
+  @Override
+  public boolean equals(Object rhs)
+  {
+    return this == rhs || (rhs instanceof ParameterHandleValueMap && equals((ParameterHandleValueMap) rhs));
+  }
+
+  private boolean equals(ParameterHandleValueMap rhs)
+  {
+    boolean equals = size() == rhs.size();
+    if (equals)
+    {
+      for (Iterator<Map.Entry<ParameterHandle, byte[]>> i = entrySet().iterator(); i.hasNext() && equals;)
+      {
+        Map.Entry<ParameterHandle, byte[]> entry = i.next();
+        equals = Arrays.equals(entry.getValue(), rhs.get(entry.getKey()));
+      }
+    }
+    return equals;
   }
 
   public static hla.rti1516e.ParameterHandleValueMap createIEEE1516eParameterHandleValueMap(

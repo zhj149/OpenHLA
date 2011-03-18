@@ -16,7 +16,9 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
@@ -40,6 +42,25 @@ public class IEEE1516AttributeHandleValueMap
     {
       put(new IEEE1516AttributeHandle(entry.getKey()), entry.getValue());
     }
+  }
+  @Override
+  public boolean equals(Object rhs)
+  {
+    return this == rhs || (rhs instanceof AttributeHandleValueMap && equals((AttributeHandleValueMap) rhs));
+  }
+
+  private boolean equals(AttributeHandleValueMap rhs)
+  {
+    boolean equals = size() == rhs.size();
+    if (equals)
+    {
+      for (Iterator<Map.Entry<AttributeHandle, byte[]>> i = entrySet().iterator(); i.hasNext() && equals;)
+      {
+        Map.Entry<AttributeHandle, byte[]> entry = i.next();
+        equals = Arrays.equals(entry.getValue(), rhs.get(entry.getKey()));
+      }
+    }
+    return equals;
   }
 
   public static hla.rti1516e.AttributeHandleValueMap createIEEE1516eAttributeHandleValueMap(
