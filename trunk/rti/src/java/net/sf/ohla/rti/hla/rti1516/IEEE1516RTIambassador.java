@@ -1794,6 +1794,11 @@ public class IEEE1516RTIambassador
     throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned, FederateNotExecutionMember, SaveInProgress,
            RestoreInProgress, RTIinternalError
   {
+    if (objectInstanceHandle == null)
+    {
+      throw new ObjectInstanceNotKnown(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_HANDLE_IS_NULL));
+    }
+
     try
     {
       rtiAmbassador.unconditionalAttributeOwnershipDivestiture(
@@ -1838,6 +1843,11 @@ public class IEEE1516RTIambassador
     throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned, AttributeAlreadyBeingDivested,
            FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
+    if (objectInstanceHandle == null)
+    {
+      throw new ObjectInstanceNotKnown(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_HANDLE_IS_NULL));
+    }
+
     try
     {
       rtiAmbassador.negotiatedAttributeOwnershipDivestiture(
@@ -1886,6 +1896,11 @@ public class IEEE1516RTIambassador
     throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned, AttributeDivestitureWasNotRequested,
            FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
+    if (objectInstanceHandle == null)
+    {
+      throw new ObjectInstanceNotKnown(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_HANDLE_IS_NULL));
+    }
+
     try
     {
       rtiAmbassador.confirmDivestiture(convert(objectInstanceHandle), convert(attributeHandles), tag);
@@ -1937,6 +1952,11 @@ public class IEEE1516RTIambassador
     throws ObjectInstanceNotKnown, ObjectClassNotPublished, AttributeNotDefined, AttributeNotPublished,
            FederateOwnsAttributes, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
+    if (objectInstanceHandle == null)
+    {
+      throw new ObjectInstanceNotKnown(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_HANDLE_IS_NULL));
+    }
+
     try
     {
       rtiAmbassador.attributeOwnershipAcquisition(convert(objectInstanceHandle), convert(attributeHandles), tag);
@@ -1989,6 +2009,11 @@ public class IEEE1516RTIambassador
            FederateOwnsAttributes, AttributeAlreadyBeingAcquired, FederateNotExecutionMember, SaveInProgress,
            RestoreInProgress, RTIinternalError
   {
+    if (objectInstanceHandle == null)
+    {
+      throw new ObjectInstanceNotKnown(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_HANDLE_IS_NULL));
+    }
+
     try
     {
       rtiAmbassador.attributeOwnershipAcquisitionIfAvailable(convert(objectInstanceHandle), convert(attributeHandles));
@@ -2044,6 +2069,11 @@ public class IEEE1516RTIambassador
     throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned, FederateNotExecutionMember, SaveInProgress,
            RestoreInProgress, RTIinternalError
   {
+    if (objectInstanceHandle == null)
+    {
+      throw new ObjectInstanceNotKnown(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_HANDLE_IS_NULL));
+    }
+
     try
     {
       return convert(rtiAmbassador.attributeOwnershipDivestitureIfWanted(
@@ -2088,6 +2118,11 @@ public class IEEE1516RTIambassador
     throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned, AttributeDivestitureWasNotRequested,
            FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
+    if (objectInstanceHandle == null)
+    {
+      throw new ObjectInstanceNotKnown(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_HANDLE_IS_NULL));
+    }
+
     try
     {
       rtiAmbassador.cancelNegotiatedAttributeOwnershipDivestiture(
@@ -2136,6 +2171,11 @@ public class IEEE1516RTIambassador
     throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeAlreadyOwned, AttributeAcquisitionWasNotRequested,
            FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
+    if (objectInstanceHandle == null)
+    {
+      throw new ObjectInstanceNotKnown(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_HANDLE_IS_NULL));
+    }
+
     try
     {
       rtiAmbassador.cancelAttributeOwnershipAcquisition(convert(objectInstanceHandle), convert(attributeHandles));
@@ -2182,6 +2222,15 @@ public class IEEE1516RTIambassador
     throws ObjectInstanceNotKnown, AttributeNotDefined, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
+    if (objectInstanceHandle == null)
+    {
+      throw new ObjectInstanceNotKnown(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_HANDLE_IS_NULL));
+    }
+    else if (attributeHandle == null)
+    {
+      throw new AttributeNotDefined(I18n.getMessage(ExceptionMessages.ATTRIBUTE_HANDLE_IS_NULL));
+    }
+
     try
     {
       rtiAmbassador.queryAttributeOwnership(convert(objectInstanceHandle), convert(attributeHandle));
@@ -2221,6 +2270,15 @@ public class IEEE1516RTIambassador
     throws ObjectInstanceNotKnown, AttributeNotDefined, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
+    if (objectInstanceHandle == null)
+    {
+      throw new ObjectInstanceNotKnown(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_HANDLE_IS_NULL));
+    }
+    else if (attributeHandle == null)
+    {
+      throw new AttributeNotDefined(I18n.getMessage(ExceptionMessages.ATTRIBUTE_HANDLE_IS_NULL));
+    }
+
     try
     {
       return rtiAmbassador.isAttributeOwnedByFederate(convert(objectInstanceHandle), convert(attributeHandle));

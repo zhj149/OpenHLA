@@ -38,15 +38,15 @@
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516.object.InteractionTestNG"/>
     </classes>
   </test>
-  <!--<test name="IEEE 1516 - Ownership Management">-->
-    <!--<classes>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.ownership.AttributeOwnershipTestNG"/>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.ownership.AttributeDivestitureTestNG"/>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.ownership.AttributeAcquisitionTestNG"/>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.ownership.NegotiatedAttributeDivestitureTestNG"/>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.ownership.IntrusiveAttributeAcquisitionTestNG"/>-->
-    <!--</classes>-->
-  <!--</test>-->
+  <test name="IEEE 1516 - Ownership Management">
+    <classes>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516.ownership.AttributeOwnershipTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516.ownership.AttributeDivestitureTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516.ownership.AttributeAcquisitionTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516.ownership.NegotiatedAttributeDivestitureTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516.ownership.IntrusiveAttributeAcquisitionTestNG"/>
+    </classes>
+  </test>
   <!--<test name="IEEE 1516 - Data Distribution Management">-->
     <!--<classes>-->
       <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.datadistribution.RegionSupportTestNG"/>-->
