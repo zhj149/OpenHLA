@@ -3261,29 +3261,27 @@ public class IEEE1516eRTIambassador
     {
       throw new InvalidDimensionHandle(I18n.getMessage(ExceptionMessages.CREATE_REGION_WITH_EMPTY_DIMENSION_HANDLES));
     }
-    else
+
+    connectLock.readLock().lock();
+    try
     {
-      connectLock.readLock().lock();
+      checkIfNotConnected();
+
+      joinResignLock.readLock().lock();
       try
       {
-        checkIfNotConnected();
+        checkIfFederateNotExecutionMember();
 
-        joinResignLock.readLock().lock();
-        try
-        {
-          checkIfFederateNotExecutionMember();
-
-          return federate.createRegion(dimensionHandles);
-        }
-        finally
-        {
-          joinResignLock.readLock().unlock();
-        }
+        return federate.createRegion(dimensionHandles);
       }
       finally
       {
-        connectLock.readLock().unlock();
+        joinResignLock.readLock().unlock();
       }
+    }
+    finally
+    {
+      connectLock.readLock().unlock();
     }
   }
 

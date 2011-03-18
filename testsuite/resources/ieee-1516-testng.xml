@@ -47,13 +47,13 @@
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516.ownership.IntrusiveAttributeAcquisitionTestNG"/>
     </classes>
   </test>
-  <!--<test name="IEEE 1516 - Data Distribution Management">-->
-    <!--<classes>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.datadistribution.RegionSupportTestNG"/>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.datadistribution.ObjectRegionTestNG"/>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.datadistribution.InteractionRegionTestNG"/>-->
-    <!--</classes>-->
-  <!--</test>-->
+  <test name="IEEE 1516 - Data Distribution Management">
+    <classes>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516.datadistribution.RegionSupportTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516.datadistribution.ObjectRegionTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516.datadistribution.InteractionRegionTestNG"/>
+    </classes>
+  </test>
   <test name="IEEE 1516 - Support Services">
     <classes>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516.support.FederateSupportTestNG"/>

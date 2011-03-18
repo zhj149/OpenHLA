@@ -3081,6 +3081,15 @@ public class IEEE1516RTIambassador
   public RegionHandle createRegion(DimensionHandleSet dimensionHandles)
     throws InvalidDimensionHandle, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
+    if (dimensionHandles == null)
+    {
+      throw new InvalidDimensionHandle(I18n.getMessage(ExceptionMessages.CREATE_REGION_WITH_NULL_DIMENSION_HANDLES));
+    }
+    else if (dimensionHandles.isEmpty())
+    {
+      throw new InvalidDimensionHandle(I18n.getMessage(ExceptionMessages.CREATE_REGION_WITH_EMPTY_DIMENSION_HANDLES));
+    }
+
     try
     {
       return convert(rtiAmbassador.createRegion(convert(dimensionHandles)));
@@ -3577,6 +3586,11 @@ public class IEEE1516RTIambassador
            FederateServiceInvocationsAreBeingReportedViaMOM, FederateNotExecutionMember, SaveInProgress,
            RestoreInProgress, RTIinternalError
   {
+    if (interactionClassHandle == null)
+    {
+      throw new InteractionClassNotDefined(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
+    }
+
     try
     {
       rtiAmbassador.subscribeInteractionClassWithRegions(convert(interactionClassHandle), convert(regionHandles));
@@ -3629,6 +3643,11 @@ public class IEEE1516RTIambassador
            FederateServiceInvocationsAreBeingReportedViaMOM, FederateNotExecutionMember, SaveInProgress,
            RestoreInProgress, RTIinternalError
   {
+    if (interactionClassHandle == null)
+    {
+      throw new InteractionClassNotDefined(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
+    }
+
     try
     {
       rtiAmbassador.subscribeInteractionClassPassivelyWithRegions(
@@ -3681,6 +3700,11 @@ public class IEEE1516RTIambassador
     throws InteractionClassNotDefined, InvalidRegion, RegionNotCreatedByThisFederate, FederateNotExecutionMember,
            SaveInProgress, RestoreInProgress, RTIinternalError
   {
+    if (interactionClassHandle == null)
+    {
+      throw new InteractionClassNotDefined(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
+    }
+
     try
     {
       rtiAmbassador.unsubscribeInteractionClassWithRegions(convert(interactionClassHandle), convert(regionHandles));
@@ -3726,6 +3750,11 @@ public class IEEE1516RTIambassador
            RegionNotCreatedByThisFederate, InvalidRegionContext, FederateNotExecutionMember, SaveInProgress,
            RestoreInProgress, RTIinternalError
   {
+    if (interactionClassHandle == null)
+    {
+      throw new InteractionClassNotDefined(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
+    }
+
     try
     {
       rtiAmbassador.sendInteractionWithRegions(
@@ -4770,6 +4799,11 @@ public class IEEE1516RTIambassador
   public DimensionHandleSet getDimensionHandleSet(RegionHandle regionHandle)
     throws InvalidRegion, FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
+    if (regionHandle == null)
+    {
+      throw new InvalidRegion(I18n.getMessage(ExceptionMessages.REGION_HANDLE_IS_NULL));
+    }
+
     try
     {
       return convert(rtiAmbassador.getDimensionHandleSet(convert(regionHandle)));
@@ -4804,6 +4838,15 @@ public class IEEE1516RTIambassador
     throws InvalidRegion, RegionDoesNotContainSpecifiedDimension, FederateNotExecutionMember, SaveInProgress,
            RestoreInProgress, RTIinternalError
   {
+    if (regionHandle == null)
+    {
+      throw new InvalidRegion(I18n.getMessage(ExceptionMessages.REGION_HANDLE_IS_NULL));
+    }
+    else if (dimensionHandle == null)
+    {
+      throw new RegionDoesNotContainSpecifiedDimension(I18n.getMessage(ExceptionMessages.DIMENSION_HANDLE_IS_NULL));
+    }
+
     try
     {
       return convert(rtiAmbassador.getRangeBounds(convert(regionHandle), convert(dimensionHandle)));
@@ -4842,6 +4885,19 @@ public class IEEE1516RTIambassador
     throws InvalidRegion, RegionNotCreatedByThisFederate, RegionDoesNotContainSpecifiedDimension, InvalidRangeBound,
            FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
+    if (regionHandle == null)
+    {
+      throw new InvalidRegion(I18n.getMessage(ExceptionMessages.REGION_HANDLE_IS_NULL));
+    }
+    else if (dimensionHandle == null)
+    {
+      throw new RegionDoesNotContainSpecifiedDimension(I18n.getMessage(ExceptionMessages.DIMENSION_HANDLE_IS_NULL));
+    }
+    else if (rangeBounds == null)
+    {
+      throw new InvalidRangeBound(I18n.getMessage(ExceptionMessages.RANGE_BOUNDS_IS_NULL));
+    }
+
     try
     {
       rtiAmbassador.setRangeBounds(convert(regionHandle), convert(dimensionHandle), convert(rangeBounds));
