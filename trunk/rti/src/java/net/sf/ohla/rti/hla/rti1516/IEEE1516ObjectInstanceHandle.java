@@ -58,4 +58,23 @@ public class IEEE1516ObjectInstanceHandle
   {
     objectInstanceHandle.encode(buffer, offset);
   }
+
+  @Override
+  public int hashCode()
+  {
+    return objectInstanceHandle.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object rhs)
+  {
+    return this == rhs || (rhs instanceof IEEE1516ObjectInstanceHandle &&
+                           objectInstanceHandle.equals(((IEEE1516ObjectInstanceHandle) rhs).objectInstanceHandle));
+  }
+
+  @Override
+  public String toString()
+  {
+    return objectInstanceHandle.toString();
+  }
 }

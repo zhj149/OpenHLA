@@ -32,4 +32,23 @@ public class IEEE1516MessageRetractionHandle
   {
     return messageRetractionHandle;
   }
+
+  @Override
+  public int hashCode()
+  {
+    return messageRetractionHandle.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object rhs)
+  {
+    return this == rhs || (rhs instanceof IEEE1516MessageRetractionHandle &&
+                           messageRetractionHandle.equals(((IEEE1516MessageRetractionHandle) rhs).messageRetractionHandle));
+  }
+
+  @Override
+  public String toString()
+  {
+    return messageRetractionHandle.toString();
+  }
 }

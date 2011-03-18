@@ -16,27 +16,28 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
 <suite name="OHLA IEEE 1516 Testsuite" parallel="false" verbose="5">
-  <!--<test name="IEEE 1516 - Federation Management">-->
-    <!--<classes>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.federation.CreationTestNG"/>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.federation.JoiningTestNG"/>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.federation.SynchronizationTestNG"/>-->
-    <!--</classes>-->
-  <!--</test>-->
-  <!--<test name="IEEE 1516 - Declaration Management">-->
-    <!--<classes>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.declaration.ObjectDeclarationTestNG"/>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.declaration.InteractionDeclarationTestNG"/>-->
-    <!--</classes>-->
-  <!--</test>-->
-  <!--<test name="IEEE 1516 - Object Management">-->
-    <!--<classes>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.object.ObjectRegistrationTestNG"/>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.object.ObjectUpdateTestNG"/>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.object.ObjectDeletionTestNG"/>-->
-      <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.object.InteractionTestNG"/>-->
-    <!--</classes>-->
-  <!--</test>-->
+  <test name="IEEE 1516 - Federation Management">
+    <classes>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516.federation.CreationTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516.federation.JoiningTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516.federation.SynchronizationTestNG"/>
+    </classes>
+  </test>
+  <test name="IEEE 1516 - Declaration Management">
+    <classes>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516.declaration.ObjectDeclarationTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516.declaration.InteractionDeclarationTestNG"/>
+    </classes>
+  </test>
+  <test name="IEEE 1516 - Object Management">
+    <classes>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516.object.ObjectNameReservationTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516.object.ObjectRegistrationTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516.object.ObjectUpdateTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516.object.ObjectDeletionTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516.object.InteractionTestNG"/>
+    </classes>
+  </test>
   <!--<test name="IEEE 1516 - Ownership Management">-->
     <!--<classes>-->
       <!--<class name="net.sf.ohla.rti.testsuite.hla.rti1516.ownership.AttributeOwnershipTestNG"/>-->

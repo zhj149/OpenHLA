@@ -70,8 +70,7 @@ public class IEEE1516eAttributeHandleValueMap
   @Override
   public boolean equals(Object rhs)
   {
-    return this == rhs || (rhs instanceof IEEE1516eAttributeHandleValueMap &&
-                           equals((IEEE1516eAttributeHandleValueMap) rhs));
+    return this == rhs || (rhs instanceof AttributeHandleValueMap && equals((AttributeHandleValueMap) rhs));
   }
 
   private boolean equals(IEEE1516eAttributeHandleValueMap rhs)

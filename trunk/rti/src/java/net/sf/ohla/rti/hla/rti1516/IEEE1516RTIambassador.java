@@ -1284,6 +1284,11 @@ public class IEEE1516RTIambassador
     throws ObjectClassNotDefined, ObjectClassNotPublished, FederateNotExecutionMember, SaveInProgress,
            RestoreInProgress, RTIinternalError
   {
+    if (objectClassHandle == null)
+    {
+      throw new ObjectClassNotDefined(I18n.getMessage(ExceptionMessages.OBJECT_CLASS_HANDLE_IS_NULL));
+    }
+
     try
     {
       return convert(rtiAmbassador.registerObjectInstance(convert(objectClassHandle)));
@@ -1322,6 +1327,11 @@ public class IEEE1516RTIambassador
     throws ObjectClassNotDefined, ObjectClassNotPublished, ObjectInstanceNameNotReserved, ObjectInstanceNameInUse,
            FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
+    if (objectClassHandle == null)
+    {
+      throw new ObjectClassNotDefined(I18n.getMessage(ExceptionMessages.OBJECT_CLASS_HANDLE_IS_NULL));
+    }
+
     try
     {
       return convert(rtiAmbassador.registerObjectInstance(convert(objectClassHandle), objectInstanceName));
@@ -1369,6 +1379,11 @@ public class IEEE1516RTIambassador
     throws ObjectInstanceNotKnown, AttributeNotDefined, AttributeNotOwned, FederateNotExecutionMember, SaveInProgress,
            RestoreInProgress, RTIinternalError
   {
+    if (objectInstanceHandle == null)
+    {
+      throw new ObjectInstanceNotKnown(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_HANDLE_IS_NULL));
+    }
+
     try
     {
       rtiAmbassador.updateAttributeValues(convert(objectInstanceHandle), convert(attributeValues), tag);
@@ -1461,6 +1476,11 @@ public class IEEE1516RTIambassador
     throws InteractionClassNotPublished, InteractionClassNotDefined, InteractionParameterNotDefined,
            FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
+    if (interactionClassHandle == null)
+    {
+      throw new InteractionClassNotDefined(I18n.getMessage(ExceptionMessages.INTERACTION_CLASS_HANDLE_IS_NULL));
+    }
+
     try
     {
       rtiAmbassador.sendInteraction(convert(interactionClassHandle), convert(parameterValues), tag);
@@ -1552,6 +1572,11 @@ public class IEEE1516RTIambassador
     throws ObjectInstanceNotKnown, DeletePrivilegeNotHeld, FederateNotExecutionMember, SaveInProgress,
            RestoreInProgress, RTIinternalError
   {
+    if (objectInstanceHandle == null)
+    {
+      throw new ObjectInstanceNotKnown(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_HANDLE_IS_NULL));
+    }
+
     try
     {
       rtiAmbassador.deleteObjectInstance(convert(objectInstanceHandle), tag);

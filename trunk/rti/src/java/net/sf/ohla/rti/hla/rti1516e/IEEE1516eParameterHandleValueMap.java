@@ -70,11 +70,10 @@ public class IEEE1516eParameterHandleValueMap
   @Override
   public boolean equals(Object rhs)
   {
-    return this == rhs || (rhs instanceof IEEE1516eParameterHandleValueMap &&
-                           equals((IEEE1516eParameterHandleValueMap) rhs));
+    return this == rhs || (rhs instanceof ParameterHandleValueMap && equals((ParameterHandleValueMap) rhs));
   }
 
-  private boolean equals(IEEE1516eParameterHandleValueMap rhs)
+  private boolean equals(ParameterHandleValueMap rhs)
   {
     boolean equals = size() == rhs.size();
     if (equals)
