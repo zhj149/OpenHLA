@@ -674,11 +674,11 @@
     </library>
     <library name="netty">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/../../thirdparty/netty/lib/netty-3.2.3.Final.jar!/" />
+        <root url="jar://$PROJECT_DIR$/../../thirdparty/netty/lib/netty-3.2.4.Final.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES>
-        <root url="jar://$PROJECT_DIR$/../../thirdparty/netty/lib/netty-3.2.3.Final-sources.jar!/" />
+        <root url="jar://$PROJECT_DIR$/../../thirdparty/netty/lib/netty-3.2.4.Final-sources.jar!/" />
       </SOURCES>
     </library>
     <library name="slf4j">
