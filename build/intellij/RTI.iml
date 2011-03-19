@@ -23,7 +23,7 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="cal10n" level="project" />
+    <orderEntry type="library" exported="" name="cal10n" level="project" />
   </component>
   <component name="copyright">
     <Base>

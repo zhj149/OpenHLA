@@ -40,21 +40,28 @@
   <property name="netty.root" location="${project.thirdparty}/netty"/>
   <property name="netty.lib" location="${netty.root}/lib"/>
   <path id="netty.classpath">
-    <fileset dir="${netty.lib}" includes="*.jar"/>
+    <fileset dir="${netty.lib}" includes="*.jar" excludes="*sources*"/>
   </path>
 
   <!-- SLF4J -->
   <property name="slf4j.root" location="${project.thirdparty}/slf4j"/>
   <property name="slf4j.lib" location="${slf4j.root}/lib"/>
   <path id="slf4j.classpath">
-    <fileset dir="${slf4j.lib}" includes="*.jar"/>
+    <fileset dir="${slf4j.lib}" includes="*.jar" excludes="*sources*"/>
   </path>
 
   <!-- Logback -->
   <property name="logback.root" location="${project.thirdparty}/logback"/>
   <property name="logback.lib" location="${logback.root}/lib"/>
   <path id="logback.classpath">
-    <fileset dir="${logback.lib}" includes="*.jar"/>
+    <fileset dir="${logback.lib}" includes="*.jar" excludes="*sources*"/>
+  </path>
+
+  <!-- CAL10N -->
+  <property name="cal10n.root" location="${project.thirdparty}/cal10n"/>
+  <property name="cal10n.lib" location="${cal10n.root}/lib"/>
+  <path id="cal10n.classpath">
+    <fileset dir="${cal10n.lib}" includes="*.jar" excludes="*sources*"/>
   </path>
 
   <!-- JavaCC -->
@@ -74,6 +81,7 @@
     <path refid="netty.classpath"/>
     <path refid="slf4j.classpath"/>
     <path refid="logback.classpath"/>
+    <path refid="cal10n.classpath"/>
   </path>
 
   <!-- The combined classpath. -->
@@ -461,8 +469,6 @@
       </classpath>
 
       <jvmarg value="-server"/>
-      <jvmarg value="-Dohla.rti.host=localhost"/>
-      <jvmarg value="-Dohla.rti.port=5000"/>
     </java>
   </target>
 

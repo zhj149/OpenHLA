@@ -73,7 +73,7 @@ public class IEEE1516eAttributeHandleValueMap
     return this == rhs || (rhs instanceof AttributeHandleValueMap && equals((AttributeHandleValueMap) rhs));
   }
 
-  private boolean equals(IEEE1516eAttributeHandleValueMap rhs)
+  private boolean equals(AttributeHandleValueMap rhs)
   {
     boolean equals = size() == rhs.size();
     if (equals)
