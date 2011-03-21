@@ -20,8 +20,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.Callable;
 
+import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
 
 import org.testng.annotations.AfterClass;
@@ -32,7 +33,6 @@ import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.CallbackModel;
 import hla.rti1516e.FederateHandle;
-import hla.rti1516e.NullFederateAmbassador;
 import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.RTIambassador;
@@ -110,25 +110,19 @@ public class AttributeDivestitureTestNG
     //
     federateAmbassadors.get(0).checkObjectInstanceHandle(testObjectInstanceHandle2);
     federateAmbassadors.get(1).checkObjectInstanceHandle(testObjectInstanceHandle);
+
+    setupComplete(federateAmbassadors);
   }
 
   @AfterClass
   public void teardown()
     throws Exception
   {
-    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
-    rtiAmbassadors.get(1).resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
-    rtiAmbassadors.get(2).resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
+    resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
 
-    // this is necessary to ensure the federates is actually resigned
-    //
-    LockSupport.parkUntil(System.currentTimeMillis() + 1000);
+    destroyFederationExecution(FEDERATION_NAME);
 
-    rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
-
-    rtiAmbassadors.get(0).disconnect();
-    rtiAmbassadors.get(1).disconnect();
-    rtiAmbassadors.get(2).disconnect();
+    disconnect();
   }
 
   @Test
@@ -194,56 +188,30 @@ public class AttributeDivestitureTestNG
   }
 
   private static class TestFederateAmbassador
-    extends NullFederateAmbassador
+    extends BaseFederateAmbassador
   {
-    private final RTIambassador rtiAmbassador;
-
     private final Map<ObjectInstanceHandle, Map<AttributeHandle, Object>> objectInstances =
       new HashMap<ObjectInstanceHandle, Map<AttributeHandle, Object>>();
 
     public TestFederateAmbassador(RTIambassador rtiAmbassador)
     {
-      this.rtiAmbassador = rtiAmbassador;
+      super(rtiAmbassador);
     }
 
-    public void checkObjectInstanceHandle(ObjectInstanceHandle objectInstanceHandle)
+    public void checkObjectInstanceHandle(final ObjectInstanceHandle objectInstanceHandle)
       throws Exception
     {
-      for (int i = 0; i < 5 && !objectInstances.containsKey(objectInstanceHandle); i++)
-      {
-        rtiAmbassador.evokeCallback(1.0);
-      }
+      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstances.containsKey(objectInstanceHandle); } });
+
       assert objectInstances.containsKey(objectInstanceHandle);
     }
 
-    public void checkAttributeIsOwnedByFederate(
-      ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle, FederateHandle federateHandle)
+    public void checkAttributeIsUnowned(
+      final ObjectInstanceHandle objectInstanceHandle, final AttributeHandle attributeHandle)
       throws Exception
     {
-      for (int i = 0; i < 5 && (!objectInstances.containsKey(objectInstanceHandle) || objectInstances.get(objectInstanceHandle).get(attributeHandle) == null); i++)
-      {
-        rtiAmbassador.evokeCallback(1.0);
-      }
-      assert federateHandle.equals(objectInstances.get(objectInstanceHandle).get(attributeHandle));
-    }
+      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstances.containsKey(objectInstanceHandle) || objectInstances.get(objectInstanceHandle).get(attributeHandle) == null; } });
 
-    public void checkAttributeIsOwnedByRTI(ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle)
-      throws Exception
-    {
-      for (int i = 0; i < 5 && (!objectInstances.containsKey(objectInstanceHandle) || objectInstances.get(objectInstanceHandle).get(attributeHandle) == null); i++)
-      {
-        rtiAmbassador.evokeCallback(1.0);
-      }
-      assert Boolean.TRUE.equals(objectInstances.get(objectInstanceHandle).get(attributeHandle));
-    }
-
-    public void checkAttributeIsUnowned(ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle)
-      throws Exception
-    {
-      for (int i = 0; i < 5 && (!objectInstances.containsKey(objectInstanceHandle) || objectInstances.get(objectInstanceHandle).get(attributeHandle) == null); i++)
-      {
-        rtiAmbassador.evokeCallback(1.0);
-      }
       assert Boolean.FALSE.equals(objectInstances.get(objectInstanceHandle).get(attributeHandle));
     }
 

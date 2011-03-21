@@ -27,8 +27,15 @@ import net.sf.ohla.rti.hla.rti1516.Integer64TimeIntervalFactory;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
+import hla.rti1516.FederateNotExecutionMember;
+import hla.rti1516.FederateOwnsAttributes;
+import hla.rti1516.FederatesCurrentlyJoined;
+import hla.rti1516.FederationExecutionDoesNotExist;
 import hla.rti1516.MobileFederateServices;
+import hla.rti1516.OwnershipAcquisitionPending;
 import hla.rti1516.RTIambassador;
+import hla.rti1516.RTIinternalError;
+import hla.rti1516.ResignAction;
 import hla.rti1516.jlc.RtiFactory;
 import hla.rti1516.jlc.RtiFactoryFactory;
 
@@ -77,5 +84,55 @@ public abstract class BaseTestNG
   public final void baseTeardown()
     throws Exception
   {
+  }
+
+  protected void setupComplete(List<? extends BaseFederateAmbassador> federateAmbassadors)
+    throws Exception
+  {
+    federateAmbassadors.get(0).setupComplete();
+
+    for (BaseFederateAmbassador federateAmbassador : federateAmbassadors)
+    {
+      federateAmbassador.waitForSetupCompleteAnnounced();
+    }
+
+    for (BaseFederateAmbassador federateAmbassador : federateAmbassadors)
+    {
+      federateAmbassador.waitForSetupComplete();
+    }
+  }
+
+  protected void resignFederationExecution(ResignAction resignAction)
+    throws FederateNotExecutionMember, FederateOwnsAttributes, OwnershipAcquisitionPending, RTIinternalError
+  {
+    for (RTIambassador rtiAmbassador : rtiAmbassadors)
+    {
+      rtiAmbassador.resignFederationExecution(resignAction);
+    }
+  }
+
+  protected void destroyFederationExecution(String federationExecutionName)
+    throws FederationExecutionDoesNotExist, RTIinternalError, InterruptedException
+  {
+    destroyFederationExecution(federationExecutionName, 10);
+  }
+
+  protected void destroyFederationExecution(String federationExecutionName, int attempts)
+    throws FederationExecutionDoesNotExist, RTIinternalError, InterruptedException
+  {
+    boolean done = false;
+    for(; !done && attempts > 0; attempts--)
+    {
+      try
+      {
+        rtiAmbassadors.get(0).destroyFederationExecution(federationExecutionName);
+
+        done = true;
+      }
+      catch (FederatesCurrentlyJoined fcj)
+      {
+        Thread.sleep(100);
+      }
+    }
   }
 }

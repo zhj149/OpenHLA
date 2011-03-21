@@ -21,8 +21,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.Callable;
 
+import net.sf.ohla.rti.testsuite.hla.rti1516.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti1516.BaseTestNG;
 import net.sf.ohla.rti.testsuite.hla.rti1516.object.TestObjectInstance;
 
@@ -50,13 +51,12 @@ import hla.rti1516.RegionHandle;
 import hla.rti1516.RegionHandleSet;
 import hla.rti1516.ResignAction;
 import hla.rti1516.TransportationType;
-import hla.rti1516.jlc.NullFederateAmbassador;
 
 @Test
 public class ObjectRegionTestNG
   extends BaseTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA Object Region Test Federation";
+  private static final String FEDERATION_NAME = "OHLA IEEE 1516 Object Region Test Federation";
 
   private final List<FederateHandle> federateHandles = new ArrayList<FederateHandle>(3);
   private final List<TestFederateAmbassador> federateAmbassadors = new ArrayList<TestFederateAmbassador>(3);
@@ -144,21 +144,17 @@ public class ObjectRegionTestNG
     objectAttributeValues.put(attributeHandle1, ATTRIBUTE1_VALUE.getBytes());
     objectAttributeValues.put(attributeHandle2, ATTRIBUTE2_VALUE.getBytes());
     objectAttributeValues.put(attributeHandle3, ATTRIBUTE3_VALUE.getBytes());
+
+    setupComplete(federateAmbassadors);
   }
 
   @AfterClass
   public void teardown()
     throws Exception
   {
-    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
-    rtiAmbassadors.get(1).resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
-    rtiAmbassadors.get(2).resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
+    resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
 
-    // this is necessary to ensure the federates is actually resigned
-    //
-    LockSupport.parkUntil(System.currentTimeMillis() + 1000);
-
-    rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
+    destroyFederationExecution(FEDERATION_NAME);
   }
 
   @Test
@@ -202,37 +198,31 @@ public class ObjectRegionTestNG
   }
 
   private static class TestFederateAmbassador
-    extends NullFederateAmbassador
+    extends BaseFederateAmbassador
   {
-    private final RTIambassador rtiAmbassador;
-
     private final Map<ObjectInstanceHandle, TestObjectInstance> objectInstances =
       new HashMap<ObjectInstanceHandle, TestObjectInstance>();
 
     public TestFederateAmbassador(RTIambassador rtiAmbassador)
     {
-      this.rtiAmbassador = rtiAmbassador;
+      super(rtiAmbassador);
     }
 
-    public void checkObjectInstanceHandle(ObjectInstanceHandle objectInstanceHandle)
+    public void checkObjectInstanceHandle(final ObjectInstanceHandle objectInstanceHandle)
       throws Exception
     {
-      for (int i = 0; i < 5 && !objectInstances.containsKey(objectInstanceHandle); i++)
-      {
-        rtiAmbassador.evokeCallback(1.0);
-      }
+      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstances.containsKey(objectInstanceHandle); } });
+
       assert objectInstances.containsKey(objectInstanceHandle);
     }
 
     public void checkAttributeValues(
-      ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues, byte[] tag,
+      final ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues, byte[] tag,
       boolean hasRegions)
       throws Exception
     {
-      for (int i = 0; i < 5 && objectInstances.get(objectInstanceHandle).getAttributeValues() == null; i++)
-      {
-        rtiAmbassador.evokeCallback(1.0);
-      }
+      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return objectInstances.get(objectInstanceHandle).getAttributeValues() == null; } });
+
       TestObjectInstance objectInstance = objectInstances.get(objectInstanceHandle);
       assert objectInstance.getAttributeValues() != null;
       assert objectInstance.getAttributeValues().equals(attributeValues);

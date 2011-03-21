@@ -364,9 +364,6 @@
       <xmlfileset dir="${testsuite.resources}" includes="ieee-1516e-testng.xml"/>
 
       <jvmarg value="-ea"/>
-
-      <sysproperty key="ohla.rti.host" value="localhost"/>
-      <sysproperty key="ohla.rti.port" value="5000"/>
     </testng>
   </target>
 
@@ -389,9 +386,6 @@
       <xmlfileset dir="${testsuite.resources}" includes="ieee-1516-testng.xml"/>
 
       <jvmarg value="-ea"/>
-
-      <sysproperty key="ohla.rti.host" value="localhost"/>
-      <sysproperty key="ohla.rti.port" value="5000"/>
     </testng>
   </target>
 
@@ -414,18 +408,6 @@
       <xmlfileset dir="${testsuite.resources}" includes="hla-1.3-testng.xml"/>
 
       <jvmarg value="-ea"/>
-
-      <sysproperty key="ohla.rti.host" value="localhost"/>
-      <sysproperty key="ohla.rti.port" value="5000"/>
-
-      <sysproperty key="ohla.federate.rti.logicalTimeFactory"
-                   value="net.sf.ohla.rti.hla.rti.Integer64TimeFactory"/>
-      <sysproperty key="ohla.federate.rti.logicalTimeIntervalFactory"
-                   value="net.sf.ohla.rti.hla.rti.Integer64TimeIntervalFactory"/>
-      <sysproperty key="ohla.federate.rti1516.logicalTimeFactory"
-                   value="net.sf.ohla.rti.hla.rti1516.Integer64TimeFactory"/>
-      <sysproperty key="ohla.federate.rti1516.logicalTimeIntervalFactory"
-                   value="net.sf.ohla.rti.hla.rti1516.Integer64TimeIntervalFactory"/>
     </testng>
   </target>
 
@@ -469,6 +451,23 @@
       </classpath>
 
       <jvmarg value="-server"/>
+    </java>
+  </target>
+
+  <target name="start-rti-debug" depends="jar-ohla" description="Starts the OHLA RTI.">
+    <java classname="net.sf.ohla.rti.RTI" fork="yes">
+      <classpath>
+        <path refid="javac.classpath"/>
+        <pathelement location="${output.lib}/${ieee-1516e.jar}"/>
+        <pathelement location="${output.lib}/${ieee-1516.jar}"/>
+        <pathelement location="${output.lib}/${hla-1.3.jar}"/>
+        <pathelement location="${output.lib}/${rti.jar}"/>
+        <pathelement location="${rti.resources}"/>
+      </classpath>
+
+      <jvmarg value="-server"/>
+      <jvmarg value="-Xdebug"/>
+      <jvmarg value="-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"/>
     </java>
   </target>
 

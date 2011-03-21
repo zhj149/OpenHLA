@@ -23,11 +23,21 @@ import java.util.List;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
 
 import hla.rti1516e.RTIambassador;
+import hla.rti1516e.ResignAction;
 import hla.rti1516e.RtiFactory;
 import hla.rti1516e.RtiFactoryFactory;
+import hla.rti1516e.exceptions.CallNotAllowedFromWithinCallback;
+import hla.rti1516e.exceptions.FederateIsExecutionMember;
+import hla.rti1516e.exceptions.FederateNotExecutionMember;
+import hla.rti1516e.exceptions.FederateOwnsAttributes;
+import hla.rti1516e.exceptions.FederatesCurrentlyJoined;
+import hla.rti1516e.exceptions.FederationExecutionDoesNotExist;
+import hla.rti1516e.exceptions.InvalidResignAction;
+import hla.rti1516e.exceptions.NotConnected;
+import hla.rti1516e.exceptions.OwnershipAcquisitionPending;
+import hla.rti1516e.exceptions.RTIinternalError;
 
 public abstract class BaseTestNG
   implements TestConstants
@@ -73,5 +83,65 @@ public abstract class BaseTestNG
   public final void baseTeardown()
     throws Exception
   {
+  }
+
+  protected void setupComplete(List<? extends BaseFederateAmbassador> federateAmbassadors)
+    throws Exception
+  {
+    federateAmbassadors.get(0).setupComplete();
+
+    for (BaseFederateAmbassador federateAmbassador : federateAmbassadors)
+    {
+      federateAmbassador.waitForSetupCompleteAnnounced();
+    }
+
+    for (BaseFederateAmbassador federateAmbassador : federateAmbassadors)
+    {
+      federateAmbassador.waitForSetupComplete();
+    }
+  }
+
+  protected void disconnect()
+    throws FederateIsExecutionMember, RTIinternalError, CallNotAllowedFromWithinCallback
+  {
+    for (RTIambassador rtiAmbassador : rtiAmbassadors)
+    {
+      rtiAmbassador.disconnect();
+    }
+  }
+
+  protected void resignFederationExecution(ResignAction resignAction)
+    throws FederateNotExecutionMember, FederateOwnsAttributes, OwnershipAcquisitionPending, NotConnected,
+           RTIinternalError, CallNotAllowedFromWithinCallback, InvalidResignAction
+  {
+    for (RTIambassador rtiAmbassador : rtiAmbassadors)
+    {
+      rtiAmbassador.resignFederationExecution(resignAction);
+    }
+  }
+
+  protected void destroyFederationExecution(String federationExecutionName)
+    throws FederationExecutionDoesNotExist, NotConnected, RTIinternalError, InterruptedException
+  {
+    destroyFederationExecution(federationExecutionName, 10);
+  }
+
+  protected void destroyFederationExecution(String federationExecutionName, int attempts)
+    throws FederationExecutionDoesNotExist, NotConnected, RTIinternalError, InterruptedException
+  {
+    boolean done = false;
+    for(; !done && attempts > 0; attempts--)
+    {
+      try
+      {
+        rtiAmbassadors.get(0).destroyFederationExecution(federationExecutionName);
+
+        done = true;
+      }
+      catch (FederatesCurrentlyJoined fcj)
+      {
+        Thread.sleep(100);
+      }
+    }
   }
 }

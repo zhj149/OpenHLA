@@ -19,8 +19,9 @@ package net.sf.ohla.rti.testsuite.hla.rti1516.datadistribution;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.Callable;
 
+import net.sf.ohla.rti.testsuite.hla.rti1516.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti1516.BaseTestNG;
 
 import org.testng.annotations.AfterClass;
@@ -42,7 +43,6 @@ import hla.rti1516.RegionHandle;
 import hla.rti1516.RegionHandleSet;
 import hla.rti1516.ResignAction;
 import hla.rti1516.TransportationType;
-import hla.rti1516.jlc.NullFederateAmbassador;
 
 @Test
 public class InteractionRegionTestNG
@@ -130,21 +130,17 @@ public class InteractionRegionTestNG
     RegionHandleSet regionHandles = rtiAmbassadors.get(1).getRegionHandleSetFactory().create();
     regionHandles.add(regionHandle2);
     rtiAmbassadors.get(1).subscribeInteractionClassWithRegions(testInteractionClassHandle, regionHandles);
+
+    setupComplete(federateAmbassadors);
   }
 
   @AfterClass
   public void teardown()
     throws Exception
   {
-    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
-    rtiAmbassadors.get(1).resignFederationExecution(ResignAction.NO_ACTION);
-    rtiAmbassadors.get(2).resignFederationExecution(ResignAction.NO_ACTION);
+    resignFederationExecution(ResignAction.NO_ACTION);
 
-    // this is necessary to ensure the federates is actually resigned
-    //
-    LockSupport.parkUntil(System.currentTimeMillis() + 1000);
-
-    rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
+    destroyFederationExecution(FEDERATION_NAME);
   }
 
   @Test
@@ -181,10 +177,8 @@ public class InteractionRegionTestNG
   }
 
   private static class TestFederateAmbassador
-    extends NullFederateAmbassador
+    extends BaseFederateAmbassador
   {
-    private final RTIambassador rtiAmbassador;
-
     private InteractionClassHandle interactionClassHandle;
     private ParameterHandleValueMap parameterValues;
     private byte[] tag;
@@ -192,7 +186,7 @@ public class InteractionRegionTestNG
 
     public TestFederateAmbassador(RTIambassador rtiAmbassador)
     {
-      this.rtiAmbassador = rtiAmbassador;
+      super(rtiAmbassador);
     }
 
     public void checkParameterValues(
@@ -200,10 +194,9 @@ public class InteractionRegionTestNG
       boolean hasRegions)
       throws Exception
     {
-      for (int i = 0; i < 5 && this.interactionClassHandle == null; i++)
-      {
-        rtiAmbassador.evokeCallback(1.0);
-      }
+      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return TestFederateAmbassador.this.interactionClassHandle == null; } });
+
+      assert this.interactionClassHandle != null;
       assert interactionClassHandle.equals(this.interactionClassHandle);
       assert parameterValues.equals(this.parameterValues);
       assert Arrays.equals(tag, this.tag);

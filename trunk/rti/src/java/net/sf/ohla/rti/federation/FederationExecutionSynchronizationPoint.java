@@ -26,15 +26,18 @@ public class FederationExecutionSynchronizationPoint
   private final String label;
   private final byte[] tag;
   private final FederateHandleSet federateHandles;
+  private final boolean exclusive;
 
   private final FederateHandleSet awaitingSynchronization = IEEE1516eFederateHandleSetFactory.INSTANCE.create();
   private final FederateHandleSet failedToSynchronize = IEEE1516eFederateHandleSetFactory.INSTANCE.create();
 
-  public FederationExecutionSynchronizationPoint(String label, byte[] tag, FederateHandleSet federateHandles)
+  public FederationExecutionSynchronizationPoint(
+    String label, byte[] tag, FederateHandleSet federateHandles, boolean exclusive)
   {
     this.label = label;
     this.tag = tag;
     this.federateHandles = federateHandles;
+    this.exclusive = exclusive;
 
     awaitingSynchronization.addAll(federateHandles);
   }
@@ -54,6 +57,11 @@ public class FederationExecutionSynchronizationPoint
     return federateHandles;
   }
 
+  public boolean isExclusive()
+  {
+    return exclusive;
+  }
+
   public FederateHandleSet getAwaitingSynchronization()
   {
     return awaitingSynchronization;
@@ -62,6 +70,14 @@ public class FederationExecutionSynchronizationPoint
   public FederateHandleSet getFailedToSynchronize()
   {
     return failedToSynchronize;
+  }
+
+  public void add(FederateHandle federateHandle)
+  {
+    assert !exclusive;
+
+    federateHandles.add(federateHandle);
+    awaitingSynchronization.add(federateHandle);
   }
 
   public boolean synchronizationPointAchieved(FederateHandle federateHandle, boolean success)

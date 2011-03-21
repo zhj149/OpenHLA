@@ -19,8 +19,9 @@ package net.sf.ohla.rti.testsuite.hla.rti1516e.object;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.Callable;
 
+import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
 
 import org.testng.annotations.AfterClass;
@@ -30,7 +31,6 @@ import org.testng.annotations.Test;
 import hla.rti1516e.CallbackModel;
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.InteractionClassHandle;
-import hla.rti1516e.NullFederateAmbassador;
 import hla.rti1516e.OrderType;
 import hla.rti1516e.ParameterHandle;
 import hla.rti1516e.ParameterHandleValueMap;
@@ -108,25 +108,19 @@ public class InteractionTestNG
 
     rtiAmbassadors.get(1).subscribeInteractionClass(testInteractionClassHandle);
     rtiAmbassadors.get(2).subscribeInteractionClass(testInteractionClassHandle2);
+
+    setupComplete(federateAmbassadors);
   }
 
   @AfterClass
   public void teardown()
     throws Exception
   {
-    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
-    rtiAmbassadors.get(1).resignFederationExecution(ResignAction.NO_ACTION);
-    rtiAmbassadors.get(2).resignFederationExecution(ResignAction.NO_ACTION);
+    resignFederationExecution(ResignAction.NO_ACTION);
 
-    // this is necessary to ensure the federates is actually resigned
-    //
-    LockSupport.parkUntil(System.currentTimeMillis() + 1000);
+    destroyFederationExecution(FEDERATION_NAME);
 
-    rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
-
-    rtiAmbassadors.get(0).disconnect();
-    rtiAmbassadors.get(1).disconnect();
-    rtiAmbassadors.get(2).disconnect();
+    disconnect();
   }
 
   @Test
@@ -163,10 +157,8 @@ public class InteractionTestNG
   }
 
   private static class TestFederateAmbassador
-    extends NullFederateAmbassador
+    extends BaseFederateAmbassador
   {
-    private final RTIambassador rtiAmbassador;
-
     private InteractionClassHandle interactionClassHandle;
     private ParameterHandleValueMap parameterValues;
     private byte[] tag;
@@ -174,7 +166,7 @@ public class InteractionTestNG
 
     public TestFederateAmbassador(RTIambassador rtiAmbassador)
     {
-      this.rtiAmbassador = rtiAmbassador;
+      super(rtiAmbassador);
     }
 
     public void checkParameterValues(
@@ -182,10 +174,9 @@ public class InteractionTestNG
       FederateHandle federateHandle)
       throws Exception
     {
-      for (int i = 0; i < 5 && this.interactionClassHandle == null; i++)
-      {
-        rtiAmbassador.evokeCallback(1.0);
-      }
+      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return TestFederateAmbassador.this.interactionClassHandle == null; } });
+
+      assert this.interactionClassHandle != null;
       assert interactionClassHandle.equals(this.interactionClassHandle);
       assert parameterValues.equals(this.parameterValues);
       assert Arrays.equals(tag, this.tag);
