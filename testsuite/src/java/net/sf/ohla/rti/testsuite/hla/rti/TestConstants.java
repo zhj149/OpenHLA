@@ -18,10 +18,6 @@ package net.sf.ohla.rti.testsuite.hla.rti;
 
 public interface TestConstants
 {
-  static final String FEDERATION_NAME = "OHLA Test Federation";
-  static final String NONEXISTANT_FEDERATION_NAME =
-    FEDERATION_NAME + " - Non-Existant Federation";
-
   static final String FED = "TestObjectModel.fed";
   static final String BAD_FED = FED + ".bad";
 

@@ -23,8 +23,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.locks.LockSupport;
 
+import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
 import net.sf.ohla.rti.testsuite.hla.rti1516e.object.TestObjectInstance;
 
@@ -145,25 +147,19 @@ public class ObjectRegionTestNG
     objectAttributeValues.put(attributeHandle1, ATTRIBUTE1_VALUE.getBytes());
     objectAttributeValues.put(attributeHandle2, ATTRIBUTE2_VALUE.getBytes());
     objectAttributeValues.put(attributeHandle3, ATTRIBUTE3_VALUE.getBytes());
+
+    setupComplete(federateAmbassadors);
   }
 
   @AfterClass
   public void teardown()
     throws Exception
   {
-    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
-    rtiAmbassadors.get(1).resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
-    rtiAmbassadors.get(2).resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
+    resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
 
-    // this is necessary to ensure the federates is actually resigned
-    //
-    LockSupport.parkUntil(System.currentTimeMillis() + 1000);
+    destroyFederationExecution(FEDERATION_NAME);
 
-    rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
-
-    rtiAmbassadors.get(0).disconnect();
-    rtiAmbassadors.get(1).disconnect();
-    rtiAmbassadors.get(2).disconnect();
+    disconnect();
   }
 
   @Test
@@ -209,10 +205,8 @@ public class ObjectRegionTestNG
   }
 
   private static class TestFederateAmbassador
-    extends NullFederateAmbassador
+    extends BaseFederateAmbassador
   {
-    private final RTIambassador rtiAmbassador;
-
     private final Set<String> reservedObjectInstanceNames = new HashSet<String>();
 
     private final Map<ObjectInstanceHandle, TestObjectInstance> objectInstances =
@@ -220,44 +214,30 @@ public class ObjectRegionTestNG
 
     public TestFederateAmbassador(RTIambassador rtiAmbassador)
     {
-      this.rtiAmbassador = rtiAmbassador;
+      super(rtiAmbassador);
     }
 
-    public void checkObjectInstanceNameReserved(String objectInstanceName)
+    public void checkObjectInstanceHandle(final ObjectInstanceHandle objectInstanceHandle)
       throws Exception
     {
-      for (int i = 0; i < 5 && !reservedObjectInstanceNames.contains(objectInstanceName); i++)
-      {
-        rtiAmbassador.evokeCallback(1.0);
-      }
-      assert reservedObjectInstanceNames.contains(objectInstanceName);
-    }
+      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstances.containsKey(objectInstanceHandle); } });
 
-    public void checkObjectInstanceHandle(ObjectInstanceHandle objectInstanceHandle)
-      throws Exception
-    {
-      for (int i = 0; i < 5 && !objectInstances.containsKey(objectInstanceHandle); i++)
-      {
-        rtiAmbassador.evokeCallback(1.0);
-      }
       assert objectInstances.containsKey(objectInstanceHandle);
     }
 
     public void checkAttributeValues(
-      ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues, FederateHandle federateHandle,
-      byte[] tag, boolean hasRegions)
+      final ObjectInstanceHandle objectInstanceHandle, final AttributeHandleValueMap attributeValues,
+      FederateHandle federateHandle, byte[] tag, boolean hasRegions)
       throws Exception
     {
-      for (int i = 0; i < 5 && objectInstances.get(objectInstanceHandle).getAttributeValues() == null; i++)
-      {
-        rtiAmbassador.evokeCallback(1.0);
-      }
+      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return objectInstances.get(objectInstanceHandle).getAttributeValues() == null; } });
+
       TestObjectInstance objectInstance = objectInstances.get(objectInstanceHandle);
       assert objectInstance.getAttributeValues() != null;
       assert objectInstance.getAttributeValues().equals(attributeValues);
       assert Arrays.equals(tag, objectInstance.getTag());
       assert objectInstance.getUpdatingFederateHandle().equals(federateHandle);
-      assert (objectInstance.getReflectInfo().hasSentRegions() && hasRegions) || !hasRegions;
+      assert !hasRegions || objectInstance.getReflectInfo().hasSentRegions();
     }
 
     @Override

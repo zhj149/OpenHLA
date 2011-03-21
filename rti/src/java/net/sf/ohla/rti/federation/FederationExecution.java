@@ -323,6 +323,19 @@ public class FederationExecution
           context.getChannel().write(new JoinFederationExecutionResponse(
             joinFederationExecution.getId(), federateHandle, fdd, timeManager.getLogicalTimeFactory().getName()));
           context.getChannel().write(new GALTAdvanced(timeManager.getGALT()));
+
+          for (FederationExecutionSynchronizationPoint synchronizationPoint : synchronizationPoints.values())
+          {
+            if (!synchronizationPoint.isExclusive() && synchronizationPoint.getAwaitingSynchronization().size() > 0)
+            {
+              // add the new Federate to any non-exclusive synchronization points that are not completed
+
+              synchronizationPoint.add(federateHandle);
+
+              federateProxy.announceSynchronizationPoint(
+                new AnnounceSynchronizationPoint(synchronizationPoint.getLabel(), synchronizationPoint.getTag()));
+            }
+          }
         }
         catch (InconsistentFDD iFDD)
         {
@@ -334,10 +347,6 @@ public class FederationExecution
             joinFederationExecution.getId(), JoinFederationExecutionResponse.Response.INCONSISTENT_FDD));
         }
       }
-    }
-    catch (Throwable t)
-    {
-      t.printStackTrace();
     }
     finally
     {
@@ -387,17 +396,23 @@ public class FederationExecution
       }
       else
       {
-        boolean federateHandlesValid;
-        if (federateHandlesValid = (federateHandles == null || federateHandles.isEmpty()))
+        boolean exclusive;
+        if (federateHandles == null || federateHandles.isEmpty())
         {
           // assign the currently joined federates
           //
           federateHandles = new IEEE1516eFederateHandleSet(federates.keySet());
+
+          exclusive = false;
+        }
+        else
+        {
+          exclusive = true;
         }
 
         // verify all the federates in the set are joined
         //
-        if (!federateHandlesValid && !federates.keySet().containsAll(federateHandles))
+        if (exclusive && !federates.keySet().containsAll(federateHandles))
         {
           log.debug(LogMessages.REGISTER_FEDERATION_SYNCHRONIZATION_POINT_SYNCHRONIZATION_SET_MEMBER_NOT_JOINED,
                     label, federateHandles, federates.keySet());
@@ -407,7 +422,8 @@ public class FederationExecution
         }
         else
         {
-          synchronizationPoints.put(label, new FederationExecutionSynchronizationPoint(label, tag, federateHandles));
+          synchronizationPoints.put(label, new FederationExecutionSynchronizationPoint(
+            label, tag, federateHandles, exclusive));
 
           federateProxy.getFederateChannel().write(new SynchronizationPointRegistrationSucceeded(label));
 
@@ -1683,26 +1699,5 @@ public class FederationExecution
   protected FederateHandle nextFederateHandle()
   {
     return new IEEE1516eFederateHandle(federateCount.incrementAndGet());
-  }
-
-  private class FederationExecutionHandler
-    extends SimpleChannelUpstreamHandler
-  {
-    @Override
-    public void messageReceived(ChannelHandlerContext context, MessageEvent event)
-      throws Exception
-    {
-      assert event.getMessage() instanceof Message;
-
-      Message message = (Message) event.getMessage();
-
-      switch (message.getType())
-      {
-        case UPDATE_ATTRIBUTE_VALUES:
-          break;
-        default:
-          context.sendUpstream(event);
-      }
-    }
   }
 }

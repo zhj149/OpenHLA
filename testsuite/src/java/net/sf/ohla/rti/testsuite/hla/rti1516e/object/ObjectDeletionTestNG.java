@@ -21,8 +21,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.Callable;
 
+import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
 
 import org.testng.annotations.AfterClass;
@@ -33,7 +34,6 @@ import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.CallbackModel;
 import hla.rti1516e.FederateHandle;
-import hla.rti1516e.NullFederateAmbassador;
 import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.OrderType;
@@ -72,7 +72,7 @@ public class ObjectDeletionTestNG
     rtiAmbassadors.get(0).connect(federateAmbassadors.get(0), CallbackModel.HLA_EVOKED);
     rtiAmbassadors.get(1).connect(federateAmbassadors.get(1), CallbackModel.HLA_EVOKED);
     rtiAmbassadors.get(2).connect(federateAmbassadors.get(2), CallbackModel.HLA_EVOKED);
-    rtiAmbassadors.get(3).connect(federateAmbassadors.get(2), CallbackModel.HLA_EVOKED);
+    rtiAmbassadors.get(3).connect(federateAmbassadors.get(3), CallbackModel.HLA_EVOKED);
 
     rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
 
@@ -116,26 +116,23 @@ public class ObjectDeletionTestNG
     federateAmbassadors.get(1).checkObjectInstanceHandle(testObjectInstanceHandle);
     federateAmbassadors.get(1).checkObjectInstanceHandle(testObjectInstanceHandle2);
     federateAmbassadors.get(2).checkObjectInstanceHandle(testObjectInstanceHandle2);
+
+    setupComplete(federateAmbassadors);
   }
 
   @AfterClass
   public void teardown()
     throws Exception
   {
-    rtiAmbassadors.get(1).resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
-    rtiAmbassadors.get(2).resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
-    rtiAmbassadors.get(3).resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
+    // the first RTI has been resigned already
 
-    // this is necessary to ensure the federates is actually resigned
-    //
-    LockSupport.parkUntil(System.currentTimeMillis() + 1000);
+    rtiAmbassadors.remove(0).disconnect();
 
-    rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
+    resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
 
-    rtiAmbassadors.get(0).disconnect();
-    rtiAmbassadors.get(1).disconnect();
-    rtiAmbassadors.get(2).disconnect();
-    rtiAmbassadors.get(3).disconnect();
+    destroyFederationExecution(FEDERATION_NAME);
+
+    disconnect();
   }
 
   @Test
@@ -179,38 +176,34 @@ public class ObjectDeletionTestNG
   }
 
   private static class TestFederateAmbassador
-    extends NullFederateAmbassador
+    extends BaseFederateAmbassador
   {
-    private final RTIambassador rtiAmbassador;
-
     private final Map<ObjectInstanceHandle, TestObjectInstance> objectInstances =
       new HashMap<ObjectInstanceHandle, TestObjectInstance>();
 
     public TestFederateAmbassador(RTIambassador rtiAmbassador)
     {
-      this.rtiAmbassador = rtiAmbassador;
+      super(rtiAmbassador);
     }
 
-    public void checkObjectInstanceHandle(ObjectInstanceHandle objectInstanceHandle)
+    public void checkObjectInstanceHandle(final ObjectInstanceHandle objectInstanceHandle)
       throws Exception
     {
-      for (int i = 0; i < 5 && !objectInstances.containsKey(objectInstanceHandle); i++)
-      {
-        rtiAmbassador.evokeCallback(1.0);
-      }
+      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstances.containsKey(objectInstanceHandle); } });
+
       assert objectInstances.containsKey(objectInstanceHandle);
     }
 
-    public void checkRemoved(ObjectInstanceHandle objectInstanceHandle, byte[] tag, FederateHandle federateHandle)
+    public void checkRemoved(final ObjectInstanceHandle objectInstanceHandle, byte[] tag, FederateHandle federateHandle)
       throws Exception
     {
-      for (int i = 0; i < 5 && !objectInstances.get(objectInstanceHandle).isRemoved(); i++)
-      {
-        rtiAmbassador.evokeCallback(1.0);
-      }
+      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstances.get(objectInstanceHandle).isRemoved(); } });
+
       TestObjectInstance objectInstance = objectInstances.get(objectInstanceHandle);
-      assert objectInstance.isRemoved() && Arrays.equals(tag, objectInstance.getTag()) &&
-             objectInstance.getDeletingFederateHandle().equals(federateHandle);
+      assert objectInstance != null;
+      assert objectInstance.isRemoved();
+      assert Arrays.equals(tag, objectInstance.getTag());
+      assert objectInstance.getDeletingFederateHandle().equals(federateHandle);
     }
 
     @Override

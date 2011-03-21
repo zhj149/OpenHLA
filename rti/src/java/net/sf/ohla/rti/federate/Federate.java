@@ -338,7 +338,7 @@ public class Federate
         //
         this.federateName = federateName == null ? defaultFederateName(federateHandle) : federateName;
 
-        marker = MarkerFactory.getMarker(federationExecutionName + "." + federateName);
+        marker = MarkerFactory.getMarker(federationExecutionName + "." + this.federateName);
         log = I18nLogger.getLogger(marker, getClass());
 
         fdd = response.getFDD();

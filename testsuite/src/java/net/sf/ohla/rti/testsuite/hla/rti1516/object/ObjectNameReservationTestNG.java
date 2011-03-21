@@ -20,8 +20,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.Callable;
 
+import net.sf.ohla.rti.testsuite.hla.rti1516.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti1516.BaseTestNG;
 
 import org.testng.annotations.AfterClass;
@@ -32,7 +33,6 @@ import hla.rti1516.FederateInternalError;
 import hla.rti1516.IllegalName;
 import hla.rti1516.RTIambassador;
 import hla.rti1516.ResignAction;
-import hla.rti1516.jlc.NullFederateAmbassador;
 
 @Test
 public class ObjectNameReservationTestNG
@@ -67,21 +67,17 @@ public class ObjectNameReservationTestNG
       FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(1), mobileFederateServices);
     rtiAmbassadors.get(2).joinFederationExecution(
       FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(2), mobileFederateServices);
+
+    setupComplete(federateAmbassadors);
   }
 
   @AfterClass
   public void teardown()
     throws Exception
   {
-    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
-    rtiAmbassadors.get(1).resignFederationExecution(ResignAction.NO_ACTION);
-    rtiAmbassadors.get(2).resignFederationExecution(ResignAction.NO_ACTION);
+    resignFederationExecution(ResignAction.NO_ACTION);
 
-    // this is necessary to ensure the federates is actually resigned
-    //
-    LockSupport.parkUntil(System.currentTimeMillis() + 1000);
-
-    rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
+    destroyFederationExecution(FEDERATION_NAME);
   }
 
   @Test(expectedExceptions = {IllegalName.class})
@@ -110,35 +106,29 @@ public class ObjectNameReservationTestNG
   }
 
   protected static class TestFederateAmbassador
-    extends NullFederateAmbassador
+    extends BaseFederateAmbassador
   {
-    private final RTIambassador rtiAmbassador;
-
     private final Set<String> reservedObjectInstanceNames = new HashSet<String>();
     private final Set<String> notReservedObjectInstanceNames = new HashSet<String>();
 
     public TestFederateAmbassador(RTIambassador rtiAmbassador)
     {
-      this.rtiAmbassador = rtiAmbassador;
+      super(rtiAmbassador);
     }
 
-    public void checkObjectInstanceNameReserved(String objectInstanceName)
+    public void checkObjectInstanceNameReserved(final String objectInstanceName)
       throws Exception
     {
-      for (int i = 0; i < 5 && !reservedObjectInstanceNames.contains(objectInstanceName); i++)
-      {
-        rtiAmbassador.evokeCallback(1.0);
-      }
+      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !reservedObjectInstanceNames.contains(objectInstanceName); } });
+
       assert reservedObjectInstanceNames.contains(objectInstanceName);
     }
 
-    public void checkObjectInstanceNameNotReserved(String objectInstanceName)
+    public void checkObjectInstanceNameNotReserved(final String objectInstanceName)
       throws Exception
     {
-      for (int i = 0; i < 5 && !notReservedObjectInstanceNames.contains(objectInstanceName); i++)
-      {
-        rtiAmbassador.evokeCallback(0.1);
-      }
+      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !notReservedObjectInstanceNames.contains(objectInstanceName); } });
+
       assert notReservedObjectInstanceNames.contains(objectInstanceName);
     }
 

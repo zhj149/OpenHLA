@@ -22,8 +22,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.Callable;
 
+import net.sf.ohla.rti.testsuite.hla.rti1516.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti1516.BaseTestNG;
 
 import org.testng.annotations.AfterClass;
@@ -32,7 +33,6 @@ import org.testng.annotations.Test;
 
 import hla.rti1516.AttributeHandle;
 import hla.rti1516.AttributeHandleSet;
-import hla.rti1516.FederateHandle;
 import hla.rti1516.FederateInternalError;
 import hla.rti1516.ObjectClassHandle;
 import hla.rti1516.ObjectClassNotDefined;
@@ -42,7 +42,6 @@ import hla.rti1516.ObjectInstanceNameInUse;
 import hla.rti1516.ObjectInstanceNameNotReserved;
 import hla.rti1516.RTIambassador;
 import hla.rti1516.ResignAction;
-import hla.rti1516.jlc.NullFederateAmbassador;
 
 @Test
 public class ObjectRegistrationTestNG
@@ -118,23 +117,17 @@ public class ObjectRegistrationTestNG
     rtiAmbassadors.get(1).subscribeObjectClassAttributes(testObjectClassHandle2, testObjectAttributeHandles2);
     rtiAmbassadors.get(2).subscribeObjectClassAttributes(testObjectClassHandle, testObjectAttributeHandles);
     rtiAmbassadors.get(2).subscribeObjectClassAttributes(testObjectClassHandle2, testObjectAttributeHandles2);
+
+    setupComplete(federateAmbassadors);
   }
 
   @AfterClass
   public void teardown()
     throws Exception
   {
-    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
-    rtiAmbassadors.get(1).resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
-    rtiAmbassadors.get(2).resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
-    rtiAmbassadors.get(3).resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
-    rtiAmbassadors.get(4).resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
+    resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
 
-    // this is necessary to ensure the federates is actually resigned
-    //
-    LockSupport.parkUntil(System.currentTimeMillis() + 1000);
-
-    rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
+    destroyFederationExecution(FEDERATION_NAME);
   }
 
   @Test
@@ -280,10 +273,8 @@ public class ObjectRegistrationTestNG
   }
 
   private static class TestFederateAmbassador
-    extends NullFederateAmbassador
+    extends BaseFederateAmbassador
   {
-    private final RTIambassador rtiAmbassador;
-
     private final Set<String> reservedObjectInstanceNames = new HashSet<String>();
 
     private final Map<ObjectInstanceHandle, TestObjectInstance> objectInstances =
@@ -291,26 +282,22 @@ public class ObjectRegistrationTestNG
 
     public TestFederateAmbassador(RTIambassador rtiAmbassador)
     {
-      this.rtiAmbassador = rtiAmbassador;
+      super(rtiAmbassador);
     }
 
-    public void checkObjectInstanceNameReserved(String objectInstanceName)
+    public void checkObjectInstanceNameReserved(final String objectInstanceName)
       throws Exception
     {
-      for (int i = 0; i < 5 && !reservedObjectInstanceNames.contains(objectInstanceName); i++)
-      {
-        rtiAmbassador.evokeCallback(1.0);
-      }
+      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !reservedObjectInstanceNames.contains(objectInstanceName); } });
+
       assert reservedObjectInstanceNames.contains(objectInstanceName);
     }
 
-    public void checkObjectInstanceHandle(ObjectInstanceHandle objectInstanceHandle)
+    public void checkObjectInstanceHandle(final ObjectInstanceHandle objectInstanceHandle)
       throws Exception
     {
-      for (int i = 0; i < 5 && !objectInstances.containsKey(objectInstanceHandle); i++)
-      {
-        rtiAmbassador.evokeCallback(1.0);
-      }
+      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstances.containsKey(objectInstanceHandle); } });
+
       assert objectInstances.containsKey(objectInstanceHandle);
     }
 
