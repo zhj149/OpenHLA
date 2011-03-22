@@ -30,47 +30,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" readonly="true" id="c306879c-2744-4d82-a20f-7284eb5ea0e6" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/BaseFederateAmbassador.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/BaseFederateAmbassador.java" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.5\testsuite\src\java\net\sf\ohla\rti\testsuite\hla\rti1516\DataDistributionManagementTestNG.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.5\testsuite\src\java\net\sf\ohla\rti\testsuite\hla\rti1516\ObjectManagementTestNG.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.5\testsuite\src\java\net\sf\ohla\rti\testsuite\hla\rti1516\OwnershipManagementTestNG.java" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../build.xml" afterPath="$PROJECT_DIR$/../build.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/OHLA.iws" afterPath="$PROJECT_DIR$/OHLA.iws" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/Federate.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/Federate.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecution.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecution.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionSynchronizationPoint.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionSynchronizationPoint.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/BaseTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/BaseTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/datadistribution/InteractionRegionTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/datadistribution/InteractionRegionTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/datadistribution/ObjectRegionTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/datadistribution/ObjectRegionTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/datadistribution/RegionSupportTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/datadistribution/RegionSupportTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/federation/SynchronizationTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/federation/SynchronizationTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/object/InteractionTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/object/InteractionTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/object/ObjectDeletionTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/object/ObjectDeletionTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/object/ObjectNameReservationTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/object/ObjectNameReservationTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/object/ObjectRegistrationTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/object/ObjectRegistrationTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/object/ObjectUpdateTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/object/ObjectUpdateTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/ownership/AttributeAcquisitionTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/ownership/AttributeAcquisitionTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/ownership/AttributeDivestitureTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/ownership/AttributeDivestitureTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/ownership/AttributeOwnershipTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/ownership/AttributeOwnershipTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/ownership/IntrusiveAttributeAcquisitionTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/ownership/IntrusiveAttributeAcquisitionTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/ownership/NegotiatedAttributeDivestitureTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/ownership/NegotiatedAttributeDivestitureTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/BaseTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/BaseTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/datadistribution/InteractionRegionTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/datadistribution/InteractionRegionTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/datadistribution/ObjectRegionTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/datadistribution/ObjectRegionTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/datadistribution/RegionSupportTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/datadistribution/RegionSupportTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/federation/SynchronizationTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/federation/SynchronizationTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/object/InteractionTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/object/InteractionTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/object/ObjectDeletionTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/object/ObjectDeletionTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/object/ObjectNameReservationTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/object/ObjectNameReservationTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/object/ObjectRegistrationTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/object/ObjectRegistrationTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/object/ObjectUpdateTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/object/ObjectUpdateTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/ownership/AttributeAcquisitionTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/ownership/AttributeAcquisitionTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/ownership/AttributeDivestitureTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/ownership/AttributeDivestitureTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/ownership/AttributeOwnershipTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/ownership/AttributeOwnershipTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/ownership/IntrusiveAttributeAcquisitionTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/ownership/IntrusiveAttributeAcquisitionTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/ownership/NegotiatedAttributeDivestitureTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/ownership/NegotiatedAttributeDivestitureTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/TestConstants.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/TestConstants.java" />
     </list>
     <list id="b279f3ba-c417-49c1-bcc1-a24f5fc97d41" name="Failed commit: Default" comment="- removed log4j" />
     <list id="261d7dd6-cad7-41bb-912f-d59a03f7b57d" name="Failed commit: Default (2)" comment="- refactoring" />
@@ -157,8 +118,8 @@
       <property name="field_breakpoints_groupByClasses" value="true" />
       <property name="method_breakpoints_groupByClasses" value="true" />
       <property name="exception_breakpoints_viewId" value="TABLE" />
-      <property name="exception_breakpoints_groupByClasses" value="true" />
       <property name="field_breakpoints_viewId" value="TABLE" />
+      <property name="exception_breakpoints_groupByClasses" value="true" />
       <property name="method_breakpoints_groupByMethods" value="false" />
     </ui_properties>
   </component>
@@ -190,39 +151,10 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="BaseFederateAmbassador.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/BaseFederateAmbassador.java">
+      <file leaf-file-name="IntrusiveAttributeAcquisitionTestNG.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/ownership/IntrusiveAttributeAcquisitionTestNG.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="70" column="0" selection-start="2313" selection-end="2313" vertical-scroll-proportion="0.0">
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="AttributeAcquisitionTestNG.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/ownership/AttributeAcquisitionTestNG.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="45" column="13" selection-start="1525" selection-end="1525" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="AttributeDivestitureTestNG.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/ownership/AttributeDivestitureTestNG.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="44" column="13" selection-start="1496" selection-end="1496" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="AttributeOwnershipTestNG.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/ownership/AttributeOwnershipTestNG.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="43" column="13" selection-start="1458" selection-end="1458" vertical-scroll-proportion="0.0">
+            <state line="63" column="14" selection-start="2204" selection-end="2204" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -231,52 +163,79 @@
       <file leaf-file-name="IntrusiveAttributeAcquisitionTestNG.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/ownership/IntrusiveAttributeAcquisitionTestNG.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="42" column="13" selection-start="1400" selection-end="1400" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="NegotiatedAttributeDivestitureTestNG.java" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/ownership/NegotiatedAttributeDivestitureTestNG.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="78" column="54" selection-start="2874" selection-end="2874" vertical-scroll-proportion="0.41140217">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="AttributeDivestitureTestNG.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/ownership/AttributeDivestitureTestNG.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="45" column="13" selection-start="1589" selection-end="1589" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="AttributeOwnershipTestNG.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/ownership/AttributeOwnershipTestNG.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="74" column="59" selection-start="2713" selection-end="2713" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="IntrusiveAttributeAcquisitionTestNG.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/ownership/IntrusiveAttributeAcquisitionTestNG.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="43" column="13" selection-start="1457" selection-end="1457" vertical-scroll-proportion="0.0">
+            <state line="276" column="0" selection-start="12770" selection-end="12770" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
       <file leaf-file-name="NegotiatedAttributeDivestitureTestNG.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/ownership/NegotiatedAttributeDivestitureTestNG.java">
+        <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/ownership/NegotiatedAttributeDivestitureTestNG.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="46" column="13" selection-start="1614" selection-end="1614" vertical-scroll-proportion="0.0">
+            <state line="257" column="0" selection-start="11479" selection-end="11479" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="BaseSupportTestNG.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/support/BaseSupportTestNG.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="26" column="22" selection-start="915" selection-end="915" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="BaseSupportTestNG.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/support/BaseSupportTestNG.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="26" column="22" selection-start="899" selection-end="899" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="SynchronizationTestNG.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/federation/SynchronizationTestNG.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="207" column="0" selection-start="8401" selection-end="8401" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="hla-1.3-testng.xml" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../testsuite/resources/hla-1.3-testng.xml">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="52" column="35" selection-start="2641" selection-end="2641" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="SynchronizationTestNG.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/federation/SynchronizationTestNG.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="168" column="3" selection-start="7001" selection-end="7001" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="build.xml" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/../build.xml">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="297" column="17" selection-start="10772" selection-end="10772" vertical-scroll-proportion="0.25528702">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="NegotiatedAttributeDivestitureTestNG.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/ownership/NegotiatedAttributeDivestitureTestNG.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="286" column="0" selection-start="13268" selection-end="13268" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -301,22 +260,22 @@
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
       <list>
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/object/ObjectDeletionTestNG.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/object/ObjectNameReservationTestNG.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/object/ObjectRegistrationTestNG.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/object/ObjectUpdateTestNG.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/ownership/AttributeAcquisitionTestNG.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/ownership/AttributeDivestitureTestNG.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/ownership/IntrusiveAttributeAcquisitionTestNG.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/ownership/IntrusiveAttributeAcquisitionTestNG.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/ownership/NegotiatedAttributeDivestitureTestNG.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/ownership/NegotiatedAttributeDivestitureTestNG.java" />
-        <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/Federate.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/object/ObjectDeletionTestNG.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/object/ObjectUpdateTestNG.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/resources/ieee-1516e-testng.xml" />
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/ownership/AttributeOwnershipTestNG.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/BaseFederateAmbassador.java" />
+        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/datadistribution/RegionSupportTestNG.java" />
+        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/datadistribution/InteractionRegionTestNG.java" />
+        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/BaseFederateAmbassador.java" />
+        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/datadistribution/ObjectRegionTestNG.java" />
+        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/federation/SynchronizationTestNG.java" />
+        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/object/InteractionTestNG.java" />
+        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/object/ObjectDeletionTestNG.java" />
+        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/object/ObjectRegistrationTestNG.java" />
+        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/object/ObjectUpdateTestNG.java" />
+        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/ownership/AttributeAcquisitionTestNG.java" />
+        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/ownership/AttributeDivestitureTestNG.java" />
+        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/ownership/AttributeOwnershipTestNG.java" />
+        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/ownership/IntrusiveAttributeAcquisitionTestNG.java" />
+        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/ownership/NegotiatedAttributeDivestitureTestNG.java" />
+        <option value="$PROJECT_DIR$/../../testsuite/resources/hla-1.3-testng.xml" />
+        <option value="$PROJECT_DIR$/../build.xml" />
       </list>
     </option>
   </component>
@@ -433,6 +392,61 @@
       <sortByType />
     </navigator>
     <panes>
+      <pane id="Favorites" />
+      <pane id="PackagesPane">
+        <subPane>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Testsuite" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewModuleNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="RTI" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewModuleNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewProjectNode" />
+            </PATH_ELEMENT>
+          </PATH>
+        </subPane>
+      </pane>
+      <pane id="Scope">
+        <subPane subId="Project Files">
+          <PATH>
+            <PATH_ELEMENT USER_OBJECT="Root">
+              <option name="myItemId" value="" />
+              <option name="myItemType" value="" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT USER_OBJECT="Root">
+              <option name="myItemId" value="" />
+              <option name="myItemType" value="" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT USER_OBJECT="RTI">
+              <option name="myItemId" value="" />
+              <option name="myItemType" value="" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT USER_OBJECT="rti">
+              <option name="myItemId" value="" />
+              <option name="myItemType" value="" />
+            </PATH_ELEMENT>
+          </PATH>
+        </subPane>
+      </pane>
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -520,60 +534,95 @@
               <option name="myItemId" value="testsuite" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
-          </PATH>
-        </subPane>
-      </pane>
-      <pane id="PackagesPane">
-        <subPane>
-          <PATH>
             <PATH_ELEMENT>
-              <option name="myItemId" value="OHLA" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewProjectNode" />
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="Testsuite" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewModuleNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="OHLA" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewProjectNode" />
+              <option name="myItemId" value="java" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="RTI" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewModuleNode" />
+              <option name="myItemId" value="testsuite" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="hla" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="rti" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
           <PATH>
             <PATH_ELEMENT>
               <option name="myItemId" value="OHLA" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewProjectNode" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="ohla-0.5" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="testsuite" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="java" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="testsuite" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="hla" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="rti" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="datadistribution" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
-        </subPane>
-      </pane>
-      <pane id="Favorites" />
-      <pane id="Scope">
-        <subPane subId="Project Files">
           <PATH>
-            <PATH_ELEMENT USER_OBJECT="Root">
-              <option name="myItemId" value="" />
-              <option name="myItemType" value="" />
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="ohla-0.5" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="testsuite" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="resources" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
           <PATH>
-            <PATH_ELEMENT USER_OBJECT="Root">
-              <option name="myItemId" value="" />
-              <option name="myItemType" value="" />
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
             </PATH_ELEMENT>
-            <PATH_ELEMENT USER_OBJECT="RTI">
-              <option name="myItemId" value="" />
-              <option name="myItemType" value="" />
+            <PATH_ELEMENT>
+              <option name="myItemId" value="ohla-0.5" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
-            <PATH_ELEMENT USER_OBJECT="rti">
-              <option name="myItemId" value="" />
-              <option name="myItemType" value="" />
+            <PATH_ELEMENT>
+              <option name="myItemId" value="build" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
         </subPane>
@@ -582,15 +631,15 @@
   </component>
   <component name="PropertiesComponent">
     <property name="project.structure.last.edited" value="Libraries" />
-    <property name="OverrideImplement.combined" value="true" />
     <property name="project.structure.proportion" value="0.15" />
-    <property name="options.splitter.main.proportions" value="0.3" />
+    <property name="OverrideImplement.combined" value="true" />
     <property name="cvs_file_history_treeOrder2" value="2" />
+    <property name="options.splitter.main.proportions" value="0.3" />
     <property name="cvs_file_history_treeOrder1" value="1" />
     <property name="RunManagerConfig.showSettingsBeforeRunnig" value="true" />
     <property name="cvs_file_history_treeOrder3" value="3" />
-    <property name="recentsLimit" value="5" />
     <property name="MemberChooser.sorted" value="false" />
+    <property name="recentsLimit" value="5" />
     <property name="GoToClass.includeJavaFiles" value="false" />
     <property name="GoToClass.toSaveIncludeLibraries" value="false" />
     <property name="cvs_file_history_treeWidth0" value="299" />
@@ -611,11 +660,11 @@
     <property name="cvs_file_history_flatOrder2" value="2" />
     <property name="cvs_file_history_flatOrder3" value="3" />
     <property name="cvs_file_history_flatOrder0" value="0" />
-    <property name="project.structure.side.proportion" value="0.2" />
     <property name="cvs_file_history_flatOrder1" value="1" />
+    <property name="project.structure.side.proportion" value="0.2" />
     <property name="MemberChooser.copyJavadoc" value="false" />
-    <property name="dynamic.classpath" value="false" />
     <property name="options.searchVisible" value="true" />
+    <property name="dynamic.classpath" value="false" />
   </component>
   <component name="RecentsManager">
     <key name="MoveMembersDialog.RECENTS_KEY">
@@ -629,7 +678,7 @@
       <recent name="net.sf.ohla.rti.testsuite.hla" />
     </key>
   </component>
-  <component name="RunManager" selected="TestNG.IEEE 1516e Testsuite">
+  <component name="RunManager" selected="TestNG.HLA 1.3 Testsuite">
     <configuration default="true" type="Remote" factoryName="Remote">
       <option name="USE_SOCKET_TRANSPORT" value="true" />
       <option name="SERVER_MODE" value="false" />
@@ -639,6 +688,24 @@
       <method>
         <option name="AntTarget" enabled="false" />
         <option name="BuildArtifacts" enabled="false" />
+        <option name="Maven.BeforeRunTask" enabled="false" />
+      </method>
+    </configuration>
+    <configuration default="true" type="Applet" factoryName="Applet">
+      <module name="" />
+      <option name="MAIN_CLASS_NAME" />
+      <option name="HTML_FILE_NAME" />
+      <option name="HTML_USED" value="false" />
+      <option name="WIDTH" value="400" />
+      <option name="HEIGHT" value="300" />
+      <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
+      <option name="VM_PARAMETERS" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <method>
+        <option name="AntTarget" enabled="false" />
+        <option name="BuildArtifacts" enabled="false" />
+        <option name="Make" enabled="true" />
         <option name="Maven.BeforeRunTask" enabled="false" />
       </method>
     </configuration>
@@ -667,24 +734,6 @@
       <envs />
       <properties />
       <listeners />
-      <method>
-        <option name="AntTarget" enabled="false" />
-        <option name="BuildArtifacts" enabled="false" />
-        <option name="Make" enabled="true" />
-        <option name="Maven.BeforeRunTask" enabled="false" />
-      </method>
-    </configuration>
-    <configuration default="true" type="Applet" factoryName="Applet">
-      <module name="" />
-      <option name="MAIN_CLASS_NAME" />
-      <option name="HTML_FILE_NAME" />
-      <option name="HTML_USED" value="false" />
-      <option name="WIDTH" value="400" />
-      <option name="HEIGHT" value="300" />
-      <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
-      <option name="VM_PARAMETERS" />
-      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" />
       <method>
         <option name="AntTarget" enabled="false" />
         <option name="BuildArtifacts" enabled="false" />
@@ -1264,8 +1313,8 @@
       <window_info id="Web" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Metrics" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="18" side_tool="false" content_ui="tabs" />
       <window_info id="EJB" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="CVS" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="19" side_tool="false" content_ui="tabs" />
       <window_info id="Module Dependencies" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
+      <window_info id="CVS" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="19" side_tool="false" content_ui="tabs" />
       <window_info id="Web Preview" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Duplicates" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="16" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -1307,7 +1356,7 @@
     <option name="SHOW_ONLY_CHANGED_IN_SELECTION_DIFF" value="true" />
     <option name="CHECK_COMMIT_MESSAGE_SPELLING" value="true" />
     <option name="FORCE_NON_EMPTY_COMMENT" value="false" />
-    <option name="LAST_COMMIT_MESSAGE" value="- tweaked Testsuite (IEEE 1516 and 1516e, 1.3 tomorrow) to handle certain synchronization issues when testing multiple federates asynchronously&#10;- allowed newly joined federates to become part of a synchronization point&#10;- fixed the Marker for Federate&#10;" />
+    <option name="LAST_COMMIT_MESSAGE" value="- tweaked HLA 1.3 Testsuite to handle certain synchronization issues when testing multiple federates asynchronously&#10;" />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="true" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="CHECK_FILES_UP_TO_DATE_BEFORE_COMMIT" value="false" />
@@ -1320,7 +1369,6 @@
     <option name="UPDATE_GROUP_BY_CHANGELIST" value="false" />
     <option name="SHOW_FILE_HISTORY_AS_TREE" value="false" />
     <option name="FILE_HISTORY_SPLITTER_PROPORTION" value="0.6" />
-    <MESSAGE value="- completed internationalization of exception messages" />
     <MESSAGE value="- internationalization of log messages" />
     <MESSAGE value="- more internationalization" />
     <MESSAGE value="- initial HLA 1.3 testsuite updates" />
@@ -1345,6 +1393,7 @@
     <MESSAGE value="- IEEE 1516 Data Distribution Management testsuite passing" />
     <MESSAGE value="- updated Netty&#10;- updated build.xml&#10;- fixed equals" />
     <MESSAGE value="- tweaked Testsuite (IEEE 1516 and 1516e, 1.3 tomorrow) to handle certain synchronization issues when testing multiple federates asynchronously&#10;- allowed newly joined federates to become part of a synchronization point&#10;- fixed the Marker for Federate&#10;" />
+    <MESSAGE value="- tweaked HLA 1.3 Testsuite to handle certain synchronization issues when testing multiple federates asynchronously&#10;" />
   </component>
   <component name="VssConfiguration">
     <option name="CLIENT_PATH" value="" />
@@ -1441,116 +1490,114 @@
     <option name="myLastEditedConfigurable" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/BaseTestNG.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="94" column="0" selection-start="2841" selection-end="2841" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eRTIambassador.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="5001" column="0" selection-start="139793" selection-end="139793" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/object/ObjectUpdateTestNG.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="49" column="13" selection-start="1682" selection-end="1682" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/object/ObjectUpdateTestNG.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="80" column="59" selection-start="3063" selection-end="3063" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../testsuite/resources/ieee-1516e-testng.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="19" column="7" selection-start="811" selection-end="811" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/ownership/AttributeAcquisitionTestNG.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="46" column="13" selection-start="1618" selection-end="1618" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/ownership/AttributeDivestitureTestNG.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="45" column="13" selection-start="1589" selection-end="1589" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/ownership/AttributeOwnershipTestNG.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="74" column="59" selection-start="2713" selection-end="2713" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/ownership/IntrusiveAttributeAcquisitionTestNG.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="43" column="13" selection-start="1457" selection-end="1457" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/ownership/NegotiatedAttributeDivestitureTestNG.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="46" column="13" selection-start="1614" selection-end="1614" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/BaseFederateAmbassador.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="70" column="0" selection-start="2313" selection-end="2313" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/ownership/AttributeAcquisitionTestNG.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="45" column="13" selection-start="1525" selection-end="1525" vertical-scroll-proportion="0.0">
+        <state line="237" column="0" selection-start="10214" selection-end="10214" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/ownership/AttributeAcquisitionTestNG.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="56" column="14" selection-start="1930" selection-end="1930" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/ownership/AttributeDivestitureTestNG.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="44" column="13" selection-start="1496" selection-end="1496" vertical-scroll-proportion="0.0">
+        <state line="208" column="0" selection-start="8789" selection-end="9003" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/ownership/AttributeDivestitureTestNG.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="207" column="0" selection-start="8583" selection-end="8583" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/ownership/AttributeOwnershipTestNG.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="43" column="13" selection-start="1458" selection-end="1458" vertical-scroll-proportion="0.0">
+        <state line="244" column="0" selection-start="10356" selection-end="10570" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/ownership/AttributeOwnershipTestNG.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="262" column="0" selection-start="11431" selection-end="11431" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/ownership/IntrusiveAttributeAcquisitionTestNG.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="42" column="13" selection-start="1400" selection-end="1400" vertical-scroll-proportion="0.0">
+        <state line="276" column="0" selection-start="12770" selection-end="12770" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/ownership/IntrusiveAttributeAcquisitionTestNG.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="63" column="14" selection-start="2204" selection-end="2204" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/ownership/NegotiatedAttributeDivestitureTestNG.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="78" column="54" selection-start="2874" selection-end="2874" vertical-scroll-proportion="0.41140217">
+        <state line="286" column="0" selection-start="13268" selection-end="13268" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/ownership/NegotiatedAttributeDivestitureTestNG.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="257" column="0" selection-start="11479" selection-end="11479" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/support/BaseSupportTestNG.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="26" column="22" selection-start="915" selection-end="915" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/support/BaseSupportTestNG.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="26" column="22" selection-start="899" selection-end="899" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../testsuite/resources/hla-1.3-testng.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="52" column="35" selection-start="2641" selection-end="2641" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/federation/SynchronizationTestNG.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="207" column="0" selection-start="8401" selection-end="8401" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/federation/SynchronizationTestNG.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="168" column="3" selection-start="7001" selection-end="7001" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../build.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="297" column="17" selection-start="10772" selection-end="10772" vertical-scroll-proportion="0.25528702">
           <folding />
         </state>
       </provider>
