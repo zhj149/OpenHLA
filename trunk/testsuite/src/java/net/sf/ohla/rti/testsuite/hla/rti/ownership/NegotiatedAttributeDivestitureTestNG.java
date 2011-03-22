@@ -21,8 +21,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.Callable;
 
+import net.sf.ohla.rti.testsuite.hla.rti.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti.BaseTestNG;
 
 import org.testng.annotations.AfterClass;
@@ -43,7 +44,6 @@ import hla.rti.HandleIterator;
 import hla.rti.ObjectClassNotKnown;
 import hla.rti.ObjectNotKnown;
 import hla.rti.ResignAction;
-import hla.rti.jlc.NullFederateAmbassador;
 import hla.rti.jlc.RTIambassadorEx;
 
 @Test
@@ -123,23 +123,17 @@ public class NegotiatedAttributeDivestitureTestNG
     federateAmbassadors.get(1).checkObjectInstanceName(testObjectInstanceName);
     federateAmbassadors.get(2).checkObjectInstanceName(testObjectInstanceName);
     federateAmbassadors.get(3).checkObjectInstanceName(testObjectInstanceName);
+
+    setupComplete(federateAmbassadors);
   }
 
   @AfterClass
   public void teardown()
     throws Exception
   {
-    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.RELEASE_ATTRIBUTES);
-    rtiAmbassadors.get(1).resignFederationExecution(ResignAction.RELEASE_ATTRIBUTES);
-    rtiAmbassadors.get(2).resignFederationExecution(ResignAction.RELEASE_ATTRIBUTES);
-    rtiAmbassadors.get(3).resignFederationExecution(ResignAction.RELEASE_ATTRIBUTES);
-    rtiAmbassadors.get(4).resignFederationExecution(ResignAction.RELEASE_ATTRIBUTES);
+    resignFederationExecution(ResignAction.RELEASE_ATTRIBUTES);
 
-    // this is necessary to ensure the federates is actually resigned
-    //
-    LockSupport.parkUntil(System.currentTimeMillis() + 1000);
-
-    rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
+    destroyFederationExecution(FEDERATION_NAME);
   }
 
   @Test
@@ -223,10 +217,8 @@ public class NegotiatedAttributeDivestitureTestNG
   }
 
   private static class TestFederateAmbassador
-    extends NullFederateAmbassador
+    extends BaseFederateAmbassador
   {
-    private final RTIambassadorEx rtiAmbassador;
-
     private final Map<Integer, Map<Integer, Object>> objectInstances = new HashMap<Integer, Map<Integer, Object>>();
     private final Map<String, Integer> objectInstanceHandlesByName = new HashMap<String, Integer>();
 
@@ -240,52 +232,45 @@ public class NegotiatedAttributeDivestitureTestNG
 
     public TestFederateAmbassador(RTIambassadorEx rtiAmbassador)
     {
-      this.rtiAmbassador = rtiAmbassador;
+      super(rtiAmbassador);
     }
 
-    public void checkObjectInstanceName(String objectInstanceName)
+    public void checkObjectInstanceName(final String objectInstanceName)
       throws Exception
     {
-      for (int i = 0; i < 5 && !objectInstanceHandlesByName.containsKey(objectInstanceName); i++)
-      {
-        rtiAmbassador.tick(.01, 1.0);
-      }
+      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstanceHandlesByName.containsKey(objectInstanceName); } });
+
       assert objectInstanceHandlesByName.containsKey(objectInstanceName);
     }
 
     public void checkAttributeAssumptionRequested(
-      int objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
+      final int objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
       throws Exception
     {
-      for (int i = 0; i < 5 && !acquisitionRequestedAttributes.containsKey(objectInstanceHandle); i++)
-      {
-        rtiAmbassador.tick(.01, 1.0);
-      }
+      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !acquisitionRequestedAttributes.containsKey(objectInstanceHandle); } });
+
       Object[] acquisition = acquisitionRequestedAttributes.get(objectInstanceHandle);
       assert acquisition != null;
       assert attributeHandles.equals(acquisition[0]);
       assert Arrays.equals(tag, (byte[]) acquisition[1]);
     }
 
-    public void checkAttributeDivestitureRequested(int objectInstanceHandle, AttributeHandleSet attributeHandles)
+    public void checkAttributeDivestitureRequested(
+      final int objectInstanceHandle, final AttributeHandleSet attributeHandles)
       throws Exception
     {
-      for (int i = 0; i < 5 && (!divestitureRequestedAttributes.containsKey(objectInstanceHandle) ||
-                                !divestitureRequestedAttributes.get(objectInstanceHandle).equals(attributeHandles)); i++)
-      {
-        rtiAmbassador.tick(.01, 1.0);
-      }
+      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !divestitureRequestedAttributes.containsKey(objectInstanceHandle) || !divestitureRequestedAttributes.get(objectInstanceHandle).equals(attributeHandles); } });
+
       AttributeHandleSet divestiture = divestitureRequestedAttributes.get(objectInstanceHandle);
-      assert divestiture != null && attributeHandles.equals(divestiture);
+      assert divestiture != null;
+      assert attributeHandles.equals(divestiture);
     }
 
-    public void checkAttributesAcquired(int objectInstanceHandle, AttributeHandleSet attributeHandles)
+    public void checkAttributesAcquired(final int objectInstanceHandle, AttributeHandleSet attributeHandles)
       throws Exception
     {
-      for (int i = 0; i < 5 && !acquiredAttributes.containsKey(objectInstanceHandle); i++)
-      {
-        rtiAmbassador.tick(.01, 1.0);
-      }
+      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !acquiredAttributes.containsKey(objectInstanceHandle); } });
+
       AttributeHandleSet acquisition = acquiredAttributes.get(objectInstanceHandle);
       assert acquisition != null;
       assert attributeHandles.equals(acquisition);

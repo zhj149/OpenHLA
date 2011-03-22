@@ -24,6 +24,12 @@ import java.util.List;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
+import hla.rti.FederateNotExecutionMember;
+import hla.rti.FederateOwnsAttributes;
+import hla.rti.FederatesCurrentlyJoined;
+import hla.rti.FederationExecutionDoesNotExist;
+import hla.rti.InvalidResignAction;
+import hla.rti.RTIinternalError;
 import hla.rti.jlc.RTIambassadorEx;
 import hla.rti.jlc.RtiFactory;
 import hla.rti.jlc.RtiFactoryFactory;
@@ -72,5 +78,55 @@ public abstract class BaseTestNG
   public final void baseTeardown()
     throws Exception
   {
+  }
+
+  protected void setupComplete(List<? extends BaseFederateAmbassador> federateAmbassadors)
+    throws Exception
+  {
+    federateAmbassadors.get(0).setupComplete();
+
+    for (BaseFederateAmbassador federateAmbassador : federateAmbassadors)
+    {
+      federateAmbassador.waitForSetupCompleteAnnounced();
+    }
+
+    for (BaseFederateAmbassador federateAmbassador : federateAmbassadors)
+    {
+      federateAmbassador.waitForSetupComplete();
+    }
+  }
+
+  protected void resignFederationExecution(int resignAction)
+    throws FederateNotExecutionMember, FederateOwnsAttributes, RTIinternalError, InvalidResignAction
+  {
+    for (RTIambassadorEx rtiAmbassador : rtiAmbassadors)
+    {
+      rtiAmbassador.resignFederationExecution(resignAction);
+    }
+  }
+
+  protected void destroyFederationExecution(String federationExecutionName)
+    throws FederationExecutionDoesNotExist, RTIinternalError, InterruptedException
+  {
+    destroyFederationExecution(federationExecutionName, 10);
+  }
+
+  protected void destroyFederationExecution(String federationExecutionName, int attempts)
+    throws FederationExecutionDoesNotExist, RTIinternalError, InterruptedException
+  {
+    boolean done = false;
+    for(; !done && attempts > 0; attempts--)
+    {
+      try
+      {
+        rtiAmbassadors.get(0).destroyFederationExecution(federationExecutionName);
+
+        done = true;
+      }
+      catch (FederatesCurrentlyJoined fcj)
+      {
+        Thread.sleep(100);
+      }
+    }
   }
 }

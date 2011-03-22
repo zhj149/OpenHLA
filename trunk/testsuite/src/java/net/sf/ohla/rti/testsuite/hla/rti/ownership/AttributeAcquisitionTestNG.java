@@ -20,8 +20,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.Callable;
 
+import net.sf.ohla.rti.testsuite.hla.rti.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti.BaseTestNG;
 
 import org.testng.annotations.AfterClass;
@@ -39,7 +40,6 @@ import hla.rti.FederateInternalError;
 import hla.rti.ObjectClassNotKnown;
 import hla.rti.ObjectNotKnown;
 import hla.rti.ResignAction;
-import hla.rti.jlc.NullFederateAmbassador;
 import hla.rti.jlc.RTIambassadorEx;
 
 @Test
@@ -116,21 +116,17 @@ public class AttributeAcquisitionTestNG
     //
     federateAmbassadors.get(0).checkObjectInstanceName(testObjectInstanceName2);
     federateAmbassadors.get(1).checkObjectInstanceName(testObjectInstanceName);
+
+    setupComplete(federateAmbassadors);
   }
 
   @AfterClass
   public void teardown()
     throws Exception
   {
-    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.RELEASE_ATTRIBUTES);
-    rtiAmbassadors.get(1).resignFederationExecution(ResignAction.RELEASE_ATTRIBUTES);
-    rtiAmbassadors.get(2).resignFederationExecution(ResignAction.RELEASE_ATTRIBUTES);
+    resignFederationExecution(ResignAction.RELEASE_ATTRIBUTES);
 
-    // this is necessary to ensure the federates is actually resigned
-    //
-    LockSupport.parkUntil(System.currentTimeMillis() + 1000);
-
-    rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
+    destroyFederationExecution(FEDERATION_NAME);
   }
 
   @Test
@@ -195,10 +191,8 @@ public class AttributeAcquisitionTestNG
   }
 
   private static class TestFederateAmbassador
-    extends NullFederateAmbassador
+    extends BaseFederateAmbassador
   {
-    private final RTIambassadorEx rtiAmbassador;
-
     private final Map<Integer, Map<Integer, Object>> objectInstances = new HashMap<Integer, Map<Integer, Object>>();
     private final Map<String, Integer> objectInstanceHandlesByName = new HashMap<String, Integer>();
 
@@ -206,39 +200,32 @@ public class AttributeAcquisitionTestNG
 
     public TestFederateAmbassador(RTIambassadorEx rtiAmbassador)
     {
-      this.rtiAmbassador = rtiAmbassador;
+      super(rtiAmbassador);
     }
 
-    public void checkObjectInstanceName(String objectInstanceName)
+    public void checkObjectInstanceName(final String objectInstanceName)
       throws Exception
     {
-      for (int i = 0; i < 5 && !objectInstanceHandlesByName.containsKey(objectInstanceName); i++)
-      {
-        rtiAmbassador.tick(.01, 1.0);
-      }
+      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstanceHandlesByName.containsKey(objectInstanceName); } });
+
       assert objectInstanceHandlesByName.containsKey(objectInstanceName);
     }
 
-    public void checkAttributesAcquired(int objectInstanceHandle, AttributeHandleSet attributeHandles)
+    public void checkAttributesAcquired(final int objectInstanceHandle, AttributeHandleSet attributeHandles)
       throws Exception
     {
-      for (int i = 0; i < 5 && !acquiredAttributes.containsKey(objectInstanceHandle); i++)
-      {
-        rtiAmbassador.tick(.01, 1.0);
-      }
+      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !acquiredAttributes.containsKey(objectInstanceHandle); } });
+
       AttributeHandleSet acquisition = acquiredAttributes.get(objectInstanceHandle);
       assert acquisition != null;
       assert attributeHandles.equals(acquisition);
     }
 
-    public void checkAttributeIsOwnedByFederate(int objectInstanceHandle, int attributeHandle, Integer federateHandle)
+    public void checkAttributeIsOwnedByFederate(final int objectInstanceHandle, final int attributeHandle, Integer federateHandle)
       throws Exception
     {
-      for (int i = 0; i < 5 && (!objectInstances.containsKey(objectInstanceHandle) ||
-                                objectInstances.get(objectInstanceHandle).get(attributeHandle) == null); i++)
-      {
-        rtiAmbassador.tick(.01, 1.0);
-      }
+      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstances.containsKey(objectInstanceHandle) || objectInstances.get(objectInstanceHandle).get(attributeHandle) == null; } });
+
       assert federateHandle.equals(objectInstances.get(objectInstanceHandle).get(attributeHandle));
     }
 

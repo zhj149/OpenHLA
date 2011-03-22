@@ -21,8 +21,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.Callable;
 
+import net.sf.ohla.rti.testsuite.hla.rti.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti.BaseTestNG;
 
 import org.testng.annotations.AfterClass;
@@ -39,7 +40,6 @@ import hla.rti.ObjectNotKnown;
 import hla.rti.ReflectedAttributes;
 import hla.rti.ResignAction;
 import hla.rti.SuppliedAttributes;
-import hla.rti.jlc.NullFederateAmbassador;
 import hla.rti.jlc.RTIambassadorEx;
 
 @Test
@@ -132,22 +132,17 @@ public class ObjectUpdateTestNG
     federateAmbassadors.get(1).checkObjectInstanceName(testObjectInstanceName);
     federateAmbassadors.get(1).checkObjectInstanceName(testObjectInstanceName2);
     federateAmbassadors.get(2).checkObjectInstanceName(testObjectInstanceName2);
+
+    setupComplete(federateAmbassadors);
   }
 
   @AfterClass
   public void teardown()
     throws Exception
   {
-    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.RELEASE_ATTRIBUTES);
-    rtiAmbassadors.get(1).resignFederationExecution(ResignAction.RELEASE_ATTRIBUTES);
-    rtiAmbassadors.get(2).resignFederationExecution(ResignAction.RELEASE_ATTRIBUTES);
-    rtiAmbassadors.get(3).resignFederationExecution(ResignAction.RELEASE_ATTRIBUTES);
+    resignFederationExecution(ResignAction.RELEASE_ATTRIBUTES);
 
-    // this is necessary to ensure the federates is actually resigned
-    //
-    LockSupport.parkUntil(System.currentTimeMillis() + 1000);
-
-    rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
+    destroyFederationExecution(FEDERATION_NAME);
   }
 
   @Test
@@ -190,10 +185,8 @@ public class ObjectUpdateTestNG
   }
 
   private static class TestFederateAmbassador
-    extends NullFederateAmbassador
+    extends BaseFederateAmbassador
   {
-    private final RTIambassadorEx rtiAmbassador;
-
     private final Map<String, TestObjectInstance> objectInstances =
       new HashMap<String, TestObjectInstance>();
     private final Map<Integer, TestObjectInstance> objectInstancesByHandle =
@@ -201,45 +194,25 @@ public class ObjectUpdateTestNG
 
     public TestFederateAmbassador(RTIambassadorEx rtiAmbassador)
     {
-      this.rtiAmbassador = rtiAmbassador;
+      super(rtiAmbassador);
     }
 
-    public void checkObjectInstanceName(String objectInstanceName)
+    public void checkObjectInstanceName(final String objectInstanceName)
       throws Exception
     {
-      for (int i = 0; i < 5 && !objectInstances.containsKey(objectInstanceName); i++)
-      {
-        rtiAmbassador.tick(.01, 1.0);
-      }
+      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstances.containsKey(objectInstanceName); } });
+
       assert objectInstances.containsKey(objectInstanceName);
     }
 
-    public void checkObjectClassHandle(String objectInstanceName, int objectClassHandle)
+    public void checkAttributeValues(final String objectInstanceName, SuppliedAttributes suppliedAttributes, byte[] tag)
       throws Exception
     {
-      assert objectInstances.get(objectInstanceName).getObjectClassHandle() == objectClassHandle;
-    }
+      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return objectInstances.get(objectInstanceName).getReflectedAttributes() == null; } });
 
-    public void checkAttributeValues(String objectInstanceName, SuppliedAttributes suppliedAttributes, byte[] tag)
-      throws Exception
-    {
-      for (int i = 0; i < 5 && objectInstances.get(objectInstanceName).getReflectedAttributes() == null; i++)
-      {
-        rtiAmbassador.tick(.01, 1.0);
-      }
       TestObjectInstance objectInstance = objectInstances.get(objectInstanceName);
       assert objectInstance.getReflectedAttributes() != null;
-      assert suppliedAttributes.size() == objectInstance.getReflectedAttributes().size();
-      for (int i = 0; i < objectInstance.getReflectedAttributes().size(); i++)
-      {
-        for (int j = 0; j < suppliedAttributes.size(); j++)
-        {
-          if (objectInstance.getReflectedAttributes().getAttributeHandle(i) == suppliedAttributes.getHandle(j))
-          {
-            assert Arrays.equals(objectInstance.getReflectedAttributes().getValue(i), suppliedAttributes.getValue(j));
-          }
-        }
-      }
+      checkReflectedAttributes(objectInstance.getReflectedAttributes(), suppliedAttributes, false);
       assert Arrays.equals(tag, objectInstance.getTag());
     }
 

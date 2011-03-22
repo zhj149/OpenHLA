@@ -21,8 +21,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.Callable;
 
+import net.sf.ohla.rti.testsuite.hla.rti.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti.BaseTestNG;
 
 import org.testng.annotations.AfterClass;
@@ -34,7 +35,6 @@ import hla.rti.DeletePrivilegeNotHeld;
 import hla.rti.FederateInternalError;
 import hla.rti.ObjectNotKnown;
 import hla.rti.ResignAction;
-import hla.rti.jlc.NullFederateAmbassador;
 import hla.rti.jlc.RTIambassadorEx;
 
 @Test
@@ -110,21 +110,21 @@ public class ObjectDeletionTestNG
     federateAmbassadors.get(1).checkObjectInstanceName(testObjectInstanceName);
     federateAmbassadors.get(1).checkObjectInstanceName(testObjectInstanceName2);
     federateAmbassadors.get(2).checkObjectInstanceName(testObjectInstanceName2);
+
+    setupComplete(federateAmbassadors);
   }
 
   @AfterClass
   public void teardown()
     throws Exception
   {
-    rtiAmbassadors.get(1).resignFederationExecution(ResignAction.RELEASE_ATTRIBUTES);
-    rtiAmbassadors.get(2).resignFederationExecution(ResignAction.RELEASE_ATTRIBUTES);
-    rtiAmbassadors.get(3).resignFederationExecution(ResignAction.RELEASE_ATTRIBUTES);
+    // the first RTI has been resigned already
 
-    // this is necessary to ensure the federates is actually resigned
-    //
-    LockSupport.parkUntil(System.currentTimeMillis() + 1000);
+    rtiAmbassadors.remove(0);
 
-    rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
+    resignFederationExecution(ResignAction.RELEASE_ATTRIBUTES);
+
+    destroyFederationExecution(FEDERATION_NAME);
   }
 
   @Test
@@ -169,10 +169,8 @@ public class ObjectDeletionTestNG
   }
 
   private static class TestFederateAmbassador
-    extends NullFederateAmbassador
+    extends BaseFederateAmbassador
   {
-    private final RTIambassadorEx rtiAmbassador;
-
     private final Map<String, TestObjectInstance> objectInstances =
       new HashMap<String, TestObjectInstance>();
     private final Map<Integer, TestObjectInstance> objectInstancesByHandle =
@@ -180,26 +178,22 @@ public class ObjectDeletionTestNG
 
     public TestFederateAmbassador(RTIambassadorEx rtiAmbassador)
     {
-      this.rtiAmbassador = rtiAmbassador;
+      super(rtiAmbassador);
     }
 
-    public void checkObjectInstanceName(String objectInstanceName)
+    public void checkObjectInstanceName(final String objectInstanceName)
       throws Exception
     {
-      for (int i = 0; i < 5 && !objectInstances.containsKey(objectInstanceName); i++)
-      {
-        rtiAmbassador.tick(.01, 1.0);
-      }
+      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstances.containsKey(objectInstanceName); } });
+
       assert objectInstances.containsKey(objectInstanceName);
     }
 
-    public void checkRemoved(String objectInstanceName, byte[] tag)
+    public void checkRemoved(final String objectInstanceName, byte[] tag)
       throws Exception
     {
-      for (int i = 0; i < 5 && !objectInstances.get(objectInstanceName).isRemoved(); i++)
-      {
-        rtiAmbassador.tick(.01, 1.0);
-      }
+      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstances.get(objectInstanceName).isRemoved(); } });
+
       TestObjectInstance objectInstance = objectInstances.get(objectInstanceName);
       assert objectInstance.isRemoved();
       assert Arrays.equals(tag, objectInstance.getTag());
