@@ -20,8 +20,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.Callable;
 
+import net.sf.ohla.rti.testsuite.hla.rti.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti.BaseTestNG;
 
 import org.testng.annotations.AfterClass;
@@ -37,7 +38,6 @@ import hla.rti.FederateInternalError;
 import hla.rti.ObjectClassNotKnown;
 import hla.rti.ObjectNotKnown;
 import hla.rti.ResignAction;
-import hla.rti.jlc.NullFederateAmbassador;
 import hla.rti.jlc.RTIambassadorEx;
 
 @Test
@@ -106,21 +106,17 @@ public class AttributeDivestitureTestNG
     //
     federateAmbassadors.get(0).checkObjectInstanceName(testObjectInstanceName2);
     federateAmbassadors.get(1).checkObjectInstanceName(testObjectInstanceName);
+
+    setupComplete(federateAmbassadors);
   }
 
   @AfterClass
   public void teardown()
     throws Exception
   {
-    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.RELEASE_ATTRIBUTES);
-    rtiAmbassadors.get(1).resignFederationExecution(ResignAction.RELEASE_ATTRIBUTES);
-    rtiAmbassadors.get(2).resignFederationExecution(ResignAction.RELEASE_ATTRIBUTES);
+    resignFederationExecution(ResignAction.RELEASE_ATTRIBUTES);
 
-    // this is necessary to ensure the federates is actually resigned
-    //
-    LockSupport.parkUntil(System.currentTimeMillis() + 1000);
-
-    rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
+    destroyFederationExecution(FEDERATION_NAME);
   }
 
   @Test
@@ -186,35 +182,29 @@ public class AttributeDivestitureTestNG
   }
 
   private static class TestFederateAmbassador
-    extends NullFederateAmbassador
+    extends BaseFederateAmbassador
   {
-    private final RTIambassadorEx rtiAmbassador;
-
     private final Map<Integer, Map<Integer, Object>> objectInstances = new HashMap<Integer, Map<Integer, Object>>();
     private final Map<String, Integer> objectInstanceHandlesByName = new HashMap<String, Integer>();
 
     public TestFederateAmbassador(RTIambassadorEx rtiAmbassador)
     {
-      this.rtiAmbassador = rtiAmbassador;
+      super(rtiAmbassador);
     }
 
-    public void checkObjectInstanceName(String objectInstanceName)
+    public void checkObjectInstanceName(final String objectInstanceName)
       throws Exception
     {
-      for (int i = 0; i < 5 && !objectInstanceHandlesByName.containsKey(objectInstanceName); i++)
-      {
-        rtiAmbassador.tick(.01, 1.0);
-      }
+      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstances.containsKey(objectInstanceName); } });
+
       assert objectInstanceHandlesByName.containsKey(objectInstanceName);
     }
 
-    public void checkAttributeIsUnowned(int objectInstanceHandle, int attributeHandle)
+    public void checkAttributeIsUnowned(final int objectInstanceHandle, final int attributeHandle)
       throws Exception
     {
-      for (int i = 0; i < 5 && (!objectInstances.containsKey(objectInstanceHandle) || objectInstances.get(objectInstanceHandle).get(attributeHandle) == null); i++)
-      {
-        rtiAmbassador.tick(.01, 1.0);
-      }
+      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstances.containsKey(objectInstanceHandle) || objectInstances.get(objectInstanceHandle).get(attributeHandle) == null; } });
+
       assert Boolean.FALSE.equals(objectInstances.get(objectInstanceHandle).get(attributeHandle));
     }
 

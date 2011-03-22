@@ -16,8 +16,6 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti.datadistribution;
 
-import java.util.concurrent.locks.LockSupport;
-
 import net.sf.ohla.rti.testsuite.hla.rti.BaseTestNG;
 
 import org.testng.annotations.AfterClass;
@@ -80,14 +78,9 @@ public class RegionSupportTestNG
   public void teardown()
     throws Exception
   {
-    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
-    rtiAmbassadors.get(1).resignFederationExecution(ResignAction.NO_ACTION);
+    resignFederationExecution(ResignAction.NO_ACTION);
 
-    // this is necessary to ensure the federates is actually resigned
-    //
-    LockSupport.parkUntil(System.currentTimeMillis() + 1000);
-
-    rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
+    destroyFederationExecution(FEDERATION_NAME);
   }
 
   @Test
