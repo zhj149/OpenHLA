@@ -615,7 +615,7 @@ public class Protocol
       }
 
       encodeVarInt(buffer, length);
-      encodeBytes(buffer, bytes);
+      buffer.writeBytes(bytes);
     }
   }
 
@@ -666,7 +666,7 @@ public class Protocol
     }
 
     encodeVarInt(buffer, length);
-    encodeBytes(buffer, bytes);
+    buffer.writeBytes(bytes);
   }
 
   public static LogicalTimeInterval decodeTimeInterval(ChannelBuffer buffer, LogicalTimeFactory factory)

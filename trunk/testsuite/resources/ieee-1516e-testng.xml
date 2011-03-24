@@ -65,4 +65,14 @@
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.support.DimensionSupportTestNG"/>
     </classes>
   </test>
+  <test name="IEEE 1516e - Time Management">
+    <classes>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.FreeTimeAdvanceTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.TimeAdvanceRequestExceptionsTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.TimeConstrainedTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.EnableTimeConstrainedExceptionsTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.TimeRegulationTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.EnableTimeRegulationExceptionsTestNG"/>
+    </classes>
+  </test>
 </suite>
