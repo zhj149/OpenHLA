@@ -1,0 +1,46 @@
+0.5 alpha
+  - ported to Netty
+  - added IEEE 1516 'Evolved' support
+  - added Internationalization support
+  - performance improvements
+  - completed proper DDM implementation
+  - completed ownership management implementation
+
+0.4 alpha
+
+0.3 alpha
+  - refactoring
+  - ported to Apache MINA
+  - ownership management support (90%)
+
+Preview Release 0.2.4
+  - 1572430 - Cannot update inherited attributes
+
+Preview Release 0.2.3
+  - 1572051 - inherited attributes not found
+
+Preview Release 0.2.2
+  - 1565747 - ObjectInstanceHandles not tracked properly at registrar
+
+Preview Release 0.2.1
+  - 1562949 - Objects not discovered if federate joins after registration
+  - updated MultipleFederateTestNG to include a federate that joins *after*
+    objects have been registered
+
+Preview Release 0.2
+  - refactoring
+  - HLA 1.3 Support
+  - testsuite moved to TestNG
+
+Preview Release 0.1.3
+  - 1460933 - ObjectInstanceNameNotReserved exception
+  - 1459183 - Reserving an Object Instance Name always succeeds
+
+Preview Release 0.1.2
+  - 1425591 - Destroying federation removes federation even if it fails
+
+Preview Release 0.1.1
+  - 1423449 - Interactions not being delivered to earlier federates
+
+Preview Release 0.1
+  - initial release
