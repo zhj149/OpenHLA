@@ -35,8 +35,6 @@ public abstract class LogicalTimeMessage
     this.time = time;
 
     Protocol.encodeTime(buffer, time);
-
-    encodingFinished();
   }
 
   protected LogicalTimeMessage(MessageType messageType, int capacity, boolean dynamic, LogicalTime time)
@@ -46,8 +44,6 @@ public abstract class LogicalTimeMessage
     this.time = time;
 
     Protocol.encodeTime(buffer, time);
-
-    encodingFinished();
   }
 
   protected LogicalTimeMessage(MessageType messageType, ChannelBuffer buffer, LogicalTime time)
@@ -57,8 +53,6 @@ public abstract class LogicalTimeMessage
     this.time = time;
 
     Protocol.encodeTime(buffer, time);
-
-    encodingFinished();
   }
 
   protected LogicalTimeMessage(ChannelBuffer buffer, LogicalTimeFactory factory)

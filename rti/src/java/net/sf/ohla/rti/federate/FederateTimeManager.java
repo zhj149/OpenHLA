@@ -108,7 +108,6 @@ public class FederateTimeManager
     epsilon = logicalTimeFactory.makeEpsilon();
 
     federateTime = logicalTimeFactory.makeInitial();
-    galt = logicalTimeFactory.makeInitial();
   }
 
   public ReadWriteLock getTimeLock()

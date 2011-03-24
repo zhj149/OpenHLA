@@ -40,6 +40,7 @@ import net.sf.ohla.rti.messages.FederateSaveComplete;
 import net.sf.ohla.rti.messages.FederateSaveNotComplete;
 import net.sf.ohla.rti.messages.GALTAdvanced;
 import net.sf.ohla.rti.messages.GALTUndefined;
+import net.sf.ohla.rti.messages.MessageDecoder;
 import net.sf.ohla.rti.messages.PublishObjectClassAttributes;
 import net.sf.ohla.rti.messages.QueryInteractionTransportationType;
 import net.sf.ohla.rti.messages.Retract;
@@ -140,7 +141,6 @@ public class FederateProxy
 
   private boolean conveyRegionDesignatorSets = true;
 
-  private final Marker marker;
   private final I18nLogger log;
 
   public FederateProxy(
@@ -162,7 +162,10 @@ public class FederateProxy
     federateChannel.getPipeline().addBefore(
       RTIChannelUpstreamHandler.NAME, FederateProxyChannelHandler.NAME, new FederateProxyChannelHandler(this));
 
-    marker = MarkerFactory.getMarker(federationExecution.getName() + "." + this.federateName);
+    ((MessageDecoder) federateChannel.getPipeline().get(MessageDecoder.NAME)).setLogicalTimeFactory(
+      federationExecution.getTimeManager().getLogicalTimeFactory());
+
+    Marker marker = MarkerFactory.getMarker(federationExecution.getName() + "." + this.federateName);
     log = I18nLogger.getLogger(marker, FederateProxy.class);
 
     log.debug(LogMessages.FEDERATE_JOINED);

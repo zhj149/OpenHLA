@@ -2728,6 +2728,11 @@ public class IEEE1516eRTIambassador
     throws InvalidLookahead, InTimeAdvancingState, RequestForTimeRegulationPending, TimeRegulationAlreadyEnabled,
            SaveInProgress, RestoreInProgress, FederateNotExecutionMember, NotConnected, RTIinternalError
   {
+    if (lookahead == null)
+    {
+      throw new InvalidLookahead(I18n.getMessage(ExceptionMessages.LOGICAL_TIME_INTERVAL_IS_NULL));
+    }
+
     connectLock.readLock().lock();
     try
     {
@@ -3108,6 +3113,11 @@ public class IEEE1516eRTIambassador
     throws InvalidLookahead, InTimeAdvancingState, TimeRegulationIsNotEnabled, SaveInProgress, RestoreInProgress,
            FederateNotExecutionMember, NotConnected, RTIinternalError
   {
+    if (lookahead == null)
+    {
+      throw new InvalidLookahead(I18n.getMessage(ExceptionMessages.LOGICAL_TIME_INTERVAL_IS_NULL));
+    }
+
     connectLock.readLock().lock();
     try
     {

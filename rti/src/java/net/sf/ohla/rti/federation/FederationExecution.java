@@ -322,7 +322,11 @@ public class FederationExecution
 
           context.getChannel().write(new JoinFederationExecutionResponse(
             joinFederationExecution.getId(), federateHandle, fdd, timeManager.getLogicalTimeFactory().getName()));
-          context.getChannel().write(new GALTAdvanced(timeManager.getGALT()));
+
+          if (timeManager.getGALT() != null)
+          {
+            context.getChannel().write(new GALTAdvanced(timeManager.getGALT()));
+          }
 
           for (FederationExecutionSynchronizationPoint synchronizationPoint : synchronizationPoints.values())
           {
