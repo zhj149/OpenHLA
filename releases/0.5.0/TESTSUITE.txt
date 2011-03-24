@@ -1,0 +1,3 @@
+To test:
+1. open console, goto <install dir>/build: ant start-rti
+2. open console, goto <install dir>/build: ant testsuite

@@ -1,0 +1,482 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<project name="Open HLA (OHLA)" basedir="." default="default">
+
+  <property name="ohla.version" value="0.5"/>
+  <property name="dist.name" value="ohla-${ohla.version}"/>
+
+  <!-- ================================================================== -->
+  <!-- Configuration                                                      -->
+  <!-- ================================================================== -->
+
+  <property name="build" location="${basedir}"/>
+
+  <property environment="env"/>
+
+  <!-- Some project wide information. -->
+  <property name="project.root" location="${basedir}/.."/>
+  <property name="project.thirdparty" location="${project.root}/thirdparty"/>
+
+  <!-- Standard JavaC arguments. -->
+  <property name="javac.debug" value="true"/>
+  <property name="javac.deprecation" value="true"/>
+  <property name="javac.fork" value="false"/>
+  <property name="javac.optimize" value="false"/>
+  <property name="javac.verbose" value="false"/>
+
+  <property name="output" location="${build}/output"/>
+  <property name="output.dist" location="${output}/dist"/>
+  <property name="output.docs" location="${output}/docs"/>
+  <property name="output.docs.api" location="${output.docs}/api"/>
+  <property name="output.lib" location="${output}/lib"/>
+  <property name="output.resources" location="${output}/resources"/>
+
+
+  <!-- ================================================================ -->
+  <!-- Libraries                                                        -->
+  <!-- ================================================================ -->
+
+  <!-- Netty -->
+  <property name="netty.root" location="${project.thirdparty}/netty"/>
+  <property name="netty.lib" location="${netty.root}/lib"/>
+  <path id="netty.classpath">
+    <fileset dir="${netty.lib}" includes="*.jar" excludes="*sources*"/>
+  </path>
+
+  <!-- SLF4J -->
+  <property name="slf4j.root" location="${project.thirdparty}/slf4j"/>
+  <property name="slf4j.lib" location="${slf4j.root}/lib"/>
+  <path id="slf4j.classpath">
+    <fileset dir="${slf4j.lib}" includes="*.jar" excludes="*sources*"/>
+  </path>
+
+  <!-- Logback -->
+  <property name="logback.root" location="${project.thirdparty}/logback"/>
+  <property name="logback.lib" location="${logback.root}/lib"/>
+  <path id="logback.classpath">
+    <fileset dir="${logback.lib}" includes="*.jar" excludes="*sources*"/>
+  </path>
+
+  <!-- CAL10N -->
+  <property name="cal10n.root" location="${project.thirdparty}/cal10n"/>
+  <property name="cal10n.lib" location="${cal10n.root}/lib"/>
+  <path id="cal10n.classpath">
+    <fileset dir="${cal10n.lib}" includes="*.jar" excludes="*sources*"/>
+  </path>
+
+  <!-- JavaCC -->
+  <property name="javacc.root" location="${project.thirdparty}/javacc"/>
+  <property name="javacc.bin" location="${javacc.root}/bin"/>
+
+  <!-- TestNG -->
+  <property name="testng.root" location="${project.thirdparty}/testng"/>
+  <property name="testng.lib" location="${testng.root}/lib"/>
+  <path id="testng.classpath">
+    <fileset dir="${testng.lib}" includes="*.jar"/>
+  </path>
+  <taskdef name="testng" classname="org.testng.TestNGAntTask" classpathref="testng.classpath"/>
+
+  <!-- The combined library classpath. -->
+  <path id="library.classpath">
+    <path refid="netty.classpath"/>
+    <path refid="slf4j.classpath"/>
+    <path refid="logback.classpath"/>
+    <path refid="cal10n.classpath"/>
+  </path>
+
+  <!-- The combined classpath. -->
+  <path id="javac.classpath">
+    <path refid="library.classpath"/>
+  </path>
+
+  <!-- The JavaDoc classpath. -->
+  <path id="javadoc.classpath">
+    <path refid="javac.classpath"/>
+  </path>
+
+
+  <!-- ================================================================== -->
+  <!-- Default Target                                                     -->
+  <!-- ================================================================== -->
+
+  <target name="default" depends="jar-ohla"/>
+
+
+  <!-- ================================================================== -->
+  <!-- Initialization                                                     -->
+  <!-- ================================================================== -->
+
+  <target name="init">
+  </target>
+
+
+  <!-- ================================================================== -->
+  <!-- IEEE 1516e                                                         -->
+  <!-- ================================================================== -->
+
+  <property name="ieee-1516e.jar" value="ieee-1516e.jar"/>
+
+  <property name="resources.ieee-1516e" location="${project.root}/ieee-1516e/resources"/>
+  <property name="source.ieee-1516e" location="${project.root}/ieee-1516e/src"/>
+  <property name="source.ieee-1516e.java" location="${source.ieee-1516e}/java"/>
+
+  <target name="compile-ieee-1516e" depends="compile-ieee-1516e-java"/>
+
+  <target name="compile-ieee-1516e-java" depends="init">
+    <mkdir dir="${output}/ieee-1516e/classes"/>
+
+    <javac destdir="${output}/ieee-1516e/classes"
+           fork="${javac.fork}"
+           optimize="${javac.optimize}"
+           debug="${javac.debug}"
+           verbose="${javac.verbose}"
+           deprecation="${javac.deprecation}"
+           includes="**/*.java">
+
+      <classpath>
+        <path refid="javac.classpath"/>
+      </classpath>
+
+      <src path="${source.ieee-1516e.java}"/>
+    </javac>
+  </target>
+
+  <target name="jar-ieee-1516e" depends="compile-ieee-1516e-java">
+    <mkdir dir="${output.lib}"/>
+
+    <jar jarfile="${output.lib}/${ieee-1516e.jar}">
+      <fileset dir="${output}/ieee-1516e/classes"/>
+    </jar>
+  </target>
+
+
+  <!-- ================================================================== -->
+  <!-- IEEE 1516                                                          -->
+  <!-- ================================================================== -->
+
+  <property name="ieee-1516.jar" value="ieee-1516.jar"/>
+
+  <property name="resources.ieee-1516" location="${project.root}/ieee-1516/resources"/>
+  <property name="source.ieee-1516" location="${project.root}/ieee-1516/src"/>
+  <property name="source.ieee-1516.java" location="${source.ieee-1516}/java"/>
+
+  <target name="compile-ieee-1516" depends="compile-ieee-1516-java"/>
+
+  <target name="compile-ieee-1516-java" depends="init">
+    <mkdir dir="${output}/ieee-1516/classes"/>
+
+    <javac destdir="${output}/ieee-1516/classes"
+           fork="${javac.fork}"
+           optimize="${javac.optimize}"
+           debug="${javac.debug}"
+           verbose="${javac.verbose}"
+           deprecation="${javac.deprecation}"
+           includes="**/*.java">
+
+      <classpath>
+        <path refid="javac.classpath"/>
+      </classpath>
+
+      <src path="${source.ieee-1516.java}"/>
+    </javac>
+  </target>
+
+  <target name="jar-ieee-1516" depends="compile-ieee-1516-java">
+    <mkdir dir="${output.lib}"/>
+
+    <jar jarfile="${output.lib}/${ieee-1516.jar}">
+      <fileset dir="${output}/ieee-1516/classes"/>
+    </jar>
+  </target>
+
+
+  <!-- ================================================================== -->
+  <!-- HLA 1.3                                                            -->
+  <!-- ================================================================== -->
+
+  <property name="hla-1.3.jar" value="hla-1.3.jar"/>
+
+  <property name="resources.hla-1.3" location="${project.root}/hla-1.3/resources"/>
+  <property name="source.hla-1.3" location="${project.root}/hla-1.3/src"/>
+  <property name="source.hla-1.3.java" location="${source.hla-1.3}/java"/>
+
+  <target name="compile-hla-1.3" depends="compile-hla-1.3-java"/>
+
+  <target name="compile-hla-1.3-java" depends="init">
+    <mkdir dir="${output}/hla-1.3/classes"/>
+
+    <javac destdir="${output}/hla-1.3/classes"
+           fork="${javac.fork}"
+           optimize="${javac.optimize}"
+           debug="${javac.debug}"
+           verbose="${javac.verbose}"
+           deprecation="${javac.deprecation}"
+           includes="**/*.java">
+
+      <classpath>
+        <path refid="javac.classpath"/>
+      </classpath>
+
+      <src path="${source.hla-1.3.java}"/>
+    </javac>
+  </target>
+
+  <target name="jar-hla-1.3" depends="compile-hla-1.3-java">
+    <mkdir dir="${output.lib}"/>
+
+    <jar jarfile="${output.lib}/${hla-1.3.jar}">
+      <fileset dir="${output}/hla-1.3/classes"/>
+    </jar>
+  </target>
+
+
+  <!-- ================================================================== -->
+  <!-- OHLA RTI                                                           -->
+  <!-- ================================================================== -->
+
+  <property name="package.rti" value="net/sf/ohla/rti"/>
+  <property name="rti.jar" value="ohla-rti.jar"/>
+
+  <property name="rti.resources" location="${project.root}/rti/resources"/>
+  <property name="rti.source" location="${project.root}/rti/src"/>
+  <property name="rti.source.java" location="${rti.source}/java"/>
+
+  <target name="compile-ohla" depends="compile-ohla-java"/>
+
+  <target name="generate-hla-1.3-fed-check" depends="init">
+    <uptodate
+      property="generate-hla-1.3-fed.notRequired"
+      srcfile="${rti.source.java}/${package.rti}/fed/javacc/FEDParser.jj"
+      targetfile="${rti.source.java}/${package.rti}/fed/javacc/FEDParser.java"/>
+  </target>
+
+  <target name="generate-hla-1.3-fed" unless="generate-hla-1.3-fed.notRequired"
+          depends="generate-hla-1.3-fed-check">
+    <javacc target="${rti.source.java}/${package.rti}/fed/javacc/FEDParser.jj"
+            outputdirectory="${rti.source.java}/${package.rti}/fed/javacc"
+            javacchome="${javacc.root}"/>
+  </target>
+
+  <target name="compile-ohla-java"
+          depends="jar-ieee-1516e, jar-ieee-1516, jar-hla-1.3, generate-hla-1.3-fed">
+    <mkdir dir="${output}/rti/classes"/>
+
+    <javac srcdir="${rti.source.java}"
+           destdir="${output}/rti/classes"
+           fork="${javac.fork}"
+           optimize="${javac.optimize}"
+           debug="${javac.debug}"
+           verbose="${javac.verbose}"
+           deprecation="${javac.deprecation}"
+           includes="**/*.java">
+
+      <classpath>
+        <path refid="javac.classpath"/>
+        <pathelement location="${output.lib}/${hla-1.3.jar}"/>
+        <pathelement location="${output.lib}/${ieee-1516.jar}"/>
+        <pathelement location="${output.lib}/${ieee-1516e.jar}"/>
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="jar-ohla" depends="compile-ohla-java">
+    <mkdir dir="${output.lib}"/>
+
+    <jar jarfile="${output.lib}/${rti.jar}">
+      <fileset dir="${output}/rti/classes"/>
+    </jar>
+  </target>
+
+
+  <!-- ================================================================== -->
+  <!-- Docs                                                               -->
+  <!-- ================================================================== -->
+
+  <target name="docs" depends="javadoc"/>
+
+  <target name="javadoc">
+    <mkdir dir="${output.docs.api}"/>
+
+    <javadoc destdir="${output.docs.api}" classpathref="javac.classpath"
+             packagenames="hla.rti.*, hla.rti1516.*, hla.rti1516e.*, net.sf.ohla.*">
+      <sourcepath>
+        <pathelement location="${source.ieee-1516e.java}"/>
+        <pathelement location="${source.ieee-1516.java}"/>
+        <pathelement location="${source.hla-1.3.java}"/>
+        <pathelement location="${rti.source.java}"/>
+      </sourcepath>
+    </javadoc>
+  </target>
+
+
+  <!-- ================================================================== -->
+  <!-- Testsuite                                                          -->
+  <!-- ================================================================== -->
+
+  <property name="testsuite.resources" location="${project.root}/testsuite/resources"/>
+  <property name="testsuite.source" location="${project.root}/testsuite/src"/>
+  <property name="testsuite.source.java" location="${testsuite.source}/java"/>
+
+  <target name="compile-testsuite" depends="compile-testsuite-java"/>
+
+  <target name="compile-testsuite-java" depends="jar-ohla">
+    <mkdir dir="${output}/testsuite/classes"/>
+
+    <javac destdir="${output}/testsuite/classes"
+           fork="${javac.fork}"
+           optimize="${javac.optimize}"
+           debug="${javac.debug}"
+           verbose="${javac.verbose}"
+           deprecation="${javac.deprecation}"
+           includes="**/*.java">
+
+      <classpath>
+        <path refid="javac.classpath"/>
+        <path refid="testng.classpath"/>
+        <pathelement location="${output.lib}/${hla-1.3.jar}"/>
+        <pathelement location="${output.lib}/${ieee-1516.jar}"/>
+        <pathelement location="${output.lib}/${ieee-1516e.jar}"/>
+        <pathelement location="${output.lib}/${rti.jar}"/>
+      </classpath>
+
+      <src path="${testsuite.source.java}"/>
+    </javac>
+  </target>
+
+  <target name="testsuite" depends="testsuite-ieee-1516e, testsuite-ieee-1516, testsuite-hla-1.3"
+          description="Executes the Testsuite."/>
+
+  <target name="testsuite-ieee-1516e" depends="compile-testsuite-java"
+          description="Executes the IEEE 1516e Testsuite.">
+    <mkdir dir="${output}/testsuite/results"/>
+
+    <testng outputDir="${output}/testsuite/results/ieee-1516e" haltOnfailure="true">
+      <classpath>
+        <path refid="javac.classpath"/>
+        <pathelement location="${output.lib}/${hla-1.3.jar}"/>
+        <pathelement location="${output.lib}/${ieee-1516.jar}"/>
+        <pathelement location="${output.lib}/${ieee-1516e.jar}"/>
+        <pathelement location="${output.lib}/${rti.jar}"/>
+        <pathelement location="${output}/testsuite/classes"/>
+        <pathelement location="${resources.ieee-1516e}"/>
+        <pathelement location="${testsuite.resources}"/>
+        <pathelement location="${rti.resources}"/>
+      </classpath>
+      <xmlfileset dir="${testsuite.resources}" includes="ieee-1516e-testng.xml"/>
+
+      <jvmarg value="-ea"/>
+    </testng>
+  </target>
+
+  <target name="testsuite-ieee-1516" depends="compile-testsuite-java"
+          description="Executes the IEEE 1516 Testsuite.">
+    <mkdir dir="${output}/testsuite/results"/>
+
+    <testng outputDir="${output}/testsuite/results/ieee-1516"
+            haltOnfailure="true">
+      <classpath>
+        <path refid="javac.classpath"/>
+        <pathelement location="${output.lib}/${hla-1.3.jar}"/>
+        <pathelement location="${output.lib}/${ieee-1516.jar}"/>
+        <pathelement location="${output.lib}/${ieee-1516e.jar}"/>
+        <pathelement location="${output.lib}/${rti.jar}"/>
+        <pathelement location="${output}/testsuite/classes"/>
+        <pathelement location="${testsuite.resources}"/>
+        <pathelement location="${rti.resources}"/>
+      </classpath>
+      <xmlfileset dir="${testsuite.resources}" includes="ieee-1516-testng.xml"/>
+
+      <jvmarg value="-ea"/>
+    </testng>
+  </target>
+
+  <target name="testsuite-hla-1.3" depends="compile-testsuite-java"
+          description="Executes the HLA 1.3 Testsuite.">
+    <mkdir dir="${output}/testsuite/results"/>
+
+    <testng outputDir="${output}/testsuite/results/hla-1.3"
+            haltOnfailure="true">
+      <classpath>
+        <path refid="javac.classpath"/>
+        <pathelement location="${output.lib}/${hla-1.3.jar}"/>
+        <pathelement location="${output.lib}/${ieee-1516.jar}"/>
+        <pathelement location="${output.lib}/${ieee-1516e.jar}"/>
+        <pathelement location="${output.lib}/${rti.jar}"/>
+        <pathelement location="${output}/testsuite/classes"/>
+        <pathelement location="${testsuite.resources}"/>
+        <pathelement location="${rti.resources}"/>
+      </classpath>
+      <xmlfileset dir="${testsuite.resources}" includes="hla-1.3-testng.xml"/>
+
+      <jvmarg value="-ea"/>
+    </testng>
+  </target>
+
+
+  <!-- ================================================================== -->
+  <!-- Distribution                                                       -->
+  <!-- ================================================================== -->
+
+  <target name="dist" depends="jar-ieee-1516e, jar-ieee-1516, jar-hla-1.3, jar-ohla, docs">
+    <mkdir dir="${output.dist}"/>
+
+    <tar destfile="${output.dist}/${dist.name}.tar.gz" compression="gzip">
+      <tarfileset prefix="${dist.name}" dir="${project.root}" excludes="build/output/**"/>
+      <tarfileset prefix="${dist.name}" dir="${output}" includes="docs/**"/>
+      <tarfileset prefix="${dist.name}" dir="${output.lib}"/>
+    </tar>
+
+    <zip destfile="${output.dist}/${dist.name}.zip">
+      <zipfileset prefix="${dist.name}" dir="${project.root}" excludes="build/output/**"/>
+      <zipfileset prefix="${dist.name}" dir="${output}" includes="docs/**"/>
+      <zipfileset prefix="${dist.name}" dir="${output.lib}"/>
+    </zip>
+  </target>
+
+
+  <!-- ================================================================== -->
+  <!-- Programs                                                           -->
+  <!-- ================================================================== -->
+
+  <target name="start-rti" depends="jar-ohla" description="Starts the OHLA RTI.">
+    <java classname="net.sf.ohla.rti.RTI" fork="yes">
+      <classpath>
+        <path refid="javac.classpath"/>
+        <pathelement location="${output.lib}/${ieee-1516e.jar}"/>
+        <pathelement location="${output.lib}/${ieee-1516.jar}"/>
+        <pathelement location="${output.lib}/${hla-1.3.jar}"/>
+        <pathelement location="${output.lib}/${rti.jar}"/>
+        <pathelement location="${rti.resources}"/>
+      </classpath>
+
+      <jvmarg value="-server"/>
+    </java>
+  </target>
+
+  <target name="start-rti-debug" depends="jar-ohla" description="Starts the OHLA RTI.">
+    <java classname="net.sf.ohla.rti.RTI" fork="yes">
+      <classpath>
+        <path refid="javac.classpath"/>
+        <pathelement location="${output.lib}/${ieee-1516e.jar}"/>
+        <pathelement location="${output.lib}/${ieee-1516.jar}"/>
+        <pathelement location="${output.lib}/${hla-1.3.jar}"/>
+        <pathelement location="${output.lib}/${rti.jar}"/>
+        <pathelement location="${rti.resources}"/>
+      </classpath>
+
+      <jvmarg value="-server"/>
+      <jvmarg value="-Xdebug"/>
+      <jvmarg value="-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"/>
+    </java>
+  </target>
+
+
+  <!-- ================================================================== -->
+  <!-- Cleaning                                                           -->
+  <!-- ================================================================== -->
+
+  <target name="clean" description="Brings the distribution back to pre-build status.">
+    <delete dir="${output}"/>
+  </target>
+
+</project>

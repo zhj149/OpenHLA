@@ -1,0 +1,50 @@
+(FED
+  (Federation Test)
+  (FEDversion v1.3)
+  (spaces
+    (space TestRoutingSpace
+      (dimension Dimension1)
+      (dimension Dimension2)
+      (dimension Dimension3)
+      (dimension Dimension4)
+    )
+  )
+  (objects
+    (class objectRoot
+      (attribute privilegeToDelete HLAreliable TimeStamp)
+      (class RTIprivate)
+
+      (class TestObject
+        (attribute Attribute1 HLAreliable TimeStamp TestRoutingSpace)
+        (attribute Attribute2 HLAreliable TimeStamp TestRoutingSpace)
+        (attribute Attribute3 HLAreliable TimeStamp TestRoutingSpace)
+        (attribute BestEffortReceiveAttribute HLAbestEffort Receive TestRoutingSpace)
+        (attribute BestEffortTimeStampAttribute HLAbestEffort TimeStamp TestRoutingSpace)
+        (attribute HLAreliableReceiveAttribute HLAreliable Receive TestRoutingSpace)
+        (attribute HLAreliableTimeStampAttribute HLAreliable TimeStamp TestRoutingSpace)
+
+        (class TestObject2
+          (attribute Attribute4 HLAreliable TimeStamp TestRoutingSpace)
+          (attribute Attribute5 HLAreliable TimeStamp TestRoutingSpace)
+          (attribute Attribute6 HLAreliable TimeStamp TestRoutingSpace)
+        )
+      )
+    )
+  )
+  (interactions
+    (class interactionRoot HLAreliable TimeStamp
+      (class RTIprivate HLAreliable TimeStamp)
+      (class TestInteraction HLAreliable TimeStamp TestRoutingSpace
+        (parameter Parameter1)
+        (parameter Parameter2)
+        (parameter Parameter3)
+
+        (class TestInteraction2 HLAreliable TimeStamp TestRoutingSpace
+          (parameter Parameter4)
+          (parameter Parameter5)
+          (parameter Parameter6)
+        )
+      )
+    )
+  )
+)
