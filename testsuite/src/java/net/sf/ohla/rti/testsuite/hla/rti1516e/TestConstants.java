@@ -38,7 +38,7 @@ public interface TestConstants
   static final String SYNCHRONIZATION_POINT_4 = "Synchronization Point 4";
   static final String SYNCHRONIZATION_POINT_5 = "Synchronization Point 5";
 
-  static final byte[] TAG = new byte[] { (byte) Math.random(), (byte) Math.random(), (byte) Math.random() };
+  static final byte[] TAG = "TAG".getBytes();
 
   static final String TEST_OBJECT = "TestObject";
   static final String TEST_OBJECT2 = "TestObject.TestObject2";
