@@ -21,16 +21,12 @@ import org.testng.annotations.Test;
 import hla.rti1516e.exceptions.InvalidLookahead;
 import hla.rti1516e.exceptions.TimeRegulationAlreadyEnabled;
 import hla.rti1516e.exceptions.TimeRegulationIsNotEnabled;
-import hla.rti1516e.time.HLAinteger64Interval;
 
 @Test
 public class TimeRegulationTestNG
   extends BaseTimeManagementTestNG
 {
   private static final String FEDERATION_NAME = "OHLA IEEE 1516e Time Regulation Test Federation";
-
-  private final HLAinteger64Interval lookahead1 = logicalTimeFactory.makeInterval(1L);
-  private final HLAinteger64Interval lookahead2 = logicalTimeFactory.makeInterval(2L);
 
   public TimeRegulationTestNG()
   {

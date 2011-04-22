@@ -31,6 +31,7 @@ import hla.rti1516e.FederateHandle;
 import hla.rti1516e.LogicalTimeFactoryFactory;
 import hla.rti1516e.RTIambassador;
 import hla.rti1516e.ResignAction;
+import hla.rti1516e.time.HLAinteger64Interval;
 import hla.rti1516e.time.HLAinteger64Time;
 import hla.rti1516e.time.HLAinteger64TimeFactory;
 
@@ -47,10 +48,18 @@ public abstract class BaseTimeManagementTestNG
 
   protected final HLAinteger64Time initial = logicalTimeFactory.makeInitial();
 
+  protected final HLAinteger64Time two = logicalTimeFactory.makeTime(2L);
+  protected final HLAinteger64Time three = logicalTimeFactory.makeTime(3L);
+  protected final HLAinteger64Time four = logicalTimeFactory.makeTime(4L);
   protected final HLAinteger64Time five = logicalTimeFactory.makeTime(5L);
   protected final HLAinteger64Time ten = logicalTimeFactory.makeTime(10L);
+  protected final HLAinteger64Time fifteen = logicalTimeFactory.makeTime(15L);
   protected final HLAinteger64Time twenty = logicalTimeFactory.makeTime(20L);
+  protected final HLAinteger64Time thirty = logicalTimeFactory.makeTime(30L);
   protected final HLAinteger64Time oneHundred = logicalTimeFactory.makeTime(100L);
+
+  protected final HLAinteger64Interval lookahead1 = logicalTimeFactory.makeInterval(1L);
+  protected final HLAinteger64Interval lookahead2 = logicalTimeFactory.makeInterval(2L);
 
   protected BaseTimeManagementTestNG(String federationName)
   {
@@ -97,5 +106,7 @@ public abstract class BaseTimeManagementTestNG
     resignFederationExecution(ResignAction.NO_ACTION);
 
     destroyFederationExecution(federationName);
+
+    disconnect();
   }
 }
