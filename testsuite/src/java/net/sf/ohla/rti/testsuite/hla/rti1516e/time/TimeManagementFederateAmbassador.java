@@ -208,6 +208,8 @@ public class TimeManagementFederateAmbassador
       rtiAmbassador.evokeCallback(1.0);
     }
     assert parameterValues.equals(this.parameterValues);
+
+    this.parameterValues = null;
   }
 
   public void checkParameterValuesNotReceived()
