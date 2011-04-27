@@ -103,7 +103,7 @@ public abstract class BaseTimeManagementTestNG
   public void baseTimeTeardown()
     throws Exception
   {
-    resignFederationExecution(ResignAction.NO_ACTION);
+    resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
 
     destroyFederationExecution(federationName);
 
