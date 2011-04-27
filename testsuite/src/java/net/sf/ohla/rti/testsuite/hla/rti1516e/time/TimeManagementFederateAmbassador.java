@@ -58,10 +58,15 @@ public class TimeManagementFederateAmbassador
     throws Exception
   {
     timeRegulationEnabledTime = null;
-    for (int i = 0; i < 5 && timeRegulationEnabledTime == null; i++)
+
+    evokeCallbackWhile(new Callable<Boolean>()
     {
-      rtiAmbassador.evokeCallback(1.0);
-    }
+      public Boolean call()
+      {
+        return timeRegulationEnabledTime == null;
+      }
+    });
+
     assert timeRegulationEnabledTime != null;
   }
 
@@ -69,22 +74,31 @@ public class TimeManagementFederateAmbassador
     throws Exception
   {
     timeRegulationEnabledTime = null;
-    for (int i = 0; i < 5 && timeRegulationEnabledTime == null; i++)
+
+    evokeCallbackWhile(new Callable<Boolean>()
     {
-      rtiAmbassador.evokeCallback(1.0);
-    }
-    assert time.equals(timeRegulationEnabledTime) :
-      time + " != " + timeRegulationEnabledTime;
+      public Boolean call()
+      {
+        return timeRegulationEnabledTime == null;
+      }
+    });
+
+    assert time.equals(timeRegulationEnabledTime);
   }
 
   public void checkTimeConstrainedEnabled()
     throws Exception
   {
     timeConstrainedEnabledTime = null;
-    for (int i = 0; i < 5 && timeConstrainedEnabledTime == null; i++)
+
+    evokeCallbackWhile(new Callable<Boolean>()
     {
-      rtiAmbassador.evokeCallback(1.0);
-    }
+      public Boolean call()
+      {
+        return timeConstrainedEnabledTime == null;
+      }
+    });
+
     assert timeConstrainedEnabledTime != null;
   }
 
@@ -92,10 +106,15 @@ public class TimeManagementFederateAmbassador
     throws Exception
   {
     timeConstrainedEnabledTime = null;
-    for (int i = 0; i < 5 && timeConstrainedEnabledTime == null; i++)
+
+    evokeCallbackWhile(new Callable<Boolean>()
     {
-      rtiAmbassador.evokeCallback(1.0);
-    }
+      public Boolean call()
+      {
+        return timeConstrainedEnabledTime == null;
+      }
+    });
+
     assert time.equals(timeConstrainedEnabledTime);
   }
 
@@ -104,109 +123,137 @@ public class TimeManagementFederateAmbassador
   {
     federateTime = null;
 
-    evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return federateTime == null; } });
+    evokeCallbackWhile(new Callable<Boolean>()
+    {
+      public Boolean call()
+      {
+        return federateTime == null;
+      }
+    });
 
-    assert time.equals(federateTime) : time + " != " + federateTime;
+    assert time.equals(federateTime);
   }
 
   public void checkTimeAdvanceGrantNotGranted(LogicalTime time)
     throws Exception
   {
     federateTime = null;
-    for (int i = 0; i < 5; i++)
+
+    evokeCallbackWhile(new Callable<Boolean>()
     {
-      rtiAmbassador.evokeCallback(0.1);
-    }
+      public Boolean call()
+      {
+        return true;
+      }
+    }, 1, 0.5);
+
     assert federateTime == null;
   }
 
   public void checkGALT(LogicalTime time)
     throws Exception
   {
-    TimeQueryReturn galt = rtiAmbassador.queryGALT();
-    for (int i = 0; i < 5 && !galt.timeIsValid; i++)
+    final TimeQueryReturn galt = rtiAmbassador.queryGALT();
+
+    evokeCallbackWhile(new Callable<Boolean>()
     {
-      rtiAmbassador.evokeCallback(1.0);
-    }
-    assert galt.timeIsValid && galt.time.equals(time);
+      public Boolean call()
+      {
+        return !galt.timeIsValid;
+      }
+    });
+
+    assert galt.timeIsValid;
+    assert galt.time.equals(time);
   }
 
   public void checkLITS(LogicalTime time)
     throws Exception
   {
-    TimeQueryReturn lits = rtiAmbassador.queryLITS();
-    for (int i = 0; i < 5 && !lits.timeIsValid; i++)
+    final TimeQueryReturn lits = rtiAmbassador.queryLITS();
+
+    evokeCallbackWhile(new Callable<Boolean>()
     {
-      rtiAmbassador.evokeCallback(1.0);
-    }
-    assert lits.timeIsValid && lits.time.equals(time);
+      public Boolean call()
+      {
+        return !lits.timeIsValid;
+      }
+    });
+
+    assert lits.timeIsValid;
+    assert lits.time.equals(time);
   }
 
-  public void checkObjectInstanceHandle(
-    ObjectInstanceHandle objectInstanceHandle)
+  public void checkObjectInstanceHandle(final ObjectInstanceHandle objectInstanceHandle)
     throws Exception
   {
-    for (int i = 0;
-         i < 5 && !objectInstances.containsKey(objectInstanceHandle); i++)
+    evokeCallbackWhile(new Callable<Boolean>()
     {
-      rtiAmbassador.evokeCallback(1.0);
-    }
+      public Boolean call()
+      {
+        return !objectInstances.containsKey(objectInstanceHandle);
+      }
+    });
+
     assert objectInstances.containsKey(objectInstanceHandle);
   }
 
-  public void checkAttributeValues(ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues)
+  public void checkAttributeValues(final ObjectInstanceHandle objectInstanceHandle,
+                                   AttributeHandleValueMap attributeValues)
     throws Exception
   {
-    for (int i = 0;
-         i < 5 &&
-         objectInstances.get(objectInstanceHandle).getAttributeValues() ==
-         null;
-         i++)
+    evokeCallbackWhile(new Callable<Boolean>()
     {
-      rtiAmbassador.evokeCallback(1.0);
-    }
+      public Boolean call()
+      {
+        return objectInstances.get(objectInstanceHandle).getAttributeValues() == null;
+      }
+    });
 
-    assert attributeValues.equals(
-      objectInstances.get(objectInstanceHandle).getAttributeValues()) :
-      attributeValues + " = " + objectInstances.get(objectInstanceHandle).getAttributeValues();
+    assert attributeValues.equals(objectInstances.get(objectInstanceHandle).getAttributeValues());
+
+    objectInstances.get(objectInstanceHandle).setAttributeValues(null, null, null);
   }
 
-  public void checkAttributeValuesNotReceived(
-    ObjectInstanceHandle objectInstanceHandle)
+  public void checkAttributeValuesNotReceived(final ObjectInstanceHandle objectInstanceHandle)
     throws Exception
   {
-    for (int i = 0;
-         i < 5 &&
-         objectInstances.get(objectInstanceHandle).getAttributeValues() ==
-         null;
-         i++)
+    evokeCallbackWhile(new Callable<Boolean>()
     {
-      rtiAmbassador.evokeCallback(0.1);
-    }
+      public Boolean call()
+      {
+        return objectInstances.get(objectInstanceHandle).getAttributeValues() == null;
+      }
+    }, 1, 0.5);
 
     assert objectInstances.get(objectInstanceHandle).getAttributeValues() == null;
   }
 
-  public void checkForRemovedObjectInstanceHandle(
-    ObjectInstanceHandle objectInstanceHandle)
+  public void checkForRemovedObjectInstanceHandle(final ObjectInstanceHandle objectInstanceHandle)
     throws Exception
   {
-    for (int i = 0;
-         i < 5 && !objectInstances.get(objectInstanceHandle).isRemoved();
-         i++)
+    evokeCallbackWhile(new Callable<Boolean>()
     {
-      rtiAmbassador.evokeCallback(1.0);
-    }
+      public Boolean call()
+      {
+        return !objectInstances.get(objectInstanceHandle).isRemoved();
+      }
+    });
+
     assert objectInstances.get(objectInstanceHandle).isRemoved();
   }
 
   public void checkParameterValues(ParameterHandleValueMap parameterValues)
     throws Exception
   {
-    for (int i = 0; i < 5 && this.parameterValues == null; i++)
+    evokeCallbackWhile(new Callable<Boolean>()
     {
-      rtiAmbassador.evokeCallback(1.0);
-    }
+      public Boolean call()
+      {
+        return TimeManagementFederateAmbassador.this.parameterValues == null;
+      }
+    });
+
     assert parameterValues.equals(this.parameterValues);
 
     this.parameterValues = null;
@@ -215,10 +262,14 @@ public class TimeManagementFederateAmbassador
   public void checkParameterValuesNotReceived()
     throws Exception
   {
-    for (int i = 0; i < 5 && this.parameterValues == null; i++)
+    evokeCallbackWhile(new Callable<Boolean>()
     {
-      rtiAmbassador.evokeCallback(0.1);
-    }
+      public Boolean call()
+      {
+        return true;
+      }
+    }, 1, 0.5);
+
     assert parameterValues == null;
   }
 
