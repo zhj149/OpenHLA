@@ -106,4 +106,61 @@ public class ManagedTimeAdvancementTestNG
     federateAmbassadors.get(1).checkTimeAdvanceGrant(five);
     federateAmbassadors.get(2).checkTimeAdvanceGrant(five);
   }
+
+  @Test(dependsOnMethods = {"testTimeAdvanceRequest"})
+  public void testNextMessageRequest()
+    throws Exception
+  {
+    // request advance by regulating-only federate
+    //
+    rtiAmbassadors.get(0).nextMessageRequest(ten);
+
+    // should be immediately granted because not constrained
+    //
+    federateAmbassadors.get(0).checkTimeAdvanceGrant(ten);
+
+    // request advance by constrained-only federate
+    //
+    rtiAmbassadors.get(1).nextMessageRequest(eight);
+
+    // should NOT be granted because other regulating federate not advanced
+    //
+    federateAmbassadors.get(1).checkTimeAdvanceGrantNotGranted(five);
+
+    // request advance by regulating-and-constrained federate
+    //
+    rtiAmbassadors.get(2).nextMessageRequest(seven);
+
+    // should be immediately granted because other regulating federate is requesting advance to five
+    //
+    federateAmbassadors.get(2).checkTimeAdvanceGrant(seven);
+
+    // request advance by regulating-and-constrained federate
+    //
+    rtiAmbassadors.get(2).nextMessageRequest(nine);
+
+    // should be immediately granted because other regulating federate is requesting advance to five
+    //
+    federateAmbassadors.get(2).checkTimeAdvanceGrant(nine);
+
+    // should be granted because regulating federates are at four
+    //
+    federateAmbassadors.get(1).checkTimeAdvanceGrant(eight);
+
+    // request advance by constrained-only federate
+    //
+    rtiAmbassadors.get(1).nextMessageRequest(nine);
+
+    // should be granted because regulating federates are at four
+    //
+    federateAmbassadors.get(1).checkTimeAdvanceGrant(nine);
+
+    // bring the regulating-and-constrained and constrained-only federates to five
+    //
+    rtiAmbassadors.get(1).nextMessageRequest(ten);
+    rtiAmbassadors.get(2).nextMessageRequest(ten);
+
+    federateAmbassadors.get(1).checkTimeAdvanceGrant(ten);
+    federateAmbassadors.get(2).checkTimeAdvanceGrant(ten);
+  }
 }

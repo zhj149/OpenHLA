@@ -52,6 +52,10 @@ public abstract class BaseTimeManagementTestNG
   protected final HLAinteger64Time three = logicalTimeFactory.makeTime(3L);
   protected final HLAinteger64Time four = logicalTimeFactory.makeTime(4L);
   protected final HLAinteger64Time five = logicalTimeFactory.makeTime(5L);
+  protected final HLAinteger64Time six = logicalTimeFactory.makeTime(6L);
+  protected final HLAinteger64Time seven = logicalTimeFactory.makeTime(7L);
+  protected final HLAinteger64Time eight = logicalTimeFactory.makeTime(8L);
+  protected final HLAinteger64Time nine = logicalTimeFactory.makeTime(9L);
   protected final HLAinteger64Time ten = logicalTimeFactory.makeTime(10L);
   protected final HLAinteger64Time fifteen = logicalTimeFactory.makeTime(15L);
   protected final HLAinteger64Time twenty = logicalTimeFactory.makeTime(20L);
