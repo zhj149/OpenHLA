@@ -65,6 +65,8 @@ import net.sf.ohla.rti.messages.GetFederateHandle;
 import net.sf.ohla.rti.messages.GetFederateHandleResponse;
 import net.sf.ohla.rti.messages.GetFederateName;
 import net.sf.ohla.rti.messages.GetFederateNameResponse;
+import net.sf.ohla.rti.messages.GetLITS;
+import net.sf.ohla.rti.messages.GetLITSResponse;
 import net.sf.ohla.rti.messages.JoinFederationExecution;
 import net.sf.ohla.rti.messages.JoinFederationExecutionResponse;
 import net.sf.ohla.rti.messages.MessageDecoder;
@@ -443,6 +445,22 @@ public class Federate
   public void fddUpdated(FDD fdd)
   {
     this.fdd = fdd;
+  }
+
+  @SuppressWarnings("unchecked")
+  public void getLITS(GetLITS getLITS)
+  {
+    timeManager.getTimeLock().writeLock().lock();
+    try
+    {
+      LogicalTime lits = getNextMessageTime();
+      lits = lits == null || lits.compareTo(getLITS.getPotentialGALT()) > 0 ? null : lits;
+      rtiChannel.write(new GetLITSResponse(getLITS.getId(), lits));
+    }
+    finally
+    {
+      timeManager.getTimeLock().writeLock().unlock();
+    }
   }
 
   @SuppressWarnings("unchecked")

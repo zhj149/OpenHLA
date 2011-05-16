@@ -375,14 +375,8 @@ public class MessageDecoder
       case NEXT_MESSAGE_REQUEST:
         message = new NextMessageRequest(buffer, logicalTimeFactory);
         break;
-      case NEXT_MESSAGE_REQUEST_TIME_ADVANCE_GRANT:
-        message = new NextMessageRequestTimeAdvanceGrant(buffer, logicalTimeFactory);
-        break;
       case NEXT_MESSAGE_REQUEST_AVAILABLE:
         message = new NextMessageRequestAvailable(buffer, logicalTimeFactory);
-        break;
-      case NEXT_MESSAGE_REQUEST_AVAILABLE_TIME_ADVANCE_GRANT:
-        message = new NextMessageRequestAvailableTimeAdvanceGrant(buffer, logicalTimeFactory);
         break;
       case FLUSH_QUEUE_REQUEST:
         message = new FlushQueueRequest(buffer, logicalTimeFactory);
@@ -392,9 +386,6 @@ public class MessageDecoder
         break;
       case GALT_UNDEFINED:
         message = new GALTUndefined(buffer);
-        break;
-      case UPDATE_LITS:
-        message = new UpdateLITS(buffer, logicalTimeFactory);
         break;
       case MODIFY_LOOKAHEAD:
         message = new ModifyLookahead(buffer, logicalTimeFactory);
@@ -569,6 +560,12 @@ public class MessageDecoder
         break;
       case REQUEST_RETRACTION:
         message = new RequestRetraction(buffer);
+        break;
+      case GET_LITS:
+        message = new GetLITS(buffer, logicalTimeFactory);
+        break;
+      case GET_LITS_RESPONSE:
+        message = new GetLITSResponse(buffer, logicalTimeFactory);
         break;
       default:
       throw new Error();

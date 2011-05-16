@@ -69,13 +69,10 @@ import net.sf.ohla.rti.messages.GetUpdateRateValueForAttribute;
 import net.sf.ohla.rti.messages.JoinFederationExecution;
 import net.sf.ohla.rti.messages.JoinFederationExecutionResponse;
 import net.sf.ohla.rti.messages.LocalDeleteObjectInstance;
-import net.sf.ohla.rti.messages.Message;
 import net.sf.ohla.rti.messages.ModifyLookahead;
 import net.sf.ohla.rti.messages.NegotiatedAttributeOwnershipDivestiture;
 import net.sf.ohla.rti.messages.NextMessageRequest;
 import net.sf.ohla.rti.messages.NextMessageRequestAvailable;
-import net.sf.ohla.rti.messages.NextMessageRequestAvailableTimeAdvanceGrant;
-import net.sf.ohla.rti.messages.NextMessageRequestTimeAdvanceGrant;
 import net.sf.ohla.rti.messages.PublishObjectClassAttributes;
 import net.sf.ohla.rti.messages.QueryAttributeOwnership;
 import net.sf.ohla.rti.messages.QueryFederationRestoreStatus;
@@ -114,7 +111,6 @@ import net.sf.ohla.rti.messages.UnsubscribeInteractionClassWithRegions;
 import net.sf.ohla.rti.messages.UnsubscribeObjectClassAttributes;
 import net.sf.ohla.rti.messages.UnsubscribeObjectClassAttributesWithRegions;
 import net.sf.ohla.rti.messages.UpdateAttributeValues;
-import net.sf.ohla.rti.messages.UpdateLITS;
 import net.sf.ohla.rti.messages.callbacks.AnnounceSynchronizationPoint;
 import net.sf.ohla.rti.messages.callbacks.AttributeOwnershipAcquisitionNotification;
 import net.sf.ohla.rti.messages.callbacks.FederationNotSaved;
@@ -128,8 +124,6 @@ import net.sf.ohla.rti.messages.callbacks.SynchronizationPointRegistrationFailed
 import net.sf.ohla.rti.messages.callbacks.SynchronizationPointRegistrationSucceeded;
 
 import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
@@ -1463,55 +1457,12 @@ public class FederationExecution
     }
   }
 
-  public void nextMessageRequestTimeAdvanceGrant(
-    FederateProxy federateProxy, NextMessageRequestTimeAdvanceGrant nextMessageRequestTimeAdvanceGrant)
-  {
-    federationExecutionStateLock.readLock().lock();
-    try
-    {
-      timeManager.nextMessageRequestTimeAdvanceGrant(federateProxy, nextMessageRequestTimeAdvanceGrant.getTime());
-    }
-    finally
-    {
-      federationExecutionStateLock.readLock().unlock();
-    }
-  }
-
-  public void nextMessageRequestAvailableTimeAdvanceGrant(
-    FederateProxy federateProxy,
-    NextMessageRequestAvailableTimeAdvanceGrant nextMessageRequestAvailableTimeAdvanceGrant)
-  {
-    federationExecutionStateLock.readLock().lock();
-    try
-    {
-      timeManager.nextMessageRequestAvailableTimeAdvanceGrant(
-        federateProxy, nextMessageRequestAvailableTimeAdvanceGrant.getTime());
-    }
-    finally
-    {
-      federationExecutionStateLock.readLock().unlock();
-    }
-  }
-
   public void flushQueueRequest(FederateProxy federateProxy, FlushQueueRequest flushQueueRequest)
   {
     federationExecutionStateLock.readLock().lock();
     try
     {
       timeManager.flushQueueRequest(federateProxy, flushQueueRequest.getTime());
-    }
-    finally
-    {
-      federationExecutionStateLock.readLock().unlock();
-    }
-  }
-
-  public void updateLITS(FederateProxy federateProxy, UpdateLITS updateLITS)
-  {
-    federationExecutionStateLock.readLock().lock();
-    try
-    {
-      federateProxy.updateLITS(updateLITS.getTime());
     }
     finally
     {

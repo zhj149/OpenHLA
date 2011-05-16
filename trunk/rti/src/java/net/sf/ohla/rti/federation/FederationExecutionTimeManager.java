@@ -16,19 +16,23 @@
 
 package net.sf.ohla.rti.federation;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.sf.ohla.rti.i18n.I18nLogger;
 import net.sf.ohla.rti.i18n.LogMessages;
+import net.sf.ohla.rti.messages.GetLITS;
 
 import hla.rti1516e.LogicalTime;
 import hla.rti1516e.LogicalTimeFactory;
 import hla.rti1516e.LogicalTimeInterval;
 import hla.rti1516e.exceptions.IllegalTimeArithmetic;
 import hla.rti1516e.exceptions.InvalidLogicalTimeInterval;
+import hla.rti1516e.exceptions.RTIinternalError;
 
 public class FederationExecutionTimeManager
 {
@@ -497,60 +501,6 @@ public class FederationExecutionTimeManager
     }
   }
 
-  public void nextMessageRequestTimeAdvanceGrant(
-    FederateProxy federateProxy, LogicalTime time)
-  {
-    timeLock.writeLock().lock();
-    try
-    {
-      federateProxy.nextMessageRequest(time);
-
-      if (timeRegulatingFederates.contains(federateProxy))
-      {
-        recalculateGALT(federateProxy);
-      }
-    }
-    catch (IllegalTimeArithmetic ita)
-    {
-      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ita);
-    }
-    catch (InvalidLogicalTimeInterval ilti)
-    {
-      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ilti);
-    }
-    finally
-    {
-      timeLock.writeLock().unlock();
-    }
-  }
-
-  public void nextMessageRequestAvailableTimeAdvanceGrant(
-    FederateProxy federateProxy, LogicalTime time)
-  {
-    timeLock.writeLock().lock();
-    try
-    {
-      federateProxy.nextMessageRequestAvailable(time);
-
-      if (timeRegulatingFederates.contains(federateProxy))
-      {
-        recalculateGALT(federateProxy);
-      }
-    }
-    catch (IllegalTimeArithmetic ita)
-    {
-      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ita);
-    }
-    catch (InvalidLogicalTimeInterval ilti)
-    {
-      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ilti);
-    }
-    finally
-    {
-      timeLock.writeLock().unlock();
-    }
-  }
-
   public void flushQueueRequest(FederateProxy federateProxy, LogicalTime time)
   {
     timeLock.writeLock().lock();
@@ -595,15 +545,147 @@ public class FederationExecutionTimeManager
     }
     else
     {
-      LogicalTime newGALT = finalTime;
+      LogicalTime potentialGALT = finalTime;
 
-      // recalculate the federation-wide GALT
+      // track any time regulating-and-constrained federates that are awaiting advances from a next message request
+      //
+      Map<FederateProxy, GetLITS> federateProxiesAwaitingNextMessageRequestTimeAdvanceGrants = null;
+
+      // calculate the potential federation-wide GALT
       //
       for (FederateProxy timeRegulatingFederate : timeRegulatingFederates)
       {
-        newGALT = min(newGALT, timeRegulatingFederate.getLOTS());
+        potentialGALT = min(potentialGALT, timeRegulatingFederate.getLOTS());
 
-        // also recalculate the GALT for each time regulating federate
+        if (timeRegulatingFederate.isTimeConstrainedEnabled() && timeRegulatingFederate.getAdvanceRequestTime() != null)
+        {
+          // this federate is constrained and awaiting a time advance grant
+
+          switch (timeRegulatingFederate.getAdvanceRequestType())
+          {
+            case NEXT_MESSAGE_REQUEST:
+            case NEXT_MESSAGE_REQUEST_AVAILABLE:
+              if (federateProxiesAwaitingNextMessageRequestTimeAdvanceGrants == null)
+              {
+                federateProxiesAwaitingNextMessageRequestTimeAdvanceGrants = new HashMap<FederateProxy, GetLITS>();
+              }
+              federateProxiesAwaitingNextMessageRequestTimeAdvanceGrants.put(timeRegulatingFederate, null);
+              break;
+          }
+        }
+      }
+
+      LogicalTime newGALT;
+      if (federateProxiesAwaitingNextMessageRequestTimeAdvanceGrants == null)
+      {
+        newGALT = potentialGALT;
+      }
+      else if (federateProxiesAwaitingNextMessageRequestTimeAdvanceGrants.size() == 1)
+      {
+        FederateProxy federateProxyAwaitingNextMessageRequestTimeAdvanceGrant =
+          federateProxiesAwaitingNextMessageRequestTimeAdvanceGrants.keySet().iterator().next();
+
+        GetLITS getLITS = new GetLITS(potentialGALT);
+        federateProxyAwaitingNextMessageRequestTimeAdvanceGrant.getFederateChannel().write(getLITS);
+
+        try
+        {
+          LogicalTime lits = getLITS.getResponse().getLITS();
+          if (lits == null)
+          {
+            newGALT = potentialGALT;
+          }
+          else
+          {
+            federateProxyAwaitingNextMessageRequestTimeAdvanceGrant.adjustNextMessageRequestAdvanceRequestTime(lits);
+
+            newGALT = federateProxyAwaitingNextMessageRequestTimeAdvanceGrant.getLOTS();
+          }
+        }
+        catch (RTIinternalError rtiie)
+        {
+          // TODO: handle appropriately
+          //
+          log.error(null, rtiie);
+
+          newGALT = potentialGALT;
+        }
+      }
+      else
+      {
+        assert federateProxiesAwaitingNextMessageRequestTimeAdvanceGrants.size() > 1;
+
+        // send all the requests
+        //
+        for (Map.Entry<FederateProxy, GetLITS> entry :
+          federateProxiesAwaitingNextMessageRequestTimeAdvanceGrants.entrySet())
+        {
+          GetLITS getLITS = new GetLITS(potentialGALT);
+          entry.setValue(getLITS);
+
+          entry.getKey().getFederateChannel().write(getLITS);
+        }
+
+        Map<FederateProxy, LogicalTime> federateProxyLITS = null;
+
+        // find the smallest LITS
+        //
+        LogicalTime smallestLITS = finalTime;
+        for (Map.Entry<FederateProxy, GetLITS> entry :
+          federateProxiesAwaitingNextMessageRequestTimeAdvanceGrants.entrySet())
+        {
+          LogicalTime lits;
+          try
+          {
+            lits = entry.getValue().getResponse().getLITS();
+          }
+          catch (RTIinternalError rtiie)
+          {
+            // TODO: handle appropriately
+            //
+            log.error(null, rtiie);
+
+            lits = null;
+          }
+
+          if (lits != null)
+          {
+            smallestLITS = min(smallestLITS, lits);
+
+            if (federateProxyLITS == null)
+            {
+              federateProxyLITS = new HashMap<FederateProxy, LogicalTime>();
+            }
+            federateProxyLITS.put(federateProxy, lits);
+          }
+        }
+
+        if (smallestLITS.compareTo(potentialGALT) < 0)
+        {
+          assert federateProxyLITS != null;
+
+          // at least one of the federates had a LITS < the potential GALT
+
+          newGALT = finalTime;
+          for (Map.Entry<FederateProxy, LogicalTime> entry : federateProxyLITS.entrySet())
+          {
+            if (smallestLITS.equals(entry.getValue()))
+            {
+              entry.getKey().adjustNextMessageRequestAdvanceRequestTime(entry.getValue());
+
+              newGALT = min(newGALT, entry.getKey().getLOTS());
+            }
+          }
+        }
+        else
+        {
+          newGALT = potentialGALT;
+        }
+      }
+
+      for (FederateProxy timeRegulatingFederate : timeRegulatingFederates)
+      {
+        // recalculate the GALT for each time regulating federate
         //
         LogicalTime newLocalGALT = finalTime;
         for (FederateProxy timeRegulatingFederate2 : timeRegulatingFederates)
@@ -613,8 +695,8 @@ public class FederationExecutionTimeManager
             newLocalGALT = min(newLocalGALT, timeRegulatingFederate2.getLOTS());
           }
         }
-        if (timeRegulatingFederate.getGALT() == null ||
-            newLocalGALT.compareTo(timeRegulatingFederate.getGALT()) > 0)
+
+        if (timeRegulatingFederate.getGALT() == null || newLocalGALT.compareTo(timeRegulatingFederate.getGALT()) > 0)
         {
           timeRegulatingFederate.galtAdvanced(newLocalGALT);
         }

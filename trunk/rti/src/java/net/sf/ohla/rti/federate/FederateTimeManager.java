@@ -31,11 +31,8 @@ import net.sf.ohla.rti.messages.FlushQueueRequest;
 import net.sf.ohla.rti.messages.ModifyLookahead;
 import net.sf.ohla.rti.messages.NextMessageRequest;
 import net.sf.ohla.rti.messages.NextMessageRequestAvailable;
-import net.sf.ohla.rti.messages.NextMessageRequestAvailableTimeAdvanceGrant;
-import net.sf.ohla.rti.messages.NextMessageRequestTimeAdvanceGrant;
 import net.sf.ohla.rti.messages.TimeAdvanceRequest;
 import net.sf.ohla.rti.messages.TimeAdvanceRequestAvailable;
-import net.sf.ohla.rti.messages.UpdateLITS;
 
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.LogicalTime;
@@ -346,6 +343,14 @@ public class FederateTimeManager
       checkIfRequestForTimeRegulationPending();
       checkIfRequestForTimeConstrainedPending();
 
+      LogicalTime nextMessageTime = federate.getNextMessageTime();
+      if (nextMessageTime != null && galtDefined() && nextMessageTime.compareTo(galt) < 0)
+      {
+        // adjust the time of the request to the next message time
+
+        time = nextMessageTime;
+      }
+
       federate.getRTIChannel().write(new NextMessageRequest(time));
 
       if (isTimeRegulating())
@@ -392,6 +397,14 @@ public class FederateTimeManager
       checkIfInTimeAdvancingState();
       checkIfRequestForTimeConstrainedPending();
       checkIfRequestForTimeRegulationPending();
+      LogicalTime nextMessageTime = federate.getNextMessageTime();
+
+      if (nextMessageTime != null && galtDefined() && nextMessageTime.compareTo(galt) <= 0)
+      {
+        // adjust the time of the request to the next message time
+
+        time = nextMessageTime;
+      }
 
       federate.getRTIChannel().write(new NextMessageRequestAvailable(time));
 
@@ -517,19 +530,16 @@ public class FederateTimeManager
 
         timeQueryReturn = new TimeQueryReturn(galt != null, galt);
       }
+      else if (galt == null || nextMessageTime.compareTo(galt) < 0)
+      {
+        // GALT is undefined (no more time regulating federates) but there is still a TSO message in the queue or the
+        // next TSO message is < GALT
+
+        timeQueryReturn = new TimeQueryReturn(true, nextMessageTime);
+      }
       else
       {
-        if (galt == null || nextMessageTime.compareTo(galt) < 0)
-        {
-          // GALT is undefined (no more time regulating federates) but there is
-          // still a TSO message in the queue or the next TSO message is < GALT
-
-          timeQueryReturn = new TimeQueryReturn(true, nextMessageTime);
-        }
-        else
-        {
-          timeQueryReturn = new TimeQueryReturn(true, galt);
-        }
+        timeQueryReturn = new TimeQueryReturn(true, galt);
       }
     }
     finally
@@ -633,17 +643,6 @@ public class FederateTimeManager
       temporalState = TemporalState.TIME_GRANTED;
       advanceRequestType = TimeAdvanceType.NONE;
 
-      if (isTimeConstrained())
-      {
-        LogicalTime lits = federate.getNextMessageTime();
-        if (lits != null)
-        {
-          // notify the RTI of the new LITS
-
-          federate.getRTIChannel().write(new UpdateLITS(lits));
-        }
-      }
-
       federateAmbassador.timeAdvanceGrant(time);
     }
     finally
@@ -663,30 +662,14 @@ public class FederateTimeManager
       this.galt = galt;
 
       LogicalTime maxFutureTaskTimestamp;
-
       if (isTimeAdvancing())
       {
-        switch (advanceRequestType)
-        {
-          case NEXT_MESSAGE_REQUEST:
-          {
-            maxFutureTaskTimestamp = handleNextMessageRequestGALTAdvanced(galt);
-            break;
-          }
-          case NEXT_MESSAGE_REQUEST_AVAILABLE:
-          {
-            maxFutureTaskTimestamp = handleNextMessageRequestAvailableGALTAdvanced(galt);
-            break;
-          }
-          default:
-            maxFutureTaskTimestamp = galt.compareTo(advanceRequestTime) > 0 ? advanceRequestTime : galt;
-        }
+        maxFutureTaskTimestamp = galt.compareTo(advanceRequestTime) > 0 ? advanceRequestTime : galt;
       }
       else
       {
         maxFutureTaskTimestamp = galt.compareTo(federateTime) > 0 ? federateTime : galt;
       }
-
       federate.processFutureTasks(maxFutureTaskTimestamp);
     }
     finally
@@ -807,94 +790,6 @@ public class FederateTimeManager
     throws InvalidLogicalTime
   {
     checkIfInvalidTimestamp(deleteTime);
-  }
-
-  @SuppressWarnings("unchecked")
-  private LogicalTime handleNextMessageRequestGALTAdvanced(LogicalTime galt)
-  {
-    LogicalTime maxFutureTaskTimestamp;
-
-    LogicalTime nextMessageTime = federate.getNextMessageTime();
-    if (nextMessageTime == null || nextMessageTime.compareTo(galt) >= 0)
-    {
-      // there are no pending TSO messages or they are >= GALT
-
-      if (advanceRequestTime.compareTo(galt) < 0)
-      {
-        // GALT has advanced past the requested time
-
-        maxFutureTaskTimestamp = advanceRequestTime;
-
-        federate.getRTIChannel().write(new NextMessageRequestTimeAdvanceGrant(advanceRequestTime));
-      }
-      else
-      {
-        maxFutureTaskTimestamp = galt;
-      }
-    }
-    else if (advanceRequestTime.compareTo(nextMessageTime) < 0)
-    {
-      // the requested time is < the pending TSO message which is < GALT 
-
-      maxFutureTaskTimestamp = advanceRequestTime;
-
-      federate.getRTIChannel().write(new NextMessageRequestTimeAdvanceGrant(advanceRequestTime));
-    }
-    else
-    {
-      // the pending TSO message is < GALT which is <= the requested time
-
-      advanceRequestTime = nextMessageTime;
-      maxFutureTaskTimestamp = nextMessageTime;
-
-      federate.getRTIChannel().write(new NextMessageRequestTimeAdvanceGrant(nextMessageTime));
-    }
-
-    return maxFutureTaskTimestamp;
-  }
-
-  @SuppressWarnings("unchecked")
-  private LogicalTime handleNextMessageRequestAvailableGALTAdvanced(LogicalTime galt)
-  {
-    LogicalTime maxFutureTaskTimestamp;
-
-    LogicalTime nextMessageTime = federate.getNextMessageTime();
-    if (nextMessageTime == null || nextMessageTime.compareTo(galt) > 0)
-    {
-      // there are no pending TSO messages or they are > GALT
-
-      if (advanceRequestTime.compareTo(galt) <= 0)
-      {
-        // GALT has advanced past the requested time
-
-        maxFutureTaskTimestamp = advanceRequestTime;
-
-        federate.getRTIChannel().write(new NextMessageRequestAvailableTimeAdvanceGrant(advanceRequestTime));
-      }
-      else
-      {
-        maxFutureTaskTimestamp = galt;
-      }
-    }
-    else if (advanceRequestTime.compareTo(nextMessageTime) < 0)
-    {
-      // the requested time is < the pending TSO message which is <= GALT
-
-      maxFutureTaskTimestamp = advanceRequestTime;
-
-      federate.getRTIChannel().write(new NextMessageRequestTimeAdvanceGrant(advanceRequestTime));
-    }
-    else
-    {
-      // the pending TSO message is <= GALT which is <= the requested time
-
-      advanceRequestTime = nextMessageTime;
-      maxFutureTaskTimestamp = nextMessageTime;
-
-      federate.getRTIChannel().write(new NextMessageRequestTimeAdvanceGrant(nextMessageTime));
-    }
-
-    return maxFutureTaskTimestamp;
   }
 
   @SuppressWarnings("unchecked")

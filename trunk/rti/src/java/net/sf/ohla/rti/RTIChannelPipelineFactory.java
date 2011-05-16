@@ -18,6 +18,7 @@ package net.sf.ohla.rti;
 
 import net.sf.ohla.rti.messages.MessageDecoder;
 import net.sf.ohla.rti.messages.MessageEncoder;
+import net.sf.ohla.rti.messages.RequestResponseHandler;
 
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
@@ -40,6 +41,7 @@ public class RTIChannelPipelineFactory
 
     pipeline.addLast(MessageEncoder.NAME, new MessageEncoder());
     pipeline.addLast(MessageDecoder.NAME, new MessageDecoder());
+    pipeline.addLast(RequestResponseHandler.NAME, new RequestResponseHandler());
     pipeline.addLast(RTIChannelUpstreamHandler.NAME, rtiChannelUpstreamHandler);
 
     return pipeline;
