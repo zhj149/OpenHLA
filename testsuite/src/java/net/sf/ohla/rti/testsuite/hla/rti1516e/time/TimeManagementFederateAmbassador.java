@@ -48,6 +48,7 @@ public class TimeManagementFederateAmbassador
     new HashMap<ObjectInstanceHandle, TestObjectInstance>();
 
   private ParameterHandleValueMap parameterValues;
+  private LogicalTime receiveTime;
 
   public TimeManagementFederateAmbassador(RTIambassador rtiAmbassador)
   {
@@ -212,7 +213,7 @@ public class TimeManagementFederateAmbassador
 
     assert attributeValues.equals(objectInstances.get(objectInstanceHandle).getAttributeValues());
 
-    objectInstances.get(objectInstanceHandle).setAttributeValues(null, null, null);
+    objectInstances.get(objectInstanceHandle).setAttributeValues(null, null, null, null);
   }
 
   public void checkAttributeValuesNotReceived(final ObjectInstanceHandle objectInstanceHandle)
@@ -243,7 +244,7 @@ public class TimeManagementFederateAmbassador
     assert objectInstances.get(objectInstanceHandle).isRemoved();
   }
 
-  public void checkParameterValues(ParameterHandleValueMap parameterValues)
+  public void checkParameterValues(ParameterHandleValueMap parameterValues, LogicalTime receiveTime)
     throws Exception
   {
     evokeCallbackWhile(new Callable<Boolean>()
@@ -255,6 +256,7 @@ public class TimeManagementFederateAmbassador
     });
 
     assert parameterValues.equals(this.parameterValues);
+    assert receiveTime == null || receiveTime.equals(this.receiveTime);
 
     this.parameterValues = null;
   }
@@ -304,7 +306,7 @@ public class TimeManagementFederateAmbassador
     ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues, byte[] tag,
     OrderType sentOrderType, TransportationTypeHandle transportationTypeHandle, SupplementalReflectInfo reflectInfo)
   {
-    objectInstances.get(objectInstanceHandle).setAttributeValues(attributeValues, tag, reflectInfo);
+    objectInstances.get(objectInstanceHandle).setAttributeValues(attributeValues, tag, null, reflectInfo);
   }
 
   @Override
@@ -313,7 +315,7 @@ public class TimeManagementFederateAmbassador
     OrderType sentOrderType, TransportationTypeHandle transportationTypeHandle, LogicalTime time,
     OrderType receivedOrderType, SupplementalReflectInfo reflectInfo)
   {
-    objectInstances.get(objectInstanceHandle).setAttributeValues(attributeValues, tag, reflectInfo);
+    objectInstances.get(objectInstanceHandle).setAttributeValues(attributeValues, tag, time, reflectInfo);
   }
 
   @Override
@@ -322,7 +324,7 @@ public class TimeManagementFederateAmbassador
     OrderType sentOrderType, TransportationTypeHandle transportationTypeHandle, LogicalTime time,
     OrderType receivedOrderType, MessageRetractionHandle messageRetractionHandle, SupplementalReflectInfo reflectInfo)
   {
-    objectInstances.get(objectInstanceHandle).setAttributeValues(attributeValues, tag, reflectInfo);
+    objectInstances.get(objectInstanceHandle).setAttributeValues(attributeValues, tag, time, reflectInfo);
   }
 
   @Override
@@ -364,6 +366,7 @@ public class TimeManagementFederateAmbassador
     throws FederateInternalError
   {
     this.parameterValues = parameterValues;
+    receiveTime = time;
   }
 
   @Override
@@ -373,5 +376,6 @@ public class TimeManagementFederateAmbassador
     OrderType receivedOrderType, MessageRetractionHandle messageRetractionHandle, SupplementalReceiveInfo receiveInfo)
   {
     this.parameterValues = parameterValues;
+    receiveTime = time;
   }
 }

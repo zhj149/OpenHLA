@@ -97,8 +97,8 @@ public class InteractionTimeManagementTestNG
 
     // parameter values should have been released
     //
-    federateAmbassadors.get(1).checkParameterValues(parameterValues);
-    federateAmbassadors.get(2).checkParameterValues(parameterValues);
+    federateAmbassadors.get(1).checkParameterValues(parameterValues, null);
+    federateAmbassadors.get(2).checkParameterValues(parameterValues, null);
 
     // finish time advance
     //
@@ -145,8 +145,8 @@ public class InteractionTimeManagementTestNG
 
     // parameter values should have been released
     //
-    federateAmbassadors.get(1).checkParameterValues(parameterValues);
-    federateAmbassadors.get(2).checkParameterValues(parameterValues);
+    federateAmbassadors.get(1).checkParameterValues(parameterValues, twenty);
+    federateAmbassadors.get(2).checkParameterValues(parameterValues, twenty);
 
     federateAmbassadors.get(1).checkTimeAdvanceGrant(twenty);
     federateAmbassadors.get(2).checkTimeAdvanceGrant(twenty);

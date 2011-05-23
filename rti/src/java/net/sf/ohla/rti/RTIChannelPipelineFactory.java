@@ -41,7 +41,6 @@ public class RTIChannelPipelineFactory
 
     pipeline.addLast(MessageEncoder.NAME, new MessageEncoder());
     pipeline.addLast(MessageDecoder.NAME, new MessageDecoder());
-    pipeline.addLast(RequestResponseHandler.NAME, new RequestResponseHandler());
     pipeline.addLast(RTIChannelUpstreamHandler.NAME, rtiChannelUpstreamHandler);
 
     return pipeline;

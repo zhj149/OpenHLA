@@ -63,6 +63,7 @@ public interface TestConstants
 
   static final String TEST_INTERACTION = "TestInteraction";
   static final String TEST_INTERACTION2 = "TestInteraction.TestInteraction2";
+  static final String TEST_INTERACTION3 = "TestInteraction.TestInteraction3";
 
   static final String UNKNOWN_INTERACTION = "UnknownInteraction";
 
@@ -72,6 +73,9 @@ public interface TestConstants
   static final String PARAMETER4 = "Parameter4";
   static final String PARAMETER5 = "Parameter5";
   static final String PARAMETER6 = "Parameter6";
+  static final String PARAMETER7 = "Parameter7";
+  static final String PARAMETER8 = "Parameter8";
+  static final String PARAMETER9 = "Parameter9";
 
   static final String UNKNOWN_PARAMETER = "UnknownParameter";
 

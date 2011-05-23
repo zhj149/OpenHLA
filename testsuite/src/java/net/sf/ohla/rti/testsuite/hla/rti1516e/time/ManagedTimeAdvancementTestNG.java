@@ -131,7 +131,7 @@ public class ManagedTimeAdvancementTestNG
     //
     rtiAmbassadors.get(2).nextMessageRequest(seven);
 
-    // should be immediately granted because other regulating federate is requesting advance to five
+    // should be immediately granted because other regulating federate is requesting advance to ten
     //
     federateAmbassadors.get(2).checkTimeAdvanceGrant(seven);
 
@@ -139,11 +139,11 @@ public class ManagedTimeAdvancementTestNG
     //
     rtiAmbassadors.get(2).nextMessageRequest(nine);
 
-    // should be immediately granted because other regulating federate is requesting advance to five
+    // should be immediately granted because other regulating federate is requesting advance to ten
     //
     federateAmbassadors.get(2).checkTimeAdvanceGrant(nine);
 
-    // should be granted because regulating federates are at four
+    // should be granted because regulating federates are at nine
     //
     federateAmbassadors.get(1).checkTimeAdvanceGrant(eight);
 
@@ -151,7 +151,7 @@ public class ManagedTimeAdvancementTestNG
     //
     rtiAmbassadors.get(1).nextMessageRequest(nine);
 
-    // should be granted because regulating federates are at four
+    // should be granted because regulating federates are at nine
     //
     federateAmbassadors.get(1).checkTimeAdvanceGrant(nine);
 

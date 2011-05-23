@@ -16,43 +16,41 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.Protocol;
+import net.sf.ohla.rti.federate.Federate;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
 import hla.rti1516e.LogicalTime;
 import hla.rti1516e.LogicalTimeFactory;
 
-public class GetLITSResponse
-  extends AbstractResponse
+public class LITSRequest
+  extends LogicalTimeMessage
+  implements FederateMessage
 {
-  private final LogicalTime lits;
-
-  public GetLITSResponse(long requestId, LogicalTime lits)
+  public LITSRequest(LogicalTime potentialGALT)
   {
-    super(MessageType.GET_LITS_RESPONSE, requestId);
-
-    this.lits = lits;
-
-    Protocol.encodeTime(buffer, lits);
+    super(MessageType.LITS_REQUEST, potentialGALT);
 
     encodingFinished();
   }
 
-  public GetLITSResponse(ChannelBuffer buffer, LogicalTimeFactory factory)
+  public LITSRequest(ChannelBuffer buffer, LogicalTimeFactory factory)
   {
-    super(buffer);
-
-    lits = Protocol.decodeTime(buffer, factory);
+    super(buffer, factory);
   }
 
-  public LogicalTime getLITS()
+  public LogicalTime getPotentialGALT()
   {
-    return lits;
+    return time;
   }
 
   public MessageType getType()
   {
-    return MessageType.GET_LITS_RESPONSE;
+    return MessageType.LITS_REQUEST;
+  }
+
+  public void execute(Federate federate)
+  {
+    federate.litsRequest(this);
   }
 }
