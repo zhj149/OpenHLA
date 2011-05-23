@@ -65,10 +65,10 @@ import net.sf.ohla.rti.messages.GetFederateHandle;
 import net.sf.ohla.rti.messages.GetFederateHandleResponse;
 import net.sf.ohla.rti.messages.GetFederateName;
 import net.sf.ohla.rti.messages.GetFederateNameResponse;
-import net.sf.ohla.rti.messages.GetLITS;
-import net.sf.ohla.rti.messages.GetLITSResponse;
 import net.sf.ohla.rti.messages.JoinFederationExecution;
 import net.sf.ohla.rti.messages.JoinFederationExecutionResponse;
+import net.sf.ohla.rti.messages.LITSRequest;
+import net.sf.ohla.rti.messages.LITSResponse;
 import net.sf.ohla.rti.messages.MessageDecoder;
 import net.sf.ohla.rti.messages.QueryFederationRestoreStatus;
 import net.sf.ohla.rti.messages.QueryFederationSaveStatus;
@@ -448,14 +448,14 @@ public class Federate
   }
 
   @SuppressWarnings("unchecked")
-  public void getLITS(GetLITS getLITS)
+  public void litsRequest(LITSRequest litsRequest)
   {
     timeManager.getTimeLock().writeLock().lock();
     try
     {
       LogicalTime lits = getNextMessageTime();
-      lits = lits == null || lits.compareTo(getLITS.getPotentialGALT()) > 0 ? null : lits;
-      rtiChannel.write(new GetLITSResponse(getLITS.getId(), lits));
+      lits = lits == null || lits.compareTo(litsRequest.getPotentialGALT()) > 0 ? null : lits;
+      rtiChannel.write(new LITSResponse(lits));
     }
     finally
     {
@@ -475,7 +475,7 @@ public class Federate
            timestampedFutureTask != null && timestampedFutureTask.getTime().compareTo(maxFutureTaskTimestamp) <= 0;
            timestampedFutureTask = futureTasks.peek())
       {
-        log.debug(LogMessages.PROCESSING_FUTURE_TASK, timestampedFutureTask);
+        log.trace(LogMessages.PROCESSING_FUTURE_TASK, timestampedFutureTask);
 
         try
         {
@@ -641,6 +641,8 @@ public class Federate
 
   public void timeAdvanceGrant(TimeAdvanceGrant timeAdvanceGrant)
   {
+    log.trace(LogMessages.TIME_ADVANCE_GRANT, timeManager.getFederateTime(), timeAdvanceGrant.getTime());
+
     processFutureTasks(timeAdvanceGrant.getTime());
 
     callbackManager.add(timeAdvanceGrant);

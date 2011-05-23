@@ -19,6 +19,7 @@ package net.sf.ohla.rti.testsuite.hla.rti1516e.object;
 import hla.rti1516e.AttributeHandleValueMap;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.FederateHandle;
+import hla.rti1516e.LogicalTime;
 import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.ObjectInstanceHandle;
 
@@ -33,6 +34,7 @@ public class TestObjectInstance
 
   private AttributeHandleValueMap attributeValues;
   private FederateAmbassador.SupplementalReflectInfo reflectInfo;
+  private LogicalTime reflectTime;
 
   private FederateHandle deletingFederateHandle;
 
@@ -74,16 +76,23 @@ public class TestObjectInstance
   }
 
   public void setAttributeValues(
-    AttributeHandleValueMap attributeValues, byte[] tag, FederateAmbassador.SupplementalReflectInfo reflectInfo)
+    AttributeHandleValueMap attributeValues, byte[] tag, LogicalTime reflectTime,
+    FederateAmbassador.SupplementalReflectInfo reflectInfo)
   {
     this.attributeValues = attributeValues;
     this.tag = tag;
+    this.reflectTime = reflectTime;
     this.reflectInfo = reflectInfo;
   }
 
   public byte[] getTag()
   {
     return tag;
+  }
+
+  public LogicalTime getReflectTime()
+  {
+    return reflectTime;
   }
 
   public FederateHandle getUpdatingFederateHandle()

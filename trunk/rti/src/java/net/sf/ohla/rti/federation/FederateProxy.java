@@ -248,22 +248,36 @@ public class FederateProxy
   public void adjustNextMessageRequestAdvanceRequestTime(LogicalTime time)
   {
     assert timeRegulationEnabled;
-    assert advanceRequestType == TimeAdvanceType.NEXT_MESSAGE_REQUEST ||
-           advanceRequestType == TimeAdvanceType.NEXT_MESSAGE_REQUEST_AVAILABLE;
 
     advanceRequestTime = time;
 
+    LogicalTimeInterval interval;
+    if (advanceRequestType == TimeAdvanceType.NEXT_MESSAGE_REQUEST)
+    {
+      log.debug(LogMessages.ADJUST_NEXT_MESSAGE_REQUEST_ADVANCE_REQUEST_TIME, time);
+
+      interval = lookahead.isZero() ? epsilon : lookahead;
+    }
+    else
+    {
+      log.debug(LogMessages.ADJUST_NEXT_MESSAGE_REQUEST_AVAILABLE_ADVANCE_REQUEST_TIME, time);
+
+      interval = lookahead;
+    }
+
     try
     {
-      lots = advanceRequestTime.add(lookahead.isZero() ? epsilon : lookahead);
+      lots = advanceRequestTime.add(interval);
+
+      log.debug(LogMessages.LOTS_UPDATED, lots);
     }
     catch (IllegalTimeArithmetic ita)
     {
-      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ita);
+      log.error(LogMessages.ILLEGAL_TIME_ARITHMETIC_ADD, ita, advanceRequestTime, interval);
     }
     catch (InvalidLogicalTimeInterval ilti)
     {
-      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ilti);
+      log.error(LogMessages.INVALID_LOGICAL_TIME_INTERVAL, ilti, interval);
     }
   }
 
@@ -729,7 +743,7 @@ public class FederateProxy
     {
       lots = advanceRequestTime.add(lookahead.isZero() ? epsilon : lookahead);
 
-      log.debug(LogMessages.LOTS_ADVANCED, lots);
+      log.debug(LogMessages.LOTS_UPDATED, lots);
     }
 
     if (!timeConstrainedEnabled || galt == null || advanceRequestTime.compareTo(galt) < 0)
@@ -756,7 +770,7 @@ public class FederateProxy
     {
       lots = advanceRequestTime.add(lookahead);
 
-      log.debug(LogMessages.LOTS_ADVANCED, lots);
+      log.debug(LogMessages.LOTS_UPDATED, lots);
     }
 
     if (!timeConstrainedEnabled || galt == null || advanceRequestTime.compareTo(galt) <= 0)
@@ -783,7 +797,7 @@ public class FederateProxy
     {
       lots = advanceRequestTime.add(lookahead.isZero() ? epsilon : lookahead);
 
-      log.debug(LogMessages.LOTS_ADVANCED, lots);
+      log.debug(LogMessages.LOTS_UPDATED, lots);
     }
 
     if (!timeConstrainedEnabled || galt == null || advanceRequestTime.compareTo(galt) < 0)
@@ -795,6 +809,20 @@ public class FederateProxy
 
       federateChannel.write(new TimeAdvanceGrant(federateTime));
     }
+  }
+
+  @SuppressWarnings("unchecked")
+  public void nextMessageRequestTimeAdvanceGrant(LogicalTime time)
+  {
+    assert timeConstrainedEnabled;
+
+    log.debug(LogMessages.NEXT_MESSAGE_REQUEST_TIME_ADVANCE_GRANT, time);
+
+    federateTime = time;
+
+    advanceRequestTime = null;
+
+    federateChannel.write(new TimeAdvanceGrant(federateTime));
   }
 
   @SuppressWarnings("unchecked")
@@ -810,7 +838,7 @@ public class FederateProxy
     {
       lots = advanceRequestTime.add(lookahead);
 
-      log.debug(LogMessages.LOTS_ADVANCED, lots);
+      log.debug(LogMessages.LOTS_UPDATED, lots);
     }
 
     if (!timeConstrainedEnabled || galt == null || advanceRequestTime.compareTo(galt) <= 0)
@@ -822,6 +850,18 @@ public class FederateProxy
 
       federateChannel.write(new TimeAdvanceGrant(federateTime));
     }
+  }
+
+  @SuppressWarnings("unchecked")
+  public void nextMessageRequestAvailableTimeAdvanceGrant(LogicalTime time)
+  {
+    log.debug(LogMessages.NEXT_MESSAGE_REQUEST_AVAILABLE_TIME_ADVANCE_GRANT, time);
+
+    federateTime = time;
+
+    advanceRequestTime = null;
+
+    federateChannel.write(new TimeAdvanceGrant(federateTime));
   }
 
   @SuppressWarnings("unchecked")
@@ -838,7 +878,7 @@ public class FederateProxy
     {
       lots = federateTime.add(lookahead);
 
-      log.debug(LogMessages.LOTS_ADVANCED, lots);
+      log.debug(LogMessages.LOTS_UPDATED, lots);
     }
 
     federateChannel.write(new TimeAdvanceGrant(federateTime));
@@ -846,7 +886,6 @@ public class FederateProxy
 
   @SuppressWarnings("unchecked")
   public void galtAdvanced(LogicalTime galt)
-    throws IllegalTimeArithmetic
   {
     if (this.galt == null)
     {
@@ -902,7 +941,9 @@ public class FederateProxy
         }
         case NEXT_MESSAGE_REQUEST:
         {
-          if (advanceRequestTime.compareTo(galt) < 0)
+          // only time regulating federates can have their times advanced in this manner when GALT advances
+          //
+          if (advanceRequestTime.compareTo(galt) < 0 && timeRegulationEnabled)
           {
             federateTime = advanceRequestTime;
 
@@ -914,7 +955,9 @@ public class FederateProxy
         }
         case NEXT_MESSAGE_REQUEST_AVAILABLE:
         {
-          if (advanceRequestTime.compareTo(galt) <= 0)
+          // only time regulating federates can have their times advanced in this manner when GALT advances
+          //
+          if (advanceRequestTime.compareTo(galt) <= 0 && timeRegulationEnabled)
           {
             federateTime = advanceRequestTime;
 

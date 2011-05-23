@@ -140,6 +140,25 @@
             <name>Parameter6</name>
           </parameter>
         </interactionClass>
+
+        <interactionClass>
+          <name>TestInteraction3</name>
+          <dimensions>
+            <dimension>Dimension3</dimension>
+            <dimension>Dimension4</dimension>
+          </dimensions>
+          <transportation>HLAreliable</transportation>
+          <order>TimeStamp</order>
+          <parameter>
+            <name>Parameter7</name>
+          </parameter>
+          <parameter>
+            <name>Parameter8</name>
+          </parameter>
+          <parameter>
+            <name>Parameter9</name>
+          </parameter>
+        </interactionClass>
       </interactionClass>
 
       <interactionClass>

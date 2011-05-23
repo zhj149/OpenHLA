@@ -16,50 +16,37 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.Protocol;
-import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.federation.FederateProxy;
+import net.sf.ohla.rti.federation.FederationExecution;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
 import hla.rti1516e.LogicalTime;
 import hla.rti1516e.LogicalTimeFactory;
 
-public class GetLITS
-  extends AbstractRequest<GetLITSResponse>
-  implements FederateMessage
+public class NextMessageRequestTimeAdvanceGrant
+  extends LogicalTimeMessage
+  implements FederationExecutionMessage
 {
-  private final LogicalTime potentialGALT;
-
-  public GetLITS(LogicalTime potentialGALT)
+  public NextMessageRequestTimeAdvanceGrant(LogicalTime time)
   {
-    super(MessageType.GET_LITS);
-
-    this.potentialGALT = potentialGALT;
-
-    Protocol.encodeTime(buffer, potentialGALT);
+    super(MessageType.NEXT_MESSAGE_REQUEST_TIME_ADVANCE_GRANT, time);
 
     encodingFinished();
   }
 
-  public GetLITS(ChannelBuffer buffer, LogicalTimeFactory factory)
+  public NextMessageRequestTimeAdvanceGrant(ChannelBuffer buffer, LogicalTimeFactory factory)
   {
-    super(buffer);
-
-    potentialGALT = Protocol.decodeTime(buffer, factory);
-  }
-
-  public LogicalTime getPotentialGALT()
-  {
-    return potentialGALT;
+    super(buffer, factory);
   }
 
   public MessageType getType()
   {
-    return MessageType.GET_LITS;
+    return MessageType.NEXT_MESSAGE_REQUEST_TIME_ADVANCE_GRANT;
   }
 
-  public void execute(Federate federate)
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
-    federate.getLITS(this);
+    federationExecution.nextMessageRequestTimeAdvanceGrant(federateProxy, this);
   }
 }

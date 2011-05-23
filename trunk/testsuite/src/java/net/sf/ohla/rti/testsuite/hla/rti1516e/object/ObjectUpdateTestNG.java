@@ -241,7 +241,7 @@ public class ObjectUpdateTestNG
       SupplementalReflectInfo reflectInfo)
       throws FederateInternalError
     {
-      objectInstances.get(objectInstanceHandle).setAttributeValues(attributeValues, tag, reflectInfo);
+      objectInstances.get(objectInstanceHandle).setAttributeValues(attributeValues, tag, null, reflectInfo);
     }
   }
 }
