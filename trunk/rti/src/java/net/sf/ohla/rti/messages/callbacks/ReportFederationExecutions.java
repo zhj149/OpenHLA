@@ -17,10 +17,8 @@
 package net.sf.ohla.rti.messages.callbacks;
 
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.federate.Federate;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederationExecutionInformationSet;
 import net.sf.ohla.rti.messages.AbstractMessage;
-import net.sf.ohla.rti.messages.FederateMessage;
 import net.sf.ohla.rti.messages.MessageType;
 
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -62,10 +60,5 @@ public class ReportFederationExecutions
     throws FederateInternalError
   {
     federateAmbassador.reportFederationExecutions(federationExecutionInformations);
-  }
-
-  public void execute(Federate federate)
-  {
-    federate.callbackReceived(this);
   }
 }

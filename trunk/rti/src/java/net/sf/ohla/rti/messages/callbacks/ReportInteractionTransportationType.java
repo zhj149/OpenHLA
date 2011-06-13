@@ -17,10 +17,8 @@
 package net.sf.ohla.rti.messages.callbacks;
 
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.federate.Federate;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandle;
-import net.sf.ohla.rti.messages.FederateMessage;
 import net.sf.ohla.rti.messages.InteractionClassMessage;
 import net.sf.ohla.rti.messages.MessageType;
 
@@ -34,7 +32,7 @@ import hla.rti1516e.exceptions.FederateInternalError;
 
 public class ReportInteractionTransportationType
   extends InteractionClassMessage
-  implements Callback, FederateMessage
+  implements Callback
 {
   private final FederateHandle federateHandle;
   private final TransportationTypeHandle transportationTypeHandle;
@@ -72,10 +70,5 @@ public class ReportInteractionTransportationType
   {
     federateAmbassador.reportInteractionTransportationType(
       federateHandle, interactionClassHandle, transportationTypeHandle);
-  }
-
-  public void execute(Federate federate)
-  {
-    federate.callbackReceived(this);
   }
 }

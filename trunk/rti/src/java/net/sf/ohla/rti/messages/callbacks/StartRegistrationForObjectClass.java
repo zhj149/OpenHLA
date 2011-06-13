@@ -17,8 +17,6 @@
 package net.sf.ohla.rti.messages.callbacks;
 
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.federate.Federate;
-import net.sf.ohla.rti.messages.FederateMessage;
 import net.sf.ohla.rti.messages.MessageType;
 import net.sf.ohla.rti.messages.ObjectClassMessage;
 
@@ -30,7 +28,7 @@ import hla.rti1516e.exceptions.FederateInternalError;
 
 public class StartRegistrationForObjectClass
   extends ObjectClassMessage
-  implements Callback, FederateMessage
+  implements Callback
 {
 
   public StartRegistrationForObjectClass(ObjectClassHandle objectClassHandle)
@@ -54,10 +52,5 @@ public class StartRegistrationForObjectClass
     throws FederateInternalError
   {
     federateAmbassador.startRegistrationForObjectClass(objectClassHandle);
-  }
-
-  public void execute(Federate federate)
-  {
-    federate.callbackReceived(this);
   }
 }

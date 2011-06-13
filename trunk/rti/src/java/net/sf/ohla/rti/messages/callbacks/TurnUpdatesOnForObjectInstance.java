@@ -18,8 +18,6 @@ package net.sf.ohla.rti.messages.callbacks;
 
 import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.federate.Federate;
-import net.sf.ohla.rti.messages.FederateMessage;
 import net.sf.ohla.rti.messages.MessageType;
 import net.sf.ohla.rti.messages.ObjectInstanceAttributesMessage;
 
@@ -32,7 +30,7 @@ import hla.rti1516e.exceptions.FederateInternalError;
 
 public class TurnUpdatesOnForObjectInstance
   extends ObjectInstanceAttributesMessage
-  implements Callback, FederateMessage
+  implements Callback
 {
   private final String updateRateDesignator;
 
@@ -64,10 +62,5 @@ public class TurnUpdatesOnForObjectInstance
     throws FederateInternalError
   {
     federateAmbassador.turnUpdatesOffForObjectInstance(objectInstanceHandle, attributeHandles);
-  }
-
-  public void execute(Federate federate)
-  {
-    federate.callbackReceived(this);
   }
 }

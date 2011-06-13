@@ -17,8 +17,6 @@
 package net.sf.ohla.rti.messages.callbacks;
 
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.federate.Federate;
-import net.sf.ohla.rti.messages.FederateMessage;
 import net.sf.ohla.rti.messages.MessageType;
 import net.sf.ohla.rti.messages.ObjectInstanceAttributeMessage;
 
@@ -31,7 +29,7 @@ import hla.rti1516e.exceptions.FederateInternalError;
 
 public class AttributeIsNotOwned
   extends ObjectInstanceAttributeMessage
-  implements Callback, FederateMessage
+  implements Callback
 {
   public AttributeIsNotOwned(ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle)
   {
@@ -54,10 +52,5 @@ public class AttributeIsNotOwned
     throws FederateInternalError
   {
     federateAmbassador.attributeIsNotOwned(objectInstanceHandle, attributeHandle);
-  }
-
-  public void execute(Federate federate)
-  {
-    federate.callbackReceived(this);
   }
 }

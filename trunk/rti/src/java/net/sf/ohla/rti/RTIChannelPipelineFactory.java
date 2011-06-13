@@ -16,9 +16,10 @@
 
 package net.sf.ohla.rti;
 
+import java.util.concurrent.Executor;
+
 import net.sf.ohla.rti.messages.MessageDecoder;
 import net.sf.ohla.rti.messages.MessageEncoder;
-import net.sf.ohla.rti.messages.RequestResponseHandler;
 
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
@@ -27,11 +28,14 @@ import org.jboss.netty.channel.Channels;
 public class RTIChannelPipelineFactory
   implements ChannelPipelineFactory
 {
-  private final RTIChannelUpstreamHandler rtiChannelUpstreamHandler;
+  private final Executor executor;
 
-  public RTIChannelPipelineFactory(RTI rti)
+  private final RTI rti;
+
+  public RTIChannelPipelineFactory(Executor executor, RTI rti)
   {
-    rtiChannelUpstreamHandler = new RTIChannelUpstreamHandler(rti);
+    this.executor = executor;
+    this.rti = rti;
   }
 
   public ChannelPipeline getPipeline()
@@ -41,7 +45,7 @@ public class RTIChannelPipelineFactory
 
     pipeline.addLast(MessageEncoder.NAME, new MessageEncoder());
     pipeline.addLast(MessageDecoder.NAME, new MessageDecoder());
-    pipeline.addLast(RTIChannelUpstreamHandler.NAME, rtiChannelUpstreamHandler);
+    pipeline.addLast(RTIChannelHandler.NAME, new RTIChannelHandler(executor, rti));
 
     return pipeline;
   }

@@ -16,41 +16,34 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.federation.FederateProxy;
+import net.sf.ohla.rti.federation.FederationExecution;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
-import hla.rti1516e.LogicalTime;
-import hla.rti1516e.LogicalTimeFactory;
-
-public class LITSRequest
-  extends LogicalTimeMessage
-  implements FederateMessage
+public class QueryGALT
+  extends AbstractRequest<QueryGALTResponse>
+  implements FederationExecutionMessage
 {
-  public LITSRequest(LogicalTime potentialGALT)
+  public QueryGALT()
   {
-    super(MessageType.LITS_REQUEST, potentialGALT);
+    super(MessageType.QUERY_GALT);
 
     encodingFinished();
   }
 
-  public LITSRequest(ChannelBuffer buffer, LogicalTimeFactory factory)
+  public QueryGALT(ChannelBuffer buffer)
   {
-    super(buffer, factory);
-  }
-
-  public LogicalTime getPotentialGALT()
-  {
-    return time;
+    super(buffer);
   }
 
   public MessageType getType()
   {
-    return MessageType.LITS_REQUEST;
+    return MessageType.QUERY_GALT;
   }
 
-  public void execute(Federate federate)
+  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
-    federate.litsRequest(this);
+    federationExecution.queryGALT(federateProxy, this);
   }
 }

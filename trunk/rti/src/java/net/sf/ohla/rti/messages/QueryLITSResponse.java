@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2006-2007, Michael Newcomb
+ * Copyright (c) 2005-2011, Michael Newcomb
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,36 +16,43 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.Protocol;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
 import hla.rti1516e.LogicalTime;
 import hla.rti1516e.LogicalTimeFactory;
 
-public class GALTAdvanced
-  extends LogicalTimeMessage
-  implements FederateMessage
+public class QueryLITSResponse
+  extends AbstractResponse
 {
-  public GALTAdvanced(LogicalTime time)
+  private final LogicalTime lits;
+
+  public QueryLITSResponse(long requestId, LogicalTime lits)
   {
-    super(MessageType.GALT_ADVANCED, time);
+    super(MessageType.QUERY_LITS_RESPONSE, requestId);
+
+    this.lits = lits;
+
+    Protocol.encodeTime(buffer, lits);
 
     encodingFinished();
   }
 
-  public GALTAdvanced(ChannelBuffer buffer, LogicalTimeFactory factory)
+  public QueryLITSResponse(ChannelBuffer buffer, LogicalTimeFactory factory)
   {
-    super(buffer, factory);
+    super(buffer);
+
+    lits = Protocol.decodeTime(buffer, factory);
+  }
+
+  public LogicalTime getLITS()
+  {
+    return lits;
   }
 
   public MessageType getType()
   {
-    return MessageType.GALT_ADVANCED;
-  }
-
-  public void execute(Federate federate)
-  {
-    federate.galtAdvanced(this);
+    return MessageType.QUERY_LITS_RESPONSE;
   }
 }

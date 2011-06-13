@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2010, Michael Newcomb
+ * Copyright (c) 2005-2011, Michael Newcomb
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,30 +16,13 @@
 
 package net.sf.ohla.rti.messages;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import hla.rti1516e.LogicalTime;
+import hla.rti1516e.OrderType;
 
-public class RetractResponse
-  extends EnumResponse<RetractResponse.Response>
+public interface TimeStampOrderedMessage
+  extends Comparable<TimeStampOrderedMessage>
 {
-  public enum Response
-  {
-    SUCCESS, SAVE_IN_PROGRESS, RESTORE_IN_PROGRESS
-  }
+  LogicalTime getTime();
 
-  public RetractResponse(long id, Response response)
-  {
-    super(MessageType.RETRACT_RESPONSE, id, response);
-
-    encodingFinished();
-  }
-
-  public RetractResponse(ChannelBuffer buffer)
-  {
-    super(buffer, Response.values());
-  }
-
-  public MessageType getType()
-  {
-    return MessageType.RETRACT_RESPONSE;
-  }
+  TimeStampOrderedMessage makeReceiveOrdered();
 }

@@ -29,6 +29,7 @@ import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandle;
 import net.sf.ohla.rti.messages.FederateMessage;
 import net.sf.ohla.rti.messages.InteractionClassMessage;
 import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.TimeStampOrderedMessage;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
@@ -49,7 +50,7 @@ import hla.rti1516e.exceptions.FederateInternalError;
 
 public class ReceiveInteraction
   extends InteractionClassMessage
-  implements Callback, FederateMessage, FederateAmbassador.SupplementalReceiveInfo
+  implements Callback, FederateMessage, TimeStampOrderedMessage, FederateAmbassador.SupplementalReceiveInfo
 {
   private final ParameterHandleValueMap parameterValues;
   private final byte[] tag;
@@ -61,7 +62,6 @@ public class ReceiveInteraction
   private final Collection<Map<DimensionHandle, RangeBounds>> regions;
 
   private RegionHandleSet sentRegions;
-  private OrderType receivedOrderType;
 
   private Federate federate;
 
@@ -70,6 +70,16 @@ public class ReceiveInteraction
     OrderType sentOrderType, TransportationTypeHandle transportationTypeHandle, LogicalTime time,
     MessageRetractionHandle messageRetractionHandle, FederateHandle producingFederateHandle,
     Map<RegionHandle, Map<DimensionHandle, RangeBounds>> regions)
+  {
+    this(interactionClassHandle, parameterValues, tag, sentOrderType, transportationTypeHandle, time,
+         messageRetractionHandle, producingFederateHandle, regions == null ? null : regions.values());
+  }
+
+  public ReceiveInteraction(
+    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues, byte[] tag,
+    OrderType sentOrderType, TransportationTypeHandle transportationTypeHandle, LogicalTime time,
+    MessageRetractionHandle messageRetractionHandle, FederateHandle producingFederateHandle,
+    Collection<Map<DimensionHandle, RangeBounds>> regions)
   {
     super(MessageType.RECEIVE_INTERACTION, interactionClassHandle);
 
@@ -80,7 +90,7 @@ public class ReceiveInteraction
     this.time = time;
     this.messageRetractionHandle = messageRetractionHandle;
     this.producingFederateHandle = producingFederateHandle;
-    this.regions = regions == null ? null : regions.values();
+    this.regions = regions;
 
     IEEE1516eParameterHandleValueMap.encode(buffer, parameterValues);
     Protocol.encodeBytes(buffer, tag);
@@ -128,11 +138,6 @@ public class ReceiveInteraction
     return transportationTypeHandle;
   }
 
-  public LogicalTime getTime()
-  {
-    return time;
-  }
-
   public MessageRetractionHandle getMessageRetractionHandle()
   {
     return messageRetractionHandle;
@@ -141,16 +146,6 @@ public class ReceiveInteraction
   public Collection<Map<DimensionHandle, RangeBounds>> getRegions()
   {
     return regions;
-  }
-
-  public OrderType getReceivedOrderType()
-  {
-    return receivedOrderType;
-  }
-
-  public void setReceivedOrderType(OrderType receivedOrderType)
-  {
-    this.receivedOrderType = receivedOrderType;
   }
 
   public void setSentRegions(RegionHandleSet sentRegions)
@@ -174,6 +169,24 @@ public class ReceiveInteraction
     this.federate = federate;
 
     federate.receiveInteraction(this);
+  }
+
+  public LogicalTime getTime()
+  {
+    return time;
+  }
+
+  public TimeStampOrderedMessage makeReceiveOrdered()
+  {
+    return new ReceiveInteraction(
+      interactionClassHandle, parameterValues, tag, OrderType.RECEIVE, transportationTypeHandle, time, null,
+      producingFederateHandle, regions);
+  }
+
+  @SuppressWarnings("unchecked")
+  public int compareTo(TimeStampOrderedMessage rhs)
+  {
+    return time.compareTo(rhs.getTime());
   }
 
   public boolean hasProducingFederate()

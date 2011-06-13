@@ -17,8 +17,6 @@
 package net.sf.ohla.rti.messages.callbacks;
 
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.federate.Federate;
-import net.sf.ohla.rti.messages.FederateMessage;
 import net.sf.ohla.rti.messages.MessageType;
 import net.sf.ohla.rti.messages.ObjectInstanceAttributesMessage;
 
@@ -31,7 +29,7 @@ import hla.rti1516e.exceptions.FederateInternalError;
 
 public class ConfirmAttributeOwnershipAcquisitionCancellation
   extends ObjectInstanceAttributesMessage
-  implements Callback, FederateMessage
+  implements Callback
 {
   public ConfirmAttributeOwnershipAcquisitionCancellation(
     ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
@@ -55,10 +53,5 @@ public class ConfirmAttributeOwnershipAcquisitionCancellation
     throws FederateInternalError
   {
     federateAmbassador.confirmAttributeOwnershipAcquisitionCancellation(objectInstanceHandle, attributeHandles);
-  }
-
-  public void execute(Federate federate)
-  {
-    federate.callbackReceived(this);
   }
 }

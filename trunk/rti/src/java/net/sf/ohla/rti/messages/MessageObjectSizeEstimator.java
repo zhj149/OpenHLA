@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2010, Michael Newcomb
+ * Copyright (c) 2005-2011, Michael Newcomb
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,30 +16,17 @@
 
 package net.sf.ohla.rti.messages;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.util.ObjectSizeEstimator;
 
-public class RetractResponse
-  extends EnumResponse<RetractResponse.Response>
+public class MessageObjectSizeEstimator
+  implements ObjectSizeEstimator
 {
-  public enum Response
-  {
-    SUCCESS, SAVE_IN_PROGRESS, RESTORE_IN_PROGRESS
-  }
+  public static final MessageObjectSizeEstimator INSTANCE = new MessageObjectSizeEstimator();
 
-  public RetractResponse(long id, Response response)
+  public int estimateSize(Object o)
   {
-    super(MessageType.RETRACT_RESPONSE, id, response);
+    assert o instanceof Message;
 
-    encodingFinished();
-  }
-
-  public RetractResponse(ChannelBuffer buffer)
-  {
-    super(buffer, Response.values());
-  }
-
-  public MessageType getType()
-  {
-    return MessageType.RETRACT_RESPONSE;
+    return ((Message) o).getBuffer().capacity();
   }
 }

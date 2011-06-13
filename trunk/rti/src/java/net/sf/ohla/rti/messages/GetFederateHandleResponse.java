@@ -25,7 +25,10 @@ import hla.rti1516e.FederateHandle;
 public class GetFederateHandleResponse
   extends EnumResponse<GetFederateHandleResponse.Response>
 {
-  public enum Response { SUCCESS, NAME_NOT_FOUND }
+  public enum Response
+  {
+    SUCCESS, NAME_NOT_FOUND
+  }
 
   private final FederateHandle federateHandle;
 

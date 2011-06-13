@@ -86,7 +86,8 @@ public abstract class AbstractRequest<R>
       catch (InterruptedException ie)
       {
       }
-    } while (!done);
+    }
+    while (!done);
 
     if (response == null)
     {

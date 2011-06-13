@@ -17,9 +17,7 @@
 package net.sf.ohla.rti.messages.callbacks;
 
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.federate.Federate;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
-import net.sf.ohla.rti.messages.FederateMessage;
 import net.sf.ohla.rti.messages.MessageType;
 import net.sf.ohla.rti.messages.ObjectInstanceAttributeMessage;
 
@@ -33,7 +31,7 @@ import hla.rti1516e.exceptions.FederateInternalError;
 
 public class InformAttributeOwnership
   extends ObjectInstanceAttributeMessage
-  implements Callback, FederateMessage
+  implements Callback
 {
   private final FederateHandle federateHandle;
 
@@ -70,10 +68,5 @@ public class InformAttributeOwnership
     throws FederateInternalError
   {
     federateAmbassador.informAttributeOwnership(objectInstanceHandle, attributeHandle, federateHandle);
-  }
-
-  public void execute(Federate federate)
-  {
-    federate.callbackReceived(this);
   }
 }

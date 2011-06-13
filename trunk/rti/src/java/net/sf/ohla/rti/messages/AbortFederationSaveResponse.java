@@ -21,7 +21,10 @@ import org.jboss.netty.buffer.ChannelBuffer;
 public class AbortFederationSaveResponse
   extends EnumResponse<AbortFederationSaveResponse.Response>
 {
-  public enum Response { SUCCESS, SAVE_NOT_IN_PROGRESS }
+  public enum Response
+  {
+    SUCCESS, SAVE_NOT_IN_PROGRESS
+  }
 
   public AbortFederationSaveResponse(long id, Response response)
   {

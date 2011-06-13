@@ -31,6 +31,7 @@ import net.sf.ohla.rti.messages.callbacks.ReflectAttributeValues;
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleValueMap;
 import hla.rti1516e.DimensionHandle;
+import hla.rti1516e.OrderType;
 import hla.rti1516e.ParameterHandleValueMap;
 import hla.rti1516e.RangeBounds;
 import hla.rti1516e.RegionHandle;
@@ -60,7 +61,7 @@ public class FederateProxySubscriptionManager
 
   public ReflectAttributeValues reflectAttributeValues(
     FederateProxy federateProxy, FederationExecutionObjectInstance objectInstance,
-    UpdateAttributeValues updateAttributeValues)
+    UpdateAttributeValues updateAttributeValues, boolean timeStampOrdered)
   {
     ReflectAttributeValues reflectAttributeValues;
 
@@ -124,16 +125,22 @@ public class FederateProxySubscriptionManager
         }
       }
 
-      if (trimmedAttributeValues == null)
+      if (trimmedAttributeValues == null || trimmedAttributeValues.isEmpty())
       {
         reflectAttributeValues = null;
+      }
+      else if (timeStampOrdered)
+      {
+        reflectAttributeValues = new ReflectAttributeValues(
+          updateAttributeValues.getObjectInstanceHandle(), trimmedAttributeValues, updateAttributeValues.getTag(),
+          OrderType.TIMESTAMP, updateAttributeValues.getTransportationTypeHandle(), updateAttributeValues.getTime(),
+          updateAttributeValues.getMessageRetractionHandle(), federateProxy.getFederateHandle(), sentRegions);
       }
       else
       {
         reflectAttributeValues = new ReflectAttributeValues(
           updateAttributeValues.getObjectInstanceHandle(), trimmedAttributeValues, updateAttributeValues.getTag(),
-          updateAttributeValues.getSentOrderType(), updateAttributeValues.getTransportationTypeHandle(),
-          updateAttributeValues.getTime(), updateAttributeValues.getMessageRetractionHandle(),
+          OrderType.RECEIVE, updateAttributeValues.getTransportationTypeHandle(), updateAttributeValues.getTime(), null,
           federateProxy.getFederateHandle(), sentRegions);
       }
     }
@@ -142,7 +149,8 @@ public class FederateProxySubscriptionManager
   }
 
   public ReceiveInteraction receiveInteraction(
-    FederateProxy federateProxy, InteractionClass interactionClass, SendInteraction sendInteraction)
+    FederateProxy federateProxy, InteractionClass interactionClass, SendInteraction sendInteraction,
+    boolean timeStampOrdered)
   {
     ReceiveInteraction receiveInteraction;
 
@@ -212,12 +220,19 @@ public class FederateProxySubscriptionManager
       {
         receiveInteraction = null;
       }
+      else if (timeStampOrdered)
+      {
+        receiveInteraction = new ReceiveInteraction(
+          interactionClass.getInteractionClassHandle(), trimmedParameterValues, sendInteraction.getTag(),
+          OrderType.TIMESTAMP, sendInteraction.getTransportationTypeHandle(), sendInteraction.getTime(),
+          sendInteraction.getMessageRetractionHandle(), federateProxy.getFederateHandle(), sentRegions);
+      }
       else
       {
         receiveInteraction = new ReceiveInteraction(
           interactionClass.getInteractionClassHandle(), trimmedParameterValues, sendInteraction.getTag(),
-          sendInteraction.getSentOrderType(), sendInteraction.getTransportationTypeHandle(), sendInteraction.getTime(),
-          sendInteraction.getMessageRetractionHandle(), federateProxy.getFederateHandle(), sentRegions);
+          OrderType.RECEIVE, sendInteraction.getTransportationTypeHandle(), sendInteraction.getTime(), null,
+          federateProxy.getFederateHandle(), sentRegions);
       }
     }
 

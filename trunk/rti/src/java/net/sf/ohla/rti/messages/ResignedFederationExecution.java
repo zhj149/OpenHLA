@@ -16,42 +16,33 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.federation.FederateProxy;
-import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.federate.Federate;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
-import hla.rti1516e.LogicalTime;
-import hla.rti1516e.LogicalTimeFactory;
-
-public class LITSResponse
-  extends LogicalTimeMessage
-  implements FederationExecutionMessage
+public class ResignedFederationExecution
+  extends AbstractMessage
+  implements FederateMessage
 {
-  public LITSResponse(LogicalTime time)
+  public ResignedFederationExecution()
   {
-    super(MessageType.LITS_RESPONSE, time);
+    super(MessageType.RESIGNED_FEDERATION_EXECUTION);
 
     encodingFinished();
   }
 
-  public LITSResponse(ChannelBuffer buffer, LogicalTimeFactory factory)
+  public ResignedFederationExecution(ChannelBuffer buffer)
   {
-    super(buffer, factory);
-  }
-
-  public LogicalTime getLITS()
-  {
-    return time;
+    super(buffer);
   }
 
   public MessageType getType()
   {
-    return MessageType.LITS_RESPONSE;
+    return MessageType.RESIGNED_FEDERATION_EXECUTION;
   }
 
-  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
+  public void execute(Federate federate)
   {
-    federationExecution.litsResponse(federateProxy, this);
+    federate.resignedFederationExecution();
   }
 }

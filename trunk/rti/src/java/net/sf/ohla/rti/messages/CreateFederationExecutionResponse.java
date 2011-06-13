@@ -21,7 +21,10 @@ import org.jboss.netty.buffer.ChannelBuffer;
 public class CreateFederationExecutionResponse
   extends EnumResponse<CreateFederationExecutionResponse.Response>
 {
-  public enum Response { SUCCESS, FEDERATION_EXECUTION_ALREADY_EXISTS, COULD_NOT_CREATE_LOGICAL_TIME_FACTORY }
+  public enum Response
+  {
+    SUCCESS, FEDERATION_EXECUTION_ALREADY_EXISTS, COULD_NOT_CREATE_LOGICAL_TIME_FACTORY
+  }
 
   public CreateFederationExecutionResponse(long id, Response response)
   {

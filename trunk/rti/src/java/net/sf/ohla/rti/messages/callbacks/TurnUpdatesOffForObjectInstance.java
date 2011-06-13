@@ -17,8 +17,6 @@
 package net.sf.ohla.rti.messages.callbacks;
 
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.federate.Federate;
-import net.sf.ohla.rti.messages.FederateMessage;
 import net.sf.ohla.rti.messages.MessageType;
 import net.sf.ohla.rti.messages.ObjectInstanceAttributesMessage;
 
@@ -31,7 +29,7 @@ import hla.rti1516e.exceptions.FederateInternalError;
 
 public class TurnUpdatesOffForObjectInstance
   extends ObjectInstanceAttributesMessage
-  implements Callback, FederateMessage
+  implements Callback
 {
   public TurnUpdatesOffForObjectInstance(ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
   {
@@ -54,10 +52,5 @@ public class TurnUpdatesOffForObjectInstance
     throws FederateInternalError
   {
     federateAmbassador.turnUpdatesOffForObjectInstance(objectInstanceHandle, attributeHandles);
-  }
-
-  public void execute(Federate federate)
-  {
-    federate.callbackReceived(this);
   }
 }

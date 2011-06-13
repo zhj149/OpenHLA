@@ -16,33 +16,24 @@
 
 package net.sf.ohla.rti.federate;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Queue;
-import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
+import net.sf.ohla.rti.MessageRetractionManager;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eMessageRetractionHandle;
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
+import net.sf.ohla.rti.messages.Retract;
 
 import hla.rti1516e.LogicalTime;
 import hla.rti1516e.MessageRetractionHandle;
 import hla.rti1516e.exceptions.MessageCanNoLongerBeRetracted;
 
 public class FederateMessageRetractionManager
+  extends MessageRetractionManager
 {
   private final Federate federate;
 
   private final AtomicLong messageRetractionCount = new AtomicLong();
-
-  private final Lock messageRetractionsLock = new ReentrantLock(true);
-  private final Map<MessageRetractionHandle, MessageRetraction> messageRetractions =
-    new HashMap<MessageRetractionHandle, MessageRetraction>();
-  private final Queue<MessageRetraction> messageRetractionsByExpiration = new PriorityQueue<MessageRetraction>();
 
   public FederateMessageRetractionManager(Federate federate)
   {
@@ -51,107 +42,44 @@ public class FederateMessageRetractionManager
 
   public MessageRetractionHandle add(LogicalTime time)
   {
-    return add(time, null);
-  }
+    MessageRetractionHandle messageRetractionHandle =
+      new IEEE1516eMessageRetractionHandle(federate.getFederateHandle(), messageRetractionCount.incrementAndGet());
 
-  public MessageRetractionHandle add(LogicalTime time, Future<?> future)
-  {
-    return add(time, future, nextMessageRetractionHandle());
-  }
-
-  public MessageRetractionHandle add(
-    LogicalTime time, Future<?> future, MessageRetractionHandle messageRetractionHandle)
-  {
-    MessageRetraction messageRetraction = new MessageRetraction(messageRetractionHandle, time, future);
-
-    messageRetractionsLock.lock();
-    try
-    {
-      messageRetractions.put(messageRetractionHandle, messageRetraction);
-      messageRetractionsByExpiration.offer(messageRetraction);
-    }
-    finally
-    {
-      messageRetractionsLock.unlock();
-    }
+    add(new MessageRetraction(messageRetractionHandle, time));
 
     return messageRetractionHandle;
   }
 
-  public void retract(MessageRetractionHandle messageRetractionHandle, LogicalTime time)
+  @SuppressWarnings("unchecked")
+  public void retract(MessageRetractionHandle messageRetractionHandle, LogicalTime minimumTime)
     throws MessageCanNoLongerBeRetracted
   {
     messageRetractionsLock.lock();
     try
     {
-      MessageRetraction messageRetraction = messageRetractions.get(messageRetractionHandle);
+      MessageRetraction messageRetraction = messageRetractions.remove(messageRetractionHandle);
       if (messageRetraction == null)
       {
-        throw new MessageCanNoLongerBeRetracted(I18n.getMessage(
-          ExceptionMessages.MESSAGE_ALREADY_PROCESSED, messageRetractionHandle));
+        throw new MessageCanNoLongerBeRetracted(
+          I18n.getMessage(ExceptionMessages.MESSAGE_CAN_NO_LONGER_BE_RETRACTED, messageRetractionHandle));
       }
-      messageRetraction.retract(time);
+      else if (minimumTime.compareTo(messageRetraction.getExpiration()) < 0)
+      {
+        federate.getRTIChannel().write(new Retract(messageRetractionHandle));
+      }
+      else
+      {
+        // put it back since it was optimistically removed
+        //
+        messageRetractions.put(messageRetractionHandle, messageRetraction);
+
+        throw new MessageCanNoLongerBeRetracted(
+          I18n.getMessage(ExceptionMessages.MESSAGE_CAN_NO_LONGER_BE_RETRACTED, messageRetractionHandle));
+      }
     }
     finally
     {
       messageRetractionsLock.unlock();
-    }
-  }
-
-  protected MessageRetractionHandle nextMessageRetractionHandle()
-  {
-    return new IEEE1516eMessageRetractionHandle(federate.getFederateHandle(), messageRetractionCount.incrementAndGet());
-  }
-
-  protected class MessageRetraction
-    implements Comparable
-  {
-    private final MessageRetractionHandle messageRetractionHandle;
-    private final LogicalTime expiration;
-    private final Future<?> future;
-
-    public MessageRetraction(MessageRetractionHandle messageRetractionHandle, LogicalTime expiration, Future<?> future)
-    {
-      this.messageRetractionHandle = messageRetractionHandle;
-      this.expiration = expiration;
-      this.future = future;
-    }
-
-    public MessageRetractionHandle getMessageRetractionHandle()
-    {
-      return messageRetractionHandle;
-    }
-
-    public LogicalTime getExpiration()
-    {
-      return expiration;
-    }
-
-    @SuppressWarnings("unchecked")
-    public void retract(LogicalTime time)
-      throws MessageCanNoLongerBeRetracted
-    {
-      if (expiration.compareTo(time) <= 0)
-      {
-        throw new MessageCanNoLongerBeRetracted(I18n.getMessage(
-          ExceptionMessages.MESSAGE_RETRACTION_EXPIRED, expiration, time));
-      }
-      else if (future != null && !future.cancel(false))
-      {
-        throw new MessageCanNoLongerBeRetracted(I18n.getMessage(
-          ExceptionMessages.MESSAGE_ALREADY_PROCESSED, messageRetractionHandle));
-      }
-    }
-
-    public int compareTo(Object rhs)
-    {
-      return compareTo((MessageRetraction) rhs);
-    }
-
-    @SuppressWarnings("unchecked")
-    public int compareTo(MessageRetraction rhs)
-    {
-      return expiration.compareTo(rhs.expiration);
     }
   }
 }

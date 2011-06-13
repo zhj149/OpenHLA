@@ -18,8 +18,6 @@ package net.sf.ohla.rti.messages.callbacks;
 
 import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.federate.Federate;
-import net.sf.ohla.rti.messages.FederateMessage;
 import net.sf.ohla.rti.messages.MessageType;
 import net.sf.ohla.rti.messages.StringMessage;
 
@@ -31,7 +29,7 @@ import hla.rti1516e.exceptions.FederateInternalError;
 
 public class SynchronizationPointRegistrationFailed
   extends StringMessage
-  implements Callback, FederateMessage
+  implements Callback
 {
   private final SynchronizationPointFailureReason reason;
 
@@ -72,10 +70,5 @@ public class SynchronizationPointRegistrationFailed
     throws FederateInternalError
   {
     federateAmbassador.synchronizationPointRegistrationFailed(s, reason);
-  }
-
-  public void execute(Federate federate)
-  {
-    federate.callbackReceived(this);
   }
 }

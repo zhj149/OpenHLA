@@ -16,37 +16,43 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.federation.FederateProxy;
-import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.Protocol;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
 import hla.rti1516e.LogicalTime;
 import hla.rti1516e.LogicalTimeFactory;
 
-public class NextMessageRequestTimeAdvanceGrant
-  extends LogicalTimeMessage
-  implements FederationExecutionMessage
+public class QueryGALTResponse
+  extends AbstractResponse
 {
-  public NextMessageRequestTimeAdvanceGrant(LogicalTime time)
+  private final LogicalTime galt;
+
+  public QueryGALTResponse(long requestId, LogicalTime galt)
   {
-    super(MessageType.NEXT_MESSAGE_REQUEST_TIME_ADVANCE_GRANT, time);
+    super(MessageType.QUERY_GALT_RESPONSE, requestId);
+
+    this.galt = galt;
+
+    Protocol.encodeTime(buffer, galt);
 
     encodingFinished();
   }
 
-  public NextMessageRequestTimeAdvanceGrant(ChannelBuffer buffer, LogicalTimeFactory factory)
+  public QueryGALTResponse(ChannelBuffer buffer, LogicalTimeFactory factory)
   {
-    super(buffer, factory);
+    super(buffer);
+
+    galt = Protocol.decodeTime(buffer, factory);
+  }
+
+  public LogicalTime getGALT()
+  {
+    return galt;
   }
 
   public MessageType getType()
   {
-    return MessageType.NEXT_MESSAGE_REQUEST_TIME_ADVANCE_GRANT;
-  }
-
-  public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
-  {
-    federationExecution.nextMessageRequestTimeAdvanceGrant(federateProxy, this);
+    return MessageType.QUERY_GALT_RESPONSE;
   }
 }
