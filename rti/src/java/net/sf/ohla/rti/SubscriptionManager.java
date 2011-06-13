@@ -334,9 +334,16 @@ public class SubscriptionManager
      */
     public boolean unsubscribe(AttributeHandleSet attributeHandles)
     {
-      for (AttributeHandle attributeHandle : attributeHandles)
+      if (attributeHandles == null)
       {
-        attributeSubscriptions.remove(attributeHandle);
+        attributeSubscriptions.clear();
+      }
+      else
+      {
+        for (AttributeHandle attributeHandle : attributeHandles)
+        {
+          attributeSubscriptions.remove(attributeHandle);
+        }
       }
 
       return attributeSubscriptions.isEmpty();

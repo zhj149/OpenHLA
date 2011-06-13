@@ -17,10 +17,8 @@
 package net.sf.ohla.rti.messages.callbacks;
 
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.federate.Federate;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eMessageRetractionHandle;
 import net.sf.ohla.rti.messages.AbstractMessage;
-import net.sf.ohla.rti.messages.FederateMessage;
 import net.sf.ohla.rti.messages.MessageType;
 
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -31,7 +29,7 @@ import hla.rti1516e.exceptions.FederateInternalError;
 
 public class RequestRetraction
   extends AbstractMessage
-  implements Callback, FederateMessage
+  implements Callback
 {
   private final MessageRetractionHandle messageRetractionHandle;
 
@@ -67,10 +65,5 @@ public class RequestRetraction
     throws FederateInternalError
   {
     federateAmbassador.requestRetraction(messageRetractionHandle);
-  }
-
-  public void execute(Federate federate)
-  {
-    federate.callbackReceived(this);
   }
 }

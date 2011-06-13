@@ -22,7 +22,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
 import net.sf.ohla.rti.i18n.I18nLogger;
-import net.sf.ohla.rti.i18n.LogMessages;
 import net.sf.ohla.rti.messages.DisableTimeConstrained;
 import net.sf.ohla.rti.messages.DisableTimeRegulation;
 import net.sf.ohla.rti.messages.EnableTimeConstrained;
@@ -31,8 +30,8 @@ import net.sf.ohla.rti.messages.FlushQueueRequest;
 import net.sf.ohla.rti.messages.ModifyLookahead;
 import net.sf.ohla.rti.messages.NextMessageRequest;
 import net.sf.ohla.rti.messages.NextMessageRequestAvailable;
-import net.sf.ohla.rti.messages.NextMessageRequestAvailableTimeAdvanceGrant;
-import net.sf.ohla.rti.messages.NextMessageRequestTimeAdvanceGrant;
+import net.sf.ohla.rti.messages.QueryGALT;
+import net.sf.ohla.rti.messages.QueryLITS;
 import net.sf.ohla.rti.messages.TimeAdvanceRequest;
 import net.sf.ohla.rti.messages.TimeAdvanceRequestAvailable;
 
@@ -86,7 +85,6 @@ public class FederateTimeManager
   private TimeConstrainedState timeConstrainedState = TimeConstrainedState.NOT_TIME_CONSTRAINED;
 
   private LogicalTime federateTime;
-  private LogicalTime galt;
 
   private LogicalTimeInterval lookahead;
 
@@ -112,6 +110,11 @@ public class FederateTimeManager
   public LogicalTime getFederateTime()
   {
     return federateTime;
+  }
+
+  public LogicalTimeInterval getLookahead()
+  {
+    return lookahead;
   }
 
   public ReadWriteLock getTimeLock()
@@ -144,9 +147,14 @@ public class FederateTimeManager
     return isTimeConstrained() && isTimeGranted();
   }
 
-  public boolean galtDefined()
+  public LogicalTime getAdvanceRequestTime()
   {
-    return galt != null;
+    return advanceRequestTime;
+  }
+
+  public TimeAdvanceType getAdvanceRequestType()
+  {
+    return advanceRequestType;
   }
 
   public void enableTimeRegulation(LogicalTimeInterval lookahead)
@@ -233,8 +241,6 @@ public class FederateTimeManager
       federate.getRTIChannel().write(new DisableTimeConstrained());
 
       timeConstrainedState = TimeConstrainedState.NOT_TIME_CONSTRAINED;
-
-      // TODO: release all TSO messages
     }
     finally
     {
@@ -350,14 +356,6 @@ public class FederateTimeManager
       checkIfRequestForTimeRegulationPending();
       checkIfRequestForTimeConstrainedPending();
 
-      LogicalTime nextMessageTime = federate.getNextMessageTime();
-      if (nextMessageTime != null && galtDefined() && nextMessageTime.compareTo(galt) < 0)
-      {
-        // adjust the time of the request to the next message time
-
-        time = nextMessageTime;
-      }
-
       federate.getRTIChannel().write(new NextMessageRequest(time));
 
       if (isTimeRegulating())
@@ -404,14 +402,6 @@ public class FederateTimeManager
       checkIfInTimeAdvancingState();
       checkIfRequestForTimeConstrainedPending();
       checkIfRequestForTimeRegulationPending();
-      LogicalTime nextMessageTime = federate.getNextMessageTime();
-
-      if (nextMessageTime != null && galtDefined() && nextMessageTime.compareTo(galt) <= 0)
-      {
-        // adjust the time of the request to the next message time
-
-        time = nextMessageTime;
-      }
 
       federate.getRTIChannel().write(new NextMessageRequestAvailable(time));
 
@@ -460,20 +450,6 @@ public class FederateTimeManager
       checkIfRequestForTimeRegulationPending();
       checkIfRequestForTimeConstrainedPending();
 
-      if (galtDefined())
-      {
-        if (galt.compareTo(time) < 0)
-        {
-          time = galt;
-        }
-      }
-
-      LogicalTime nextMessageTime = federate.getNextMessageTime();
-      if (nextMessageTime != null && nextMessageTime.compareTo(time) < 0)
-      {
-        time = nextMessageTime;
-      }
-
       federate.getRTIChannel().write(new FlushQueueRequest(time));
 
       if (isTimeRegulating())
@@ -513,6 +489,10 @@ public class FederateTimeManager
     timeLock.readLock().lock();
     try
     {
+      QueryGALT queryGALT = new QueryGALT();
+      federate.getRTIChannel().write(queryGALT);
+
+      LogicalTime galt = queryGALT.getResponse().getGALT();
       return new TimeQueryReturn(galt != null, galt);
     }
     finally
@@ -539,36 +519,19 @@ public class FederateTimeManager
   public TimeQueryReturn queryLITS()
     throws RTIinternalError
   {
-    TimeQueryReturn timeQueryReturn;
-
     timeLock.readLock().lock();
     try
     {
-      LogicalTime nextMessageTime = federate.getNextMessageTime();
-      if (nextMessageTime == null)
-      {
-        // no TSO messages in the queue, LITS is GALT (if GALT is defined)
+      QueryLITS queryLITS = new QueryLITS();
+      federate.getRTIChannel().write(queryLITS);
 
-        timeQueryReturn = new TimeQueryReturn(galt != null, galt);
-      }
-      else if (galt == null || nextMessageTime.compareTo(galt) < 0)
-      {
-        // GALT is undefined (no more time regulating federates) but there is still a TSO message in the queue or the
-        // next TSO message is < GALT
-
-        timeQueryReturn = new TimeQueryReturn(true, nextMessageTime);
-      }
-      else
-      {
-        timeQueryReturn = new TimeQueryReturn(true, galt);
-      }
+      LogicalTime lits = queryLITS.getResponse().getLITS();
+      return new TimeQueryReturn(lits != null, lits);
     }
     finally
     {
       timeLock.readLock().unlock();
     }
-
-    return timeQueryReturn;
   }
 
   public void modifyLookahead(LogicalTimeInterval lookahead)
@@ -672,63 +635,6 @@ public class FederateTimeManager
     }
   }
 
-  @SuppressWarnings("unchecked")
-  public void galtAdvanced(LogicalTime galt)
-  {
-    timeLock.writeLock().lock();
-    try
-    {
-      log.trace(LogMessages.GALT_ADVANCED, this.galt, galt);
-
-      this.galt = galt;
-
-      if (isTimeConstrained())
-      {
-        LogicalTime maxFutureTaskTimestamp;
-        if (isTimeAdvancing())
-        {
-          switch (advanceRequestType)
-          {
-            case NEXT_MESSAGE_REQUEST:
-              maxFutureTaskTimestamp = handleNextMessageRequestGALTAdvanced(galt);
-              break;
-            case NEXT_MESSAGE_REQUEST_AVAILABLE:
-              maxFutureTaskTimestamp = handleNextMessageRequestAvailableGALTAdvanced(galt);
-              break;
-            default:
-              maxFutureTaskTimestamp = galt.compareTo(advanceRequestTime) > 0 ? advanceRequestTime : galt;
-          }
-        }
-        else
-        {
-          maxFutureTaskTimestamp = galt.compareTo(federateTime) > 0 ? federateTime : galt;
-        }
-        federate.processFutureTasks(maxFutureTaskTimestamp);
-      }
-    }
-    finally
-    {
-      timeLock.writeLock().unlock();
-    }
-  }
-
-  public void galtUndefined()
-  {
-    timeLock.writeLock().lock();
-    try
-    {
-      log.debug(LogMessages.GALT_UNDEFINED);
-
-      galt = null;
-
-      federate.clearFutureTasks();
-    }
-    finally
-    {
-      timeLock.writeLock().unlock();
-    }
-  }
-
   public void checkIfInTimeAdvancingState()
     throws InTimeAdvancingState
   {
@@ -824,112 +730,6 @@ public class FederateTimeManager
     throws InvalidLogicalTime
   {
     checkIfInvalidTimestamp(deleteTime);
-  }
-
-  @SuppressWarnings("unchecked")
-  private LogicalTime handleNextMessageRequestGALTAdvanced(LogicalTime galt)
-  {
-    LogicalTime maxFutureTaskTimestamp;
-
-    LogicalTime nextMessageTime = federate.getNextMessageTime();
-    if (nextMessageTime == null || nextMessageTime.compareTo(galt) >= 0)
-    {
-      // there are no pending TSO messages or they are >= GALT
-
-      if (advanceRequestTime.compareTo(galt) < 0)
-      {
-        // GALT has advanced past the requested time
-
-        maxFutureTaskTimestamp = advanceRequestTime;
-
-        if (!isTimeRegulating())
-        {
-          federate.getRTIChannel().write(new NextMessageRequestTimeAdvanceGrant(advanceRequestTime));
-        }
-      }
-      else
-      {
-        maxFutureTaskTimestamp = galt;
-      }
-    }
-    else if (advanceRequestTime.compareTo(nextMessageTime) < 0)
-    {
-      // the requested time is < the pending TSO message which is < GALT
-
-      maxFutureTaskTimestamp = advanceRequestTime;
-
-      if (!isTimeRegulating())
-      {
-        federate.getRTIChannel().write(new NextMessageRequestTimeAdvanceGrant(advanceRequestTime));
-      }
-    }
-    else
-    {
-      // the pending TSO message is < GALT which is <= the requested time
-
-      advanceRequestTime = nextMessageTime;
-      maxFutureTaskTimestamp = nextMessageTime;
-
-      if (!isTimeRegulating())
-      {
-        federate.getRTIChannel().write(new NextMessageRequestTimeAdvanceGrant(nextMessageTime));
-      }
-    }
-
-    return maxFutureTaskTimestamp;
-  }
-
-  @SuppressWarnings("unchecked")
-  private LogicalTime handleNextMessageRequestAvailableGALTAdvanced(LogicalTime galt)
-  {
-    LogicalTime maxFutureTaskTimestamp;
-
-    LogicalTime nextMessageTime = federate.getNextMessageTime();
-    if (nextMessageTime == null || nextMessageTime.compareTo(galt) > 0)
-    {
-      // there are no pending TSO messages or they are > GALT
-
-      if (advanceRequestTime.compareTo(galt) <= 0)
-      {
-        // GALT has advanced past the requested time
-
-        maxFutureTaskTimestamp = advanceRequestTime;
-
-        if (!isTimeRegulating())
-        {
-          federate.getRTIChannel().write(new NextMessageRequestAvailableTimeAdvanceGrant(advanceRequestTime));
-        }
-      }
-      else
-      {
-        maxFutureTaskTimestamp = galt;
-      }
-    }
-    else if (advanceRequestTime.compareTo(nextMessageTime) < 0)
-    {
-      // the requested time is < the pending TSO message which is <= GALT
-
-      maxFutureTaskTimestamp = advanceRequestTime;
-
-      if (!isTimeRegulating())
-      {
-        federate.getRTIChannel().write(new NextMessageRequestTimeAdvanceGrant(advanceRequestTime));
-      }
-    }
-    else
-    {
-      // the pending TSO message is <= GALT which is <= the requested time
-
-      advanceRequestTime = nextMessageTime;
-      maxFutureTaskTimestamp = nextMessageTime;
-
-      if (!isTimeRegulating())
-      {
-        federate.getRTIChannel().write(new NextMessageRequestTimeAdvanceGrant(nextMessageTime));
-      }
-    }
-
-    return maxFutureTaskTimestamp;
   }
 
   @SuppressWarnings("unchecked")

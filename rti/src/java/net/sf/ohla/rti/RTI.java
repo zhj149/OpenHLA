@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -68,6 +69,8 @@ public class RTI
   {
     // TODO: read from configuration file
 
+    Executor executor = Executors.newCachedThreadPool();
+
     if (serverBootstraps.isEmpty())
     {
       ServerBootstrap serverBootstrap = new ServerBootstrap(
@@ -75,7 +78,7 @@ public class RTI
 
       serverBootstrap.setOption("localAddress", new InetSocketAddress(DEFAULT_PORT));
 
-      serverBootstrap.setPipelineFactory(new RTIChannelPipelineFactory(this));
+      serverBootstrap.setPipelineFactory(new RTIChannelPipelineFactory(executor, this));
 
       serverBootstraps.put("default", serverBootstrap);
     }
@@ -190,7 +193,6 @@ public class RTI
                  federationExecutionName);
 
         context.getChannel().write(new JoinFederationExecutionResponse(
-          joinFederationExecution.getId(),
           JoinFederationExecutionResponse.Response.FEDERATION_EXECUTION_DOES_NOT_EXIST));
       }
       else

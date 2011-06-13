@@ -53,6 +53,16 @@ public abstract class AbstractMessage
     this.buffer = buffer;
   }
 
+  public ChannelBuffer getBuffer()
+  {
+    return buffer;
+  }
+
+  public boolean isOrdered()
+  {
+    return true;
+  }
+
   /**
    * Called to indicate that a subclass has fully encoded it's data into {@link AbstractMessage#buffer}. This method
    * then writes the size of the message in the first 4 bytes as the header.
@@ -60,10 +70,5 @@ public abstract class AbstractMessage
   protected void encodingFinished()
   {
     buffer.setInt(0, buffer.readableBytes() - 4);
-  }
-
-  public ChannelBuffer getBuffer()
-  {
-    return buffer;
   }
 }

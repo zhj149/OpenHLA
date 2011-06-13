@@ -62,6 +62,6 @@ public class TimeAdvanceGrant
   {
     this.federate = federate;
 
-    federate.timeAdvanceGrant(this);
+    federate.callbackReceived(this);
   }
 }

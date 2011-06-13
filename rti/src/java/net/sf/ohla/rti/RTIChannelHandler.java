@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2005-2010, Michael Newcomb
+ * Copyright (c) 2005-2011, Michael Newcomb
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,40 +16,51 @@
 
 package net.sf.ohla.rti;
 
+import java.util.concurrent.Executor;
+
+import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.messages.CreateFederationExecution;
 import net.sf.ohla.rti.messages.DestroyFederationExecution;
+import net.sf.ohla.rti.messages.FederationExecutionMessage;
 import net.sf.ohla.rti.messages.JoinFederationExecution;
 import net.sf.ohla.rti.messages.ListFederationExecutions;
 import net.sf.ohla.rti.messages.Message;
+import net.sf.ohla.rti.messages.MessageChannelHandler;
 
-import org.jboss.netty.channel.ChannelEvent;
-import org.jboss.netty.channel.ChannelHandler;
 import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelUpstreamHandler;
-import org.jboss.netty.channel.MessageEvent;
 
-@ChannelHandler.Sharable
-public class RTIChannelUpstreamHandler
-  implements ChannelUpstreamHandler
+public class RTIChannelHandler
+  extends MessageChannelHandler
 {
-  public static final String NAME = "RTIChannelUpstreamHandler";
+  public static final String NAME = "RTIChannelHandler";
 
   private final RTI rti;
 
-  public RTIChannelUpstreamHandler(RTI rti)
+  private FederateProxy federateProxy;
+
+  public RTIChannelHandler(Executor executor, RTI rti)
   {
+    super(executor);
+
     this.rti = rti;
   }
 
-  public void handleUpstream(ChannelHandlerContext context, ChannelEvent event)
-    throws Exception
+  public void setFederateProxy(FederateProxy federateProxy)
   {
-    if (event instanceof MessageEvent)
+    this.federateProxy = federateProxy;
+  }
+
+  @Override
+  protected void messageReceived(ChannelHandlerContext context, Message message)
+  {
+    if (message instanceof FederationExecutionMessage)
     {
-      assert ((MessageEvent) event).getMessage() instanceof Message;
+      assert federateProxy != null;
 
-      Message message = (Message) ((MessageEvent) event).getMessage();
-
+      ((FederationExecutionMessage) message).execute(federateProxy.getFederationExecution(), federateProxy);
+    }
+    else
+    {
       switch (message.getType())
       {
         case CREATE_FEDERATION_EXECUTION:
@@ -65,12 +76,8 @@ public class RTIChannelUpstreamHandler
           rti.listFederationExecutions(context, (ListFederationExecutions) message);
           break;
         default:
-          context.sendUpstream(event);
+          // TODO: error?
       }
-    }
-    else
-    {
-      context.sendUpstream(event);
     }
   }
 }

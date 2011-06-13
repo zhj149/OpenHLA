@@ -38,11 +38,11 @@ public class ManagedTimeAdvancementTestNG
     rtiAmbassadors.get(0).enableTimeRegulation(lookahead1);
     rtiAmbassadors.get(2).enableTimeRegulation(lookahead1);
 
-    rtiAmbassadors.get(1).enableTimeConstrained();
-    rtiAmbassadors.get(2).enableTimeConstrained();
-
     federateAmbassadors.get(0).checkTimeRegulationEnabled(initial);
     federateAmbassadors.get(2).checkTimeRegulationEnabled(initial);
+
+    rtiAmbassadors.get(1).enableTimeConstrained();
+    rtiAmbassadors.get(2).enableTimeConstrained();
 
     federateAmbassadors.get(1).checkTimeConstrainedEnabled(initial);
     federateAmbassadors.get(2).checkTimeConstrainedEnabled(initial);

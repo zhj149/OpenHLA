@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -33,7 +34,9 @@ import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.fed.FED;
 import net.sf.ohla.rti.fed.RoutingSpace;
 import net.sf.ohla.rti.fed.javacc.FEDParser;
-import net.sf.ohla.rti.federate.FederateChannelUpstreamHandler;
+import net.sf.ohla.rti.federate.CallbackManager;
+import net.sf.ohla.rti.federate.FederateChannelHandler;
+import net.sf.ohla.rti.federate.FederateChannelHandlerFactory;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSet;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeSetRegionSetPairList;
@@ -50,10 +53,7 @@ import net.sf.ohla.rti.messages.Message;
 import net.sf.ohla.rti.messages.callbacks.ObjectInstanceNameReservationFailed;
 import net.sf.ohla.rti.messages.callbacks.ObjectInstanceNameReservationSucceeded;
 
-import org.jboss.netty.channel.ChannelEvent;
 import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelUpstreamHandler;
-import org.jboss.netty.channel.MessageEvent;
 
 import hla.rti.ArrayIndexOutOfBounds;
 import hla.rti.AsynchronousDeliveryAlreadyDisabled;
@@ -409,10 +409,6 @@ public class HLA13RTIambassador
     {
       FederateHandle federateHandle = rtiAmbassador.joinFederationExecution(federateType, federationExecutionName);
 
-      rtiAmbassador.getRTIChannel().getPipeline().addBefore(
-        FederateChannelUpstreamHandler.NAME, ObjectNameReservationChannelUpstreamHandler.NAME,
-        new ObjectNameReservationChannelUpstreamHandler());
-
       setIEEE1516eLogicalTimeFactory(rtiAmbassador.getFederate().getLogicalTimeFactory());
 
       fed = rtiAmbassador.getFederate().getFDD().getFED();
@@ -467,10 +463,6 @@ public class HLA13RTIambassador
     {
       FederateHandle federateHandle = rtiAmbassador.joinFederationExecution(federateType, federationExecutionName);
 
-      rtiAmbassador.getRTIChannel().getPipeline().addBefore(
-        FederateChannelUpstreamHandler.NAME, ObjectNameReservationChannelUpstreamHandler.NAME,
-        new ObjectNameReservationChannelUpstreamHandler());
-
       setIEEE1516eLogicalTimeFactory(rtiAmbassador.getFederate().getLogicalTimeFactory());
 
       fed = rtiAmbassador.getFederate().getFDD().getFED();
@@ -521,8 +513,6 @@ public class HLA13RTIambassador
     try
     {
       rtiAmbassador.resignFederationExecution(getResignAction(resignAction));
-
-      rtiAmbassador.getRTIChannel().getPipeline().remove(ObjectNameReservationChannelUpstreamHandler.NAME);
     }
     catch (hla.rti1516e.exceptions.InvalidResignAction ira)
     {
@@ -5397,54 +5387,55 @@ public class HLA13RTIambassador
     return System.getProperty(logicalTimeFactoryClassNameProperty);
   }
 
-  private class ObjectNameReservationChannelUpstreamHandler
-    implements ChannelUpstreamHandler
+  private class HLA13FederateChannelHandler
+    extends FederateChannelHandler
   {
-    public static final String NAME = "ObjectNameReservationChannelUpstreamHandler";
-
-    public void handleUpstream(ChannelHandlerContext context, ChannelEvent event)
-      throws Exception
+    public HLA13FederateChannelHandler(Executor executor, CallbackManager callbackManager)
     {
-      if (event instanceof MessageEvent)
-      {
-        assert ((MessageEvent) event).getMessage() instanceof Message;
+      super(executor, callbackManager);
+    }
 
-        Message message = (Message) ((MessageEvent) event).getMessage();
-
-        switch (message.getType())
-        {
-          case OBJECT_INSTANCE_NAME_RESERVATION_SUCCEEDED:
-            objectInstanceNameReservationsLock.lock();
-            try
-            {
-              objectInstanceNameReservations.remove(
-                ((ObjectInstanceNameReservationSucceeded) message).getObjectInstanceName()).complete(true);
-            }
-            finally
-            {
-              objectInstanceNameReservationsLock.unlock();
-            }
-            break;
-          case OBJECT_INSTANCE_NAME_RESERVATION_FAILED:
-            objectInstanceNameReservationsLock.lock();
-            try
-            {
-              objectInstanceNameReservations.remove(
-                ((ObjectInstanceNameReservationFailed) message).getName()).complete(false);
-            }
-            finally
-            {
-              objectInstanceNameReservationsLock.unlock();
-            }
-            break;
-          default:
-            context.sendUpstream(event);
-        }
-      }
-      else
+    @Override
+    protected void messageReceived(ChannelHandlerContext context, Message message)
+    {
+      switch (message.getType())
       {
-        context.sendUpstream(event);
+        case OBJECT_INSTANCE_NAME_RESERVATION_SUCCEEDED:
+          objectInstanceNameReservationsLock.lock();
+          try
+          {
+            objectInstanceNameReservations.remove(
+              ((ObjectInstanceNameReservationSucceeded) message).getObjectInstanceName()).complete(true);
+          }
+          finally
+          {
+            objectInstanceNameReservationsLock.unlock();
+          }
+          break;
+        case OBJECT_INSTANCE_NAME_RESERVATION_FAILED:
+          objectInstanceNameReservationsLock.lock();
+          try
+          {
+            objectInstanceNameReservations.remove(
+              ((ObjectInstanceNameReservationFailed) message).getName()).complete(false);
+          }
+          finally
+          {
+            objectInstanceNameReservationsLock.unlock();
+          }
+          break;
+        default:
+          super.messageReceived(context, message);
       }
+    }
+  }
+
+  private class HLA13FederateChannelHandlerFactory
+  implements FederateChannelHandlerFactory
+  {
+    public FederateChannelHandler create(Executor executor, CallbackManager callbackManager)
+    {
+      return new HLA13FederateChannelHandler(executor, callbackManager);
     }
   }
 

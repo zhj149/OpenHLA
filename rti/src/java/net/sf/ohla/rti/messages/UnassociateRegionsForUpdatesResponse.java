@@ -21,7 +21,10 @@ import org.jboss.netty.buffer.ChannelBuffer;
 public class UnassociateRegionsForUpdatesResponse
   extends EnumResponse<UnassociateRegionsForUpdatesResponse.Response>
 {
-  public enum Response { SUCCESS, OBJECT_INSTANCE_NOT_KNOWN }
+  public enum Response
+  {
+    SUCCESS, OBJECT_INSTANCE_NOT_KNOWN
+  }
 
   public UnassociateRegionsForUpdatesResponse(long id, Response response)
   {

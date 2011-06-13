@@ -134,7 +134,8 @@ public class MessageDecoder
           decodeMessage(context, buffer);
         }
       }
-    } while (message == null && buffer.readable());
+    }
+    while (message == null && buffer.readable());
   }
 
   private void decodeMessage(ChannelHandlerContext context, ChannelBuffer buffer)
@@ -191,6 +192,9 @@ public class MessageDecoder
         break;
       case RESIGN_FEDERATION_EXECUTION:
         message = new ResignFederationExecution(buffer);
+        break;
+      case RESIGNED_FEDERATION_EXECUTION:
+        message = new ResignedFederationExecution(buffer);
         break;
       case REGISTER_FEDERATION_SYNCHRONIZATION_POINT:
         message = new RegisterFederationSynchronizationPoint(buffer);
@@ -256,7 +260,7 @@ public class MessageDecoder
         message = new SubscribeObjectClassAttributes(buffer);
         break;
       case UNSUBSCRIBE_OBJECT_CLASS_ATTRIBUTES:
-        message = new UnpublishObjectClassAttributes(buffer);
+        message = new UnsubscribeObjectClassAttributes(buffer);
         break;
       case SUBSCRIBE_INTERACTION_CLASS:
         message = new SubscribeInteractionClass(buffer);
@@ -375,23 +379,23 @@ public class MessageDecoder
       case NEXT_MESSAGE_REQUEST:
         message = new NextMessageRequest(buffer, logicalTimeFactory);
         break;
-      case NEXT_MESSAGE_REQUEST_TIME_ADVANCE_GRANT:
-        message = new NextMessageRequestTimeAdvanceGrant(buffer, logicalTimeFactory);
-        break;
       case NEXT_MESSAGE_REQUEST_AVAILABLE:
         message = new NextMessageRequestAvailable(buffer, logicalTimeFactory);
-        break;
-      case NEXT_MESSAGE_REQUEST_AVAILABLE_TIME_ADVANCE_GRANT:
-        message = new NextMessageRequestAvailableTimeAdvanceGrant(buffer, logicalTimeFactory);
         break;
       case FLUSH_QUEUE_REQUEST:
         message = new FlushQueueRequest(buffer, logicalTimeFactory);
         break;
-      case GALT_ADVANCED:
-        message = new GALTAdvanced(buffer, logicalTimeFactory);
+      case QUERY_GALT:
+        message = new QueryGALT(buffer);
         break;
-      case GALT_UNDEFINED:
-        message = new GALTUndefined(buffer);
+      case QUERY_GALT_RESPONSE:
+        message = new QueryGALTResponse(buffer, logicalTimeFactory);
+        break;
+      case QUERY_LITS:
+        message = new QueryLITS(buffer);
+        break;
+      case QUERY_LITS_RESPONSE:
+        message = new QueryLITSResponse(buffer, logicalTimeFactory);
         break;
       case MODIFY_LOOKAHEAD:
         message = new ModifyLookahead(buffer, logicalTimeFactory);
@@ -567,14 +571,8 @@ public class MessageDecoder
       case REQUEST_RETRACTION:
         message = new RequestRetraction(buffer);
         break;
-      case LITS_REQUEST:
-        message = new LITSRequest(buffer, logicalTimeFactory);
-        break;
-      case LITS_RESPONSE:
-        message = new LITSResponse(buffer, logicalTimeFactory);
-        break;
       default:
-      throw new Error();
+        throw new Error();
     }
     return message;
   }

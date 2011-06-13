@@ -21,32 +21,29 @@ import net.sf.ohla.rti.federation.FederationExecution;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
-import hla.rti1516e.LogicalTime;
-import hla.rti1516e.LogicalTimeFactory;
-
-public class NextMessageRequestAvailableTimeAdvanceGrant
-  extends LogicalTimeMessage
+public class QueryLITS
+  extends AbstractRequest<QueryLITSResponse>
   implements FederationExecutionMessage
 {
-  public NextMessageRequestAvailableTimeAdvanceGrant(LogicalTime time)
+  public QueryLITS()
   {
-    super(MessageType.NEXT_MESSAGE_REQUEST_AVAILABLE_TIME_ADVANCE_GRANT, time);
+    super(MessageType.QUERY_LITS);
 
     encodingFinished();
   }
 
-  public NextMessageRequestAvailableTimeAdvanceGrant(ChannelBuffer buffer, LogicalTimeFactory factory)
+  public QueryLITS(ChannelBuffer buffer)
   {
-    super(buffer, factory);
+    super(buffer);
   }
 
   public MessageType getType()
   {
-    return MessageType.NEXT_MESSAGE_REQUEST_AVAILABLE_TIME_ADVANCE_GRANT;
+    return MessageType.QUERY_LITS;
   }
 
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
-    federationExecution.nextMessageRequestAvailableTimeAdvanceGrant(federateProxy, this);
+    federationExecution.queryLITS(federateProxy, this);
   }
 }

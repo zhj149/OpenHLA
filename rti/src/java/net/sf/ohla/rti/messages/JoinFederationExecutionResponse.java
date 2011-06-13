@@ -18,6 +18,7 @@ package net.sf.ohla.rti.messages;
 
 import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.fdd.FDD;
+import net.sf.ohla.rti.federate.Federate;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
 
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -25,18 +26,21 @@ import org.jboss.netty.buffer.ChannelBuffer;
 import hla.rti1516e.FederateHandle;
 
 public class JoinFederationExecutionResponse
-  extends EnumResponse<JoinFederationExecutionResponse.Response>
+  extends EnumMessage<JoinFederationExecutionResponse.Response>
+  implements FederateMessage
 {
-  public enum Response { SUCCESS, FEDERATION_EXECUTION_DOES_NOT_EXIST, SAVE_IN_PROGRESS, RESTORE_IN_PROGRESS,
-    INCONSISTENT_FDD }
+  public enum Response
+  {
+    SUCCESS, FEDERATION_EXECUTION_DOES_NOT_EXIST, SAVE_IN_PROGRESS, RESTORE_IN_PROGRESS, INCONSISTENT_FDD
+  }
 
   private final FederateHandle federateHandle;
   private final FDD fdd;
   private final String logicalTimeImplementationName;
 
-  public JoinFederationExecutionResponse(long id, Response response)
+  public JoinFederationExecutionResponse(Response response)
   {
-    super(MessageType.JOIN_FEDERATION_EXECUTION_RESPONSE, id, response);
+    super(MessageType.JOIN_FEDERATION_EXECUTION_RESPONSE, response);
 
     assert response != Response.SUCCESS;
 
@@ -47,10 +51,9 @@ public class JoinFederationExecutionResponse
     encodingFinished();
   }
 
-  public JoinFederationExecutionResponse(
-    long id, FederateHandle federateHandle, FDD fdd, String logicalTimeImplementationName)
+  public JoinFederationExecutionResponse(FederateHandle federateHandle, FDD fdd, String logicalTimeImplementationName)
   {
-    super(MessageType.JOIN_FEDERATION_EXECUTION_RESPONSE, id, Response.SUCCESS);
+    super(MessageType.JOIN_FEDERATION_EXECUTION_RESPONSE, Response.SUCCESS);
 
     this.federateHandle = federateHandle;
     this.fdd = fdd;
@@ -67,7 +70,7 @@ public class JoinFederationExecutionResponse
   {
     super(buffer, Response.values());
 
-    if (response == Response.SUCCESS)
+    if (e == Response.SUCCESS)
     {
       federateHandle = IEEE1516eFederateHandle.decode(buffer);
       fdd = FDD.decode(buffer);
@@ -96,8 +99,18 @@ public class JoinFederationExecutionResponse
     return logicalTimeImplementationName;
   }
 
+  public Response getResponse()
+  {
+    return e;
+  }
+
   public MessageType getType()
   {
     return MessageType.JOIN_FEDERATION_EXECUTION_RESPONSE;
+  }
+
+  public void execute(Federate federate)
+  {
+    federate.joinFederationExecutionResponse(this);
   }
 }

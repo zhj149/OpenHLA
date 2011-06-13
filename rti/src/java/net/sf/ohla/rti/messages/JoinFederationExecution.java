@@ -24,7 +24,7 @@ import net.sf.ohla.rti.fdd.FDD;
 import org.jboss.netty.buffer.ChannelBuffer;
 
 public class JoinFederationExecution
-  extends AbstractRequest<JoinFederationExecutionResponse>
+  extends AbstractMessage
 {
   private final String federateName;
   private final String federateType;

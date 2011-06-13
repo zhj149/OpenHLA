@@ -53,6 +53,7 @@ import net.sf.ohla.rti.messages.UnassociateRegionsForUpdates;
 import net.sf.ohla.rti.messages.UnconditionalAttributeOwnershipDivestiture;
 import net.sf.ohla.rti.messages.UpdateAttributeValues;
 import net.sf.ohla.rti.messages.callbacks.ReflectAttributeValues;
+import net.sf.ohla.rti.messages.callbacks.RemoveObjectInstance;
 
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleSet;
@@ -959,35 +960,28 @@ public class FederateObjectInstance
           regionManager.createTemporaryRegions(reflectAttributeValues.getRegions()));
       }
 
-      AttributeHandleValueMap attributeValues = reflectAttributeValues.getAttributeValues();
-      byte[] tag = reflectAttributeValues.getTag();
       OrderType sentOrderType = reflectAttributeValues.getSentOrderType();
-      TransportationTypeHandle transportationTypeHandle = reflectAttributeValues.getTransportationTypeHandle();
       LogicalTime time = reflectAttributeValues.getTime();
 
-      // TODO: might have to check attributes against the owned attributes in case an attribute has been acquired
-
-      if (time == null)
+      if (sentOrderType == OrderType.TIMESTAMP)
       {
         federateAmbassador.reflectAttributeValues(
-          objectInstanceHandle, attributeValues, tag, sentOrderType, transportationTypeHandle, reflectAttributeValues);
+          objectInstanceHandle, reflectAttributeValues.getAttributeValues(), reflectAttributeValues.getTag(),
+          OrderType.TIMESTAMP, reflectAttributeValues.getTransportationTypeHandle(), time,
+          OrderType.TIMESTAMP, reflectAttributeValues.getMessageRetractionHandle(), reflectAttributeValues);
+      }
+      else if (time == null)
+      {
+        federateAmbassador.reflectAttributeValues(
+          objectInstanceHandle, reflectAttributeValues.getAttributeValues(), reflectAttributeValues.getTag(),
+          sentOrderType, reflectAttributeValues.getTransportationTypeHandle(), reflectAttributeValues);
       }
       else
       {
-        OrderType receivedOrderType = reflectAttributeValues.getReceivedOrderType();
-        MessageRetractionHandle messageRetractionHandle = reflectAttributeValues.getMessageRetractionHandle();
-        if (messageRetractionHandle == null)
-        {
-          federateAmbassador.reflectAttributeValues(
-            objectInstanceHandle, attributeValues, tag, sentOrderType, transportationTypeHandle, time,
-            receivedOrderType, reflectAttributeValues);
-        }
-        else
-        {
-          federateAmbassador.reflectAttributeValues(
-            objectInstanceHandle, attributeValues, tag, sentOrderType, transportationTypeHandle, time,
-            receivedOrderType, messageRetractionHandle, reflectAttributeValues);
-        }
+        federateAmbassador.reflectAttributeValues(
+          objectInstanceHandle, reflectAttributeValues.getAttributeValues(), reflectAttributeValues.getTag(),
+          sentOrderType, reflectAttributeValues.getTransportationTypeHandle(), time, OrderType.RECEIVE,
+          reflectAttributeValues);
       }
     }
     finally
@@ -1001,29 +995,32 @@ public class FederateObjectInstance
     }
   }
 
-  public void removeObjectInstance(
-    ObjectInstanceHandle objectInstanceHandle, byte[] tag, OrderType sentOrderType, LogicalTime time,
-    OrderType receivedOrderType, MessageRetractionHandle messageRetractionHandle,
-    FederateAmbassador.SupplementalRemoveInfo supplementalRemoveInfo, FederateAmbassador federateAmbassador)
+  public void fireRemoveObjectInstance(
+    RemoveObjectInstance removeObjectInstance, FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
     objectLock.readLock().lock();
     try
     {
-      if (time == null)
-      {
-        federateAmbassador.removeObjectInstance(objectInstanceHandle, tag, sentOrderType, supplementalRemoveInfo);
-      }
-      else if (messageRetractionHandle == null)
+      OrderType sentOrderType = removeObjectInstance.getSentOrderType();
+      LogicalTime time = removeObjectInstance.getTime();
+
+      if (sentOrderType == OrderType.TIMESTAMP)
       {
         federateAmbassador.removeObjectInstance(
-          objectInstanceHandle, tag, sentOrderType, time, receivedOrderType, supplementalRemoveInfo);
+          objectInstanceHandle, removeObjectInstance.getTag(), OrderType.TIMESTAMP, time, OrderType.TIMESTAMP,
+          removeObjectInstance.getMessageRetractionHandle(), removeObjectInstance);
+      }
+      else if (time == null)
+      {
+        federateAmbassador.removeObjectInstance(
+          objectInstanceHandle, removeObjectInstance.getTag(), sentOrderType, removeObjectInstance);
       }
       else
       {
         federateAmbassador.removeObjectInstance(
-          objectInstanceHandle, tag, sentOrderType, time, receivedOrderType, messageRetractionHandle,
-          supplementalRemoveInfo);
+          objectInstanceHandle, removeObjectInstance.getTag(), sentOrderType, time, OrderType.RECEIVE,
+          removeObjectInstance);
       }
     }
     finally

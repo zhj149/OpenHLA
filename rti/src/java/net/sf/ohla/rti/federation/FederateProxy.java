@@ -20,11 +20,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import net.sf.ohla.rti.RTIChannelUpstreamHandler;
+import net.sf.ohla.rti.RTIChannelHandler;
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.federate.Federate;
@@ -38,17 +40,17 @@ import net.sf.ohla.rti.messages.FederateRestoreNotComplete;
 import net.sf.ohla.rti.messages.FederateSaveBegun;
 import net.sf.ohla.rti.messages.FederateSaveComplete;
 import net.sf.ohla.rti.messages.FederateSaveNotComplete;
-import net.sf.ohla.rti.messages.GALTAdvanced;
-import net.sf.ohla.rti.messages.GALTUndefined;
 import net.sf.ohla.rti.messages.MessageDecoder;
 import net.sf.ohla.rti.messages.PublishObjectClassAttributes;
 import net.sf.ohla.rti.messages.QueryInteractionTransportationType;
+import net.sf.ohla.rti.messages.ResignedFederationExecution;
 import net.sf.ohla.rti.messages.Retract;
 import net.sf.ohla.rti.messages.SendInteraction;
 import net.sf.ohla.rti.messages.SubscribeInteractionClass;
 import net.sf.ohla.rti.messages.SubscribeInteractionClassWithRegions;
 import net.sf.ohla.rti.messages.SubscribeObjectClassAttributes;
 import net.sf.ohla.rti.messages.SubscribeObjectClassAttributesWithRegions;
+import net.sf.ohla.rti.messages.TimeStampOrderedMessage;
 import net.sf.ohla.rti.messages.UnsubscribeInteractionClass;
 import net.sf.ohla.rti.messages.UnsubscribeInteractionClassWithRegions;
 import net.sf.ohla.rti.messages.UnsubscribeObjectClassAttributes;
@@ -81,6 +83,7 @@ import hla.rti1516e.LogicalTime;
 import hla.rti1516e.LogicalTimeInterval;
 import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.ObjectInstanceHandle;
+import hla.rti1516e.OrderType;
 import hla.rti1516e.ResignAction;
 import hla.rti1516e.RestoreStatus;
 import hla.rti1516e.SaveStatus;
@@ -109,6 +112,12 @@ public class FederateProxy
 
   private final Set<ObjectInstanceHandle> discoveredObjects =
     Collections.synchronizedSet(new HashSet<ObjectInstanceHandle>());
+
+  private final Queue<QueuedTimeStampOrderedMessage> queuedTimeStampOrderedMessages =
+    new PriorityQueue<QueuedTimeStampOrderedMessage>();
+
+  private final FederateProxyMessageRetractionManager messageRetractionManager =
+    new FederateProxyMessageRetractionManager();
 
   private final Map<InteractionClassHandle, TransportationTypeHandle> interactionClassTransportationTypeHandles =
     new HashMap<InteractionClassHandle, TransportationTypeHandle>();
@@ -157,9 +166,7 @@ public class FederateProxy
 
     federateTime = federationExecution.getTimeManager().getLogicalTimeFactory().makeInitial();
 
-    federateChannel.getPipeline().addBefore(
-      RTIChannelUpstreamHandler.NAME, FederateProxyChannelHandler.NAME, new FederateProxyChannelHandler(this));
-
+    ((RTIChannelHandler) federateChannel.getPipeline().get(RTIChannelHandler.NAME)).setFederateProxy(this);
     ((MessageDecoder) federateChannel.getPipeline().get(MessageDecoder.NAME)).setLogicalTimeFactory(
       federationExecution.getTimeManager().getLogicalTimeFactory());
 
@@ -244,6 +251,44 @@ public class FederateProxy
     return lots;
   }
 
+  public LogicalTime getLITS()
+  {
+    QueuedTimeStampOrderedMessage queuedTimeStampOrderedMessage = queuedTimeStampOrderedMessages.peek();
+    return queuedTimeStampOrderedMessage == null ? null : queuedTimeStampOrderedMessage.getTime();
+  }
+
+  public LogicalTime getLITSOrGALT()
+  {
+    QueuedTimeStampOrderedMessage queuedTimeStampOrderedMessage = queuedTimeStampOrderedMessages.peek();
+    return queuedTimeStampOrderedMessage == null ? galt : queuedTimeStampOrderedMessage.getTime();
+  }
+
+  @SuppressWarnings("unchecked")
+  public LogicalTime getLITS(LogicalTime potentialGALT)
+  {
+    LogicalTime lits;
+
+    QueuedTimeStampOrderedMessage queuedTimeStampOrderedMessage = queuedTimeStampOrderedMessages.peek();
+    if (queuedTimeStampOrderedMessage == null)
+    {
+      lits = null;
+    }
+    else if (advanceRequestType == TimeAdvanceType.NEXT_MESSAGE_REQUEST)
+    {
+      lits = queuedTimeStampOrderedMessage.getTime().compareTo(potentialGALT) < 0 ?
+        null : queuedTimeStampOrderedMessage.getTime();
+    }
+    else
+    {
+      assert advanceRequestType == TimeAdvanceType.NEXT_MESSAGE_REQUEST_AVAILABLE;
+
+      lits = queuedTimeStampOrderedMessage.getTime().compareTo(potentialGALT) <= 0 ?
+        null : queuedTimeStampOrderedMessage.getTime();
+    }
+
+    return lits;
+  }
+
   @SuppressWarnings("unchecked")
   public void adjustNextMessageRequestAdvanceRequestTime(LogicalTime time)
   {
@@ -260,6 +305,8 @@ public class FederateProxy
     }
     else
     {
+      assert advanceRequestType == TimeAdvanceType.NEXT_MESSAGE_REQUEST_AVAILABLE;
+
       log.debug(LogMessages.ADJUST_NEXT_MESSAGE_REQUEST_AVAILABLE_ADVANCE_REQUEST_TIME, time);
 
       interval = lookahead;
@@ -283,9 +330,11 @@ public class FederateProxy
 
   public void resignFederationExecution(ResignAction resignAction)
   {
-    federateChannel.getPipeline().remove(FederateProxyChannelHandler.NAME);
+    ((RTIChannelHandler) federateChannel.getPipeline().get(RTIChannelHandler.NAME)).setFederateProxy(null);
 
     log.debug(LogMessages.FEDERATE_RESIGNED, resignAction);
+
+    federateChannel.write(new ResignedFederationExecution());
   }
 
   public void announceSynchronizationPoint(AnnounceSynchronizationPoint announceSynchronizationPoint)
@@ -392,20 +441,36 @@ public class FederateProxy
   {
     ReflectAttributeValues reflectAttributeValues;
 
+    boolean timeStampOrdered =
+      updateAttributeValues.getSentOrderType() == OrderType.TIMESTAMP && isTimeConstrainedEnabled();
+
     subscriptionLock.readLock().lock();
     try
     {
       reflectAttributeValues = subscriptionManager.reflectAttributeValues(
-        federateProxy, objectInstance, updateAttributeValues);
+        federateProxy, objectInstance, updateAttributeValues, timeStampOrdered);
+
+      if (reflectAttributeValues != null)
+      {
+        if (timeStampOrdered && queueTimeStampOrderedMessage(reflectAttributeValues))
+        {
+          QueuedTimeStampOrderedMessage queuedTimeStampOrderedMessage =
+            new QueuedTimeStampOrderedMessage(reflectAttributeValues);
+          queuedTimeStampOrderedMessages.offer(queuedTimeStampOrderedMessage);
+
+          messageRetractionManager.add(
+            reflectAttributeValues.getMessageRetractionHandle(), reflectAttributeValues.getTime(),
+            queuedTimeStampOrderedMessage);
+        }
+        else
+        {
+          federateChannel.write(reflectAttributeValues);
+        }
+      }
     }
     finally
     {
       subscriptionLock.readLock().unlock();
-    }
-
-    if (reflectAttributeValues != null)
-    {
-      federateChannel.write(reflectAttributeValues);
     }
   }
 
@@ -414,19 +479,36 @@ public class FederateProxy
   {
     ReceiveInteraction receiveInteraction;
 
+    boolean timeStampOrdered =
+      sendInteraction.getSentOrderType() == OrderType.TIMESTAMP && isTimeConstrainedEnabled();
+
     subscriptionLock.readLock().lock();
     try
     {
-      receiveInteraction = subscriptionManager.receiveInteraction(federateProxy, interactionClass, sendInteraction);
+      receiveInteraction = subscriptionManager.receiveInteraction(
+        federateProxy, interactionClass, sendInteraction, timeStampOrdered);
+
+      if (receiveInteraction != null)
+      {
+        if (timeStampOrdered && queueTimeStampOrderedMessage(receiveInteraction))
+        {
+          QueuedTimeStampOrderedMessage queuedTimeStampOrderedMessage =
+            new QueuedTimeStampOrderedMessage(receiveInteraction);
+          queuedTimeStampOrderedMessages.offer(queuedTimeStampOrderedMessage);
+
+          messageRetractionManager.add(
+            receiveInteraction.getMessageRetractionHandle(), receiveInteraction.getTime(),
+            queuedTimeStampOrderedMessage);
+        }
+        else
+        {
+          federateChannel.write(receiveInteraction);
+        }
+      }
     }
     finally
     {
       subscriptionLock.readLock().unlock();
-    }
-
-    if (receiveInteraction != null)
-    {
-      federateChannel.write(receiveInteraction);
     }
   }
 
@@ -442,10 +524,36 @@ public class FederateProxy
   {
     if (discoveredObjects.contains(deleteObjectInstance.getObjectInstanceHandle()))
     {
-      federateChannel.write(new RemoveObjectInstance(
-        deleteObjectInstance.getObjectInstanceHandle(), deleteObjectInstance.getTag(),
-        deleteObjectInstance.getSentOrderType(), deleteObjectInstance.getTime(),
-        deleteObjectInstance.getMessageRetractionHandle(), federateHandle));
+      boolean timeStampOrdered =
+        deleteObjectInstance.getSentOrderType() == OrderType.TIMESTAMP && isTimeConstrainedEnabled();
+
+      if (timeStampOrdered)
+      {
+        RemoveObjectInstance removeObjectInstance = new RemoveObjectInstance(
+          deleteObjectInstance.getObjectInstanceHandle(), deleteObjectInstance.getTag(), OrderType.TIMESTAMP,
+          deleteObjectInstance.getTime(), deleteObjectInstance.getMessageRetractionHandle(), federateHandle);
+
+        if (queueTimeStampOrderedMessage(removeObjectInstance))
+        {
+          QueuedTimeStampOrderedMessage queuedTimeStampOrderedMessage =
+            new QueuedTimeStampOrderedMessage(removeObjectInstance);
+          queuedTimeStampOrderedMessages.offer(queuedTimeStampOrderedMessage);
+
+          messageRetractionManager.add(
+            removeObjectInstance.getMessageRetractionHandle(), removeObjectInstance.getTime(),
+            queuedTimeStampOrderedMessage);
+        }
+        else
+        {
+          federateChannel.write(removeObjectInstance);
+        }
+      }
+      else
+      {
+        federateChannel.write(new RemoveObjectInstance(
+          deleteObjectInstance.getObjectInstanceHandle(), deleteObjectInstance.getTag(), OrderType.RECEIVE,
+          deleteObjectInstance.getTime(), null, federateHandle));
+      }
     }
   }
 
@@ -487,7 +595,8 @@ public class FederateProxy
             }
           }
         }
-      } while ((objectClass = objectClass.getSuperObjectClass()) != null);
+      }
+      while ((objectClass = objectClass.getSuperObjectClass()) != null);
 
       if (candidateAttributeHandles != null)
       {
@@ -554,7 +663,8 @@ public class FederateProxy
     try
     {
       subscriptionManager.unsubscribeObjectClassAttributes(
-        unsubscribeObjectClassAttributes.getObjectClassHandle(), unsubscribeObjectClassAttributes.getAttributeHandles());
+        unsubscribeObjectClassAttributes.getObjectClassHandle(),
+        unsubscribeObjectClassAttributes.getAttributeHandles());
     }
     finally
     {
@@ -661,8 +771,6 @@ public class FederateProxy
   public void enableTimeRegulation(LogicalTimeInterval lookahead, LogicalTime federateTime)
     throws IllegalTimeArithmetic, InvalidLogicalTimeInterval
   {
-    assert !timeConstrainedEnabled || galt == null || federateTime.compareTo(galt) <= 0;
-
     this.lookahead = lookahead;
     this.federateTime = federateTime;
 
@@ -671,15 +779,7 @@ public class FederateProxy
     // set the Least Outgoing Time Stamp
     //
     lots = federateTime.add(lookahead);
-  }
 
-  public boolean isTimeRegulationEnabled()
-  {
-    return timeRegulationEnabled;
-  }
-
-  public void timeRegulationEnabled()
-  {
     timeRegulationEnabled = true;
 
     log.debug(LogMessages.TIME_REGULATION_ENABLED, federateTime);
@@ -700,6 +800,11 @@ public class FederateProxy
   public boolean isTimeConstrainedEnabled()
   {
     return timeConstrainedEnabled;
+  }
+
+  public boolean isTimeRegulationEnabled()
+  {
+    return timeRegulationEnabled;
   }
 
   @SuppressWarnings("unchecked")
@@ -750,10 +855,9 @@ public class FederateProxy
     {
       // immediately grant the request
 
-      federateTime = advanceRequestTime;
-      advanceRequestTime = null;
+      releaseTimeStampOrderedMessages(advanceRequestTime);
 
-      federateChannel.write(new TimeAdvanceGrant(federateTime));
+      timeAdvanceGrant(advanceRequestTime);
     }
   }
 
@@ -777,10 +881,9 @@ public class FederateProxy
     {
       // immediately grant the request
 
-      federateTime = advanceRequestTime;
-      advanceRequestTime = null;
+      releaseTimeStampOrderedMessages(advanceRequestTime);
 
-      federateChannel.write(new TimeAdvanceGrant(federateTime));
+      timeAdvanceGrant(advanceRequestTime);
     }
   }
 
@@ -798,31 +901,42 @@ public class FederateProxy
       lots = advanceRequestTime.add(lookahead.isZero() ? epsilon : lookahead);
 
       log.debug(LogMessages.LOTS_UPDATED, lots);
-    }
 
-    if (!timeConstrainedEnabled || galt == null || advanceRequestTime.compareTo(galt) < 0)
+      if (!timeConstrainedEnabled || galt == null)
+      {
+        // immediately grant the request
+
+        timeAdvanceGrant(advanceRequestTime);
+      }
+    }
+    else if (galt == null)
     {
       // immediately grant the request
 
-      federateTime = advanceRequestTime;
-      advanceRequestTime = null;
-
-      federateChannel.write(new TimeAdvanceGrant(federateTime));
+      timeAdvanceGrant(advanceRequestTime);
     }
-  }
+    else if (timeConstrainedEnabled)
+    {
+      // time constrained only federates need to check LITS themselves
 
-  @SuppressWarnings("unchecked")
-  public void nextMessageRequestTimeAdvanceGrant(LogicalTime time)
-  {
-    assert timeConstrainedEnabled;
+      LogicalTime lits = getLITS();
+      if (lits != null && lits.compareTo(galt) < 0)
+      {
+        // immediately grant the request
 
-    log.debug(LogMessages.NEXT_MESSAGE_REQUEST_TIME_ADVANCE_GRANT, time);
+        releaseTimeStampOrderedMessages(lits);
 
-    federateTime = time;
+        timeAdvanceGrant(lits);
+      }
+      else if (advanceRequestTime.compareTo(galt) < 0)
+      {
+        // immediately grant the request
 
-    advanceRequestTime = null;
+        releaseTimeStampOrderedMessages(advanceRequestTime);
 
-    federateChannel.write(new TimeAdvanceGrant(federateTime));
+        timeAdvanceGrant(advanceRequestTime);
+      }
+    }
   }
 
   @SuppressWarnings("unchecked")
@@ -839,29 +953,42 @@ public class FederateProxy
       lots = advanceRequestTime.add(lookahead);
 
       log.debug(LogMessages.LOTS_UPDATED, lots);
-    }
 
-    if (!timeConstrainedEnabled || galt == null || advanceRequestTime.compareTo(galt) <= 0)
+      if (!timeConstrainedEnabled || galt == null)
+      {
+        // immediately grant the request
+
+        timeAdvanceGrant(advanceRequestTime);
+      }
+    }
+    else if (galt == null)
     {
       // immediately grant the request
 
-      federateTime = advanceRequestTime;
-      advanceRequestTime = null;
-
-      federateChannel.write(new TimeAdvanceGrant(federateTime));
+      timeAdvanceGrant(advanceRequestTime);
     }
-  }
+    else if (timeConstrainedEnabled)
+    {
+      // time constrained only federates need to check LITS themselves
 
-  @SuppressWarnings("unchecked")
-  public void nextMessageRequestAvailableTimeAdvanceGrant(LogicalTime time)
-  {
-    log.debug(LogMessages.NEXT_MESSAGE_REQUEST_AVAILABLE_TIME_ADVANCE_GRANT, time);
+      LogicalTime lits = getLITS();
+      if (lits != null && lits.compareTo(galt) <= 0)
+      {
+        // immediately grant the request
 
-    federateTime = time;
+        releaseTimeStampOrderedMessages(lits);
 
-    advanceRequestTime = null;
+        timeAdvanceGrant(lits);
+      }
+      else if (advanceRequestTime.compareTo(galt) <= 0)
+      {
+        // immediately grant the request
 
-    federateChannel.write(new TimeAdvanceGrant(federateTime));
+        releaseTimeStampOrderedMessages(advanceRequestTime);
+
+        timeAdvanceGrant(advanceRequestTime);
+      }
+    }
   }
 
   @SuppressWarnings("unchecked")
@@ -872,35 +999,40 @@ public class FederateProxy
 
     advanceRequestType = TimeAdvanceType.FLUSH_QUEUE_REQUEST;
 
-    federateTime = galt == null || time.compareTo(galt) < 0 ? time : galt;
+    if (galt != null && time.compareTo(galt) < 0)
+    {
+      time = galt;
+    }
+
+    LogicalTime lits = getLITS();
+    if (lits != null && lits.compareTo(time) < 0)
+    {
+      time = lits;
+    }
 
     if (timeRegulationEnabled)
     {
-      lots = federateTime.add(lookahead);
+      lots = time.add(lookahead);
 
       log.debug(LogMessages.LOTS_UPDATED, lots);
     }
 
-    federateChannel.write(new TimeAdvanceGrant(federateTime));
+    releaseAllTimeStampOrderedMessages();
+
+    timeAdvanceGrant(time);
   }
 
   @SuppressWarnings("unchecked")
-  public void galtAdvanced(LogicalTime galt)
+  public void galtUpdated(LogicalTime galt)
   {
     if (this.galt == null)
     {
       log.debug(LogMessages.GALT_DEFINED, galt);
     }
-    else
-    {
-      assert this.galt.compareTo(galt) < 0;
 
-      log.debug(LogMessages.GALT_ADVANCED, this.galt, galt);
-    }
+    log.debug(LogMessages.GALT_UPDATED, this.galt, galt);
 
     this.galt = galt;
-
-    federateChannel.write(new GALTAdvanced(galt));
 
     if (timeConstrainedPending && federateTime.compareTo(galt) < 0)
     {
@@ -919,11 +1051,9 @@ public class FederateProxy
         {
           if (advanceRequestTime.compareTo(galt) < 0)
           {
-            federateTime = advanceRequestTime;
+            releaseTimeStampOrderedMessages(advanceRequestTime);
 
-            advanceRequestTime = null;
-
-            federateChannel.write(new TimeAdvanceGrant(federateTime));
+            timeAdvanceGrant(advanceRequestTime);
           }
           break;
         }
@@ -931,39 +1061,43 @@ public class FederateProxy
         {
           if (advanceRequestTime.compareTo(galt) <= 0)
           {
-            federateTime = advanceRequestTime;
+            releaseTimeStampOrderedMessages(advanceRequestTime);
 
-            advanceRequestTime = null;
-
-            federateChannel.write(new TimeAdvanceGrant(federateTime));
+            timeAdvanceGrant(advanceRequestTime);
           }
           break;
         }
         case NEXT_MESSAGE_REQUEST:
         {
-          // only time regulating federates can have their times advanced in this manner when GALT advances
-          //
-          if (advanceRequestTime.compareTo(galt) < 0 && timeRegulationEnabled)
+          LogicalTime lits = getLITS();
+          if (lits != null && lits.compareTo(galt) < 0)
           {
-            federateTime = advanceRequestTime;
+            releaseTimeStampOrderedMessages(lits);
 
-            advanceRequestTime = null;
+            timeAdvanceGrant(lits);
+          }
+          else if (advanceRequestTime.compareTo(galt) < 0)
+          {
+            releaseTimeStampOrderedMessages(advanceRequestTime);
 
-            federateChannel.write(new TimeAdvanceGrant(federateTime));
+            timeAdvanceGrant(advanceRequestTime);
           }
           break;
         }
         case NEXT_MESSAGE_REQUEST_AVAILABLE:
         {
-          // only time regulating federates can have their times advanced in this manner when GALT advances
-          //
-          if (advanceRequestTime.compareTo(galt) <= 0 && timeRegulationEnabled)
+          LogicalTime lits = getLITS();
+          if (lits != null && lits.compareTo(galt) <= 0)
           {
-            federateTime = advanceRequestTime;
+            releaseTimeStampOrderedMessages(lits);
 
-            advanceRequestTime = null;
+            timeAdvanceGrant(lits);
+          }
+          else if (advanceRequestTime.compareTo(galt) <= 0)
+          {
+            releaseTimeStampOrderedMessages(advanceRequestTime);
 
-            federateChannel.write(new TimeAdvanceGrant(federateTime));
+            timeAdvanceGrant(advanceRequestTime);
           }
           break;
         }
@@ -977,7 +1111,11 @@ public class FederateProxy
   {
     galt = null;
 
-    federateChannel.write(new GALTUndefined());
+    for (QueuedTimeStampOrderedMessage queuedTimeStampOrderedMessage = queuedTimeStampOrderedMessages.poll();
+         queuedTimeStampOrderedMessage != null; queuedTimeStampOrderedMessage = queuedTimeStampOrderedMessages.poll())
+    {
+      queuedTimeStampOrderedMessage.writeReceiveOrder(federateChannel);
+    }
   }
 
   public void queryInteractionTransportationType(
@@ -1014,5 +1152,71 @@ public class FederateProxy
   public String toString()
   {
     return String.format("%s,%s,%s", federateHandle, federateChannel.getLocalAddress(), federateName);
+  }
+
+  @SuppressWarnings("unchecked")
+  private boolean queueTimeStampOrderedMessage(TimeStampOrderedMessage timeStampOrderedMessage)
+  {
+    boolean queue;
+    if (advanceRequestTime == null)
+    {
+      // not time advancing
+
+      queue = true;
+    }
+    else
+    {
+      switch (advanceRequestType)
+      {
+        case NEXT_MESSAGE_REQUEST:
+        case NEXT_MESSAGE_REQUEST_AVAILABLE:
+          queue = true;
+          break;
+        case TIME_ADVANCE_REQUEST:
+          queue = timeStampOrderedMessage.getTime().compareTo(advanceRequestTime) >= 0;
+          break;
+        case TIME_ADVANCE_REQUEST_AVAILABLE:
+          queue = timeStampOrderedMessage.getTime().compareTo(advanceRequestTime) > 0;
+          break;
+        default:
+          throw new Error();
+      }
+    }
+    return queue;
+  }
+
+  @SuppressWarnings("unchecked")
+  private void releaseAllTimeStampOrderedMessages()
+  {
+    for (QueuedTimeStampOrderedMessage queuedTimeStampOrderedMessage : queuedTimeStampOrderedMessages)
+    {
+      queuedTimeStampOrderedMessage.write(federateChannel);
+    }
+
+    queuedTimeStampOrderedMessages.clear();
+  }
+
+  @SuppressWarnings("unchecked")
+  private void releaseTimeStampOrderedMessages(LogicalTime time)
+  {
+    for (QueuedTimeStampOrderedMessage queuedTimeStampOrderedMessage = queuedTimeStampOrderedMessages.peek();
+         queuedTimeStampOrderedMessage != null && queuedTimeStampOrderedMessage.getTime().compareTo(time) <= 0;
+         queuedTimeStampOrderedMessage = queuedTimeStampOrderedMessages.peek())
+    {
+      queuedTimeStampOrderedMessage.write(federateChannel);
+
+      queuedTimeStampOrderedMessages.poll();
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  private void timeAdvanceGrant(LogicalTime time)
+  {
+    log.trace(LogMessages.TIME_ADVANCE_GRANT, federateTime, time);
+
+    federateTime = time;
+    advanceRequestTime = null;
+
+    federateChannel.write(new TimeAdvanceGrant(time));
   }
 }

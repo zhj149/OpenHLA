@@ -23,7 +23,10 @@ import org.jboss.netty.buffer.ChannelBuffer;
 public class GetFederateNameResponse
   extends EnumResponse<GetFederateNameResponse.Response>
 {
-  public enum Response { SUCCESS, FEDERATE_HANDLE_NOT_KNOWN }
+  public enum Response
+  {
+    SUCCESS, FEDERATE_HANDLE_NOT_KNOWN
+  }
 
   private final String federateName;
 

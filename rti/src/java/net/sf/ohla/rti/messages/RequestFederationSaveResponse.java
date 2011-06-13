@@ -21,7 +21,10 @@ import org.jboss.netty.buffer.ChannelBuffer;
 public class RequestFederationSaveResponse
   extends EnumResponse<RequestFederationSaveResponse.Response>
 {
-  public enum Response { SUCCESS, LOGICAL_TIME_ALREADY_PASSED, SAVE_IN_PROGRESS, RESTORE_IN_PROGRESS }
+  public enum Response
+  {
+    SUCCESS, LOGICAL_TIME_ALREADY_PASSED, SAVE_IN_PROGRESS, RESTORE_IN_PROGRESS
+  }
 
   public RequestFederationSaveResponse(long id)
   {

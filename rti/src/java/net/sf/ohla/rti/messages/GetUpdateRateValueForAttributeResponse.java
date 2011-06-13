@@ -23,7 +23,10 @@ import org.jboss.netty.buffer.ChannelBuffer;
 public class GetUpdateRateValueForAttributeResponse
   extends EnumResponse<GetUpdateRateValueForAttributeResponse.Response>
 {
-  public enum Response { SUCCESS, OBJECT_INSTANCE_NOT_KNOWN }
+  public enum Response
+  {
+    SUCCESS, OBJECT_INSTANCE_NOT_KNOWN
+  }
 
   private final double updateRate;
 

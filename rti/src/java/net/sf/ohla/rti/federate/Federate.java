@@ -19,12 +19,9 @@ package net.sf.ohla.rti.federate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Exchanger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -59,16 +56,12 @@ import net.sf.ohla.rti.messages.FederateRestoreNotComplete;
 import net.sf.ohla.rti.messages.FederateSaveBegun;
 import net.sf.ohla.rti.messages.FederateSaveComplete;
 import net.sf.ohla.rti.messages.FederateSaveNotComplete;
-import net.sf.ohla.rti.messages.GALTAdvanced;
-import net.sf.ohla.rti.messages.GALTUndefined;
 import net.sf.ohla.rti.messages.GetFederateHandle;
 import net.sf.ohla.rti.messages.GetFederateHandleResponse;
 import net.sf.ohla.rti.messages.GetFederateName;
 import net.sf.ohla.rti.messages.GetFederateNameResponse;
 import net.sf.ohla.rti.messages.JoinFederationExecution;
 import net.sf.ohla.rti.messages.JoinFederationExecutionResponse;
-import net.sf.ohla.rti.messages.LITSRequest;
-import net.sf.ohla.rti.messages.LITSResponse;
 import net.sf.ohla.rti.messages.MessageDecoder;
 import net.sf.ohla.rti.messages.QueryFederationRestoreStatus;
 import net.sf.ohla.rti.messages.QueryFederationSaveStatus;
@@ -78,14 +71,12 @@ import net.sf.ohla.rti.messages.RequestFederationSave;
 import net.sf.ohla.rti.messages.RequestObjectClassAttributeValueUpdate;
 import net.sf.ohla.rti.messages.RequestObjectClassAttributeValueUpdateWithRegions;
 import net.sf.ohla.rti.messages.ResignFederationExecution;
-import net.sf.ohla.rti.messages.Retract;
 import net.sf.ohla.rti.messages.SetAutomaticResignDirective;
 import net.sf.ohla.rti.messages.SynchronizationPointAchieved;
 import net.sf.ohla.rti.messages.callbacks.ReceiveInteraction;
 import net.sf.ohla.rti.messages.callbacks.ReflectAttributeValues;
 import net.sf.ohla.rti.messages.callbacks.RemoveObjectInstance;
 import net.sf.ohla.rti.messages.callbacks.ReportInteractionTransportationType;
-import net.sf.ohla.rti.messages.callbacks.TimeAdvanceGrant;
 
 import org.jboss.netty.channel.Channel;
 import org.slf4j.Marker;
@@ -164,6 +155,7 @@ import hla.rti1516e.exceptions.FederateServiceInvocationsAreBeingReportedViaMOM;
 import hla.rti1516e.exceptions.FederateUnableToUseTime;
 import hla.rti1516e.exceptions.FederationExecutionDoesNotExist;
 import hla.rti1516e.exceptions.IllegalName;
+import hla.rti1516e.exceptions.IllegalTimeArithmetic;
 import hla.rti1516e.exceptions.InTimeAdvancingState;
 import hla.rti1516e.exceptions.InconsistentFDD;
 import hla.rti1516e.exceptions.InteractionClassNotDefined;
@@ -176,6 +168,7 @@ import hla.rti1516e.exceptions.InvalidDimensionHandle;
 import hla.rti1516e.exceptions.InvalidFederateHandle;
 import hla.rti1516e.exceptions.InvalidInteractionClassHandle;
 import hla.rti1516e.exceptions.InvalidLogicalTime;
+import hla.rti1516e.exceptions.InvalidLogicalTimeInterval;
 import hla.rti1516e.exceptions.InvalidLookahead;
 import hla.rti1516e.exceptions.InvalidMessageRetractionHandle;
 import hla.rti1516e.exceptions.InvalidObjectClassHandle;
@@ -239,7 +232,7 @@ public class Federate
 
   private FederateState federateState = FederateState.ACTIVE;
 
-  private ReadWriteLock federateStateLock = new ReentrantReadWriteLock(true);
+  private final ReadWriteLock federateStateLock = new ReentrantReadWriteLock(true);
 
   private ResignAction automaticResignDirective;
 
@@ -249,20 +242,17 @@ public class Federate
   private RestoreStatus restoreStatus;
   private FederateRestore federateRestore;
 
-  private Lock synchronizationPointLock = new ReentrantLock(true);
-  private Map<String, FederateSynchronizationPoint> synchronizationPoints =
+  private final Lock synchronizationPointLock = new ReentrantLock(true);
+  private final Map<String, FederateSynchronizationPoint> synchronizationPoints =
     new HashMap<String, FederateSynchronizationPoint>();
 
   private boolean asynchronousDeliveryEnabled;
 
-  private FederateObjectManager objectManager = new FederateObjectManager(this);
-  private FederateRegionManager regionManager = new FederateRegionManager(this);
-  private FederateMessageRetractionManager messageRetractionManager = new FederateMessageRetractionManager(this);
+  private final FederateObjectManager objectManager = new FederateObjectManager(this);
+  private final FederateRegionManager regionManager = new FederateRegionManager(this);
+  private final FederateMessageRetractionManager messageRetractionManager = new FederateMessageRetractionManager(this);
 
   private final FederateTimeManager timeManager;
-
-  private Lock futureTasksLock = new ReentrantLock(true);
-  private Queue<TimestampedFutureTask> futureTasks = new PriorityQueue<TimestampedFutureTask>();
 
   private final AttributeHandleFactory attributeHandleFactory =
     IEEE1516eAttributeHandleFactory.INSTANCE;
@@ -302,6 +292,10 @@ public class Federate
 
   private boolean conveyProducingFederate = true;
 
+  private final Exchanger<Object> joinExchanger = new Exchanger<Object>();
+
+  private final CountDownLatch resignedLatch = new CountDownLatch(1);
+
   public Federate(String federateName, String federateType, String federationExecutionName,
                   List<FDD> additionalFDDs, FederateAmbassador federateAmbassador, CallbackManager callbackManager,
                   Channel rtiChannel)
@@ -314,61 +308,81 @@ public class Federate
     this.callbackManager = callbackManager;
     this.rtiChannel = rtiChannel;
 
+    ((FederateChannelHandler) rtiChannel.getPipeline().get(FederateChannelHandler.NAME)).setFederate(this);
+
     JoinFederationExecution joinFederationExecution = new JoinFederationExecution(
       federateName, federateType, federationExecutionName, additionalFDDs);
 
     rtiChannel.write(joinFederationExecution);
 
-    JoinFederationExecutionResponse response = joinFederationExecution.getResponse();
-    switch (response.getResponse())
+    boolean success = false;
+
+    CountDownLatch joinCompleteLatch = new CountDownLatch(1);
+    try
     {
-      case FEDERATION_EXECUTION_DOES_NOT_EXIST:
-        throw new FederationExecutionDoesNotExist(I18n.getMessage(
-          ExceptionMessages.FEDERATION_EXECUTION_DOES_NOT_EXIST, federationExecutionName));
-      case SAVE_IN_PROGRESS:
-        throw new SaveInProgress(I18n.getMessage(ExceptionMessages.SAVE_IN_PROGRESS, federationExecutionName));
-      case RESTORE_IN_PROGRESS:
-        throw new RestoreInProgress(I18n.getMessage(ExceptionMessages.RESTORE_IN_PROGRESS, federationExecutionName));
-      case INCONSISTENT_FDD:
-        // TODO: provide more useful information
-        //
-        throw new InconsistentFDD("");
-      case SUCCESS:
-        federateHandle = response.getFederateHandle();
+      JoinFederationExecutionResponse response =
+        (JoinFederationExecutionResponse) joinExchanger.exchange(joinCompleteLatch);
+      switch (response.getResponse())
+      {
+        case FEDERATION_EXECUTION_DOES_NOT_EXIST:
+          throw new FederationExecutionDoesNotExist(I18n.getMessage(
+            ExceptionMessages.FEDERATION_EXECUTION_DOES_NOT_EXIST, federationExecutionName));
+        case SAVE_IN_PROGRESS:
+          throw new SaveInProgress(I18n.getMessage(ExceptionMessages.SAVE_IN_PROGRESS, federationExecutionName));
+        case RESTORE_IN_PROGRESS:
+          throw new RestoreInProgress(I18n.getMessage(ExceptionMessages.RESTORE_IN_PROGRESS, federationExecutionName));
+        case INCONSISTENT_FDD:
+          // TODO: provide more useful information
+          //
+          throw new InconsistentFDD("");
+        case SUCCESS:
+          federateHandle = response.getFederateHandle();
 
-        // don't assign federate name until we have the handle in case the name was null
-        //
-        this.federateName = federateName == null ? defaultFederateName(federateHandle) : federateName;
+          // don't assign federate name until we have the handle in case the name was null
+          //
+          this.federateName = federateName == null ? defaultFederateName(federateHandle) : federateName;
 
-        marker = MarkerFactory.getMarker(federationExecutionName + "." + this.federateName);
-        log = I18nLogger.getLogger(marker, getClass());
+          marker = MarkerFactory.getMarker(federationExecutionName + "." + this.federateName);
+          log = I18nLogger.getLogger(marker, getClass());
 
-        fdd = response.getFDD();
+          fdd = response.getFDD();
 
-        logicalTimeFactory = LogicalTimeFactoryFactory.getLogicalTimeFactory(
-          response.getLogicalTimeImplementationName());
+          logicalTimeFactory = LogicalTimeFactoryFactory.getLogicalTimeFactory(
+            response.getLogicalTimeImplementationName());
 
-        if (logicalTimeFactory == null)
-        {
-          rtiChannel.write(new ResignFederationExecution(ResignAction.NO_ACTION));
+          if (logicalTimeFactory == null)
+          {
+            rtiChannel.write(new ResignFederationExecution(ResignAction.NO_ACTION));
 
-          throw new CouldNotCreateLogicalTimeFactory(I18n.getMessage(
-            ExceptionMessages.COULD_NOT_CREATE_LOGICAL_TIME_FACTORY, response.getLogicalTimeImplementationName()));
-        }
-        else
-        {
-          timeManager = new FederateTimeManager(this, logicalTimeFactory);
+            throw new CouldNotCreateLogicalTimeFactory(I18n.getMessage(
+              ExceptionMessages.COULD_NOT_CREATE_LOGICAL_TIME_FACTORY, response.getLogicalTimeImplementationName()));
+          }
+          else
+          {
+            timeManager = new FederateTimeManager(this, logicalTimeFactory);
 
-          rtiChannel.getPipeline().addBefore(
-            CallbackManagerChannelUpstreamHandler.NAME, FederateChannelUpstreamHandler.NAME,
-            new FederateChannelUpstreamHandler(this));
+            ((MessageDecoder) rtiChannel.getPipeline().get(MessageDecoder.NAME)).setLogicalTimeFactory(
+              logicalTimeFactory);
 
-          ((MessageDecoder) rtiChannel.getPipeline().get(MessageDecoder.NAME)).setLogicalTimeFactory(
-            logicalTimeFactory);
-        }
-        break;
-      default:
-        throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION));
+            success = true;
+          }
+          break;
+        default:
+          throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION));
+      }
+    }
+    catch (InterruptedException ie)
+    {
+      throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION), ie);
+    }
+    finally
+    {
+      if (!success)
+      {
+        ((FederateChannelHandler) rtiChannel.getPipeline().get(FederateChannelHandler.NAME)).setFederate(null);
+      }
+
+      joinCompleteLatch.countDown();
     }
   }
 
@@ -447,80 +461,21 @@ public class Federate
     this.fdd = fdd;
   }
 
-  @SuppressWarnings("unchecked")
-  public void litsRequest(LITSRequest litsRequest)
+  public void joinFederationExecutionResponse(JoinFederationExecutionResponse joinFederationExecutionResponse)
   {
-    timeManager.getTimeLock().writeLock().lock();
     try
     {
-      LogicalTime lits = getNextMessageTime();
-      lits = lits == null || lits.compareTo(litsRequest.getPotentialGALT()) > 0 ? null : lits;
-      rtiChannel.write(new LITSResponse(lits));
+      ((CountDownLatch) joinExchanger.exchange(joinFederationExecutionResponse)).await();
     }
-    finally
+    catch (InterruptedException ie)
     {
-      timeManager.getTimeLock().writeLock().unlock();
+      log.error(LogMessages.UNEXPECTED_EXCEPTION, ie, ie);
     }
   }
 
-  @SuppressWarnings("unchecked")
-  public void processFutureTasks(LogicalTime maxFutureTaskTimestamp)
+  public void callbackReceived(Callback callback)
   {
-    futureTasksLock.lock();
-    try
-    {
-      log.debug(LogMessages.PROCESSING_FUTURE_TASKS, maxFutureTaskTimestamp);
-
-      for (TimestampedFutureTask timestampedFutureTask = futureTasks.peek();
-           timestampedFutureTask != null && timestampedFutureTask.getTime().compareTo(maxFutureTaskTimestamp) <= 0;
-           timestampedFutureTask = futureTasks.peek())
-      {
-        log.trace(LogMessages.PROCESSING_FUTURE_TASK, timestampedFutureTask);
-
-        try
-        {
-          timestampedFutureTask.run();
-        }
-        catch (Throwable t)
-        {
-          log.error(LogMessages.UNABLE_TO_EXECUTE_SCHEDULED_TASK, t, timestampedFutureTask);
-        }
-
-        futureTasks.poll();
-      }
-    }
-    finally
-    {
-      futureTasksLock.unlock();
-    }
-  }
-
-  public void clearFutureTasks()
-  {
-    futureTasksLock.lock();
-    try
-    {
-      log.debug(LogMessages.CLEARING_FUTURE_TASKS, futureTasks.size());
-
-      for (TimestampedFutureTask timestampedFutureTask = futureTasks.poll();
-           timestampedFutureTask != null; timestampedFutureTask = futureTasks.poll())
-      {
-        log.debug(LogMessages.PROCESSING_FUTURE_TASK, timestampedFutureTask);
-
-        try
-        {
-          timestampedFutureTask.run();
-        }
-        catch (Throwable t)
-        {
-          log.error(LogMessages.UNABLE_TO_EXECUTE_SCHEDULED_TASK, t, timestampedFutureTask);
-        }
-      }
-    }
-    finally
-    {
-      futureTasksLock.unlock();
-    }
+    callbackManager.add(callback);
   }
 
   public void reflectAttributeValues(ReflectAttributeValues reflectAttributeValues)
@@ -528,31 +483,12 @@ public class Federate
     timeManager.getTimeLock().readLock().lock();
     try
     {
-      OrderType receivedOrderType =
-        reflectAttributeValues.getSentOrderType() == OrderType.TIMESTAMP &&
-        timeManager.isTimeConstrained() && timeManager.galtDefined() ? OrderType.TIMESTAMP : OrderType.RECEIVE;
-      reflectAttributeValues.setReceivedOrderType(receivedOrderType);
+      // receive order callbacks need to be held until released if we are constrained and in the time granted state,
+      // if asynchronous delivery is disabled
+      //
+      boolean hold = timeManager.isTimeConstrainedAndTimeGranted() && !isAsynchronousDeliveryEnabled();
 
-      if (receivedOrderType == OrderType.RECEIVE)
-      {
-        // receive order callbacks need to be held until released if we are constrained and in the time granted state
-        // if asynchronous delivery is disabled
-        //
-        boolean hold = timeManager.isTimeConstrainedAndTimeGranted() && !isAsynchronousDeliveryEnabled();
-
-        callbackManager.add(reflectAttributeValues, hold);
-      }
-      else
-      {
-        // schedule the callback for the appropriate time
-        //
-        Future future = schedule(reflectAttributeValues.getTime(), new AddCallback(reflectAttributeValues));
-
-        // register the message retraction handle
-        //
-        messageRetractionManager.add(
-          reflectAttributeValues.getTime(), future, reflectAttributeValues.getMessageRetractionHandle());
-      }
+      callbackManager.add(reflectAttributeValues, hold);
     }
     finally
     {
@@ -565,32 +501,12 @@ public class Federate
     timeManager.getTimeLock().readLock().lock();
     try
     {
-      OrderType receivedOrderType =
-        receiveInteraction.getSentOrderType() == OrderType.TIMESTAMP && timeManager.isTimeConstrained() ?
-          OrderType.TIMESTAMP : OrderType.RECEIVE;
+      // receive order callbacks need to be held until released if we are constrained and in the time granted state,
+      // if asynchronous delivery is disabled
+      //
+      boolean hold = timeManager.isTimeConstrainedAndTimeGranted() && !isAsynchronousDeliveryEnabled();
 
-      receiveInteraction.setReceivedOrderType(receivedOrderType);
-
-      if (receivedOrderType == OrderType.RECEIVE)
-      {
-        // receive order callbacks need to be held until released if we are constrained and in the time granted state,
-        // if asynchronous delivery is disabled
-        //
-        boolean hold = timeManager.isTimeConstrainedAndTimeGranted() && !isAsynchronousDeliveryEnabled();
-
-        callbackManager.add(receiveInteraction, hold);
-      }
-      else
-      {
-        // schedule the callback for the appropriate time
-        //
-        Future future = schedule(receiveInteraction.getTime(), new AddCallback(receiveInteraction));
-
-        // register the message retraction handle
-        //
-        messageRetractionManager.add(
-          receiveInteraction.getTime(), future, receiveInteraction.getMessageRetractionHandle());
-      }
+      callbackManager.add(receiveInteraction, hold);
     }
     finally
     {
@@ -603,64 +519,17 @@ public class Federate
     timeManager.getTimeLock().readLock().lock();
     try
     {
-      OrderType receivedOrderType =
-        removeObjectInstance.getSentOrderType() == OrderType.TIMESTAMP &&
-        timeManager.isTimeConstrained() ? OrderType.TIMESTAMP :
-          OrderType.RECEIVE;
-
-      removeObjectInstance.setReceivedOrderType(receivedOrderType);
-
-      if (receivedOrderType == OrderType.RECEIVE)
-      {
-        // receive order callbacks need to be held until released if we
-        // are constrained and in the time granted state, if asynchronous
-        // delivery is disabled
+        // receive order callbacks need to be held until released if we are constrained and in the time granted state,
+        // if asynchronous delivery is disabled
         //
-        boolean hold = timeManager.isTimeConstrainedAndTimeGranted() &&
-                       !isAsynchronousDeliveryEnabled();
+        boolean hold = timeManager.isTimeConstrainedAndTimeGranted() && !isAsynchronousDeliveryEnabled();
 
         callbackManager.add(removeObjectInstance, hold);
-      }
-      else
-      {
-        // schedule the callback for the appropriate time
-        //
-        Future future = schedule(removeObjectInstance.getTime(), new AddCallback(removeObjectInstance));
-
-        // register the message retraction handle
-        //
-        messageRetractionManager.add(
-          removeObjectInstance.getTime(), future, removeObjectInstance.getMessageRetractionHandle());
-      }
     }
     finally
     {
       timeManager.getTimeLock().readLock().unlock();
     }
-  }
-
-  public void timeAdvanceGrant(TimeAdvanceGrant timeAdvanceGrant)
-  {
-    log.trace(LogMessages.TIME_ADVANCE_GRANT, timeManager.getFederateTime(), timeAdvanceGrant.getTime());
-
-    processFutureTasks(timeAdvanceGrant.getTime());
-
-    callbackManager.add(timeAdvanceGrant);
-  }
-
-  public void callbackReceived(Callback callback)
-  {
-    callbackManager.add(callback);
-  }
-
-  public void galtAdvanced(GALTAdvanced galtAdvanced)
-  {
-    timeManager.galtAdvanced(galtAdvanced.getTime());
-  }
-
-  public void galtUndefined(GALTUndefined galtUndefined)
-  {
-    timeManager.galtUndefined();
   }
 
   public void resignFederationExecution(ResignAction resignAction)
@@ -673,12 +542,23 @@ public class Federate
 
       federateState = FederateState.RESIGNED;
 
-      rtiChannel.getPipeline().remove(FederateChannelUpstreamHandler.NAME);
+      resignedLatch.await();
+    }
+    catch (InterruptedException ie)
+    {
+      throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION), ie);
     }
     finally
     {
       federateStateLock.writeLock().unlock();
     }
+  }
+
+  public void resignedFederationExecution()
+  {
+    ((FederateChannelHandler) rtiChannel.getPipeline().get(FederateChannelHandler.NAME)).setFederate(null);
+
+    resignedLatch.countDown();
   }
 
   public void registerFederationSynchronizationPoint(String label, byte[] tag, FederateHandleSet federateHandles)
@@ -1356,19 +1236,25 @@ public class Federate
     {
       checkIfActive();
 
-      MessageRetractionHandle messageRetractionHandle = null;
+      MessageRetractionHandle messageRetractionHandle;
 
       timeManager.getTimeLock().readLock().lock();
       try
       {
         timeManager.updateAttributeValues(updateTime);
 
-        OrderType sentOrderType =
-          timeManager.isTimeRegulating() && updateTime != null ? OrderType.TIMESTAMP : OrderType.RECEIVE;
-
-        if (sentOrderType == OrderType.TIMESTAMP)
+        OrderType sentOrderType;
+        if (timeManager.isTimeRegulating())
         {
+          sentOrderType = OrderType.TIMESTAMP;
+
           messageRetractionHandle = messageRetractionManager.add(updateTime);
+        }
+        else
+        {
+          sentOrderType = OrderType.RECEIVE;
+
+          messageRetractionHandle = null;
         }
 
         objectManager.updateAttributeValues(
@@ -1424,19 +1310,25 @@ public class Federate
     {
       checkIfActive();
 
-      MessageRetractionHandle messageRetractionHandle = null;
+      MessageRetractionHandle messageRetractionHandle;
 
       timeManager.getTimeLock().readLock().lock();
       try
       {
         timeManager.sendInteraction(sendTime);
 
-        OrderType sentOrderType =
-          timeManager.isTimeRegulating() && sendTime != null ? OrderType.TIMESTAMP : OrderType.RECEIVE;
-
-        if (sentOrderType == OrderType.TIMESTAMP)
+        OrderType sentOrderType;
+        if (timeManager.isTimeRegulating())
         {
+          sentOrderType = OrderType.TIMESTAMP;
+
           messageRetractionHandle = messageRetractionManager.add(sendTime);
+        }
+        else
+        {
+          sentOrderType = OrderType.RECEIVE;
+
+          messageRetractionHandle = null;
         }
 
         objectManager.sendInteraction(
@@ -1481,25 +1373,29 @@ public class Federate
     {
       checkIfActive();
 
-      MessageRetractionHandle messageRetractionHandle = null;
+      MessageRetractionHandle messageRetractionHandle;
 
       timeManager.getTimeLock().readLock().lock();
       try
       {
         timeManager.deleteObjectInstance(deleteTime);
 
-        OrderType sentOrderType =
-          timeManager.isTimeRegulating() && deleteTime != null ?
-            OrderType.TIMESTAMP : OrderType.RECEIVE;
-
-        if (sentOrderType == OrderType.TIMESTAMP)
+        OrderType sentOrderType;
+        if (timeManager.isTimeRegulating())
         {
+          sentOrderType = OrderType.TIMESTAMP;
+
           messageRetractionHandle = messageRetractionManager.add(deleteTime);
+        }
+        else
+        {
+          sentOrderType = OrderType.RECEIVE;
+
+          messageRetractionHandle = null;
         }
 
         objectManager.deleteObjectInstance(
-          objectInstanceHandle, tag, deleteTime, messageRetractionHandle,
-          sentOrderType);
+          objectInstanceHandle, tag, deleteTime, messageRetractionHandle, sentOrderType);
       }
       finally
       {
@@ -2114,6 +2010,7 @@ public class Federate
     }
   }
 
+  @SuppressWarnings("unchecked")
   public void retract(MessageRetractionHandle messageRetractionHandle)
     throws InvalidMessageRetractionHandle, TimeRegulationIsNotEnabled, MessageCanNoLongerBeRetracted,
            SaveInProgress, RestoreInProgress, RTIinternalError
@@ -2128,9 +2025,25 @@ public class Federate
       {
         timeManager.checkIfTimeRegulationIsNotEnabled();
 
-        messageRetractionManager.retract(messageRetractionHandle, timeManager.queryLogicalTime());
+        LogicalTime minimumTime;
+        if (timeManager.isTimeGranted())
+        {
+          minimumTime = timeManager.getFederateTime().add(timeManager.getLookahead());
+        }
+        else
+        {
+          minimumTime = timeManager.getAdvanceRequestTime().add(timeManager.getLookahead());
+        }
 
-        rtiChannel.write(new Retract(messageRetractionHandle));
+        messageRetractionManager.retract(messageRetractionHandle, minimumTime);
+      }
+      catch (IllegalTimeArithmetic ita)
+      {
+        throw new RuntimeException(ita);
+      }
+      catch (InvalidLogicalTimeInterval ilti)
+      {
+        throw new RuntimeException(ilti);
       }
       finally
       {
@@ -3216,15 +3129,10 @@ public class Federate
     objectManager.fireReceiveInteraction(receiveInteraction, federateAmbassador);
   }
 
-  public void removeObjectInstance(
-    ObjectInstanceHandle objectInstanceHandle, byte[] tag, OrderType sentOrderType, LogicalTime deleteTime,
-    OrderType receivedOrderType, MessageRetractionHandle messageRetractionHandle,
-    FederateAmbassador.SupplementalRemoveInfo supplementalRemoveInfo)
+  public void fireRemoveObjectInstance(RemoveObjectInstance removeObjectInstance)
     throws FederateInternalError
   {
-    objectManager.removeObjectInstance(
-      objectInstanceHandle, tag, sentOrderType, deleteTime, receivedOrderType,
-      messageRetractionHandle, supplementalRemoveInfo, federateAmbassador);
+    objectManager.fireRemoveObjectInstance(removeObjectInstance, federateAmbassador);
   }
 
   public void attributeOwnershipAcquisitionNotification(
@@ -3251,20 +3159,6 @@ public class Federate
     throws FederateInternalError
   {
     timeManager.timeAdvanceGrant(time, federateAmbassador);
-  }
-
-  public LogicalTime getNextMessageTime()
-  {
-    futureTasksLock.lock();
-    try
-    {
-      TimestampedFutureTask timestampedFutureTask = futureTasks.peek();
-      return timestampedFutureTask == null ? null : timestampedFutureTask.getTime();
-    }
-    finally
-    {
-      futureTasksLock.unlock();
-    }
   }
 
   @Override
@@ -3303,101 +3197,6 @@ public class Federate
       default:
         assert federateState == FederateState.ACTIVE;
         break;
-    }
-  }
-
-  private Future<Object> schedule(LogicalTime time, Callable<Object> callable)
-  {
-    log.debug(LogMessages.SCHEDULING_TASK, callable, time);
-
-    TimestampedFutureTask future = new TimestampedFutureTask(time, callable);
-
-    futureTasksLock.lock();
-    try
-    {
-      futureTasks.offer(future);
-    }
-    finally
-    {
-      futureTasksLock.unlock();
-    }
-
-    return future;
-  }
-
-  private class TimestampedFutureTask
-    extends FutureTask<Object>
-    implements Comparable<TimestampedFutureTask>
-  {
-    private final LogicalTime time;
-
-    public TimestampedFutureTask(LogicalTime time, Callable<Object> callable)
-    {
-      super(callable);
-
-      this.time = time;
-    }
-
-    public LogicalTime getTime()
-    {
-      return time;
-    }
-
-    @SuppressWarnings("unchecked")
-    public int compareTo(TimestampedFutureTask rhs)
-    {
-      return time.compareTo(rhs.time);
-    }
-  }
-
-  private class AddCallback
-    implements Callable<Object>
-  {
-    private final Callback callback;
-
-    public AddCallback(Callback callback)
-    {
-      this.callback = callback;
-    }
-
-    public Object call()
-    {
-      timeManager.getTimeLock().readLock().lock();
-      try
-      {
-        boolean hold = !isAsynchronousDeliveryEnabled() &&
-                       timeManager.isTimeConstrainedAndTimeGranted();
-
-        callbackManager.add(callback, hold);
-      }
-      finally
-      {
-        timeManager.getTimeLock().readLock().unlock();
-      }
-
-      return null;
-    }
-  }
-
-  private class ScheduledDeleteObjectInstance
-    implements Callable<Object>
-  {
-    private final ObjectInstanceHandle objectInstanceHandle;
-    private final byte[] tag;
-
-    public ScheduledDeleteObjectInstance(
-      ObjectInstanceHandle objectInstanceHandle, byte[] tag)
-    {
-      this.objectInstanceHandle = objectInstanceHandle;
-      this.tag = tag;
-    }
-
-    public Object call()
-      throws Exception
-    {
-      objectManager.deleteObjectInstance(objectInstanceHandle, tag);
-
-      return null;
     }
   }
 

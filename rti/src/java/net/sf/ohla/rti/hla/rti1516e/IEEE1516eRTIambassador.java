@@ -24,6 +24,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -31,8 +32,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import net.sf.ohla.rti.RTI;
 import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.federate.CallbackManager;
-import net.sf.ohla.rti.federate.CallbackManagerChannelUpstreamHandler;
+import net.sf.ohla.rti.federate.DefaultFederateChannelHandlerFactory;
 import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.federate.FederateChannelHandlerFactory;
 import net.sf.ohla.rti.federate.FederateChannelPipelineFactory;
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
@@ -203,6 +205,8 @@ public class IEEE1516eRTIambassador
    */
   private final ReadWriteLock connectLock = new ReentrantReadWriteLock(true);
 
+  private final FederateChannelHandlerFactory federateChannelHandlerFactory;
+
   private Channel rtiChannel;
 
   private FederateAmbassador federateAmbassador;
@@ -224,6 +228,16 @@ public class IEEE1516eRTIambassador
       return Boolean.FALSE;
     }
   };
+
+  public IEEE1516eRTIambassador()
+  {
+    this(new DefaultFederateChannelHandlerFactory());
+  }
+
+  public IEEE1516eRTIambassador(FederateChannelHandlerFactory federateChannelHandlerFactory)
+  {
+    this.federateChannelHandlerFactory = federateChannelHandlerFactory;
+  }
 
   public Channel getRTIChannel()
   {
@@ -332,6 +346,8 @@ public class IEEE1516eRTIambassador
       throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.CALLBACK_MODEL_IS_NULL));
     }
 
+    Executor executor = Executors.newCachedThreadPool();
+
     String host;
     int port;
     long connectTimeoutMillis = 1000L;
@@ -383,7 +399,9 @@ public class IEEE1516eRTIambassador
 
         clientBootstrap.setOption("connectTimeoutMillis", connectTimeoutMillis);
 
-        clientBootstrap.setPipelineFactory(new FederateChannelPipelineFactory());
+        CallbackManager callbackManager = new CallbackManager(federateAmbassador);
+        clientBootstrap.setPipelineFactory(
+          new FederateChannelPipelineFactory(executor, callbackManager, federateChannelHandlerFactory));
 
         ChannelFuture future = clientBootstrap.connect(new InetSocketAddress(host, port)).awaitUninterruptibly();
         if (future.isSuccess())
@@ -392,10 +410,7 @@ public class IEEE1516eRTIambassador
 
           this.federateAmbassador = federateAmbassador;
 
-          callbackManager = new CallbackManager(federateAmbassador);
-
-          rtiChannel.getPipeline().addLast(
-            CallbackManagerChannelUpstreamHandler.NAME, new CallbackManagerChannelUpstreamHandler(callbackManager));
+          this.callbackManager = callbackManager;
         }
         else
         {
@@ -3172,6 +3187,11 @@ public class IEEE1516eRTIambassador
     throws MessageCanNoLongerBeRetracted, InvalidMessageRetractionHandle, TimeRegulationIsNotEnabled, SaveInProgress,
            RestoreInProgress, FederateNotExecutionMember, NotConnected, RTIinternalError
   {
+    if (messageRetractionHandle == null)
+    {
+      throw new InvalidMessageRetractionHandle(I18n.getMessage(ExceptionMessages.MESSAGE_RETRACTION_HANDLE_IS_NULL));
+    }
+
     connectLock.readLock().lock();
     try
     {

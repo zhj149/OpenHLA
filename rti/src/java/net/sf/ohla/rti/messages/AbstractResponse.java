@@ -62,4 +62,10 @@ public abstract class AbstractResponse
   {
     return requestId;
   }
+
+  @Override
+  public boolean isOrdered()
+  {
+    return false;
+  }
 }

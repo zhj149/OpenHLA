@@ -17,8 +17,6 @@
 package net.sf.ohla.rti.messages.callbacks;
 
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.federate.Federate;
-import net.sf.ohla.rti.messages.FederateMessage;
 import net.sf.ohla.rti.messages.InteractionClassMessage;
 import net.sf.ohla.rti.messages.MessageType;
 
@@ -30,7 +28,7 @@ import hla.rti1516e.exceptions.FederateInternalError;
 
 public class TurnInteractionsOff
   extends InteractionClassMessage
-  implements Callback, FederateMessage
+  implements Callback
 {
   public TurnInteractionsOff(InteractionClassHandle interactionClassHandle)
   {
@@ -53,10 +51,5 @@ public class TurnInteractionsOff
     throws FederateInternalError
   {
     federateAmbassador.turnInteractionsOff(interactionClassHandle);
-  }
-
-  public void execute(Federate federate)
-  {
-    federate.callbackReceived(this);
   }
 }

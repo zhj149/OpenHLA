@@ -26,7 +26,10 @@ import org.jboss.netty.buffer.ChannelBuffer;
 public class DestroyFederationExecutionResponse
   extends EnumResponse<DestroyFederationExecutionResponse.Response>
 {
-  public enum Response { SUCCESS, FEDERATES_CURRENTLY_JOINED, FEDERATION_EXECUTION_DOES_NOT_EXIST }
+  public enum Response
+  {
+    SUCCESS, FEDERATES_CURRENTLY_JOINED, FEDERATION_EXECUTION_DOES_NOT_EXIST
+  }
 
   private final Set<String> currentlyJoinedFederates;
 

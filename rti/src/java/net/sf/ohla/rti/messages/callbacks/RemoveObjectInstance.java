@@ -24,6 +24,7 @@ import net.sf.ohla.rti.hla.rti1516e.IEEE1516eMessageRetractionHandle;
 import net.sf.ohla.rti.messages.FederateMessage;
 import net.sf.ohla.rti.messages.MessageType;
 import net.sf.ohla.rti.messages.ObjectInstanceMessage;
+import net.sf.ohla.rti.messages.TimeStampOrderedMessage;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
@@ -38,7 +39,7 @@ import hla.rti1516e.exceptions.FederateInternalError;
 
 public class RemoveObjectInstance
   extends ObjectInstanceMessage
-  implements Callback, FederateMessage, FederateAmbassador.SupplementalRemoveInfo
+  implements Callback, FederateMessage, TimeStampOrderedMessage, FederateAmbassador.SupplementalRemoveInfo
 {
   private final byte[] tag;
   private final OrderType sentOrderType;
@@ -47,8 +48,6 @@ public class RemoveObjectInstance
   private final FederateHandle producingFederateHandle;
 
   private Federate federate;
-
-  private OrderType receivedOrderType;
 
   public RemoveObjectInstance(ObjectInstanceHandle objectInstanceHandle, FederateHandle producingFederateHandle)
   {
@@ -87,24 +86,19 @@ public class RemoveObjectInstance
     producingFederateHandle = IEEE1516eFederateHandle.decode(buffer);
   }
 
+  public byte[] getTag()
+  {
+    return tag;
+  }
+
   public OrderType getSentOrderType()
   {
     return sentOrderType;
   }
 
-  public LogicalTime getTime()
-  {
-    return time;
-  }
-
   public MessageRetractionHandle getMessageRetractionHandle()
   {
     return messageRetractionHandle;
-  }
-
-  public void setReceivedOrderType(OrderType receivedOrderType)
-  {
-    this.receivedOrderType = receivedOrderType;
   }
 
   public MessageType getType()
@@ -115,8 +109,7 @@ public class RemoveObjectInstance
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federate.removeObjectInstance(
-      objectInstanceHandle, tag, sentOrderType, time, receivedOrderType, messageRetractionHandle, this);
+    federate.fireRemoveObjectInstance(this);
   }
 
   public void execute(Federate federate)
@@ -124,6 +117,23 @@ public class RemoveObjectInstance
     this.federate = federate;
 
     federate.removeObjectInstance(this);
+  }
+
+  public LogicalTime getTime()
+  {
+    return time;
+  }
+
+  public TimeStampOrderedMessage makeReceiveOrdered()
+  {
+    return new RemoveObjectInstance(
+      objectInstanceHandle, tag, OrderType.RECEIVE, time, null, producingFederateHandle);
+  }
+
+  @SuppressWarnings("unchecked")
+  public int compareTo(TimeStampOrderedMessage rhs)
+  {
+    return time.compareTo(rhs.getTime());
   }
 
   public boolean hasProducingFederate()
