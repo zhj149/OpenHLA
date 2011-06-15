@@ -93,12 +93,24 @@ public class BaseFederateAmbassador
     evokeCallbackWhile(test, 5);
   }
 
+  protected void evokeCallbackWhile(Callable<Boolean> test, double minimumTime)
+    throws Exception
+  {
+    evokeCallbackWhile(test, 5, minimumTime);
+  }
+
   protected void evokeCallbackWhile(Callable<Boolean> test, int count)
+    throws Exception
+  {
+    evokeCallbackWhile(test, count, 1.0);
+  }
+
+  protected void evokeCallbackWhile(Callable<Boolean> test, int count, double minimumTime)
     throws Exception
   {
     for (; count > 0 && test.call(); count--)
     {
-      rtiAmbassador.evokeCallback(1.0);
+      rtiAmbassador.evokeCallback(minimumTime);
     }
   }
 }

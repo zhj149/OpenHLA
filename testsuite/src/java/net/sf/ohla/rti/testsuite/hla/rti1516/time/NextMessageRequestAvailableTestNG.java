@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package net.sf.ohla.rti.testsuite.hla.rti1516e.time;
+package net.sf.ohla.rti.testsuite.hla.rti1516.time;
 
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import hla.rti1516e.InteractionClassHandle;
-import hla.rti1516e.ParameterHandle;
-import hla.rti1516e.ParameterHandleValueMap;
+import hla.rti1516.InteractionClassHandle;
+import hla.rti1516.ParameterHandle;
+import hla.rti1516.ParameterHandleValueMap;
 
 @Test
 public class NextMessageRequestAvailableTestNG
   extends BaseTimeManagementTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516e Next Message Request Available Test Federation";
+  private static final String FEDERATION_NAME = "OHLA IEEE 1516 Next Message Request Available Test Federation";
 
   private InteractionClassHandle testInteractionClassHandle2;
   private InteractionClassHandle testInteractionClassHandle3;

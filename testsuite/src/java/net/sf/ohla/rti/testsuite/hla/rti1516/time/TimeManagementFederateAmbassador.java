@@ -2,18 +2,22 @@ package net.sf.ohla.rti.testsuite.hla.rti1516.time;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
+
+import net.sf.ohla.rti.testsuite.hla.rti1516.BaseFederateAmbassador;
+import net.sf.ohla.rti.testsuite.hla.rti1516.object.TestObjectInstance;
 
 import hla.rti1516.AttributeHandleValueMap;
 import hla.rti1516.AttributeNotRecognized;
 import hla.rti1516.AttributeNotSubscribed;
 import hla.rti1516.FederateInternalError;
 import hla.rti1516.InteractionClassHandle;
+import hla.rti1516.InteractionClassNotRecognized;
+import hla.rti1516.InteractionClassNotSubscribed;
+import hla.rti1516.InteractionParameterNotRecognized;
 import hla.rti1516.InvalidLogicalTime;
-import hla.rti1516.JoinedFederateIsNotInTimeAdvancingState;
 import hla.rti1516.LogicalTime;
 import hla.rti1516.MessageRetractionHandle;
-import hla.rti1516.NoRequestToEnableTimeConstrainedWasPending;
-import hla.rti1516.NoRequestToEnableTimeRegulationWasPending;
 import hla.rti1516.ObjectClassHandle;
 import hla.rti1516.ObjectInstanceHandle;
 import hla.rti1516.ObjectInstanceNotKnown;
@@ -21,38 +25,40 @@ import hla.rti1516.OrderType;
 import hla.rti1516.ParameterHandleValueMap;
 import hla.rti1516.RTIambassador;
 import hla.rti1516.RegionHandleSet;
-import hla.rti1516.TransportationType;
 import hla.rti1516.TimeQueryReturn;
-import hla.rti1516.jlc.NullFederateAmbassador;
+import hla.rti1516.TransportationType;
 
 public class TimeManagementFederateAmbassador
-  extends NullFederateAmbassador
+  extends BaseFederateAmbassador
 {
-  protected RTIambassador rtiAmbassador;
+  private LogicalTime timeRegulationEnabledTime;
+  private LogicalTime timeConstrainedEnabledTime;
+  private LogicalTime federateTime;
 
-  protected LogicalTime timeRegulationEnabledTime;
-  protected LogicalTime timeConstrainedEnabledTime;
-  protected LogicalTime federateTime;
+  private Map<ObjectInstanceHandle, TestObjectInstance> objectInstances =
+    new HashMap<ObjectInstanceHandle, TestObjectInstance>();
 
-  protected Map<ObjectInstanceHandle, ObjectInstance>
-    objectInstances =
-    new HashMap<ObjectInstanceHandle, ObjectInstance>();
-
-  protected ParameterHandleValueMap parameterValues;
+  private ParameterHandleValueMap parameterValues;
+  private LogicalTime receiveTime;
 
   public TimeManagementFederateAmbassador(RTIambassador rtiAmbassador)
   {
-    this.rtiAmbassador = rtiAmbassador;
+    super(rtiAmbassador);
   }
 
   public void checkTimeRegulationEnabled()
     throws Exception
   {
     timeRegulationEnabledTime = null;
-    for (int i = 0; i < 5 && timeRegulationEnabledTime == null; i++)
+
+    evokeCallbackWhile(new Callable<Boolean>()
     {
-      rtiAmbassador.evokeCallback(1.0);
-    }
+      public Boolean call()
+      {
+        return timeRegulationEnabledTime == null;
+      }
+    });
+
     assert timeRegulationEnabledTime != null;
   }
 
@@ -60,22 +66,31 @@ public class TimeManagementFederateAmbassador
     throws Exception
   {
     timeRegulationEnabledTime = null;
-    for (int i = 0; i < 5 && timeRegulationEnabledTime == null; i++)
+
+    evokeCallbackWhile(new Callable<Boolean>()
     {
-      rtiAmbassador.evokeCallback(1.0);
-    }
-    assert time.equals(timeRegulationEnabledTime) :
-      time + " != " + timeRegulationEnabledTime;
+      public Boolean call()
+      {
+        return timeRegulationEnabledTime == null;
+      }
+    });
+
+    assert time.equals(timeRegulationEnabledTime);
   }
 
   public void checkTimeConstrainedEnabled()
     throws Exception
   {
     timeConstrainedEnabledTime = null;
-    for (int i = 0; i < 5 && timeConstrainedEnabledTime == null; i++)
+
+    evokeCallbackWhile(new Callable<Boolean>()
     {
-      rtiAmbassador.evokeCallback(1.0);
-    }
+      public Boolean call()
+      {
+        return timeConstrainedEnabledTime == null;
+      }
+    });
+
     assert timeConstrainedEnabledTime != null;
   }
 
@@ -83,10 +98,15 @@ public class TimeManagementFederateAmbassador
     throws Exception
   {
     timeConstrainedEnabledTime = null;
-    for (int i = 0; i < 5 && timeConstrainedEnabledTime == null; i++)
+
+    evokeCallbackWhile(new Callable<Boolean>()
     {
-      rtiAmbassador.evokeCallback(1.0);
-    }
+      public Boolean call()
+      {
+        return timeConstrainedEnabledTime == null;
+      }
+    });
+
     assert time.equals(timeConstrainedEnabledTime);
   }
 
@@ -94,307 +114,327 @@ public class TimeManagementFederateAmbassador
     throws Exception
   {
     federateTime = null;
-    for (int i = 0; i < 5 && federateTime == null; i++)
+
+    evokeCallbackWhile(new Callable<Boolean>()
     {
-      rtiAmbassador.evokeCallback(1.0);
-    }
-    assert time.equals(federateTime) : time + " != " + federateTime;
+      public Boolean call()
+      {
+        return federateTime == null;
+      }
+    });
+
+    assert time.equals(federateTime);
   }
 
   public void checkTimeAdvanceGrantNotGranted(LogicalTime time)
     throws Exception
   {
     federateTime = null;
-    for (int i = 0; i < 5; i++)
+
+    evokeCallbackWhile(new Callable<Boolean>()
     {
-      rtiAmbassador.evokeCallback(0.1);
-    }
+      public Boolean call()
+      {
+        return true;
+      }
+    }, 1, 0.5);
+
     assert federateTime == null;
   }
 
   public void checkGALT(LogicalTime time)
     throws Exception
   {
-    TimeQueryReturn galt = rtiAmbassador.queryGALT();
-    for (int i = 0; i < 5 && !galt.timeIsValid; i++)
+    final TimeQueryReturn galt = rtiAmbassador.queryGALT();
+
+    evokeCallbackWhile(new Callable<Boolean>()
     {
-      rtiAmbassador.evokeCallback(1.0);
-    }
-    assert galt.timeIsValid && galt.time.equals(time);
+      public Boolean call()
+      {
+        return !galt.timeIsValid;
+      }
+    });
+
+    assert galt.timeIsValid;
+    assert galt.time.equals(time);
   }
 
   public void checkLITS(LogicalTime time)
     throws Exception
   {
-    TimeQueryReturn lits = rtiAmbassador.queryLITS();
-    for (int i = 0; i < 5 && !lits.timeIsValid; i++)
+    final TimeQueryReturn lits = rtiAmbassador.queryLITS();
+
+    evokeCallbackWhile(new Callable<Boolean>()
     {
-      rtiAmbassador.evokeCallback(1.0);
-    }
-    assert lits.timeIsValid && lits.time.equals(time);
+      public Boolean call()
+      {
+        return !lits.timeIsValid;
+      }
+    });
+
+    assert lits.timeIsValid;
+    assert lits.time.equals(time);
   }
 
-  public void checkObjectInstanceHandle(
-    ObjectInstanceHandle objectInstanceHandle)
+  public void checkObjectInstanceHandle(final ObjectInstanceHandle objectInstanceHandle)
     throws Exception
   {
-    for (int i = 0;
-         i < 5 && !objectInstances.containsKey(objectInstanceHandle); i++)
+    evokeCallbackWhile(new Callable<Boolean>()
     {
-      rtiAmbassador.evokeCallback(1.0);
-    }
+      public Boolean call()
+      {
+        return !objectInstances.containsKey(objectInstanceHandle);
+      }
+    });
+
     assert objectInstances.containsKey(objectInstanceHandle);
   }
 
-  public void checkAttributeValues(ObjectInstanceHandle objectInstanceHandle,
+  public void checkAttributeValues(final ObjectInstanceHandle objectInstanceHandle,
                                    AttributeHandleValueMap attributeValues)
     throws Exception
   {
-    for (int i = 0;
-         i < 5 &&
-         objectInstances.get(objectInstanceHandle).getAttributeValues() ==
-         null;
-         i++)
+    evokeCallbackWhile(new Callable<Boolean>()
     {
-      rtiAmbassador.evokeCallback(1.0);
-    }
+      public Boolean call()
+      {
+        return objectInstances.get(objectInstanceHandle).getAttributeValues() == null;
+      }
+    });
 
-    assert attributeValues.equals(
-      objectInstances.get(objectInstanceHandle).getAttributeValues()) :
-    attributeValues + " = " + objectInstances.get(objectInstanceHandle).getAttributeValues();
+    assert attributeValues.equals(objectInstances.get(objectInstanceHandle).getAttributeValues());
+
+    objectInstances.get(objectInstanceHandle).setAttributeValues(null, null, null, null);
   }
 
-  public void checkAttributeValuesNotReceived(
-    ObjectInstanceHandle objectInstanceHandle)
+  public void checkAttributeValuesNotReceived(final ObjectInstanceHandle objectInstanceHandle)
     throws Exception
   {
-    for (int i = 0;
-         i < 5 &&
-         objectInstances.get(objectInstanceHandle).getAttributeValues() ==
-         null;
-         i++)
+    evokeCallbackWhile(new Callable<Boolean>()
     {
-      rtiAmbassador.evokeCallback(0.1);
-    }
+      public Boolean call()
+      {
+        return objectInstances.get(objectInstanceHandle).getAttributeValues() == null;
+      }
+    }, 1, 0.5);
 
     assert objectInstances.get(objectInstanceHandle).getAttributeValues() == null;
   }
 
-  public void checkForRemovedObjectInstanceHandle(
-    ObjectInstanceHandle objectInstanceHandle)
+  public void checkForRemovedObjectInstanceHandle(final ObjectInstanceHandle objectInstanceHandle)
     throws Exception
   {
-    for (int i = 0;
-         i < 5 && !objectInstances.get(objectInstanceHandle).isRemoved();
-         i++)
+    evokeCallbackWhile(new Callable<Boolean>()
     {
-      rtiAmbassador.evokeCallback(1.0);
-    }
+      public Boolean call()
+      {
+        return !objectInstances.get(objectInstanceHandle).isRemoved();
+      }
+    });
+
     assert objectInstances.get(objectInstanceHandle).isRemoved();
   }
 
-  public void checkParameterValues(ParameterHandleValueMap parameterValues)
+  public void checkParameterValues(ParameterHandleValueMap parameterValues, LogicalTime receiveTime)
     throws Exception
   {
-    for (int i = 0; i < 5 && this.parameterValues == null; i++)
+    evokeCallbackWhile(new Callable<Boolean>()
     {
-      rtiAmbassador.evokeCallback(1.0);
-    }
+      public Boolean call()
+      {
+        return TimeManagementFederateAmbassador.this.parameterValues == null;
+      }
+    });
+
     assert parameterValues.equals(this.parameterValues);
+    assert receiveTime == null || receiveTime.equals(this.receiveTime);
+
+    this.parameterValues = null;
   }
 
   public void checkParameterValuesNotReceived()
     throws Exception
   {
-    for (int i = 0; i < 5 && this.parameterValues == null; i++)
+    evokeCallbackWhile(new Callable<Boolean>()
     {
-      rtiAmbassador.evokeCallback(0.1);
-    }
+      public Boolean call()
+      {
+        return true;
+      }
+    }, 1, 0.5);
+
     assert parameterValues == null;
   }
 
   @Override
   public void timeRegulationEnabled(LogicalTime time)
-    throws InvalidLogicalTime, NoRequestToEnableTimeRegulationWasPending,
-           FederateInternalError
   {
     timeRegulationEnabledTime = time;
   }
 
   @Override
   public void timeConstrainedEnabled(LogicalTime time)
-    throws InvalidLogicalTime, NoRequestToEnableTimeConstrainedWasPending,
-           FederateInternalError
   {
     timeConstrainedEnabledTime = time;
   }
 
   @Override
   public void timeAdvanceGrant(LogicalTime time)
-    throws InvalidLogicalTime, JoinedFederateIsNotInTimeAdvancingState,
-           FederateInternalError
   {
     federateTime = time;
   }
 
   @Override
-  public void discoverObjectInstance(
-    ObjectInstanceHandle objectInstanceHandle,
-    ObjectClassHandle objectClassHandle,
-    String name)
+  public void discoverObjectInstance(ObjectInstanceHandle objectInstanceHandle, ObjectClassHandle objectClassHandle,
+                                     String objectInstanceName)
   {
-    objectInstances.put(objectInstanceHandle, new ObjectInstance(
-      objectInstanceHandle, objectClassHandle, name));
+    objectInstances.put(objectInstanceHandle, new TestObjectInstance(
+      objectInstanceHandle, objectClassHandle, objectInstanceName));
   }
 
   @Override
-  public void reflectAttributeValues(
-    ObjectInstanceHandle objectInstanceHandle,
-    AttributeHandleValueMap attributeValues,
-    byte[] tag, OrderType sentOrderType,
-    TransportationType transportationType)
+  public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues,
+                                     byte[] tag, OrderType sentOrderType, TransportationType transportationType)
+    throws ObjectInstanceNotKnown, AttributeNotRecognized, AttributeNotSubscribed, FederateInternalError
   {
-    objectInstances.get(objectInstanceHandle).setAttributeValues(
-      attributeValues);
+    objectInstances.get(objectInstanceHandle).setAttributeValues(attributeValues, tag, null, null);
   }
 
   @Override
-  public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle,
-                                     AttributeHandleValueMap attributeValues,
-                                     byte[] tag, OrderType sentOrderType,
-                                     TransportationType transportationType,
-                                     LogicalTime updateTime,
-                                     OrderType receivedOrderType)
-    throws ObjectInstanceNotKnown, AttributeNotRecognized,
-           AttributeNotSubscribed, FederateInternalError
-  {
-    objectInstances.get(objectInstanceHandle).setAttributeValues(
-      attributeValues);
-  }
-
-  @Override
-  public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle,
-                                     AttributeHandleValueMap attributeValues,
-                                     byte[] tag, OrderType sentOrderType,
-                                     TransportationType transportationType,
-                                     LogicalTime updateTime,
-                                     OrderType receivedOrderType,
+  public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues,
+                                     byte[] tag, OrderType sentOrderType, TransportationType transportationType,
                                      RegionHandleSet regionHandles)
-    throws ObjectInstanceNotKnown, AttributeNotRecognized,
-           AttributeNotSubscribed, FederateInternalError
+    throws ObjectInstanceNotKnown, AttributeNotRecognized, AttributeNotSubscribed, FederateInternalError
   {
-    objectInstances.get(objectInstanceHandle).setAttributeValues(
-      attributeValues);
+    objectInstances.get(objectInstanceHandle).setAttributeValues(attributeValues, tag, null, regionHandles);
   }
 
   @Override
-  public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle,
-                                     AttributeHandleValueMap attributeValues,
-                                     byte[] tag, OrderType sentOrderType,
-                                     TransportationType transportationType,
-                                     LogicalTime updateTime,
-                                     OrderType receivedOrderType,
+  public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues,
+                                     byte[] tag, OrderType sentOrderType, TransportationType transportationType,
+                                     LogicalTime updateTime, OrderType receivedOrderType)
+    throws ObjectInstanceNotKnown, AttributeNotRecognized, AttributeNotSubscribed, FederateInternalError
+  {
+    objectInstances.get(objectInstanceHandle).setAttributeValues(attributeValues, tag, updateTime, null);
+  }
+
+  @Override
+  public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues,
+                                     byte[] tag, OrderType sentOrderType, TransportationType transportationType,
+                                     LogicalTime updateTime, OrderType receivedOrderType, RegionHandleSet regionHandles)
+    throws ObjectInstanceNotKnown, AttributeNotRecognized, AttributeNotSubscribed, FederateInternalError
+  {
+    objectInstances.get(objectInstanceHandle).setAttributeValues(attributeValues, tag, updateTime, regionHandles);
+  }
+
+  @Override
+  public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues,
+                                     byte[] tag, OrderType sentOrderType, TransportationType transportationType,
+                                     LogicalTime updateTime, OrderType receivedOrderType,
                                      MessageRetractionHandle messageRetractionHandle)
-    throws ObjectInstanceNotKnown, AttributeNotRecognized,
-           AttributeNotSubscribed, InvalidLogicalTime, FederateInternalError
+    throws ObjectInstanceNotKnown, AttributeNotRecognized, AttributeNotSubscribed, InvalidLogicalTime,
+           FederateInternalError
   {
-    objectInstances.get(objectInstanceHandle).setAttributeValues(
-      attributeValues);
+    objectInstances.get(objectInstanceHandle).setAttributeValues(attributeValues, tag, updateTime, null);
   }
 
   @Override
-  public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle,
-                                     AttributeHandleValueMap attributeValues,
-                                     byte[] tag, OrderType sentOrderType,
-                                     TransportationType transportationType,
-                                     LogicalTime updateTime,
-                                     OrderType receivedOrderType,
-                                     MessageRetractionHandle messageRetractionHandle,
-                                     RegionHandleSet regionHandles)
-    throws ObjectInstanceNotKnown, AttributeNotRecognized,
-           AttributeNotSubscribed, InvalidLogicalTime, FederateInternalError
+  public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues,
+                                     byte[] tag, OrderType sentOrderType, TransportationType transportationType,
+                                     LogicalTime updateTime, OrderType receivedOrderType,
+                                     MessageRetractionHandle messageRetractionHandle, RegionHandleSet regionHandles)
+    throws ObjectInstanceNotKnown, AttributeNotRecognized, AttributeNotSubscribed, InvalidLogicalTime,
+           FederateInternalError
   {
-    objectInstances.get(objectInstanceHandle).setAttributeValues(
-      attributeValues);
+    objectInstances.get(objectInstanceHandle).setAttributeValues(attributeValues, tag, updateTime, regionHandles);
   }
 
   @Override
-  public void removeObjectInstance(ObjectInstanceHandle objectInstanceHandle,
-                                   byte[] tag, OrderType sentOrderType)
+  public void removeObjectInstance(ObjectInstanceHandle objectInstanceHandle, byte[] tag, OrderType sentOrderType)
+    throws ObjectInstanceNotKnown, FederateInternalError
   {
-    objectInstances.get(objectInstanceHandle).setRemoved(true);
+    objectInstances.get(objectInstanceHandle).setRemoved(tag);
   }
 
   @Override
-  public void removeObjectInstance(ObjectInstanceHandle objectInstanceHandle,
-                                   byte[] tag, OrderType sentOrderType,
-                                   LogicalTime deleteTime,
-                                   OrderType receivedOrderType,
+  public void removeObjectInstance(ObjectInstanceHandle objectInstanceHandle, byte[] tag, OrderType sentOrderType,
+                                   LogicalTime deleteTime, OrderType receivedOrderType)
+    throws ObjectInstanceNotKnown, FederateInternalError
+  {
+    objectInstances.get(objectInstanceHandle).setRemoved(tag);
+  }
+
+  @Override
+  public void removeObjectInstance(ObjectInstanceHandle objectInstanceHandle, byte[] tag, OrderType sentOrderType,
+                                   LogicalTime deleteTime, OrderType receivedOrderType,
                                    MessageRetractionHandle messageRetractionHandle)
     throws ObjectInstanceNotKnown, InvalidLogicalTime, FederateInternalError
   {
-    objectInstances.get(objectInstanceHandle).setRemoved(true);
+    objectInstances.get(objectInstanceHandle).setRemoved(tag);
   }
 
   @Override
-  public void receiveInteraction(
-    InteractionClassHandle interactionClassHandle,
-    ParameterHandleValueMap parameterValues,
-    byte[] tag, OrderType sentOrderType,
-    TransportationType transportationType)
+  public void receiveInteraction(InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues,
+                                 byte[] tag, OrderType sentOrderType, TransportationType transportationType)
+    throws InteractionClassNotRecognized, InteractionParameterNotRecognized, InteractionClassNotSubscribed,
+           FederateInternalError
   {
     this.parameterValues = parameterValues;
   }
 
-  protected static class ObjectInstance
+  @Override
+  public void receiveInteraction(InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues,
+                                 byte[] tag, OrderType sentOrderType, TransportationType transportationType,
+                                 RegionHandleSet regionHandles)
+    throws InteractionClassNotRecognized, InteractionParameterNotRecognized, InteractionClassNotSubscribed,
+           FederateInternalError
   {
-    protected ObjectInstanceHandle objectInstanceHandle;
-    protected ObjectClassHandle objectClassHandle;
-    protected String name;
-    protected AttributeHandleValueMap attributeValues;
-    protected boolean removed;
+    this.parameterValues = parameterValues;
+  }
 
-    public ObjectInstance(ObjectInstanceHandle objectInstanceHandle,
-                          ObjectClassHandle objectClassHandle, String name)
-    {
-      this.objectInstanceHandle = objectInstanceHandle;
-      this.objectClassHandle = objectClassHandle;
-      this.name = name;
-    }
+  @Override
+  public void receiveInteraction(InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues,
+                                 byte[] tag, OrderType sentOrderType, TransportationType transportationType,
+                                 LogicalTime sentTime, OrderType receivedOrderType)
+    throws InteractionClassNotRecognized, InteractionParameterNotRecognized, InteractionClassNotSubscribed,
+           FederateInternalError
+  {
+    this.parameterValues = parameterValues;
+    receiveTime = sentTime;
+  }
 
-    public ObjectInstanceHandle getObjectInstanceHandle()
-    {
-      return objectInstanceHandle;
-    }
+  @Override
+  public void receiveInteraction(InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues,
+                                 byte[] tag, OrderType sentOrderType, TransportationType transportationType,
+                                 LogicalTime sentTime, OrderType receivedOrderType, RegionHandleSet regionHandles)
+    throws InteractionClassNotRecognized, InteractionParameterNotRecognized, InteractionClassNotSubscribed,
+           FederateInternalError
+  {
+    this.parameterValues = parameterValues;
+    receiveTime = sentTime;
+  }
 
-    public ObjectClassHandle getObjectClassHandle()
-    {
-      return objectClassHandle;
-    }
+  @Override
+  public void receiveInteraction(InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues,
+                                 byte[] tag, OrderType sentOrderType, TransportationType transportationType,
+                                 LogicalTime sentTime, OrderType receivedOrderType,
+                                 MessageRetractionHandle messageRetractionHandle)
+    throws InteractionClassNotRecognized, InteractionParameterNotRecognized, InteractionClassNotSubscribed,
+           InvalidLogicalTime, FederateInternalError
+  {
+    this.parameterValues = parameterValues;
+    receiveTime = sentTime;
+  }
 
-    public String getName()
-    {
-      return name;
-    }
-
-    public AttributeHandleValueMap getAttributeValues()
-    {
-      return attributeValues;
-    }
-
-    public void setAttributeValues(AttributeHandleValueMap attributeValues)
-    {
-      this.attributeValues = attributeValues;
-    }
-
-    public boolean isRemoved()
-    {
-      return removed;
-    }
-
-    public void setRemoved(boolean removed)
-    {
-      this.removed = removed;
-    }
+  @Override
+  public void receiveInteraction(InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues,
+                                 byte[] tag, OrderType sentOrderType, TransportationType transportationType,
+                                 LogicalTime sentTime, OrderType receivedOrderType,
+                                 MessageRetractionHandle messageRetractionHandle, RegionHandleSet regionHandles)
+    throws InteractionClassNotRecognized, InteractionParameterNotRecognized, InteractionClassNotSubscribed,
+           InvalidLogicalTime, FederateInternalError
+  {
+    this.parameterValues = parameterValues;
+    receiveTime = sentTime;
   }
 }

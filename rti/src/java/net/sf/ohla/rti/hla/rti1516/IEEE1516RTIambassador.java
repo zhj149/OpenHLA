@@ -171,6 +171,7 @@ import hla.rti1516e.exceptions.InvalidServiceGroup;
 import hla.rti1516e.exceptions.NoAcquisitionPending;
 import hla.rti1516e.exceptions.NotConnected;
 import hla.rti1516e.exceptions.UnsupportedCallbackModel;
+import hla.rti1516e.time.HLAinteger64TimeFactory;
 
 public class IEEE1516RTIambassador
   implements RTIambassador
@@ -234,7 +235,12 @@ public class IEEE1516RTIambassador
 
     try
     {
-      rtiAmbassador.createFederationExecution(federationExecutionName, IEEE1516FDDParser.parseFDD(fdd));
+      rtiAmbassador.createFederationExecution(
+        federationExecutionName, IEEE1516FDDParser.parseFDD(fdd), HLAinteger64TimeFactory.NAME);
+    }
+    catch (CouldNotCreateLogicalTimeFactory cncltf)
+    {
+      throw new RTIinternalError(cncltf);
     }
     catch (hla.rti1516e.exceptions.FederationExecutionAlreadyExists feae)
     {
@@ -285,7 +291,15 @@ public class IEEE1516RTIambassador
 
     try
     {
-      return convert(rtiAmbassador.joinFederationExecution(federateType, federationExecutionName));
+      hla.rti1516e.FederateHandle ieee1516eFederateHandle =
+        rtiAmbassador.joinFederationExecution(federateType, federationExecutionName);
+
+      logicalTimeFactory = mobileFederateServices.timeFactory;
+      logicalTimeIntervalFactory = mobileFederateServices.intervalFactory;
+
+      ieee1516eLogicalTimeFactory = rtiAmbassador.getFederate().getLogicalTimeFactory();
+
+      return convert(ieee1516eFederateHandle);
     }
     catch (CouldNotCreateLogicalTimeFactory cncltf)
     {
@@ -2317,6 +2331,11 @@ public class IEEE1516RTIambassador
     throws TimeRegulationAlreadyEnabled, InvalidLookahead, InTimeAdvancingState, RequestForTimeRegulationPending,
            FederateNotExecutionMember, SaveInProgress, RestoreInProgress, RTIinternalError
   {
+    if (lookahead == null)
+    {
+      throw new InvalidLookahead(I18n.getMessage(ExceptionMessages.LOGICAL_TIME_INTERVAL_IS_NULL));
+    }
+
     try
     {
       rtiAmbassador.enableTimeRegulation(convert(lookahead));
@@ -5375,7 +5394,8 @@ public class IEEE1516RTIambassador
   public TimeQueryReturn convert(hla.rti1516e.TimeQueryReturn timeQueryReturn)
     throws RTIinternalError
   {
-    return new TimeQueryReturn(timeQueryReturn.timeIsValid, convert(timeQueryReturn.time));
+    return new TimeQueryReturn(
+      timeQueryReturn.timeIsValid, timeQueryReturn.timeIsValid ? convert(timeQueryReturn.time) : null);
   }
 
   public MessageRetractionHandle convert(hla.rti1516e.MessageRetractionHandle messageRetractionHandle)

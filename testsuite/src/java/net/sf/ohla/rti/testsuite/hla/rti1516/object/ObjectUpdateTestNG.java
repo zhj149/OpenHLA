@@ -232,7 +232,7 @@ public class ObjectUpdateTestNG
       OrderType sentOrderType, TransportationType transportationType)
       throws ObjectInstanceNotKnown, AttributeNotRecognized, AttributeNotSubscribed, FederateInternalError
     {
-      objectInstances.get(objectInstanceHandle).setAttributeValues(attributeValues, tag);
+      objectInstances.get(objectInstanceHandle).setAttributeValues(attributeValues, tag, null, null);
     }
   }
 }
