@@ -58,6 +58,7 @@ public interface TestConstants
 
   static final String TEST_INTERACTION = "TestInteraction";
   static final String TEST_INTERACTION2 = "TestInteraction.TestInteraction2";
+  static final String TEST_INTERACTION3 = "TestInteraction.TestInteraction3";
 
   static final String UNKNOWN_INTERACTION = "UnknownInteraction";
 

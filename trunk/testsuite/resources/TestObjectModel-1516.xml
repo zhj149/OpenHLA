@@ -79,6 +79,15 @@
           <parameter name="Parameter5"/>
           <parameter name="Parameter6"/>
         </interactionClass>
+
+        <interactionClass name="TestInteraction3"
+                          dimensions="Dimension3 Dimension4"
+                          transportation="HLAreliable"
+                          order="TimeStamp">
+          <parameter name="Parameter7"/>
+          <parameter name="Parameter8"/>
+          <parameter name="Parameter9"/>
+        </interactionClass>
       </interactionClass>
 
       <interactionClass name="BestEffortReceiveInteraction"

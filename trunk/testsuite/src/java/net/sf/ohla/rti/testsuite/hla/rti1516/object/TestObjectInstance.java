@@ -17,6 +17,7 @@
 package net.sf.ohla.rti.testsuite.hla.rti1516.object;
 
 import hla.rti1516.AttributeHandleValueMap;
+import hla.rti1516.LogicalTime;
 import hla.rti1516.ObjectClassHandle;
 import hla.rti1516.ObjectInstanceHandle;
 import hla.rti1516.RegionHandleSet;
@@ -31,6 +32,7 @@ public class TestObjectInstance
 
   private AttributeHandleValueMap attributeValues;
   private RegionHandleSet regionHandles;
+  private LogicalTime reflectTime;
 
   private boolean removed;
 
@@ -62,26 +64,27 @@ public class TestObjectInstance
     return attributeValues;
   }
 
-  public void setAttributeValues(AttributeHandleValueMap attributeValues, byte[] tag)
-  {
-    setAttributeValues(attributeValues, tag, null);
-  }
-
-  public void setAttributeValues(AttributeHandleValueMap attributeValues, byte[] tag, RegionHandleSet regionHandles)
+  public void setAttributeValues(AttributeHandleValueMap attributeValues, byte[] tag, LogicalTime reflectTime,
+                                 RegionHandleSet regionHandles)
   {
     this.attributeValues = attributeValues;
     this.tag = tag;
     this.regionHandles = regionHandles;
   }
 
-  public RegionHandleSet getRegionHandles()
-  {
-    return regionHandles;
-  }
-
   public byte[] getTag()
   {
     return tag;
+  }
+
+  public LogicalTime getReflectTime()
+  {
+    return reflectTime;
+  }
+
+  public RegionHandleSet getRegionHandles()
+  {
+    return regionHandles;
   }
 
   public boolean isRemoved()

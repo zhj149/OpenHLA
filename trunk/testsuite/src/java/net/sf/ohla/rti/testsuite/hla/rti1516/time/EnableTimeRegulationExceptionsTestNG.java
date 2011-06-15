@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package net.sf.ohla.rti.testsuite.hla.rti1516e.time;
+package net.sf.ohla.rti.testsuite.hla.rti1516.time;
 
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import hla.rti1516e.exceptions.RequestForTimeRegulationPending;
+import hla.rti1516.RequestForTimeRegulationPending;
 
 @Test
 public class EnableTimeRegulationExceptionsTestNG
   extends BaseTimeManagementTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516e Enable Time Regulation Exceptions Test Federation";
+  private static final String FEDERATION_NAME = "OHLA IEEE 1516 Enable Time Regulation Exceptions Test Federation";
 
   public EnableTimeRegulationExceptionsTestNG()
   {

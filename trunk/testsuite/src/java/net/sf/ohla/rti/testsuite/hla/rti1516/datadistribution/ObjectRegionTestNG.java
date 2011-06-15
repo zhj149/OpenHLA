@@ -245,7 +245,7 @@ public class ObjectRegionTestNG
       OrderType sentOrderType, TransportationType transportationType)
       throws ObjectInstanceNotKnown, AttributeNotRecognized, AttributeNotSubscribed, FederateInternalError
     {
-      objectInstances.get(objectInstanceHandle).setAttributeValues(attributeValues, tag);
+      objectInstances.get(objectInstanceHandle).setAttributeValues(attributeValues, tag, null, null);
     }
 
     @Override
@@ -254,7 +254,7 @@ public class ObjectRegionTestNG
       byte[] tag, OrderType sentOrderType, TransportationType transportationType, RegionHandleSet regionHandles)
       throws FederateInternalError
     {
-      objectInstances.get(objectInstanceHandle).setAttributeValues(attributeValues, tag, regionHandles);
+      objectInstances.get(objectInstanceHandle).setAttributeValues(attributeValues, tag, null, regionHandles);
     }
   }
 }

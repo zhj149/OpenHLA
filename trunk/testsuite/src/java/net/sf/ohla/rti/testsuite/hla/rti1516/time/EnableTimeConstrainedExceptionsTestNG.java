@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package net.sf.ohla.rti.testsuite.hla.rti1516e.time;
+package net.sf.ohla.rti.testsuite.hla.rti1516.time;
 
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import hla.rti1516e.exceptions.InTimeAdvancingState;
+import hla.rti1516.RequestForTimeConstrainedPending;
 
 @Test
-public class TimeAdvanceRequestExceptionsTestNG
+public class EnableTimeConstrainedExceptionsTestNG
   extends BaseTimeManagementTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516e Time Advance Request Exceptions Test Federation";
+  private static final String FEDERATION_NAME = "OHLA IEEE 1516 Enable Time Constrained Exceptions Test Federation";
 
-  public TimeAdvanceRequestExceptionsTestNG()
+  public EnableTimeConstrainedExceptionsTestNG()
   {
     super(FEDERATION_NAME);
   }
@@ -36,53 +36,46 @@ public class TimeAdvanceRequestExceptionsTestNG
   public void setup()
     throws Exception
   {
-    rtiAmbassadors.get(0).timeAdvanceRequest(ten);
+    rtiAmbassadors.get(0).enableTimeConstrained();
   }
 
-  @Test(expectedExceptions = {InTimeAdvancingState.class})
-  public void testEnableTimeRegulationWhileInTimeAdvancingState()
-    throws Exception
-  {
-    rtiAmbassadors.get(0).enableTimeRegulation(logicalTimeFactory.makeInterval(1L));
-  }
-
-  @Test(expectedExceptions = {InTimeAdvancingState.class})
-  public void testEnableTimeConstrainedWhileInTimeAdvancingState()
+  @Test(expectedExceptions = {RequestForTimeConstrainedPending.class})
+  public void testEnableTimeConstrainedWhileEnableTimeConstrainedPending()
     throws Exception
   {
     rtiAmbassadors.get(0).enableTimeConstrained();
   }
 
-  @Test(expectedExceptions = {InTimeAdvancingState.class})
-  public void testTimeAdvanceRequestWhileInTimeAdvancingState()
+  @Test(expectedExceptions = {RequestForTimeConstrainedPending.class})
+  public void testTimeAdvanceRequestWhileEnableTimeConstrainedPending()
     throws Exception
   {
     rtiAmbassadors.get(0).timeAdvanceRequest(oneHundred);
   }
 
-  @Test(expectedExceptions = {InTimeAdvancingState.class})
-  public void testTimeAdvanceRequestAvailableWhileInTimeAdvancingState()
+  @Test(expectedExceptions = {RequestForTimeConstrainedPending.class})
+  public void testTimeAdvanceRequestAvailableWhileEnableTimeConstrainedPending()
     throws Exception
   {
     rtiAmbassadors.get(0).timeAdvanceRequestAvailable(oneHundred);
   }
 
-  @Test(expectedExceptions = {InTimeAdvancingState.class})
-  public void testNextMessageRequestWhileInTimeAdvancingState()
+  @Test(expectedExceptions = {RequestForTimeConstrainedPending.class})
+  public void testNextMessageRequestWhileEnableTimeConstrainedPending()
     throws Exception
   {
     rtiAmbassadors.get(0).nextMessageRequest(oneHundred);
   }
 
-  @Test(expectedExceptions = {InTimeAdvancingState.class})
-  public void testNextMessageRequestAvailableWhileInTimeAdvancingState()
+  @Test(expectedExceptions = {RequestForTimeConstrainedPending.class})
+  public void testNextMessageRequestAvailableWhileEnableTimeConstrainedPending()
     throws Exception
   {
     rtiAmbassadors.get(0).nextMessageRequestAvailable(oneHundred);
   }
 
-  @Test(expectedExceptions = {InTimeAdvancingState.class})
-  public void testFlushQueueRequestWhileInTimeAdvancingState()
+  @Test(expectedExceptions = {RequestForTimeConstrainedPending.class})
+  public void testFlushQueueRequestWhileEnableTimeConstrainedPending()
     throws Exception
   {
     rtiAmbassadors.get(0).flushQueueRequest(oneHundred);
