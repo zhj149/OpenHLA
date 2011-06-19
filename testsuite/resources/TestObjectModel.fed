@@ -44,6 +44,12 @@
           (parameter Parameter5)
           (parameter Parameter6)
         )
+
+        (class TestInteraction3 HLAreliable TimeStamp TestRoutingSpace
+          (parameter Parameter7)
+          (parameter Parameter8)
+          (parameter Parameter9)
+        )
       )
     )
   )

@@ -31,9 +31,6 @@ import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
 import net.sf.ohla.rti.i18n.I18nLogger;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import hla.rti1516.AsynchronousDeliveryAlreadyDisabled;
 import hla.rti1516.AsynchronousDeliveryAlreadyEnabled;
 import hla.rti1516.AttributeAcquisitionWasNotRequested;
@@ -171,11 +168,13 @@ import hla.rti1516e.exceptions.InvalidServiceGroup;
 import hla.rti1516e.exceptions.NoAcquisitionPending;
 import hla.rti1516e.exceptions.NotConnected;
 import hla.rti1516e.exceptions.UnsupportedCallbackModel;
-import hla.rti1516e.time.HLAinteger64TimeFactory;
 
 public class IEEE1516RTIambassador
   implements RTIambassador
 {
+  public static final String OHLA_IEEE1516_FEDERATION_EXECUTION_LOGICAL_TIME_IMPLEMENTATION_PROPERTY =
+    "ohla.ieee1516.federationExecution.%s.logicalTimeImplementation";
+
   private static final I18nLogger log = I18nLogger.getLogger(IEEE1516RTIambassador.class);
 
   private final IEEE1516eRTIambassador rtiAmbassador = new IEEE1516eRTIambassador();
@@ -233,10 +232,11 @@ public class IEEE1516RTIambassador
       throw new CouldNotOpenFDD(I18n.getMessage(ExceptionMessages.FOM_MODULE_IS_NULL));
     }
 
+    String logicalTimeImplementationName = getIEEE1516eLogicalTimeImplementationName(federationExecutionName);
     try
     {
       rtiAmbassador.createFederationExecution(
-        federationExecutionName, IEEE1516FDDParser.parseFDD(fdd), HLAinteger64TimeFactory.NAME);
+        federationExecutionName, IEEE1516FDDParser.parseFDD(fdd), logicalTimeImplementationName);
     }
     catch (CouldNotCreateLogicalTimeFactory cncltf)
     {
@@ -294,6 +294,8 @@ public class IEEE1516RTIambassador
       hla.rti1516e.FederateHandle ieee1516eFederateHandle =
         rtiAmbassador.joinFederationExecution(federateType, federationExecutionName);
 
+      // always use the factories provided
+      //
       logicalTimeFactory = mobileFederateServices.timeFactory;
       logicalTimeIntervalFactory = mobileFederateServices.intervalFactory;
 
@@ -5489,5 +5491,16 @@ public class IEEE1516RTIambassador
   public hla.rti1516e.ServiceGroup convert(ServiceGroup serviceGroup)
   {
     return hla.rti1516e.ServiceGroup.values()[serviceGroup.ordinal()];
+  }
+
+  private String getIEEE1516eLogicalTimeImplementationName(String federationExecutionName)
+    throws RTIinternalError
+  {
+    String logicalTimeFactoryClassNameProperty = String.format(
+      OHLA_IEEE1516_FEDERATION_EXECUTION_LOGICAL_TIME_IMPLEMENTATION_PROPERTY, federationExecutionName);
+
+    // TODO: log this
+
+    return System.getProperty(logicalTimeFactoryClassNameProperty);
   }
 }

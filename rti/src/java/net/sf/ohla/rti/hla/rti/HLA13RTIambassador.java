@@ -207,10 +207,15 @@ public class HLA13RTIambassador
   public static final String OHLA_HLA13_FEDERATION_EXECUTION_LOGICAL_TIME_IMPLEMENTATION_PROPERTY =
     "ohla.hla13.federationExecution.%s.logicalTimeImplementation";
 
-  public static final String OHLA_FEDERATE_HLA13_LOGICAL_TIME_IMPLEMENTATION_PROPERTY =
+  public static final String OHLA_HLA13_LOGICAL_TIME_IMPLEMENTATION_PROPERTY =
     "ohla.hla13.logicalTimeImplementation.%s";
 
-  private final IEEE1516eRTIambassador rtiAmbassador = new IEEE1516eRTIambassador();
+  public static final String OHLA_HLA13_TICK_TIME_PROPERTY = "ohla.hla13.tick.time";
+
+  public static final double DEFAULT_TICK_TIME = 0.2;
+
+  private final IEEE1516eRTIambassador rtiAmbassador =
+    new IEEE1516eRTIambassador(new HLA13FederateChannelHandlerFactory());
 
   private FED fed;
 
@@ -238,9 +243,32 @@ public class HLA13RTIambassador
 
   private FederateAmbassador federateAmbassador;
 
+  private final double tickTime;
+
   public HLA13RTIambassador()
     throws RTIinternalError
   {
+    String tickTimeProperty = System.getProperty(OHLA_HLA13_TICK_TIME_PROPERTY);
+    double tickTime;
+    if (tickTimeProperty == null)
+    {
+      tickTime = DEFAULT_TICK_TIME;
+    }
+    else
+    {
+      try
+      {
+        tickTime = Double.parseDouble(tickTimeProperty);
+      }
+      catch (NumberFormatException nfe)
+      {
+        // TODO: log
+
+        tickTime = DEFAULT_TICK_TIME;
+      }
+    }
+    this.tickTime = tickTime;
+
     try
     {
       rtiAmbassador.connect(new HLA13FederateAmbassadorBridge(this), CallbackModel.HLA_EVOKED);
@@ -463,7 +491,12 @@ public class HLA13RTIambassador
     {
       FederateHandle federateHandle = rtiAmbassador.joinFederationExecution(federateType, federationExecutionName);
 
-      setIEEE1516eLogicalTimeFactory(rtiAmbassador.getFederate().getLogicalTimeFactory());
+      // always use the factories provided
+      //
+      logicalTimeFactory = mobileFederateServices._timeFactory;
+      logicalTimeIntervalFactory = mobileFederateServices._intervalFactory;
+
+      ieee1516eLogicalTimeFactory = rtiAmbassador.getFederate().getLogicalTimeFactory();
 
       fed = rtiAmbassador.getFederate().getFDD().getFED();
 
@@ -2319,6 +2352,11 @@ public class HLA13RTIambassador
            InvalidFederationTime, InvalidLookahead, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
+    if (lookahead == null)
+    {
+      throw new InvalidLookahead(I18n.getMessage(ExceptionMessages.LOGICAL_TIME_INTERVAL_IS_NULL));
+    }
+
     try
     {
       rtiAmbassador.enableTimeRegulation(convert(lookahead));
@@ -5042,7 +5080,7 @@ public class HLA13RTIambassador
   {
     try
     {
-      rtiAmbassador.evokeCallback(1.0);
+      rtiAmbassador.evokeCallback(tickTime);
     }
     catch (CallNotAllowedFromWithinCallback cnafwc)
     {
@@ -5320,7 +5358,7 @@ public class HLA13RTIambassador
     this.ieee1516eLogicalTimeFactory = ieee1516eLogicalTimeFactory;
 
     String logicalTimeFactoryClassNameProperty = String.format(
-      OHLA_FEDERATE_HLA13_LOGICAL_TIME_IMPLEMENTATION_PROPERTY, ieee1516eLogicalTimeFactory.getName());
+      OHLA_HLA13_LOGICAL_TIME_IMPLEMENTATION_PROPERTY, ieee1516eLogicalTimeFactory.getName());
     String value = System.getProperty(logicalTimeFactoryClassNameProperty);
     if (value == null)
     {
@@ -5431,7 +5469,7 @@ public class HLA13RTIambassador
   }
 
   private class HLA13FederateChannelHandlerFactory
-  implements FederateChannelHandlerFactory
+    implements FederateChannelHandlerFactory
   {
     public FederateChannelHandler create(Executor executor, CallbackManager callbackManager)
     {

@@ -63,4 +63,15 @@
       <class name="net.sf.ohla.rti.testsuite.hla.rti.support.RoutingSpaceSupportTestNG"/>
     </classes>
   </test>
+  <test name="HLA 1.3 - Time Management">
+    <classes>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti.time.TimeAdvancingExceptionsTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti.time.TimeConstrainedTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti.time.EnableTimeConstrainedExceptionsTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti.time.TimeRegulationTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti.time.EnableTimeRegulationExceptionsTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti.time.NextEventRequestTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti.time.NextEventRequestAvailableTestNG"/>
+    </classes>
+  </test>
 </suite>

@@ -14,24 +14,22 @@
  * limitations under the License.
  */
 
-package net.sf.ohla.rti.testsuite.hla.rti1516e.time;
+package net.sf.ohla.rti.testsuite.hla.rti.time;
 
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import hla.rti1516e.InteractionClassHandle;
-import hla.rti1516e.ParameterHandle;
-import hla.rti1516e.ParameterHandleValueMap;
+import hla.rti.SuppliedParameters;
 
 @Test
-public class NextMessageRequestTestNG
+public class NextEventRequestTestNG
   extends BaseTimeManagementTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516e Next Message Request Test Federation";
+  private static final String FEDERATION_NAME = "OHLA HLA 1.3 Next Event Request Test Federation";
 
-  private ParameterHandleValueMap testParameterValues;
+  private SuppliedParameters testSuppliedParameters;
 
-  public NextMessageRequestTestNG()
+  public NextEventRequestTestNG()
     throws Exception
   {
     super(5, FEDERATION_NAME);
@@ -41,11 +39,11 @@ public class NextMessageRequestTestNG
   public void setup()
     throws Exception
   {
-    rtiAmbassadors.get(0).enableTimeRegulation(lookahead1);
-    rtiAmbassadors.get(1).enableTimeRegulation(lookahead2);
-    rtiAmbassadors.get(2).enableTimeRegulation(lookahead2);
-    rtiAmbassadors.get(3).enableTimeRegulation(lookahead1);
-    rtiAmbassadors.get(4).enableTimeRegulation(lookahead1);
+    rtiAmbassadors.get(0).enableTimeRegulation(initial, lookahead1);
+    rtiAmbassadors.get(1).enableTimeRegulation(initial, lookahead2);
+    rtiAmbassadors.get(2).enableTimeRegulation(initial, lookahead2);
+    rtiAmbassadors.get(3).enableTimeRegulation(initial, lookahead1);
+    rtiAmbassadors.get(4).enableTimeRegulation(initial, lookahead1);
 
     federateAmbassadors.get(0).checkTimeRegulationEnabled(initial);
     federateAmbassadors.get(1).checkTimeRegulationEnabled(initial);
@@ -65,18 +63,18 @@ public class NextMessageRequestTestNG
     federateAmbassadors.get(3).checkTimeConstrainedEnabled(initial);
     federateAmbassadors.get(4).checkTimeConstrainedEnabled(initial);
 
-    InteractionClassHandle testInteractionClassHandle = rtiAmbassadors.get(0).getInteractionClassHandle(TEST_INTERACTION);
-    InteractionClassHandle testInteractionClassHandle2 = rtiAmbassadors.get(0).getInteractionClassHandle(TEST_INTERACTION2);
-    InteractionClassHandle testInteractionClassHandle3 = rtiAmbassadors.get(0).getInteractionClassHandle(TEST_INTERACTION3);
+    int testInteractionClassHandle = rtiAmbassadors.get(0).getInteractionClassHandle(TEST_INTERACTION);
+    int testInteractionClassHandle2 = rtiAmbassadors.get(0).getInteractionClassHandle(TEST_INTERACTION2);
+    int testInteractionClassHandle3 = rtiAmbassadors.get(0).getInteractionClassHandle(TEST_INTERACTION3);
 
-    ParameterHandle parameterHandle1 = rtiAmbassadors.get(0).getParameterHandle(testInteractionClassHandle, PARAMETER1);
-    ParameterHandle parameterHandle2 = rtiAmbassadors.get(0).getParameterHandle(testInteractionClassHandle, PARAMETER2);
-    ParameterHandle parameterHandle3 = rtiAmbassadors.get(0).getParameterHandle(testInteractionClassHandle, PARAMETER3);
+    int parameterHandle1 = rtiAmbassadors.get(0).getParameterHandle(PARAMETER1, testInteractionClassHandle);
+    int parameterHandle2 = rtiAmbassadors.get(0).getParameterHandle(PARAMETER2, testInteractionClassHandle);
+    int parameterHandle3 = rtiAmbassadors.get(0).getParameterHandle(PARAMETER3, testInteractionClassHandle);
 
-    testParameterValues = rtiAmbassadors.get(0).getParameterHandleValueMapFactory().create(3);
-    testParameterValues.put(parameterHandle1, PARAMETER1_VALUE.getBytes());
-    testParameterValues.put(parameterHandle2, PARAMETER2_VALUE.getBytes());
-    testParameterValues.put(parameterHandle3, PARAMETER3_VALUE.getBytes());
+    testSuppliedParameters = rtiFactory.createSuppliedParameters();
+    testSuppliedParameters.add(parameterHandle1, PARAMETER1_VALUE.getBytes());
+    testSuppliedParameters.add(parameterHandle2, PARAMETER2_VALUE.getBytes());
+    testSuppliedParameters.add(parameterHandle3, PARAMETER3_VALUE.getBytes());
 
     rtiAmbassadors.get(0).publishInteractionClass(testInteractionClassHandle2);
     rtiAmbassadors.get(0).publishInteractionClass(testInteractionClassHandle3);
@@ -89,19 +87,19 @@ public class NextMessageRequestTestNG
 
     setupComplete(federateAmbassadors);
 
-    rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle2, testParameterValues, TAG, three);
-    rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle3, testParameterValues, TAG, four);
+    rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle2, testSuppliedParameters, TAG, three);
+    rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle3, testSuppliedParameters, TAG, four);
   }
 
   @Test
-  public void testNextMessageRequest()
+  public void testNextEventRequest()
     throws Exception
   {
-    rtiAmbassadors.get(0).nextMessageRequest(five);
-    rtiAmbassadors.get(1).nextMessageRequest(five);
-    rtiAmbassadors.get(2).nextMessageRequest(five);
-    rtiAmbassadors.get(3).nextMessageRequest(five);
-    rtiAmbassadors.get(4).nextMessageRequest(five);
+    rtiAmbassadors.get(0).nextEventRequest(five);
+    rtiAmbassadors.get(1).nextEventRequest(five);
+    rtiAmbassadors.get(2).nextEventRequest(five);
+    rtiAmbassadors.get(3).nextEventRequest(five);
+    rtiAmbassadors.get(4).nextEventRequest(five);
 
     // federates 1 and 2 will be granted an advance to 3 because that is their next message time
     //
@@ -110,8 +108,8 @@ public class NextMessageRequestTestNG
 
     // verify their received interactions
     //
-    federateAmbassadors.get(1).checkParameterValues(testParameterValues, three);
-    federateAmbassadors.get(2).checkParameterValues(testParameterValues, three);
+    federateAmbassadors.get(1).checkReceivedInteraction(testSuppliedParameters, three);
+    federateAmbassadors.get(2).checkReceivedInteraction(testSuppliedParameters, three);
 
     // federates 3 and 4 will be granted an advance to 4 because when federates 1 and 2 go to 3, their LOTS is
     // 5 (time + lookahead (3 + 2)) which allows federates 3 and 4 to receive their next message
@@ -121,15 +119,15 @@ public class NextMessageRequestTestNG
 
     // verify their received interactions
     //
-    federateAmbassadors.get(3).checkParameterValues(testParameterValues, four);
-    federateAmbassadors.get(4).checkParameterValues(testParameterValues, four);
+    federateAmbassadors.get(3).checkReceivedInteraction(testSuppliedParameters, four);
+    federateAmbassadors.get(4).checkReceivedInteraction(testSuppliedParameters, four);
 
     // advance everyone to 5
     //
-    rtiAmbassadors.get(1).nextMessageRequest(five);
-    rtiAmbassadors.get(2).nextMessageRequest(five);
-    rtiAmbassadors.get(3).nextMessageRequest(five);
-    rtiAmbassadors.get(4).nextMessageRequest(five);
+    rtiAmbassadors.get(1).nextEventRequest(five);
+    rtiAmbassadors.get(2).nextEventRequest(five);
+    rtiAmbassadors.get(3).nextEventRequest(five);
+    rtiAmbassadors.get(4).nextEventRequest(five);
 
     // all should be at 5 now
     //
