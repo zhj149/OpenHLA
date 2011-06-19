@@ -372,8 +372,7 @@
           description="Executes the IEEE 1516 Testsuite.">
     <mkdir dir="${output}/testsuite/results"/>
 
-    <testng outputDir="${output}/testsuite/results/ieee-1516"
-            haltOnfailure="true">
+    <testng outputDir="${output}/testsuite/results/ieee-1516" haltOnfailure="true">
       <classpath>
         <path refid="javac.classpath"/>
         <pathelement location="${output.lib}/${hla-1.3.jar}"/>
@@ -394,8 +393,7 @@
           description="Executes the HLA 1.3 Testsuite.">
     <mkdir dir="${output}/testsuite/results"/>
 
-    <testng outputDir="${output}/testsuite/results/hla-1.3"
-            haltOnfailure="true">
+    <testng outputDir="${output}/testsuite/results/hla-1.3" haltOnfailure="true">
       <classpath>
         <path refid="javac.classpath"/>
         <pathelement location="${output.lib}/${hla-1.3.jar}"/>

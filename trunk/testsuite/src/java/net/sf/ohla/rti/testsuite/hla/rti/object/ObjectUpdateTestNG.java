@@ -229,7 +229,7 @@ public class ObjectUpdateTestNG
     public void reflectAttributeValues(int objectInstanceHandle, ReflectedAttributes reflectedAttributes, byte[] tag)
       throws ObjectNotKnown, AttributeNotKnown, FederateOwnsAttributes, FederateInternalError
     {
-      objectInstancesByHandle.get(objectInstanceHandle).setReflectedAttributes(reflectedAttributes, tag);
+      objectInstancesByHandle.get(objectInstanceHandle).setReflectedAttributes(reflectedAttributes, tag, null);
     }
   }
 }

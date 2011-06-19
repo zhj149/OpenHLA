@@ -16,6 +16,7 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti.object;
 
+import hla.rti.LogicalTime;
 import hla.rti.ReflectedAttributes;
 
 public class TestObjectInstance
@@ -27,6 +28,7 @@ public class TestObjectInstance
   private byte[] tag;
 
   private ReflectedAttributes reflectedAttributes;
+  private LogicalTime reflectTime;
 
   private boolean removed;
 
@@ -57,10 +59,11 @@ public class TestObjectInstance
     return reflectedAttributes;
   }
 
-  public void setReflectedAttributes(ReflectedAttributes reflectedAttributes, byte[] tag)
+  public void setReflectedAttributes(ReflectedAttributes reflectedAttributes, byte[] tag, LogicalTime reflectTime)
   {
     this.reflectedAttributes = reflectedAttributes;
     this.tag = tag;
+    this.reflectTime = reflectTime;
   }
 
   public byte[] getTag()

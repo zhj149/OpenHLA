@@ -93,21 +93,6 @@ public class BaseFederateAmbassador
     }
   }
 
-  protected void evokeCallbackWhile(Callable<Boolean> test)
-    throws Exception
-  {
-    evokeCallbackWhile(test, 25);
-  }
-
-  protected void evokeCallbackWhile(Callable<Boolean> test, int count)
-    throws Exception
-  {
-    for (; count > 0 && test.call(); count--)
-    {
-      rtiAmbassador.tick(0.05, 0.2);
-    }
-  }
-
   protected void checkReceivedInteraction(
     ReceivedInteraction receivedInteraction, SuppliedParameters suppliedParameters)
     throws ArrayIndexOutOfBounds
@@ -141,6 +126,21 @@ public class BaseFederateAmbassador
           assert (hasRegions && reflectedAttributes.getRegion(i) != null) || !hasRegions;
         }
       }
+    }
+  }
+
+  protected void evokeCallbackWhile(Callable<Boolean> test)
+    throws Exception
+  {
+    evokeCallbackWhile(test, 5);
+  }
+
+  protected void evokeCallbackWhile(Callable<Boolean> test, int count)
+    throws Exception
+  {
+    for (; count > 0 && test.call(); count--)
+    {
+      rtiAmbassador.tick();
     }
   }
 }

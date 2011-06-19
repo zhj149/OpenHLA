@@ -21,6 +21,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.sf.ohla.rti.hla.rti.Integer64TimeFactory;
+import net.sf.ohla.rti.hla.rti.Integer64TimeIntervalFactory;
+
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
@@ -29,6 +32,7 @@ import hla.rti.FederateOwnsAttributes;
 import hla.rti.FederatesCurrentlyJoined;
 import hla.rti.FederationExecutionDoesNotExist;
 import hla.rti.InvalidResignAction;
+import hla.rti.MobileFederateServices;
 import hla.rti.RTIinternalError;
 import hla.rti.jlc.RTIambassadorEx;
 import hla.rti.jlc.RtiFactory;
@@ -44,6 +48,9 @@ public abstract class BaseTestNG
   protected URL badFED;
 
   protected RtiFactory rtiFactory;
+
+  protected final MobileFederateServices mobileFederateServices =
+    new MobileFederateServices(new Integer64TimeFactory(), new Integer64TimeIntervalFactory());
 
   protected BaseTestNG()
   {

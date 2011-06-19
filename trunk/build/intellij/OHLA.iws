@@ -30,31 +30,31 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" readonly="true" id="c306879c-2744-4d82-a20f-7284eb5ea0e6" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/EnableTimeConstrainedExceptionsTestNG.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/EnableTimeRegulationExceptionsTestNG.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/NextMessageRequestAvailableTestNG.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/NextMessageRequestTestNG.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/TimeAdvancingExceptionsTestNG.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/time/TimeAdvancingExceptionsTestNG.java" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.5\testsuite\src\java\net\sf\ohla\rti\testsuite\hla\rti1516\time\FullTimeManagementTestNG.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.5\testsuite\src\java\net\sf\ohla\rti\testsuite\hla\rti1516\time\TimeManagementTestNG.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.5\testsuite\src\java\net\sf\ohla\rti\testsuite\hla\rti1516e\time\TimeAdvanceRequestExceptionsTestNG.java" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/time" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/time/BaseTimeManagementTestNG.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/time/EnableTimeConstrainedExceptionsTestNG.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/time/EnableTimeRegulationExceptionsTestNG.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/time/NextEventRequestAvailableTestNG.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/time/NextEventRequestTestNG.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/time/TimeAdvancingExceptionsTestNG.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/time/TimeConstrainedTestNG.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/time/TimeManagementFederateAmbassador.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/time/TimeRegulationTestNG.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../build.xml" afterPath="$PROJECT_DIR$/../build.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/OHLA.iws" afterPath="$PROJECT_DIR$/OHLA.iws" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516RTIambassador.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516RTIambassador.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/resources/TestObjectModel-1516.xml" afterPath="$PROJECT_DIR$/../../testsuite/resources/TestObjectModel-1516.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/resources/ieee-1516-testng.xml" afterPath="$PROJECT_DIR$/../../testsuite/resources/ieee-1516-testng.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/resources/ieee-1516e-testng.xml" afterPath="$PROJECT_DIR$/../../testsuite/resources/ieee-1516e-testng.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/BaseFederateAmbassador.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/BaseFederateAmbassador.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/TestConstants.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/TestConstants.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/datadistribution/ObjectRegionTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/datadistribution/ObjectRegionTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/object/ObjectUpdateTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/object/ObjectUpdateTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/object/TestObjectInstance.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/object/TestObjectInstance.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13RTIambassador.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13RTIambassador.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/resources/TestObjectModel.fed" afterPath="$PROJECT_DIR$/../../testsuite/resources/TestObjectModel.fed" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/resources/hla-1.3-testng.xml" afterPath="$PROJECT_DIR$/../../testsuite/resources/hla-1.3-testng.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/BaseTimeManagementTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/BaseTimeManagementTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/TimeConstrainedTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/TimeConstrainedTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/TimeManagementFederateAmbassador.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/TimeManagementFederateAmbassador.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/TimeRegulationTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/TimeRegulationTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/time/EnableTimeRegulationExceptionsTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/time/EnableTimeRegulationExceptionsTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/time/NextMessageRequestAvailableTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/time/NextMessageRequestAvailableTestNG.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/NextMessageRequestTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/NextMessageRequestTestNG.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/time/NextMessageRequestTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/time/NextMessageRequestTestNG.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/BaseFederateAmbassador.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/BaseFederateAmbassador.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/BaseTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/BaseTestNG.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/TestConstants.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/TestConstants.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/datadistribution/ObjectRegionTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/datadistribution/ObjectRegionTestNG.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/object/ObjectUpdateTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/object/ObjectUpdateTestNG.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/object/TestObjectInstance.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/object/TestObjectInstance.java" />
     </list>
     <list id="b279f3ba-c417-49c1-bcc1-a24f5fc97d41" name="Failed commit: Default" comment="- removed log4j" />
     <list id="261d7dd6-cad7-41bb-912f-d59a03f7b57d" name="Failed commit: Default (2)" comment="- refactoring" />
@@ -213,33 +213,29 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="ieee-1516-testng.xml" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/../../testsuite/resources/ieee-1516-testng.xml">
+      <file leaf-file-name="hla-1.3-testng.xml" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../testsuite/resources/hla-1.3-testng.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="41" column="13" selection-start="1985" selection-end="1985" vertical-scroll-proportion="0.6314286">
+            <state line="77" column="0" selection-start="4054" selection-end="4054" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="TimeRegulationTestNG.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/TimeRegulationTestNG.java">
+      <file leaf-file-name="SynchronizationTestNG.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/federation/SynchronizationTestNG.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="80" column="0" selection-start="2492" selection-end="2492" vertical-scroll-proportion="0.0">
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
+            <state line="129" column="0" selection-start="5118" selection-end="5118" vertical-scroll-proportion="0.0">
+              <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="NextMessageRequestTestNG.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/NextMessageRequestTestNG.java">
+      <file leaf-file-name="BaseFederateAmbassador.java" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/BaseFederateAmbassador.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="107" column="0" selection-start="4757" selection-end="4757" vertical-scroll-proportion="0.0">
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
+            <state line="137" column="33" selection-start="4183" selection-end="4183" vertical-scroll-proportion="0.44142857">
+              <folding />
             </state>
           </provider>
         </entry>
@@ -263,22 +259,22 @@
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
       <list>
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/object/TestObjectInstance.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/BaseFederateAmbassador.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/TimeManagementFederateAmbassador.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/time/TimeAdvancingExceptionsTestNG.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/TimeConstrainedTestNG.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/TimeAdvancingExceptionsTestNG.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/NextMessageRequestTestNG.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/NextMessageRequestAvailableTestNG.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/EnableTimeRegulationExceptionsTestNG.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/EnableTimeConstrainedExceptionsTestNG.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/TimeRegulationTestNG.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/object/ObjectUpdateTestNG.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/datadistribution/ObjectRegionTestNG.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/resources/ieee-1516e-testng.xml" />
+        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/time/NextEventRequestTestNG.java" />
+        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/time/TimeConstrainedTestNG.java" />
+        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/time/TimeRegulationTestNG.java" />
+        <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13FederateChannelHandlerFactory.java" />
+        <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13FederateChannelHandler.java" />
+        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/datadistribution/ObjectRegionTestNG.java" />
+        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/object/ObjectUpdateTestNG.java" />
+        <option value="$PROJECT_DIR$/../build.xml" />
         <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516RTIambassador.java" />
-        <option value="$PROJECT_DIR$/../../testsuite/resources/ieee-1516-testng.xml" />
+        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/time/BaseTimeManagementTestNG.java" />
+        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/BaseTimeManagementTestNG.java" />
+        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/time/TimeAdvancingExceptionsTestNG.java" />
+        <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13RTIambassador.java" />
+        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/BaseFederateAmbassador.java" />
+        <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/time/TimeManagementFederateAmbassador.java" />
+        <option value="$PROJECT_DIR$/../../testsuite/resources/hla-1.3-testng.xml" />
       </list>
     </option>
   </component>
@@ -395,60 +391,6 @@
       <sortByType />
     </navigator>
     <panes>
-      <pane id="PackagesPane">
-        <subPane>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="OHLA" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Testsuite" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewModuleNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="OHLA" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="RTI" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewModuleNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="OHLA" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewProjectNode" />
-            </PATH_ELEMENT>
-          </PATH>
-        </subPane>
-      </pane>
-      <pane id="Scope">
-        <subPane subId="Project Files">
-          <PATH>
-            <PATH_ELEMENT USER_OBJECT="Root">
-              <option name="myItemId" value="" />
-              <option name="myItemType" value="" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT USER_OBJECT="Root">
-              <option name="myItemId" value="" />
-              <option name="myItemType" value="" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT USER_OBJECT="RTI">
-              <option name="myItemId" value="" />
-              <option name="myItemType" value="" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT USER_OBJECT="rti">
-              <option name="myItemId" value="" />
-              <option name="myItemType" value="" />
-            </PATH_ELEMENT>
-          </PATH>
-        </subPane>
-      </pane>
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -667,11 +609,7 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="rti1516" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="object" />
+              <option name="myItemId" value="rti" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -708,6 +646,48 @@
               <option name="myItemId" value="rti" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="time" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="ohla-0.5" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="testsuite" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="java" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="testsuite" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="hla" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="rti" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="object" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
           </PATH>
           <PATH>
             <PATH_ELEMENT>
@@ -727,9 +707,125 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="ohla-0.5" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="rti" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="java" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="ohla-0.5" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="rti" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="resources" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="ohla-0.5" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="rti" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="resources" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="services" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
         </subPane>
       </pane>
       <pane id="Favorites" />
+      <pane id="PackagesPane">
+        <subPane>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Testsuite" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewModuleNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="RTI" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewModuleNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewProjectNode" />
+            </PATH_ELEMENT>
+          </PATH>
+        </subPane>
+      </pane>
+      <pane id="Scope">
+        <subPane subId="Project Files">
+          <PATH>
+            <PATH_ELEMENT USER_OBJECT="Root">
+              <option name="myItemId" value="" />
+              <option name="myItemType" value="" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT USER_OBJECT="Root">
+              <option name="myItemId" value="" />
+              <option name="myItemType" value="" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT USER_OBJECT="RTI">
+              <option name="myItemId" value="" />
+              <option name="myItemType" value="" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT USER_OBJECT="rti">
+              <option name="myItemId" value="" />
+              <option name="myItemType" value="" />
+            </PATH_ELEMENT>
+          </PATH>
+        </subPane>
+      </pane>
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -801,7 +897,7 @@
       <recent name="net.sf.ohla.rti.testsuite.hla" />
     </key>
   </component>
-  <component name="RunManager" selected="TestNG.IEEE 1516 Testsuite">
+  <component name="RunManager" selected="TestNG.IEEE 1516e Testsuite">
     <configuration default="true" type="Remote" factoryName="Remote">
       <option name="USE_SOCKET_TRANSPORT" value="true" />
       <option name="SERVER_MODE" value="false" />
@@ -1409,17 +1505,17 @@
     <editor active="false" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32827586" sideWeight="0.5" order="12" side_tool="false" content_ui="tabs" />
-      <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
+      <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.49793673" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.15362526" sideWeight="0.51448274" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.15362526" sideWeight="0.5158184" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.48418158" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32965517" sideWeight="0.5" order="13" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3287483" sideWeight="0.0" order="14" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32689655" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32950467" sideWeight="0.5006896" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32950467" sideWeight="0.5020633" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39913854" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32950467" sideWeight="0.6712517" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32950467" sideWeight="0.5158184" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Dependency Viewer" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32988507" sideWeight="0.5" order="15" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3737931" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -1427,18 +1523,18 @@
       <window_info id="IDEtalk Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="IDEtalk" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3295129" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="SVN Repositories" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32872927" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
-      <window_info id="Maven projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="File View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Maven projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="File View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Dependency Cycles" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="17" side_tool="false" content_ui="tabs" />
-      <window_info id="Data Sources" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Data Sources" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32928804" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32928804" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Web" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Metrics" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="18" side_tool="false" content_ui="tabs" />
       <window_info id="EJB" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Module Dependencies" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
+      <window_info id="Module Dependencies" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="CVS" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="19" side_tool="false" content_ui="tabs" />
       <window_info id="Web Preview" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Duplicates" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="16" side_tool="false" content_ui="tabs" />
@@ -1626,126 +1722,114 @@
     <option name="myLastEditedConfigurable" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/EnableTimeRegulationExceptionsTestNG.java">
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/Integer64Time.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="27" column="63" selection-start="954" selection-end="954" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
+        <state line="191" column="0" selection-start="4975" selection-end="4975" vertical-scroll-proportion="0.0">
+          <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/EnableTimeConstrainedExceptionsTestNG.java">
+    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/BaseTestNG.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="27" column="63" selection-start="956" selection-end="956" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
+        <state line="41" column="0" selection-start="1402" selection-end="1402" vertical-scroll-proportion="0.0">
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/BaseTimeManagementTestNG.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="18" column="22" selection-start="554" selection-end="554" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/time/TimeRegulationTestNG.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="113" column="0" selection-start="873" selection-end="3522" vertical-scroll-proportion="0.0">
+        <state line="21" column="22" selection-start="663" selection-end="663" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/object/ObjectUpdateTestNG.java">
+    <entry file="file://$PROJECT_DIR$/../../hla-1.3/src/java/hla/rti/jlc/RTIambassadorEx.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="234" column="99" selection-start="10568" selection-end="10568" vertical-scroll-proportion="0.32605532">
+        <state line="9" column="0" selection-start="187" selection-end="187" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/datadistribution/ObjectRegionTestNG.java">
+    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/BaseFederateAmbassador.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="247" column="22" selection-start="10736" selection-end="10736" vertical-scroll-proportion="0.21542941">
+        <state line="119" column="29" selection-start="3474" selection-end="3474" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../testsuite/resources/ieee-1516e-testng.xml">
+    <entry file="file://$PROJECT_DIR$/../../ieee-1516e/src/java/hla/rti1516e/RTIambassador.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="70" column="0" selection-start="3799" selection-end="3799" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FederateAmbassadorBridge.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="1274" column="0" selection-start="41970" selection-end="41970" vertical-scroll-proportion="0.14410481">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/Federate.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="1939" column="30" selection-start="61608" selection-end="61608" vertical-scroll-proportion="0.43283582">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateTimeManager.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="485" column="25" selection-start="13925" selection-end="13925" vertical-scroll-proportion="-0.12537314">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/TimeRegulationTestNG.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="80" column="0" selection-start="2492" selection-end="2492" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/NextMessageRequestTestNG.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="107" column="0" selection-start="4757" selection-end="4757" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/time/BaseTimeManagementTestNG.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="45" column="56" selection-start="1516" selection-end="1516" vertical-scroll-proportion="0.24926686">
+        <state line="1821" column="0" selection-start="51135" selection-end="51135" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eRTIambassador.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="264" column="14" selection-start="11365" selection-end="11365" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516RTIambassador.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="242" column="39" selection-start="9664" selection-end="9664" vertical-scroll-proportion="0.8201893">
+        <state line="5017" column="17" selection-start="140400" selection-end="140400" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../../testsuite/resources/ieee-1516-testng.xml">
+    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/time/NextEventRequestTestNG.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="41" column="13" selection-start="1985" selection-end="1985" vertical-scroll-proportion="0.6314286">
+        <state line="105" column="42" selection-start="4626" selection-end="4626" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.6.0_23/src.zip!/java/lang/Double.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="508" column="25" selection-start="21046" selection-end="21046" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13RTIambassador.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="5082" column="42" selection-start="153782" selection-end="153782" vertical-scroll-proportion="0.48034933">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/TimeManagementFederateAmbassador.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="181" column="19" selection-start="4346" selection-end="4346" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/BaseFederateAmbassador.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="101" column="30" selection-start="2857" selection-end="2857" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/time/TimeManagementFederateAmbassador.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="230" column="0" selection-start="6089" selection-end="6089" vertical-scroll-proportion="0.37356323">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../testsuite/resources/hla-1.3-testng.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="77" column="0" selection-start="4054" selection-end="4054" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/federation/SynchronizationTestNG.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="129" column="0" selection-start="5118" selection-end="5118" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/BaseFederateAmbassador.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="137" column="33" selection-start="4183" selection-end="4183" vertical-scroll-proportion="0.44142857">
           <folding />
         </state>
       </provider>
