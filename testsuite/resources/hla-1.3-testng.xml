@@ -70,6 +70,8 @@
       <class name="net.sf.ohla.rti.testsuite.hla.rti.time.EnableTimeConstrainedExceptionsTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti.time.TimeRegulationTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti.time.EnableTimeRegulationExceptionsTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti.time.TimeAdvanceRequestTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti.time.TimeAdvanceRequestAvailableTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti.time.NextEventRequestTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti.time.NextEventRequestAvailableTestNG"/>
     </classes>
