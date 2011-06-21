@@ -128,6 +128,7 @@ public class TimeAdvanceRequestTestNG
     rtiAmbassadors.get(0).timeAdvanceRequest(five);
   }
 
+  @Test(dependsOnMethods = { "testTimeAdvanceRequest" })
   public void testTimeAdvanceRequestToSameTime()
     throws Exception
   {

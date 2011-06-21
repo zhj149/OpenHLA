@@ -20,6 +20,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import hla.rti1516.InteractionClassHandle;
+import hla.rti1516.LogicalTimeAlreadyPassed;
 import hla.rti1516.ParameterHandle;
 import hla.rti1516.ParameterHandleValueMap;
 
@@ -107,5 +108,22 @@ public class TimeAdvanceRequestAvailableTestNG
 
     federateAmbassadors.get(0).checkTimeAdvanceGrant(ten);
     federateAmbassadors.get(1).checkTimeAdvanceGrant(ten);
+  }
+
+  @Test(dependsOnMethods = { "testTimeAdvanceRequestAvailable" }, expectedExceptions = { LogicalTimeAlreadyPassed.class })
+  public void testTimeAdvanceRequestAvailableToLogicalTimeAlreadyPassed()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).timeAdvanceRequest(five);
+  }
+
+  @Test(dependsOnMethods = { "testTimeAdvanceRequestAvailable" })
+  public void testTimeAdvanceRequestAvailableToSameTime()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).timeAdvanceRequestAvailable(ten);
+    federateAmbassadors.get(0).checkTimeAdvanceGrant(ten);
+
+    assert ten.equals(rtiAmbassadors.get(0).queryLogicalTime());
   }
 }
