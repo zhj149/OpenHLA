@@ -61,18 +61,4 @@ public class TimeConstrainedTestNG
   {
     rtiAmbassadors.get(0).disableTimeConstrained();
   }
-
-  @Test
-  public void testGALTUndefinedWithNoTimeRegulatingFederate()
-    throws Exception
-  {
-    assert !rtiAmbassadors.get(0).queryGALT().timeIsValid;
-  }
-
-  @Test
-  public void testLITSUndefinedWithNoTimeRegulatingFederate()
-    throws Exception
-  {
-    assert !rtiAmbassadors.get(0).queryLITS().timeIsValid;
-  }
 }

@@ -61,11 +61,4 @@ public class TimeConstrainedTestNG
   {
     rtiAmbassadors.get(0).disableTimeConstrained();
   }
-
-  @Test
-  public void testLBTSUndefinedWithNoTimeRegulatingFederate()
-    throws Exception
-  {
-    assert rtiAmbassadors.get(0).queryLBTS() == null;
-  }
 }

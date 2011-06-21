@@ -2836,7 +2836,18 @@ public class HLA13RTIambassador
     try
     {
       TimeQueryReturn tqr = rtiAmbassador.queryGALT();
-      return tqr.timeIsValid ? convert(tqr.time) : null;
+
+      LogicalTime lbts;
+      if (tqr.timeIsValid)
+      {
+        lbts = convert(tqr.time);
+      }
+      else
+      {
+        lbts = logicalTimeFactory.makeInitial();
+        lbts.setFinal();
+      }
+      return lbts;
     }
     catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
@@ -2895,7 +2906,18 @@ public class HLA13RTIambassador
     try
     {
       TimeQueryReturn tqr = rtiAmbassador.queryLITS();
-      return tqr.timeIsValid ? convert(tqr.time) : null;
+
+      LogicalTime minNextEventTime;
+      if (tqr.timeIsValid)
+      {
+        minNextEventTime = convert(tqr.time);
+      }
+      else
+      {
+        minNextEventTime = logicalTimeFactory.makeInitial();
+        minNextEventTime.setFinal();
+      }
+      return minNextEventTime;
     }
     catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
