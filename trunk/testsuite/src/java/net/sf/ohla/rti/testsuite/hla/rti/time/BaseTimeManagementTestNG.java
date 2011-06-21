@@ -43,6 +43,7 @@ public class BaseTimeManagementTestNG
   protected final List<TimeManagementFederateAmbassador> federateAmbassadors;
 
   protected final LogicalTime initial;
+  protected final LogicalTime infinity;
 
   protected final LogicalTime two = new Integer64Time(2L);
   protected final LogicalTime three = new Integer64Time(3L);
@@ -70,6 +71,9 @@ public class BaseTimeManagementTestNG
 
     initial = mobileFederateServices._timeFactory.makeInitial();
 
+    infinity = mobileFederateServices._timeFactory.makeInitial();
+    infinity.setFinal();
+
     System.setProperty(String.format(
       HLA13RTIambassador.OHLA_HLA13_FEDERATION_EXECUTION_LOGICAL_TIME_IMPLEMENTATION_PROPERTY, federationName),
                        HLAinteger64TimeFactory.NAME);
@@ -85,6 +89,9 @@ public class BaseTimeManagementTestNG
     federateAmbassadors = new ArrayList<TimeManagementFederateAmbassador>(rtiAmbassadorCount);
 
     initial = mobileFederateServices._timeFactory.makeInitial();
+
+    infinity = mobileFederateServices._timeFactory.makeInitial();
+    infinity.setFinal();
 
     System.setProperty(String.format(
       HLA13RTIambassador.OHLA_HLA13_FEDERATION_EXECUTION_LOGICAL_TIME_IMPLEMENTATION_PROPERTY, federationName),
