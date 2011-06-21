@@ -74,6 +74,7 @@
       <class name="net.sf.ohla.rti.testsuite.hla.rti.time.TimeAdvanceRequestAvailableTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti.time.NextEventRequestTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti.time.NextEventRequestAvailableTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti.time.FlushQueueRequestTestNG"/>
     </classes>
   </test>
 </suite>

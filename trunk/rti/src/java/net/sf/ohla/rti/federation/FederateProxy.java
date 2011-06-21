@@ -999,7 +999,7 @@ public class FederateProxy
 
     advanceRequestType = TimeAdvanceType.FLUSH_QUEUE_REQUEST;
 
-    if (galt != null && time.compareTo(galt) < 0)
+    if (galt != null && galt.compareTo(time) < 0)
     {
       time = galt;
     }
