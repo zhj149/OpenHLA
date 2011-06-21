@@ -59,6 +59,11 @@ public class TestObjectInstance
     return reflectedAttributes;
   }
 
+  public LogicalTime getReflectTime()
+  {
+    return reflectTime;
+  }
+
   public void setReflectedAttributes(ReflectedAttributes reflectedAttributes, byte[] tag, LogicalTime reflectTime)
   {
     this.reflectedAttributes = reflectedAttributes;

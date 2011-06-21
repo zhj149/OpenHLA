@@ -69,6 +69,7 @@ public class TestObjectInstance
   {
     this.attributeValues = attributeValues;
     this.tag = tag;
+    this.reflectTime = reflectTime;
     this.regionHandles = regionHandles;
   }
 

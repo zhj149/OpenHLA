@@ -194,6 +194,13 @@ public class TimeManagementFederateAmbassador
                                    AttributeHandleValueMap attributeValues)
     throws Exception
   {
+    checkAttributeValues(objectInstanceHandle, attributeValues, null);
+  }
+
+  public void checkAttributeValues(final ObjectInstanceHandle objectInstanceHandle,
+                                   AttributeHandleValueMap attributeValues, LogicalTime reflectTime)
+    throws Exception
+  {
     evokeCallbackWhile(new Callable<Boolean>()
     {
       public Boolean call()
@@ -203,6 +210,7 @@ public class TimeManagementFederateAmbassador
     });
 
     assert attributeValues.equals(objectInstances.get(objectInstanceHandle).getAttributeValues());
+    assert reflectTime == null || reflectTime.equals(objectInstances.get(objectInstanceHandle).getReflectTime());
 
     objectInstances.get(objectInstanceHandle).setAttributeValues(null, null, null, null);
   }

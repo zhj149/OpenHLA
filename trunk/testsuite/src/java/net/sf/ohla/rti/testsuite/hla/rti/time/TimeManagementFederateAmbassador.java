@@ -16,6 +16,7 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti.time;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -47,8 +48,8 @@ public class TimeManagementFederateAmbassador
   private LogicalTime timeConstrainedEnabledTime;
   private LogicalTime federateTime;
 
-  private Map<Integer, TestObjectInstance> objectInstances =
-    new HashMap<Integer, TestObjectInstance>();
+  private final Map<String, TestObjectInstance> objectInstances = new HashMap<String, TestObjectInstance>();
+  private final Map<Integer, TestObjectInstance> objectInstancesByHandle = new HashMap<Integer, TestObjectInstance>();
 
   private Integer interactionClassHandle;
   private ReceivedInteraction receivedInteraction;
@@ -156,63 +157,72 @@ public class TimeManagementFederateAmbassador
     assert federateTime == null;
   }
 
-  public void checkObjectInstanceHandle(final int objectInstanceHandle)
+  public void checkObjectInstanceName(final String objectInstanceName)
     throws Exception
   {
     evokeCallbackWhile(new Callable<Boolean>()
     {
       public Boolean call()
       {
-        return !objectInstances.containsKey(objectInstanceHandle);
+        return !objectInstances.containsKey(objectInstanceName);
       }
     });
 
-    assert objectInstances.containsKey(objectInstanceHandle);
+    assert objectInstances.containsKey(objectInstanceName);
   }
 
-  public void checkReflectedAttributes(final int objectInstanceHandle, SuppliedAttributes suppliedAttributes)
+  public void checkReflectedAttributes(final String objectInstanceName, SuppliedAttributes suppliedAttributes)
+    throws Exception
+  {
+    checkReflectedAttributes(objectInstanceName, suppliedAttributes, null);
+  }
+
+  public void checkReflectedAttributes(final String objectInstanceName, SuppliedAttributes suppliedAttributes,
+                                       LogicalTime reflectTime)
     throws Exception
   {
     evokeCallbackWhile(new Callable<Boolean>()
     {
       public Boolean call()
       {
-        return objectInstances.get(objectInstanceHandle).getReflectedAttributes() == null;
+        return objectInstances.get(objectInstanceName).getReflectedAttributes() == null;
       }
     });
 
-    checkReflectedAttributes(objectInstances.get(objectInstanceHandle).getReflectedAttributes(),
+    checkReflectedAttributes(objectInstances.get(objectInstanceName).getReflectedAttributes(),
                              suppliedAttributes, false);
 
-    objectInstances.get(objectInstanceHandle).setReflectedAttributes(null, null, null);
+    assert reflectTime == null || reflectTime.equals(objectInstances.get(objectInstanceName).getReflectTime());
+
+    objectInstances.get(objectInstanceName).setReflectedAttributes(null, null, null);
   }
 
-  public void checkReflectedAttributesNotReceived(final int objectInstanceHandle)
+  public void checkReflectedAttributesNotReceived(final String objectInstanceName)
     throws Exception
   {
     evokeCallbackWhile(new Callable<Boolean>()
     {
       public Boolean call()
       {
-        return objectInstances.get(objectInstanceHandle).getReflectedAttributes() == null;
+        return objectInstances.get(objectInstanceName).getReflectedAttributes() == null;
       }
     });
 
-    assert objectInstances.get(objectInstanceHandle).getReflectedAttributes() == null;
+    assert objectInstances.get(objectInstanceName).getReflectedAttributes() == null;
   }
 
-  public void checkForRemovedObjectInstanceHandle(final int objectInstanceHandle)
+  public void checkForRemovedObjectInstanceHandle(final String objectInstanceName)
     throws Exception
   {
     evokeCallbackWhile(new Callable<Boolean>()
     {
       public Boolean call()
       {
-        return !objectInstances.get(objectInstanceHandle).isRemoved();
+        return !objectInstances.get(objectInstanceName).isRemoved();
       }
     });
 
-    assert objectInstances.get(objectInstanceHandle).isRemoved();
+    assert objectInstances.get(objectInstanceName).isRemoved();
   }
 
   public void checkReceivedInteraction(SuppliedParameters suppliedParameters, LogicalTime receiveTime)
@@ -232,7 +242,7 @@ public class TimeManagementFederateAmbassador
     this.receivedInteraction = null;
   }
 
-  public void checkParameterValuesNotReceived()
+  public void checkInteractionNotReceived()
     throws Exception
   {
     evokeCallbackWhile(new Callable<Boolean>()
@@ -268,15 +278,17 @@ public class TimeManagementFederateAmbassador
   public void discoverObjectInstance(int objectInstanceHandle, int objectClassHandle, String objectInstanceName)
     throws CouldNotDiscover, ObjectClassNotKnown, FederateInternalError
   {
-    objectInstances.put(objectInstanceHandle, new TestObjectInstance(
-      objectInstanceHandle, objectClassHandle, objectInstanceName));
+    TestObjectInstance objectInstance =
+      new TestObjectInstance(objectInstanceHandle, objectClassHandle, objectInstanceName);
+    objectInstances.put(objectInstanceName, objectInstance);
+    objectInstancesByHandle.put(objectInstanceHandle, objectInstance);
   }
 
   @Override
   public void reflectAttributeValues(int objectInstanceHandle, ReflectedAttributes attributes, byte[] tag)
     throws ObjectNotKnown, AttributeNotKnown, FederateOwnsAttributes, FederateInternalError
   {
-    objectInstances.get(objectInstanceHandle).setReflectedAttributes(attributes, tag, null);
+    objectInstancesByHandle.get(objectInstanceHandle).setReflectedAttributes(attributes, tag, null);
   }
 
   @Override
@@ -284,14 +296,14 @@ public class TimeManagementFederateAmbassador
                                      LogicalTime reflectTime, EventRetractionHandle eventRetractionHandle)
     throws ObjectNotKnown, AttributeNotKnown, FederateOwnsAttributes, InvalidFederationTime, FederateInternalError
   {
-    objectInstances.get(objectInstanceHandle).setReflectedAttributes(attributes, tag, reflectTime);
+    objectInstancesByHandle.get(objectInstanceHandle).setReflectedAttributes(attributes, tag, reflectTime);
   }
 
   @Override
   public void removeObjectInstance(int objectInstanceHandle, byte[] tag)
     throws ObjectNotKnown, FederateInternalError
   {
-    objectInstances.get(objectInstanceHandle).setRemoved(tag);
+    objectInstancesByHandle.get(objectInstanceHandle).setRemoved(tag);
   }
 
   @Override
@@ -299,7 +311,7 @@ public class TimeManagementFederateAmbassador
                                    EventRetractionHandle eventRetractionHandle)
     throws ObjectNotKnown, InvalidFederationTime, FederateInternalError
   {
-    objectInstances.get(objectInstanceHandle).setRemoved(tag);
+    objectInstancesByHandle.get(objectInstanceHandle).setRemoved(tag);
   }
 
   @Override
