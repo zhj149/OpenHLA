@@ -19,7 +19,9 @@ package net.sf.ohla.rti.testsuite.hla.rti.time;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import hla.rti.AttributeHandleSet;
 import hla.rti.FederationTimeAlreadyPassed;
+import hla.rti.SuppliedAttributes;
 import hla.rti.SuppliedParameters;
 
 @Test
@@ -29,6 +31,9 @@ public class TimeAdvanceRequestTestNG
   private static final String FEDERATION_NAME = "OHLA IEEE 1516e Time Advance Request Test Federation";
 
   private SuppliedParameters testSuppliedParameters;
+
+  private String testObjectInstanceName;
+  private SuppliedAttributes testSuppliedAttributes;
 
   public TimeAdvanceRequestTestNG()
     throws Exception
@@ -64,13 +69,37 @@ public class TimeAdvanceRequestTestNG
     testSuppliedParameters.add(parameterHandle3, PARAMETER3_VALUE.getBytes());
 
     rtiAmbassadors.get(0).publishInteractionClass(testInteractionClassHandle);
-
     rtiAmbassadors.get(1).subscribeInteractionClass(testInteractionClassHandle);
+
+    int testObjectClassHandle = rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT);
+
+    int attributeHandle1 = rtiAmbassadors.get(0).getAttributeHandle(ATTRIBUTE1, testObjectClassHandle);
+    int attributeHandle2 = rtiAmbassadors.get(0).getAttributeHandle(ATTRIBUTE2, testObjectClassHandle);
+    int attributeHandle3 = rtiAmbassadors.get(0).getAttributeHandle(ATTRIBUTE3, testObjectClassHandle);
+
+    AttributeHandleSet testObjectAttributeHandles = rtiFactory.createAttributeHandleSet();
+    testObjectAttributeHandles.add(attributeHandle1);
+    testObjectAttributeHandles.add(attributeHandle2);
+    testObjectAttributeHandles.add(attributeHandle3);
+
+    testSuppliedAttributes = rtiFactory.createSuppliedAttributes();
+
+    testSuppliedAttributes.add(attributeHandle1, ATTRIBUTE1_VALUE.getBytes());
+    testSuppliedAttributes.add(attributeHandle2, ATTRIBUTE2_VALUE.getBytes());
+    testSuppliedAttributes.add(attributeHandle3, ATTRIBUTE3_VALUE.getBytes());
+
+    rtiAmbassadors.get(0).publishObjectClass(testObjectClassHandle, testObjectAttributeHandles);
+    rtiAmbassadors.get(1).subscribeObjectClassAttributes(testObjectClassHandle, testObjectAttributeHandles);
+
+    int testObjectInstanceHandle = rtiAmbassadors.get(0).registerObjectInstance(testObjectClassHandle);
+    testObjectInstanceName = rtiAmbassadors.get(0).getObjectInstanceName(testObjectInstanceHandle);
+
+    federateAmbassadors.get(1).checkObjectInstanceName(testObjectInstanceName);
 
     setupComplete(federateAmbassadors);
 
     rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle, testSuppliedParameters, TAG, five);
-    rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle, testSuppliedParameters, TAG, ten);
+    rtiAmbassadors.get(0).updateAttributeValues(testObjectInstanceHandle, testSuppliedAttributes, TAG, ten);
   }
 
   @Test
@@ -88,7 +117,7 @@ public class TimeAdvanceRequestTestNG
 
     // nothing should be received yet
     //
-    federateAmbassadors.get(1).checkParameterValuesNotReceived();
+    federateAmbassadors.get(1).checkInteractionNotReceived();
 
     // advance federate 1 to 5
     //
@@ -107,7 +136,7 @@ public class TimeAdvanceRequestTestNG
 
     // nothing should be received yet
     //
-    federateAmbassadors.get(1).checkParameterValuesNotReceived();
+    federateAmbassadors.get(1).checkReflectedAttributesNotReceived(testObjectInstanceName);
 
     // advance federate 1 to 10
     //
@@ -115,7 +144,7 @@ public class TimeAdvanceRequestTestNG
 
     // the second message should be received
     //
-    federateAmbassadors.get(1).checkReceivedInteraction(testSuppliedParameters, ten);
+    federateAmbassadors.get(1).checkReflectedAttributes(testObjectInstanceName, testSuppliedAttributes, ten);
 
     federateAmbassadors.get(0).checkTimeAdvanceGrant(ten);
     federateAmbassadors.get(1).checkTimeAdvanceGrant(ten);
