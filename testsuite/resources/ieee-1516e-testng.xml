@@ -76,6 +76,7 @@
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.TimeAdvanceRequestAvailableTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.NextMessageRequestTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.NextMessageRequestAvailableTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.FlushQueueRequestTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.FreeTimeAdvanceTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.ManagedTimeAdvancementTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.InteractionTimeManagementTestNG"/>
