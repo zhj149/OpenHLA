@@ -1,17 +1,20 @@
+0.6 alpha
+  - completed Time Management implementation
+
 0.5 alpha
   - ported to Netty
   - added IEEE 1516 'Evolved' support
   - added Internationalization support
   - performance improvements
   - completed proper DDM implementation
-  - completed ownership management implementation
+  - completed Ownership Management implementation
 
 0.4 alpha
 
 0.3 alpha
   - refactoring
   - ported to Apache MINA
-  - ownership management support (90%)
+  - Ownership management support (90%)
 
 Preview Release 0.2.4
   - 1572430 - Cannot update inherited attributes
