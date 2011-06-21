@@ -109,14 +109,14 @@ public class TimeAdvanceRequestAvailableTestNG
   }
 
   @Test(dependsOnMethods = { "testTimeAdvanceRequestAvailable" }, expectedExceptions = { FederationTimeAlreadyPassed.class })
-  public void testTimeAdvanceRequestToLogicalTimeAlreadyPassed()
+  public void testTimeAdvanceRequestAvailableToLogicalTimeAlreadyPassed()
     throws Exception
   {
     rtiAmbassadors.get(0).timeAdvanceRequestAvailable(five);
   }
 
   @Test(dependsOnMethods = { "testTimeAdvanceRequestAvailable" })
-  public void testTimeAdvanceRequestToSameTime()
+  public void testTimeAdvanceRequestAvailableToSameTime()
     throws Exception
   {
     rtiAmbassadors.get(0).timeAdvanceRequestAvailable(ten);
