@@ -76,7 +76,7 @@ public class TimeAdvanceRequestAvailableTestNG
   }
 
   @Test
-  public void testNextMessageRequestAvailable()
+  public void testTimeAdvanceRequestAvailable()
     throws Exception
   {
     // advance federate 0 to 4, his LOTS will be 5 which will release the first message

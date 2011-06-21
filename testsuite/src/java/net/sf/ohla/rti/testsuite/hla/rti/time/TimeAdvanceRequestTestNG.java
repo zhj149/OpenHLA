@@ -19,6 +19,7 @@ package net.sf.ohla.rti.testsuite.hla.rti.time;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import hla.rti.FederationTimeAlreadyPassed;
 import hla.rti.SuppliedParameters;
 
 @Test
@@ -118,5 +119,21 @@ public class TimeAdvanceRequestTestNG
 
     federateAmbassadors.get(0).checkTimeAdvanceGrant(ten);
     federateAmbassadors.get(1).checkTimeAdvanceGrant(ten);
+  }
+
+  @Test(dependsOnMethods = { "testTimeAdvanceRequest" }, expectedExceptions = { FederationTimeAlreadyPassed.class })
+  public void testTimeAdvanceRequestToLogicalTimeAlreadyPassed()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).timeAdvanceRequest(five);
+  }
+
+  public void testTimeAdvanceRequestToSameTime()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).timeAdvanceRequest(ten);
+    federateAmbassadors.get(0).checkTimeAdvanceGrant(ten);
+
+    assert ten.equals(rtiAmbassadors.get(0).queryFederateTime());
   }
 }
