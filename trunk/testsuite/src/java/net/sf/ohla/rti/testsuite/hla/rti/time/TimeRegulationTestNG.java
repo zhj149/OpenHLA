@@ -99,9 +99,9 @@ public class TimeRegulationTestNG
   }
 
   @Test
-  public void testLBTSUndefinedWithOneTimeRegulatingFederate()
+  public void testInfiniteLBTSWithOneTimeRegulatingFederate()
     throws Exception
   {
-    assert rtiAmbassadors.get(0).queryLBTS() == null;
+    assert infinity.equals(rtiAmbassadors.get(0).queryLBTS());
   }
 }

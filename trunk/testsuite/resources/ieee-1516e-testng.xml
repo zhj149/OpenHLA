@@ -67,6 +67,7 @@
   </test>
   <test name="IEEE 1516e - Time Management">
     <classes>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.InitialTimeStateTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.TimeAdvancingExceptionsTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.TimeConstrainedTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.EnableTimeConstrainedExceptionsTestNG"/>
@@ -77,10 +78,6 @@
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.NextMessageRequestTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.NextMessageRequestAvailableTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.FlushQueueRequestTestNG"/>
-      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.FreeTimeAdvanceTestNG"/>
-      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.ManagedTimeAdvancementTestNG"/>
-      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.InteractionTimeManagementTestNG"/>
-      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.ObjectTimeManagementTestNG"/>
     </classes>
   </test>
 </suite>
