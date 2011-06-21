@@ -19,7 +19,12 @@ package net.sf.ohla.rti.testsuite.hla.rti1516e.time;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import hla.rti1516e.AttributeHandle;
+import hla.rti1516e.AttributeHandleSet;
+import hla.rti1516e.AttributeHandleValueMap;
 import hla.rti1516e.InteractionClassHandle;
+import hla.rti1516e.ObjectClassHandle;
+import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.ParameterHandle;
 import hla.rti1516e.ParameterHandleValueMap;
 import hla.rti1516e.exceptions.LogicalTimeAlreadyPassed;
@@ -33,6 +38,9 @@ public class TimeAdvanceRequestAvailableTestNG
   private InteractionClassHandle testInteractionClassHandle;
 
   private ParameterHandleValueMap testParameterValues;
+
+  private ObjectInstanceHandle testObjectInstanceHandle;
+  private AttributeHandleValueMap testAttributeValues;
 
   public TimeAdvanceRequestAvailableTestNG()
     throws Exception
@@ -68,8 +76,30 @@ public class TimeAdvanceRequestAvailableTestNG
     testParameterValues.put(parameterHandle3, PARAMETER3_VALUE.getBytes());
 
     rtiAmbassadors.get(0).publishInteractionClass(testInteractionClassHandle);
-
     rtiAmbassadors.get(1).subscribeInteractionClass(testInteractionClassHandle);
+
+    ObjectClassHandle testObjectClassHandle = rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT);
+
+    AttributeHandle attributeHandle1 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle, ATTRIBUTE1);
+    AttributeHandle attributeHandle2 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle, ATTRIBUTE2);
+    AttributeHandle attributeHandle3 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle, ATTRIBUTE3);
+
+    AttributeHandleSet testObjectAttributeHandles = rtiAmbassadors.get(0).getAttributeHandleSetFactory().create();
+    testObjectAttributeHandles.add(attributeHandle1);
+    testObjectAttributeHandles.add(attributeHandle2);
+    testObjectAttributeHandles.add(attributeHandle3);
+
+    rtiAmbassadors.get(0).publishObjectClassAttributes(testObjectClassHandle, testObjectAttributeHandles);
+    rtiAmbassadors.get(1).subscribeObjectClassAttributes(testObjectClassHandle, testObjectAttributeHandles);
+
+    testObjectInstanceHandle = rtiAmbassadors.get(0).registerObjectInstance(testObjectClassHandle);
+
+    federateAmbassadors.get(1).checkObjectInstanceHandle(testObjectInstanceHandle);
+
+    testAttributeValues = rtiAmbassadors.get(0).getAttributeHandleValueMapFactory().create(3);
+    testAttributeValues.put(attributeHandle1, ATTRIBUTE1_VALUE.getBytes());
+    testAttributeValues.put(attributeHandle2, ATTRIBUTE2_VALUE.getBytes());
+    testAttributeValues.put(attributeHandle3, ATTRIBUTE3_VALUE.getBytes());
 
     setupComplete(federateAmbassadors);
 
@@ -97,14 +127,14 @@ public class TimeAdvanceRequestAvailableTestNG
 
     // send another message at 5
     //
-    rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle, testParameterValues, TAG, five);
+    rtiAmbassadors.get(0).updateAttributeValues(testObjectInstanceHandle, testAttributeValues, TAG, five);
 
     rtiAmbassadors.get(0).timeAdvanceRequest(ten);
     rtiAmbassadors.get(1).timeAdvanceRequest(ten);
 
-    // the first message should be received
+    // the second message should be received
     //
-    federateAmbassadors.get(1).checkParameterValues(testParameterValues, five);
+    federateAmbassadors.get(1).checkAttributeValues(testObjectInstanceHandle, testAttributeValues, five);
 
     federateAmbassadors.get(0).checkTimeAdvanceGrant(ten);
     federateAmbassadors.get(1).checkTimeAdvanceGrant(ten);
