@@ -16,6 +16,10 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import net.sf.ohla.rti.Protocol;
 
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -36,6 +40,12 @@ public class IEEE1516eRegionHandle
     this.regionHandle = regionHandle;
   }
 
+  public IEEE1516eRegionHandle(DataInput in)
+    throws IOException
+  {
+    this(IEEE1516eFederateHandle.decode(in), in.readInt());
+  }
+
   public int encodedLength()
   {
     return federateHandle.encodedLength() + Protocol.encodedVarIntSize(regionHandle);
@@ -45,6 +55,14 @@ public class IEEE1516eRegionHandle
   {
     Protocol.encodeVarInt(buffer, offset, regionHandle);
     federateHandle.encode(buffer, offset + Protocol.encodedVarIntSize(regionHandle));
+  }
+
+  public void writeTo(DataOutput out)
+    throws IOException
+  {
+    ((IEEE1516eFederateHandle) federateHandle).writeTo(out);
+
+    out.writeInt(regionHandle);
   }
 
   @Override
@@ -86,6 +104,18 @@ public class IEEE1516eRegionHandle
 
       IEEE1516eFederateHandle.encode(buffer, ((IEEE1516eRegionHandle) regionHandle).federateHandle);
     }
+  }
+
+  public static IEEE1516eRegionHandle decode(DataInput in)
+    throws IOException
+  {
+    // decode the handle first
+    //
+    int regionHandle = in.readInt();
+
+    // a 0 indicates the RegionHandle was null
+    //
+    return regionHandle == 0 ? null : new IEEE1516eRegionHandle(IEEE1516eFederateHandle.decode(in), regionHandle);
   }
 
   public static IEEE1516eRegionHandle decode(ChannelBuffer buffer)

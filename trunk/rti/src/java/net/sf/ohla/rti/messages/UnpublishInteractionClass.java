@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2006-2007, Michael Newcomb
+ * Copyright (c) 2005-2011, Michael Newcomb
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *       http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,29 +21,29 @@ import net.sf.ohla.rti.federation.FederationExecution;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
-public class FederateSaveComplete
-  extends AbstractMessage
+import hla.rti1516e.InteractionClassHandle;
+
+public class UnpublishInteractionClass
+  extends InteractionClassMessage
   implements FederationExecutionMessage
 {
-  public FederateSaveComplete()
+  public UnpublishInteractionClass(InteractionClassHandle interactionClassHandle)
   {
-    super(MessageType.FEDERATE_SAVE_COMPLETE);
-
-    encodingFinished();
+    super(MessageType.UNPUBLISH_INTERACTION_CLASS, interactionClassHandle);
   }
 
-  public FederateSaveComplete(ChannelBuffer buffer)
+  protected UnpublishInteractionClass(ChannelBuffer buffer)
   {
     super(buffer);
   }
 
   public MessageType getType()
   {
-    return MessageType.FEDERATE_SAVE_COMPLETE;
+    return MessageType.UNPUBLISH_INTERACTION_CLASS;
   }
 
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
-    federationExecution.federateSaveComplete(federateProxy, this);
+    federationExecution.unpublishInteractionClass(federateProxy, this);
   }
 }

@@ -16,6 +16,10 @@
 
 package net.sf.ohla.rti.federate;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -531,6 +535,34 @@ public class FederateRegionManager
         federateRegion.checkIfInvalidRegionContext(interactionClass);
       }
     }
+  }
+
+  public void saveState(DataOutput out)
+    throws IOException
+  {
+    out.writeInt(regions.size());
+    for (FederateRegion federateRegion : regions.values())
+    {
+      federateRegion.writeTo(out);
+    }
+
+    // temporary regions only exist during a 'message' (interaction/reflection) callback
+    //
+    assert temporaryRegions.isEmpty();
+
+    out.writeInt(regionCount.get());
+  }
+
+  public void restoreState(DataInput in)
+    throws IOException
+  {
+    for (int count = in.readInt(); count > 0; count--)
+    {
+      FederateRegion federateRegion = new FederateRegion(in);
+      regions.put(federateRegion.getRegionHandle(), federateRegion);
+    }
+
+    regionCount.set(in.readInt());
   }
 
   private FederateRegion getRegion(RegionHandle regionHandle)

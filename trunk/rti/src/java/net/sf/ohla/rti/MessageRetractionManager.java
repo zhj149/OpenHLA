@@ -16,6 +16,10 @@
 
 package net.sf.ohla.rti;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -23,8 +27,13 @@ import java.util.Queue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eMessageRetractionHandle;
+
 import hla.rti1516e.LogicalTime;
+import hla.rti1516e.LogicalTimeFactory;
 import hla.rti1516e.MessageRetractionHandle;
+import hla.rti1516e.exceptions.CouldNotDecode;
+import hla.rti1516e.exceptions.CouldNotEncode;
 
 public class MessageRetractionManager
 {
@@ -68,6 +77,28 @@ public class MessageRetractionManager
     }
   }
 
+  protected void saveState(DataOutput out)
+    throws IOException
+  {
+    out.writeInt(messageRetractions.size());
+    for (MessageRetraction messageRetraction : messageRetractions.values())
+    {
+      messageRetraction.writeTo(out);
+    }
+  }
+
+  protected void restoreState(DataInput in, LogicalTimeFactory logicalTimeFactory)
+    throws IOException
+  {
+    for (int count = in.readInt(); count > 0; count--)
+    {
+      MessageRetraction messageRetraction = new MessageRetraction(in, logicalTimeFactory);
+
+      messageRetractions.put(messageRetraction.getMessageRetractionHandle(), messageRetraction);
+      messageRetractionsByExpiration.add(messageRetraction);
+    }
+  }
+
   protected class MessageRetraction
     implements Comparable<MessageRetraction>
   {
@@ -79,6 +110,24 @@ public class MessageRetractionManager
     {
       this.messageRetractionHandle = messageRetractionHandle;
       this.expiration = expiration;
+    }
+
+    public MessageRetraction(DataInput in, LogicalTimeFactory logicalTimeFactory)
+      throws IOException
+    {
+      messageRetractionHandle = new IEEE1516eMessageRetractionHandle(in);
+
+      byte[] buffer = new byte[in.readInt()];
+      in.readFully(buffer);
+
+      try
+      {
+        expiration = logicalTimeFactory.decodeTime(buffer, 0);
+      }
+      catch (CouldNotDecode cnd)
+      {
+        throw new IOException(cnd);
+      }
     }
 
     public MessageRetractionHandle getMessageRetractionHandle()
@@ -94,6 +143,24 @@ public class MessageRetractionManager
     public boolean retract()
     {
       return true;
+    }
+
+    public void writeTo(DataOutput out)
+      throws IOException
+    {
+      ((IEEE1516eMessageRetractionHandle) messageRetractionHandle).writeTo(out);
+
+      byte[] buffer = new byte[expiration.encodedLength()];
+      try
+      {
+        expiration.encode(buffer, 0);
+      }
+      catch (CouldNotEncode cne)
+      {
+        throw new IOException(cne);
+      }
+      out.writeInt(buffer.length);
+      out.write(buffer);
     }
 
     @SuppressWarnings("unchecked")

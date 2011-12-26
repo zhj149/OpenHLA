@@ -53,11 +53,6 @@ public class CallbackManager
     this.federateAmbassador = federateAmbassador;
   }
 
-  public void add(Callback callback)
-  {
-    add(callback, false);
-  }
-
   public void add(Callback callback, boolean hold)
   {
     callbacksLock.lock();

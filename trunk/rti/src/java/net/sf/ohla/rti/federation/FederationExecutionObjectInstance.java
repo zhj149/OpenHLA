@@ -16,8 +16,6 @@
 
 package net.sf.ohla.rti.federation;
 
-import java.io.Serializable;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -62,7 +60,6 @@ import hla.rti1516e.RangeBounds;
 import hla.rti1516e.RegionHandle;
 
 public class FederationExecutionObjectInstance
-  implements Serializable
 {
   private final ObjectInstanceHandle objectInstanceHandle;
   private final ObjectClass objectClass;
@@ -336,6 +333,85 @@ public class FederationExecutionObjectInstance
     finally
     {
       objectLock.readLock().unlock();
+    }
+  }
+
+  public void unpublishObjectClass(FederateProxy federateProxy)
+  {
+    objectLock.writeLock().lock();
+    try
+    {
+      Map<FederateProxy, AttributeHandleSetTagPair> newOwners = new HashMap<FederateProxy, AttributeHandleSetTagPair>();
+      for (FederationExecutionAttributeInstance attributeInstance : attributes.values())
+      {
+        if (attributeInstance.getOwner() == federateProxy)
+        {
+          FederationExecutionAttributeInstance.Divestiture divestiture =
+            attributeInstance.unconditionalAttributeOwnershipDivestiture();
+          if (divestiture != null)
+          {
+            AttributeHandleSetTagPair acquiredAttributes = newOwners.get(divestiture.newOwner);
+            if (acquiredAttributes == null)
+            {
+              acquiredAttributes = new AttributeHandleSetTagPair(divestiture.tag);
+              newOwners.put(divestiture.newOwner, acquiredAttributes);
+            }
+            acquiredAttributes.attributeHandles.add(attributeInstance.getAttributeHandle());
+          }
+        }
+      }
+
+      // notify the new owners
+      //
+      for (Map.Entry<FederateProxy, AttributeHandleSetTagPair> entry : newOwners.entrySet())
+      {
+        entry.getKey().getFederateChannel().write(new AttributeOwnershipAcquisitionNotification(
+          objectInstanceHandle, entry.getValue().attributeHandles, entry.getValue().tag));
+      }
+    }
+    finally
+    {
+      objectLock.writeLock().unlock();
+    }
+  }
+
+  public void unpublishObjectClassAttributes(FederateProxy owner, AttributeHandleSet attributeHandles)
+  {
+    objectLock.writeLock().lock();
+    try
+    {
+      Map<FederateProxy, AttributeHandleSetTagPair> newOwners = new HashMap<FederateProxy, AttributeHandleSetTagPair>();
+      for (AttributeHandle attributeHandle : attributeHandles)
+      {
+        FederationExecutionAttributeInstance attributeInstance = attributes.get(attributeHandle);
+        if (attributeInstance.getOwner() == owner)
+        {
+          FederationExecutionAttributeInstance.Divestiture divestiture =
+            attributeInstance.unconditionalAttributeOwnershipDivestiture();
+          if (divestiture != null)
+          {
+            AttributeHandleSetTagPair acquiredAttributes = newOwners.get(divestiture.newOwner);
+            if (acquiredAttributes == null)
+            {
+              acquiredAttributes = new AttributeHandleSetTagPair(divestiture.tag);
+              newOwners.put(divestiture.newOwner, acquiredAttributes);
+            }
+            acquiredAttributes.attributeHandles.add(attributeHandle);
+          }
+        }
+      }
+
+      // notify the new owners
+      //
+      for (Map.Entry<FederateProxy, AttributeHandleSetTagPair> entry : newOwners.entrySet())
+      {
+        entry.getKey().getFederateChannel().write(new AttributeOwnershipAcquisitionNotification(
+          objectInstanceHandle, entry.getValue().attributeHandles, entry.getValue().tag));
+      }
+    }
+    finally
+    {
+      objectLock.writeLock().unlock();
     }
   }
 

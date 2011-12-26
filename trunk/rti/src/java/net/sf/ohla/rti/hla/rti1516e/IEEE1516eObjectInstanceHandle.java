@@ -16,6 +16,10 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import net.sf.ohla.rti.Protocol;
 
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -34,6 +38,21 @@ public class IEEE1516eObjectInstanceHandle
   {
     this.federateHandle = federateHandle;
     this.objectInstanceHandle = objectInstanceHandle;
+  }
+
+  public IEEE1516eObjectInstanceHandle(DataInput in)
+    throws IOException
+  {
+    federateHandle = IEEE1516eFederateHandle.decode(in);
+    objectInstanceHandle = in.readInt();
+  }
+
+  public void writeTo(DataOutput out)
+    throws IOException
+  {
+    ((IEEE1516eFederateHandle) federateHandle).writeTo(out);
+
+    out.writeInt(objectInstanceHandle);
   }
 
   public int encodedLength()

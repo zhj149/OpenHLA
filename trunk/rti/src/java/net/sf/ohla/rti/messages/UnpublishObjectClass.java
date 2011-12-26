@@ -20,18 +20,26 @@ import java.util.Set;
 
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
+import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.ObjectInstanceHandle;
 
 public class UnpublishObjectClass
   extends ObjectInstancesMessage
   implements FederationExecutionMessage
 {
-  public UnpublishObjectClass(Set<ObjectInstanceHandle> objectInstanceHandles)
+  private final ObjectClassHandle objectClassHandle;
+
+  public UnpublishObjectClass(ObjectClassHandle objectClassHandle, Set<ObjectInstanceHandle> objectInstanceHandles)
   {
     super(MessageType.UNPUBLISH_OBJECT_CLASS, objectInstanceHandles);
+
+    this.objectClassHandle = objectClassHandle;
+
+    IEEE1516eObjectClassHandle.encode(buffer, objectClassHandle);
 
     encodingFinished();
   }
@@ -39,6 +47,13 @@ public class UnpublishObjectClass
   public UnpublishObjectClass(ChannelBuffer buffer)
   {
     super(buffer);
+
+    objectClassHandle = IEEE1516eObjectClassHandle.decode(buffer);
+  }
+
+  public ObjectClassHandle getObjectClassHandle()
+  {
+    return objectClassHandle;
   }
 
   public MessageType getType()

@@ -16,6 +16,7 @@
 
 package net.sf.ohla.rti;
 
+import java.io.File;
 import java.net.InetSocketAddress;
 
 import java.util.HashMap;
@@ -65,9 +66,13 @@ public class RTI
   private final SortedMap<String, FederationExecution> federationExecutions =
     new TreeMap<String, FederationExecution>();
 
+  private final File savesDirectory;
+
   public RTI()
   {
     // TODO: read from configuration file
+
+    savesDirectory = new File(".");
 
     Executor executor = Executors.newCachedThreadPool();
 
@@ -110,8 +115,6 @@ public class RTI
     }
     else
     {
-      // do a quick check
-
       federationsLock.lock();
       try
       {
@@ -125,8 +128,8 @@ public class RTI
         else
         {
           federationExecutions.put(
-            federationExecutionName,
-            new FederationExecution(federationExecutionName, createFederationExecution.getFDD(), logicalTimeFactory));
+            federationExecutionName, new FederationExecution(
+            federationExecutionName, createFederationExecution.getFDD(), logicalTimeFactory, savesDirectory));
 
           response = CreateFederationExecutionResponse.Response.SUCCESS;
         }

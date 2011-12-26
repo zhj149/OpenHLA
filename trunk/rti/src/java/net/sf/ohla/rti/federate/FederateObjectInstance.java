@@ -16,7 +16,9 @@
 
 package net.sf.ohla.rti.federate;
 
-import java.io.Serializable;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -32,8 +34,12 @@ import net.sf.ohla.rti.fdd.Attribute;
 import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.fdd.TransportationType;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSet;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSetFactory;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectInstanceHandle;
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
 import net.sf.ohla.rti.messages.AssociateRegionsForUpdates;
@@ -85,7 +91,6 @@ import hla.rti1516e.exceptions.OwnershipAcquisitionPending;
 import hla.rti1516e.exceptions.RTIinternalError;
 
 public class FederateObjectInstance
-  implements Serializable
 {
   private final FederateHandle producingFederateHandle;
   private final ObjectInstanceHandle objectInstanceHandle;
@@ -174,6 +179,33 @@ public class FederateObjectInstance
           region.associateRegionsForUpdates(objectInstanceHandle, attributeRegionAssociation.ahset);
         }
       }
+    }
+  }
+
+  public FederateObjectInstance(DataInput in, FDD fdd)
+    throws IOException
+  {
+    producingFederateHandle = IEEE1516eFederateHandle.decode(in);
+    objectInstanceHandle = new IEEE1516eObjectInstanceHandle(in);
+
+    objectClass = fdd.getObjectClassSafely(IEEE1516eObjectClassHandle.decode(in));
+
+    objectInstanceName = in.readUTF();
+
+    for (int count = in.readInt(); count > 0; count--)
+    {
+      FederateAttributeInstance federateAttributeInstance = new FederateAttributeInstance(in, objectClass);
+      attributes.put(federateAttributeInstance.getAttributeHandle(), federateAttributeInstance);
+    }
+
+    for (int count = in.readInt(); count > 0; count--)
+    {
+      attributeHandlesBeingAcquired.add(IEEE1516eAttributeHandle.decode(in));
+    }
+
+    for (int count = in.readInt(); count > 0; count--)
+    {
+      attributeHandlesBeingAcquiredIfAvailable.add(IEEE1516eAttributeHandle.decode(in));
     }
   }
 
@@ -660,13 +692,13 @@ public class FederateObjectInstance
       FederateAttributeInstance attributeInstance = attributes.get(attributeHandle);
       if (attributeInstance == null)
       {
-        federate.getCallbackManager().add(new ReportAttributeTransportationType(
+        federate.callbackReceived(new ReportAttributeTransportationType(
           objectInstanceHandle, attributeHandle, objectClass.getAttribute(
           attributeHandle).getTransportationTypeHandle()));
       }
       else
       {
-        federate.getCallbackManager().add(new ReportAttributeTransportationType(
+        federate.callbackReceived(new ReportAttributeTransportationType(
           objectInstanceHandle, attributeHandle, attributeInstance.getTransportationTypeHandle()));
       }
     }
@@ -851,16 +883,46 @@ public class FederateObjectInstance
     }
   }
 
+  public void writeTo(DataOutput out)
+    throws IOException
+  {
+    ((IEEE1516eAttributeHandle) producingFederateHandle).writeTo(out);
+    ((IEEE1516eObjectInstanceHandle) objectInstanceHandle).writeTo(out);
+    ((IEEE1516eObjectClassHandle) objectClass.getObjectClassHandle()).writeTo(out);
+    out.writeUTF(objectInstanceName);
+
+    out.writeInt(attributes.size());
+    for (FederateAttributeInstance federateAttributeInstance : attributes.values())
+    {
+      federateAttributeInstance.writeTo(out);
+    }
+
+    out.writeInt(attributeHandlesBeingAcquired.size());
+    for (AttributeHandle attributeHandle : attributeHandlesBeingAcquired)
+    {
+      ((IEEE1516eAttributeHandle) attributeHandle).writeTo(out);
+    }
+
+    out.writeInt(attributeHandlesBeingAcquiredIfAvailable.size());
+    for (AttributeHandle attributeHandle : attributeHandlesBeingAcquiredIfAvailable)
+    {
+      ((IEEE1516eAttributeHandle) attributeHandle).writeTo(out);
+    }
+  }
+
+  @Override
   public int hashCode()
   {
     return objectInstanceHandle.hashCode();
   }
 
+  @Override
   public boolean equals(Object rhs)
   {
     return this == rhs || (rhs instanceof FederateObjectInstance && equals((FederateObjectInstance) rhs));
   }
 
+  @Override
   public String toString()
   {
     return new StringBuilder(objectInstanceHandle.toString()).append("/").append(objectInstanceName).append("/").append(

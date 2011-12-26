@@ -33,11 +33,7 @@ public class RequestFederationSave
 
   public RequestFederationSave(String label)
   {
-    super(MessageType.REQUEST_FEDERATION_SAVE, label);
-
-    time = null;
-
-    encodingFinished();
+    this(label, null);
   }
 
   public RequestFederationSave(String label, LogicalTime time)

@@ -16,9 +16,14 @@
 
 package net.sf.ohla.rti.federate;
 
-import java.io.Serializable;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 
 import net.sf.ohla.rti.fdd.Attribute;
+import net.sf.ohla.rti.fdd.ObjectClass;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandle;
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
 
@@ -30,7 +35,6 @@ import hla.rti1516e.exceptions.AttributeAlreadyBeingDivested;
 import hla.rti1516e.exceptions.AttributeDivestitureWasNotRequested;
 
 public class FederateAttributeInstance
-  implements Serializable
 {
   private final Attribute attribute;
 
@@ -45,6 +49,17 @@ public class FederateAttributeInstance
 
     transportationTypeHandle = attribute.getTransportationTypeHandle();
     orderType = attribute.getOrderType();
+  }
+
+  public FederateAttributeInstance(DataInput in, ObjectClass objectClass)
+    throws IOException
+  {
+    attribute = objectClass.getAttributeSafely(IEEE1516eAttributeHandle.decode(in));
+
+    transportationTypeHandle = IEEE1516eTransportationTypeHandle.decode(in);
+    orderType = OrderType.values()[in.readInt()];
+
+    divesting = in.readBoolean();
   }
 
   public Attribute getAttribute()
@@ -116,6 +131,17 @@ public class FederateAttributeInstance
     throws AttributeAlreadyBeingChanged
   {
     // TODO: check status
+  }
+
+  public void writeTo(DataOutput out)
+    throws IOException
+  {
+    ((IEEE1516eAttributeHandle) attribute.getAttributeHandle()).writeTo(out);
+
+    ((IEEE1516eTransportationTypeHandle) transportationTypeHandle).writeTo(out);
+    out.writeInt(orderType.ordinal());
+
+    out.writeBoolean(divesting);
   }
 
   @Override

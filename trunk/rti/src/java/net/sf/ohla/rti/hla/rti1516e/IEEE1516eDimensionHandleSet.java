@@ -16,6 +16,10 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -47,6 +51,24 @@ public class IEEE1516eDimensionHandleSet
   public IEEE1516eDimensionHandleSet(IEEE1516eDimensionHandleSet dimensionHandles)
   {
     super(dimensionHandles);
+  }
+  public IEEE1516eDimensionHandleSet(DataInput in)
+    throws IOException
+  {
+    for (int count = in.readInt(); count > 0; count--)
+    {
+      add(IEEE1516eDimensionHandle.decode(in));
+    }
+  }
+
+  public void writeTo(DataOutput out)
+    throws IOException
+  {
+    out.writeInt(size());
+    for (DimensionHandle dimensionHandle : this)
+    {
+      ((IEEE1516eDimensionHandle) dimensionHandle).writeTo(out);
+    }
   }
 
   @Override

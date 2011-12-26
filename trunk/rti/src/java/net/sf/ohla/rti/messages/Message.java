@@ -23,6 +23,4 @@ public interface Message
   MessageType getType();
 
   ChannelBuffer getBuffer();
-
-  boolean isOrdered();
 }

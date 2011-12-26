@@ -16,6 +16,10 @@
 
 package net.sf.ohla.rti.federate;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -31,6 +35,9 @@ import net.sf.ohla.rti.SubscriptionManager;
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.fdd.TransportationType;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSet;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eInteractionClassHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectInstanceHandle;
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
@@ -38,6 +45,7 @@ import net.sf.ohla.rti.i18n.I18nLogger;
 import net.sf.ohla.rti.i18n.LogMessages;
 import net.sf.ohla.rti.messages.DeleteObjectInstance;
 import net.sf.ohla.rti.messages.LocalDeleteObjectInstance;
+import net.sf.ohla.rti.messages.PublishInteractionClass;
 import net.sf.ohla.rti.messages.PublishObjectClassAttributes;
 import net.sf.ohla.rti.messages.RegisterObjectInstance;
 import net.sf.ohla.rti.messages.ReleaseMultipleObjectInstanceName;
@@ -50,6 +58,7 @@ import net.sf.ohla.rti.messages.SubscribeInteractionClass;
 import net.sf.ohla.rti.messages.SubscribeInteractionClassWithRegions;
 import net.sf.ohla.rti.messages.SubscribeObjectClassAttributes;
 import net.sf.ohla.rti.messages.SubscribeObjectClassAttributesWithRegions;
+import net.sf.ohla.rti.messages.UnpublishInteractionClass;
 import net.sf.ohla.rti.messages.UnpublishObjectClass;
 import net.sf.ohla.rti.messages.UnpublishObjectClassAttributes;
 import net.sf.ohla.rti.messages.UnsubscribeInteractionClass;
@@ -257,7 +266,8 @@ public class FederateObjectManager
               unpublishedObjectInstanceHandles.add(objectInstance.getObjectInstanceHandle());
             }
 
-            federate.getRTIChannel().write(new UnpublishObjectClass(unpublishedObjectInstanceHandles));
+            federate.getRTIChannel().write(
+              new UnpublishObjectClass(objectClassHandle, unpublishedObjectInstanceHandles));
           }
         }
         finally
@@ -304,7 +314,7 @@ public class FederateObjectManager
             }
 
             federate.getRTIChannel().write(new UnpublishObjectClassAttributes(
-              objectInstanceHandlesToUnpublishAttributes, attributeHandles));
+              objectClassHandle, attributeHandles, objectInstanceHandlesToUnpublishAttributes));
           }
         }
         finally
@@ -329,6 +339,8 @@ public class FederateObjectManager
     try
     {
       publishedInteractionClasses.add(interactionClassHandle);
+
+      federate.getRTIChannel().write(new PublishInteractionClass(interactionClassHandle));
     }
     finally
     {
@@ -342,6 +354,8 @@ public class FederateObjectManager
     try
     {
       publishedInteractionClasses.remove(interactionClassHandle);
+
+      federate.getRTIChannel().write(new UnpublishInteractionClass(interactionClassHandle));
     }
     finally
     {
@@ -1780,6 +1794,87 @@ public class FederateObjectManager
     throws ObjectInstanceNotKnown, AttributeNotDefined, RTIinternalError
   {
     return getObjectInstance(objectInstanceHandle).getUpdateRateValueForAttribute(attributeHandle, federate);
+  }
+
+  public void saveState(DataOutput out)
+    throws IOException
+  {
+    out.writeInt(publishedObjectClasses.size());
+    for (Map.Entry<ObjectClassHandle, AttributeHandleSet> entry : publishedObjectClasses.entrySet())
+    {
+      ((IEEE1516eObjectClassHandle) entry.getKey()).writeTo(out);
+      ((IEEE1516eAttributeHandleSet) entry.getValue()).writeTo(out);
+    }
+
+    out.writeInt(publishedInteractionClasses.size());
+    for (InteractionClassHandle interactionClassHandle : publishedInteractionClasses)
+    {
+      ((IEEE1516eInteractionClassHandle) interactionClassHandle).writeTo(out);
+    }
+
+    subscriptionManager.saveState(out);
+
+    out.writeInt(reservedObjectInstanceNames.size());
+    for (String reservedObjectInstanceName : reservedObjectInstanceNames)
+    {
+      out.writeUTF(reservedObjectInstanceName);
+    }
+
+    out.writeInt(objectInstanceNamesBeingReserved.size());
+    for (String objectInstanceNameBeingReserved : objectInstanceNamesBeingReserved)
+    {
+      out.writeUTF(objectInstanceNameBeingReserved);
+    }
+
+    out.writeInt(objects.size());
+    for (FederateObjectInstance federateObjectInstance : objects.values())
+    {
+      federateObjectInstance.writeTo(out);
+    }
+
+    out.writeInt(objectInstanceCount);
+  }
+
+  public void restoreState(DataInput in)
+    throws IOException
+  {
+    publishedObjectClasses.clear();
+    for (int count = in.readInt(); count > 0; count--)
+    {
+      ObjectClassHandle objectClassHandle = IEEE1516eObjectClassHandle.decode(in);
+      AttributeHandleSet attributeHandles = new IEEE1516eAttributeHandleSet(in);
+
+      publishedObjectClasses.put(objectClassHandle, attributeHandles);
+    }
+
+    publishedInteractionClasses.clear();
+    for (int count = in.readInt(); count > 0; count--)
+    {
+      publishedInteractionClasses.add(IEEE1516eInteractionClassHandle.decode(in));
+    }
+
+    subscriptionManager.restoreState(in, federate.getFDD());
+
+    reservedObjectInstanceNames.clear();
+    for (int count = in.readInt(); count > 0; count--)
+    {
+      reservedObjectInstanceNames.add(in.readUTF());
+    }
+
+    objectInstanceNamesBeingReserved.clear();
+    for (int count = in.readInt(); count > 0; count--)
+    {
+      objectInstanceNamesBeingReserved.add(in.readUTF());
+    }
+
+    objects.clear();
+    for (int count = in.readInt(); count > 0; count--)
+    {
+      FederateObjectInstance federateObjectInstance = new FederateObjectInstance(in, federate.getFDD());
+      objects.put(federateObjectInstance.getObjectInstanceHandle(), federateObjectInstance);
+    }
+
+    objectInstanceCount = in.readInt();
   }
 
   private AttributeHandleSet getPublishedObjectClassAttributes(ObjectClassHandle objectClassHandle)

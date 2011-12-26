@@ -16,15 +16,13 @@
 
 package net.sf.ohla.rti.hla.rti;
 
-import java.io.Serializable;
-
 import hla.rti.EventRetractionHandle;
 
 import hla.rti1516e.MessageRetractionHandle;
 import hla.rti1516e.MessageRetractionReturn;
 
 public class HLA13EventRetractionHandle
-  implements EventRetractionHandle, Serializable
+  implements EventRetractionHandle
 {
   private final MessageRetractionHandle messageRetractionHandle;
 

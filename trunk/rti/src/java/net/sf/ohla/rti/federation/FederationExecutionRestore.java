@@ -17,6 +17,7 @@
 package net.sf.ohla.rti.federation;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import hla.rti1516e.FederateHandle;
@@ -41,9 +42,8 @@ public class FederationExecutionRestore
     return label;
   }
 
-  public FederateRestoreStatus[] getFederationRestoreStatus()
+  public void updateFederationRestoreStatus(Map<FederateHandle, FederateRestoreStatus> federationRestoreStatus)
   {
-    return new FederateRestoreStatus[0];
   }
 
   public boolean federateRestoreComplete(FederateHandle federateHandle)

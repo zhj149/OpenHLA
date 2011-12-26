@@ -21,25 +21,31 @@ import java.util.Set;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSet;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
 import hla.rti1516e.AttributeHandleSet;
+import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.ObjectInstanceHandle;
 
 public class UnpublishObjectClassAttributes
   extends ObjectInstancesMessage
   implements FederationExecutionMessage
 {
+  private final ObjectClassHandle objectClassHandle;
   private final AttributeHandleSet attributeHandles;
 
   public UnpublishObjectClassAttributes(
-    Set<ObjectInstanceHandle> objectInstanceHandles, AttributeHandleSet attributeHandles)
+    ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles,
+    Set<ObjectInstanceHandle> objectInstanceHandles)
   {
     super(MessageType.UNPUBLISH_OBJECT_CLASS_ATTRIBUTES, objectInstanceHandles);
 
+    this.objectClassHandle = objectClassHandle;
     this.attributeHandles = attributeHandles;
 
+    IEEE1516eObjectClassHandle.encode(buffer, objectClassHandle);
     IEEE1516eAttributeHandleSet.encode(buffer, attributeHandles);
 
     encodingFinished();
@@ -49,7 +55,13 @@ public class UnpublishObjectClassAttributes
   {
     super(buffer);
 
+    objectClassHandle = IEEE1516eObjectClassHandle.decode(buffer);
     attributeHandles = IEEE1516eAttributeHandleSet.decode(buffer);
+  }
+
+  public ObjectClassHandle getObjectClassHandle()
+  {
+    return objectClassHandle;
   }
 
   public AttributeHandleSet getAttributeHandles()

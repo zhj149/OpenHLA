@@ -16,6 +16,10 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -47,6 +51,25 @@ public class IEEE1516eAttributeHandleSet
   public IEEE1516eAttributeHandleSet(IEEE1516eAttributeHandleSet attributeHandles)
   {
     super(attributeHandles);
+  }
+
+  public IEEE1516eAttributeHandleSet(DataInput in)
+    throws IOException
+  {
+    for (int count = in.readInt(); count > 0; count--)
+    {
+      add(IEEE1516eAttributeHandle.decode(in));
+    }
+  }
+
+  public void writeTo(DataOutput out)
+    throws IOException
+  {
+    out.writeInt(size());
+    for (AttributeHandle attributeHandle : this)
+    {
+      ((IEEE1516eAttributeHandle) attributeHandle).writeTo(out);
+    }
   }
 
   @Override

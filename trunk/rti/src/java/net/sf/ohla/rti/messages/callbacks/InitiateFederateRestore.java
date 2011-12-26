@@ -18,7 +18,9 @@ package net.sf.ohla.rti.messages.callbacks;
 
 import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
+import net.sf.ohla.rti.messages.FederateMessage;
 import net.sf.ohla.rti.messages.MessageType;
 import net.sf.ohla.rti.messages.StringMessage;
 
@@ -30,10 +32,12 @@ import hla.rti1516e.exceptions.FederateInternalError;
 
 public class InitiateFederateRestore
   extends StringMessage
-  implements Callback
+  implements Callback, FederateMessage
 {
   private final String federateName;
   private final FederateHandle federateHandle;
+
+  private Federate federate;
 
   public InitiateFederateRestore(String label, String federateName, FederateHandle federateHandle)
   {
@@ -79,6 +83,13 @@ public class InitiateFederateRestore
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.initiateFederateRestore(s, federateName, federateHandle);
+    federate.fireInitiateFederateRestore(s, federateName, federateHandle);
+  }
+
+  public void execute(Federate federate)
+  {
+    this.federate = federate;
+
+    federate.callbackReceived(this);
   }
 }

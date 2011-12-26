@@ -16,6 +16,10 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.IntegerHandle;
 
@@ -48,6 +52,13 @@ public class IEEE1516eObjectClassHandle
   public static void encode(ChannelBuffer buffer, ObjectClassHandle objectClassHandle)
   {
     ((IEEE1516eObjectClassHandle) objectClassHandle).encode(buffer);
+  }
+
+  public static IEEE1516eObjectClassHandle decode(DataInput in)
+    throws IOException
+  {
+    int handle = decodeHandle(in);
+    return handle < cache.length ? cache[handle] : new IEEE1516eObjectClassHandle(handle);
   }
 
   public static IEEE1516eObjectClassHandle decode(ChannelBuffer buffer)

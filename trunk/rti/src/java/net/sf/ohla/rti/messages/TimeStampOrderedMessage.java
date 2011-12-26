@@ -17,12 +17,14 @@
 package net.sf.ohla.rti.messages;
 
 import hla.rti1516e.LogicalTime;
+import hla.rti1516e.MessageRetractionHandle;
 import hla.rti1516e.OrderType;
 
 public interface TimeStampOrderedMessage
-  extends Comparable<TimeStampOrderedMessage>
+  extends Message, Comparable<TimeStampOrderedMessage>
 {
   LogicalTime getTime();
+  MessageRetractionHandle getMessageRetractionHandle();
 
   TimeStampOrderedMessage makeReceiveOrdered();
 }

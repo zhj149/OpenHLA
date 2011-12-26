@@ -27,6 +27,7 @@ import org.jboss.netty.buffer.ChannelBuffer;
 
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.LogicalTime;
+import hla.rti1516e.LogicalTimeFactory;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class InitiateFederateSave
@@ -59,11 +60,11 @@ public class InitiateFederateSave
     encodingFinished();
   }
 
-  public InitiateFederateSave(ChannelBuffer buffer)
+  public InitiateFederateSave(ChannelBuffer buffer, LogicalTimeFactory logicalTimeFactory)
   {
     super(buffer);
 
-    time = Protocol.decodeTime(buffer, federate.getLogicalTimeFactory());
+    time = Protocol.decodeTime(buffer, logicalTimeFactory);
   }
 
   public String getLabel()
@@ -84,7 +85,7 @@ public class InitiateFederateSave
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federate.initiateFederateSave(s, time);
+    federate.fireInitiateFederateSave(s, time);
   }
 
   public void execute(Federate federate)
