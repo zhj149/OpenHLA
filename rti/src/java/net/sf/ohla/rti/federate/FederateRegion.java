@@ -16,6 +16,10 @@
 
 package net.sf.ohla.rti.federate;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -28,7 +32,14 @@ import net.sf.ohla.rti.fdd.Attribute;
 import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.fdd.ObjectClass;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSet;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSet;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSetFactory;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eInteractionClassHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectInstanceHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandle;
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
 
@@ -85,6 +96,52 @@ public class FederateRegion
     this.rangeBounds.putAll(rangeBounds);
 
     dimensionHandles = IEEE1516eDimensionHandleSetFactory.INSTANCE.create(rangeBounds.keySet());
+  }
+
+  public FederateRegion(DataInput in)
+    throws IOException
+  {
+    regionHandle = IEEE1516eRegionHandle.decode(in);
+    dimensionHandles = new IEEE1516eDimensionHandleSet(in);
+
+    for (int count = in.readInt(); count > 0; count--)
+    {
+      DimensionHandle dimensionHandle = IEEE1516eDimensionHandle.decode(in);
+      long lower = in.readLong();
+      long upper = in.readLong();
+
+      rangeBounds.put(dimensionHandle, new RangeBounds(lower, upper));
+    }
+
+    for (int count = in.readInt(); count > 0; count--)
+    {
+      DimensionHandle dimensionHandle = IEEE1516eDimensionHandle.decode(in);
+      long lower = in.readLong();
+      long upper = in.readLong();
+
+      uncommittedRangeBounds.put(dimensionHandle, new RangeBounds(lower, upper));
+    }
+
+    for (int count = in.readInt(); count > 0; count--)
+    {
+      ObjectInstanceHandle objectInstanceHandle = new IEEE1516eObjectInstanceHandle(in);
+      AttributeHandleSet attributeHandles = new IEEE1516eAttributeHandleSet(in);
+
+      associatedObjects.put(objectInstanceHandle, attributeHandles);
+    }
+
+    for (int count = in.readInt(); count > 0; count--)
+    {
+      ObjectClassHandle objectClassHandle = IEEE1516eObjectClassHandle.decode(in);
+      AttributeHandleSet attributeHandles = new IEEE1516eAttributeHandleSet(in);
+
+      subscribedObjectClasses.put(objectClassHandle, attributeHandles);
+    }
+
+    for (int count = in.readInt(); count > 0; count--)
+    {
+      subscribedInteractionClasses.add(IEEE1516eInteractionClassHandle.decode(in));
+    }
   }
 
   public RegionHandle getRegionHandle()
@@ -339,6 +396,49 @@ public class FederateRegion
     }
 
     return intersect;
+  }
+
+  public void writeTo(DataOutput out)
+    throws IOException
+  {
+    ((IEEE1516eRegionHandle) regionHandle).writeTo(out);
+    ((IEEE1516eDimensionHandleSet) dimensionHandles).writeTo(out);
+
+    out.writeInt(rangeBounds.size());
+    for (Map.Entry<DimensionHandle, RangeBounds> entry : rangeBounds.entrySet())
+    {
+      ((IEEE1516eDimensionHandle) entry.getKey()).writeTo(out);
+      out.writeLong(entry.getValue().lower);
+      out.writeLong(entry.getValue().upper);
+    }
+
+    out.writeInt(uncommittedRangeBounds.size());
+    for (Map.Entry<DimensionHandle, RangeBounds> entry : uncommittedRangeBounds.entrySet())
+    {
+      ((IEEE1516eDimensionHandle) entry.getKey()).writeTo(out);
+      out.writeLong(entry.getValue().lower);
+      out.writeLong(entry.getValue().upper);
+    }
+
+    out.writeInt(associatedObjects.size());
+    for (Map.Entry<ObjectInstanceHandle, AttributeHandleSet> entry : associatedObjects.entrySet())
+    {
+      ((IEEE1516eObjectInstanceHandle) entry.getKey()).writeTo(out);
+      ((IEEE1516eAttributeHandleSet) entry.getValue()).writeTo(out);
+    }
+
+    out.writeInt(subscribedObjectClasses.size());
+    for (Map.Entry<ObjectClassHandle, AttributeHandleSet> entry : subscribedObjectClasses.entrySet())
+    {
+      ((IEEE1516eObjectClassHandle) entry.getKey()).writeTo(out);
+      ((IEEE1516eAttributeHandleSet) entry.getValue()).writeTo(out);
+    }
+
+    out.writeInt(subscribedInteractionClasses.size());
+    for (InteractionClassHandle interactionClassHandle : subscribedInteractionClasses)
+    {
+      ((IEEE1516eInteractionClassHandle) interactionClassHandle).writeTo(out);
+    }
   }
 
   private boolean intersects(RangeBounds lhs, RangeBounds rhs)

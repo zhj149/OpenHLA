@@ -16,6 +16,10 @@
 
 package net.sf.ohla.rti.federate;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -40,6 +44,8 @@ import hla.rti1516e.LogicalTime;
 import hla.rti1516e.LogicalTimeFactory;
 import hla.rti1516e.LogicalTimeInterval;
 import hla.rti1516e.TimeQueryReturn;
+import hla.rti1516e.exceptions.CouldNotDecode;
+import hla.rti1516e.exceptions.CouldNotEncode;
 import hla.rti1516e.exceptions.FederateInternalError;
 import hla.rti1516e.exceptions.IllegalTimeArithmetic;
 import hla.rti1516e.exceptions.InTimeAdvancingState;
@@ -730,6 +736,165 @@ public class FederateTimeManager
     throws InvalidLogicalTime
   {
     checkIfInvalidTimestamp(deleteTime);
+  }
+
+  public void saveState(DataOutput out)
+    throws IOException
+  {
+    out.writeInt(temporalState.ordinal());
+    out.writeInt(timeRegulatingState.ordinal());
+    out.writeInt(timeConstrainedState.ordinal());
+
+    byte[] buffer = new byte[federateTime.encodedLength()];
+    try
+    {
+      federateTime.encode(buffer, 0);
+    }
+    catch (CouldNotEncode cne)
+    {
+      throw new IOException(cne);
+    }
+    out.writeInt(buffer.length);
+    out.write(buffer);
+
+    if (lookahead == null)
+    {
+      out.writeInt(0);
+    }
+    else
+    {
+      buffer = new byte[lookahead.encodedLength()];
+      try
+      {
+        lookahead.encode(buffer, 0);
+      }
+      catch (CouldNotEncode cne)
+      {
+        throw new IOException(cne);
+      }
+      out.writeInt(buffer.length);
+      out.write(buffer);
+    }
+
+    if (lots == null)
+    {
+      out.writeInt(0);
+    }
+    else
+    {
+      buffer = new byte[lots.encodedLength()];
+      try
+      {
+        lots.encode(buffer, 0);
+      }
+      catch (CouldNotEncode cne)
+      {
+        throw new IOException(cne);
+      }
+      out.writeInt(buffer.length);
+      out.write(buffer);
+    }
+
+    if (advanceRequestTime == null)
+    {
+      out.writeInt(0);
+    }
+    else
+    {
+      buffer = new byte[advanceRequestTime.encodedLength()];
+      try
+      {
+        advanceRequestTime.encode(buffer, 0);
+      }
+      catch (CouldNotEncode cne)
+      {
+        throw new IOException(cne);
+      }
+      out.writeInt(buffer.length);
+      out.write(buffer);
+    }
+
+    out.writeInt(advanceRequestType.ordinal());
+  }
+
+  public void restoreState(DataInput in, LogicalTimeFactory logicalTimeFactory)
+    throws IOException
+  {
+    temporalState = TemporalState.values()[in.readInt()];
+    timeRegulatingState = TimeRegulatingState.values()[in.readInt()];
+    timeConstrainedState = TimeConstrainedState.values()[in.readInt()];
+
+    byte[] buffer = new byte[in.readInt()];
+    try
+    {
+      federateTime = logicalTimeFactory.decodeTime(buffer, 0);
+    }
+    catch (CouldNotDecode cnd)
+    {
+      throw new IOException(cnd);
+    }
+
+    int length = in.readInt();
+    if (length == 0)
+    {
+      lookahead = null;
+    }
+    else
+    {
+      buffer = new byte[length];
+      in.readFully(buffer);
+
+      try
+      {
+        lookahead = logicalTimeFactory.decodeInterval(buffer, 0);
+      }
+      catch (CouldNotDecode cnd)
+      {
+        throw new IOException(cnd);
+      }
+    }
+
+    length = in.readInt();
+    if (length == 0)
+    {
+      lots = null;
+    }
+    else
+    {
+      buffer = new byte[length];
+      in.readFully(buffer);
+
+      try
+      {
+        lots = logicalTimeFactory.decodeTime(buffer, 0);
+      }
+      catch (CouldNotDecode cnd)
+      {
+        throw new IOException(cnd);
+      }
+    }
+
+    length = in.readInt();
+    if (length == 0)
+    {
+      advanceRequestTime = null;
+    }
+    else
+    {
+      buffer = new byte[length];
+      in.readFully(buffer);
+
+      try
+      {
+        advanceRequestTime = logicalTimeFactory.decodeTime(buffer, 0);
+      }
+      catch (CouldNotDecode cnd)
+      {
+        throw new IOException(cnd);
+      }
+    }
+
+    advanceRequestType = TimeAdvanceType.values()[in.readInt()];
   }
 
   @SuppressWarnings("unchecked")

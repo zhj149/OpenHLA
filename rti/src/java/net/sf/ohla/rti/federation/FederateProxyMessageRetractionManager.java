@@ -16,9 +16,18 @@
 
 package net.sf.ohla.rti.federation;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 import net.sf.ohla.rti.MessageRetractionManager;
 
 import hla.rti1516e.LogicalTime;
+import hla.rti1516e.LogicalTimeFactory;
 import hla.rti1516e.MessageRetractionHandle;
 
 public class FederateProxyMessageRetractionManager
@@ -29,6 +38,37 @@ public class FederateProxyMessageRetractionManager
   {
     add(new FederateProxyMessageRetraction(messageRetractionHandle, time, queuedTimeStampOrderedMessage));
   }
+
+  public void restoreState(DataInput in, LogicalTimeFactory logicalTimeFactory,
+                           Collection<QueuedTimeStampOrderedMessage> queuedTimeStampOrderedMessages)
+    throws IOException
+  {
+    Map<MessageRetractionHandle, QueuedTimeStampOrderedMessage> queuedTimeStampOrderedMessagesByMessageRetractionHandle =
+      new HashMap<MessageRetractionHandle, QueuedTimeStampOrderedMessage>();
+    for (QueuedTimeStampOrderedMessage queuedTimeStampOrderedMessage : queuedTimeStampOrderedMessages)
+    {
+      queuedTimeStampOrderedMessagesByMessageRetractionHandle.put(
+        queuedTimeStampOrderedMessage.getTimeStampOrderedMessage().getMessageRetractionHandle(),
+        queuedTimeStampOrderedMessage);
+    }
+
+    for (int count = in.readInt(); count > 0; count--)
+    {
+      MessageRetraction messageRetraction = new FederateProxyMessageRetraction(
+        in, logicalTimeFactory, queuedTimeStampOrderedMessagesByMessageRetractionHandle);
+
+      messageRetractions.put(messageRetraction.getMessageRetractionHandle(), messageRetraction);
+      messageRetractionsByExpiration.add(messageRetraction);
+    }
+  }
+
+  @Override
+  public void saveState(DataOutput out)
+    throws IOException
+  {
+    super.saveState(out);
+  }
+
   private class FederateProxyMessageRetraction
     extends MessageRetraction
   {
@@ -41,6 +81,18 @@ public class FederateProxyMessageRetractionManager
       super(messageRetractionHandle, expiration);
 
       this.queuedTimeStampOrderedMessage = queuedTimeStampOrderedMessage;
+    }
+
+    private FederateProxyMessageRetraction(
+      DataInput in, LogicalTimeFactory logicalTimeFactory,
+      Map<MessageRetractionHandle, QueuedTimeStampOrderedMessage> queuedTimeStampOrderedMessages)
+      throws IOException
+    {
+      super(in, logicalTimeFactory);
+
+      queuedTimeStampOrderedMessage = queuedTimeStampOrderedMessages.get(messageRetractionHandle);
+
+      assert queuedTimeStampOrderedMessage != null;
     }
 
     @Override

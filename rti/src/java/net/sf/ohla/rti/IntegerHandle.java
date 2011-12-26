@@ -16,6 +16,10 @@
 
 package net.sf.ohla.rti;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import org.jboss.netty.buffer.ChannelBuffer;
 
 public class IntegerHandle
@@ -43,6 +47,12 @@ public class IntegerHandle
     handle = decodeHandle(buffer, offset);
   }
 
+  public IntegerHandle(DataInput in)
+    throws IOException
+  {
+    this(in.readInt());
+  }
+
   public int getHandle()
   {
     return handle;
@@ -58,9 +68,15 @@ public class IntegerHandle
     Protocol.encodeVarInt(buffer, offset, handle);
   }
 
-  protected void encode(ChannelBuffer buffer)
+  public void encode(ChannelBuffer buffer)
   {
     Protocol.encodeVarInt(buffer, handle);
+  }
+
+  public void writeTo(DataOutput out)
+    throws IOException
+  {
+    out.writeInt(handle);
   }
 
   public int compareTo(IntegerHandle rhs)
@@ -84,6 +100,12 @@ public class IntegerHandle
   public String toString()
   {
     return Integer.toString(handle);
+  }
+
+  public static int decodeHandle(DataInput in)
+    throws IOException
+  {
+    return in.readInt();
   }
 
   public static int decodeHandle(ChannelBuffer buffer)

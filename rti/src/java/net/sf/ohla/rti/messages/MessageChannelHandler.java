@@ -70,7 +70,7 @@ public abstract class MessageChannelHandler
 
         request.setResponse(message);
       }
-      else if (message.isOrdered())
+      else
       {
         boolean needsExecution;
         synchronized (readLock)
@@ -84,10 +84,6 @@ public abstract class MessageChannelHandler
         {
           executor.execute(new DeliverMessage());
         }
-      }
-      else
-      {
-        executor.execute(new ContextedMessage(context, message));
       }
     }
     else if (event instanceof ChannelStateEvent)

@@ -54,13 +54,13 @@ public class FederationNotSaved
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federate.federationNotSaved(e);
+    federate.fireFederationNotSaved(e);
   }
 
   public void execute(Federate federate)
   {
     this.federate = federate;
 
-    federate.callbackReceived(this);
+    federate.federationNotSaved(this);
   }
 }

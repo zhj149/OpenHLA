@@ -16,8 +16,6 @@
 
 package net.sf.ohla.rti.fdd;
 
-import java.io.Serializable;
-
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -46,7 +44,6 @@ import hla.rti1516e.exceptions.InvalidAttributeHandle;
 import hla.rti1516e.exceptions.NameNotFound;
 
 public class ObjectClass
-  implements Serializable
 {
   private final FDD fdd;
 

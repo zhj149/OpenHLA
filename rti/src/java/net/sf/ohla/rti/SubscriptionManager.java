@@ -16,14 +16,22 @@
 
 package net.sf.ohla.rti;
 
-import java.util.Collection;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.fdd.ObjectClass;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eInteractionClassHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandleValueMapFactory;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandle;
 
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleSet;
@@ -39,11 +47,48 @@ import hla.rti1516e.RegionHandleSet;
 
 public class SubscriptionManager
 {
-  protected Map<ObjectClassHandle, ObjectClassSubscription> subscribedObjectClasses =
+  protected final Map<ObjectClassHandle, ObjectClassSubscription> subscribedObjectClasses =
     new HashMap<ObjectClassHandle, ObjectClassSubscription>();
 
-  protected Map<InteractionClassHandle, InteractionClassSubscription> subscribedInteractionClasses =
+  protected final Map<InteractionClassHandle, InteractionClassSubscription> subscribedInteractionClasses =
     new HashMap<InteractionClassHandle, InteractionClassSubscription>();
+
+  public SubscriptionManager()
+  {
+  }
+
+  public void saveState(DataOutput out)
+    throws IOException
+  {
+    out.writeInt(subscribedObjectClasses.size());
+    for (ObjectClassSubscription objectClassSubscription : subscribedObjectClasses.values())
+    {
+      objectClassSubscription.writeTo(out);
+    }
+
+    out.writeInt(subscribedInteractionClasses.size());
+    for (InteractionClassSubscription interactionClassSubscription : subscribedInteractionClasses.values())
+    {
+      interactionClassSubscription.writeTo(out);
+    }
+  }
+
+  public void restoreState(DataInput in, FDD fdd)
+    throws IOException
+  {
+    for (int count = in.readInt(); count > 0; count--)
+    {
+      ObjectClassSubscription objectClassSubscription = new ObjectClassSubscription(fdd, in);
+      subscribedObjectClasses.put(objectClassSubscription.getObjectClassHandle(), objectClassSubscription);
+    }
+
+    for (int count = in.readInt(); count > 0; count--)
+    {
+      InteractionClassSubscription interactionClassSubscription = new InteractionClassSubscription(fdd, in);
+      subscribedInteractionClasses.put(
+        interactionClassSubscription.getInteractionClassHandle(), interactionClassSubscription);
+    }
+  }
 
   /**
    * Returns {@code true} if the specified {@code ObjectClassHandle} is explicitly subscribed. This method does
@@ -274,6 +319,12 @@ public class SubscriptionManager
     private final Map<AttributeHandle, AttributeSubscription> attributeSubscriptions =
       new HashMap<AttributeHandle, AttributeSubscription>();
 
+    private ObjectClassSubscription(FDD fdd, DataInput in)
+      throws IOException
+    {
+      objectClass = fdd.getObjectClassSafely(IEEE1516eObjectClassHandle.decode(in));
+    }
+
     private ObjectClassSubscription(ObjectClass objectClass, AttributeHandleSet attributeHandles, boolean passive)
     {
       this.objectClass = objectClass;
@@ -287,6 +338,33 @@ public class SubscriptionManager
       this.objectClass = objectClass;
 
       subscribe(attributesAndRegions, passive);
+    }
+
+    public ObjectClass getObjectClass()
+    {
+      return objectClass;
+    }
+
+    public ObjectClassHandle getObjectClassHandle()
+    {
+      return objectClass.getObjectClassHandle();
+    }
+
+    public Map<AttributeHandle, AttributeSubscription> getAttributeSubscriptions()
+    {
+      return attributeSubscriptions;
+    }
+
+    public void writeTo(DataOutput out)
+      throws IOException
+    {
+      ((IEEE1516eObjectClassHandle) objectClass.getObjectClassHandle()).writeTo(out);
+
+      out.writeInt(attributeSubscriptions.size());
+      for (AttributeSubscription attributeSubscription : attributeSubscriptions.values())
+      {
+        attributeSubscription.writeTo(out);
+      }
     }
 
     public void subscribe(AttributeHandleSet attributeHandles, boolean passive)
@@ -392,15 +470,26 @@ public class SubscriptionManager
     protected boolean defaultRegionSubscribed;
     protected boolean defaultRegionPassive;
 
-    protected final Map<RegionHandle, Boolean> subscribedRegionHandles =
-      new HashMap<RegionHandle, Boolean>();
+    protected final Map<RegionHandle, Boolean> subscribedRegionHandles = new HashMap<RegionHandle, Boolean>();
 
-    public RegionSubscription(boolean passive)
+    protected RegionSubscription(DataInput in)
+      throws IOException
+    {
+      defaultRegionPassive = in.readBoolean();
+      defaultRegionSubscribed = in.readBoolean();
+
+      for (int i = in.readInt(); i > 0; i--)
+      {
+        subscribedRegionHandles.put(new IEEE1516eRegionHandle(in), in.readBoolean());
+      }
+    }
+
+    protected RegionSubscription(boolean passive)
     {
       subscribe(passive);
     }
 
-    public RegionSubscription(RegionHandleSet regionHandles, boolean passive)
+    protected RegionSubscription(RegionHandleSet regionHandles, boolean passive)
     {
       subscribe(regionHandles, passive);
     }
@@ -418,6 +507,22 @@ public class SubscriptionManager
     public Set<RegionHandle> getSubscribedRegionHandles()
     {
       return subscribedRegionHandles.keySet();
+    }
+
+    public void writeTo(DataOutput out)
+      throws IOException
+    {
+      // TODO: passivity needs looked at
+      //
+      out.writeBoolean(defaultRegionPassive);
+      out.writeBoolean(defaultRegionSubscribed);
+
+      out.writeInt(subscribedRegionHandles.size());
+      for (Map.Entry<RegionHandle, Boolean> entry : subscribedRegionHandles.entrySet())
+      {
+        ((IEEE1516eRegionHandle) entry.getKey()).writeTo(out);
+        out.writeBoolean(entry.getValue());
+      }
     }
 
     public void subscribe(boolean passive)
@@ -447,16 +552,24 @@ public class SubscriptionManager
   protected class AttributeSubscription
     extends RegionSubscription
   {
-    protected final AttributeHandle attributeHandle;
+    private final AttributeHandle attributeHandle;
 
-    public AttributeSubscription(AttributeHandle attributeHandle, boolean passive)
+    private AttributeSubscription(DataInput in)
+      throws IOException
+    {
+      super(in);
+
+      attributeHandle = IEEE1516eAttributeHandle.decode(in);
+    }
+
+    private AttributeSubscription(AttributeHandle attributeHandle, boolean passive)
     {
       super(passive);
 
       this.attributeHandle = attributeHandle;
     }
 
-    public AttributeSubscription(AttributeHandle attributeHandle, RegionHandleSet regionHandles, boolean passive)
+    private AttributeSubscription(AttributeHandle attributeHandle, RegionHandleSet regionHandles, boolean passive)
     {
       super(regionHandles, passive);
 
@@ -467,21 +580,38 @@ public class SubscriptionManager
     {
       return attributeHandle;
     }
+
+    @Override
+    public void writeTo(DataOutput out)
+      throws IOException
+    {
+      super.writeTo(out);
+
+      ((IEEE1516eAttributeHandle) attributeHandle).writeTo(out);
+    }
   }
 
   protected class InteractionClassSubscription
     extends RegionSubscription
   {
-    protected final InteractionClass interactionClass;
+    private final InteractionClass interactionClass;
 
-    public InteractionClassSubscription(InteractionClass interactionClass, boolean passive)
+    private InteractionClassSubscription(FDD fdd, DataInput in)
+      throws IOException
+    {
+      super(in);
+
+      interactionClass = fdd.getInteractionClassSafely(IEEE1516eInteractionClassHandle.decode(in));
+    }
+
+    private InteractionClassSubscription(InteractionClass interactionClass, boolean passive)
     {
       super(passive);
 
       this.interactionClass = interactionClass;
     }
 
-    public InteractionClassSubscription(
+    private InteractionClassSubscription(
       InteractionClass interactionClass, RegionHandleSet regionHandles, boolean passive)
     {
       super(regionHandles, passive);
@@ -497,6 +627,15 @@ public class SubscriptionManager
     public InteractionClassHandle getInteractionClassHandle()
     {
       return interactionClass.getInteractionClassHandle();
+    }
+
+    @Override
+    public void writeTo(DataOutput out)
+      throws IOException
+    {
+      super.writeTo(out);
+
+      ((IEEE1516eInteractionClassHandle) interactionClass.getInteractionClassHandle()).writeTo(out);
     }
 
     public ParameterHandleValueMap trim(InteractionClass interactionClass, ParameterHandleValueMap parameterValues)

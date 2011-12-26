@@ -16,7 +16,13 @@
 
 package net.sf.ohla.rti.federation;
 
-import java.io.Serializable;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.RandomAccessFile;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,33 +31,67 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import net.sf.ohla.rti.federate.FederateSave;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
+import net.sf.ohla.rti.messages.FederationExecutionMessage;
+
+import org.jboss.netty.buffer.ChannelBuffer;
 
 import hla.rti1516e.FederateHandle;
-import hla.rti1516e.FederateHandleSaveStatusPair;
 import hla.rti1516e.LogicalTime;
 import hla.rti1516e.SaveFailureReason;
 import hla.rti1516e.SaveStatus;
 
 public class FederationExecutionSave
-  implements Serializable
 {
+  public static final String FEDERATION_EXECUTION_MESSAGES = "Federation_Execution_Messages";
+
   private final String label;
   private final LogicalTime saveTime;
+
+  private final File directory;
+
+  private final RandomAccessFile saveFile;
+
+  private final File federationExecutionMessagesFile;
+  private final OutputStream federationExecutionMessagesOutputStream;
+  private final DataOutput federationExecutionMessagesDataOutput;
+
   private final Map<FederateHandle, FederateSave> federateSaves = new HashMap<FederateHandle, FederateSave>();
 
-  protected transient Set<FederateHandle> instructedToSave = new HashSet<FederateHandle>();
-  protected transient Set<FederateHandle> saving = new HashSet<FederateHandle>();
-  protected transient Set<FederateHandle> waitingForFederationToSave = new HashSet<FederateHandle>();
+  private final List<FederationExecutionMessage> federationExecutionMessages = new LinkedList<FederationExecutionMessage>();
 
-  protected transient Map<FederateHandle, SaveFailureReason> failed = new HashMap<FederateHandle, SaveFailureReason>();
+  private final Set<FederateHandle> instructedToSave = new HashSet<FederateHandle>();
+  private final Set<FederateHandle> saving = new HashSet<FederateHandle>();
+  private final Set<FederateHandle> waitingForFederationToSave = new HashSet<FederateHandle>();
 
-  protected transient SaveFailureReason saveFailureReason;
+  private final Map<FederateHandle, SaveFailureReason> failed = new HashMap<FederateHandle, SaveFailureReason>();
 
-  public FederationExecutionSave(String label, LogicalTime saveTime)
+  private SaveFailureReason saveFailureReason;
+
+  public FederationExecutionSave(File directory, String label)
+    throws IOException
+  {
+    this(directory, label, null);
+  }
+
+  public FederationExecutionSave(File directory, String label, LogicalTime saveTime)
+    throws IOException
   {
     this.label = label;
     this.saveTime = saveTime;
+    this.directory = directory;
+
+    directory.mkdirs();
+
+    File file = new File(directory, label + ".save");
+
+    // TODO: check for existence of file and other stuff
+
+    saveFile = new RandomAccessFile(file, "rw");
+
+    federationExecutionMessagesFile = File.createTempFile(FEDERATION_EXECUTION_MESSAGES, "save");
+    federationExecutionMessagesOutputStream = new FileOutputStream(federationExecutionMessagesFile);
+    federationExecutionMessagesDataOutput = new DataOutputStream(federationExecutionMessagesOutputStream);
   }
 
   public String getLabel()
@@ -64,9 +104,19 @@ public class FederationExecutionSave
     return saveTime;
   }
 
-  public Map<FederateHandle, FederateSave> getFederateSaves()
+  public File getDirectory()
   {
-    return federateSaves;
+    return directory;
+  }
+
+  public FederateSave getFederateSave(FederateHandle federateHandle)
+  {
+    return federateSaves.get(federateHandle);
+  }
+
+  public Set<FederateHandle> getInstructedToSave()
+  {
+    return instructedToSave;
   }
 
   public boolean hasFailed()
@@ -79,38 +129,32 @@ public class FederationExecutionSave
     return saveFailureReason;
   }
 
-  public void instructedToSave(FederateHandle instructedToSave)
+  public FederateSave instructedToSave(FederateProxy federateProxy)
+    throws IOException
   {
-    this.instructedToSave.add(instructedToSave);
+    instructedToSave.add(federateProxy.getFederateHandle());
+
+    FederateSave federateSave = new FederateSave(federateProxy);
+    federateSaves.put(federateProxy.getFederateHandle(), federateSave);
+    return federateSave;
   }
 
-  public void instructedToSave(Set<FederateHandle> instructedToSave)
+  public void updateFederationSaveStatus(Map<FederateHandle, SaveStatus> federationSaveStatus)
   {
-    this.instructedToSave.addAll(instructedToSave);
-  }
-
-  public FederateHandleSaveStatusPair[] getFederationSaveStatus()
-  {
-    List<FederateHandleSaveStatusPair> federationSaveStatus = new LinkedList<FederateHandleSaveStatusPair>();
-
     for (FederateHandle federateHandle : instructedToSave)
     {
-      federationSaveStatus.add(new FederateHandleSaveStatusPair(
-        federateHandle, SaveStatus.FEDERATE_INSTRUCTED_TO_SAVE));
+      federationSaveStatus.put(federateHandle, SaveStatus.FEDERATE_INSTRUCTED_TO_SAVE);
     }
 
     for (FederateHandle federateHandle : saving)
     {
-      federationSaveStatus.add(new FederateHandleSaveStatusPair(federateHandle, SaveStatus.FEDERATE_SAVING));
+      federationSaveStatus.put(federateHandle, SaveStatus.FEDERATE_SAVING);
     }
 
     for (FederateHandle federateHandle : waitingForFederationToSave)
     {
-      federationSaveStatus.add(new FederateHandleSaveStatusPair(
-        federateHandle, SaveStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_SAVE));
+      federationSaveStatus.put(federateHandle, SaveStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_SAVE);
     }
-
-    return federationSaveStatus.toArray(new FederateHandleSaveStatusPair[federationSaveStatus.size()]);
   }
 
   public void federateSaveBegun(FederateHandle federateHandle)
@@ -119,13 +163,34 @@ public class FederationExecutionSave
     saving.add(federateHandle);
   }
 
-  public boolean federateSaveComplete(FederateHandle federateHandle, FederateSave federateSave)
+  public boolean federateSaveComplete(FederateHandle federateHandle)
   {
     saving.remove(federateHandle);
     waitingForFederationToSave.add(federateHandle);
-    federateSaves.put(federateHandle, federateSave);
 
-    return saving.isEmpty();
+    try
+    {
+      federateSaves.get(federateHandle).writeTo(saveFile);
+    }
+    catch (IOException ioe)
+    {
+      ioe.printStackTrace();
+    }
+
+    boolean done;
+    if (done = saving.isEmpty())
+    {
+      try
+      {
+        saveFile.close();
+      }
+      catch (IOException ioe)
+      {
+        ioe.printStackTrace();
+      }
+    }
+
+    return done;
   }
 
   public boolean federateSaveNotComplete(FederateHandle federateHandle)
@@ -148,5 +213,17 @@ public class FederationExecutionSave
     saveFailureReason = SaveFailureReason.FEDERATE_RESIGNED_DURING_SAVE;
 
     return saving.isEmpty();
+  }
+
+  public synchronized void save(FederateHandle federateHandle, FederationExecutionMessage message)
+    throws IOException
+  {
+    ((IEEE1516eFederateHandle) federateHandle).writeTo(federationExecutionMessagesDataOutput);
+
+    ChannelBuffer buffer = message.getBuffer();
+
+    int length = buffer.readableBytes();
+    federationExecutionMessagesDataOutput.writeInt(length);
+    buffer.readBytes(federationExecutionMessagesOutputStream, length);
   }
 }

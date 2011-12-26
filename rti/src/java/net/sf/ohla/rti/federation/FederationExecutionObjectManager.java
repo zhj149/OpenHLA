@@ -309,13 +309,54 @@ public class FederationExecutionObjectManager
     }
   }
 
+  public void unpublishObjectClass(FederateProxy federateProxy, Set<ObjectInstanceHandle> objectInstanceHandles)
+  {
+    objectsLock.readLock().lock();
+    try
+    {
+      for (ObjectInstanceHandle objectInstanceHandle : objectInstanceHandles)
+      {
+        FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
+
+        if (objectInstance != null)
+        {
+          objectInstance.unpublishObjectClass(federateProxy);
+        }
+      }
+    }
+    finally
+    {
+      objectsLock.readLock().unlock();
+    }
+  }
+
+  public void unpublishObjectClassAttributes(
+    FederateProxy federateProxy, AttributeHandleSet attributeHandles, Set<ObjectInstanceHandle> objectInstanceHandles)
+  {
+    objectsLock.readLock().lock();
+    try
+    {
+      for (ObjectInstanceHandle objectInstanceHandle : objectInstanceHandles)
+      {
+        FederationExecutionObjectInstance objectInstance = objects.get(objectInstanceHandle);
+
+        if (objectInstance != null)
+        {
+          objectInstance.unpublishObjectClassAttributes(federateProxy, attributeHandles);
+        }
+      }
+    }
+    finally
+    {
+      objectsLock.readLock().unlock();
+    }
+  }
+
   public void subscribeObjectClassAttributes(FederateProxy federateProxy, ObjectClass objectClass)
   {
     objectsLock.readLock().lock();
     try
     {
-      // TODO: consider sending one message instead of many
-
       for (FederationExecutionObjectInstance objectInstance : objects.values())
       {
         if (!federateProxy.getFederateHandle().equals(objectInstance.getProducingFederateHandle()) &&

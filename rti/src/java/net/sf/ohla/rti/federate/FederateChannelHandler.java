@@ -58,7 +58,14 @@ public class FederateChannelHandler
     {
       assert message instanceof Callback;
 
-      callbackManager.add((Callback) message);
+      if (federate == null)
+      {
+        callbackManager.add((Callback) message, false);
+      }
+      else
+      {
+        federate.callbackReceived((Callback) message);
+      }
     }
   }
 }

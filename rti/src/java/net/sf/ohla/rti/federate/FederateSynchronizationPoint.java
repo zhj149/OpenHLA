@@ -16,6 +16,10 @@
 
 package net.sf.ohla.rti.federate;
 
+import net.sf.ohla.rti.Protocol;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
 public class FederateSynchronizationPoint
 {
   private final String label;
@@ -27,6 +31,13 @@ public class FederateSynchronizationPoint
   {
     this.label = label;
     this.tag = tag;
+  }
+
+  public FederateSynchronizationPoint(ChannelBuffer buffer)
+  {
+    label = Protocol.decodeString(buffer);
+    tag = Protocol.decodeBytes(buffer);
+    state = State.values()[Protocol.decodeVarInt(buffer)];
   }
 
   public String getLabel()
@@ -47,6 +58,13 @@ public class FederateSynchronizationPoint
       state = State.WAITING_FOR_REST_OF_FEDERATION_TO_SYNCHRONIZE;
     }
     return synchronizationPointAchieved;
+  }
+
+  public void encode(ChannelBuffer buffer)
+  {
+    Protocol.encodeString(buffer, label);
+    Protocol.encodeBytes(buffer, tag);
+    Protocol.encodeVarInt(buffer, state.ordinal());
   }
 
   protected enum State

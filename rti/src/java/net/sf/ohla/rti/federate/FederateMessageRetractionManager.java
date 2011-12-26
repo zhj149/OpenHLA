@@ -16,6 +16,10 @@
 
 package net.sf.ohla.rti.federate;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import java.util.concurrent.atomic.AtomicLong;
 
 import net.sf.ohla.rti.MessageRetractionManager;
@@ -25,6 +29,7 @@ import net.sf.ohla.rti.i18n.I18n;
 import net.sf.ohla.rti.messages.Retract;
 
 import hla.rti1516e.LogicalTime;
+import hla.rti1516e.LogicalTimeFactory;
 import hla.rti1516e.MessageRetractionHandle;
 import hla.rti1516e.exceptions.MessageCanNoLongerBeRetracted;
 
@@ -81,5 +86,23 @@ public class FederateMessageRetractionManager
     {
       messageRetractionsLock.unlock();
     }
+  }
+
+  @Override
+  public void saveState(DataOutput out)
+    throws IOException
+  {
+    super.saveState(out);
+
+    out.writeLong(messageRetractionCount.get());
+  }
+
+  @Override
+  public void restoreState(DataInput in, LogicalTimeFactory logicalTimeFactory)
+    throws IOException
+  {
+    super.restoreState(in, logicalTimeFactory);
+
+    messageRetractionCount.set(in.readLong());
   }
 }

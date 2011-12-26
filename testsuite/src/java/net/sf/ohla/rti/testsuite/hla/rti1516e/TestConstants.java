@@ -38,6 +38,11 @@ public interface TestConstants
   static final String SYNCHRONIZATION_POINT_4 = "Synchronization Point 4";
   static final String SYNCHRONIZATION_POINT_5 = "Synchronization Point 5";
 
+  static final String FEDERATION_SAVE_1 = "Save 1";
+  static final String FEDERATION_SAVE_2 = "Save 2";
+  static final String FEDERATION_SAVE_3 = "Save 3";
+  static final String FEDERATION_SAVE_4 = "Save 4";
+
   static final byte[] TAG = "TAG".getBytes();
 
   static final String TEST_OBJECT = "TestObject";

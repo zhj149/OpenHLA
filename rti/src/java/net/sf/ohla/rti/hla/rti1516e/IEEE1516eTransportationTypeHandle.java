@@ -16,6 +16,9 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
+import java.io.DataInput;
+import java.io.IOException;
+
 import net.sf.ohla.rti.IntegerHandle;
 
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -47,14 +50,16 @@ public class IEEE1516eTransportationTypeHandle
     super(handle);
   }
 
-  public IEEE1516eTransportationTypeHandle(ChannelBuffer buffer)
-  {
-    super(buffer);
-  }
-
   public static void encode(ChannelBuffer buffer, TransportationTypeHandle transportationTypeHandle)
   {
     ((IEEE1516eTransportationTypeHandle) transportationTypeHandle).encode(buffer);
+  }
+
+  public static TransportationTypeHandle decode(DataInput in)
+    throws IOException
+  {
+    int handle = decodeHandle(in);
+    return handle < cache.length ? cache[handle] : new IEEE1516eTransportationTypeHandle(handle);
   }
 
   public static TransportationTypeHandle decode(ChannelBuffer buffer)

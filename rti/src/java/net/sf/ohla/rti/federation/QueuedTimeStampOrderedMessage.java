@@ -41,6 +41,11 @@ public class QueuedTimeStampOrderedMessage
     return timeStampOrderedMessage;
   }
 
+  public boolean isCancelled()
+  {
+    return cancelled;
+  }
+
   public LogicalTime getTime()
   {
     return timeStampOrderedMessage.getTime();
