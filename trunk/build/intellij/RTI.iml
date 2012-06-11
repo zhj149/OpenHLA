@@ -14,6 +14,7 @@
     <orderEntry type="library" exported="" name="logback" level="project" />
     <orderEntry type="library" exported="" name="slf4j" level="project" />
     <orderEntry type="library" exported="" name="netty" level="project" />
+    <orderEntry type="library" exported="" name="cal10n" level="project" />
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
@@ -23,7 +24,6 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" exported="" name="cal10n" level="project" />
   </component>
   <component name="copyright">
     <Base>

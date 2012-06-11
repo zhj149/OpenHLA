@@ -1102,20 +1102,7 @@ public class IEEE1516eRTIambassador
       {
         checkIfFederateNotExecutionMember();
 
-        RequestFederationRestore requestFederationRestore = new RequestFederationRestore(label);
-        rtiChannel.write(requestFederationRestore);
-
-        switch (requestFederationRestore.getResponse().getResponse())
-        {
-          case SAVE_IN_PROGRESS:
-            throw new SaveInProgress(I18n.getMessage(
-              ExceptionMessages.SAVE_IN_PROGRESS, federate.getFederationExecutionName()));
-          case RESTORE_IN_PROGRESS:
-            throw new RestoreInProgress(I18n.getMessage(
-              ExceptionMessages.RESTORE_IN_PROGRESS, federate.getFederationExecutionName()));
-          case SUCCESS:
-            break;
-        }
+        federate.requestFederationRestore(label);
       }
       finally
       {

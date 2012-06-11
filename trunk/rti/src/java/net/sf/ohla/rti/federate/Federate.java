@@ -31,7 +31,6 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.fdd.ObjectClass;
@@ -75,6 +74,7 @@ import net.sf.ohla.rti.messages.QueryFederationRestoreStatus;
 import net.sf.ohla.rti.messages.QueryFederationSaveStatus;
 import net.sf.ohla.rti.messages.QueryInteractionTransportationType;
 import net.sf.ohla.rti.messages.RegisterFederationSynchronizationPoint;
+import net.sf.ohla.rti.messages.RequestFederationRestore;
 import net.sf.ohla.rti.messages.RequestFederationSave;
 import net.sf.ohla.rti.messages.RequestObjectClassAttributeValueUpdate;
 import net.sf.ohla.rti.messages.RequestObjectClassAttributeValueUpdateWithRegions;
@@ -88,8 +88,6 @@ import net.sf.ohla.rti.messages.callbacks.ReflectAttributeValues;
 import net.sf.ohla.rti.messages.callbacks.RemoveObjectInstance;
 import net.sf.ohla.rti.messages.callbacks.ReportInteractionTransportationType;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
@@ -133,6 +131,7 @@ import hla.rti1516e.RegionHandle;
 import hla.rti1516e.RegionHandleSet;
 import hla.rti1516e.RegionHandleSetFactory;
 import hla.rti1516e.ResignAction;
+import hla.rti1516e.RestoreFailureReason;
 import hla.rti1516e.RestoreStatus;
 import hla.rti1516e.SaveFailureReason;
 import hla.rti1516e.SaveStatus;
@@ -249,9 +248,10 @@ public class Federate
 
   private ResignAction automaticResignDirective;
 
-  private SaveStatus saveStatus;
-  private RestoreStatus restoreStatus;
+  private SaveStatus saveStatus = SaveStatus.NO_SAVE_IN_PROGRESS;
+  private RestoreStatus restoreStatus = RestoreStatus.NO_RESTORE_IN_PROGRESS;
 
+  private FederateStateReader federateStateReader;
   private FederateStateWriter federateStateWriter;
 
   private final Lock synchronizationPointLock = new ReentrantLock(true);
@@ -847,6 +847,38 @@ public class Federate
     }
   }
 
+  public void requestFederationRestore(String label)
+    throws SaveInProgress, RestoreInProgress, RTIinternalError
+  {
+    federateStateLock.writeLock().lock();
+    try
+    {
+      checkIfActive();
+
+      restoreStatus = RestoreStatus.FEDERATE_RESTORE_REQUEST_PENDING;
+
+      RequestFederationRestore requestFederationRestore = new RequestFederationRestore(label);
+      rtiChannel.write(requestFederationRestore);
+
+      switch (requestFederationRestore.getResponse().getResponse())
+      {
+        case SAVE_IN_PROGRESS:
+          restoreStatus = RestoreStatus.NO_RESTORE_IN_PROGRESS;
+          throw new SaveInProgress(I18n.getMessage(ExceptionMessages.SAVE_IN_PROGRESS, federationExecutionName));
+        case RESTORE_IN_PROGRESS:
+          restoreStatus = RestoreStatus.NO_RESTORE_IN_PROGRESS;
+          throw new RestoreInProgress(I18n.getMessage(ExceptionMessages.RESTORE_IN_PROGRESS, federationExecutionName));
+        case SUCCESS:
+          restoreStatus = RestoreStatus.FEDERATE_WAITING_FOR_RESTORE_TO_BEGIN;
+          break;
+      }
+    }
+    finally
+    {
+      federateStateLock.writeLock().unlock();
+    }
+  }
+
   public void federateRestoreComplete()
     throws RestoreNotRequested, SaveInProgress, RTIinternalError
   {
@@ -860,6 +892,10 @@ public class Federate
         throw new RestoreNotRequested(I18n.getMessage(
           ExceptionMessages.RESTORE_NOT_IN_PROGRESS, federationExecutionName));
       }
+
+      // wait until the federate state has been completely read
+      //
+      federateStateReader.awaitUninterruptibly();
 
       restoreStatus = RestoreStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_RESTORE;
 
@@ -884,6 +920,10 @@ public class Federate
         throw new RestoreNotRequested(I18n.getMessage(
           ExceptionMessages.RESTORE_NOT_IN_PROGRESS, federationExecutionName));
       }
+
+      // wait until the federate state has been completely read
+      //
+      federateStateReader.awaitUninterruptibly();
 
       restoreStatus = RestoreStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_RESTORE;
 
@@ -3173,7 +3213,7 @@ public class Federate
     }
   }
 
-  public void fireInitiateFederateRestore(String label, String federateName, FederateHandle federateHandle)
+  public void fireFederationRestoreBegun()
     throws FederateInternalError
   {
     federateStateLock.writeLock().lock();
@@ -3183,15 +3223,63 @@ public class Federate
 
       restoreStatus = RestoreStatus.FEDERATE_PREPARED_TO_RESTORE;
 
-      federateAmbassador.initiateFederateRestore(label, federateName, federateHandle);
+      federateStateReader = new FederateStateReader();
 
-      // TODO: should this happen before the callback?
-      //
-      this.federateName = federateName;
-      this.federateHandle = federateHandle;
+      federateAmbassador.federationRestoreBegun();
     }
     finally
     {
+      federateStateLock.writeLock().unlock();
+    }
+  }
+
+  public void fireInitiateFederateRestore(String label, String federateName, FederateHandle federateHandle)
+    throws FederateInternalError
+  {
+    federateStateLock.writeLock().lock();
+    try
+    {
+      restoreStatus = RestoreStatus.FEDERATE_RESTORING;
+
+      this.federateName = federateName;
+      this.federateHandle = federateHandle;
+
+      federateAmbassador.initiateFederateRestore(label, federateName, federateHandle);
+    }
+    finally
+    {
+      federateStateLock.writeLock().unlock();
+    }
+  }
+
+  public void fireFederationRestored()
+    throws FederateInternalError
+  {
+    federateStateLock.writeLock().lock();
+    try
+    {
+      federateAmbassador.federationRestored();
+    }
+    finally
+    {
+      federateState = FederateState.ACTIVE;
+
+      federateStateLock.writeLock().unlock();
+    }
+  }
+
+  public void fireFederationNotRestored(RestoreFailureReason restoreFailureReason)
+    throws FederateInternalError
+  {
+    federateStateLock.writeLock().lock();
+    try
+    {
+      federateAmbassador.federationNotRestored(restoreFailureReason);
+    }
+    finally
+    {
+      federateState = FederateState.ACTIVE;
+
       federateStateLock.writeLock().unlock();
     }
   }
@@ -3242,32 +3330,20 @@ public class Federate
 
   public void handleFederateStateFrame(FederateStateFrame federateStateFrame)
   {
+    federateStateReader.getFederateStateInputStream().addFrame(federateStateFrame.getBuffer());
+
+    if (federateStateFrame.isLast())
+    {
+      federateStateReader.getFederateStateInputStream().done();
+
+      federateStateReader = null;
+    }
   }
 
   @Override
   public String toString()
   {
     return new StringBuilder(federateName).append(":").append(federateHandle).toString();
-  }
-
-  private ChannelBuffer saveState()
-  {
-    ChannelBuffer state = ChannelBuffers.dynamicBuffer();
-    Protocol.encodeVarInt(state, this.synchronizationPoints.size());
-    for (FederateSynchronizationPoint synchronizationPoint : this.synchronizationPoints.values())
-    {
-      synchronizationPoint.encode(state);
-    }
-    return state;
-  }
-
-  private void restoreState(ChannelBuffer state)
-  {
-    for (int count = Protocol.decodeVarInt(state); count > 0; count--)
-    {
-      FederateSynchronizationPoint synchronizationPoint = new FederateSynchronizationPoint(state);
-      synchronizationPoints.put(synchronizationPoint.getLabel(), synchronizationPoint);
-    }
   }
 
   private void checkIfSaveInProgress()
@@ -3308,21 +3384,43 @@ public class Federate
   {
     private final FederateStateInputStream federateStateInputStream = new FederateStateInputStream();
 
+    private boolean done = false;
+
     public FederateStateReader()
     {
       new Thread(this).start();
     }
 
-    public void addFrame(FederateStateFrame federateStateFrame)
+    public FederateStateInputStream getFederateStateInputStream()
     {
+      return federateStateInputStream;
     }
 
-    @Override
+    public synchronized void awaitUninterruptibly()
+    {
+      while (!done)
+      {
+        try
+        {
+          wait();
+        }
+        catch (InterruptedException ie)
+        {
+        }
+      }
+    }
+
     public void run()
     {
       DataInputStream in = new DataInputStream(federateStateInputStream);
       try
       {
+        for (int i = in.readInt(); i > 0; i--)
+        {
+          FederateSynchronizationPoint synchronizationPoint = new FederateSynchronizationPoint(in);
+          synchronizationPoints.put(synchronizationPoint.getLabel(), synchronizationPoint);
+        }
+
         objectManager.restoreState(in);
         regionManager.restoreState(in);
         messageRetractionManager.restoreState(in, logicalTimeFactory);
@@ -3341,6 +3439,13 @@ public class Federate
         catch (IOException ioe)
         {
           log.warn(LogMessages.UNABLE_TO_SAVE_FEDERATE_STATE, ioe);
+        }
+
+        synchronized (this)
+        {
+          done = true;
+
+          notifyAll();
         }
       }
     }
@@ -3370,12 +3475,17 @@ public class Federate
       }
     }
 
-    @Override
     public void run()
     {
       DataOutputStream out = new DataOutputStream(new FederateStateOutputStream(8192, rtiChannel));
       try
       {
+        out.writeInt(synchronizationPoints.size());
+        for (FederateSynchronizationPoint synchronizationPoint : synchronizationPoints.values())
+        {
+          synchronizationPoint.writeTo(out);
+        }
+
         objectManager.saveState(out);
         regionManager.saveState(out);
         messageRetractionManager.saveState(out);

@@ -20,10 +20,50 @@ import java.util.Locale;
 
 import ch.qos.cal10n.IMessageConveyor;
 import ch.qos.cal10n.MessageConveyor;
+import ch.qos.cal10n.MessageConveyorException;
+import ch.qos.cal10n.util.MiscUtil;
 
 public class I18n
 {
-  public static final IMessageConveyor MESSAGE_CONVEYOR = new MessageConveyor(Locale.getDefault());
+  public static final IMessageConveyor MESSAGE_CONVEYOR;
+
+  public static final String DEFAULT_LOCALE = "en_US";
+
+  static
+  {
+    // TODO: check for a Locale property?
+
+    Locale locale = Locale.getDefault();
+
+    IMessageConveyor messageConveyor = new MessageConveyor(locale);
+    try
+    {
+      messageConveyor.getMessage(LogMessages.LOCALE_TEST);
+    }
+    catch (MessageConveyorException mce)
+    {
+      // might not have a resource bundle for the default locale, try again with the default Locale
+
+      // TODO: check for a default Locale property?
+
+      locale = MiscUtil.toLocale(DEFAULT_LOCALE);
+
+      messageConveyor = new MessageConveyor(locale);
+
+      try
+      {
+        messageConveyor.getMessage(LogMessages.LOCALE_TEST);
+      }
+      catch (MessageConveyorException mce2)
+      {
+        // rethrow the original error
+        //
+        throw mce;
+      }
+    }
+
+    MESSAGE_CONVEYOR = messageConveyor;
+  }
 
   public static <E extends Enum<?>> String getMessage(E key, Object... args)
   {

@@ -17,8 +17,11 @@
 package net.sf.ohla.rti.i18n;
 
 import ch.qos.cal10n.BaseName;
+import ch.qos.cal10n.Locale;
+import ch.qos.cal10n.LocaleData;
 
 @BaseName("ohla_rti_exception_messages")
+@LocaleData(value = { @Locale(value = "en_US") })
 public enum ExceptionMessages
 {
   UNEXPECTED_EXCEPTION,

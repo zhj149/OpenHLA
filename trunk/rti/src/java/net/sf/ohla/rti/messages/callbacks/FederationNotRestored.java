@@ -17,7 +17,9 @@
 package net.sf.ohla.rti.messages.callbacks;
 
 import net.sf.ohla.rti.federate.Callback;
+import net.sf.ohla.rti.federate.Federate;
 import net.sf.ohla.rti.messages.EnumMessage;
+import net.sf.ohla.rti.messages.FederateMessage;
 import net.sf.ohla.rti.messages.MessageType;
 
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -28,8 +30,10 @@ import hla.rti1516e.exceptions.FederateInternalError;
 
 public class FederationNotRestored
   extends EnumMessage<RestoreFailureReason>
-  implements Callback
+  implements Callback, FederateMessage
 {
+  private Federate federate;
+
   public FederationNotRestored(RestoreFailureReason restoreFailureReason)
   {
     super(MessageType.FEDERATION_NOT_RESTORED, restoreFailureReason);
@@ -50,6 +54,13 @@ public class FederationNotRestored
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.federationNotRestored(e);
+    federate.fireFederationNotRestored(e);
+  }
+
+  public void execute(Federate federate)
+  {
+    this.federate = federate;
+
+    federate.callbackReceived(this);
   }
 }
