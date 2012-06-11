@@ -16,6 +16,8 @@
 
 package net.sf.ohla.rti.federation;
 
+import java.io.DataInput;
+import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -37,11 +39,9 @@ import net.sf.ohla.rti.federate.Federate;
 import net.sf.ohla.rti.federate.TimeAdvanceType;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSet;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSetFactory;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eInteractionClassHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectInstanceHandle;
-import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18nLogger;
 import net.sf.ohla.rti.i18n.LogMessages;
 import net.sf.ohla.rti.messages.DeleteObjectInstance;
@@ -51,10 +51,14 @@ import net.sf.ohla.rti.messages.FederateRestoreNotComplete;
 import net.sf.ohla.rti.messages.FederateSaveBegun;
 import net.sf.ohla.rti.messages.FederateSaveComplete;
 import net.sf.ohla.rti.messages.FederateSaveNotComplete;
+import net.sf.ohla.rti.messages.Message;
 import net.sf.ohla.rti.messages.MessageDecoder;
+import net.sf.ohla.rti.messages.MessageFactory;
 import net.sf.ohla.rti.messages.PublishInteractionClass;
 import net.sf.ohla.rti.messages.PublishObjectClassAttributes;
 import net.sf.ohla.rti.messages.QueryInteractionTransportationType;
+import net.sf.ohla.rti.messages.RequestFederationRestore;
+import net.sf.ohla.rti.messages.RequestFederationRestoreResponse;
 import net.sf.ohla.rti.messages.ResignedFederationExecution;
 import net.sf.ohla.rti.messages.Retract;
 import net.sf.ohla.rti.messages.SendInteraction;
@@ -73,8 +77,12 @@ import net.sf.ohla.rti.messages.UnsubscribeObjectClassAttributesWithRegions;
 import net.sf.ohla.rti.messages.UpdateAttributeValues;
 import net.sf.ohla.rti.messages.callbacks.AnnounceSynchronizationPoint;
 import net.sf.ohla.rti.messages.callbacks.DiscoverObjectInstance;
+import net.sf.ohla.rti.messages.callbacks.FederationNotRestored;
 import net.sf.ohla.rti.messages.callbacks.FederationNotSaved;
+import net.sf.ohla.rti.messages.callbacks.FederationRestoreBegun;
+import net.sf.ohla.rti.messages.callbacks.FederationRestored;
 import net.sf.ohla.rti.messages.callbacks.FederationSaved;
+import net.sf.ohla.rti.messages.callbacks.InitiateFederateRestore;
 import net.sf.ohla.rti.messages.callbacks.InitiateFederateSave;
 import net.sf.ohla.rti.messages.callbacks.ProvideAttributeValueUpdate;
 import net.sf.ohla.rti.messages.callbacks.ReceiveInteraction;
@@ -87,6 +95,7 @@ import net.sf.ohla.rti.messages.callbacks.TimeConstrainedEnabled;
 import net.sf.ohla.rti.messages.callbacks.TimeRegulationEnabled;
 
 import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
@@ -96,6 +105,7 @@ import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.InteractionClassHandle;
 import hla.rti1516e.LogicalTime;
+import hla.rti1516e.LogicalTimeFactory;
 import hla.rti1516e.LogicalTimeInterval;
 import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.ObjectInstanceHandle;
@@ -104,6 +114,7 @@ import hla.rti1516e.ResignAction;
 import hla.rti1516e.RestoreStatus;
 import hla.rti1516e.SaveStatus;
 import hla.rti1516e.TransportationTypeHandle;
+import hla.rti1516e.exceptions.CouldNotDecode;
 import hla.rti1516e.exceptions.CouldNotEncode;
 import hla.rti1516e.exceptions.IllegalTimeArithmetic;
 import hla.rti1516e.exceptions.InvalidLogicalTimeInterval;
@@ -111,9 +122,10 @@ import hla.rti1516e.exceptions.InvalidLogicalTimeInterval;
 public class FederateProxy
 {
   private final FederationExecution federationExecution;
-  private final FederateHandle federateHandle;
-  private final String federateName;
-  private final String federateType;
+
+  private FederateHandle federateHandle;
+  private String federateName;
+  private String federateType;
 
   /**
    * The {@code Channel} back to the Federate.
@@ -411,11 +423,14 @@ public class FederateProxy
   {
     saveStatus = SaveStatus.FEDERATE_SAVING;
 
+    DataOutputStream out = new DataOutputStream(federateSave.getFederateProxyStateOutputStream());
     try
     {
       // write the state of the proxy
       //
-      writeState(new DataOutputStream(federateSave.getFederateProxyStateOutputStream()));
+      saveState(out);
+
+      out.close();
     }
     catch (IOException ioe)
     {
@@ -455,14 +470,44 @@ public class FederateProxy
     federateChannel.write(federationNotSaved);
   }
 
-  public void federateRestoreComplete(FederateRestoreComplete federateRestoreComplete)
+  public void federationRestoreRequestGranted(RequestFederationRestore requestFederationRestore)
   {
-    restoreStatus = RestoreStatus.NO_RESTORE_IN_PROGRESS;
+    restoreStatus = RestoreStatus.FEDERATE_RESTORE_REQUEST_PENDING;
+
+    federateChannel.write(new RequestFederationRestoreResponse(requestFederationRestore.getId()));
   }
 
-  public void federateRestoreNotComplete(FederateRestoreNotComplete federateRestoreNotComplete)
+  public void federationRestoreBegun(FederationRestoreBegun federationRestoreBegun)
+  {
+    restoreStatus = RestoreStatus.FEDERATE_PREPARED_TO_RESTORE;
+
+    federateChannel.write(federationRestoreBegun);
+  }
+
+  public void initiateFederateRestore(InitiateFederateRestore initiateFederateRestore)
+  {
+    restoreStatus = RestoreStatus.FEDERATE_RESTORING;
+
+    federateChannel.write(initiateFederateRestore);
+  }
+
+  public void federateRestoreComplete(FederateRestoreComplete federateRestoreComplete)
+  {
+    restoreStatus = RestoreStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_RESTORE;
+  }
+
+  public void federationRestored(FederationRestored federationRestored)
   {
     restoreStatus = RestoreStatus.NO_RESTORE_IN_PROGRESS;
+
+    federateChannel.write(federationRestored);
+  }
+
+  public void federationNotRestored(FederationNotRestored federationNotRestored)
+  {
+    restoreStatus = RestoreStatus.NO_RESTORE_IN_PROGRESS;
+
+    federateChannel.write(federationNotRestored);
   }
 
   public void rediscoverObjectInstance(FederationExecutionObjectInstance objectInstance)
@@ -1303,6 +1348,79 @@ public class FederateProxy
     }
   }
 
+  public void restoreState(DataInputStream in, FederateHandle federateHandle, String federateName, String federateType)
+    throws IOException, CouldNotDecode
+  {
+    this.federateHandle = federateHandle;
+    this.federateName = federateName;
+    this.federateType = federateType;
+
+    publishedObjectClasses.clear();
+    for (int count = in.readInt(); count > 0; count--)
+    {
+      publishedObjectClasses.put(IEEE1516eObjectClassHandle.decode(in), new IEEE1516eAttributeHandleSet(in));
+    }
+
+    publishedInteractionClasses.clear();
+    for (int count = in.readInt(); count > 0; count--)
+    {
+      publishedInteractionClasses.add(IEEE1516eInteractionClassHandle.decode(in));
+    }
+
+    subscriptionManager.restoreState(in, federationExecution.getFDD());
+
+    discoveredObjects.clear();
+    for (int count = in.readInt(); count > 0; count--)
+    {
+      discoveredObjects.add(new IEEE1516eObjectInstanceHandle(in));
+    }
+
+    if (timeRegulationEnabled = in.readBoolean())
+    {
+      lookahead = readLogicalTimeInterval(in, federationExecution.getTimeManager().getLogicalTimeFactory());
+    }
+    else
+    {
+      lookahead = null;
+    }
+
+    queuedTimeStampOrderedMessages.clear();
+    if (timeConstrainedEnabled = in.readBoolean())
+    {
+      timeConstrainedPending = false;
+
+      if (in.readBoolean())
+      {
+        advanceRequestTime = readLogicalTime(in, federationExecution.getTimeManager().getLogicalTimeFactory());
+        advanceRequestType = TimeAdvanceType.values()[in.readInt()];
+      }
+      else
+      {
+        advanceRequestTime = null;
+        advanceRequestType = null;
+      }
+
+      for (int count = in.readInt(); count > 0; count--)
+      {
+        ChannelBuffer buffer = ChannelBuffers.buffer(in.readInt());
+        buffer.writeBytes(in, buffer.writableBytes());
+
+        Message message = MessageFactory.createMessage(
+          buffer, federationExecution.getTimeManager().getLogicalTimeFactory());
+        assert message instanceof TimeStampOrderedMessage;
+
+        queuedTimeStampOrderedMessages.add(new QueuedTimeStampOrderedMessage((TimeStampOrderedMessage) message));
+      }
+    }
+    else
+    {
+      advanceRequestTime = null;
+      advanceRequestType = null;
+
+      timeConstrainedPending = in.readBoolean();
+    }
+  }
+
   @Override
   public int hashCode()
   {
@@ -1312,7 +1430,7 @@ public class FederateProxy
   @Override
   public String toString()
   {
-    return String.format("%s,%s,%s", federateHandle, federateChannel.getLocalAddress(), federateName);
+    return new StringBuilder().append(federateHandle).append("-").append(federateName).toString();
   }
 
   private void saveMessage(FederateMessage message)
@@ -1329,14 +1447,9 @@ public class FederateProxy
     }
   }
 
-  private void writeState(DataOutputStream out)
+  private void saveState(DataOutputStream out)
     throws IOException, CouldNotEncode
   {
-    ((IEEE1516eFederateHandle) federateHandle).writeTo(out);
-
-    out.writeUTF(federateName);
-    out.writeUTF(federateType);
-
     out.writeInt(publishedObjectClasses.size());
     for (Map.Entry<ObjectClassHandle, AttributeHandleSet> entry : publishedObjectClasses.entrySet())
     {
@@ -1412,6 +1525,24 @@ public class FederateProxy
     }
 
     out.close();
+  }
+
+  private LogicalTime readLogicalTime(DataInput in, LogicalTimeFactory logicalTimeFactory)
+    throws CouldNotDecode, IOException
+  {
+    byte[] buffer = new byte[in.readInt()];
+    in.readFully(buffer);
+
+    return logicalTimeFactory.decodeTime(buffer, 0);
+  }
+
+  private LogicalTimeInterval readLogicalTimeInterval(DataInput in, LogicalTimeFactory logicalTimeFactory)
+    throws CouldNotDecode, IOException
+  {
+    byte[] buffer = new byte[in.readInt()];
+    in.readFully(buffer);
+
+    return logicalTimeFactory.decodeInterval(buffer, 0);
   }
 
   private void write(DataOutput out, LogicalTime logicalTime)

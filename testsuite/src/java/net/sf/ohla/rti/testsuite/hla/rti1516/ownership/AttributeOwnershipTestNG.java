@@ -134,28 +134,28 @@ public class AttributeOwnershipTestNG
   public void testIsAttributeOwnedByFederateWithNullObjectInstanceHandle()
     throws Exception
   {
-    assert rtiAmbassadors.get(0).isAttributeOwnedByFederate(null, attributeHandle1);
+    rtiAmbassadors.get(0).isAttributeOwnedByFederate(null, attributeHandle1);
   }
 
   @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
   public void testIsAttributeOwnedByFederateWithUnknownObjectInstanceHandle()
     throws Exception
   {
-    assert rtiAmbassadors.get(2).isAttributeOwnedByFederate(testObjectInstanceHandle, attributeHandle1);
+    rtiAmbassadors.get(2).isAttributeOwnedByFederate(testObjectInstanceHandle, attributeHandle1);
   }
 
   @Test(expectedExceptions = {AttributeNotDefined.class})
   public void testIsAttributeOwnedByFederateWithNullAttributeHandle()
     throws Exception
   {
-    assert rtiAmbassadors.get(0).isAttributeOwnedByFederate(testObjectInstanceHandle, null);
+    rtiAmbassadors.get(0).isAttributeOwnedByFederate(testObjectInstanceHandle, null);
   }
 
   @Test(expectedExceptions = {AttributeNotDefined.class})
   public void testIsAttributeOwnedByFederateWithUndefinedAttributeHandle()
     throws Exception
   {
-    assert rtiAmbassadors.get(0).isAttributeOwnedByFederate(testObjectInstanceHandle, attributeHandle4);
+    rtiAmbassadors.get(0).isAttributeOwnedByFederate(testObjectInstanceHandle, attributeHandle4);
   }
 
   @Test
@@ -199,14 +199,14 @@ public class AttributeOwnershipTestNG
   public void testQueryAttributeOwnershipWithNullAttributeHandle()
     throws Exception
   {
-    assert rtiAmbassadors.get(0).isAttributeOwnedByFederate(testObjectInstanceHandle, null);
+    rtiAmbassadors.get(0).isAttributeOwnedByFederate(testObjectInstanceHandle, null);
   }
 
   @Test(expectedExceptions = {AttributeNotDefined.class})
   public void testQueryAttributeOwnershipWithUndefinedAttributeHandle()
     throws Exception
   {
-    assert rtiAmbassadors.get(0).isAttributeOwnedByFederate(testObjectInstanceHandle, attributeHandle4);
+    rtiAmbassadors.get(0).isAttributeOwnedByFederate(testObjectInstanceHandle, attributeHandle4);
   }
 
   private static class TestFederateAmbassador

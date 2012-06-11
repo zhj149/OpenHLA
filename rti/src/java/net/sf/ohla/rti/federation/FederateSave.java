@@ -30,6 +30,8 @@ import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
 import net.sf.ohla.rti.messages.FederateMessage;
 
 import org.jboss.netty.buffer.ChannelBuffer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import hla.rti1516e.FederateHandle;
 
@@ -42,6 +44,8 @@ public class FederateSave
   public static final String FEDERATE_STATE = "Federate_State";
   public static final String FEDERATE_PROXY_STATE = "Federate_Proxy_State";
   public static final String FEDERATE_MESSAGES = "Federate_Messages";
+
+  private static final Logger log = LoggerFactory.getLogger(FederateRestore.class);
 
   private final FederateHandle federateHandle;
   private final String federateName;
@@ -62,9 +66,16 @@ public class FederateSave
     federateName = federateProxy.getFederateName();
     federateType = federateProxy.getFederateType();
 
+    log.debug("Federate save: {}", federateProxy);
+
     federateStateFile = File.createTempFile(FEDERATE_STATE, "save");
+    log.debug("Federate state file: {}", federateStateFile);
+
     federateProxyStateFile = File.createTempFile(FEDERATE_PROXY_STATE, "save");
+    log.debug("Federate proxy state file: {}", federateProxyStateFile);
+
     federateMessagesFile = File.createTempFile(FEDERATE_MESSAGES, "save");
+    log.debug("Federate messages file: {}", federateMessagesFile);
 
     // TODO: allow different types of output streams
 
@@ -72,21 +83,6 @@ public class FederateSave
     federateProxyStateOutputStream = new GZIPOutputStream(new FileOutputStream(federateProxyStateFile));
     federateMessagesOutputStream = new DataOutputStream(
       new GZIPOutputStream(new FileOutputStream(federateMessagesFile)));
-  }
-
-  public FederateHandle getFederateHandle()
-  {
-    return federateHandle;
-  }
-
-  public String getFederateName()
-  {
-    return federateName;
-  }
-
-  public String getFederateType()
-  {
-    return federateType;
   }
 
   public OutputStream getFederateStateOutputStream()
@@ -133,5 +129,12 @@ public class FederateSave
     FileInputStream in = new FileInputStream(source);
     destination.getChannel().transferFrom(in.getChannel(), 0, source.length());
     in.close();
+
+    if (source.delete())
+    {
+    }
+    else
+    {
+    }
   }
 }

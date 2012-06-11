@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -38,6 +39,7 @@ import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandleSet;
 import net.sf.ohla.rti.i18n.I18nLogger;
 import net.sf.ohla.rti.i18n.LogMessages;
 import net.sf.ohla.rti.messages.AbortFederationRestore;
+import net.sf.ohla.rti.messages.AbortFederationRestoreResponse;
 import net.sf.ohla.rti.messages.AbortFederationSave;
 import net.sf.ohla.rti.messages.AssociateRegionsForUpdates;
 import net.sf.ohla.rti.messages.AttributeOwnershipAcquisition;
@@ -122,8 +124,10 @@ import net.sf.ohla.rti.messages.UnsubscribeObjectClassAttributesWithRegions;
 import net.sf.ohla.rti.messages.UpdateAttributeValues;
 import net.sf.ohla.rti.messages.callbacks.AnnounceSynchronizationPoint;
 import net.sf.ohla.rti.messages.callbacks.AttributeOwnershipAcquisitionNotification;
+import net.sf.ohla.rti.messages.callbacks.FederationNotRestored;
 import net.sf.ohla.rti.messages.callbacks.FederationNotSaved;
 import net.sf.ohla.rti.messages.callbacks.FederationRestoreStatusResponse;
+import net.sf.ohla.rti.messages.callbacks.FederationRestored;
 import net.sf.ohla.rti.messages.callbacks.FederationSaveStatusResponse;
 import net.sf.ohla.rti.messages.callbacks.FederationSaved;
 import net.sf.ohla.rti.messages.callbacks.FederationSynchronized;
@@ -145,6 +149,7 @@ import hla.rti1516e.InteractionClassHandle;
 import hla.rti1516e.LogicalTime;
 import hla.rti1516e.LogicalTimeFactory;
 import hla.rti1516e.OrderType;
+import hla.rti1516e.RestoreFailureReason;
 import hla.rti1516e.RestoreStatus;
 import hla.rti1516e.SaveStatus;
 import hla.rti1516e.SynchronizationPointFailureReason;
@@ -631,7 +636,7 @@ public class FederationExecution
   public void queryFederationSaveStatus(
     FederateProxy federateProxy, QueryFederationSaveStatus queryFederationSaveStatus)
   {
-    federationExecutionStateLock.writeLock().lock();
+    federationExecutionStateLock.readLock().lock();
     try
     {
       Map<FederateHandle, SaveStatus> federationSaveStatus = new HashMap<FederateHandle, SaveStatus>();
@@ -657,15 +662,17 @@ public class FederationExecution
     }
     finally
     {
-      federationExecutionStateLock.writeLock().unlock();
+      federationExecutionStateLock.readLock().unlock();
     }
   }
 
   public void requestFederationRestore(FederateProxy federateProxy, RequestFederationRestore requestFederationRestore)
   {
-    String label = requestFederationRestore.getLabel();
+    // use a variable for which lock is held because it may be downgraded to a read lock
+    //
+    Lock lock = federationExecutionStateLock.writeLock();
 
-    federationExecutionStateLock.writeLock().lock();
+    lock.lock();
     try
     {
       if (saveInProgress())
@@ -678,31 +685,38 @@ public class FederationExecution
         federateProxy.getFederateChannel().write(new RequestFederationRestoreResponse(
           requestFederationRestore.getId(), RequestFederationRestoreResponse.Response.RESTORE_IN_PROGRESS));
       }
-
-      // TODO: locate the saved information
-
-      Set<FederateHandle> federateHandles = new HashSet<FederateHandle>(federates.keySet());
-
-      // TODO: determine if the same number of federate types are joined
-
-      federationExecutionRestore = new FederationExecutionRestore(requestFederationRestore.getLabel(), federateHandles);
-
-      // this is a psuedo restore-in-progress... it will only prevent joins and new requests to save/restore
-      //
-      federationExecutionState = FederationExecutionState.RESTORE_IN_PROGRESS;
-
-      federateProxy.getFederateChannel().write(new RequestFederationRestoreResponse(requestFederationRestore.getId()));
-
-      // notify all federates to initiate restore
-      //
-      for (FederateProxy f : federates.values())
+      else
       {
-        // f.initiateFederateRestore(new InitiateFederateRestore(label));
+        try
+        {
+          federationExecutionRestore = new FederationExecutionRestore(
+            saveDirectory, requestFederationRestore.getLabel(), federates);
+
+          // this is a psuedo restore-in-progress... it will only prevent joins and new requests to save/restore
+          //
+          federationExecutionState = FederationExecutionState.RESTORE_IN_PROGRESS;
+
+          federateProxy.federationRestoreRequestGranted(requestFederationRestore);
+
+          // downgrade the lock to a read lock
+          //
+          (lock = federationExecutionStateLock.readLock()).lock();
+          federationExecutionStateLock.writeLock().unlock();
+
+          federationExecutionRestore.begin();
+          federationExecutionRestore.initiate();
+        }
+        catch (IOException ioe)
+        {
+          // TODO: write an error message
+
+          ioe.printStackTrace();
+        }
       }
     }
     finally
     {
-      federationExecutionStateLock.writeLock().unlock();
+      lock.unlock();
     }
   }
 
@@ -711,13 +725,27 @@ public class FederationExecution
     federationExecutionStateLock.writeLock().lock();
     try
     {
-      federateProxy.federateRestoreComplete(federateRestoreComplete);
-
-      if (federationExecutionRestore.federateRestoreComplete(federateProxy.getFederateHandle()))
+      if (federationExecutionRestore == null)
       {
-        federationExecutionState = FederationExecutionState.ACTIVE;
+        // restore was cancelled
+      }
+      else
+      {
+        federateProxy.federateRestoreComplete(federateRestoreComplete);
 
-        // TODO: federation restored
+        if (federationExecutionRestore.federateRestoreComplete(federateProxy.getFederateHandle()))
+        {
+          FederationRestored federationRestored = new FederationRestored();
+
+          for (FederateProxy f : federates.values())
+          {
+            f.federationRestored(federationRestored);
+          }
+
+          federationExecutionState = FederationExecutionState.ACTIVE;
+
+          federationExecutionRestore = null;
+        }
       }
     }
     finally
@@ -732,13 +760,26 @@ public class FederationExecution
     federationExecutionStateLock.writeLock().lock();
     try
     {
-      federateProxy.federateRestoreNotComplete(federateRestoreNotComplete);
-
-      if (federationExecutionRestore.federateRestoreNotComplete(federateProxy.getFederateHandle()))
+      if (federationExecutionRestore == null)
       {
+        // restore was cancelled
+      }
+      else
+      {
+        // fail fast
+
+        FederationNotRestored federationNotRestored =
+          new FederationNotRestored(RestoreFailureReason.FEDERATE_REPORTED_FAILURE_DURING_RESTORE);
+        for (FederateProxy f : federates.values())
+        {
+          f.federationNotRestored(federationNotRestored);
+        }
+
+        federationExecutionRestore.federateRestoreNotComplete(federateProxy.getFederateHandle());
+
         federationExecutionState = FederationExecutionState.ACTIVE;
 
-        // TODO: federation not restored
+        federationExecutionRestore = null;
       }
     }
     finally
@@ -752,6 +793,15 @@ public class FederationExecution
     federationExecutionStateLock.writeLock().lock();
     try
     {
+      if (federationExecutionRestore == null)
+      {
+        federateProxy.getFederateChannel().write(new AbortFederationRestoreResponse(
+          abortFederationRestore.getId(), AbortFederationRestoreResponse.Response.RESTORE_NOT_IN_PROGRESS));
+      }
+      else
+      {
+        federationExecutionRestore.abort();
+      }
     }
     finally
     {
@@ -762,9 +812,11 @@ public class FederationExecution
   public void queryFederationRestoreStatus(
     FederateProxy federateProxy, QueryFederationRestoreStatus queryFederationRestoreStatus)
   {
-    federationExecutionStateLock.writeLock().lock();
+    federationExecutionStateLock.readLock().lock();
     try
     {
+      // initialize all the current to no restore in progress
+      //
       Map<FederateHandle, FederateRestoreStatus> federationRestoreStatus =
         new HashMap<FederateHandle, FederateRestoreStatus>();
       for (FederateHandle federateHandle : federates.keySet())
@@ -778,20 +830,22 @@ public class FederationExecution
         federationExecutionRestore.updateFederationRestoreStatus(federationRestoreStatus);
       }
 
-      FederateRestoreStatus[] federationRestoreStatusValues =
-        new FederateRestoreStatus[federationRestoreStatus.size()];
-      int i = 0;
-      for (Map.Entry<FederateHandle, FederateRestoreStatus> entry : federationRestoreStatus.entrySet())
-      {
-        federationRestoreStatusValues[i++] = entry.getValue();
-      }
-
-      federateProxy.getFederateChannel().write(new FederationRestoreStatusResponse(federationRestoreStatusValues));
+      federateProxy.getFederateChannel().write(
+        new FederationRestoreStatusResponse(federationRestoreStatus.values().toArray(
+          new FederateRestoreStatus[federationRestoreStatus.size()])));
     }
     finally
     {
-      federationExecutionStateLock.writeLock().unlock();
+      federationExecutionStateLock.readLock().unlock();
     }
+  }
+
+  public void federationRestoreSucceeded()
+  {
+  }
+
+  public void federationRestoreFailed()
+  {
   }
 
   public void reserveObjectInstanceName(
@@ -2141,7 +2195,7 @@ public class FederationExecution
 
       try
       {
-        federationExecutionSave = new FederationExecutionSave(saveDirectory, label);
+        federationExecutionSave = new FederationExecutionSave(saveDirectory, label, federates.values());
 
         // this is a psuedo save-in-progress... it will only prevent joins and new requests to save/restore
         //
@@ -2218,7 +2272,7 @@ public class FederationExecution
 
     try
     {
-      federationExecutionSave = new FederationExecutionSave(saveDirectory, label, time);
+      federationExecutionSave = new FederationExecutionSave(saveDirectory, label, federates.values(), time);
 
       // tell the federate that the request is going to be honored
       //

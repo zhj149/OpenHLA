@@ -23,7 +23,7 @@ public class RequestFederationRestoreResponse
 {
   public enum Response
   {
-    SUCCESS, LOGICAL_TIME_ALREADY_PASSED, SAVE_IN_PROGRESS, RESTORE_IN_PROGRESS
+    SUCCESS, SAVE_IN_PROGRESS, RESTORE_IN_PROGRESS, RTI_INTERNAL_ERROR
   }
 
   public RequestFederationRestoreResponse(long id)

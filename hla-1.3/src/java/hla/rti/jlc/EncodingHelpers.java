@@ -47,7 +47,7 @@ public class EncodingHelpers
    * @param buffer Buffer containing encoded value
    *               SISO-STD-004-2004
    *               Dynamic Link Compatible HLA API Standard for the HLA Interface Specification Version 1.3
-   *               Copyright © 2004 SISO. All rights reserved.
+   *               Copyright Â© 2004 SISO. All rights reserved.
    *               79
    * @param offset Offset in buffer
    * @return Decoded value
@@ -101,7 +101,7 @@ public class EncodingHelpers
    *               <p/>
    *               SISO-STD-004-2004
    *               Dynamic Link Compatible HLA API Standard for the HLA Interface Specification Version 1.3
-   *               Copyright © 2004 SISO. All rights reserved.
+   *               Copyright Â© 2004 SISO. All rights reserved.
    *               80
    * @return Decoded value.
    */
@@ -156,7 +156,7 @@ public class EncodingHelpers
    * <p/>
    * SISO-STD-004-2004
    * Dynamic Link Compatible HLA API Standard for the HLA Interface Specification Version 1.3
-   * Copyright © 2004 SISO. All rights reserved.
+   * Copyright Â© 2004 SISO. All rights reserved.
    * 81
    *
    * @param buffer Buffer containing encoded value
@@ -261,7 +261,7 @@ public class EncodingHelpers
    * <p/>
    * SISO-STD-004-2004
    * Dynamic Link Compatible HLA API Standard for the HLA Interface Specification Version 1.3
-   * Copyright © 2004 SISO. All rights reserved.
+   * Copyright Â© 2004 SISO. All rights reserved.
    * 83
    *
    * @param buffer Buffer containing encoded value
@@ -365,7 +365,7 @@ public class EncodingHelpers
   /**
    * SISO-STD-004-2004
    * Dynamic Link Compatible HLA API Standard for the HLA Interface Specification Version 1.3
-   * Copyright © 2004 SISO. All rights reserved.
+   * Copyright Â© 2004 SISO. All rights reserved.
    * 85
    * Encodes a long value as a big-endian 64-bit integer into a buffer at
    * specified offset.
@@ -470,7 +470,7 @@ public class EncodingHelpers
    * @param buffer Buffer containing encoded value
    *               SISO-STD-004-2004
    *               Dynamic Link Compatible HLA API Standard for the HLA Interface Specification Version 1.3
-   *               Copyright © 2004 SISO. All rights reserved.
+   *               Copyright Â© 2004 SISO. All rights reserved.
    *               87
    * @param offset Offset in buffer
    * @return Decoded value
@@ -505,7 +505,7 @@ public class EncodingHelpers
    * @return Decoded string
    */
   public static String decodeString(byte[] buffer)
-{
-return new String(buffer, 0, buffer.length - 1);
-}
+  {
+    return new String(buffer, 0, buffer.length - 1);
+  }
 }

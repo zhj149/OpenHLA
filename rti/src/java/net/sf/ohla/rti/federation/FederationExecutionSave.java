@@ -19,11 +19,13 @@ package net.sf.ohla.rti.federation;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -45,10 +47,10 @@ public class FederationExecutionSave
 {
   public static final String FEDERATION_EXECUTION_MESSAGES = "Federation_Execution_Messages";
 
+  public static final String SAVE_FILE_EXTENSION = ".save";
+
   private final String label;
   private final LogicalTime saveTime;
-
-  private final File directory;
 
   private final RandomAccessFile saveFile;
 
@@ -68,26 +70,34 @@ public class FederationExecutionSave
 
   private SaveFailureReason saveFailureReason;
 
-  public FederationExecutionSave(File directory, String label)
+  public FederationExecutionSave(File directory, String label, Collection<FederateProxy> federates)
     throws IOException
   {
-    this(directory, label, null);
+    this(directory, label, federates, null);
   }
 
-  public FederationExecutionSave(File directory, String label, LogicalTime saveTime)
+  public FederationExecutionSave(File directory, String label, Collection<FederateProxy> federates,
+                                 LogicalTime saveTime)
     throws IOException
   {
     this.label = label;
     this.saveTime = saveTime;
-    this.directory = directory;
 
     directory.mkdirs();
 
-    File file = new File(directory, label + ".save");
+    File file = new File(directory, label + SAVE_FILE_EXTENSION);
 
     // TODO: check for existence of file and other stuff
 
     saveFile = new RandomAccessFile(file, "rw");
+
+    saveFile.writeInt(federates.size());
+    for (FederateProxy federate : federates)
+    {
+      ((IEEE1516eFederateHandle) federate.getFederateHandle()).writeTo(saveFile);
+      saveFile.writeUTF(federate.getFederateName());
+      saveFile.writeUTF(federate.getFederateType());
+    }
 
     federationExecutionMessagesFile = File.createTempFile(FEDERATION_EXECUTION_MESSAGES, "save");
     federationExecutionMessagesOutputStream = new FileOutputStream(federationExecutionMessagesFile);
@@ -102,11 +112,6 @@ public class FederationExecutionSave
   public LogicalTime getSaveTime()
   {
     return saveTime;
-  }
-
-  public File getDirectory()
-  {
-    return directory;
   }
 
   public FederateSave getFederateSave(FederateHandle federateHandle)
@@ -182,11 +187,21 @@ public class FederationExecutionSave
     {
       try
       {
+        federationExecutionMessagesOutputStream.close();
+
+        saveFile.writeLong(federationExecutionMessagesFile.length());
+
+        FileInputStream in = new FileInputStream(federationExecutionMessagesFile);
+        saveFile.getChannel().transferFrom(in.getChannel(), 0, federationExecutionMessagesFile.length());
+        in.close();
+
         saveFile.close();
       }
       catch (IOException ioe)
       {
         ioe.printStackTrace();
+
+        // TODO: fail the save
       }
     }
 

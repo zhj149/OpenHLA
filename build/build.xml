@@ -288,6 +288,7 @@
 
     <jar jarfile="${output.lib}/${rti.jar}">
       <fileset dir="${output}/rti/classes"/>
+      <fileset dir="${rti.resources}" includes="META-INF/**,*.properties"/>
     </jar>
   </target>
 

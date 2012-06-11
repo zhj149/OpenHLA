@@ -16,9 +16,9 @@
 
 package net.sf.ohla.rti.federate;
 
-import net.sf.ohla.rti.Protocol;
-
-import org.jboss.netty.buffer.ChannelBuffer;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 
 public class FederateSynchronizationPoint
 {
@@ -33,11 +33,15 @@ public class FederateSynchronizationPoint
     this.tag = tag;
   }
 
-  public FederateSynchronizationPoint(ChannelBuffer buffer)
+  public FederateSynchronizationPoint(DataInput in)
+    throws IOException
   {
-    label = Protocol.decodeString(buffer);
-    tag = Protocol.decodeBytes(buffer);
-    state = State.values()[Protocol.decodeVarInt(buffer)];
+    label = in.readUTF();
+
+    tag = new byte[in.readInt()];
+    in.readFully(tag);
+
+    state = State.values()[in.readInt()];
   }
 
   public String getLabel()
@@ -60,11 +64,22 @@ public class FederateSynchronizationPoint
     return synchronizationPointAchieved;
   }
 
-  public void encode(ChannelBuffer buffer)
+  public void writeTo(DataOutput out)
+    throws IOException
   {
-    Protocol.encodeString(buffer, label);
-    Protocol.encodeBytes(buffer, tag);
-    Protocol.encodeVarInt(buffer, state.ordinal());
+    out.writeUTF(label);
+
+    if (tag == null)
+    {
+      out.writeInt(0);
+    }
+    else
+    {
+      out.writeInt(tag.length);
+      out.write(tag);
+    }
+
+    out.writeInt(state.ordinal());
   }
 
   protected enum State

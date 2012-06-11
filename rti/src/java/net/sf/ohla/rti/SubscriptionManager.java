@@ -76,12 +76,14 @@ public class SubscriptionManager
   public void restoreState(DataInput in, FDD fdd)
     throws IOException
   {
+    subscribedObjectClasses.clear();
     for (int count = in.readInt(); count > 0; count--)
     {
       ObjectClassSubscription objectClassSubscription = new ObjectClassSubscription(fdd, in);
       subscribedObjectClasses.put(objectClassSubscription.getObjectClassHandle(), objectClassSubscription);
     }
 
+    subscribedInteractionClasses.clear();
     for (int count = in.readInt(); count > 0; count--)
     {
       InteractionClassSubscription interactionClassSubscription = new InteractionClassSubscription(fdd, in);
