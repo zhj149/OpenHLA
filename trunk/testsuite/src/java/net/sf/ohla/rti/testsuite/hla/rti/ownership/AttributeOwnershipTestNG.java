@@ -226,7 +226,13 @@ public class AttributeOwnershipTestNG
     public void checkObjectInstanceName(final String objectInstanceName)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstanceHandlesByName.containsKey(objectInstanceName); } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          return !objectInstanceHandlesByName.containsKey(objectInstanceName);
+        }
+      });
 
       assert objectInstanceHandlesByName.containsKey(objectInstanceName);
     }
@@ -235,7 +241,14 @@ public class AttributeOwnershipTestNG
       final String objectInstanceName, final int attributeHandle, Integer federateHandle)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { Integer objectInstanceHandle = objectInstanceHandlesByName.get(objectInstanceName); return objectInstanceHandle != null &&  objectInstances.get(objectInstanceHandle).get(attributeHandle) == null; } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          Integer objectInstanceHandle = objectInstanceHandlesByName.get(objectInstanceName);
+          return objectInstanceHandle != null && objectInstances.get(objectInstanceHandle).get(attributeHandle) == null;
+        }
+      });
 
       Integer objectInstanceHandle = objectInstanceHandlesByName.get(objectInstanceName);
       assert objectInstanceHandle != null;
@@ -246,7 +259,14 @@ public class AttributeOwnershipTestNG
       final Integer objectInstanceHandle, final int attributeHandle, Integer federateHandle)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstances.containsKey(objectInstanceHandle) || objectInstances.get(objectInstanceHandle).get(attributeHandle) == null; } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          return !objectInstances.containsKey(objectInstanceHandle) ||
+                 objectInstances.get(objectInstanceHandle).get(attributeHandle) == null;
+        }
+      });
 
       assert federateHandle.equals(objectInstances.get(objectInstanceHandle).get(attributeHandle));
     }
@@ -254,7 +274,14 @@ public class AttributeOwnershipTestNG
     public void checkAttributeIsUnowned(final String objectInstanceName, final int attributeHandle)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { Integer objectInstanceHandle = objectInstanceHandlesByName.get(objectInstanceName); return objectInstanceHandle != null &&  objectInstances.get(objectInstanceHandle).get(attributeHandle) == null; } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          Integer objectInstanceHandle = objectInstanceHandlesByName.get(objectInstanceName);
+          return objectInstanceHandle != null && objectInstances.get(objectInstanceHandle).get(attributeHandle) == null;
+        }
+      });
 
       Integer objectInstanceHandle = objectInstanceHandlesByName.get(objectInstanceName);
       assert objectInstanceHandle != null;
@@ -264,7 +291,14 @@ public class AttributeOwnershipTestNG
     public void checkAttributeIsUnowned(final Integer objectInstanceHandle, final int attributeHandle)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstances.containsKey(objectInstanceHandle) || objectInstances.get(objectInstanceHandle).get(attributeHandle) == null; } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          return !objectInstances.containsKey(objectInstanceHandle) ||
+                 objectInstances.get(objectInstanceHandle).get(attributeHandle) == null;
+        }
+      });
 
       assert Boolean.FALSE.equals(objectInstances.get(objectInstanceHandle).get(attributeHandle));
     }
