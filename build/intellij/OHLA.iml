@@ -9,7 +9,6 @@
       <excludeFolder url="file://$MODULE_DIR$/../../ieee-1516e" />
       <excludeFolder url="file://$MODULE_DIR$/../../rti" />
       <excludeFolder url="file://$MODULE_DIR$/../../testsuite" />
-      <excludeFolder url="file://$MODULE_DIR$/../../thirdparty" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

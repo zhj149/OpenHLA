@@ -16,8 +16,6 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti1516e;
 
-import java.util.Random;
-
 public interface TestConstants
 {
   static final String LOCAL_SETTINGS_DESIGNATOR = "LocalSettingsDesignator.properties";

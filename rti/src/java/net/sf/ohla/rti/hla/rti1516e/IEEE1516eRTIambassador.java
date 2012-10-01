@@ -453,6 +453,9 @@ public class IEEE1516eRTIambassador
 
         rtiChannel.close();
 
+        rtiChannel.getCloseFuture().awaitUninterruptibly();
+        rtiChannel.getFactory().releaseExternalResources();
+
         rtiChannel = null;
       }
       else

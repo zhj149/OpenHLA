@@ -587,16 +587,19 @@ public class Federate
       objectManager.resignFederationExecution(resignAction);
 
       federateState = FederateState.RESIGNED;
+    }
+    finally
+    {
+      federateStateLock.writeLock().unlock();
+    }
 
+    try
+    {
       resignedLatch.await();
     }
     catch (InterruptedException ie)
     {
       throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION), ie);
-    }
-    finally
-    {
-      federateStateLock.writeLock().unlock();
     }
   }
 

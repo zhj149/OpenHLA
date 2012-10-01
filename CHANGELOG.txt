@@ -1,5 +1,6 @@
 0.6 alpha
   - completed Time Management implementation
+  - completed Save/Restore functionality
 
 0.5 alpha
   - ported to Netty
