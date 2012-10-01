@@ -602,6 +602,27 @@
             </SvnBranchConfiguration>
           </value>
         </entry>
+        <entry key="$PROJECT_DIR$/../../hla-1.3">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="https://ohla.svn.sourceforge.net/svnroot/ohla/trunk/hla-1.3" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../../ieee-1516e">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="https://ohla.svn.sourceforge.net/svnroot/ohla/trunk/ieee-1516e" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/../../testsuite">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="https://ohla.svn.sourceforge.net/svnroot/ohla/trunk/testsuite" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
       </map>
     </option>
     <option name="myVersion" value="124" />
@@ -803,11 +824,11 @@
     </library>
     <library name="netty">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/../../thirdparty/netty/lib/netty-3.2.5.Final.jar!/" />
+        <root url="jar://$PROJECT_DIR$/../../thirdparty/netty/lib/netty-3.5.7.Final.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES>
-        <root url="jar://$PROJECT_DIR$/../../thirdparty/netty/lib/netty-3.2.5.Final-sources.jar!/" />
+        <root url="jar://$PROJECT_DIR$/../../thirdparty/netty/lib/netty-3.5.7.Final-sources.jar!/" />
       </SOURCES>
     </library>
     <library name="slf4j">
@@ -823,7 +844,7 @@
     </library>
     <library name="testng">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/../../thirdparty/testng/lib/testng-5.14.7.jar!/" />
+        <root url="jar://$PROJECT_DIR$/../../thirdparty/testng/lib/testng-6.2.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES />

@@ -22,7 +22,6 @@
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.federation.CreationTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.federation.JoiningTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.federation.SynchronizationTestNG"/>
-      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.federation.SavingTestNG"/>
     </classes>
   </test>
   <test name="IEEE 1516e - Declaration Management">
@@ -79,6 +78,11 @@
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.NextMessageRequestTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.NextMessageRequestAvailableTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.FlushQueueRequestTestNG"/>
+    </classes>
+  </test>
+  <test name="IEEE 1516e - Save/Restore">
+    <classes>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.federation.saverestore.SavingTestNG"/>
     </classes>
   </test>
 </suite>

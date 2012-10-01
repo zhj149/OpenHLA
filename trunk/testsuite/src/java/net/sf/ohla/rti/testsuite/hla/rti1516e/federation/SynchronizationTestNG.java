@@ -174,6 +174,7 @@ public class SynchronizationTestNG
     rtiAmbassador.connect(new NullFederateAmbassador(), CallbackModel.HLA_EVOKED);
     FederateHandle federateHandle = rtiAmbassador.joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME);
     rtiAmbassador.resignFederationExecution(ResignAction.NO_ACTION);
+    rtiAmbassador.disconnect();
 
     // this is necessary to ensure the federate is actually resigned
     //

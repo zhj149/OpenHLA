@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.sf.ohla.rti.testsuite.hla.rti1516e.federation;
+package net.sf.ohla.rti.testsuite.hla.rti1516e.federation.saverestore;
 
 import java.util.ArrayList;
 import java.util.HashMap;
