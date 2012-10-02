@@ -49,6 +49,8 @@ import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandleSet;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandle;
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
+import net.sf.ohla.rti.i18n.I18nLogger;
+import net.sf.ohla.rti.i18n.LogMessages;
 import net.sf.ohla.rti.messages.Message;
 import net.sf.ohla.rti.messages.callbacks.ObjectInstanceNameReservationFailed;
 import net.sf.ohla.rti.messages.callbacks.ObjectInstanceNameReservationSucceeded;
@@ -204,20 +206,25 @@ import hla.rti1516e.time.HLAinteger64TimeFactory;
 public class HLA13RTIambassador
   implements RTIambassadorEx
 {
-  public static final String OHLA_HLA13_FEDERATION_EXECUTION_LOGICAL_TIME_IMPLEMENTATION_PROPERTY =
-    "ohla.hla13.federationExecution.%s.logicalTimeImplementation";
-
   public static final String OHLA_HLA13_LOGICAL_TIME_IMPLEMENTATION_PROPERTY =
     "ohla.hla13.logicalTimeImplementation.%s";
 
   public static final String OHLA_HLA13_TICK_TIME_PROPERTY = "ohla.hla13.tick.time";
 
+  public static final String OHLA_HLA13_LOCAL_SETTINGS_DESIGNATOR_PROPERTY = "ohla.hla13.localSettingsDesignator";
+
+  public static final String OHLA_HLA13_FEDERATION_EXECUTION_LOCAL_SETTINGS_DESIGNATOR_PROPERTY =
+    "ohla.hla13.federationExecution.%s.localSettingsDesignator";
+
+  public static final String OHLA_HLA13_FEDERATION_EXECUTION_LOGICAL_TIME_IMPLEMENTATION_PROPERTY =
+    "ohla.hla13.federationExecution.%s.logicalTimeImplementation";
+
   public static final double DEFAULT_TICK_TIME = 0.2;
+
+  private static final I18nLogger log = I18nLogger.getLogger(HLA13RTIambassador.class);
 
   private final IEEE1516eRTIambassador rtiAmbassador =
     new IEEE1516eRTIambassador(new HLA13FederateChannelHandlerFactory());
-
-  private FED fed;
 
   private final Lock objectInstanceNameReservationsLock = new ReentrantLock(true);
   private final Map<String, ReserveObjectInstanceNameResult> objectInstanceNameReservations =
@@ -235,6 +242,8 @@ public class HLA13RTIambassador
   private final Lock regionsLock = new ReentrantLock(true);
   private final Map<Integer, HLA13Region> regions = new HashMap<Integer, HLA13Region>();
   private final Map<Integer, HLA13Region> temporaryRegions = new HashMap<Integer, HLA13Region>();
+
+  private FED fed;
 
   private LogicalTimeFactory logicalTimeFactory;
   private LogicalTimeIntervalFactory logicalTimeIntervalFactory;
@@ -268,35 +277,6 @@ public class HLA13RTIambassador
       }
     }
     this.tickTime = tickTime;
-
-    try
-    {
-      rtiAmbassador.connect(new HLA13FederateAmbassadorBridge(this), CallbackModel.HLA_EVOKED);
-    }
-    catch (ConnectionFailed cf)
-    {
-      throw new RTIinternalError(cf.getMessage(), cf);
-    }
-    catch (InvalidLocalSettingsDesignator ilsd)
-    {
-      throw new RTIinternalError(ilsd.getMessage(), ilsd);
-    }
-    catch (UnsupportedCallbackModel ucm)
-    {
-      throw new RTIinternalError(ucm.getMessage(), ucm);
-    }
-    catch (AlreadyConnected ac)
-    {
-      throw new RTIinternalError(ac.getMessage(), ac);
-    }
-    catch (CallNotAllowedFromWithinCallback cnafwc)
-    {
-      throw new RTIinternalError(cnafwc.getMessage(), cnafwc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie.getMessage(), rtiie);
-    }
   }
 
   public IEEE1516eRTIambassador getIEEE1516eRTIambassador()
@@ -374,52 +354,122 @@ public class HLA13RTIambassador
       throw new CouldNotOpenFED(I18n.getMessage(ExceptionMessages.FED_IS_NULL));
     }
 
-    String logicalTimeImplementationName = getIEEE1516eLogicalTimeImplementationName(federationExecutionName);
+    IEEE1516eRTIambassador rtiAmbassador = new IEEE1516eRTIambassador();
+    String localSettingsDesignator = getIEEE1516eLocalSettingsDesignator(federationExecutionName);
     try
     {
-      rtiAmbassador.createFederationExecution(
-        federationExecutionName, FEDParser.parseFED(fed).getFDD(), logicalTimeImplementationName);
+      rtiAmbassador.connect(new HLA13FederateAmbassadorBridge(this), CallbackModel.HLA_EVOKED, localSettingsDesignator);
+
+      String logicalTimeImplementationName = getIEEE1516eLogicalTimeImplementationName(federationExecutionName);
+      try
+      {
+        rtiAmbassador.createFederationExecution(
+          federationExecutionName, FEDParser.parseFED(fed).getFDD(), logicalTimeImplementationName);
+      }
+      catch (CouldNotCreateLogicalTimeFactory cncltf)
+      {
+        throw new RTIinternalError(cncltf);
+      }
+      catch (hla.rti1516e.exceptions.FederationExecutionAlreadyExists feae)
+      {
+        throw new FederationExecutionAlreadyExists(feae);
+      }
+      catch (NotConnected nc)
+      {
+        throw new RTIinternalError(nc);
+      }
+      catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+      {
+        throw new RTIinternalError(rtiie);
+      }
+      finally
+      {
+        disconnectQuietly(rtiAmbassador);
+      }
     }
-    catch (CouldNotCreateLogicalTimeFactory cncltf)
+    catch (ConnectionFailed cf)
     {
-      throw new RTIinternalError(cncltf);
+      throw new RTIinternalError(cf.getMessage(), cf);
     }
-    catch (hla.rti1516e.exceptions.FederationExecutionAlreadyExists feae)
+    catch (InvalidLocalSettingsDesignator ilsd)
     {
-      throw new FederationExecutionAlreadyExists(feae);
+      throw new RTIinternalError(ilsd.getMessage(), ilsd);
     }
-    catch (NotConnected nc)
+    catch (UnsupportedCallbackModel ucm)
     {
-      throw new RTIinternalError(nc);
+      throw new RTIinternalError(ucm.getMessage(), ucm);
+    }
+    catch (AlreadyConnected ac)
+    {
+      throw new RTIinternalError(ac.getMessage(), ac);
+    }
+    catch (CallNotAllowedFromWithinCallback cnafwc)
+    {
+      throw new RTIinternalError(cnafwc.getMessage(), cnafwc);
     }
     catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(rtiie.getMessage(), rtiie);
     }
   }
 
   public void destroyFederationExecution(String federationExecutionName)
     throws FederatesCurrentlyJoined, FederationExecutionDoesNotExist, RTIinternalError
   {
+    IEEE1516eRTIambassador rtiAmbassador = new IEEE1516eRTIambassador();
+    String localSettingsDesignator = getIEEE1516eLocalSettingsDesignator(federationExecutionName);
     try
     {
-      rtiAmbassador.destroyFederationExecution(federationExecutionName);
+      rtiAmbassador.connect(new HLA13FederateAmbassadorBridge(this), CallbackModel.HLA_EVOKED, localSettingsDesignator);
+
+      try
+      {
+        rtiAmbassador.destroyFederationExecution(federationExecutionName);
+      }
+      catch (hla.rti1516e.exceptions.FederatesCurrentlyJoined fcj)
+      {
+        throw new FederatesCurrentlyJoined(fcj);
+      }
+      catch (hla.rti1516e.exceptions.FederationExecutionDoesNotExist fedne)
+      {
+        throw new FederationExecutionDoesNotExist(fedne);
+      }
+      catch (NotConnected nc)
+      {
+        throw new RTIinternalError(nc);
+      }
+      catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+      {
+        throw new RTIinternalError(rtiie);
+      }
+      finally
+      {
+        disconnectQuietly(rtiAmbassador);
+      }
     }
-    catch (hla.rti1516e.exceptions.FederatesCurrentlyJoined fcj)
+    catch (ConnectionFailed cf)
     {
-      throw new FederatesCurrentlyJoined(fcj);
+      throw new RTIinternalError(cf.getMessage(), cf);
     }
-    catch (hla.rti1516e.exceptions.FederationExecutionDoesNotExist fedne)
+    catch (InvalidLocalSettingsDesignator ilsd)
     {
-      throw new FederationExecutionDoesNotExist(fedne);
+      throw new RTIinternalError(ilsd.getMessage(), ilsd);
     }
-    catch (NotConnected nc)
+    catch (UnsupportedCallbackModel ucm)
     {
-      throw new RTIinternalError(nc);
+      throw new RTIinternalError(ucm.getMessage(), ucm);
+    }
+    catch (AlreadyConnected ac)
+    {
+      throw new RTIinternalError(ac.getMessage(), ac);
+    }
+    catch (CallNotAllowedFromWithinCallback cnafwc)
+    {
+      throw new RTIinternalError(cnafwc.getMessage(), cnafwc);
     }
     catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(rtiie.getMessage(), rtiie);
     }
   }
 
@@ -431,6 +481,42 @@ public class HLA13RTIambassador
     if (federateAmbassador == null)
     {
       throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATE_AMBASSADOR_IS_NULL));
+    }
+
+    boolean justConnected;
+
+    // join/resign federation execution calls typcially indicate a connect/disconnect
+    //
+    String localSettingsDesignator = getIEEE1516eLocalSettingsDesignator(federationExecutionName);
+    try
+    {
+      rtiAmbassador.connect(new HLA13FederateAmbassadorBridge(this), CallbackModel.HLA_EVOKED, localSettingsDesignator);
+
+      justConnected = true;
+    }
+    catch (ConnectionFailed cf)
+    {
+      throw new RTIinternalError(cf.getMessage(), cf);
+    }
+    catch (InvalidLocalSettingsDesignator ilsd)
+    {
+      throw new RTIinternalError(ilsd.getMessage(), ilsd);
+    }
+    catch (UnsupportedCallbackModel ucm)
+    {
+      throw new RTIinternalError(ucm.getMessage(), ucm);
+    }
+    catch (AlreadyConnected ac)
+    {
+      justConnected = false;
+    }
+    catch (CallNotAllowedFromWithinCallback cnafwc)
+    {
+      throw new RTIinternalError(cnafwc.getMessage(), cnafwc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie.getMessage(), rtiie);
     }
 
     try
@@ -449,35 +535,84 @@ public class HLA13RTIambassador
     }
     catch (CouldNotCreateLogicalTimeFactory cncltf)
     {
+      if (justConnected)
+      {
+        disconnectQuietly();
+      }
+
       throw new RTIinternalError(cncltf);
     }
     catch (hla.rti1516e.exceptions.FederationExecutionDoesNotExist fedne)
     {
+      if (justConnected)
+      {
+        disconnectQuietly();
+      }
+
       throw new FederationExecutionDoesNotExist(fedne);
     }
     catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
+      if (justConnected)
+      {
+        disconnectQuietly();
+      }
+
       throw new SaveInProgress(sip);
     }
     catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
+      if (justConnected)
+      {
+        disconnectQuietly();
+      }
+
       throw new RestoreInProgress(rip);
     }
     catch (hla.rti1516e.exceptions.FederateAlreadyExecutionMember faem)
     {
+      if (justConnected)
+      {
+        disconnectQuietly();
+      }
+
       throw new FederateAlreadyExecutionMember(faem);
     }
     catch (NotConnected nc)
     {
+      if (justConnected)
+      {
+        disconnectQuietly();
+      }
+
       throw new RTIinternalError(nc);
     }
     catch (CallNotAllowedFromWithinCallback cnafwc)
     {
+      if (justConnected)
+      {
+        disconnectQuietly();
+      }
+
       throw new RTIinternalError(cnafwc);
     }
     catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
+      if (justConnected)
+      {
+        disconnectQuietly();
+      }
+
       throw new RTIinternalError(rtiie);
+    }
+    catch (RuntimeException re)
+    {
+      if (justConnected)
+      {
+        disconnectQuietly();
+      }
+
+      throw re;
     }
   }
 
@@ -487,6 +622,42 @@ public class HLA13RTIambassador
     throws FederateAlreadyExecutionMember, FederationExecutionDoesNotExist, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
+    boolean justConnected;
+
+    // join/resign federation execution calls typcially indicate a connect/disconnect
+    //
+    String localSettingsDesignator = getIEEE1516eLocalSettingsDesignator(federationExecutionName);
+    try
+    {
+      rtiAmbassador.connect(new HLA13FederateAmbassadorBridge(this), CallbackModel.HLA_EVOKED, localSettingsDesignator);
+
+      justConnected = true;
+    }
+    catch (ConnectionFailed cf)
+    {
+      throw new RTIinternalError(cf.getMessage(), cf);
+    }
+    catch (InvalidLocalSettingsDesignator ilsd)
+    {
+      throw new RTIinternalError(ilsd.getMessage(), ilsd);
+    }
+    catch (UnsupportedCallbackModel ucm)
+    {
+      throw new RTIinternalError(ucm.getMessage(), ucm);
+    }
+    catch (AlreadyConnected ac)
+    {
+      justConnected = false;
+    }
+    catch (CallNotAllowedFromWithinCallback cnafwc)
+    {
+      throw new RTIinternalError(cnafwc.getMessage(), cnafwc);
+    }
+    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
+    {
+      throw new RTIinternalError(rtiie.getMessage(), rtiie);
+    }
+
     try
     {
       FederateHandle federateHandle = rtiAmbassador.joinFederationExecution(federateType, federationExecutionName);
@@ -508,26 +679,56 @@ public class HLA13RTIambassador
     }
     catch (CouldNotCreateLogicalTimeFactory cncltf)
     {
+      if (justConnected)
+      {
+        disconnectQuietly();
+      }
+
       throw new RTIinternalError(cncltf);
     }
     catch (hla.rti1516e.exceptions.FederationExecutionDoesNotExist fedne)
     {
+      if (justConnected)
+      {
+        disconnectQuietly();
+      }
+
       throw new FederationExecutionDoesNotExist(fedne);
     }
     catch (hla.rti1516e.exceptions.FederateAlreadyExecutionMember faem)
     {
+      if (justConnected)
+      {
+        disconnectQuietly();
+      }
+
       throw new FederateAlreadyExecutionMember(faem);
     }
     catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
+      if (justConnected)
+      {
+        disconnectQuietly();
+      }
+
       throw new SaveInProgress(sip);
     }
     catch (hla.rti1516e.exceptions.RestoreInProgress rip)
     {
+      if (justConnected)
+      {
+        disconnectQuietly();
+      }
+
       throw new RestoreInProgress(rip);
     }
     catch (CallNotAllowedFromWithinCallback cnafwc)
     {
+      if (justConnected)
+      {
+        disconnectQuietly();
+      }
+
       throw new RTIinternalError(cnafwc);
     }
     catch (NotConnected nc)
@@ -536,7 +737,21 @@ public class HLA13RTIambassador
     }
     catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
+      if (justConnected)
+      {
+        disconnectQuietly();
+      }
+
       throw new RTIinternalError(rtiie);
+    }
+    catch (RuntimeException re)
+    {
+      if (justConnected)
+      {
+        disconnectQuietly();
+      }
+
+      throw re;
     }
   }
 
@@ -546,6 +761,10 @@ public class HLA13RTIambassador
     try
     {
       rtiAmbassador.resignFederationExecution(getResignAction(resignAction));
+
+      // join/resign federation execution calls typcially indicate a connect/disconnect
+      //
+      disconnectQuietly();
     }
     catch (hla.rti1516e.exceptions.InvalidResignAction ira)
     {
@@ -569,7 +788,7 @@ public class HLA13RTIambassador
     }
     catch (NotConnected nc)
     {
-      throw new RTIinternalError(nc);
+      throw new FederateNotExecutionMember(nc);
     }
     catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
     {
@@ -5374,7 +5593,7 @@ public class HLA13RTIambassador
   }
 
   @SuppressWarnings("unchecked")
-  public void setIEEE1516eLogicalTimeFactory(hla.rti1516e.LogicalTimeFactory ieee1516eLogicalTimeFactory)
+  protected void setIEEE1516eLogicalTimeFactory(hla.rti1516e.LogicalTimeFactory ieee1516eLogicalTimeFactory)
     throws RTIinternalError
   {
     this.ieee1516eLogicalTimeFactory = ieee1516eLogicalTimeFactory;
@@ -5436,6 +5655,23 @@ public class HLA13RTIambassador
     }
   }
 
+  private String getIEEE1516eLocalSettingsDesignator(String federationExecutionName)
+    throws RTIinternalError
+  {
+    String localSettingsDesginatorProperty = String.format(
+      OHLA_HLA13_FEDERATION_EXECUTION_LOCAL_SETTINGS_DESIGNATOR_PROPERTY, federationExecutionName);
+
+    String localSettingsDesignator = System.getProperty(localSettingsDesginatorProperty);
+    if (localSettingsDesignator == null)
+    {
+      localSettingsDesignator = System.getProperty(OHLA_HLA13_LOCAL_SETTINGS_DESIGNATOR_PROPERTY);
+    }
+
+    // TODO: log this
+
+    return localSettingsDesignator;
+  }
+
   private String getIEEE1516eLogicalTimeImplementationName(String federationExecutionName)
     throws RTIinternalError
   {
@@ -5445,6 +5681,23 @@ public class HLA13RTIambassador
     // TODO: log this
 
     return System.getProperty(logicalTimeFactoryClassNameProperty);
+  }
+
+  private void disconnectQuietly()
+  {
+    disconnectQuietly(rtiAmbassador);
+  }
+
+  private static void disconnectQuietly(IEEE1516eRTIambassador rtiAmbassador)
+  {
+    try
+    {
+      rtiAmbassador.disconnect();
+    }
+    catch (Throwable t)
+    {
+      log.warn(LogMessages.UNEXPECTED_EXCEPTION, t);
+    }
   }
 
   private class HLA13FederateChannelHandler

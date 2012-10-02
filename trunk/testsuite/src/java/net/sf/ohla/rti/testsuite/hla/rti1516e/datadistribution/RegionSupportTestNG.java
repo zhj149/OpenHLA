@@ -16,8 +16,6 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti1516e.datadistribution;
 
-import java.util.concurrent.locks.LockSupport;
-
 import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
 
 import org.testng.annotations.AfterClass;

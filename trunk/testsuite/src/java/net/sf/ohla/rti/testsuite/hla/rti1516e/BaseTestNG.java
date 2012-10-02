@@ -85,17 +85,17 @@ public abstract class BaseTestNG
   {
   }
 
-  protected void setupComplete(List<? extends BaseFederateAmbassador> federateAmbassadors)
+  protected void setupComplete(List<? extends SynchronizedFederateAmbassador> federateAmbassadors)
     throws Exception
   {
     federateAmbassadors.get(0).setupComplete();
 
-    for (BaseFederateAmbassador federateAmbassador : federateAmbassadors)
+    for (SynchronizedFederateAmbassador federateAmbassador : federateAmbassadors)
     {
       federateAmbassador.waitForSetupCompleteAnnounced();
     }
 
-    for (BaseFederateAmbassador federateAmbassador : federateAmbassadors)
+    for (SynchronizedFederateAmbassador federateAmbassador : federateAmbassadors)
     {
       federateAmbassador.waitForSetupComplete();
     }

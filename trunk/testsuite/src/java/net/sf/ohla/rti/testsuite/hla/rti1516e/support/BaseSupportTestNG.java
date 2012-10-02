@@ -20,7 +20,6 @@ import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
 
 import hla.rti1516e.CallbackModel;
 import hla.rti1516e.NullFederateAmbassador;

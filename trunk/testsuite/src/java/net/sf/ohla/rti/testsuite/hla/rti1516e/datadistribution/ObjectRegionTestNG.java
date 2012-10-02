@@ -24,10 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.locks.LockSupport;
 
-import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
+import net.sf.ohla.rti.testsuite.hla.rti1516e.SynchronizedFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti1516e.object.TestObjectInstance;
 
 import org.testng.annotations.AfterClass;
@@ -43,7 +42,6 @@ import hla.rti1516e.CallbackModel;
 import hla.rti1516e.DimensionHandle;
 import hla.rti1516e.DimensionHandleSet;
 import hla.rti1516e.FederateHandle;
-import hla.rti1516e.NullFederateAmbassador;
 import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.OrderType;
@@ -205,7 +203,7 @@ public class ObjectRegionTestNG
   }
 
   private static class TestFederateAmbassador
-    extends BaseFederateAmbassador
+    extends SynchronizedFederateAmbassador
   {
     private final Set<String> reservedObjectInstanceNames = new HashSet<String>();
 
@@ -220,7 +218,13 @@ public class ObjectRegionTestNG
     public void checkObjectInstanceHandle(final ObjectInstanceHandle objectInstanceHandle)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstances.containsKey(objectInstanceHandle); } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          return !objectInstances.containsKey(objectInstanceHandle);
+        }
+      });
 
       assert objectInstances.containsKey(objectInstanceHandle);
     }
@@ -230,7 +234,13 @@ public class ObjectRegionTestNG
       FederateHandle federateHandle, byte[] tag, boolean hasRegions)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return objectInstances.get(objectInstanceHandle).getAttributeValues() == null; } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          return objectInstances.get(objectInstanceHandle).getAttributeValues() == null;
+        }
+      });
 
       TestObjectInstance objectInstance = objectInstances.get(objectInstanceHandle);
       assert objectInstance.getAttributeValues() != null;

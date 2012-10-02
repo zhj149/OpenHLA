@@ -43,12 +43,13 @@ import net.sf.ohla.rti.i18n.LogMessages;
 import net.sf.ohla.rti.messages.CreateFederationExecution;
 import net.sf.ohla.rti.messages.DestroyFederationExecution;
 import net.sf.ohla.rti.messages.ListFederationExecutions;
-import net.sf.ohla.rti.messages.RequestFederationRestore;
 
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
+import org.jboss.netty.channel.ChannelFutureListener;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
+import org.slf4j.Logger;
 
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleFactory;
@@ -229,6 +230,8 @@ public class IEEE1516eRTIambassador
     }
   };
 
+  private final ShutdownHook shutdownHook = new ShutdownHook();
+
   public IEEE1516eRTIambassador()
   {
     this(new DefaultFederateChannelHandlerFactory());
@@ -332,6 +335,30 @@ public class IEEE1516eRTIambassador
     }
   }
 
+  public void disconnectQuietly(I18nLogger log)
+  {
+    try
+    {
+      disconnect();
+    }
+    catch (Throwable t)
+    {
+      log.warn(LogMessages.UNEXPECTED_EXCEPTION, t);
+    }
+  }
+
+  public void resignFederationExecutionQuietly(I18nLogger log, ResignAction resignAction)
+  {
+    try
+    {
+      resignFederationExecution(resignAction);
+    }
+    catch (Throwable t)
+    {
+      log.warn(LogMessages.UNEXPECTED_EXCEPTION, t);
+    }
+  }
+
   public void connect(
     FederateAmbassador federateAmbassador, CallbackModel callbackModel, String localSettingsDesignator)
     throws ConnectionFailed, InvalidLocalSettingsDesignator, UnsupportedCallbackModel, AlreadyConnected,
@@ -345,8 +372,6 @@ public class IEEE1516eRTIambassador
     {
       throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.CALLBACK_MODEL_IS_NULL));
     }
-
-    Executor executor = Executors.newCachedThreadPool();
 
     String host;
     int port;
@@ -394,6 +419,8 @@ public class IEEE1516eRTIambassador
     {
       if (rtiChannel == null)
       {
+        Executor executor = Executors.newCachedThreadPool();
+
         ClientBootstrap clientBootstrap = new ClientBootstrap(
           new NioClientSocketChannelFactory(Executors.newCachedThreadPool(), Executors.newCachedThreadPool()));
 
@@ -408,9 +435,22 @@ public class IEEE1516eRTIambassador
         {
           rtiChannel = future.getChannel();
 
-          this.federateAmbassador = federateAmbassador;
+          // release the channel factories external resources when the channel is closed
+          //
+          rtiChannel.getCloseFuture().addListener(new ChannelFutureListener()
+          {
+            @Override
+            public void operationComplete(ChannelFuture future)
+              throws Exception
+            {
+              future.getChannel().getFactory().releaseExternalResources();
+            }
+          });
 
+          this.federateAmbassador = federateAmbassador;
           this.callbackManager = callbackManager;
+
+          Runtime.getRuntime().addShutdownHook(shutdownHook);
         }
         else
         {
@@ -440,21 +480,27 @@ public class IEEE1516eRTIambassador
   {
     checkIfCallNotAllowedFromWithinCallback();
 
+    Channel closedChannel = null;
+
     connectLock.writeLock().lock();
     try
     {
       if (rtiChannel == null)
       {
-        log.warn(LogMessages.NOT_CONNECTED);
+        log.debug(LogMessages.NOT_CONNECTED);
       }
       else if (federate == null)
       {
-        log.info(LogMessages.DISCONNECTING, rtiChannel.getRemoteAddress());
+        log.debug(LogMessages.DISCONNECTING, rtiChannel.getRemoteAddress());
 
         rtiChannel.close();
 
-        rtiChannel.getCloseFuture().awaitUninterruptibly();
-        rtiChannel.getFactory().releaseExternalResources();
+        closedChannel = rtiChannel;
+
+        if (Thread.currentThread() != shutdownHook)
+        {
+          Runtime.getRuntime().removeShutdownHook(shutdownHook);
+        }
 
         rtiChannel = null;
       }
@@ -466,6 +512,11 @@ public class IEEE1516eRTIambassador
     finally
     {
       connectLock.writeLock().unlock();
+    }
+
+    if (closedChannel != null)
+    {
+      closedChannel.getCloseFuture().awaitUninterruptibly();
     }
   }
 
@@ -3549,7 +3600,8 @@ public class IEEE1516eRTIambassador
       {
         checkIfFederateNotExecutionMember();
 
-        federate.subscribeObjectClassAttributesWithRegions(objectClassHandle, attributesAndRegions, updateRateDesignator);
+        federate.subscribeObjectClassAttributesWithRegions(objectClassHandle, attributesAndRegions,
+                                                           updateRateDesignator);
       }
       finally
       {
@@ -5585,6 +5637,17 @@ public class IEEE1516eRTIambassador
     {
       throw new CallNotAllowedFromWithinCallback(I18n.getMessage(
         ExceptionMessages.CALL_NOT_ALLOWED_FROM_WITHIN_CALLBACK, Thread.currentThread()));
+    }
+  }
+
+  private class ShutdownHook
+    extends Thread
+  {
+    @Override
+    public void run()
+    {
+      resignFederationExecutionQuietly(log, ResignAction.NO_ACTION);
+      disconnectQuietly(log);
     }
   }
 }

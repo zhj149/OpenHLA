@@ -24,8 +24,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import net.sf.ohla.rti.testsuite.hla.rti1516.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti1516.BaseTestNG;
+import net.sf.ohla.rti.testsuite.hla.rti1516.SynchronizedFederateAmbassador;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -273,7 +273,7 @@ public class ObjectRegistrationTestNG
   }
 
   private static class TestFederateAmbassador
-    extends BaseFederateAmbassador
+    extends SynchronizedFederateAmbassador
   {
     private final Set<String> reservedObjectInstanceNames = new HashSet<String>();
 
@@ -288,7 +288,13 @@ public class ObjectRegistrationTestNG
     public void checkObjectInstanceNameReserved(final String objectInstanceName)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !reservedObjectInstanceNames.contains(objectInstanceName); } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          return !reservedObjectInstanceNames.contains(objectInstanceName);
+        }
+      });
 
       assert reservedObjectInstanceNames.contains(objectInstanceName);
     }
@@ -296,7 +302,13 @@ public class ObjectRegistrationTestNG
     public void checkObjectInstanceHandle(final ObjectInstanceHandle objectInstanceHandle)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstances.containsKey(objectInstanceHandle); } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          return !objectInstances.containsKey(objectInstanceHandle);
+        }
+      });
 
       assert objectInstances.containsKey(objectInstanceHandle);
     }

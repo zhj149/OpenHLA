@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
+import net.sf.ohla.rti.testsuite.hla.rti1516e.SynchronizedFederateAmbassador;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -190,7 +190,7 @@ public class AttributeAcquisitionTestNG
   }
 
   private static class TestFederateAmbassador
-    extends BaseFederateAmbassador
+    extends SynchronizedFederateAmbassador
   {
     private final Map<ObjectInstanceHandle, Map<AttributeHandle, Object>> objectInstances =
       new HashMap<ObjectInstanceHandle, Map<AttributeHandle, Object>>();
@@ -206,7 +206,13 @@ public class AttributeAcquisitionTestNG
     public void checkObjectInstanceHandle(final ObjectInstanceHandle objectInstanceHandle)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstances.containsKey(objectInstanceHandle); } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          return !objectInstances.containsKey(objectInstanceHandle);
+        }
+      });
 
       assert objectInstances.containsKey(objectInstanceHandle);
     }
@@ -215,7 +221,13 @@ public class AttributeAcquisitionTestNG
       final ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !acquiredAttributes.containsKey(objectInstanceHandle); } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          return !acquiredAttributes.containsKey(objectInstanceHandle);
+        }
+      });
 
       Object[] acquisition = acquiredAttributes.get(objectInstanceHandle);
       assert acquisition != null;
@@ -228,7 +240,14 @@ public class AttributeAcquisitionTestNG
       FederateHandle federateHandle)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstances.containsKey(objectInstanceHandle) || objectInstances.get(objectInstanceHandle).get(attributeHandle) == null; } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          return !objectInstances.containsKey(objectInstanceHandle) ||
+                 objectInstances.get(objectInstanceHandle).get(attributeHandle) == null;
+        }
+      });
 
       assert federateHandle.equals(objectInstances.get(objectInstanceHandle).get(attributeHandle));
     }
@@ -247,7 +266,7 @@ public class AttributeAcquisitionTestNG
       ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
       throws FederateInternalError
     {
-      acquiredAttributes.put(objectInstanceHandle, new Object[] { attributeHandles, tag });
+      acquiredAttributes.put(objectInstanceHandle, new Object[]{attributeHandles, tag});
     }
 
     @Override

@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import net.sf.ohla.rti.testsuite.hla.rti.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti.BaseTestNG;
+import net.sf.ohla.rti.testsuite.hla.rti.SynchronizedFederateAmbassador;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -191,7 +191,7 @@ public class AttributeAcquisitionTestNG
   }
 
   private static class TestFederateAmbassador
-    extends BaseFederateAmbassador
+    extends SynchronizedFederateAmbassador
   {
     private final Map<Integer, Map<Integer, Object>> objectInstances = new HashMap<Integer, Map<Integer, Object>>();
     private final Map<String, Integer> objectInstanceHandlesByName = new HashMap<String, Integer>();
@@ -206,7 +206,13 @@ public class AttributeAcquisitionTestNG
     public void checkObjectInstanceName(final String objectInstanceName)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstanceHandlesByName.containsKey(objectInstanceName); } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          return !objectInstanceHandlesByName.containsKey(objectInstanceName);
+        }
+      });
 
       assert objectInstanceHandlesByName.containsKey(objectInstanceName);
     }
@@ -214,7 +220,13 @@ public class AttributeAcquisitionTestNG
     public void checkAttributesAcquired(final int objectInstanceHandle, AttributeHandleSet attributeHandles)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !acquiredAttributes.containsKey(objectInstanceHandle); } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          return !acquiredAttributes.containsKey(objectInstanceHandle);
+        }
+      });
 
       AttributeHandleSet acquisition = acquiredAttributes.get(objectInstanceHandle);
       assert acquisition != null;
@@ -224,7 +236,14 @@ public class AttributeAcquisitionTestNG
     public void checkAttributeIsOwnedByFederate(final int objectInstanceHandle, final int attributeHandle, Integer federateHandle)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstances.containsKey(objectInstanceHandle) || objectInstances.get(objectInstanceHandle).get(attributeHandle) == null; } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          return !objectInstances.containsKey(objectInstanceHandle) ||
+                 objectInstances.get(objectInstanceHandle).get(attributeHandle) == null;
+        }
+      });
 
       assert federateHandle.equals(objectInstances.get(objectInstanceHandle).get(attributeHandle));
     }
