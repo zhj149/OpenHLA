@@ -52,7 +52,7 @@ import hla.rti1516e.LogicalTimeFactoryFactory;
 public class RTI
 {
   public static final String NAME = "OHLA";
-  public static final String VERSION = "0.5";
+  public static final String VERSION = "0.6";
 
   public static final String FULL_VERSION = NAME + " " + VERSION;
 

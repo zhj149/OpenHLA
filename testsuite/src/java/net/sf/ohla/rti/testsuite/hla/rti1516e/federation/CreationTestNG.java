@@ -20,7 +20,9 @@ import java.net.URL;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
+import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
 
 import org.testng.annotations.AfterClass;
@@ -30,7 +32,6 @@ import org.testng.annotations.Test;
 import hla.rti1516e.CallbackModel;
 import hla.rti1516e.FederationExecutionInformation;
 import hla.rti1516e.FederationExecutionInformationSet;
-import hla.rti1516e.NullFederateAmbassador;
 import hla.rti1516e.RTIambassador;
 import hla.rti1516e.exceptions.CouldNotOpenFDD;
 import hla.rti1516e.exceptions.ErrorReadingFDD;
@@ -152,27 +153,28 @@ public class CreationTestNG
   }
 
   private class TestFederateAmbassador
-    extends NullFederateAmbassador
+    extends BaseFederateAmbassador
   {
-    private final RTIambassador rtiAmbassador;
-
     private final Set<FederationExecutionInformation> reportedFederationExecutionInformations =
       new HashSet<FederationExecutionInformation>();
 
     private TestFederateAmbassador(RTIambassador rtiAmbassador)
     {
-      this.rtiAmbassador = rtiAmbassador;
+      super(rtiAmbassador);
     }
 
     public void checkReportedFederationExecutions(
-      Set<FederationExecutionInformation> expectedFederationExecutionInformations)
+      final Set<FederationExecutionInformation> expectedFederationExecutionInformations)
       throws Exception
     {
-      for (int i = 0;
-           i < 5 && !reportedFederationExecutionInformations.containsAll(expectedFederationExecutionInformations); i++)
+      evokeCallbackWhile(new Callable<Boolean>()
       {
-        rtiAmbassador.evokeCallback(1.0);
-      }
+        public Boolean call()
+        {
+          return !reportedFederationExecutionInformations.containsAll(expectedFederationExecutionInformations);
+        }
+      });
+
       assert reportedFederationExecutionInformations.containsAll(expectedFederationExecutionInformations);
     }
 

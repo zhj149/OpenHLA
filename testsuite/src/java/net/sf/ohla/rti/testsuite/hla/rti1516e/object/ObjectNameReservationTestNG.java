@@ -21,17 +21,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.locks.LockSupport;
 
-import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
+import net.sf.ohla.rti.testsuite.hla.rti1516e.SynchronizedFederateAmbassador;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import hla.rti1516e.CallbackModel;
-import hla.rti1516e.NullFederateAmbassador;
 import hla.rti1516e.RTIambassador;
 import hla.rti1516e.ResignAction;
 import hla.rti1516e.exceptions.FederateInternalError;
@@ -212,7 +210,7 @@ public class ObjectNameReservationTestNG
   }
 
   protected static class TestFederateAmbassador
-    extends BaseFederateAmbassador
+    extends SynchronizedFederateAmbassador
   {
     private final Set<String> reservedObjectInstanceNames = new HashSet<String>();
     private final Set<String> notReservedObjectInstanceNames = new HashSet<String>();
@@ -225,7 +223,13 @@ public class ObjectNameReservationTestNG
     public void checkObjectInstanceNameReserved(final String objectInstanceName)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !reservedObjectInstanceNames.contains(objectInstanceName); } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          return !reservedObjectInstanceNames.contains(objectInstanceName);
+        }
+      });
 
       assert reservedObjectInstanceNames.contains(objectInstanceName);
     }
@@ -233,7 +237,13 @@ public class ObjectNameReservationTestNG
     public void checkObjectInstanceNameNotReserved(final String objectInstanceName)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !notReservedObjectInstanceNames.contains(objectInstanceName); } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          return !notReservedObjectInstanceNames.contains(objectInstanceName);
+        }
+      });
 
       assert notReservedObjectInstanceNames.contains(objectInstanceName);
     }

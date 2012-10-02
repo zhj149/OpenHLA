@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
+import net.sf.ohla.rti.testsuite.hla.rti1516e.SynchronizedFederateAmbassador;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -199,7 +199,7 @@ public class IntrusiveAttributeAcquisitionTestNG
   }
 
   private static class TestFederateAmbassador
-    extends BaseFederateAmbassador
+    extends SynchronizedFederateAmbassador
   {
     private final Map<ObjectInstanceHandle, Map<AttributeHandle, Object>> objectInstances =
       new HashMap<ObjectInstanceHandle, Map<AttributeHandle, Object>>();
@@ -219,7 +219,13 @@ public class IntrusiveAttributeAcquisitionTestNG
     public void checkObjectInstanceHandle(final ObjectInstanceHandle objectInstanceHandle)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstances.containsKey(objectInstanceHandle); } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          return !objectInstances.containsKey(objectInstanceHandle);
+        }
+      });
 
       assert objectInstances.containsKey(objectInstanceHandle);
     }
@@ -228,7 +234,14 @@ public class IntrusiveAttributeAcquisitionTestNG
       final ObjectInstanceHandle objectInstanceHandle, final AttributeHandleSet attributeHandles, byte[] tag)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !releaseRequestedAttributes.containsKey(objectInstanceHandle) || !releaseRequestedAttributes.get(objectInstanceHandle)[0].equals(attributeHandles); } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          return !releaseRequestedAttributes.containsKey(objectInstanceHandle) ||
+                 !releaseRequestedAttributes.get(objectInstanceHandle)[0].equals(attributeHandles);
+        }
+      });
 
       Object[] acquisition = releaseRequestedAttributes.get(objectInstanceHandle);
       assert acquisition != null;
@@ -251,7 +264,14 @@ public class IntrusiveAttributeAcquisitionTestNG
       final ObjectInstanceHandle objectInstanceHandle, final AttributeHandleSet attributeHandles, byte[] tag)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !acquiredAttributes.containsKey(objectInstanceHandle) || !acquiredAttributes.get(objectInstanceHandle)[0].equals(attributeHandles); } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          return !acquiredAttributes.containsKey(objectInstanceHandle) ||
+                 !acquiredAttributes.get(objectInstanceHandle)[0].equals(attributeHandles);
+        }
+      });
 
       Object[] acquisition = acquiredAttributes.get(objectInstanceHandle);
       assert acquisition != null;
@@ -264,7 +284,14 @@ public class IntrusiveAttributeAcquisitionTestNG
       FederateHandle federateHandle)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstances.containsKey(objectInstanceHandle) || objectInstances.get(objectInstanceHandle).get(attributeHandle) == null; } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          return !objectInstances.containsKey(objectInstanceHandle) ||
+                 objectInstances.get(objectInstanceHandle).get(attributeHandle) == null;
+        }
+      });
 
       assert federateHandle.equals(objectInstances.get(objectInstanceHandle).get(attributeHandle));
     }
@@ -283,7 +310,7 @@ public class IntrusiveAttributeAcquisitionTestNG
       ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
       throws FederateInternalError
     {
-      releaseRequestedAttributes.put(objectInstanceHandle, new Object[] { attributeHandles, tag });
+      releaseRequestedAttributes.put(objectInstanceHandle, new Object[]{attributeHandles, tag});
     }
 
     @Override
@@ -308,7 +335,7 @@ public class IntrusiveAttributeAcquisitionTestNG
       ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
       throws FederateInternalError
     {
-      acquiredAttributes.put(objectInstanceHandle, new Object[] { attributeHandles, tag });
+      acquiredAttributes.put(objectInstanceHandle, new Object[]{attributeHandles, tag});
     }
 
     @Override

@@ -18,8 +18,6 @@ package net.sf.ohla.rti.testsuite.hla.rti.time;
 
 import org.testng.annotations.Test;
 
-import hla.rti.LogicalTime;
-
 @Test
 public class InitialTimeStateTestNG
   extends BaseTimeManagementTestNG

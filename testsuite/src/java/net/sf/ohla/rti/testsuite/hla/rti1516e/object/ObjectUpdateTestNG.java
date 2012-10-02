@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
+import net.sf.ohla.rti.testsuite.hla.rti1516e.SynchronizedFederateAmbassador;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -192,7 +192,7 @@ public class ObjectUpdateTestNG
   }
 
   private static class TestFederateAmbassador
-    extends BaseFederateAmbassador
+    extends SynchronizedFederateAmbassador
   {
     private final Map<ObjectInstanceHandle, TestObjectInstance> objectInstances =
       new HashMap<ObjectInstanceHandle, TestObjectInstance>();

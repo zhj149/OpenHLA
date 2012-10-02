@@ -16,12 +16,11 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti.time;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import net.sf.ohla.rti.testsuite.hla.rti.BaseFederateAmbassador;
+import net.sf.ohla.rti.testsuite.hla.rti.SynchronizedFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti.object.TestObjectInstance;
 
 import hla.rti.AttributeNotKnown;
@@ -42,7 +41,7 @@ import hla.rti.SuppliedParameters;
 import hla.rti.jlc.RTIambassadorEx;
 
 public class TimeManagementFederateAmbassador
-  extends BaseFederateAmbassador
+  extends SynchronizedFederateAmbassador
 {
   private LogicalTime timeRegulationEnabledTime;
   private LogicalTime timeConstrainedEnabledTime;

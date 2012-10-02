@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import net.sf.ohla.rti.testsuite.hla.rti.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti.BaseTestNG;
+import net.sf.ohla.rti.testsuite.hla.rti.SynchronizedFederateAmbassador;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -221,7 +221,7 @@ public class IntrusiveAttributeAcquisitionTestNG
   }
 
   private static class TestFederateAmbassador
-    extends BaseFederateAmbassador
+    extends SynchronizedFederateAmbassador
   {
     private final Map<Integer, Map<Integer, Object>> objectInstances = new HashMap<Integer, Map<Integer, Object>>();
     private final Map<String, Integer> objectInstanceHandlesByName = new HashMap<String, Integer>();
@@ -240,7 +240,13 @@ public class IntrusiveAttributeAcquisitionTestNG
     public void checkObjectInstanceName(final String objectInstanceName)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstances.containsKey(objectInstanceName); } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          return !objectInstances.containsKey(objectInstanceName);
+        }
+      });
 
       assert objectInstanceHandlesByName.containsKey(objectInstanceName);
     }
@@ -249,7 +255,14 @@ public class IntrusiveAttributeAcquisitionTestNG
       final int objectInstanceHandle, final AttributeHandleSet attributeHandles, byte[] tag)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !releaseRequestedAttributes.containsKey(objectInstanceHandle) || !releaseRequestedAttributes.get(objectInstanceHandle)[0].equals(attributeHandles); } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          return !releaseRequestedAttributes.containsKey(objectInstanceHandle) ||
+                 !releaseRequestedAttributes.get(objectInstanceHandle)[0].equals(attributeHandles);
+        }
+      });
 
       Object[] acquisition = releaseRequestedAttributes.get(objectInstanceHandle);
       assert acquisition != null;
@@ -271,8 +284,15 @@ public class IntrusiveAttributeAcquisitionTestNG
     public void checkAttributesAcquired(final int objectInstanceHandle, final AttributeHandleSet attributeHandles)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !acquiredAttributes.containsKey(objectInstanceHandle) || !acquiredAttributes.get(objectInstanceHandle).equals(
-        attributeHandles); } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          return !acquiredAttributes.containsKey(objectInstanceHandle) ||
+                 !acquiredAttributes.get(objectInstanceHandle).equals(
+                   attributeHandles);
+        }
+      });
 
       assert attributeHandles.equals(acquiredAttributes.get(objectInstanceHandle));
     }
@@ -281,7 +301,14 @@ public class IntrusiveAttributeAcquisitionTestNG
       final Integer objectInstanceHandle, final int attributeHandle, Integer federateHandle)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstances.containsKey(objectInstanceHandle) || objectInstances.get(objectInstanceHandle).get(attributeHandle) == null; } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          return !objectInstances.containsKey(objectInstanceHandle) ||
+                 objectInstances.get(objectInstanceHandle).get(attributeHandle) == null;
+        }
+      });
 
       assert federateHandle.equals(objectInstances.get(objectInstanceHandle).get(attributeHandle));
     }
@@ -299,7 +326,7 @@ public class IntrusiveAttributeAcquisitionTestNG
       int objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
       throws ObjectNotKnown, AttributeNotKnown, AttributeNotOwned, FederateInternalError
     {
-      releaseRequestedAttributes.put(objectInstanceHandle, new Object[] { attributeHandles, tag });
+      releaseRequestedAttributes.put(objectInstanceHandle, new Object[]{attributeHandles, tag});
     }
 
     @Override

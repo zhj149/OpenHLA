@@ -23,8 +23,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.locks.LockSupport;
 
+import net.sf.ohla.rti.testsuite.hla.rti.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti.BaseTestNG;
 
 import org.testng.annotations.AfterClass;
@@ -183,10 +185,8 @@ public class SynchronizationTestNG
   }
 
   protected static class TestFederateAmbassador
-    extends NullFederateAmbassador
+    extends BaseFederateAmbassador
   {
-    private final RTIambassadorEx rtiAmbassador;
-
     private final Set<String> successfullyRegisteredSynchronizationPoints = new HashSet<String>();
     private final Set<String> unsuccessfullyRegisteredSynchronizationPoints = new HashSet<String>();
     private final Map<String, byte[]> announcedSynchronizationPoints = new HashMap<String, byte[]>();
@@ -194,49 +194,65 @@ public class SynchronizationTestNG
 
     public TestFederateAmbassador(RTIambassadorEx rtiAmbassador)
     {
-      this.rtiAmbassador = rtiAmbassador;
+      super(rtiAmbassador);
     }
 
-    public void checkSynchronizationPointRegistrationSucceeded(String label)
+    public void checkSynchronizationPointRegistrationSucceeded(final String label)
       throws Exception
     {
-      int i = 0;
-      for (; i < 5 && !successfullyRegisteredSynchronizationPoints.contains(label); i++)
+      evokeCallbackWhile(new Callable<Boolean>()
       {
-        rtiAmbassador.tick(.01, 1.0);
-      }
+        public Boolean call()
+        {
+          return !successfullyRegisteredSynchronizationPoints.contains(label);
+        }
+      });
+
       assert successfullyRegisteredSynchronizationPoints.contains(label);
     }
 
-    public void checkSynchronizationPointRegistrationFailed(String label)
+    public void checkSynchronizationPointRegistrationFailed(final String label)
       throws Exception
     {
-      for (int i = 0; i < 5 && !unsuccessfullyRegisteredSynchronizationPoints.contains(label); i++)
+      evokeCallbackWhile(new Callable<Boolean>()
       {
-        rtiAmbassador.tick(.01, 1.0);
-      }
+        public Boolean call()
+        {
+          return !unsuccessfullyRegisteredSynchronizationPoints.contains(label);
+        }
+      });
+
       assert unsuccessfullyRegisteredSynchronizationPoints.contains(label);
     }
 
-    public void checkAnnouncedSynchronizationPoint(String label, byte[] tag)
+    public void checkAnnouncedSynchronizationPoint(final String label, byte[] tag)
       throws Exception
     {
-      for (int i = 0; i < 5 && !announcedSynchronizationPoints.containsKey(label); i++)
+      evokeCallbackWhile(new Callable<Boolean>()
       {
-        rtiAmbassador.tick(.01, 1.0);
-      }
-      assert announcedSynchronizationPoints.containsKey(label) && tag == null ?
+        public Boolean call()
+        {
+          return !announcedSynchronizationPoints.containsKey(label);
+        }
+      });
+
+      assert announcedSynchronizationPoints.containsKey(label);
+      assert tag == null ?
         announcedSynchronizationPoints.get(label) == null :
         Arrays.equals(tag, announcedSynchronizationPoints.get(label));
     }
 
-    public void checkFederationSynchronized(String label)
+    public void checkFederationSynchronized(final String label)
       throws Exception
     {
-      for (int i = 0; i < 5 && !federationSynchronized.contains(label); i++)
+      evokeCallbackWhile(new Callable<Boolean>()
       {
-        rtiAmbassador.tick(.01, 1.0);
-      }
+        public Boolean call()
+        {
+          return !federationSynchronized.contains(label);
+        }
+      });
+
       assert federationSynchronized.contains(label);
     }
 

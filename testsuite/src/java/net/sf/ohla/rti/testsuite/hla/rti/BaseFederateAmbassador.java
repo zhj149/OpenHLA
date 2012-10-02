@@ -20,13 +20,8 @@ import java.util.Arrays;
 import java.util.concurrent.Callable;
 
 import hla.rti.ArrayIndexOutOfBounds;
-import hla.rti.FederateInternalError;
-import hla.rti.FederateNotExecutionMember;
-import hla.rti.RTIinternalError;
 import hla.rti.ReceivedInteraction;
 import hla.rti.ReflectedAttributes;
-import hla.rti.RestoreInProgress;
-import hla.rti.SaveInProgress;
 import hla.rti.SuppliedAttributes;
 import hla.rti.SuppliedParameters;
 import hla.rti.jlc.NullFederateAmbassador;
@@ -35,62 +30,11 @@ import hla.rti.jlc.RTIambassadorEx;
 public class BaseFederateAmbassador
   extends NullFederateAmbassador
 {
-  public static final String SETUP_COMPLETE = "SETUP_COMPLETE";
-
   protected final RTIambassadorEx rtiAmbassador;
-
-  private boolean setupCompleteAnnounced;
-  private boolean setupComplete;
 
   public BaseFederateAmbassador(RTIambassadorEx rtiAmbassador)
   {
     this.rtiAmbassador = rtiAmbassador;
-  }
-
-  public void setupComplete()
-    throws FederateNotExecutionMember, RestoreInProgress, SaveInProgress, RTIinternalError
-  {
-    rtiAmbassador.registerFederationSynchronizationPoint(SETUP_COMPLETE, null);
-  }
-
-  public void waitForSetupCompleteAnnounced()
-    throws Exception
-  {
-    evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !setupCompleteAnnounced; } });
-  }
-
-  public void waitForSetupComplete()
-    throws Exception
-  {
-    evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !setupComplete; } });
-  }
-
-  @Override
-  public void announceSynchronizationPoint(String synchronizationPointLabel, byte[] tag)
-    throws FederateInternalError
-  {
-    if (SETUP_COMPLETE.equals(synchronizationPointLabel))
-    {
-      setupCompleteAnnounced = true;
-
-      try
-      {
-        rtiAmbassador.synchronizationPointAchieved(synchronizationPointLabel);
-      }
-      catch (Throwable t)
-      {
-        throw new FederateInternalError(t);
-      }
-    }
-  }
-
-  @Override
-  public void federationSynchronized(String synchronizationPointLabel)
-  {
-    if (SETUP_COMPLETE.equals(synchronizationPointLabel))
-    {
-      setupComplete = true;
-    }
   }
 
   protected void checkReceivedInteraction(

@@ -22,7 +22,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
+import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
 
 import org.testng.annotations.AfterClass;
@@ -34,7 +36,6 @@ import hla.rti1516e.FederateHandle;
 import hla.rti1516e.FederateHandleSaveStatusPair;
 import hla.rti1516e.FederateRestoreStatus;
 import hla.rti1516e.LogicalTime;
-import hla.rti1516e.NullFederateAmbassador;
 import hla.rti1516e.RTIambassador;
 import hla.rti1516e.ResignAction;
 import hla.rti1516e.RestoreFailureReason;
@@ -121,10 +122,8 @@ public class SavingTestNG
   }
 
   protected static class TestFederateAmbassador
-    extends NullFederateAmbassador
+    extends BaseFederateAmbassador
   {
-    private final RTIambassador rtiAmbassador;
-
     private final Map<String, LogicalTime> successfullyInitiatedFederateSaves = new HashMap<String, LogicalTime>();
 
     private final Set<String> successfulFederationSaves = new HashSet<String>();
@@ -135,7 +134,7 @@ public class SavingTestNG
 
     public TestFederateAmbassador(RTIambassador rtiAmbassador)
     {
-      this.rtiAmbassador = rtiAmbassador;
+      super(rtiAmbassador);
     }
 
     public void checkInitiateFederateSave(String label)
@@ -144,34 +143,46 @@ public class SavingTestNG
       checkInitiateFederateSave(label, null);
     }
 
-    public void checkInitiateFederateSave(String label, LogicalTime time)
+    public void checkInitiateFederateSave(final String label, LogicalTime time)
       throws Exception
     {
-      for (int i = 0; i < 5 && !successfullyInitiatedFederateSaves.containsKey(label); i++)
+      evokeCallbackWhile(new Callable<Boolean>()
       {
-        rtiAmbassador.evokeCallback(1.0);
-      }
+        public Boolean call()
+        {
+          return !successfullyInitiatedFederateSaves.containsKey(label);
+        }
+      });
+
       assert successfullyInitiatedFederateSaves.containsKey(label);
       assert time == null || time.equals(successfullyInitiatedFederateSaves.get(label));
     }
 
-    public void checkFederationSaved(String label)
+    public void checkFederationSaved(final String label)
       throws Exception
     {
-      for (int i = 0; i < 5 && !successfulFederationSaves.contains(label); i++)
+      evokeCallbackWhile(new Callable<Boolean>()
       {
-        rtiAmbassador.evokeCallback(1.0);
-      }
+        public Boolean call()
+        {
+          return !successfulFederationSaves.contains(label);
+        }
+      });
+
       assert successfulFederationSaves.contains(label);
     }
 
-    public void checkFederationNotSaved(String label, SaveFailureReason reason)
+    public void checkFederationNotSaved(final String label, SaveFailureReason reason)
       throws Exception
     {
-      for (int i = 0; i < 5 && !unsuccessfulFederationSaves.containsKey(label); i++)
+      evokeCallbackWhile(new Callable<Boolean>()
       {
-        rtiAmbassador.evokeCallback(1.0);
-      }
+        public Boolean call()
+        {
+          return !unsuccessfulFederationSaves.containsKey(label);
+        }
+      });
+
       assert unsuccessfulFederationSaves.containsKey(label);
       assert reason == unsuccessfulFederationSaves.get(label);
     }

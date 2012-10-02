@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import net.sf.ohla.rti.testsuite.hla.rti1516.BaseFederateAmbassador;
+import net.sf.ohla.rti.testsuite.hla.rti1516.SynchronizedFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti1516.object.TestObjectInstance;
 
 import hla.rti1516.AttributeHandleValueMap;
@@ -29,7 +29,7 @@ import hla.rti1516.TimeQueryReturn;
 import hla.rti1516.TransportationType;
 
 public class TimeManagementFederateAmbassador
-  extends BaseFederateAmbassador
+  extends SynchronizedFederateAmbassador
 {
   private LogicalTime timeRegulationEnabledTime;
   private LogicalTime timeConstrainedEnabledTime;

@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import net.sf.ohla.rti.testsuite.hla.rti.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti.BaseTestNG;
+import net.sf.ohla.rti.testsuite.hla.rti.SynchronizedFederateAmbassador;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -217,7 +217,7 @@ public class NegotiatedAttributeDivestitureTestNG
   }
 
   private static class TestFederateAmbassador
-    extends BaseFederateAmbassador
+    extends SynchronizedFederateAmbassador
   {
     private final Map<Integer, Map<Integer, Object>> objectInstances = new HashMap<Integer, Map<Integer, Object>>();
     private final Map<String, Integer> objectInstanceHandlesByName = new HashMap<String, Integer>();
@@ -238,7 +238,13 @@ public class NegotiatedAttributeDivestitureTestNG
     public void checkObjectInstanceName(final String objectInstanceName)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !objectInstanceHandlesByName.containsKey(objectInstanceName); } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          return !objectInstanceHandlesByName.containsKey(objectInstanceName);
+        }
+      });
 
       assert objectInstanceHandlesByName.containsKey(objectInstanceName);
     }
@@ -259,7 +265,14 @@ public class NegotiatedAttributeDivestitureTestNG
       final int objectInstanceHandle, final AttributeHandleSet attributeHandles)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !divestitureRequestedAttributes.containsKey(objectInstanceHandle) || !divestitureRequestedAttributes.get(objectInstanceHandle).equals(attributeHandles); } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          return !divestitureRequestedAttributes.containsKey(objectInstanceHandle) ||
+                 !divestitureRequestedAttributes.get(objectInstanceHandle).equals(attributeHandles);
+        }
+      });
 
       AttributeHandleSet divestiture = divestitureRequestedAttributes.get(objectInstanceHandle);
       assert divestiture != null;
@@ -269,7 +282,13 @@ public class NegotiatedAttributeDivestitureTestNG
     public void checkAttributesAcquired(final int objectInstanceHandle, AttributeHandleSet attributeHandles)
       throws Exception
     {
-      evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !acquiredAttributes.containsKey(objectInstanceHandle); } });
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          return !acquiredAttributes.containsKey(objectInstanceHandle);
+        }
+      });
 
       AttributeHandleSet acquisition = acquiredAttributes.get(objectInstanceHandle);
       assert acquisition != null;
@@ -289,7 +308,7 @@ public class NegotiatedAttributeDivestitureTestNG
       int objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
       throws ObjectNotKnown, AttributeNotKnown, AttributeAlreadyOwned, AttributeNotPublished, FederateInternalError
     {
-      acquisitionRequestedAttributes.put(objectInstanceHandle, new Object[] { attributeHandles, tag });
+      acquisitionRequestedAttributes.put(objectInstanceHandle, new Object[]{attributeHandles, tag});
     }
 
     @Override
