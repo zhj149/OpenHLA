@@ -90,27 +90,6 @@ public class CallbackManager
     }
   }
 
-  public void holdCallbacks()
-  {
-    callbacksLock.lock();
-    try
-    {
-      // release all the held callbacks to the callback Q
-      //
-      releaseHeld();
-
-      // switch the held callbacks and the callbacks
-      //
-      Queue<Callback> temp = heldCallbacks;
-      heldCallbacks = callbacks;
-      callbacks = temp;
-    }
-    finally
-    {
-      callbacksLock.unlock();
-    }
-  }
-
   public boolean evokeCallback(double approximateMinimumTimeInSeconds)
   {
     long minNanosTimeout = (long) Math.floor(approximateMinimumTimeInSeconds * 1000000000);

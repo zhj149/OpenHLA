@@ -138,8 +138,36 @@ public class FederateRegionManager
     }
   }
 
+  public DimensionHandleSet getDimensionHandleSet(RegionHandle regionHandle)
+    throws InvalidRegion
+  {
+    DimensionHandleSet dimensionHandles;
+
+    regionsLock.readLock().lock();
+    try
+    {
+      FederateRegion region = regions.get(regionHandle);
+      if (region == null)
+      {
+        region = temporaryRegions.get(regionHandle);
+        if (region == null)
+        {
+          throw new InvalidRegion(I18n.getMessage(ExceptionMessages.INVALID_REGION, regionHandle));
+        }
+      }
+
+      dimensionHandles = region.getDimensionHandles();
+    }
+    finally
+    {
+      regionsLock.readLock().unlock();
+    }
+
+    return dimensionHandles;
+  }
+
   public RangeBounds getRangeBounds(RegionHandle regionHandle, DimensionHandle dimensionHandle)
-    throws InvalidRegion, RegionDoesNotContainSpecifiedDimension, RTIinternalError
+    throws InvalidRegion, RegionDoesNotContainSpecifiedDimension
   {
     RangeBounds rangeBounds;
 

@@ -92,6 +92,6 @@ public class InitiateFederateSave
   {
     this.federate = federate;
 
-    federate.callbackReceived(this);
+    federate.getCallbackManager().add(this, false);
   }
 }

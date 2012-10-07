@@ -28,6 +28,8 @@ public class QueryFederationSaveStatus
   public QueryFederationSaveStatus()
   {
     super(MessageType.QUERY_FEDERATION_SAVE_STATUS);
+
+    encodingFinished();
   }
 
   public QueryFederationSaveStatus(ChannelBuffer buffer)

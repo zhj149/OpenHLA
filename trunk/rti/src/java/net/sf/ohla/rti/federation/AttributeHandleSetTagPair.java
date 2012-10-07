@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.sf.ohla.rti;
+package net.sf.ohla.rti.federation;
 
 import java.util.Arrays;
 

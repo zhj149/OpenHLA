@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -40,7 +41,12 @@ import hla.rti1516e.RTIambassador;
 import hla.rti1516e.ResignAction;
 import hla.rti1516e.RestoreFailureReason;
 import hla.rti1516e.SaveFailureReason;
+import hla.rti1516e.SaveStatus;
 import hla.rti1516e.exceptions.FederateInternalError;
+import hla.rti1516e.exceptions.FederateNotExecutionMember;
+import hla.rti1516e.exceptions.NotConnected;
+import hla.rti1516e.exceptions.RTIinternalError;
+import hla.rti1516e.exceptions.RestoreInProgress;
 
 @Test
 public class SavingTestNG
@@ -90,35 +96,64 @@ public class SavingTestNG
   public void testRequestFederationSave()
     throws Exception
   {
+    checkFederationSaveStatus(
+      SaveStatus.NO_SAVE_IN_PROGRESS, SaveStatus.NO_SAVE_IN_PROGRESS, SaveStatus.NO_SAVE_IN_PROGRESS);
+
     rtiAmbassadors.get(0).requestFederationSave(FEDERATION_SAVE_1);
 
     federateAmbassadors.get(0).checkInitiateFederateSave(FEDERATION_SAVE_1);
     federateAmbassadors.get(1).checkInitiateFederateSave(FEDERATION_SAVE_1);
     federateAmbassadors.get(2).checkInitiateFederateSave(FEDERATION_SAVE_1);
 
+    checkFederationSaveStatus(
+      SaveStatus.FEDERATE_INSTRUCTED_TO_SAVE, SaveStatus.FEDERATE_INSTRUCTED_TO_SAVE,
+      SaveStatus.FEDERATE_INSTRUCTED_TO_SAVE);
+
     rtiAmbassadors.get(0).federateSaveBegun();
     rtiAmbassadors.get(1).federateSaveBegun();
     rtiAmbassadors.get(2).federateSaveBegun();
 
-    // TODO: check save status
-    //
-//    rtiAmbassadors.get(0).queryFederationSaveStatus();
-//    rtiAmbassadors.get(1).queryFederationSaveStatus();
-//    rtiAmbassadors.get(2).queryFederationSaveStatus();
+    checkFederationSaveStatus(
+      SaveStatus.FEDERATE_SAVING, SaveStatus.FEDERATE_SAVING, SaveStatus.FEDERATE_SAVING);
 
     rtiAmbassadors.get(0).federateSaveComplete();
     rtiAmbassadors.get(1).federateSaveComplete();
-    rtiAmbassadors.get(2).federateSaveComplete();
 
-    // TODO: check save status
-    //
-//    rtiAmbassadors.get(0).queryFederationSaveStatus();
-//    rtiAmbassadors.get(1).queryFederationSaveStatus();
-//    rtiAmbassadors.get(2).queryFederationSaveStatus();
+    checkFederationSaveStatus(
+      SaveStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_SAVE, SaveStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_SAVE,
+      SaveStatus.FEDERATE_SAVING);
+
+    rtiAmbassadors.get(2).federateSaveComplete();
 
     federateAmbassadors.get(0).checkFederationSaved(FEDERATION_SAVE_1);
     federateAmbassadors.get(1).checkFederationSaved(FEDERATION_SAVE_1);
     federateAmbassadors.get(2).checkFederationSaved(FEDERATION_SAVE_1);
+
+    checkFederationSaveStatus(
+      SaveStatus.NO_SAVE_IN_PROGRESS, SaveStatus.NO_SAVE_IN_PROGRESS, SaveStatus.NO_SAVE_IN_PROGRESS);
+  }
+
+  protected void checkFederationSaveStatus(SaveStatus... saveStatii)
+    throws Exception
+  {
+    assert federateHandles.size() == saveStatii.length;
+
+    for (RTIambassador rtiAmbassador : rtiAmbassadors)
+    {
+      rtiAmbassador.queryFederationSaveStatus();
+    }
+
+    Map<FederateHandle, SaveStatus> saveStatusResponse = new HashMap<FederateHandle, SaveStatus>();
+    for (ListIterator<FederateHandle> i = federateHandles.listIterator(); i.hasNext();)
+    {
+      int index = i.nextIndex();
+      saveStatusResponse.put(i.next(), saveStatii[index]);
+    }
+
+    for (TestFederateAmbassador federateAmbassador : federateAmbassadors)
+    {
+      federateAmbassador.checkFederationSaveStatus(saveStatusResponse);
+    }
   }
 
   protected static class TestFederateAmbassador
@@ -129,8 +164,9 @@ public class SavingTestNG
     private final Set<String> successfulFederationSaves = new HashSet<String>();
     private final Map<String, SaveFailureReason> unsuccessfulFederationSaves = new HashMap<String, SaveFailureReason>();
 
+    private final Map<FederateHandle, SaveStatus> saveStatusResponse = new HashMap<FederateHandle, SaveStatus>();
+
     private String currentSaveLabel;
-    private FederateHandleSaveStatusPair[] saveStatusResponse;
 
     public TestFederateAmbassador(RTIambassador rtiAmbassador)
     {
@@ -187,6 +223,28 @@ public class SavingTestNG
       assert reason == unsuccessfulFederationSaves.get(label);
     }
 
+    public void checkFederationSaveStatus(final Map<FederateHandle, SaveStatus> saveStatusResponse)
+      throws Exception
+    {
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+          throws FederateNotExecutionMember, RestoreInProgress, NotConnected, RTIinternalError
+        {
+          boolean done = TestFederateAmbassador.this.saveStatusResponse.equals(saveStatusResponse);
+          if (!done)
+          {
+            rtiAmbassador.queryFederationSaveStatus();
+          }
+          return !done;
+        }
+      });
+
+      assert this.saveStatusResponse.equals(saveStatusResponse);
+
+      this.saveStatusResponse.clear();
+    }
+
     @Override
     public void initiateFederateSave(String label)
       throws FederateInternalError
@@ -227,7 +285,7 @@ public class SavingTestNG
     public void federationSaveStatusResponse(FederateHandleSaveStatusPair[] response)
       throws FederateInternalError
     {
-      saveStatusResponse = response;
+      saveStatusResponse.putAll(toMap(response));
     }
 
     @Override
@@ -270,6 +328,16 @@ public class SavingTestNG
     public void federationRestoreStatusResponse(FederateRestoreStatus[] response)
       throws FederateInternalError
     {
+    }
+
+    private static Map<FederateHandle, SaveStatus> toMap(FederateHandleSaveStatusPair[] response)
+    {
+      Map<FederateHandle, SaveStatus> saveStatusResponse = new HashMap<FederateHandle, SaveStatus>();
+      for (FederateHandleSaveStatusPair federateHandleSaveStatusPair : response)
+      {
+        saveStatusResponse.put(federateHandleSaveStatusPair.handle, federateHandleSaveStatusPair.status);
+      }
+      return saveStatusResponse;
     }
   }
 }

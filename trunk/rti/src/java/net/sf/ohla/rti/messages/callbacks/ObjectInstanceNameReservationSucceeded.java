@@ -65,6 +65,6 @@ public class ObjectInstanceNameReservationSucceeded
   {
     this.federate = federate;
 
-    federate.callbackReceived(this);
+    federate.getCallbackManager().add(this, false);
   }
 }

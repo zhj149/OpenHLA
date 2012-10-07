@@ -30,7 +30,6 @@ import hla.rti1516e.DimensionHandle;
 import hla.rti1516e.DimensionHandleSet;
 import hla.rti1516e.RangeBounds;
 import hla.rti1516e.RegionHandle;
-import hla.rti1516e.exceptions.RegionDoesNotContainSpecifiedDimension;
 
 public class FederationExecutionRegion
 {

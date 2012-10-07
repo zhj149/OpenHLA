@@ -29,7 +29,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import net.sf.ohla.rti.AttributeHandleSetTagPair;
 import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.fdd.ObjectClass;
@@ -586,6 +585,8 @@ public class FederationExecution
         }
 
         federationExecutionState = FederationExecutionState.ACTIVE;
+
+        federationExecutionSave = null;
       }
     }
     finally
@@ -2067,23 +2068,16 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      if (federateProxy.isSaving())
+      FederateProxy f = federatesByName.get(getFederateHandle.getFederateName());
+      if (f == null)
       {
-        saveMessage(federateProxy.getFederateHandle(), getFederateHandle);
+        federateProxy.getFederateChannel().write(new GetFederateHandleResponse(
+          getFederateHandle.getId(), GetFederateHandleResponse.Response.NAME_NOT_FOUND));
       }
       else
       {
-        FederateProxy f = federatesByName.get(getFederateHandle.getFederateName());
-        if (f == null)
-        {
-          federateProxy.getFederateChannel().write(new GetFederateHandleResponse(
-            getFederateHandle.getId(), GetFederateHandleResponse.Response.NAME_NOT_FOUND));
-        }
-        else
-        {
-          federateProxy.getFederateChannel().write(new GetFederateHandleResponse(
-            getFederateHandle.getId(), f.getFederateHandle()));
-        }
+        federateProxy.getFederateChannel().write(new GetFederateHandleResponse(
+          getFederateHandle.getId(), f.getFederateHandle()));
       }
     }
     finally
@@ -2097,23 +2091,16 @@ public class FederationExecution
     federationExecutionStateLock.readLock().lock();
     try
     {
-      if (federateProxy.isSaving())
+      FederateProxy f = federates.get(getFederateName.getFederateHandle());
+      if (f == null)
       {
-        saveMessage(federateProxy.getFederateHandle(), getFederateName);
+        federateProxy.getFederateChannel().write(new GetFederateNameResponse(
+          getFederateName.getId(), GetFederateNameResponse.Response.FEDERATE_HANDLE_NOT_KNOWN));
       }
       else
       {
-        FederateProxy f = federates.get(getFederateName.getFederateHandle());
-        if (f == null)
-        {
-          federateProxy.getFederateChannel().write(new GetFederateNameResponse(
-            getFederateName.getId(), GetFederateNameResponse.Response.FEDERATE_HANDLE_NOT_KNOWN));
-        }
-        else
-        {
-          federateProxy.getFederateChannel().write(new GetFederateNameResponse(
-            getFederateName.getId(), f.getFederateName()));
-        }
+        federateProxy.getFederateChannel().write(new GetFederateNameResponse(
+          getFederateName.getId(), f.getFederateName()));
       }
     }
     finally

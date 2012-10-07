@@ -2,7 +2,7 @@
 
 <project name="Open HLA (OHLA)" basedir="." default="default">
 
-  <property name="ohla.version" value="0.5"/>
+  <property name="ohla.version" value="0.6"/>
   <property name="dist.name" value="ohla-${ohla.version}"/>
 
   <!-- ================================================================== -->
@@ -253,15 +253,13 @@
       targetfile="${rti.source.java}/${package.rti}/fed/javacc/FEDParser.java"/>
   </target>
 
-  <target name="generate-hla-1.3-fed" unless="generate-hla-1.3-fed.notRequired"
-          depends="generate-hla-1.3-fed-check">
+  <target name="generate-hla-1.3-fed" unless="generate-hla-1.3-fed.notRequired" depends="generate-hla-1.3-fed-check">
     <javacc target="${rti.source.java}/${package.rti}/fed/javacc/FEDParser.jj"
             outputdirectory="${rti.source.java}/${package.rti}/fed/javacc"
             javacchome="${javacc.root}"/>
   </target>
 
-  <target name="compile-ohla-java"
-          depends="jar-ieee-1516e, jar-ieee-1516, jar-hla-1.3, generate-hla-1.3-fed">
+  <target name="compile-ohla-java" depends="jar-ieee-1516e, jar-ieee-1516, jar-hla-1.3, generate-hla-1.3-fed">
     <mkdir dir="${output}/rti/classes"/>
 
     <javac srcdir="${rti.source.java}"
@@ -352,8 +350,7 @@
   <target name="testsuite" depends="testsuite-ieee-1516e, testsuite-ieee-1516, testsuite-hla-1.3"
           description="Executes the Testsuite."/>
 
-  <target name="testsuite-ieee-1516e" depends="compile-testsuite-java"
-          description="Executes the IEEE 1516e Testsuite.">
+  <target name="testsuite-ieee-1516e" depends="compile-testsuite-java" description="Executes the IEEE 1516e Testsuite.">
     <mkdir dir="${output}/testsuite/results"/>
 
     <testng outputDir="${output}/testsuite/results/ieee-1516e" haltOnfailure="true">
@@ -374,8 +371,7 @@
     </testng>
   </target>
 
-  <target name="testsuite-ieee-1516" depends="compile-testsuite-java"
-          description="Executes the IEEE 1516 Testsuite.">
+  <target name="testsuite-ieee-1516" depends="compile-testsuite-java" description="Executes the IEEE 1516 Testsuite.">
     <mkdir dir="${output}/testsuite/results"/>
 
     <testng outputDir="${output}/testsuite/results/ieee-1516" haltOnfailure="true">
@@ -395,8 +391,7 @@
     </testng>
   </target>
 
-  <target name="testsuite-hla-1.3" depends="compile-testsuite-java"
-          description="Executes the HLA 1.3 Testsuite.">
+  <target name="testsuite-hla-1.3" depends="compile-testsuite-java" description="Executes the HLA 1.3 Testsuite.">
     <mkdir dir="${output}/testsuite/results"/>
 
     <testng outputDir="${output}/testsuite/results/hla-1.3" haltOnfailure="true">
@@ -443,7 +438,9 @@
   <!-- ================================================================== -->
 
   <target name="start-rti" depends="jar-ohla" description="Starts the OHLA RTI.">
-    <java classname="net.sf.ohla.rti.RTI" fork="yes">
+    <mkdir dir="${output}/rti"/>
+
+    <java classname="net.sf.ohla.rti.RTI" fork="true" dir="${output}/rti">
       <classpath>
         <path refid="javac.classpath"/>
         <pathelement location="${output.lib}/${ieee-1516e.jar}"/>
@@ -458,7 +455,9 @@
   </target>
 
   <target name="start-rti-debug" depends="jar-ohla" description="Starts the OHLA RTI.">
-    <java classname="net.sf.ohla.rti.RTI" fork="yes">
+    <mkdir dir="${output}/rti-debug"/>
+
+    <java classname="net.sf.ohla.rti.RTI" fork="true" dir="${output}/rti-debug">
       <classpath>
         <path refid="javac.classpath"/>
         <pathelement location="${output.lib}/${ieee-1516e.jar}"/>
