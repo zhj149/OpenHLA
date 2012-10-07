@@ -485,19 +485,6 @@ public class Federate
     }
   }
 
-  public void callbackReceived(Callback callback)
-  {
-    federateStateLock.readLock().lock();
-    try
-    {
-      callbackManager.add(callback, federateState == FederateState.SAVE_IN_PROGRESS);
-    }
-    finally
-    {
-      federateStateLock.readLock().unlock();
-    }
-  }
-
   public void federationSaved(FederationSaved federationSaved)
   {
     federateStateLock.readLock().lock();
@@ -1587,9 +1574,9 @@ public class Federate
 
       if (federateHandle.equals(this.federateHandle))
       {
-        callbackReceived(new ReportInteractionTransportationType(
+        callbackManager.add(new ReportInteractionTransportationType(
           interactionClassHandle, federateHandle,
-          fdd.getInteractionClass(interactionClassHandle).getTransportationTypeHandle()));
+          fdd.getInteractionClass(interactionClassHandle).getTransportationTypeHandle()), false);
       }
       else
       {
@@ -2915,7 +2902,7 @@ public class Federate
     {
       checkIfActive();
 
-      return null;
+      return regionManager.getDimensionHandleSet(regionHandle);
     }
     finally
     {
@@ -3087,8 +3074,6 @@ public class Federate
   public void announceSynchronizationPoint(String label, byte[] tag)
     throws FederateInternalError
   {
-    FederateSynchronizationPoint federateSynchronizationPoint;
-
     synchronizationPointLock.lock();
     try
     {

@@ -211,8 +211,9 @@ public class FederationExecutionSave
   public boolean federateSaveNotComplete(FederateHandle federateHandle)
   {
     saving.remove(federateHandle);
-    failed.put(federateHandle, SaveFailureReason.FEDERATE_REPORTED_FAILURE_DURING_SAVE);
     waitingForFederationToSave.add(federateHandle);
+
+    failed.put(federateHandle, SaveFailureReason.FEDERATE_REPORTED_FAILURE_DURING_SAVE);
 
     saveFailureReason = SaveFailureReason.FEDERATE_REPORTED_FAILURE_DURING_SAVE;
 

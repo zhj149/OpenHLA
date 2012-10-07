@@ -692,14 +692,14 @@ public class FederateObjectInstance
       FederateAttributeInstance attributeInstance = attributes.get(attributeHandle);
       if (attributeInstance == null)
       {
-        federate.callbackReceived(new ReportAttributeTransportationType(
+        federate.getCallbackManager().add(new ReportAttributeTransportationType(
           objectInstanceHandle, attributeHandle, objectClass.getAttribute(
-          attributeHandle).getTransportationTypeHandle()));
+          attributeHandle).getTransportationTypeHandle()), false);
       }
       else
       {
-        federate.callbackReceived(new ReportAttributeTransportationType(
-          objectInstanceHandle, attributeHandle, attributeInstance.getTransportationTypeHandle()));
+        federate.getCallbackManager().add(new ReportAttributeTransportationType(
+          objectInstanceHandle, attributeHandle, attributeInstance.getTransportationTypeHandle()), false);
       }
     }
     finally

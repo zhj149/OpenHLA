@@ -47,9 +47,7 @@ import net.sf.ohla.rti.messages.ListFederationExecutions;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelFutureListener;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
-import org.slf4j.Logger;
 
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleFactory;
@@ -242,11 +240,6 @@ public class IEEE1516eRTIambassador
     this.federateChannelHandlerFactory = federateChannelHandlerFactory;
   }
 
-  public Channel getRTIChannel()
-  {
-    return rtiChannel;
-  }
-
   public Federate getFederate()
   {
     return federate;
@@ -435,18 +428,6 @@ public class IEEE1516eRTIambassador
         {
           rtiChannel = future.getChannel();
 
-          // release the channel factories external resources when the channel is closed
-          //
-          rtiChannel.getCloseFuture().addListener(new ChannelFutureListener()
-          {
-            @Override
-            public void operationComplete(ChannelFuture future)
-              throws Exception
-            {
-              future.getChannel().getFactory().releaseExternalResources();
-            }
-          });
-
           this.federateAmbassador = federateAmbassador;
           this.callbackManager = callbackManager;
 
@@ -517,6 +498,10 @@ public class IEEE1516eRTIambassador
     if (closedChannel != null)
     {
       closedChannel.getCloseFuture().awaitUninterruptibly();
+
+      // release the channel factories external resources when the channel is closed
+      //
+      closedChannel.getFactory().releaseExternalResources();
     }
   }
 

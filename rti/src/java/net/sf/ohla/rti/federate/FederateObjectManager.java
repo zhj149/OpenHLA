@@ -1211,9 +1211,9 @@ public class FederateObjectManager
             // trim any unsubscribed attributes, this is necessary because the federate might have changed subscriptions
             // from the time these attributes were passed from the RTI to the federate
             //
-            if (subscriptionManager.trim(
-              reflectAttributeValues.getAttributeValues(), subscribedObjectClass.getObjectClassHandle()) &&
-                reflectAttributeValues.getAttributeValues().isEmpty())
+            boolean trimmed = subscriptionManager.trim(
+              reflectAttributeValues.getAttributeValues(), subscribedObjectClass.getObjectClassHandle());
+            if (trimmed && reflectAttributeValues.getAttributeValues().isEmpty())
             {
               // all the AttributeHandles have been trimmed, recreate the message so we can get the AttributeHandles
               // that are no longer subscribed
