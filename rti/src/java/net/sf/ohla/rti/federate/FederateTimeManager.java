@@ -825,6 +825,7 @@ public class FederateTimeManager
     timeConstrainedState = TimeConstrainedState.values()[in.readInt()];
 
     byte[] buffer = new byte[in.readInt()];
+    in.readFully(buffer);
     try
     {
       federateTime = logicalTimeFactory.decodeTime(buffer, 0);

@@ -325,6 +325,12 @@ public class SubscriptionManager
       throws IOException
     {
       objectClass = fdd.getObjectClassSafely(IEEE1516eObjectClassHandle.decode(in));
+
+      for (int count = in.readInt(); count > 0; count--)
+      {
+        AttributeSubscription attributeSubscription = new AttributeSubscription(in);
+        attributeSubscriptions.put(attributeSubscription.getAttributeHandle(), attributeSubscription);
+      }
     }
 
     private ObjectClassSubscription(ObjectClass objectClass, AttributeHandleSet attributeHandles, boolean passive)

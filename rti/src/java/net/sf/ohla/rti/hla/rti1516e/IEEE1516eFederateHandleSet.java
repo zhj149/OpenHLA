@@ -16,6 +16,10 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
+import java.io.DataOutput;
+import java.io.IOException;
+import java.io.DataInput;
+
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -49,6 +53,25 @@ public class IEEE1516eFederateHandleSet
   public IEEE1516eFederateHandleSet(IEEE1516eFederateHandleSet federateHandleSet)
   {
     super(federateHandleSet);
+  }
+
+  public IEEE1516eFederateHandleSet(DataInput in)
+    throws IOException
+  {
+    for (int count = in.readInt(); count > 0; count--)
+    {
+      add(IEEE1516eFederateHandle.decode(in));
+    }
+  }
+
+  public void writeTo(DataOutput out)
+    throws IOException
+  {
+    out.writeInt(size());
+    for (FederateHandle federateHandle : this)
+    {
+      ((IEEE1516eFederateHandle) federateHandle).writeTo(out);
+    }
   }
 
   public static void encode(ChannelBuffer buffer, FederateHandleSet federateHandles)

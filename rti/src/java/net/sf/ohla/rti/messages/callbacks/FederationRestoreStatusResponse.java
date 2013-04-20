@@ -45,9 +45,15 @@ public class FederationRestoreStatusResponse
     Protocol.encodeVarInt(buffer, response.length);
     for (FederateRestoreStatus status : response)
     {
-      IEEE1516eFederateHandle.encode(buffer, status.preRestoreHandle);
-      IEEE1516eFederateHandle.encode(buffer, status.postRestoreHandle);
       Protocol.encodeEnum(buffer, status.status);
+      IEEE1516eFederateHandle.encode(buffer, status.preRestoreHandle);
+
+      if (status.status != RestoreStatus.NO_RESTORE_IN_PROGRESS)
+      {
+        assert status.postRestoreHandle != null;
+
+        IEEE1516eFederateHandle.encode(buffer, status.postRestoreHandle);
+      }
     }
 
     encodingFinished();
@@ -61,9 +67,18 @@ public class FederationRestoreStatusResponse
     response = new FederateRestoreStatus[length];
     for (int i = 0; i < length; i++)
     {
-      FederateHandle preRestoreHandle = IEEE1516eFederateHandle.decode(buffer);
-      FederateHandle postRestoreHandle = IEEE1516eFederateHandle.decode(buffer);
       RestoreStatus status = Protocol.decodeEnum(buffer, RestoreStatus.values());
+      FederateHandle preRestoreHandle = IEEE1516eFederateHandle.decode(buffer);
+
+      FederateHandle postRestoreHandle;
+      if (status == RestoreStatus.NO_RESTORE_IN_PROGRESS)
+      {
+        postRestoreHandle = null;
+      }
+      else
+      {
+        postRestoreHandle = IEEE1516eFederateHandle.decode(buffer);
+      }
 
       response[i] = new FederateRestoreStatus(preRestoreHandle, postRestoreHandle, status);
     }

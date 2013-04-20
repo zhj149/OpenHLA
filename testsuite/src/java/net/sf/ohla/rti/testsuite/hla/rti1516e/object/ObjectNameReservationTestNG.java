@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
-import net.sf.ohla.rti.testsuite.hla.rti1516e.SynchronizedFederateAmbassador;
+import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseFederateAmbassador;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -73,11 +73,11 @@ public class ObjectNameReservationTestNG
 
     rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
 
-    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME);
-    rtiAmbassadors.get(1).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME);
-    rtiAmbassadors.get(2).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME);
+    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME);
+    rtiAmbassadors.get(1).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME);
+    rtiAmbassadors.get(2).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME);
 
-    setupComplete(federateAmbassadors);
+    synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE, federateAmbassadors);
   }
 
   @AfterClass
@@ -210,7 +210,7 @@ public class ObjectNameReservationTestNG
   }
 
   protected static class TestFederateAmbassador
-    extends SynchronizedFederateAmbassador
+    extends BaseFederateAmbassador
   {
     private final Set<String> reservedObjectInstanceNames = new HashSet<String>();
     private final Set<String> notReservedObjectInstanceNames = new HashSet<String>();

@@ -35,7 +35,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import net.sf.ohla.rti.RTIChannelHandler;
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.fdd.ObjectClass;
-import net.sf.ohla.rti.federate.Federate;
 import net.sf.ohla.rti.federate.TimeAdvanceType;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSet;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSetFactory;
@@ -46,7 +45,6 @@ import net.sf.ohla.rti.i18n.I18nLogger;
 import net.sf.ohla.rti.i18n.LogMessages;
 import net.sf.ohla.rti.messages.DeleteObjectInstance;
 import net.sf.ohla.rti.messages.FederateMessage;
-import net.sf.ohla.rti.messages.FederateRestoreComplete;
 import net.sf.ohla.rti.messages.FederateSaveBegun;
 import net.sf.ohla.rti.messages.FederateSaveComplete;
 import net.sf.ohla.rti.messages.FederateSaveNotComplete;
@@ -56,8 +54,6 @@ import net.sf.ohla.rti.messages.MessageFactory;
 import net.sf.ohla.rti.messages.PublishInteractionClass;
 import net.sf.ohla.rti.messages.PublishObjectClassAttributes;
 import net.sf.ohla.rti.messages.QueryInteractionTransportationType;
-import net.sf.ohla.rti.messages.RequestFederationRestore;
-import net.sf.ohla.rti.messages.RequestFederationRestoreResponse;
 import net.sf.ohla.rti.messages.ResignedFederationExecution;
 import net.sf.ohla.rti.messages.Retract;
 import net.sf.ohla.rti.messages.SendInteraction;
@@ -89,6 +85,8 @@ import net.sf.ohla.rti.messages.callbacks.ReflectAttributeValues;
 import net.sf.ohla.rti.messages.callbacks.RemoveObjectInstance;
 import net.sf.ohla.rti.messages.callbacks.ReportInteractionTransportationType;
 import net.sf.ohla.rti.messages.callbacks.RequestAttributeOwnershipAssumption;
+import net.sf.ohla.rti.messages.callbacks.RequestFederationRestoreFailed;
+import net.sf.ohla.rti.messages.callbacks.RequestFederationRestoreSucceeded;
 import net.sf.ohla.rti.messages.callbacks.TimeAdvanceGrant;
 import net.sf.ohla.rti.messages.callbacks.TimeConstrainedEnabled;
 import net.sf.ohla.rti.messages.callbacks.TimeRegulationEnabled;
@@ -110,8 +108,6 @@ import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.OrderType;
 import hla.rti1516e.ResignAction;
-import hla.rti1516e.RestoreStatus;
-import hla.rti1516e.SaveStatus;
 import hla.rti1516e.TransportationTypeHandle;
 import hla.rti1516e.exceptions.CouldNotDecode;
 import hla.rti1516e.exceptions.CouldNotEncode;
@@ -131,7 +127,7 @@ public class FederateProxy
    */
   private final Channel federateChannel;
 
-  private FederateSave federateSave;
+  private FederateProxySave federateProxySave;
 
   private final ReadWriteLock publicationLock = new ReentrantReadWriteLock(true);
   private final Map<ObjectClassHandle, AttributeHandleSet> publishedObjectClasses =
@@ -155,9 +151,6 @@ public class FederateProxy
 
   private final LogicalTimeInterval zero;
   private final LogicalTimeInterval epsilon;
-
-  private SaveStatus saveStatus = SaveStatus.NO_SAVE_IN_PROGRESS;
-  private RestoreStatus restoreStatus = RestoreStatus.NO_RESTORE_IN_PROGRESS;
 
   private boolean timeRegulationEnabled;
 
@@ -187,7 +180,7 @@ public class FederateProxy
   {
     this.federationExecution = federationExecution;
     this.federateHandle = federateHandle;
-    this.federateName = federateName == null ? Federate.defaultFederateName(federateHandle) : federateName;
+    this.federateName = federateName;
     this.federateType = federateType;
     this.federateChannel = federateChannel;
     this.galt = galt;
@@ -254,17 +247,7 @@ public class FederateProxy
 
   public boolean isSaving()
   {
-    return federateSave != null;
-  }
-
-  public SaveStatus getSaveStatus()
-  {
-    return saveStatus;
-  }
-
-  public RestoreStatus getRestoreStatus()
-  {
-    return restoreStatus;
+    return federateProxySave != null;
   }
 
   public LogicalTime getFederateTime()
@@ -406,23 +389,18 @@ public class FederateProxy
   public void initiateFederateSave(FederationExecutionSave federationExecutionSave)
     throws IOException
   {
-    federateSave = federationExecutionSave.instructedToSave(this);
-
-    saveStatus = SaveStatus.FEDERATE_INSTRUCTED_TO_SAVE;
+    federateProxySave = federationExecutionSave.instructedToSave(this);
 
     federateChannel.write(new InitiateFederateSave(federationExecutionSave.getLabel()));
   }
 
   public void federateSaveInitiatedFailed()
   {
-    saveStatus = SaveStatus.NO_SAVE_IN_PROGRESS;
   }
 
   public void federateSaveBegun(FederateSaveBegun federateSaveBegun)
   {
-    saveStatus = SaveStatus.FEDERATE_SAVING;
-
-    DataOutputStream out = new DataOutputStream(federateSave.getFederateProxyStateOutputStream());
+    DataOutputStream out = new DataOutputStream(federateProxySave.getFederateProxyStateOutputStream());
     try
     {
       // write the state of the proxy
@@ -447,65 +425,53 @@ public class FederateProxy
 
   public void federateSaveComplete(FederateSaveComplete federateSaveComplete)
   {
-    saveStatus = SaveStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_SAVE;
   }
 
   public void federateSaveNotComplete(FederateSaveNotComplete federateSaveNotComplete)
   {
-    saveStatus = SaveStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_SAVE;
   }
 
   public void federationSaved(FederationSaved federationSaved)
   {
-    saveStatus = SaveStatus.NO_SAVE_IN_PROGRESS;
+    federateProxySave = null;
 
     federateChannel.write(federationSaved);
   }
 
   public void federationNotSaved(FederationNotSaved federationNotSaved)
   {
-    saveStatus = SaveStatus.NO_SAVE_IN_PROGRESS;
+    federateProxySave = null;
 
     federateChannel.write(federationNotSaved);
   }
 
-  public void federationRestoreRequestGranted(RequestFederationRestore requestFederationRestore)
+  public void requestFederationRestoreSucceeded(RequestFederationRestoreSucceeded requestFederationRestoreSucceeded)
   {
-    restoreStatus = RestoreStatus.FEDERATE_RESTORE_REQUEST_PENDING;
+    federateChannel.write(requestFederationRestoreSucceeded);
+  }
 
-    federateChannel.write(new RequestFederationRestoreResponse(requestFederationRestore.getId()));
+  public void requestFederationRestoreFailed(RequestFederationRestoreFailed requestFederationRestoreFailed)
+  {
+    federateChannel.write(requestFederationRestoreFailed);
   }
 
   public void federationRestoreBegun(FederationRestoreBegun federationRestoreBegun)
   {
-    restoreStatus = RestoreStatus.FEDERATE_PREPARED_TO_RESTORE;
-
     federateChannel.write(federationRestoreBegun);
   }
 
   public void initiateFederateRestore(InitiateFederateRestore initiateFederateRestore)
   {
-    restoreStatus = RestoreStatus.FEDERATE_RESTORING;
-
     federateChannel.write(initiateFederateRestore);
-  }
-
-  public void federateRestoreComplete(FederateRestoreComplete federateRestoreComplete)
-  {
-    restoreStatus = RestoreStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_RESTORE;
   }
 
   public void federationRestored(FederationRestored federationRestored)
   {
-    restoreStatus = RestoreStatus.NO_RESTORE_IN_PROGRESS;
-
     federateChannel.write(federationRestored);
   }
 
   public void federationNotRestored(FederationNotRestored federationNotRestored)
   {
-    restoreStatus = RestoreStatus.NO_RESTORE_IN_PROGRESS;
-
     federateChannel.write(federationNotRestored);
   }
 
@@ -1436,7 +1402,7 @@ public class FederateProxy
   {
     try
     {
-      federateSave.save(message);
+      federateProxySave.save(message);
     }
     catch (IOException ioe)
     {

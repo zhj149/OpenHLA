@@ -105,7 +105,7 @@ public class AttributeOwnershipTestNG
     //
     federateAmbassadors.get(1).checkObjectInstanceHandle(testObjectInstanceHandle);
 
-    setupComplete(federateAmbassadors);
+    synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE, federateAmbassadors);
   }
 
   @AfterClass

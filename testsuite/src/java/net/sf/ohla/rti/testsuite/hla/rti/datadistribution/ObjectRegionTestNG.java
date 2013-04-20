@@ -115,7 +115,7 @@ public class ObjectRegionTestNG
     objectAttributeValues.add(attributeHandle2, ATTRIBUTE2_VALUE.getBytes());
     objectAttributeValues.add(attributeHandle3, ATTRIBUTE3_VALUE.getBytes());
 
-    setupComplete(federateAmbassadors);
+    synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE, federateAmbassadors);
   }
 
   @AfterClass

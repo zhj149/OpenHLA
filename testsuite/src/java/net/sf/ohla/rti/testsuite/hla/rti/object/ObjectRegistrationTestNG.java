@@ -107,7 +107,7 @@ public class ObjectRegistrationTestNG
     rtiAmbassadors.get(2).subscribeObjectClassAttributes(testObjectClassHandle, testObjectAttributeHandles);
     rtiAmbassadors.get(2).subscribeObjectClassAttributes(testObjectClassHandle2, testObjectAttributeHandles2);
 
-    setupComplete(federateAmbassadors);
+    synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE, federateAmbassadors);
   }
 
   @AfterClass

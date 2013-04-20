@@ -71,9 +71,9 @@ public class SynchronizationTestNG
 
     rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
 
-    federateHandles.add(rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME));
-    federateHandles.add(rtiAmbassadors.get(1).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME));
-    federateHandles.add(rtiAmbassadors.get(2).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME));
+    federateHandles.add(rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME));
+    federateHandles.add(rtiAmbassadors.get(1).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME));
+    federateHandles.add(rtiAmbassadors.get(2).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME));
   }
 
   @AfterClass
@@ -174,7 +174,7 @@ public class SynchronizationTestNG
   {
     RTIambassador rtiAmbassador = rtiFactory.getRtiAmbassador();
     rtiAmbassador.connect(new NullFederateAmbassador(), CallbackModel.HLA_EVOKED);
-    FederateHandle federateHandle = rtiAmbassador.joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME);
+    FederateHandle federateHandle = rtiAmbassador.joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME);
     rtiAmbassador.resignFederationExecution(ResignAction.NO_ACTION);
     rtiAmbassador.disconnect();
 

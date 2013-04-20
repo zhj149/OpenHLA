@@ -37,7 +37,7 @@ public class FederateSupportTestNG
   public void testJoinFederationExecutionAlreadyExecutionMemberOf()
     throws Exception
   {
-    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME);
+    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME);
   }
 
   @Test(expectedExceptions = {InvalidResignAction.class})

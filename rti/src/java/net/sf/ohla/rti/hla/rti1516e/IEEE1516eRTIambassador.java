@@ -858,6 +858,8 @@ public class IEEE1516eRTIambassador
 
         federate.resignFederationExecution(resignAction);
 
+        callbackManager.reset();
+
         federate = null;
       }
       finally

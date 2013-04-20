@@ -26,7 +26,11 @@ public interface TestConstants
   static final String BAD_FDD = FDD + ".bad";
 
   static final String FEDERATE_NAME = "Test Federate Name";
-  static final String FEDERATE_TYPE = "Test Federate";
+
+  static final String FEDERATE_TYPE_1 = "Test Federate 1";
+  static final String FEDERATE_TYPE_2 = "Test Federate 2";
+  static final String FEDERATE_TYPE_3 = "Test Federate 3";
+  static final String FEDERATE_TYPE_4 = "Test Federate 4";
 
   static final String LOGICAL_TIME_IMPLEMENTATION = "HLAfloat64Time";
 
@@ -35,11 +39,6 @@ public interface TestConstants
   static final String SYNCHRONIZATION_POINT_3 = "Synchronization Point 3";
   static final String SYNCHRONIZATION_POINT_4 = "Synchronization Point 4";
   static final String SYNCHRONIZATION_POINT_5 = "Synchronization Point 5";
-
-  static final String FEDERATION_SAVE_1 = "Save 1";
-  static final String FEDERATION_SAVE_2 = "Save 2";
-  static final String FEDERATION_SAVE_3 = "Save 3";
-  static final String FEDERATION_SAVE_4 = "Save 4";
 
   static final byte[] TAG = "TAG".getBytes();
 
@@ -111,4 +110,6 @@ public interface TestConstants
 
   static final String HLA_RELIABLE = "HLAreliable";
   static final String HLA_BEST_EFFORT = "HLAbestEffort";
+
+  static final String SYNCHRONIZATION_POINT_SETUP_COMPLETE = "SetupComplete";
 }

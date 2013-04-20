@@ -32,9 +32,16 @@ public class MessageEncoder
   {
     if (event instanceof MessageEvent)
     {
-      assert ((MessageEvent) event).getMessage() instanceof Message;
+      Object message = ((MessageEvent) event).getMessage();
 
-      Channels.write(context, event.getFuture(), ((Message) ((MessageEvent) event).getMessage()).getBuffer());
+      if (message instanceof Message)
+      {
+        Channels.write(context, event.getFuture(), ((Message) ((MessageEvent) event).getMessage()).getBuffer());
+      }
+      else
+      {
+        context.sendDownstream(event);
+      }
     }
     else
     {

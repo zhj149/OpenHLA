@@ -125,7 +125,7 @@ public class NegotiatedAttributeDivestitureTestNG
     federateAmbassadors.get(2).checkObjectInstanceHandle(testObjectInstanceHandle);
     federateAmbassadors.get(3).checkObjectInstanceHandle(testObjectInstanceHandle);
 
-    setupComplete(federateAmbassadors);
+    synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE, federateAmbassadors);
   }
 
   @AfterClass

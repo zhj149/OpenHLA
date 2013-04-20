@@ -28,14 +28,14 @@ public class RequestFederationRestoreResponse
 
   public RequestFederationRestoreResponse(long id)
   {
-    super(MessageType.REQUEST_FEDERATION_SAVE_RESPONSE, id, Response.SUCCESS);
+    super(MessageType.REQUEST_FEDERATION_RESTORE_RESPONSE, id, Response.SUCCESS);
 
     encodingFinished();
   }
 
   public RequestFederationRestoreResponse(long id, Response response)
   {
-    super(MessageType.REQUEST_FEDERATION_SAVE_RESPONSE, id, response);
+    super(MessageType.REQUEST_FEDERATION_RESTORE_RESPONSE, id, response);
 
     encodingFinished();
   }
@@ -47,6 +47,6 @@ public class RequestFederationRestoreResponse
 
   public MessageType getType()
   {
-    return MessageType.REQUEST_FEDERATION_SAVE_RESPONSE;
+    return MessageType.REQUEST_FEDERATION_RESTORE_RESPONSE;
   }
 }

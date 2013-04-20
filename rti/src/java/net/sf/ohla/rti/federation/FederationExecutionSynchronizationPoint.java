@@ -16,7 +16,11 @@
 
 package net.sf.ohla.rti.federation;
 
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandleSetFactory;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandleSet;
 
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.FederateHandleSet;
@@ -28,8 +32,8 @@ public class FederationExecutionSynchronizationPoint
   private final FederateHandleSet federateHandles;
   private final boolean exclusive;
 
-  private final FederateHandleSet awaitingSynchronization = IEEE1516eFederateHandleSetFactory.INSTANCE.create();
-  private final FederateHandleSet failedToSynchronize = IEEE1516eFederateHandleSetFactory.INSTANCE.create();
+  private final FederateHandleSet awaitingSynchronization;
+  private final FederateHandleSet failedToSynchronize;
 
   public FederationExecutionSynchronizationPoint(
     String label, byte[] tag, FederateHandleSet federateHandles, boolean exclusive)
@@ -39,7 +43,32 @@ public class FederationExecutionSynchronizationPoint
     this.federateHandles = federateHandles;
     this.exclusive = exclusive;
 
-    awaitingSynchronization.addAll(federateHandles);
+    awaitingSynchronization = new IEEE1516eFederateHandleSet(federateHandles);
+    failedToSynchronize = new IEEE1516eFederateHandleSet();
+  }
+
+  public FederationExecutionSynchronizationPoint(DataInput in)
+    throws IOException
+  {
+    label = in.readUTF();
+
+    int length = in.readInt();
+    if (length == 0)
+    {
+      tag = null;
+    }
+    else
+    {
+      tag = new byte[length];
+      in.readFully(tag);
+    }
+
+    federateHandles = new IEEE1516eFederateHandleSet(in);
+
+    exclusive = in.readBoolean();
+
+    awaitingSynchronization = new IEEE1516eFederateHandleSet(in);
+    failedToSynchronize = new IEEE1516eFederateHandleSet(in);
   }
 
   public String getLabel()
@@ -90,5 +119,28 @@ public class FederationExecutionSynchronizationPoint
     }
 
     return awaitingSynchronization.isEmpty();
+  }
+
+  public void writeTo(DataOutput out)
+    throws IOException
+  {
+    out.writeUTF(label);
+
+    if (tag == null)
+    {
+      out.writeInt(0);
+    }
+    else
+    {
+      out.writeInt(tag.length);
+      out.write(tag);
+    }
+
+    ((IEEE1516eFederateHandleSet) federateHandles).writeTo(out);
+
+    out.writeBoolean(exclusive);
+
+    ((IEEE1516eFederateHandleSet) awaitingSynchronization).writeTo(out);
+    ((IEEE1516eFederateHandleSet) failedToSynchronize).writeTo(out);
   }
 }

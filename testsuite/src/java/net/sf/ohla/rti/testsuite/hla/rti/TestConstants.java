@@ -98,4 +98,6 @@ public interface TestConstants
 
   static final String HLA_RELIABLE = "HLAreliable";
   static final String HLA_BEST_EFFORT = "HLAbestEffort";
+
+  static final String SYNCHRONIZATION_POINT_SETUP_COMPLETE = "SetupComplete";
 }

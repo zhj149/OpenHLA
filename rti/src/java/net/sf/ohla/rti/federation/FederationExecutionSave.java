@@ -16,32 +16,34 @@
 
 package net.sf.ohla.rti.federation;
 
-import java.io.DataOutput;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.RandomAccessFile;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
 import net.sf.ohla.rti.messages.FederationExecutionMessage;
+import net.sf.ohla.rti.messages.callbacks.FederationSaved;
 
 import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.buffer.ChannelBuffers;
 
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.LogicalTime;
 import hla.rti1516e.SaveFailureReason;
 import hla.rti1516e.SaveStatus;
+import hla.rti1516e.exceptions.CouldNotEncode;
 
 public class FederationExecutionSave
 {
@@ -49,18 +51,17 @@ public class FederationExecutionSave
 
   public static final String SAVE_FILE_EXTENSION = ".save";
 
+  private final FederationExecution federationExecution;
+
   private final String label;
   private final LogicalTime saveTime;
 
   private final RandomAccessFile saveFile;
 
   private final File federationExecutionMessagesFile;
-  private final OutputStream federationExecutionMessagesOutputStream;
-  private final DataOutput federationExecutionMessagesDataOutput;
+  private final DataOutputStream federationExecutionMessagesDataOutputStream;
 
-  private final Map<FederateHandle, FederateSave> federateSaves = new HashMap<FederateHandle, FederateSave>();
-
-  private final List<FederationExecutionMessage> federationExecutionMessages = new LinkedList<FederationExecutionMessage>();
+  private final Map<FederateHandle, FederateProxySave> federateSaves = new HashMap<FederateHandle, FederateProxySave>();
 
   private final Set<FederateHandle> instructedToSave = new HashSet<FederateHandle>();
   private final Set<FederateHandle> saving = new HashSet<FederateHandle>();
@@ -70,29 +71,31 @@ public class FederationExecutionSave
 
   private SaveFailureReason saveFailureReason;
 
-  public FederationExecutionSave(File directory, String label, Collection<FederateProxy> federates)
+  private int federationExecutionMessageCount;
+
+  public FederationExecutionSave(FederationExecution federationExecution, String label)
     throws IOException
   {
-    this(directory, label, federates, null);
+    this(federationExecution, label, null);
   }
 
-  public FederationExecutionSave(File directory, String label, Collection<FederateProxy> federates,
-                                 LogicalTime saveTime)
+  public FederationExecutionSave(FederationExecution federationExecution, String label, LogicalTime saveTime)
     throws IOException
   {
+    this.federationExecution = federationExecution;
     this.label = label;
     this.saveTime = saveTime;
 
-    directory.mkdirs();
+    federationExecution.getSaveDirectory().mkdirs();
 
-    File file = new File(directory, label + SAVE_FILE_EXTENSION);
+    File file = new File(federationExecution.getSaveDirectory(), label + SAVE_FILE_EXTENSION);
 
     // TODO: check for existence of file and other stuff
 
     saveFile = new RandomAccessFile(file, "rw");
 
-    saveFile.writeInt(federates.size());
-    for (FederateProxy federate : federates)
+    saveFile.writeInt(federationExecution.getFederates().size());
+    for (FederateProxy federate : federationExecution.getFederates().values())
     {
       ((IEEE1516eFederateHandle) federate.getFederateHandle()).writeTo(saveFile);
       saveFile.writeUTF(federate.getFederateName());
@@ -100,8 +103,18 @@ public class FederationExecutionSave
     }
 
     federationExecutionMessagesFile = File.createTempFile(FEDERATION_EXECUTION_MESSAGES, "save");
-    federationExecutionMessagesOutputStream = new FileOutputStream(federationExecutionMessagesFile);
-    federationExecutionMessagesDataOutput = new DataOutputStream(federationExecutionMessagesOutputStream);
+    DataOutputStream federationExecutionMessagesDataOutputStream = new DataOutputStream(
+      new FileOutputStream(federationExecutionMessagesFile));
+
+    // save space for an uncompressed int at the head of the file
+    //
+    federationExecutionMessagesDataOutputStream.writeInt(0);
+    federationExecutionMessagesDataOutputStream.flush();
+
+    // start the zipped portion after the uncompressed number has been written at the front
+    //
+    this.federationExecutionMessagesDataOutputStream = new DataOutputStream(
+      new GZIPOutputStream(federationExecutionMessagesDataOutputStream));
   }
 
   public String getLabel()
@@ -114,7 +127,7 @@ public class FederationExecutionSave
     return saveTime;
   }
 
-  public FederateSave getFederateSave(FederateHandle federateHandle)
+  public FederateProxySave getFederateSave(FederateHandle federateHandle)
   {
     return federateSaves.get(federateHandle);
   }
@@ -134,14 +147,14 @@ public class FederationExecutionSave
     return saveFailureReason;
   }
 
-  public FederateSave instructedToSave(FederateProxy federateProxy)
+  public FederateProxySave instructedToSave(FederateProxy federateProxy)
     throws IOException
   {
     instructedToSave.add(federateProxy.getFederateHandle());
 
-    FederateSave federateSave = new FederateSave(federateProxy);
-    federateSaves.put(federateProxy.getFederateHandle(), federateSave);
-    return federateSave;
+    FederateProxySave federateProxySave = new FederateProxySave(federateProxy);
+    federateSaves.put(federateProxy.getFederateHandle(), federateProxySave);
+    return federateProxySave;
   }
 
   public void updateFederationSaveStatus(Map<FederateHandle, SaveStatus> federationSaveStatus)
@@ -175,6 +188,8 @@ public class FederationExecutionSave
 
     try
     {
+      saveFile.writeInt(((IEEE1516eFederateHandle) federateHandle).getHandle());
+
       federateSaves.get(federateHandle).writeTo(saveFile);
     }
     catch (IOException ioe)
@@ -187,12 +202,31 @@ public class FederationExecutionSave
     {
       try
       {
-        federationExecutionMessagesOutputStream.close();
+        federationExecutionMessagesDataOutputStream.close();
 
-        saveFile.writeLong(federationExecutionMessagesFile.length());
+        federationExecution.saveState(saveFile);
+
+        // write the number of messages at the front of the file (uncompressed)
+        //
+        RandomAccessFile raf = new RandomAccessFile(federationExecutionMessagesFile, "rw");
+        raf.writeInt(federationExecutionMessageCount);
+        raf.close();
+
+        //saveFile.writeLong(federationExecutionMessagesFile.length());
 
         FileInputStream in = new FileInputStream(federationExecutionMessagesFile);
-        saveFile.getChannel().transferFrom(in.getChannel(), 0, federationExecutionMessagesFile.length());
+
+        long length = federationExecutionMessagesFile.length();
+        long position = saveFile.getFilePointer();
+        do
+        {
+          long bytesTransferred = saveFile.getChannel().transferFrom(in.getChannel(), position, length);
+          length -= bytesTransferred;
+          position += bytesTransferred;
+        } while (length > 0);
+
+        saveFile.seek(position);
+
         in.close();
 
         saveFile.close();
@@ -200,6 +234,12 @@ public class FederationExecutionSave
       catch (IOException ioe)
       {
         ioe.printStackTrace();
+
+        // TODO: fail the save
+      }
+      catch (CouldNotEncode couldNotEncode)
+      {
+        couldNotEncode.printStackTrace();
 
         // TODO: fail the save
       }
@@ -220,6 +260,70 @@ public class FederationExecutionSave
     return saving.isEmpty();
   }
 
+  public void federationSaved(Map<FederateHandle, FederateProxy> federates)
+  {
+    FederationSaved federationSaved = new FederationSaved();
+
+    for (FederateProxy f : federates.values())
+    {
+      f.federationSaved(federationSaved);
+    }
+
+    // fire all the messages destined to federates after they were instructed to save, but before the sender was
+    // instructed to save
+    //
+    try
+    {
+      // read the uncompressed number of messages
+      //
+      DataInputStream in = new DataInputStream(new FileInputStream(federationExecutionMessagesFile));
+      int federationExecutionMessageCount = in.readInt();
+
+      // start reading the compressed part
+      //
+      in = new DataInputStream(new GZIPInputStream(in));
+
+      for (; federationExecutionMessageCount > 0; federationExecutionMessageCount--)
+      {
+        FederateHandle federateHandle = IEEE1516eFederateHandle.decode(in);
+
+        // rebuild the message
+        //
+        int length = in.readInt();
+        ChannelBuffer buffer = ChannelBuffers.buffer(length + 4);
+        buffer.writeInt(length);
+        buffer.writeBytes(in, length);
+
+        FederateProxy federate = federates.get(federateHandle);
+        assert federate != null;
+
+        federate.getFederateChannel().write(buffer);
+      }
+
+      in.close();
+
+      federationExecutionMessagesFile.delete();
+    }
+    catch (FileNotFoundException fnfe)
+    {
+      fnfe.printStackTrace();
+
+      // TODO: fail the save
+    }
+    catch (IOException e)
+    {
+      e.printStackTrace();
+
+      // TODO: fail the save
+    }
+
+    // fire all the messages that
+    for (FederateProxySave federateProxySave : federateSaves.values())
+    {
+
+    }
+  }
+
   public boolean federateResigned(FederateHandle federateHandle)
   {
     instructedToSave.remove(federateHandle);
@@ -234,12 +338,14 @@ public class FederationExecutionSave
   public synchronized void save(FederateHandle federateHandle, FederationExecutionMessage message)
     throws IOException
   {
-    ((IEEE1516eFederateHandle) federateHandle).writeTo(federationExecutionMessagesDataOutput);
+    ((IEEE1516eFederateHandle) federateHandle).writeTo(federationExecutionMessagesDataOutputStream);
 
     ChannelBuffer buffer = message.getBuffer();
 
     int length = buffer.readableBytes();
-    federationExecutionMessagesDataOutput.writeInt(length);
-    buffer.readBytes(federationExecutionMessagesOutputStream, length);
+    federationExecutionMessagesDataOutputStream.writeInt(length);
+    buffer.readBytes(federationExecutionMessagesDataOutputStream, length);
+
+    federationExecutionMessageCount++;
   }
 }

@@ -68,7 +68,7 @@ public class FlushQueueRequestTestNG
 
     rtiAmbassadors.get(1).subscribeInteractionClass(testInteractionClassHandle);
 
-    setupComplete(federateAmbassadors);
+    synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE, federateAmbassadors);
 
     rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle, testParameterValues, TAG, five);
     rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle, testParameterValues, TAG, ten);

@@ -85,19 +85,20 @@ public abstract class BaseTestNG
   {
   }
 
-  protected void setupComplete(List<? extends SynchronizedFederateAmbassador> federateAmbassadors)
+  protected void synchronize(String synchronizationPointLabel,
+                             List<? extends BaseFederateAmbassador> federateAmbassadors)
     throws Exception
   {
-    federateAmbassadors.get(0).setupComplete();
+    federateAmbassadors.get(0).registerSynchronizationPoint(synchronizationPointLabel);
 
-    for (SynchronizedFederateAmbassador federateAmbassador : federateAmbassadors)
+    for (BaseFederateAmbassador federateAmbassador : federateAmbassadors)
     {
-      federateAmbassador.waitForSetupCompleteAnnounced();
+      federateAmbassador.waitForAnnounceSynchronizationPoint(synchronizationPointLabel);
     }
 
-    for (SynchronizedFederateAmbassador federateAmbassador : federateAmbassadors)
+    for (BaseFederateAmbassador federateAmbassador : federateAmbassadors)
     {
-      federateAmbassador.waitForSetupComplete();
+      federateAmbassador.waitForFederationSynchronized(synchronizationPointLabel);
     }
   }
 

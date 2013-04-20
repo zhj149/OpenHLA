@@ -16,15 +16,20 @@
 
 package net.sf.ohla.rti.federation;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import net.sf.ohla.rti.fdd.Attribute;
 import net.sf.ohla.rti.fdd.Dimension;
 import net.sf.ohla.rti.fdd.FDD;
-import net.sf.ohla.rti.fdd.InteractionClass;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSet;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandle;
 
 import hla.rti1516e.DimensionHandle;
 import hla.rti1516e.DimensionHandleSet;
@@ -50,6 +55,23 @@ public class FederationExecutionRegion
       Dimension dimension = fdd.getDimensionSafely(dimensionHandle);
 
       rangeBounds.put(dimensionHandle, new RangeBounds(0L, dimension.getUpperBound()));
+    }
+  }
+
+  public FederationExecutionRegion(DataInput in)
+    throws IOException
+  {
+    regionHandle = IEEE1516eRegionHandle.decode(in);
+
+    dimensionHandles = new IEEE1516eDimensionHandleSet();
+    for (int count = in.readInt(); count > 0; count--)
+    {
+      DimensionHandle dimensionHandle = IEEE1516eDimensionHandle.decode(in);
+      dimensionHandles.add(dimensionHandle);
+
+      long lower = in.readLong();
+      long upper = in.readLong();
+      rangeBounds.put(dimensionHandle, new RangeBounds(lower, upper));
     }
   }
 
@@ -108,81 +130,26 @@ public class FederationExecutionRegion
     return intersects;
   }
 
+  public void writeTo(DataOutput out)
+    throws IOException
+  {
+    ((IEEE1516eRegionHandle) regionHandle).writeTo(out);
+
+    out.writeInt(dimensionHandles.size());
+    for (DimensionHandle dimensionHandle : dimensionHandles)
+    {
+      ((IEEE1516eDimensionHandle) dimensionHandle).writeTo(out);
+
+      RangeBounds rangeBounds = this.rangeBounds.get(dimensionHandle);
+      assert rangeBounds != null;
+
+      out.writeLong(rangeBounds.lower);
+      out.writeLong(rangeBounds.upper);
+    }
+  }
+
   protected boolean intersects(RangeBounds lhs, RangeBounds rhs)
   {
     return (lhs.lower < rhs.upper && rhs.lower < lhs.upper) || lhs.lower == rhs.lower;
-  }
-
-  protected abstract class RegionRealization
-  {
-    protected final Map<RegionHandle, FederationExecutionRegion> intersectingRegions =
-      new HashMap<RegionHandle, FederationExecutionRegion>();
-
-    public void determineIntersectingRegions(Map<RegionHandle, FederationExecutionRegion> regions)
-    {
-      intersectingRegions.clear();
-
-      for (Map.Entry<RegionHandle, FederationExecutionRegion> entry :
-        regions.entrySet())
-      {
-        if (!regionHandle.equals(entry.getKey()))
-        {
-        }
-      }
-    }
-
-    public boolean intersects(Set<RegionHandle> regionHandles)
-    {
-      boolean intersects = false;
-
-      if (regionHandles.size() < intersectingRegions.size())
-      {
-        for (Iterator<RegionHandle> i = regionHandles.iterator(); !intersects && i.hasNext();)
-        {
-          intersects = intersectingRegions.containsKey(i.next());
-        }
-      }
-      else
-      {
-        for (Iterator<RegionHandle> i = intersectingRegions.keySet().iterator(); !intersects && i.hasNext();)
-        {
-          intersects = regionHandles.contains(i.next());
-        }
-      }
-
-      return intersects;
-    }
-  }
-
-  protected class AttributeRegionRealization
-    extends RegionRealization
-  {
-    protected final Attribute attribute;
-
-    public AttributeRegionRealization(Attribute attribute)
-    {
-      this.attribute = attribute;
-    }
-
-    public Attribute getAttribute()
-    {
-      return attribute;
-    }
-  }
-
-  protected class InteractionClassRegionRealization
-    extends RegionRealization
-  {
-    protected final InteractionClass interactionClass;
-
-    public InteractionClassRegionRealization(InteractionClass interactionClass)
-    {
-      this.interactionClass = interactionClass;
-    }
-
-    public InteractionClass getInteractionClass()
-    {
-      return interactionClass;
-    }
   }
 }

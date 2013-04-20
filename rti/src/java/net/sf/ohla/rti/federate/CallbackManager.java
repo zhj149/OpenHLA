@@ -18,6 +18,7 @@ package net.sf.ohla.rti.federate;
 
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Iterator;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
@@ -26,6 +27,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import net.sf.ohla.rti.i18n.I18nLogger;
 import net.sf.ohla.rti.i18n.LogMessages;
+import net.sf.ohla.rti.messages.ListFederationExecutions;
 
 import hla.rti1516e.FederateAmbassador;
 
@@ -51,6 +53,36 @@ public class CallbackManager
   public CallbackManager(FederateAmbassador federateAmbassador)
   {
     this.federateAmbassador = federateAmbassador;
+  }
+
+  public void reset()
+  {
+    callbacksLock.lock();
+    try
+    {
+      // need to clear out any old federation execution callbacks, only Connection Lost and
+      // List Federation Executions can stay
+
+      // neither of the above callbacks can be held
+      //
+      heldCallbacks.clear();
+
+      for (Iterator<Callback> i = callbacks.iterator(); i.hasNext();)
+      {
+        Callback callback = i.next();
+
+        // TODO: add check for Connection Lost
+        //
+        if (!ListFederationExecutions.class.isInstance(callback))
+        {
+          i.remove();
+        }
+      }
+    }
+    finally
+    {
+      callbacksLock.unlock();
+    }
   }
 
   public void add(Callback callback, boolean hold)

@@ -105,7 +105,7 @@ public class InteractionTestNG
     rtiAmbassadors.get(1).subscribeInteractionClass(testInteractionClassHandle);
     rtiAmbassadors.get(2).subscribeInteractionClass(testInteractionClassHandle2);
 
-    setupComplete(federateAmbassadors);
+    synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE, federateAmbassadors);
   }
 
   @AfterClass

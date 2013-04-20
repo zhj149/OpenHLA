@@ -120,7 +120,7 @@ public class IntrusiveAttributeAcquisitionTestNG
     federateAmbassadors.get(0).checkObjectInstanceName(testObjectInstanceName2);
     federateAmbassadors.get(1).checkObjectInstanceName(testObjectInstanceName);
 
-    setupComplete(federateAmbassadors);
+    synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE, federateAmbassadors);
   }
 
   @AfterClass

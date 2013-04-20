@@ -135,7 +135,7 @@ public class ObjectUpdateTestNG
     federateAmbassadors.get(1).checkObjectInstanceHandle(testObjectInstanceHandle2);
     federateAmbassadors.get(2).checkObjectInstanceHandle(testObjectInstanceHandle2);
 
-    setupComplete(federateAmbassadors);
+    synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE, federateAmbassadors);
   }
 
   @AfterClass

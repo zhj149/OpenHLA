@@ -56,7 +56,7 @@ public class JoiningTestNG
     throws Exception
   {
     FederateHandle federateHandle =
-      rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME);
+      rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME);
     String federateName = rtiAmbassadors.get(0).getFederateName(federateHandle);
 
     assert federateHandle.equals(rtiAmbassadors.get(0).getFederateHandle(federateName));
@@ -69,7 +69,7 @@ public class JoiningTestNG
     throws Exception
   {
     FederateHandle federateHandle =
-      rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_NAME, FEDERATE_TYPE, FEDERATION_NAME);
+      rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_NAME, FEDERATE_TYPE_1, FEDERATION_NAME);
 
     assert FEDERATE_NAME.equals(rtiAmbassadors.get(0).getFederateName(federateHandle));
     assert federateHandle.equals(rtiAmbassadors.get(0).getFederateHandle(FEDERATE_NAME));
@@ -88,14 +88,14 @@ public class JoiningTestNG
   public void testJoinFederationExecutionWithNullFederationExecutionName()
     throws Exception
   {
-    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, null);
+    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE_1, null);
   }
 
   @Test(expectedExceptions = {FederationExecutionDoesNotExist.class})
   public void testJoinFederationThatDoesNotExist()
     throws Exception
   {
-    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, "xxx");
+    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE_1, "xxx");
   }
 
   @Test(expectedExceptions = {FederateNotExecutionMember.class})

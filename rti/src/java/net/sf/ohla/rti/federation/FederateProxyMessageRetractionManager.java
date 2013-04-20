@@ -17,7 +17,6 @@
 package net.sf.ohla.rti.federation;
 
 import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 import java.util.Collection;
@@ -60,13 +59,6 @@ public class FederateProxyMessageRetractionManager
       messageRetractions.put(messageRetraction.getMessageRetractionHandle(), messageRetraction);
       messageRetractionsByExpiration.add(messageRetraction);
     }
-  }
-
-  @Override
-  public void saveState(DataOutput out)
-    throws IOException
-  {
-    super.saveState(out);
   }
 
   private class FederateProxyMessageRetraction

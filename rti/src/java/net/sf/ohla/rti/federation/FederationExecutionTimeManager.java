@@ -16,6 +16,10 @@
 
 package net.sf.ohla.rti.federation;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -23,6 +27,7 @@ import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
 import net.sf.ohla.rti.i18n.I18nLogger;
 import net.sf.ohla.rti.i18n.LogMessages;
 import net.sf.ohla.rti.messages.QueryGALT;
@@ -30,9 +35,12 @@ import net.sf.ohla.rti.messages.QueryGALTResponse;
 import net.sf.ohla.rti.messages.QueryLITS;
 import net.sf.ohla.rti.messages.QueryLITSResponse;
 
+import hla.rti1516e.FederateHandle;
 import hla.rti1516e.LogicalTime;
 import hla.rti1516e.LogicalTimeFactory;
 import hla.rti1516e.LogicalTimeInterval;
+import hla.rti1516e.exceptions.CouldNotDecode;
+import hla.rti1516e.exceptions.CouldNotEncode;
 import hla.rti1516e.exceptions.IllegalTimeArithmetic;
 import hla.rti1516e.exceptions.InvalidLogicalTimeInterval;
 
@@ -46,8 +54,8 @@ public class FederationExecutionTimeManager
 
   private final ReadWriteLock timeLock = new ReentrantReadWriteLock(true);
 
-  private final Set<FederateProxy> timeRegulatingFederates = new HashSet<FederateProxy>();
-  private final Set<FederateProxy> timeConstrainedFederates = new HashSet<FederateProxy>();
+  private final Set<FederateHandle> timeRegulatingFederates = new HashSet<FederateHandle>();
+  private final Set<FederateHandle> timeConstrainedFederates = new HashSet<FederateHandle>();
 
   private final I18nLogger log;
 
@@ -100,8 +108,10 @@ public class FederationExecutionTimeManager
         // go through all the time constrained federates to find the maximum constrained LITS
 
         LogicalTime maxLITS = initialTime;
-        for (FederateProxy timeConstrainedFederate : timeConstrainedFederates)
+        for (FederateHandle timeConstrainedFederateHandle : timeConstrainedFederates)
         {
+          FederateProxy timeConstrainedFederate = federationExecution.getFederate(timeConstrainedFederateHandle);
+
           // since there are no time regulating federates, no federate should be in a time advancing state because any
           // requests will be granted immediately
           //
@@ -144,7 +154,7 @@ public class FederationExecutionTimeManager
         }
       }
 
-      timeRegulatingFederates.add(federateProxy);
+      timeRegulatingFederates.add(federateProxy.getFederateHandle());
 
       federateProxy.enableTimeRegulation(lookahead, federateTime);
 
@@ -185,7 +195,8 @@ public class FederationExecutionTimeManager
       }
       else if (timeRegulatingFederates.size() == 1)
       {
-        FederateProxy lastTimeRegulatingFederate = timeRegulatingFederates.iterator().next();
+        FederateProxy lastTimeRegulatingFederate = federationExecution.getFederate(
+          timeRegulatingFederates.iterator().next());
 
         lastTimeRegulatingFederate.galtUndefined();
 
@@ -211,9 +222,10 @@ public class FederationExecutionTimeManager
         // find the least LOTS of the time regulating federates
         //
         LogicalTime leastTimeRegulatingLOTS = finalTime;
-        for (FederateProxy timeRegulatingFederate : timeRegulatingFederates)
+        for (FederateHandle timeRegulatingFederateHandle : timeRegulatingFederates)
         {
-          leastTimeRegulatingLOTS = min(leastTimeRegulatingLOTS, timeRegulatingFederate.getLOTS());
+          leastTimeRegulatingLOTS = min(
+            leastTimeRegulatingLOTS, federationExecution.getFederate(timeRegulatingFederateHandle).getLOTS());
         }
 
         if (leastTimeRegulatingLOTS.equals(galt))
@@ -222,11 +234,15 @@ public class FederationExecutionTimeManager
 
           // recalculate the GALT for each time regulating federate
           //
-          for (FederateProxy timeRegulatingFederate : timeRegulatingFederates)
+          for (FederateHandle timeRegulatingFederateHandle : timeRegulatingFederates)
           {
+            FederateProxy timeRegulatingFederate = federationExecution.getFederate(timeRegulatingFederateHandle);
+
             LogicalTime newGALT = finalTime;
-            for (FederateProxy timeRegulatingFederate2 : timeRegulatingFederates)
+            for (FederateHandle timeRegulatingFederateHandle2 : timeRegulatingFederates)
             {
+              FederateProxy timeRegulatingFederate2 = federationExecution.getFederate(timeRegulatingFederateHandle2);
+
               if (timeRegulatingFederate != timeRegulatingFederate2)
               {
                 newGALT = min(newGALT, timeRegulatingFederate.getLOTS());
@@ -244,11 +260,15 @@ public class FederationExecutionTimeManager
 
           // recalculate the GALT for each time regulating federate
           //
-          for (FederateProxy timeRegulatingFederate : timeRegulatingFederates)
+          for (FederateHandle timeRegulatingFederateHandle : timeRegulatingFederates)
           {
+            FederateProxy timeRegulatingFederate = federationExecution.getFederate(timeRegulatingFederateHandle);
+
             LogicalTime newGALT = finalTime;
-            for (FederateProxy timeRegulatingFederate2 : timeRegulatingFederates)
+            for (FederateHandle timeRegulatingFederateHandle2 : timeRegulatingFederates)
             {
+              FederateProxy timeRegulatingFederate2 = federationExecution.getFederate(timeRegulatingFederateHandle2);
+
               if (timeRegulatingFederate != timeRegulatingFederate2)
               {
                 newGALT = min(newGALT, timeRegulatingFederate.getLOTS());
@@ -285,7 +305,7 @@ public class FederationExecutionTimeManager
     {
       federateProxy.enableTimeConstrained();
 
-      timeConstrainedFederates.add(federateProxy);
+      timeConstrainedFederates.add(federateProxy.getFederateHandle());
     }
     finally
     {
@@ -477,6 +497,62 @@ public class FederationExecutionTimeManager
     }
   }
 
+  public void saveState(DataOutput out)
+    throws IOException, CouldNotEncode
+  {
+    out.writeInt(timeRegulatingFederates.size());
+    for (FederateHandle federateHandle : timeRegulatingFederates)
+    {
+      ((IEEE1516eFederateHandle) federateHandle).writeTo(out);
+    }
+
+    out.writeInt(timeConstrainedFederates.size());
+    for (FederateHandle federateHandle : timeConstrainedFederates)
+    {
+      ((IEEE1516eFederateHandle) federateHandle).writeTo(out);
+    }
+
+    if (galt == null)
+    {
+      // TODO: null should be -1?
+      //
+      out.writeInt(0);
+    }
+    else
+    {
+      byte[] encodedGalt = new byte[galt.encodedLength()];
+      out.writeInt(encodedGalt.length);
+      galt.encode(encodedGalt, 0);
+      out.write(encodedGalt);
+    }
+  }
+
+  public void restoreState(DataInput in)
+    throws IOException, CouldNotDecode
+  {
+    for (int i = in.readInt(); i > 0; i--)
+    {
+      timeRegulatingFederates.add(IEEE1516eFederateHandle.decode(in));
+    }
+
+    for (int i = in.readInt(); i > 0; i--)
+    {
+      timeConstrainedFederates.add(IEEE1516eFederateHandle.decode(in));
+    }
+
+    int encodedGALTLength = in.readInt();
+    if (encodedGALTLength == 0)
+    {
+      galt = null;
+    }
+    else
+    {
+      byte[] encodedGALT = new byte[encodedGALTLength];
+      in.readFully(encodedGALT);
+      galt = logicalTimeFactory.decodeTime(encodedGALT, 0);
+    }
+  }
+
   @SuppressWarnings("unchecked")
   private void recalculateGALT(FederateProxy federateProxy)
     throws IllegalTimeArithmetic
@@ -514,8 +590,10 @@ public class FederationExecutionTimeManager
 
       // calculate the potential federation-wide GALT
       //
-      for (FederateProxy timeRegulatingFederate : timeRegulatingFederates)
+      for (FederateHandle timeRegulatingFederateHandle : timeRegulatingFederates)
       {
+        FederateProxy timeRegulatingFederate = federationExecution.getFederate(timeRegulatingFederateHandle);
+
         potentialGALT = min(potentialGALT, timeRegulatingFederate.getLOTS());
 
         if (timeRegulatingFederate.isTimeConstrainedEnabled() && timeRegulatingFederate.getAdvanceRequestTime() != null)
@@ -594,13 +672,17 @@ public class FederationExecutionTimeManager
 
       galt = newGALT;
 
-      for (FederateProxy timeRegulatingFederate : timeRegulatingFederates)
+      for (FederateHandle timeRegulatingFederateHandle : timeRegulatingFederates)
       {
+        FederateProxy timeRegulatingFederate = federationExecution.getFederate(timeRegulatingFederateHandle);
+
         // recalculate the GALT for each time regulating federate
         //
         LogicalTime newLocalGALT = finalTime;
-        for (FederateProxy timeRegulatingFederate2 : timeRegulatingFederates)
+        for (FederateHandle timeRegulatingFederateHandle2 : timeRegulatingFederates)
         {
+          FederateProxy timeRegulatingFederate2 = federationExecution.getFederate(timeRegulatingFederateHandle2);
+
           if (timeRegulatingFederate != timeRegulatingFederate2)
           {
             newLocalGALT = min(newLocalGALT, timeRegulatingFederate2.getLOTS());
