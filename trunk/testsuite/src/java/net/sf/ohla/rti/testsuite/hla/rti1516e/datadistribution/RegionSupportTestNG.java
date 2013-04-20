@@ -66,8 +66,8 @@ public class RegionSupportTestNG
 
     rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
 
-    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME);
-    rtiAmbassadors.get(1).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME);
+    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME);
+    rtiAmbassadors.get(1).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME);
 
     dimensionHandle1 = rtiAmbassadors.get(0).getDimensionHandle(DIMENSION1);
     dimensionHandle2 = rtiAmbassadors.get(0).getDimensionHandle(DIMENSION2);

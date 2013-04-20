@@ -68,7 +68,7 @@ public class ObjectNameReservationTestNG
     rtiAmbassadors.get(2).joinFederationExecution(
       FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(2), mobileFederateServices);
 
-    setupComplete(federateAmbassadors);
+    synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE, federateAmbassadors);
   }
 
   @AfterClass

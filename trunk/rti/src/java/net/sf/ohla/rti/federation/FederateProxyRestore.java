@@ -26,20 +26,15 @@ import java.io.RandomAccessFile;
 
 import java.util.zip.GZIPInputStream;
 
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
 import net.sf.ohla.rti.i18n.I18nLogger;
 import net.sf.ohla.rti.messages.FederateStateOutputStream;
 
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.exceptions.CouldNotDecode;
 
-public class FederateRestore
+public class FederateProxyRestore
 {
-  public static final String FEDERATE_STATE = "Federate_State";
-  public static final String FEDERATE_PROXY_STATE = "Federate_Proxy_State";
-  public static final String FEDERATE_MESSAGES = "Federate_Messages";
-
-  private static final I18nLogger log = I18nLogger.getLogger(FederateRestore.class);
+  private static final I18nLogger log = I18nLogger.getLogger(FederateProxyRestore.class);
 
   private final FederateHandle federateHandle;
   private final String federateName;
@@ -53,35 +48,33 @@ public class FederateRestore
   private final DataInputStream federateProxyStateInputStream;
   private final DataInputStream federateMessagesInputStream;
 
-  public FederateRestore(RandomAccessFile file)
+  public FederateProxyRestore(FederateHandle federateHandle, String federateName, String federateType,
+                              RandomAccessFile file)
     throws IOException
   {
-    federateHandle = IEEE1516eFederateHandle.decode(file);
-    federateName = file.readUTF();
-    federateType = file.readUTF();
+    this.federateHandle = federateHandle;
+    this.federateName = federateName;
+    this.federateType = federateType;
 
     log.debug("Federate restore: {} - {}", federateHandle, federateName);
 
-    federateStateFile = File.createTempFile(FEDERATE_STATE, "restore");
+    federateStateFile = File.createTempFile(FederateProxySave.FEDERATE_STATE, "restore");
     log.debug("Federate state file: {}", federateStateFile);
 
-    federateProxyStateFile = File.createTempFile(FEDERATE_PROXY_STATE, "restore");
+    federateProxyStateFile = File.createTempFile(FederateProxySave.FEDERATE_PROXY_STATE, "restore");
     log.debug("Federate proxy state file: {}", federateProxyStateFile);
 
-    federateMessagesFile = File.createTempFile(FEDERATE_MESSAGES, "restore");
+    federateMessagesFile = File.createTempFile(FederateProxySave.FEDERATE_MESSAGES, "restore");
     log.debug("Federate messages file: {}", federateMessagesFile);
 
     long federateStateFileLength = file.readLong();
     transfer(file, federateStateFileLength, federateStateFile);
-    file.seek(file.getFilePointer() + federateStateFileLength);
 
     long federateProxyStateFileLength = file.readLong();
     transfer(file, federateProxyStateFileLength, federateProxyStateFile);
-    file.seek(file.getFilePointer() + federateProxyStateFileLength);
 
     long federateMessagesFileLength = file.readLong();
     transfer(file, federateMessagesFileLength, federateMessagesFile);
-    file.seek(file.getFilePointer() + federateMessagesFileLength);
 
     // TODO: allow different types of input streams
 
@@ -119,6 +112,7 @@ public class FederateRestore
 
       bytesRead = federateStateInputStream.read(buffer);
     }
+    out.close();
     federateStateInputStream.close();
     federateStateFile.delete();
 
@@ -137,8 +131,15 @@ public class FederateRestore
   {
     FileOutputStream out = new FileOutputStream(destination);
 
-    long bytesTransfered = source.getChannel().transferTo(source.getFilePointer(), length, out.getChannel());
-    assert bytesTransfered == length;
+    long position = source.getFilePointer();
+    do
+    {
+      long bytesTransferred = source.getChannel().transferTo(position, length, out.getChannel());
+      length -= bytesTransferred;
+      position += bytesTransferred;
+    } while (length > 0);
+
+    source.seek(position);
 
     out.close();
   }

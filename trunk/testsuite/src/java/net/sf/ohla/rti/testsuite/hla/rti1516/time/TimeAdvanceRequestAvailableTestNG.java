@@ -101,7 +101,7 @@ public class TimeAdvanceRequestAvailableTestNG
     testAttributeValues.put(attributeHandle2, ATTRIBUTE2_VALUE.getBytes());
     testAttributeValues.put(attributeHandle3, ATTRIBUTE3_VALUE.getBytes());
 
-    setupComplete(federateAmbassadors);
+    synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE, federateAmbassadors);
 
     rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle, testParameterValues, TAG, five);
   }

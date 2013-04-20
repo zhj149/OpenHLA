@@ -672,6 +672,8 @@ public class FederateObjectInstance
         }
       }
 
+      // TODO: need to provide confirmation call back and execute change after callback
+      //
       for (AttributeHandle attributeHandle : attributeHandles)
       {
         getAttributeInstance(attributeHandle).setTransportationTypeHandle(transportationTypeHandle);
@@ -883,10 +885,119 @@ public class FederateObjectInstance
     }
   }
 
+  public void fireReflectAttributeValues(
+    ReflectAttributeValues reflectAttributeValues, FederateAmbassador federateAmbassador,
+    FederateRegionManager regionManager)
+    throws FederateInternalError
+  {
+    objectLock.readLock().lock();
+    try
+    {
+      if (reflectAttributeValues.hasSentRegions())
+      {
+        reflectAttributeValues.setSentRegions(
+          regionManager.createTemporaryRegions(reflectAttributeValues.getRegions()));
+      }
+
+      OrderType sentOrderType = reflectAttributeValues.getSentOrderType();
+      LogicalTime time = reflectAttributeValues.getTime();
+
+      if (sentOrderType == OrderType.TIMESTAMP)
+      {
+        federateAmbassador.reflectAttributeValues(
+          objectInstanceHandle, reflectAttributeValues.getAttributeValues(), reflectAttributeValues.getTag(),
+          OrderType.TIMESTAMP, reflectAttributeValues.getTransportationTypeHandle(), time,
+          OrderType.TIMESTAMP, reflectAttributeValues.getMessageRetractionHandle(), reflectAttributeValues);
+      }
+      else if (time == null)
+      {
+        federateAmbassador.reflectAttributeValues(
+          objectInstanceHandle, reflectAttributeValues.getAttributeValues(), reflectAttributeValues.getTag(),
+          sentOrderType, reflectAttributeValues.getTransportationTypeHandle(), reflectAttributeValues);
+      }
+      else
+      {
+        federateAmbassador.reflectAttributeValues(
+          objectInstanceHandle, reflectAttributeValues.getAttributeValues(), reflectAttributeValues.getTag(),
+          sentOrderType, reflectAttributeValues.getTransportationTypeHandle(), time, OrderType.RECEIVE,
+          reflectAttributeValues);
+      }
+    }
+    finally
+    {
+      objectLock.readLock().unlock();
+
+      if (reflectAttributeValues.hasSentRegions())
+      {
+        regionManager.deleteTemporaryRegions(reflectAttributeValues.getSentRegions());
+      }
+    }
+  }
+
+  public void fireRemoveObjectInstance(
+    RemoveObjectInstance removeObjectInstance, FederateAmbassador federateAmbassador)
+    throws FederateInternalError
+  {
+    objectLock.readLock().lock();
+    try
+    {
+      OrderType sentOrderType = removeObjectInstance.getSentOrderType();
+      LogicalTime time = removeObjectInstance.getTime();
+
+      if (sentOrderType == OrderType.TIMESTAMP)
+      {
+        federateAmbassador.removeObjectInstance(
+          objectInstanceHandle, removeObjectInstance.getTag(), OrderType.TIMESTAMP, time, OrderType.TIMESTAMP,
+          removeObjectInstance.getMessageRetractionHandle(), removeObjectInstance);
+      }
+      else if (time == null)
+      {
+        federateAmbassador.removeObjectInstance(
+          objectInstanceHandle, removeObjectInstance.getTag(), sentOrderType, removeObjectInstance);
+      }
+      else
+      {
+        federateAmbassador.removeObjectInstance(
+          objectInstanceHandle, removeObjectInstance.getTag(), sentOrderType, time, OrderType.RECEIVE,
+          removeObjectInstance);
+      }
+    }
+    finally
+    {
+      objectLock.readLock().unlock();
+    }
+  }
+
+  public void attributeOwnershipAcquisitionNotification(
+    AttributeHandleSet attributeHandles, byte[] tag, FederateAmbassador federateAmbassador)
+    throws FederateInternalError
+  {
+    objectLock.writeLock().lock();
+    try
+    {
+      attributeHandlesBeingAcquired.removeAll(attributeHandles);
+
+      for (AttributeHandle attributeHandle : attributeHandles)
+      {
+        Attribute attribute = objectClass.getAttributeSafely(attributeHandle);
+
+        // create an attribute instance for each of the published attributes
+        //
+        attributes.put(attributeHandle, new FederateAttributeInstance(attribute));
+      }
+
+      federateAmbassador.attributeOwnershipAcquisitionNotification(objectInstanceHandle, attributeHandles, tag);
+    }
+    finally
+    {
+      objectLock.writeLock().unlock();
+    }
+  }
+
   public void writeTo(DataOutput out)
     throws IOException
   {
-    ((IEEE1516eAttributeHandle) producingFederateHandle).writeTo(out);
+    ((IEEE1516eFederateHandle) producingFederateHandle).writeTo(out);
     ((IEEE1516eObjectInstanceHandle) objectInstanceHandle).writeTo(out);
     ((IEEE1516eObjectClassHandle) objectClass.getObjectClassHandle()).writeTo(out);
     out.writeUTF(objectInstanceName);
@@ -1005,115 +1116,6 @@ public class FederateObjectInstance
     {
       throw new FederateOwnsAttributes(I18n.getMessage(
         ExceptionMessages.FEDERATE_OWNS_ATTRIBUTES, this, ownedAttributes));
-    }
-  }
-
-  public void fireReflectAttributeValues(
-    ReflectAttributeValues reflectAttributeValues, FederateAmbassador federateAmbassador,
-    FederateRegionManager regionManager)
-    throws FederateInternalError
-  {
-    objectLock.readLock().lock();
-    try
-    {
-      if (reflectAttributeValues.hasSentRegions())
-      {
-        reflectAttributeValues.setSentRegions(
-          regionManager.createTemporaryRegions(reflectAttributeValues.getRegions()));
-      }
-
-      OrderType sentOrderType = reflectAttributeValues.getSentOrderType();
-      LogicalTime time = reflectAttributeValues.getTime();
-
-      if (sentOrderType == OrderType.TIMESTAMP)
-      {
-        federateAmbassador.reflectAttributeValues(
-          objectInstanceHandle, reflectAttributeValues.getAttributeValues(), reflectAttributeValues.getTag(),
-          OrderType.TIMESTAMP, reflectAttributeValues.getTransportationTypeHandle(), time,
-          OrderType.TIMESTAMP, reflectAttributeValues.getMessageRetractionHandle(), reflectAttributeValues);
-      }
-      else if (time == null)
-      {
-        federateAmbassador.reflectAttributeValues(
-          objectInstanceHandle, reflectAttributeValues.getAttributeValues(), reflectAttributeValues.getTag(),
-          sentOrderType, reflectAttributeValues.getTransportationTypeHandle(), reflectAttributeValues);
-      }
-      else
-      {
-        federateAmbassador.reflectAttributeValues(
-          objectInstanceHandle, reflectAttributeValues.getAttributeValues(), reflectAttributeValues.getTag(),
-          sentOrderType, reflectAttributeValues.getTransportationTypeHandle(), time, OrderType.RECEIVE,
-          reflectAttributeValues);
-      }
-    }
-    finally
-    {
-      objectLock.readLock().unlock();
-
-      if (reflectAttributeValues.hasSentRegions())
-      {
-        regionManager.deleteTemporaryRegions(reflectAttributeValues.getSentRegions());
-      }
-    }
-  }
-
-  public void fireRemoveObjectInstance(
-    RemoveObjectInstance removeObjectInstance, FederateAmbassador federateAmbassador)
-    throws FederateInternalError
-  {
-    objectLock.readLock().lock();
-    try
-    {
-      OrderType sentOrderType = removeObjectInstance.getSentOrderType();
-      LogicalTime time = removeObjectInstance.getTime();
-
-      if (sentOrderType == OrderType.TIMESTAMP)
-      {
-        federateAmbassador.removeObjectInstance(
-          objectInstanceHandle, removeObjectInstance.getTag(), OrderType.TIMESTAMP, time, OrderType.TIMESTAMP,
-          removeObjectInstance.getMessageRetractionHandle(), removeObjectInstance);
-      }
-      else if (time == null)
-      {
-        federateAmbassador.removeObjectInstance(
-          objectInstanceHandle, removeObjectInstance.getTag(), sentOrderType, removeObjectInstance);
-      }
-      else
-      {
-        federateAmbassador.removeObjectInstance(
-          objectInstanceHandle, removeObjectInstance.getTag(), sentOrderType, time, OrderType.RECEIVE,
-          removeObjectInstance);
-      }
-    }
-    finally
-    {
-      objectLock.readLock().unlock();
-    }
-  }
-
-  public void attributeOwnershipAcquisitionNotification(
-    AttributeHandleSet attributeHandles, byte[] tag, FederateAmbassador federateAmbassador)
-    throws FederateInternalError
-  {
-    objectLock.writeLock().lock();
-    try
-    {
-      attributeHandlesBeingAcquired.removeAll(attributeHandles);
-
-      for (AttributeHandle attributeHandle : attributeHandles)
-      {
-        Attribute attribute = objectClass.getAttributeSafely(attributeHandle);
-
-        // create an attribute instance for each of the published attributes
-        //
-        attributes.put(attributeHandle, new FederateAttributeInstance(attribute));
-      }
-
-      federateAmbassador.attributeOwnershipAcquisitionNotification(objectInstanceHandle, attributeHandles, tag);
-    }
-    finally
-    {
-      objectLock.writeLock().unlock();
     }
   }
 

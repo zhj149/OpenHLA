@@ -375,6 +375,40 @@ public class Protocol
     }
   }
 
+  public static void encodeLong(byte[] buffer, int offset, long value)
+  {
+    buffer[offset] = (byte) (value >>> 56);
+    buffer[offset + 1] = (byte) (value >>> 48);
+    buffer[offset + 2] = (byte) (value >>> 40);
+    buffer[offset + 3] = (byte) (value >>> 32);
+    buffer[offset + 4] = (byte) (value >>> 24);
+    buffer[offset + 5] = (byte) (value >>> 16);
+    buffer[offset + 6] = (byte) (value >>>  8);
+    buffer[offset + 7] = (byte) value;
+  }
+
+  public static void encodeLong(ChannelBuffer buffer, long value)
+  {
+    buffer.writeLong(value);
+  }
+
+  public static long decodeLong(byte[] buffer, int value)
+  {
+    return ((((long) buffer[value] & 0xff) << 56) |
+            (((long) buffer[value + 1] & 0xff) << 48) |
+            (((long) buffer[value + 2] & 0xff) << 40) |
+            (((long) buffer[value + 3] & 0xff) << 32) |
+            (((long) buffer[value + 4] & 0xff) << 24) |
+            (((long) buffer[value + 5] & 0xff) << 16) |
+            (((long) buffer[value + 6] & 0xff) << 8) |
+            (((long) buffer[value + 7] & 0xff)));
+  }
+
+  public static long decodeLong(ChannelBuffer buffer)
+  {
+    return buffer.readLong();
+  }
+
   public static int encodeVarLong(byte[] buffer, int offset, long value)
   {
     int index = offset;

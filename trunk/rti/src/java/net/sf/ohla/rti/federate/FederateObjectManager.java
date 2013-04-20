@@ -1872,6 +1872,9 @@ public class FederateObjectManager
     {
       FederateObjectInstance federateObjectInstance = new FederateObjectInstance(in, federate.getFDD());
       objects.put(federateObjectInstance.getObjectInstanceHandle(), federateObjectInstance);
+      objectsByName.put(federateObjectInstance.getObjectInstanceName(), federateObjectInstance);
+      getObjectsByClassHandle(federateObjectInstance.getObjectClassHandle()).add(
+        federateObjectInstance.getObjectInstanceHandle());
     }
 
     objectInstanceCount = in.readInt();
@@ -1922,8 +1925,7 @@ public class FederateObjectManager
     return objectInstance;
   }
 
-  private Set<ObjectInstanceHandle> getObjectsByClassHandle(
-    ObjectClassHandle objectClassHandle)
+  private Set<ObjectInstanceHandle> getObjectsByClassHandle(ObjectClassHandle objectClassHandle)
   {
     Set<ObjectInstanceHandle> objectInstanceHandles = objectsByObjectClassHandle.get(objectClassHandle);
     if (objectInstanceHandles == null)

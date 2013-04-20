@@ -26,7 +26,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
-import net.sf.ohla.rti.testsuite.hla.rti1516e.SynchronizedFederateAmbassador;
+import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti1516e.object.TestObjectInstance;
 
 import org.testng.annotations.AfterClass;
@@ -97,9 +97,9 @@ public class ObjectRegionTestNG
 
     rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
 
-    federateHandles.add(rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME));
-    federateHandles.add(rtiAmbassadors.get(1).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME));
-    federateHandles.add(rtiAmbassadors.get(2).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME));
+    federateHandles.add(rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME));
+    federateHandles.add(rtiAmbassadors.get(1).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME));
+    federateHandles.add(rtiAmbassadors.get(2).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME));
 
     dimensionHandle1 = rtiAmbassadors.get(0).getDimensionHandle(DIMENSION1);
     dimensionHandle2 = rtiAmbassadors.get(0).getDimensionHandle(DIMENSION2);
@@ -146,7 +146,7 @@ public class ObjectRegionTestNG
     objectAttributeValues.put(attributeHandle2, ATTRIBUTE2_VALUE.getBytes());
     objectAttributeValues.put(attributeHandle3, ATTRIBUTE3_VALUE.getBytes());
 
-    setupComplete(federateAmbassadors);
+    synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE, federateAmbassadors);
   }
 
   @AfterClass
@@ -203,7 +203,7 @@ public class ObjectRegionTestNG
   }
 
   private static class TestFederateAmbassador
-    extends SynchronizedFederateAmbassador
+    extends BaseFederateAmbassador
   {
     private final Set<String> reservedObjectInstanceNames = new HashSet<String>();
 

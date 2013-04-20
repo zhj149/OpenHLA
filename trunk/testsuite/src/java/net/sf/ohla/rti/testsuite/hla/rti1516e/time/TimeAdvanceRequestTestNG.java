@@ -99,7 +99,7 @@ public class TimeAdvanceRequestTestNG
     testAttributeValues.put(attributeHandle2, ATTRIBUTE2_VALUE.getBytes());
     testAttributeValues.put(attributeHandle3, ATTRIBUTE3_VALUE.getBytes());
 
-    setupComplete(federateAmbassadors);
+    synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE, federateAmbassadors);
 
     rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle, testParameterValues, TAG, five);
     rtiAmbassadors.get(0).updateAttributeValues(testObjectInstanceHandle, testAttributeValues, TAG, ten);

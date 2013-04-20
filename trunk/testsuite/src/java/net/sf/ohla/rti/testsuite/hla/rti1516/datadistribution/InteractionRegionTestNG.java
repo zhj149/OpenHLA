@@ -131,7 +131,7 @@ public class InteractionRegionTestNG
     regionHandles.add(regionHandle2);
     rtiAmbassadors.get(1).subscribeInteractionClassWithRegions(testInteractionClassHandle, regionHandles);
 
-    setupComplete(federateAmbassadors);
+    synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE, federateAmbassadors);
   }
 
   @AfterClass

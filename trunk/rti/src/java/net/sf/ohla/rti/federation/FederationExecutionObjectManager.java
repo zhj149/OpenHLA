@@ -16,6 +16,10 @@
 
 package net.sf.ohla.rti.federation;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -27,6 +31,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.sf.ohla.rti.fdd.ObjectClass;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
 import net.sf.ohla.rti.i18n.I18nLogger;
 import net.sf.ohla.rti.i18n.LogMessages;
 import net.sf.ohla.rti.messages.AssociateRegionsForUpdates;
@@ -50,6 +55,7 @@ import net.sf.ohla.rti.messages.callbacks.ObjectInstanceNameReservationSucceeded
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.AttributeSetRegionSetPairList;
+import hla.rti1516e.FederateHandle;
 import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.OrderType;
@@ -60,7 +66,7 @@ public class FederationExecutionObjectManager
 
   private final Lock objectInstanceNamesLock = new ReentrantLock(true);
 
-  private final Map<String, FederateProxy> reservedObjectInstanceNames = new HashMap<String, FederateProxy>();
+  private final Map<String, FederateHandle> reservedObjectInstanceNames = new HashMap<String, FederateHandle>();
 
   private final ReadWriteLock objectsLock = new ReentrantReadWriteLock(true);
   private final Map<ObjectInstanceHandle, FederationExecutionObjectInstance> objects =
@@ -320,7 +326,7 @@ public class FederationExecutionObjectManager
 
         if (objectInstance != null)
         {
-          objectInstance.unpublishObjectClass(federateProxy);
+          objectInstance.unpublishObjectClass(federationExecution, federateProxy);
         }
       }
     }
@@ -342,7 +348,7 @@ public class FederationExecutionObjectManager
 
         if (objectInstance != null)
         {
-          objectInstance.unpublishObjectClassAttributes(federateProxy, attributeHandles);
+          objectInstance.unpublishObjectClassAttributes(federationExecution, federateProxy, attributeHandles);
         }
       }
     }
@@ -402,17 +408,17 @@ public class FederationExecutionObjectManager
     objectInstanceNamesLock.lock();
     try
     {
-      FederateProxy reservingFederateProxy = reservedObjectInstanceNames.get(name);
-      if (reservingFederateProxy == null)
+      FederateHandle reservingFederateHandle = reservedObjectInstanceNames.get(name);
+      if (reservingFederateHandle == null)
       {
-        reservedObjectInstanceNames.put(name, federateProxy);
+        reservedObjectInstanceNames.put(name, federateProxy.getFederateHandle());
 
         federateProxy.getFederateChannel().write(new ObjectInstanceNameReservationSucceeded(name));
       }
       else
       {
         log.debug(LogMessages.RESERVE_OBJECT_INSTANCE_NAME_FAILED_NAME_ALREADY_RESERVED,
-                  name, reservingFederateProxy);
+                  name, reservingFederateHandle);
 
         federateProxy.getFederateChannel().write(new ObjectInstanceNameReservationFailed(name));
       }
@@ -441,18 +447,18 @@ public class FederationExecutionObjectManager
     objectInstanceNamesLock.lock();
     try
     {
-      Map<String, FederateProxy> alreadyReservedObjectInstanceNames = new HashMap<String, FederateProxy>();
-      Map<String, FederateProxy> reservedObjectInstanceNames = new HashMap<String, FederateProxy>();
+      Map<String, FederateHandle> alreadyReservedObjectInstanceNames = new HashMap<String, FederateHandle>();
+      Map<String, FederateHandle> reservedObjectInstanceNames = new HashMap<String, FederateHandle>();
       for (String objectInstanceName : objectInstanceNames)
       {
-        FederateProxy reservingFederateProxy = this.reservedObjectInstanceNames.get(objectInstanceName);
-        if (reservingFederateProxy == null)
+        FederateHandle reservingFederateHandle = this.reservedObjectInstanceNames.get(objectInstanceName);
+        if (reservingFederateHandle == null)
         {
-          reservedObjectInstanceNames.put(objectInstanceName, federateProxy);
+          reservedObjectInstanceNames.put(objectInstanceName, federateProxy.getFederateHandle());
         }
         else
         {
-          alreadyReservedObjectInstanceNames.put(objectInstanceName, reservingFederateProxy);
+          alreadyReservedObjectInstanceNames.put(objectInstanceName, reservingFederateHandle);
         }
       }
 
@@ -498,7 +504,7 @@ public class FederationExecutionObjectManager
     ObjectClass objectClass = federationExecution.getFDD().getObjectClassSafely(objectClassHandle);
 
     assert objectInstanceName.startsWith("HLA") ||
-           federateProxy.equals(reservedObjectInstanceNames.get(objectInstanceName));
+           federateProxy.getFederateHandle().equals(reservedObjectInstanceNames.get(objectInstanceName));
 
     FederationExecutionObjectInstance objectInstance = new FederationExecutionObjectInstance(
       objectInstanceHandle, objectClass, objectInstanceName, publishedAttributeHandles, attributesAndRegions,
@@ -671,7 +677,8 @@ public class FederationExecutionObjectManager
       }
       else
       {
-        divestitures = objectInstance.attributeOwnershipDivestitureIfWanted(owner, attributeHandles);
+        divestitures = objectInstance.attributeOwnershipDivestitureIfWanted(
+          federationExecution, owner, attributeHandles);
       }
     }
     finally
@@ -819,6 +826,41 @@ public class FederationExecutionObjectManager
     finally
     {
       objectsLock.readLock().unlock();
+    }
+  }
+
+  public void saveState(DataOutput out)
+    throws IOException
+  {
+    out.writeInt(reservedObjectInstanceNames.size());
+    for (Map.Entry<String, FederateHandle> entry : reservedObjectInstanceNames.entrySet())
+    {
+      out.writeUTF(entry.getKey());
+      ((IEEE1516eFederateHandle) entry.getValue()).writeTo(out);
+    }
+
+    out.writeInt(objects.size());
+    for (FederationExecutionObjectInstance federationExecutionObjectInstance : objects.values())
+    {
+      federationExecutionObjectInstance.writeTo(out);
+    }
+  }
+
+  public void restoreState(DataInput in)
+    throws IOException
+  {
+    for (int i = in.readInt(); i > 0; i--)
+    {
+      String reservedObjectInstanceName = in.readUTF();
+      FederateHandle federateHandle = IEEE1516eFederateHandle.decode(in);
+      reservedObjectInstanceNames.put(reservedObjectInstanceName, federateHandle);
+    }
+
+    for (int i = in.readInt(); i > 0; i--)
+    {
+      FederationExecutionObjectInstance federationExecutionObjectInstance =
+        new FederationExecutionObjectInstance(in, federationExecution);
+      objects.put(federationExecutionObjectInstance.getObjectInstanceHandle(), federationExecutionObjectInstance);
     }
   }
 }

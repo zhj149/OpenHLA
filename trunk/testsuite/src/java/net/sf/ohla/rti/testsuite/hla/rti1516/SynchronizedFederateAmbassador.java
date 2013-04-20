@@ -16,6 +16,8 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti1516;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import hla.rti1516.FederateInternalError;
@@ -28,59 +30,67 @@ import hla.rti1516.SaveInProgress;
 public class SynchronizedFederateAmbassador
   extends BaseFederateAmbassador
 {
-  public static final String SETUP_COMPLETE = "SETUP_COMPLETE";
-
-  private boolean setupCompleteAnnounced;
-  private boolean setupComplete;
+  private final Set<String> announcedSynchronizationPoints = new HashSet<String>();
+  private final Set<String> synchronizedSynchronizationPoints = new HashSet<String>();
 
   public SynchronizedFederateAmbassador(RTIambassador rtiAmbassador)
   {
     super(rtiAmbassador);
   }
 
-  public void setupComplete()
+  public void registerSynchronizationPoint(String synchronizationPointLabel)
     throws FederateNotExecutionMember, RestoreInProgress, SaveInProgress, RTIinternalError
   {
-    rtiAmbassador.registerFederationSynchronizationPoint(SETUP_COMPLETE, null);
+    rtiAmbassador.registerFederationSynchronizationPoint(synchronizationPointLabel, null);
   }
 
-  public void waitForSetupCompleteAnnounced()
+  public void waitForAnnounceSynchronizationPoint(final String synchronizationPointLabel)
     throws Exception
   {
-    evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !setupCompleteAnnounced; } });
+    evokeCallbackWhile(new Callable<Boolean>()
+    {
+      public Boolean call()
+      {
+        return !announcedSynchronizationPoints.contains(synchronizationPointLabel);
+      }
+    });
   }
 
-  public void waitForSetupComplete()
+  public void waitForFederationSynchronized(final String synchronizationPointLabel)
     throws Exception
   {
-    evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return !setupComplete; } });
+    evokeCallbackWhile(new Callable<Boolean>()
+    {
+      public Boolean call()
+      {
+        return !synchronizedSynchronizationPoints.contains(synchronizationPointLabel);
+      }
+    });
   }
 
   @Override
   public void announceSynchronizationPoint(String synchronizationPointLabel, byte[] tag)
     throws FederateInternalError
   {
-    if (SETUP_COMPLETE.equals(synchronizationPointLabel))
-    {
-      setupCompleteAnnounced = true;
+    assert !announcedSynchronizationPoints.contains(synchronizationPointLabel);
 
-      try
-      {
-        rtiAmbassador.synchronizationPointAchieved(synchronizationPointLabel);
-      }
-      catch (Throwable t)
-      {
-        throw new FederateInternalError(t);
-      }
+    announcedSynchronizationPoints.add(synchronizationPointLabel);
+    try
+    {
+      rtiAmbassador.synchronizationPointAchieved(synchronizationPointLabel);
+    }
+    catch (Throwable t)
+    {
+      throw new FederateInternalError(t.getMessage(), t);
     }
   }
 
   @Override
   public void federationSynchronized(String synchronizationPointLabel)
   {
-    if (SETUP_COMPLETE.equals(synchronizationPointLabel))
-    {
-      setupComplete = true;
-    }
+    assert announcedSynchronizationPoints.contains(synchronizationPointLabel);
+    assert !synchronizedSynchronizationPoints.contains(synchronizationPointLabel);
+
+    synchronizedSynchronizationPoints.add(synchronizationPointLabel);
   }
 }

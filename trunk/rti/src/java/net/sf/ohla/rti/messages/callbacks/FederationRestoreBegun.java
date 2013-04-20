@@ -16,26 +16,38 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.federate.Callback;
 import net.sf.ohla.rti.federate.Federate;
-import net.sf.ohla.rti.messages.AbstractMessage;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
 import net.sf.ohla.rti.messages.FederateMessage;
 import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.StringMessage;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
 import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.FederateHandle;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class FederationRestoreBegun
-  extends AbstractMessage
+  extends StringMessage
   implements Callback, FederateMessage
 {
+  private final String federateName;
+  private final FederateHandle federateHandle;
+
   private Federate federate;
 
-  public FederationRestoreBegun()
+  public FederationRestoreBegun(String label, String federateName, FederateHandle federateHandle)
   {
-    super(MessageType.FEDERATION_RESTORE_BEGUN);
+    super(MessageType.FEDERATION_RESTORE_BEGUN, label);
+
+    this.federateName = federateName;
+    this.federateHandle = federateHandle;
+
+    Protocol.encodeString(buffer, federateName);
+    IEEE1516eFederateHandle.encode(buffer, federateHandle);
 
     encodingFinished();
   }
@@ -43,6 +55,24 @@ public class FederationRestoreBegun
   public FederationRestoreBegun(ChannelBuffer buffer)
   {
     super(buffer);
+
+    federateName = Protocol.decodeString(buffer);
+    federateHandle = IEEE1516eFederateHandle.decode(buffer);
+  }
+
+  public String getLabel()
+  {
+    return s;
+  }
+
+  public String getFederateName()
+  {
+    return federateName;
+  }
+
+  public FederateHandle getFederateHandle()
+  {
+    return federateHandle;
   }
 
   public MessageType getType()
@@ -60,6 +90,6 @@ public class FederationRestoreBegun
   {
     this.federate = federate;
 
-    federate.getCallbackManager().add(this, false);
+    federate.federationRestoreBegun(this);
   }
 }

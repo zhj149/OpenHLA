@@ -96,7 +96,7 @@ public class TimeAdvanceRequestTestNG
 
     federateAmbassadors.get(1).checkObjectInstanceName(testObjectInstanceName);
 
-    setupComplete(federateAmbassadors);
+    synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE, federateAmbassadors);
 
     rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle, testSuppliedParameters, TAG, five);
     rtiAmbassadors.get(0).updateAttributeValues(testObjectInstanceHandle, testSuppliedAttributes, TAG, ten);

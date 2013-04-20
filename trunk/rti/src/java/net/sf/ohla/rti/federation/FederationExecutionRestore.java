@@ -16,8 +16,11 @@
 
 package net.sf.ohla.rti.federation;
 
+import java.io.DataInput;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.RandomAccessFile;
 
 import java.util.Collection;
@@ -27,10 +30,12 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.GZIPInputStream;
 
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
 import net.sf.ohla.rti.messages.callbacks.FederationNotRestored;
 import net.sf.ohla.rti.messages.callbacks.FederationRestoreBegun;
+import net.sf.ohla.rti.messages.callbacks.FederationRestored;
 import net.sf.ohla.rti.messages.callbacks.InitiateFederateRestore;
 
 import hla.rti1516e.FederateHandle;
@@ -41,20 +46,28 @@ import hla.rti1516e.exceptions.CouldNotDecode;
 
 public class FederationExecutionRestore
 {
+  private final FederationExecution federationExecution;
+
   private final String label;
 
   private final RandomAccessFile restoreFile;
 
-  private final Collection<FederateRestoreMapping> federateRestoreMappings = new LinkedList<FederateRestoreMapping>();
+  /**
+   * {@code Map} of the post-restore {@link FederateHandle} to the {@link FederateRestoreMapping}.
+   */
+  private final Map<FederateHandle, FederateRestoreMapping> federateRestoreMappings =
+    new HashMap<FederateHandle, FederateRestoreMapping>();
 
   private final Set<FederateHandle> waitingForFederationToRestore = new HashSet<FederateHandle>();
 
-  public FederationExecutionRestore(File directory, String label, Map<FederateHandle, FederateProxy> federates)
+  public FederationExecutionRestore(FederationExecution federationExecution, String label,
+                                    FederateProxy requestingFederateProxy)
     throws IOException
   {
+    this.federationExecution = federationExecution;
     this.label = label;
 
-    File file = new File(directory, label + FederationExecutionSave.SAVE_FILE_EXTENSION);
+    File file = new File(federationExecution.getSaveDirectory(), label + FederationExecutionSave.SAVE_FILE_EXTENSION);
 
     // TODO: check for existence of file and other stuff
 
@@ -64,7 +77,7 @@ public class FederationExecutionRestore
 
     // quick check
     //
-    if (federatesInSave != federates.size())
+    if (federatesInSave != federationExecution.getFederates().size())
     {
       // TODO: not enough federates subscribed
     }
@@ -90,7 +103,7 @@ public class FederationExecutionRestore
     // organize the federates by type
     //
     Map<String, Collection<FederateProxy>> federatesByType = new HashMap<String, Collection<FederateProxy>>();
-    for (FederateProxy federate : federates.values())
+    for (FederateProxy federate : federationExecution.getFederates().values())
     {
       Collection<FederateProxy> federatesOfType = federatesByType.get(federate.getFederateType());
       if (federatesOfType == null)
@@ -131,7 +144,9 @@ public class FederationExecutionRestore
         {
           assert j.hasNext();
 
-          federateRestoreMappings.add(new FederateRestoreMapping(i.next(), j.next()));
+          FederateRestoreMapping federateRestoreMapping =
+            new FederateRestoreMapping(i.next(), j.next(), requestingFederateProxy);
+          federateRestoreMappings.put(federateRestoreMapping.getPostRestoreFederateHandle(), federateRestoreMapping);
         }
         assert !j.hasNext();
       }
@@ -145,7 +160,7 @@ public class FederationExecutionRestore
 
   public void begin()
   {
-    for (FederateRestoreMapping federateRestoreMapping : federateRestoreMappings)
+    for (FederateRestoreMapping federateRestoreMapping : federateRestoreMappings.values())
     {
       federateRestoreMapping.begin();
     }
@@ -155,10 +170,13 @@ public class FederationExecutionRestore
   {
     try
     {
-      // create a FederateRestore for each Federate in the save
-      //
-      for (FederateRestoreMapping federateRestoreMapping : federateRestoreMappings)
+      for (int count = federateRestoreMappings.size(); count > 0; count--)
       {
+        FederateHandle federateHandle = IEEE1516eFederateHandle.decode(restoreFile);
+
+        FederateRestoreMapping federateRestoreMapping = federateRestoreMappings.get(federateHandle);
+        assert federateRestoreMapping != null;
+
         federateRestoreMapping.initiate(restoreFile);
       }
     }
@@ -181,24 +199,33 @@ public class FederationExecutionRestore
   {
     FederationNotRestored federationNotRestored = new FederationNotRestored(restoreFailureReason);
 
-    for (FederateRestoreMapping federateRestoreMapping : federateRestoreMappings)
+    for (FederateRestoreMapping federateRestoreMapping : federateRestoreMappings.values())
     {
       federateRestoreMapping.getFederateProxy().federationNotRestored(federationNotRestored);
     }
   }
 
-  public void updateFederationRestoreStatus(Map<FederateHandle, FederateRestoreStatus> federationRestoreStatus)
+  public FederateRestoreStatus[] queryFederationRestoreStatus()
   {
-    for (FederateRestoreMapping federateRestoreMapping : federateRestoreMappings)
+    FederateRestoreStatus[] federationRestoreStatus = new FederateRestoreStatus[federateRestoreMappings.size()];
+
+    Iterator<FederateRestoreMapping> federateRestoreMappings = this.federateRestoreMappings.values().iterator();
+    for (int i = 0; i < federationRestoreStatus.length; i++)
     {
-      federationRestoreStatus.put(federateRestoreMapping.getFederateSaveHeader().getFederateHandle(),
-                                  federateRestoreMapping.getFederateRestoreStatus());
+      federationRestoreStatus[i] = federateRestoreMappings.next().getFederateRestoreStatus();
     }
+
+    return federationRestoreStatus;
   }
 
   public boolean federateRestoreComplete(FederateHandle federateHandle)
   {
     waitingForFederationToRestore.add(federateHandle);
+
+    FederateRestoreMapping federateRestoreMapping = federateRestoreMappings.get(federateHandle);
+    assert federateRestoreMapping != null;
+
+    federateRestoreMapping.federateRestoreComplete();
 
     return waitingForFederationToRestore.size() == federateRestoreMappings.size();
   }
@@ -206,6 +233,98 @@ public class FederationExecutionRestore
   public void federateRestoreNotComplete(FederateHandle federateHandle)
   {
     fail(RestoreFailureReason.FEDERATE_REPORTED_FAILURE_DURING_RESTORE);
+  }
+
+  public void federationRestored()
+  {
+    try
+    {
+      federationExecution.restoreState(restoreFile);
+
+      int federationExecutionMessageCount = restoreFile.readInt();
+
+      DataInput in = new DataInputStream(new GZIPInputStream(new InputStream()
+      {
+        public int read()
+        throws IOException
+        {
+          return restoreFile.read();
+        }
+
+        @Override
+        public int read(byte b[], int off, int len)
+        throws IOException
+        {
+          return restoreFile.read(b, off, len);
+        }
+
+        @Override
+        public long skip(long n)
+        throws IOException
+        {
+          long skipped;
+
+          long availableToSkip = restoreFile.length() - restoreFile.getFilePointer();
+          if (n > availableToSkip)
+          {
+            skipped = availableToSkip;
+          }
+          else
+          {
+            skipped = n;
+          }
+          restoreFile.seek(restoreFile.getFilePointer() + n);
+          return skipped;
+        }
+
+        @Override
+        public int available()
+          throws IOException
+        {
+          return new Long(restoreFile.length() - restoreFile.getFilePointer()).intValue();
+        }
+
+        @Override
+        public void close()
+          throws IOException
+        {
+          super.close();
+        }
+      }));
+
+      for (int i = federationExecutionMessageCount; i > 0; i--)
+      {
+        FederateHandle sendingFederateHandle = IEEE1516eFederateHandle.decode(in);
+
+        int length = in.readInt();
+        byte[] buffer = new byte[length];
+        in.readFully(buffer);
+      }
+    }
+    catch (IOException e)
+    {
+      e.printStackTrace();
+
+      // TODO: fail the restore
+    }
+    catch (CouldNotDecode couldNotDecode)
+    {
+      couldNotDecode.printStackTrace();
+
+      // TODO: fail the restore
+    }
+
+    FederationRestored federationRestored = new FederationRestored();
+
+    for (FederateRestoreMapping federateRestoreMapping : federateRestoreMappings.values())
+    {
+      federateRestoreMapping.federationRestored(federationRestored);
+
+      federationExecution.getFederates().put(
+        federateRestoreMapping.getPostRestoreFederateHandle(), federateRestoreMapping.getFederateProxy());
+      federationExecution.getFederatesByName().put(
+        federateRestoreMapping.getPostRestoreFederateName(), federateRestoreMapping.getFederateProxy());
+    }
   }
 
   private class FederateRestoreMapping
@@ -216,17 +335,21 @@ public class FederationExecutionRestore
     private final FederateHandle preRestoreFederateHandle;
     private final String preRestoreFederateName;
 
-    private FederateRestore federateRestore;
+    private FederateProxyRestore federateProxyRestore;
 
-    private volatile RestoreStatus restoreStatus = RestoreStatus.NO_RESTORE_IN_PROGRESS;
+    private volatile RestoreStatus restoreStatus;
 
-    public FederateRestoreMapping(FederateSaveHeader federateSaveHeader, FederateProxy federateProxy)
+    public FederateRestoreMapping(FederateSaveHeader federateSaveHeader, FederateProxy federateProxy,
+                                  FederateProxy requestingFederateProxy)
     {
       this.federateSaveHeader = federateSaveHeader;
       this.federateProxy = federateProxy;
 
       preRestoreFederateHandle = federateProxy.getFederateHandle();
       preRestoreFederateName = federateProxy.getFederateName();
+
+      restoreStatus = federateProxy == requestingFederateProxy ?
+        RestoreStatus.FEDERATE_WAITING_FOR_RESTORE_TO_BEGIN : RestoreStatus.NO_RESTORE_IN_PROGRESS;
     }
 
     public FederateSaveHeader getFederateSaveHeader()
@@ -244,24 +367,60 @@ public class FederationExecutionRestore
       return new FederateRestoreStatus(preRestoreFederateHandle, federateSaveHeader.getFederateHandle(), restoreStatus);
     }
 
+    public FederateHandle getPreRestoreFederateHandle()
+    {
+      return preRestoreFederateHandle;
+    }
+
+    public String getPreRestoreFederateName()
+    {
+      return preRestoreFederateName;
+    }
+
+    public FederateHandle getPostRestoreFederateHandle()
+    {
+      return federateSaveHeader.getFederateHandle();
+    }
+
+    public String getPostRestoreFederateName()
+    {
+      return federateSaveHeader.getFederateName();
+    }
+
     public void begin()
     {
       // notify the Federate a restore has begun
       //
-      federateProxy.federationRestoreBegun(new FederationRestoreBegun());
+      federateProxy.federationRestoreBegun(new FederationRestoreBegun(
+        label, federateSaveHeader.getFederateName(), federateSaveHeader.getFederateHandle()));
+
+      restoreStatus = RestoreStatus.FEDERATE_PREPARED_TO_RESTORE;
     }
 
     public void initiate(RandomAccessFile file)
       throws IOException, CouldNotDecode
     {
-      federateRestore = new FederateRestore(file);
+      federateProxyRestore = new FederateProxyRestore(
+        federateSaveHeader.getFederateHandle(), federateSaveHeader.getFederateName(),
+        federateSaveHeader.getFederateType(), file);
 
       // tell the Federate to initiate the restore
       //
-      federateProxy.initiateFederateRestore(new InitiateFederateRestore(
-        label, federateSaveHeader.getFederateName(), federateSaveHeader.getFederateHandle()));
+      federateProxy.initiateFederateRestore(new InitiateFederateRestore());
 
-      federateRestore.restore(federateProxy);
+      restoreStatus = RestoreStatus.FEDERATE_RESTORING;
+
+      federateProxyRestore.restore(federateProxy);
+    }
+
+    public void federateRestoreComplete()
+    {
+      restoreStatus = RestoreStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_RESTORE;
+    }
+
+    public void federationRestored(FederationRestored federationRestored)
+    {
+      federateProxy.federationRestored(federationRestored);
     }
   }
 

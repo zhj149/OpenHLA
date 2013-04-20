@@ -36,16 +36,16 @@ import org.slf4j.LoggerFactory;
 import hla.rti1516e.FederateHandle;
 
 /**
- * The {@code FederateSave} represents the state of the {@link net.sf.ohla.rti.federate.Federate} and the
+ * The {@code FederateProxySave} represents the state of the {@link net.sf.ohla.rti.federate.Federate} and the
  * {@link FederateProxy}. It also contains any messages received by the {@link FederateProxy} during a save.
  */
-public class FederateSave
+public class FederateProxySave
 {
   public static final String FEDERATE_STATE = "Federate_State";
   public static final String FEDERATE_PROXY_STATE = "Federate_Proxy_State";
   public static final String FEDERATE_MESSAGES = "Federate_Messages";
 
-  private static final Logger log = LoggerFactory.getLogger(FederateRestore.class);
+  private static final Logger log = LoggerFactory.getLogger(FederateProxySave.class);
 
   private final FederateHandle federateHandle;
   private final String federateName;
@@ -59,7 +59,7 @@ public class FederateSave
   private final OutputStream federateProxyStateOutputStream;
   private final DataOutputStream federateMessagesOutputStream;
 
-  public FederateSave(FederateProxy federateProxy)
+  public FederateProxySave(FederateProxy federateProxy)
     throws IOException
   {
     federateHandle = federateProxy.getFederateHandle();
@@ -109,25 +109,32 @@ public class FederateSave
   {
     federateMessagesOutputStream.close();
 
-    file.writeInt(((IEEE1516eFederateHandle) federateHandle).getHandle());
-    file.writeUTF(federateName);
-    file.writeUTF(federateType);
-
     file.writeLong(federateStateFile.length());
-    transfer(federateStateFile, file);
+    transferThenDelete(federateStateFile, file);
 
     file.writeLong(federateProxyStateFile.length());
-    transfer(federateProxyStateFile, file);
+    transferThenDelete(federateProxyStateFile, file);
 
     file.writeLong(federateMessagesFile.length());
-    transfer(federateMessagesFile, file);
+    transferThenDelete(federateMessagesFile, file);
   }
 
-  private void transfer(File source, RandomAccessFile destination)
+  private void transferThenDelete(File source, RandomAccessFile destination)
     throws IOException
   {
     FileInputStream in = new FileInputStream(source);
-    destination.getChannel().transferFrom(in.getChannel(), 0, source.length());
+
+    long length = source.length();
+    long position = destination.getFilePointer();
+    do
+    {
+      long bytesTransferred = destination.getChannel().transferFrom(in.getChannel(), position, length);
+      length -= bytesTransferred;
+      position += bytesTransferred;
+    } while (length > 0);
+
+    destination.seek(position);
+
     in.close();
 
     if (source.delete())

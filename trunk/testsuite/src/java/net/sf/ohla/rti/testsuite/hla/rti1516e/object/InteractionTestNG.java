@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
-import net.sf.ohla.rti.testsuite.hla.rti1516e.SynchronizedFederateAmbassador;
+import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseFederateAmbassador;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -76,9 +76,9 @@ public class InteractionTestNG
 
     rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
 
-    federateHandles.add(rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME));
-    federateHandles.add(rtiAmbassadors.get(1).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME));
-    federateHandles.add(rtiAmbassadors.get(2).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME));
+    federateHandles.add(rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME));
+    federateHandles.add(rtiAmbassadors.get(1).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME));
+    federateHandles.add(rtiAmbassadors.get(2).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME));
 
     testInteractionClassHandle = rtiAmbassadors.get(0).getInteractionClassHandle(TEST_INTERACTION);
     ParameterHandle parameterHandle1 = rtiAmbassadors.get(0).getParameterHandle(testInteractionClassHandle, PARAMETER1);
@@ -109,7 +109,7 @@ public class InteractionTestNG
     rtiAmbassadors.get(1).subscribeInteractionClass(testInteractionClassHandle);
     rtiAmbassadors.get(2).subscribeInteractionClass(testInteractionClassHandle2);
 
-    setupComplete(federateAmbassadors);
+    synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE, federateAmbassadors);
   }
 
   @AfterClass
@@ -157,7 +157,7 @@ public class InteractionTestNG
   }
 
   private static class TestFederateAmbassador
-    extends SynchronizedFederateAmbassador
+    extends BaseFederateAmbassador
   {
     private InteractionClassHandle interactionClassHandle;
     private ParameterHandleValueMap parameterValues;

@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
-import net.sf.ohla.rti.testsuite.hla.rti1516e.SynchronizedFederateAmbassador;
+import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseFederateAmbassador;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -82,10 +82,10 @@ public class ObjectUpdateTestNG
 
     rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
 
-    federateHandles.add(rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME));
-    federateHandles.add(rtiAmbassadors.get(1).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME));
-    federateHandles.add(rtiAmbassadors.get(2).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME));
-    federateHandles.add(rtiAmbassadors.get(3).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME));
+    federateHandles.add(rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME));
+    federateHandles.add(rtiAmbassadors.get(1).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME));
+    federateHandles.add(rtiAmbassadors.get(2).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME));
+    federateHandles.add(rtiAmbassadors.get(3).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME));
 
     ObjectClassHandle testObjectClassHandle = rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT);
     AttributeHandle attributeHandle1 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle, ATTRIBUTE1);
@@ -137,7 +137,7 @@ public class ObjectUpdateTestNG
     federateAmbassadors.get(1).checkObjectInstanceHandle(testObjectInstanceHandle2);
     federateAmbassadors.get(2).checkObjectInstanceHandle(testObjectInstanceHandle2);
 
-    setupComplete(federateAmbassadors);
+    synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE, federateAmbassadors);
   }
 
   @AfterClass
@@ -192,7 +192,7 @@ public class ObjectUpdateTestNG
   }
 
   private static class TestFederateAmbassador
-    extends SynchronizedFederateAmbassador
+    extends BaseFederateAmbassador
   {
     private final Map<ObjectInstanceHandle, TestObjectInstance> objectInstances =
       new HashMap<ObjectInstanceHandle, TestObjectInstance>();

@@ -48,7 +48,7 @@ public abstract class BaseDeclarationTestNG
   {
     rtiAmbassadors.get(0).connect(new NullFederateAmbassador(), CallbackModel.HLA_EVOKED);
     rtiAmbassadors.get(0).createFederationExecution(federationName, fdd);
-    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, federationName);
+    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE_1, federationName);
   }
 
   @AfterClass

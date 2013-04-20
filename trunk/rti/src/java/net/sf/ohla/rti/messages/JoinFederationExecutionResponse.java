@@ -31,10 +31,12 @@ public class JoinFederationExecutionResponse
 {
   public enum Response
   {
-    SUCCESS, FEDERATION_EXECUTION_DOES_NOT_EXIST, SAVE_IN_PROGRESS, RESTORE_IN_PROGRESS, INCONSISTENT_FDD
+    SUCCESS, FEDERATE_NAME_ALREADY_IN_USE, FEDERATION_EXECUTION_DOES_NOT_EXIST, SAVE_IN_PROGRESS, RESTORE_IN_PROGRESS,
+    INCONSISTENT_FDD
   }
 
   private final FederateHandle federateHandle;
+  private final String federateName;
   private final FDD fdd;
   private final String logicalTimeImplementationName;
 
@@ -44,6 +46,7 @@ public class JoinFederationExecutionResponse
 
     assert response != Response.SUCCESS;
 
+    federateName = null;
     federateHandle = null;
     fdd = null;
     logicalTimeImplementationName = null;
@@ -51,14 +54,17 @@ public class JoinFederationExecutionResponse
     encodingFinished();
   }
 
-  public JoinFederationExecutionResponse(FederateHandle federateHandle, FDD fdd, String logicalTimeImplementationName)
+  public JoinFederationExecutionResponse(String federateName, FederateHandle federateHandle, FDD fdd,
+                                         String logicalTimeImplementationName)
   {
     super(MessageType.JOIN_FEDERATION_EXECUTION_RESPONSE, Response.SUCCESS);
 
+    this.federateName = federateName;
     this.federateHandle = federateHandle;
     this.fdd = fdd;
     this.logicalTimeImplementationName = logicalTimeImplementationName;
 
+    Protocol.encodeString(buffer, federateName);
     IEEE1516eFederateHandle.encode(buffer, federateHandle);
     FDD.encode(buffer, fdd);
     Protocol.encodeString(buffer, logicalTimeImplementationName);
@@ -72,16 +78,23 @@ public class JoinFederationExecutionResponse
 
     if (e == Response.SUCCESS)
     {
+      federateName = Protocol.decodeString(buffer);
       federateHandle = IEEE1516eFederateHandle.decode(buffer);
       fdd = FDD.decode(buffer);
       logicalTimeImplementationName = Protocol.decodeString(buffer);
     }
     else
     {
+      federateName = null;
       federateHandle = null;
       fdd = null;
       logicalTimeImplementationName = null;
     }
+  }
+
+  public String getFederateName()
+  {
+    return federateName;
   }
 
   public FederateHandle getFederateHandle()

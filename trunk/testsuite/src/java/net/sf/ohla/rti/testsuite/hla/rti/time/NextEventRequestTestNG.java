@@ -85,7 +85,7 @@ public class NextEventRequestTestNG
     rtiAmbassadors.get(3).subscribeInteractionClass(testInteractionClassHandle3);
     rtiAmbassadors.get(4).subscribeInteractionClass(testInteractionClassHandle3);
 
-    setupComplete(federateAmbassadors);
+    synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE, federateAmbassadors);
 
     rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle2, testSuppliedParameters, TAG, three);
     rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle3, testSuppliedParameters, TAG, four);

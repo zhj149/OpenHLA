@@ -16,6 +16,10 @@
 
 package net.sf.ohla.rti.federation;
 
+import java.io.DataOutput;
+import java.io.IOException;
+import java.io.DataInput;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -214,5 +218,25 @@ public class FederationExecutionRegionManager
       }
     }
     return intersects;
+  }
+
+  public void saveState(DataOutput out)
+    throws IOException
+  {
+    out.writeInt(regions.size());
+    for (FederationExecutionRegion region : regions.values())
+    {
+      region.writeTo(out);
+    }
+  }
+
+  public void restoreState(DataInput in)
+    throws IOException
+  {
+    for (int i = in.readInt(); i > 0; i--)
+    {
+      FederationExecutionRegion region = new FederationExecutionRegion(in);
+      regions.put(region.getRegionHandle(), region);
+    }
   }
 }

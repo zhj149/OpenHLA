@@ -97,9 +97,28 @@ public abstract class BaseTimeManagementTestNG
 
     rtiAmbassadors.get(0).createFederationExecution(federationName, new URL[] { fdd }, HLAinteger64TimeFactory.NAME);
 
-    for (RTIambassador rtiAmbassador : rtiAmbassadors)
+    switch (rtiAmbassadors.size())
     {
-      federateHandles.add(rtiAmbassador.joinFederationExecution(FEDERATE_TYPE, federationName));
+      case 4:
+        federateHandles.add(rtiAmbassadors.get(3).joinFederationExecution(
+          FEDERATE_TYPE_4, FEDERATE_TYPE_4, federationName));
+      case 3:
+        federateHandles.add(rtiAmbassadors.get(2).joinFederationExecution(
+          FEDERATE_TYPE_3, FEDERATE_TYPE_3, federationName));
+      case 2:
+        federateHandles.add(rtiAmbassadors.get(1).joinFederationExecution(
+          FEDERATE_TYPE_2, FEDERATE_TYPE_2, federationName));
+      case 1:
+        federateHandles.add(rtiAmbassadors.get(0).joinFederationExecution(
+          FEDERATE_TYPE_1, FEDERATE_TYPE_1, federationName));
+        break;
+      default:
+      {
+        for (RTIambassador rtiAmbassador : rtiAmbassadors)
+        {
+          federateHandles.add(rtiAmbassador.joinFederationExecution(FEDERATE_TYPE_1, federationName));
+        }
+      }
     }
   }
 
