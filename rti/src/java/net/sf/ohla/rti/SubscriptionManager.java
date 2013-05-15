@@ -488,7 +488,7 @@ public class SubscriptionManager
 
       for (int i = in.readInt(); i > 0; i--)
       {
-        subscribedRegionHandles.put(new IEEE1516eRegionHandle(in), in.readBoolean());
+        subscribedRegionHandles.put(IEEE1516eRegionHandle.decode(in), in.readBoolean());
       }
     }
 

@@ -28,7 +28,7 @@ import hla.rti1516e.exceptions.NameNotFound;
 public class InteractionSupportTestNG
   extends BaseSupportTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA Interaction Support Test Federation";
+  private static final String FEDERATION_NAME = InteractionSupportTestNG.class.getSimpleName();
 
   public InteractionSupportTestNG()
   {

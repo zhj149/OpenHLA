@@ -595,7 +595,7 @@ public class FederationExecution
     federationExecutionStateLock.writeLock().lock();
     try
     {
-      assert federationExecutionSave != null;
+      assert federationExecutionSave != null : federateProxy.getFederateName();
 
       federationExecutionSave.federateSaveBegun(federateProxy.getFederateHandle());
 
@@ -1598,7 +1598,10 @@ public class FederationExecution
     {
       if (federateProxy.isSaving())
       {
-        saveMessage(federateProxy.getFederateHandle(), attributeOwnershipDivestitureIfWanted);
+        // this message requires a response
+        //
+        federateProxy.getFederateChannel().write(new AttributeOwnershipDivestitureIfWantedResponse(
+          attributeOwnershipDivestitureIfWanted.getId(), null));
       }
       else
       {

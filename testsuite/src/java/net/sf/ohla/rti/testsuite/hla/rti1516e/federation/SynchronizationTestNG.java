@@ -16,11 +16,9 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti1516e.federation;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -45,45 +43,30 @@ import hla.rti1516e.exceptions.SynchronizationPointLabelNotAnnounced;
 
 @Test
 public class SynchronizationTestNG
-  extends BaseTestNG
+  extends BaseTestNG<SynchronizationTestNG.TestFederateAmbassador>
 {
-  private static final String FEDERATION_NAME = "OHLA Synchronization Test Federation";
-
-  private final List<TestFederateAmbassador> federateAmbassadors = new ArrayList<TestFederateAmbassador>(3);
-  private final List<FederateHandle> federateHandles = new ArrayList<FederateHandle>(3);
+  private static final String FEDERATION_NAME = SynchronizationTestNG.class.getSimpleName();
 
   public SynchronizationTestNG()
   {
-    super(3);
+    super(3, FEDERATION_NAME);
   }
 
   @BeforeClass
   public void setup()
     throws Exception
   {
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(0)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(1)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(2)));
-
-    rtiAmbassadors.get(0).connect(federateAmbassadors.get(0), CallbackModel.HLA_EVOKED);
-    rtiAmbassadors.get(1).connect(federateAmbassadors.get(1), CallbackModel.HLA_EVOKED);
-    rtiAmbassadors.get(2).connect(federateAmbassadors.get(2), CallbackModel.HLA_EVOKED);
-
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
-
-    federateHandles.add(rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME));
-    federateHandles.add(rtiAmbassadors.get(1).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME));
-    federateHandles.add(rtiAmbassadors.get(2).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME));
+    connect();
+    createFederationExecution();
+    joinFederationExecution();
   }
 
   @AfterClass
   public void teardown()
     throws Exception
   {
-    resignFederationExecution(ResignAction.NO_ACTION);
-
-    destroyFederationExecution(FEDERATION_NAME);
-
+    resignFederationExecution();
+    destroyFederationExecution();
     disconnect();
   }
 
@@ -215,6 +198,11 @@ public class SynchronizationTestNG
     federateAmbassadors.get(0).checkFederationSynchronized(SYNCHRONIZATION_POINT_5, failedToSynchronize);
     federateAmbassadors.get(1).checkFederationSynchronized(SYNCHRONIZATION_POINT_5, failedToSynchronize);
     federateAmbassadors.get(2).checkFederationSynchronized(SYNCHRONIZATION_POINT_5, failedToSynchronize);
+  }
+
+  protected TestFederateAmbassador createFederateAmbassador(RTIambassador rtiAmbassador)
+  {
+    return new TestFederateAmbassador(rtiAmbassador);
   }
 
   protected static class TestFederateAmbassador

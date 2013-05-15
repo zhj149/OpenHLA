@@ -27,7 +27,7 @@ import hla.rti1516e.ParameterHandleValueMap;
 public class NextMessageRequestAvailableTestNG
   extends BaseTimeManagementTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516e Next Message Request Available Test Federation";
+  private static final String FEDERATION_NAME = NextMessageRequestAvailableTestNG.class.getSimpleName();
 
   private InteractionClassHandle testInteractionClassHandle2;
   private InteractionClassHandle testInteractionClassHandle3;

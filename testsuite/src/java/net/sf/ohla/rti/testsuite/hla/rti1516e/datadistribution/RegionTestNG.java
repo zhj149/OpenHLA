@@ -22,14 +22,13 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import hla.rti1516e.CallbackModel;
 import hla.rti1516e.DimensionHandle;
 import hla.rti1516e.DimensionHandleSet;
 import hla.rti1516e.NullFederateAmbassador;
+import hla.rti1516e.RTIambassador;
 import hla.rti1516e.RangeBounds;
 import hla.rti1516e.RegionHandle;
 import hla.rti1516e.RegionHandleSet;
-import hla.rti1516e.ResignAction;
 import hla.rti1516e.exceptions.InvalidDimensionHandle;
 import hla.rti1516e.exceptions.InvalidRangeBound;
 import hla.rti1516e.exceptions.InvalidRegion;
@@ -37,10 +36,10 @@ import hla.rti1516e.exceptions.RegionDoesNotContainSpecifiedDimension;
 import hla.rti1516e.exceptions.RegionNotCreatedByThisFederate;
 
 @Test
-public class RegionSupportTestNG
-  extends BaseTestNG
+public class RegionTestNG
+  extends BaseTestNG<NullFederateAmbassador>
 {
-  private static final String FEDERATION_NAME = "OHLA Region Test Federation";
+  private static final String FEDERATION_NAME = RegionTestNG.class.getSimpleName();
 
   private DimensionHandle dimensionHandle1;
   private DimensionHandle dimensionHandle2;
@@ -52,22 +51,18 @@ public class RegionSupportTestNG
 
   private RangeBounds rangeBounds = new RangeBounds(5L, 44L);
 
-  public RegionSupportTestNG()
+  public RegionTestNG()
   {
-    super(2);
+    super(2, FEDERATION_NAME);
   }
 
   @BeforeClass
   public void setup()
     throws Exception
   {
-    rtiAmbassadors.get(0).connect(new NullFederateAmbassador(), CallbackModel.HLA_EVOKED);
-    rtiAmbassadors.get(1).connect(new NullFederateAmbassador(), CallbackModel.HLA_EVOKED);
-
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
-
-    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME);
-    rtiAmbassadors.get(1).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME);
+    connect();
+    createFederationExecution();
+    joinFederationExecution();
 
     dimensionHandle1 = rtiAmbassadors.get(0).getDimensionHandle(DIMENSION1);
     dimensionHandle2 = rtiAmbassadors.get(0).getDimensionHandle(DIMENSION2);
@@ -79,10 +74,8 @@ public class RegionSupportTestNG
   public void teardown()
     throws Exception
   {
-    resignFederationExecution(ResignAction.NO_ACTION);
-
-    destroyFederationExecution(FEDERATION_NAME);
-
+    resignFederationExecution();
+    destroyFederationExecution();
     disconnect();
   }
 
@@ -124,6 +117,14 @@ public class RegionSupportTestNG
     assert rtiAmbassadors.get(0).getDimensionUpperBound(dimensionHandle1) == rangeBounds1.upper;
     assert rtiAmbassadors.get(0).getDimensionUpperBound(dimensionHandle2) == rangeBounds2.upper;
     assert rtiAmbassadors.get(0).getDimensionUpperBound(dimensionHandle3) == rangeBounds3.upper;
+
+    rangeBounds1 = rtiAmbassadors.get(1).getRangeBounds(regionHandle2, dimensionHandle1);
+    rangeBounds2 = rtiAmbassadors.get(1).getRangeBounds(regionHandle2, dimensionHandle2);
+    rangeBounds3 = rtiAmbassadors.get(1).getRangeBounds(regionHandle2, dimensionHandle3);
+
+    assert rtiAmbassadors.get(1).getDimensionUpperBound(dimensionHandle1) == rangeBounds1.upper;
+    assert rtiAmbassadors.get(1).getDimensionUpperBound(dimensionHandle2) == rangeBounds2.upper;
+    assert rtiAmbassadors.get(1).getDimensionUpperBound(dimensionHandle3) == rangeBounds3.upper;
   }
 
   @Test(dependsOnMethods = {"testGetRangeBounds"})
@@ -242,7 +243,7 @@ public class RegionSupportTestNG
     rtiAmbassadors.get(0).commitRegionModifications(regionHandles);
   }
 
-  @Test
+  @Test(dependsOnMethods = {"testGetRangeBounds"})
   public void testDeleteRegion()
     throws Exception
   {
@@ -254,5 +255,10 @@ public class RegionSupportTestNG
     throws Exception
   {
     rtiAmbassadors.get(0).deleteRegion(regionHandle2);
+  }
+
+  protected NullFederateAmbassador createFederateAmbassador(RTIambassador rtiAmbassador)
+  {
+    return new NullFederateAmbassador();
   }
 }

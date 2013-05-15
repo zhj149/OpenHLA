@@ -43,17 +43,17 @@ public class TimeRegulationPersistenceTestNG
     federateAmbassadors.get(0).checkFederationSaved(SAVE_NAME);
 
     resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
-
-    destroyFederationExecution(FEDERATION_NAME);
+    destroyFederationExecution();
+    disconnect();
 
     for (TimeManagementFederateAmbassador federateAmbassador : federateAmbassadors)
     {
       federateAmbassador.reset();
     }
 
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, new URL[] { fdd }, HLAinteger64TimeFactory.NAME);
-
-    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE_1, FEDERATE_TYPE_1, FEDERATION_NAME);
+    connect();
+    createFederationExecution(HLAinteger64TimeFactory.NAME);
+    joinFederationExecution();
 
     rtiAmbassadors.get(0).requestFederationRestore(SAVE_NAME);
 

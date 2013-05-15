@@ -16,18 +16,23 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti1516e.declaration;
 
+import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
+
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import hla.rti1516e.AttributeHandleSet;
+import hla.rti1516e.NullFederateAmbassador;
 import hla.rti1516e.ObjectClassHandle;
+import hla.rti1516e.RTIambassador;
 import hla.rti1516e.exceptions.ObjectClassNotDefined;
 
 @Test
 public class ObjectDeclarationTestNG
-  extends BaseDeclarationTestNG
+  extends BaseTestNG<NullFederateAmbassador>
 {
-  private static final String FEDERATION_NAME = "OHLA Object Declaration Test Federation";
+  private static final String FEDERATION_NAME = ObjectDeclarationTestNG.class.getSimpleName();
 
   private ObjectClassHandle testObjectClassHandle;
   private AttributeHandleSet testAttributeHandles;
@@ -37,11 +42,14 @@ public class ObjectDeclarationTestNG
     super(FEDERATION_NAME);
   }
 
+
   @BeforeClass
   public void setup()
     throws Exception
   {
-    super.setup();
+    connect();
+    createFederationExecution();
+    joinFederationExecution();
 
     testObjectClassHandle = rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT);
 
@@ -50,6 +58,15 @@ public class ObjectDeclarationTestNG
     testAttributeHandles.add(rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle, ATTRIBUTE1));
     testAttributeHandles.add(rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle, ATTRIBUTE2));
     testAttributeHandles.add(rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle, ATTRIBUTE3));
+  }
+
+  @AfterClass
+  public void teardown()
+    throws Exception
+  {
+    resignFederationExecution();
+    destroyFederationExecution();
+    disconnect();
   }
 
   @Test
@@ -120,5 +137,10 @@ public class ObjectDeclarationTestNG
     throws Exception
   {
     rtiAmbassadors.get(0).unsubscribeObjectClass(null);
+  }
+
+  protected NullFederateAmbassador createFederateAmbassador(RTIambassador rtiAmbassador)
+  {
+    return new NullFederateAmbassador();
   }
 }

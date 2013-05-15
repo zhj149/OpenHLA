@@ -38,6 +38,7 @@
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.object.ObjectUpdateTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.object.ObjectDeletionTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.object.InteractionTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.object.InteractionPersistenceTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.object.ObjectPersistenceTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.object.DeclarationPersistenceTestNG"/>
     </classes>
@@ -54,7 +55,8 @@
   </test>
   <test name="IEEE 1516e - Data Distribution Management">
     <classes>
-      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.datadistribution.RegionSupportTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.datadistribution.RegionTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.datadistribution.RegionPersistenceTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.datadistribution.ObjectRegionTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.datadistribution.InteractionRegionTestNG"/>
     </classes>
@@ -83,6 +85,7 @@
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.NextMessageRequestAvailableTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.FlushQueueRequestTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.TimeRegulationPersistenceTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.TimeConstrainedPersistenceTestNG"/>
     </classes>
   </test>
 </suite>

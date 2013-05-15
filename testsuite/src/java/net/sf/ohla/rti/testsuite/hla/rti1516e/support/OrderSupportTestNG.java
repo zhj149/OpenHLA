@@ -26,7 +26,7 @@ import hla.rti1516e.exceptions.InvalidOrderType;
 public class OrderSupportTestNG
   extends BaseSupportTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA Order Support Test Federation";
+  private static final String FEDERATION_NAME = OrderSupportTestNG.class.getSimpleName();
 
   public OrderSupportTestNG()
   {

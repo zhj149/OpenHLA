@@ -23,14 +23,13 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.UUID;
 
-import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
 import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseFederateAmbassador;
+import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import hla.rti1516e.CallbackModel;
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.FederateRestoreStatus;
 import hla.rti1516e.RTIambassador;
@@ -40,50 +39,37 @@ import hla.rti1516e.SaveStatus;
 
 @Test
 public class SaveRestoreTestNG
-  extends BaseTestNG
+  extends BaseTestNG<BaseFederateAmbassador>
 {
   private static final String FEDERATION_NAME = SaveRestoreTestNG.class.getSimpleName();
   private static final String SAVE_NAME = FEDERATION_NAME + UUID.randomUUID();
 
-  private final List<BaseFederateAmbassador> federateAmbassadors =
-    new ArrayList<BaseFederateAmbassador>(3);
-  private final List<FederateHandle> federateHandles = new ArrayList<FederateHandle>(3);
+  private final List<FederateHandle> postRestoreFederateHandles = new ArrayList<FederateHandle>(3);
 
   public SaveRestoreTestNG()
   {
-    super(3);
+    super(3, FEDERATION_NAME);
   }
 
   @BeforeClass
   public void setup()
     throws Exception
   {
-    federateAmbassadors.add(new BaseFederateAmbassador(rtiAmbassadors.get(0)));
-    federateAmbassadors.add(new BaseFederateAmbassador(rtiAmbassadors.get(1)));
-    federateAmbassadors.add(new BaseFederateAmbassador(rtiAmbassadors.get(2)));
+    connect();
+    createFederationExecution();
+    joinFederationExecution();
 
-    rtiAmbassadors.get(0).connect(federateAmbassadors.get(0), CallbackModel.HLA_EVOKED);
-    rtiAmbassadors.get(1).connect(federateAmbassadors.get(1), CallbackModel.HLA_EVOKED);
-    rtiAmbassadors.get(2).connect(federateAmbassadors.get(2), CallbackModel.HLA_EVOKED);
-
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
-
-    federateHandles.add(rtiAmbassadors.get(0).joinFederationExecution(
-      FEDERATE_TYPE_1, FEDERATE_TYPE_1, FEDERATION_NAME));
-    federateHandles.add(rtiAmbassadors.get(1).joinFederationExecution(
-      FEDERATE_TYPE_2, FEDERATE_TYPE_2, FEDERATION_NAME));
-    federateHandles.add(rtiAmbassadors.get(2).joinFederationExecution(
-      FEDERATE_TYPE_3, FEDERATE_TYPE_3, FEDERATION_NAME));
+    // track what the post restore federate handles should be
+    //
+    postRestoreFederateHandles.addAll(federateHandles);
   }
 
   @AfterClass
   public void teardown()
     throws Exception
   {
-    resignFederationExecution(ResignAction.NO_ACTION);
-
-    destroyFederationExecution(FEDERATION_NAME);
-
+    resignFederationExecution();
+    destroyFederationExecution();
     disconnect();
   }
 
@@ -133,19 +119,15 @@ public class SaveRestoreTestNG
     throws Exception
   {
     resignFederationExecution(ResignAction.NO_ACTION);
-
-    destroyFederationExecution(FEDERATION_NAME);
-
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
+    destroyFederationExecution();
+    disconnect();
+    connect();
+    createFederationExecution();
 
     // federate handles in OHLA are created sequentially, join/resign a federate so it isn't the same
     //
     rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME);
     rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
-
-    List<FederateHandle> postRestoreFederateHandles = new ArrayList<FederateHandle>(federateHandles);
-
-    federateHandles.clear();
 
     // rejoin the federation without federate names
     //
@@ -314,5 +296,10 @@ public class SaveRestoreTestNG
     {
       federateAmbassador.checkFederationRestoreStatus(restoreStatusResponse);
     }
+  }
+
+  protected BaseFederateAmbassador createFederateAmbassador(RTIambassador rtiAmbassador)
+  {
+    return new BaseFederateAmbassador(rtiAmbassador);
   }
 }

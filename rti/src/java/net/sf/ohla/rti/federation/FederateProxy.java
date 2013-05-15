@@ -16,7 +16,6 @@
 
 package net.sf.ohla.rti.federation;
 
-import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
@@ -44,7 +43,6 @@ import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectInstanceHandle;
 import net.sf.ohla.rti.i18n.I18nLogger;
 import net.sf.ohla.rti.i18n.LogMessages;
 import net.sf.ohla.rti.messages.DeleteObjectInstance;
-import net.sf.ohla.rti.messages.FederateMessage;
 import net.sf.ohla.rti.messages.FederateSaveBegun;
 import net.sf.ohla.rti.messages.FederateSaveComplete;
 import net.sf.ohla.rti.messages.FederateSaveNotComplete;
@@ -102,7 +100,6 @@ import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.InteractionClassHandle;
 import hla.rti1516e.LogicalTime;
-import hla.rti1516e.LogicalTimeFactory;
 import hla.rti1516e.LogicalTimeInterval;
 import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.ObjectInstanceHandle;
@@ -544,10 +541,6 @@ public class FederateProxy
             reflectAttributeValues.getMessageRetractionHandle(), reflectAttributeValues.getTime(),
             queuedTimeStampOrderedMessage);
         }
-        else if (isSaving())
-        {
-          saveMessage(reflectAttributeValues);
-        }
         else
         {
           federateChannel.write(reflectAttributeValues);
@@ -585,10 +578,6 @@ public class FederateProxy
           messageRetractionManager.add(
             receiveInteraction.getMessageRetractionHandle(), receiveInteraction.getTime(),
             queuedTimeStampOrderedMessage);
-        }
-        else if (isSaving())
-        {
-          saveMessage(receiveInteraction);
         }
         else
         {
@@ -633,10 +622,6 @@ public class FederateProxy
             removeObjectInstance.getMessageRetractionHandle(), removeObjectInstance.getTime(),
             queuedTimeStampOrderedMessage);
         }
-        else if (isSaving())
-        {
-          saveMessage(removeObjectInstance);
-        }
         else
         {
           federateChannel.write(removeObjectInstance);
@@ -648,14 +633,7 @@ public class FederateProxy
           deleteObjectInstance.getObjectInstanceHandle(), deleteObjectInstance.getTag(), OrderType.RECEIVE,
           deleteObjectInstance.getTime(), null, federateHandle);
 
-        if (isSaving())
-        {
-          saveMessage(removeObjectInstance);
-        }
-        else
-        {
-          federateChannel.write(removeObjectInstance);
-        }
+        federateChannel.write(removeObjectInstance);
       }
     }
   }
@@ -1342,7 +1320,10 @@ public class FederateProxy
 
     if (timeRegulationEnabled = in.readBoolean())
     {
-      lookahead = readLogicalTimeInterval(in, federationExecution.getTimeManager().getLogicalTimeFactory());
+      byte[] buffer = new byte[in.readInt()];
+      in.readFully(buffer);
+
+      lookahead = federationExecution.getTimeManager().getLogicalTimeFactory().decodeInterval(buffer, 0);
     }
     else
     {
@@ -1350,19 +1331,24 @@ public class FederateProxy
     }
 
     queuedTimeStampOrderedMessages.clear();
+
     if (timeConstrainedEnabled = in.readBoolean())
     {
       timeConstrainedPending = false;
 
-      if (in.readBoolean())
-      {
-        advanceRequestTime = readLogicalTime(in, federationExecution.getTimeManager().getLogicalTimeFactory());
-        advanceRequestType = TimeAdvanceType.values()[in.readInt()];
-      }
-      else
+      int size = in.readInt();
+      if (size == 0)
       {
         advanceRequestTime = null;
         advanceRequestType = null;
+      }
+      else
+      {
+        byte[] buffer = new byte[size];
+        in.readFully(buffer);
+
+        advanceRequestTime = federationExecution.getTimeManager().getLogicalTimeFactory().decodeTime(buffer, 0);
+        advanceRequestType = TimeAdvanceType.values()[in.readInt()];
       }
 
       for (int count = in.readInt(); count > 0; count--)
@@ -1384,6 +1370,19 @@ public class FederateProxy
 
       timeConstrainedPending = in.readBoolean();
     }
+
+    int size = in.readInt();
+    if (size == 0)
+    {
+      federateTime = null;
+    }
+    else
+    {
+      byte[] buffer = new byte[size];
+      in.readFully(buffer);
+
+      federateTime = federationExecution.getTimeManager().getLogicalTimeFactory().decodeTime(buffer, 0);
+    }
   }
 
   @Override
@@ -1396,20 +1395,6 @@ public class FederateProxy
   public String toString()
   {
     return new StringBuilder().append(federateHandle).append("-").append(federateName).toString();
-  }
-
-  private void saveMessage(FederateMessage message)
-  {
-    try
-    {
-      federateProxySave.save(message);
-    }
-    catch (IOException ioe)
-    {
-      log.error(LogMessages.UNEXPECTED_EXCEPTION, ioe, ioe);
-
-      // TODO: close connection
-    }
   }
 
   private void saveState(DataOutputStream out)
@@ -1490,24 +1475,6 @@ public class FederateProxy
     }
 
     out.close();
-  }
-
-  private LogicalTime readLogicalTime(DataInput in, LogicalTimeFactory logicalTimeFactory)
-    throws CouldNotDecode, IOException
-  {
-    byte[] buffer = new byte[in.readInt()];
-    in.readFully(buffer);
-
-    return logicalTimeFactory.decodeTime(buffer, 0);
-  }
-
-  private LogicalTimeInterval readLogicalTimeInterval(DataInput in, LogicalTimeFactory logicalTimeFactory)
-    throws CouldNotDecode, IOException
-  {
-    byte[] buffer = new byte[in.readInt()];
-    in.readFully(buffer);
-
-    return logicalTimeFactory.decodeInterval(buffer, 0);
   }
 
   private void write(DataOutput out, LogicalTime logicalTime)

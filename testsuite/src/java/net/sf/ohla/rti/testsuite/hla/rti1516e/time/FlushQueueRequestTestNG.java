@@ -27,7 +27,7 @@ import hla.rti1516e.ParameterHandleValueMap;
 public class FlushQueueRequestTestNG
   extends BaseTimeManagementTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516e Flush Queue Request Test Federation";
+  private static final String FEDERATION_NAME = FlushQueueRequestTestNG.class.getSimpleName();
 
   private ParameterHandleValueMap testParameterValues;
 
@@ -75,7 +75,7 @@ public class FlushQueueRequestTestNG
   }
 
   @Test
-  public void testTimeAdvanceRequest()
+  public void testFlushQueueRequest()
     throws Exception
   {
     rtiAmbassadors.get(1).flushQueueRequest(initial);

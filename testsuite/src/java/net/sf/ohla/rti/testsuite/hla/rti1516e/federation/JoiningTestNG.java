@@ -22,33 +22,38 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import hla.rti1516e.CallbackModel;
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.NullFederateAmbassador;
+import hla.rti1516e.RTIambassador;
 import hla.rti1516e.ResignAction;
 import hla.rti1516e.exceptions.FederateNotExecutionMember;
 import hla.rti1516e.exceptions.FederationExecutionDoesNotExist;
 
 @Test
 public class JoiningTestNG
-  extends BaseTestNG
+  extends BaseTestNG<NullFederateAmbassador>
 {
-  private static final String FEDERATION_NAME = "OHLA Joining Test Federation";
+  private static final String FEDERATION_NAME = JoiningTestNG.class.getSimpleName();
+
+  public JoiningTestNG()
+  {
+    super(FEDERATION_NAME);
+  }
 
   @BeforeClass
   public void setup()
     throws Exception
   {
-    rtiAmbassadors.get(0).connect(new NullFederateAmbassador(), CallbackModel.HLA_EVOKED);
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
+    connect();
+    createFederationExecution();
   }
 
   @AfterClass
   public void teardown()
     throws Exception
   {
-    rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
-    rtiAmbassadors.get(0).disconnect();
+    destroyFederationExecution();
+    disconnect();
   }
 
   @Test
@@ -103,5 +108,10 @@ public class JoiningTestNG
     throws Exception
   {
     rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
+  }
+
+  protected NullFederateAmbassador createFederateAmbassador(RTIambassador rtiAmbassador)
+  {
+    return new NullFederateAmbassador();
   }
 }
