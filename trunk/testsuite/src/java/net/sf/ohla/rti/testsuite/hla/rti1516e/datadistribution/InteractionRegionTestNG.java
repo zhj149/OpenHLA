@@ -16,19 +16,16 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti1516e.datadistribution;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.Callable;
 
-import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
 import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseFederateAmbassador;
+import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import hla.rti1516e.CallbackModel;
 import hla.rti1516e.DimensionHandle;
 import hla.rti1516e.DimensionHandleSet;
 import hla.rti1516e.FederateHandle;
@@ -39,7 +36,6 @@ import hla.rti1516e.ParameterHandleValueMap;
 import hla.rti1516e.RTIambassador;
 import hla.rti1516e.RegionHandle;
 import hla.rti1516e.RegionHandleSet;
-import hla.rti1516e.ResignAction;
 import hla.rti1516e.TransportationTypeHandle;
 import hla.rti1516e.exceptions.FederateInternalError;
 import hla.rti1516e.exceptions.InteractionClassNotDefined;
@@ -48,12 +44,9 @@ import hla.rti1516e.exceptions.InteractionParameterNotDefined;
 
 @Test
 public class InteractionRegionTestNG
-  extends BaseTestNG
+  extends BaseTestNG<InteractionRegionTestNG.TestFederateAmbassador>
 {
-  private static final String FEDERATION_NAME = "OHLA Interaction Region Test Federation";
-
-  private final List<FederateHandle> federateHandles = new ArrayList<FederateHandle>(3);
-  private final List<TestFederateAmbassador> federateAmbassadors = new ArrayList<TestFederateAmbassador>(3);
+  private static final String FEDERATION_NAME = InteractionRegionTestNG.class.getSimpleName();
 
   private DimensionHandle dimensionHandle3;
   private DimensionHandle dimensionHandle4;
@@ -71,26 +64,16 @@ public class InteractionRegionTestNG
 
   public InteractionRegionTestNG()
   {
-    super(3);
+    super(3, FEDERATION_NAME);
   }
 
   @BeforeClass
   public void setup()
     throws Exception
   {
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(0)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(1)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(2)));
-
-    rtiAmbassadors.get(0).connect(federateAmbassadors.get(0), CallbackModel.HLA_EVOKED);
-    rtiAmbassadors.get(1).connect(federateAmbassadors.get(1), CallbackModel.HLA_EVOKED);
-    rtiAmbassadors.get(2).connect(federateAmbassadors.get(2), CallbackModel.HLA_EVOKED);
-
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
-
-    federateHandles.add(rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME));
-    federateHandles.add(rtiAmbassadors.get(1).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME));
-    federateHandles.add(rtiAmbassadors.get(2).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME));
+    connect();
+    createFederationExecution();
+    joinFederationExecution();
 
     dimensionHandle3 = rtiAmbassadors.get(0).getDimensionHandle(DIMENSION3);
     dimensionHandle4 = rtiAmbassadors.get(0).getDimensionHandle(DIMENSION4);
@@ -142,10 +125,8 @@ public class InteractionRegionTestNG
   public void teardown()
     throws Exception
   {
-    resignFederationExecution(ResignAction.NO_ACTION);
-
-    destroyFederationExecution(FEDERATION_NAME);
-
+    resignFederationExecution();
+    destroyFederationExecution();
     disconnect();
   }
 
@@ -183,7 +164,12 @@ public class InteractionRegionTestNG
       testInteractionClassHandle, testParameterValues2, regionHandles1, TAG);
   }
 
-  private static class TestFederateAmbassador
+  protected TestFederateAmbassador createFederateAmbassador(RTIambassador rtiAmbassador)
+  {
+    return new  TestFederateAmbassador(rtiAmbassador);
+  }
+
+  public static class TestFederateAmbassador
     extends BaseFederateAmbassador
   {
     private InteractionClassHandle interactionClassHandle;

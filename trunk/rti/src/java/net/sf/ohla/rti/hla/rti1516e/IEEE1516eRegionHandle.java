@@ -40,12 +40,6 @@ public class IEEE1516eRegionHandle
     this.regionHandle = regionHandle;
   }
 
-  public IEEE1516eRegionHandle(DataInput in)
-    throws IOException
-  {
-    this(IEEE1516eFederateHandle.decode(in), in.readInt());
-  }
-
   public int encodedLength()
   {
     return federateHandle.encodedLength() + Protocol.encodedVarIntSize(regionHandle);
@@ -60,9 +54,9 @@ public class IEEE1516eRegionHandle
   public void writeTo(DataOutput out)
     throws IOException
   {
-    ((IEEE1516eFederateHandle) federateHandle).writeTo(out);
-
     out.writeInt(regionHandle);
+
+    ((IEEE1516eFederateHandle) federateHandle).writeTo(out);
   }
 
   @Override

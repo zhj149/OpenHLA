@@ -1,18 +1,16 @@
 package net.sf.ohla.rti.testsuite.hla.rti1516e.object;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
-import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
 import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseFederateAmbassador;
+import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -20,7 +18,6 @@ import org.testng.annotations.Test;
 
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleSet;
-import hla.rti1516e.CallbackModel;
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.InteractionClassHandle;
 import hla.rti1516e.ObjectClassHandle;
@@ -36,13 +33,10 @@ import hla.rti1516e.exceptions.FederateInternalError;
 
 @Test
 public class DeclarationPersistenceTestNG
-  extends BaseTestNG
+  extends BaseTestNG<DeclarationPersistenceTestNG.TestFederateAmbassador>
 {
-  private static final String FEDERATION_NAME = ObjectPersistenceTestNG.class.getSimpleName();
+  private static final String FEDERATION_NAME = DeclarationPersistenceTestNG.class.getSimpleName();
   private static final String SAVE_NAME = FEDERATION_NAME + UUID.randomUUID();
-
-  private final List<TestFederateAmbassador> federateAmbassadors = new ArrayList<TestFederateAmbassador>(4);
-  private final List<FederateHandle> federateHandles = new ArrayList<FederateHandle>(4);
 
   private ObjectClassHandle testObjectClassHandle;
   private ObjectClassHandle testObjectClassHandle2;
@@ -55,33 +49,16 @@ public class DeclarationPersistenceTestNG
 
   public DeclarationPersistenceTestNG()
   {
-    super(4);
+    super(4, FEDERATION_NAME);
   }
 
   @BeforeClass
   public void setup()
     throws Exception
   {
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(0)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(1)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(2)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(3)));
-
-    rtiAmbassadors.get(0).connect(federateAmbassadors.get(0), CallbackModel.HLA_EVOKED);
-    rtiAmbassadors.get(1).connect(federateAmbassadors.get(1), CallbackModel.HLA_EVOKED);
-    rtiAmbassadors.get(2).connect(federateAmbassadors.get(2), CallbackModel.HLA_EVOKED);
-    rtiAmbassadors.get(3).connect(federateAmbassadors.get(3), CallbackModel.HLA_EVOKED);
-
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
-
-    federateHandles.add(rtiAmbassadors.get(0).joinFederationExecution(
-      FEDERATE_TYPE_1, FEDERATE_TYPE_1, FEDERATION_NAME));
-    federateHandles.add(rtiAmbassadors.get(1).joinFederationExecution(
-      FEDERATE_TYPE_2, FEDERATE_TYPE_2, FEDERATION_NAME));
-    federateHandles.add(rtiAmbassadors.get(2).joinFederationExecution(
-      FEDERATE_TYPE_3, FEDERATE_TYPE_3, FEDERATION_NAME));
-    federateHandles.add(rtiAmbassadors.get(3).joinFederationExecution(
-      FEDERATE_TYPE_4, FEDERATE_TYPE_4, FEDERATION_NAME));
+    connect();
+    createFederationExecution();
+    joinFederationExecution();
 
     testObjectClassHandle = rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT);
     AttributeHandle attributeHandle1 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle, ATTRIBUTE1);
@@ -167,25 +144,18 @@ public class DeclarationPersistenceTestNG
     federateAmbassadors.get(2).checkFederationSaved(SAVE_NAME);
     federateAmbassadors.get(3).checkFederationSaved(SAVE_NAME);
 
-    resignFederationExecution(ResignAction.DELETE_OBJECTS);
-
-    destroyFederationExecution(FEDERATION_NAME);
+    resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
+    destroyFederationExecution();
+    disconnect();
 
     for (TestFederateAmbassador testFederateAmbassador : federateAmbassadors)
     {
       testFederateAmbassador.reset();
     }
 
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
-
-    federateHandles.add(rtiAmbassadors.get(0).joinFederationExecution(
-      FEDERATE_TYPE_1, FEDERATE_TYPE_1, FEDERATION_NAME));
-    federateHandles.add(rtiAmbassadors.get(1).joinFederationExecution(
-      FEDERATE_TYPE_2, FEDERATE_TYPE_2, FEDERATION_NAME));
-    federateHandles.add(rtiAmbassadors.get(2).joinFederationExecution(
-      FEDERATE_TYPE_3, FEDERATE_TYPE_3, FEDERATION_NAME));
-    federateHandles.add(rtiAmbassadors.get(3).joinFederationExecution(
-      FEDERATE_TYPE_4, FEDERATE_TYPE_4, FEDERATION_NAME));
+    connect();
+    createFederationExecution();
+    joinFederationExecution();
 
     rtiAmbassadors.get(0).requestFederationRestore(SAVE_NAME);
 
@@ -212,9 +182,7 @@ public class DeclarationPersistenceTestNG
     throws Exception
   {
     resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
-
-    destroyFederationExecution(FEDERATION_NAME);
-
+    destroyFederationExecution();
     disconnect();
   }
 
@@ -313,7 +281,12 @@ public class DeclarationPersistenceTestNG
     }
   }
 
-  protected static class TestFederateAmbassador
+  protected TestFederateAmbassador createFederateAmbassador(RTIambassador rtiAmbassador)
+  {
+    return new TestFederateAmbassador(rtiAmbassador);
+  }
+
+  public static class TestFederateAmbassador
     extends BaseFederateAmbassador
   {
     private final Set<String> successfullyReservedObjectInstanceNames = new HashSet<String>();

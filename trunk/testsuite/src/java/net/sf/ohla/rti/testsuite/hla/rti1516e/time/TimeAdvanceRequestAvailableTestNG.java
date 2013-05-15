@@ -33,7 +33,7 @@ import hla.rti1516e.exceptions.LogicalTimeAlreadyPassed;
 public class TimeAdvanceRequestAvailableTestNG
   extends BaseTimeManagementTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516e Time Advance Request Available Test Federation";
+  private static final String FEDERATION_NAME = TimeAdvanceRequestAvailableTestNG.class.getSimpleName();
 
   private InteractionClassHandle testInteractionClassHandle;
 

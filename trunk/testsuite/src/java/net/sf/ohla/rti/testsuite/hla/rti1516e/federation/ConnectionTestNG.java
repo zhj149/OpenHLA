@@ -22,19 +22,15 @@ import org.testng.annotations.Test;
 
 import hla.rti1516e.CallbackModel;
 import hla.rti1516e.NullFederateAmbassador;
+import hla.rti1516e.RTIambassador;
 import hla.rti1516e.exceptions.AlreadyConnected;
 import hla.rti1516e.exceptions.ConnectionFailed;
 import hla.rti1516e.exceptions.InvalidLocalSettingsDesignator;
 
 @Test
 public class ConnectionTestNG
-  extends BaseTestNG
+  extends BaseTestNG<NullFederateAmbassador>
 {
-  public ConnectionTestNG()
-  {
-    super(1);
-  }
-
   @Test
   public void testDefaultConnect()
     throws Exception
@@ -92,5 +88,10 @@ public class ConnectionTestNG
     throws Exception
   {
     rtiAmbassadors.get(0).connect(new NullFederateAmbassador(), null);
+  }
+
+  protected NullFederateAmbassador createFederateAmbassador(RTIambassador rtiAmbassador)
+  {
+    return new NullFederateAmbassador();
   }
 }

@@ -16,15 +16,13 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti1516e.object;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
 import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseFederateAmbassador;
+import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -33,7 +31,6 @@ import org.testng.annotations.Test;
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.AttributeHandleValueMap;
-import hla.rti1516e.CallbackModel;
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.ObjectInstanceHandle;
@@ -48,12 +45,9 @@ import hla.rti1516e.exceptions.ObjectInstanceNotKnown;
 
 @Test
 public class ObjectUpdateTestNG
-  extends BaseTestNG
+  extends BaseTestNG<ObjectUpdateTestNG.TestFederateAmbassador>
 {
-  private static final String FEDERATION_NAME = "OHLA Object Update Test Federation";
-
-  private final List<FederateHandle> federateHandles = new ArrayList<FederateHandle>(4);
-  private final List<TestFederateAmbassador> federateAmbassadors = new ArrayList<TestFederateAmbassador>(4);
+  private static final String FEDERATION_NAME = ObjectUpdateTestNG.class.getSimpleName();
 
   private AttributeHandleValueMap testObjectAttributeValues;
   private AttributeHandleValueMap testObjectAttributeValues2;
@@ -63,29 +57,16 @@ public class ObjectUpdateTestNG
 
   public ObjectUpdateTestNG()
   {
-    super(4);
+    super(4, FEDERATION_NAME);
   }
 
   @BeforeClass
   public void setup()
     throws Exception
   {
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(0)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(1)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(2)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(3)));
-
-    rtiAmbassadors.get(0).connect(federateAmbassadors.get(0), CallbackModel.HLA_EVOKED);
-    rtiAmbassadors.get(1).connect(federateAmbassadors.get(1), CallbackModel.HLA_EVOKED);
-    rtiAmbassadors.get(2).connect(federateAmbassadors.get(2), CallbackModel.HLA_EVOKED);
-    rtiAmbassadors.get(3).connect(federateAmbassadors.get(3), CallbackModel.HLA_EVOKED);
-
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
-
-    federateHandles.add(rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME));
-    federateHandles.add(rtiAmbassadors.get(1).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME));
-    federateHandles.add(rtiAmbassadors.get(2).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME));
-    federateHandles.add(rtiAmbassadors.get(3).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME));
+    connect();
+    createFederationExecution();
+    joinFederationExecution();
 
     ObjectClassHandle testObjectClassHandle = rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT);
     AttributeHandle attributeHandle1 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle, ATTRIBUTE1);
@@ -145,9 +126,7 @@ public class ObjectUpdateTestNG
     throws Exception
   {
     resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
-
-    destroyFederationExecution(FEDERATION_NAME);
-
+    destroyFederationExecution();
     disconnect();
   }
 
@@ -191,7 +170,12 @@ public class ObjectUpdateTestNG
     rtiAmbassadors.get(3).updateAttributeValues(testObjectInstanceHandle, testObjectAttributeValues, null);
   }
 
-  private static class TestFederateAmbassador
+  protected TestFederateAmbassador createFederateAmbassador(RTIambassador rtiAmbassador)
+  {
+    return new TestFederateAmbassador(rtiAmbassador);
+  }
+
+  public static class TestFederateAmbassador
     extends BaseFederateAmbassador
   {
     private final Map<ObjectInstanceHandle, TestObjectInstance> objectInstances =

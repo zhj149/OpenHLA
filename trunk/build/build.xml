@@ -20,7 +20,7 @@
   <!-- Standard JavaC arguments. -->
   <property name="javac.debug" value="true"/>
   <property name="javac.deprecation" value="true"/>
-  <property name="javac.fork" value="false"/>
+  <property name="javac.fork" value="true"/>
   <property name="javac.optimize" value="false"/>
   <property name="javac.verbose" value="false"/>
 
@@ -237,33 +237,27 @@
   <!-- OHLA RTI                                                           -->
   <!-- ================================================================== -->
 
-  <property name="package.rti" value="net/sf/ohla/rti"/>
   <property name="rti.jar" value="ohla-rti.jar"/>
 
   <property name="rti.resources" location="${project.root}/rti/resources"/>
   <property name="rti.source" location="${project.root}/rti/src"/>
   <property name="rti.source.java" location="${rti.source}/java"/>
 
+  <property name="output.rti" location="${output}/rti"/>
+  <property name="output.rti.classes" location="${output.rti}/classes"/>
+
   <target name="compile-ohla" depends="compile-ohla-java"/>
 
-  <target name="generate-hla-1.3-fed-check" depends="init">
-    <uptodate
-      property="generate-hla-1.3-fed.notRequired"
-      srcfile="${rti.source.java}/${package.rti}/fed/javacc/FEDParser.jj"
-      targetfile="${rti.source.java}/${package.rti}/fed/javacc/FEDParser.java"/>
-  </target>
-
-  <target name="generate-hla-1.3-fed" unless="generate-hla-1.3-fed.notRequired" depends="generate-hla-1.3-fed-check">
-    <javacc target="${rti.source.java}/${package.rti}/fed/javacc/FEDParser.jj"
-            outputdirectory="${rti.source.java}/${package.rti}/fed/javacc"
+  <target name="generate-hla-1.3-fed">
+    <javacc target="${rti.source.java}/net/sf/ohla/rti/fed/javacc/FEDParser.jj"
+            outputdirectory="${rti.source.java}/net/sf/ohla/rti/fed/javacc"
             javacchome="${javacc.root}"/>
   </target>
 
   <target name="compile-ohla-java" depends="jar-ieee-1516e, jar-ieee-1516, jar-hla-1.3, generate-hla-1.3-fed">
-    <mkdir dir="${output}/rti/classes"/>
+    <mkdir dir="${output.rti.classes}"/>
 
-    <javac srcdir="${rti.source.java}"
-           destdir="${output}/rti/classes"
+    <javac destdir="${output}/rti/classes"
            fork="${javac.fork}"
            optimize="${javac.optimize}"
            includeantruntime="false"
@@ -271,6 +265,12 @@
            verbose="${javac.verbose}"
            deprecation="${javac.deprecation}"
            includes="**/*.java">
+
+      <!--<compilerarg value="-J-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005"/>-->
+      <compilerarg value="-proc:none"/>
+
+      <src path="${rti.source.java}"/>
+      <src path="${rti.resources}"/>
 
       <classpath>
         <path refid="javac.classpath"/>

@@ -16,7 +16,6 @@
 
 package net.sf.ohla.rti.federation;
 
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -26,10 +25,6 @@ import java.io.RandomAccessFile;
 
 import java.util.zip.GZIPOutputStream;
 
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
-import net.sf.ohla.rti.messages.FederateMessage;
-
-import org.jboss.netty.buffer.ChannelBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,11 +48,9 @@ public class FederateProxySave
 
   private final File federateStateFile;
   private final File federateProxyStateFile;
-  private final File federateMessagesFile;
 
   private final OutputStream federateStateOutputStream;
   private final OutputStream federateProxyStateOutputStream;
-  private final DataOutputStream federateMessagesOutputStream;
 
   public FederateProxySave(FederateProxy federateProxy)
     throws IOException
@@ -74,15 +67,10 @@ public class FederateProxySave
     federateProxyStateFile = File.createTempFile(FEDERATE_PROXY_STATE, "save");
     log.debug("Federate proxy state file: {}", federateProxyStateFile);
 
-    federateMessagesFile = File.createTempFile(FEDERATE_MESSAGES, "save");
-    log.debug("Federate messages file: {}", federateMessagesFile);
-
     // TODO: allow different types of output streams
 
     federateStateOutputStream = new GZIPOutputStream(new FileOutputStream(federateStateFile));
     federateProxyStateOutputStream = new GZIPOutputStream(new FileOutputStream(federateProxyStateFile));
-    federateMessagesOutputStream = new DataOutputStream(
-      new GZIPOutputStream(new FileOutputStream(federateMessagesFile)));
   }
 
   public OutputStream getFederateStateOutputStream()
@@ -95,28 +83,14 @@ public class FederateProxySave
     return federateProxyStateOutputStream;
   }
 
-  public void save(FederateMessage federateMessage)
-    throws IOException
-  {
-    ChannelBuffer buffer = federateMessage.getBuffer();
-
-    federateMessagesOutputStream.writeInt(buffer.readableBytes());
-    buffer.readBytes(federateMessagesOutputStream, buffer.readableBytes());
-  }
-
   public void writeTo(RandomAccessFile file)
     throws IOException
   {
-    federateMessagesOutputStream.close();
-
     file.writeLong(federateStateFile.length());
     transferThenDelete(federateStateFile, file);
 
     file.writeLong(federateProxyStateFile.length());
     transferThenDelete(federateProxyStateFile, file);
-
-    file.writeLong(federateMessagesFile.length());
-    transferThenDelete(federateMessagesFile, file);
   }
 
   private void transferThenDelete(File source, RandomAccessFile destination)

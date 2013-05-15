@@ -34,6 +34,8 @@ import java.util.zip.GZIPOutputStream;
 
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
 import net.sf.ohla.rti.messages.FederationExecutionMessage;
+import net.sf.ohla.rti.messages.Message;
+import net.sf.ohla.rti.messages.MessageFactory;
 import net.sf.ohla.rti.messages.callbacks.FederationSaved;
 
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -179,6 +181,28 @@ public class FederationExecutionSave
   {
     instructedToSave.remove(federateHandle);
     saving.add(federateHandle);
+
+    if (instructedToSave.isEmpty())
+    {
+      // all federates have begun saving, no more messages will be coming in
+
+      try
+      {
+        federationExecutionMessagesDataOutputStream.close();
+
+        // write the number of messages at the front of the file (uncompressed)
+        //
+        RandomAccessFile raf = new RandomAccessFile(federationExecutionMessagesFile, "rw");
+        raf.writeInt(federationExecutionMessageCount);
+        raf.close();
+      }
+      catch (IOException ioe)
+      {
+        ioe.printStackTrace();
+
+        // TODO: fail the save
+      }
+    }
   }
 
   public boolean federateSaveComplete(FederateHandle federateHandle)
@@ -198,21 +222,11 @@ public class FederationExecutionSave
     }
 
     boolean done;
-    if (done = saving.isEmpty())
+    if (done = waitingForFederationToSave.size() == federateSaves.size())
     {
       try
       {
-        federationExecutionMessagesDataOutputStream.close();
-
         federationExecution.saveState(saveFile);
-
-        // write the number of messages at the front of the file (uncompressed)
-        //
-        RandomAccessFile raf = new RandomAccessFile(federationExecutionMessagesFile, "rw");
-        raf.writeInt(federationExecutionMessageCount);
-        raf.close();
-
-        //saveFile.writeLong(federationExecutionMessagesFile.length());
 
         FileInputStream in = new FileInputStream(federationExecutionMessagesFile);
 
@@ -224,8 +238,6 @@ public class FederationExecutionSave
           length -= bytesTransferred;
           position += bytesTransferred;
         } while (length > 0);
-
-        saveFile.seek(position);
 
         in.close();
 
@@ -269,8 +281,7 @@ public class FederationExecutionSave
       f.federationSaved(federationSaved);
     }
 
-    // fire all the messages destined to federates after they were instructed to save, but before the sender was
-    // instructed to save
+    // send the messages sent by federates after the save started, but before they were instructed to save
     //
     try
     {
@@ -285,19 +296,17 @@ public class FederationExecutionSave
 
       for (; federationExecutionMessageCount > 0; federationExecutionMessageCount--)
       {
-        FederateHandle federateHandle = IEEE1516eFederateHandle.decode(in);
+        FederateHandle sendingFederateHandle = IEEE1516eFederateHandle.decode(in);
 
-        // rebuild the message
-        //
-        int length = in.readInt();
-        ChannelBuffer buffer = ChannelBuffers.buffer(length + 4);
-        buffer.writeInt(length);
-        buffer.writeBytes(in, length);
+        ChannelBuffer buffer = ChannelBuffers.buffer(in.readInt());
+        buffer.writeBytes(in, buffer.writableBytes());
 
-        FederateProxy federate = federates.get(federateHandle);
-        assert federate != null;
+        Message message = MessageFactory.createMessage(
+          buffer, federationExecution.getTimeManager().getLogicalTimeFactory());
+        assert message instanceof FederationExecutionMessage;
 
-        federate.getFederateChannel().write(buffer);
+        ((FederationExecutionMessage) message).execute(
+          federationExecution, federationExecution.getFederate(sendingFederateHandle));
       }
 
       in.close();
@@ -308,19 +317,13 @@ public class FederationExecutionSave
     {
       fnfe.printStackTrace();
 
-      // TODO: fail the save
+      // TODO: ??
     }
     catch (IOException e)
     {
       e.printStackTrace();
 
-      // TODO: fail the save
-    }
-
-    // fire all the messages that
-    for (FederateProxySave federateProxySave : federateSaves.values())
-    {
-
+      // TODO: ??
     }
   }
 

@@ -25,7 +25,7 @@ import hla.rti1516e.exceptions.RequestForTimeConstrainedPending;
 public class EnableTimeConstrainedExceptionsTestNG
   extends BaseTimeManagementTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516e Enable Time Constrained Exceptions Test Federation";
+  private static final String FEDERATION_NAME = EnableTimeConstrainedExceptionsTestNG.class.getSimpleName();
 
   public EnableTimeConstrainedExceptionsTestNG()
   {

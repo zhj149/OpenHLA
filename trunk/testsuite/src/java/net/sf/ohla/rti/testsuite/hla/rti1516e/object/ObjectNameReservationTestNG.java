@@ -16,31 +16,27 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti1516e.object;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
 import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseFederateAmbassador;
+import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import hla.rti1516e.CallbackModel;
 import hla.rti1516e.RTIambassador;
-import hla.rti1516e.ResignAction;
 import hla.rti1516e.exceptions.FederateInternalError;
 import hla.rti1516e.exceptions.IllegalName;
 import hla.rti1516e.exceptions.ObjectInstanceNameNotReserved;
 
 @Test
 public class ObjectNameReservationTestNG
-  extends BaseTestNG
+  extends BaseTestNG<ObjectNameReservationTestNG.TestFederateAmbassador>
 {
-  private static final String FEDERATION_NAME = "OHLA Object Name Reservation Test Federation";
+  private static final String FEDERATION_NAME = ObjectNameReservationTestNG.class.getSimpleName();
 
   private static final String ILLEGAL_NAME_1 = "HLA illegal name 1";
   private static final String ILLEGAL_NAME_2 = "HLA illegal name 2";
@@ -52,30 +48,18 @@ public class ObjectNameReservationTestNG
   private static final String LEGAL_NAME_5 = "legal name 5";
   private static final String LEGAL_NAME_6 = "legal name 6";
 
-  private final List<TestFederateAmbassador> federateAmbassadors = new ArrayList<TestFederateAmbassador>(3);
-
   public ObjectNameReservationTestNG()
   {
-    super(3);
+    super(3, FEDERATION_NAME);
   }
 
   @BeforeClass
   public void setup()
     throws Exception
   {
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(0)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(1)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(2)));
-
-    rtiAmbassadors.get(0).connect(federateAmbassadors.get(0), CallbackModel.HLA_EVOKED);
-    rtiAmbassadors.get(1).connect(federateAmbassadors.get(1), CallbackModel.HLA_EVOKED);
-    rtiAmbassadors.get(2).connect(federateAmbassadors.get(2), CallbackModel.HLA_EVOKED);
-
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
-
-    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME);
-    rtiAmbassadors.get(1).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME);
-    rtiAmbassadors.get(2).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME);
+    connect();
+    createFederationExecution();
+    joinFederationExecution();
 
     synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE, federateAmbassadors);
   }
@@ -84,10 +68,8 @@ public class ObjectNameReservationTestNG
   public void teardown()
     throws Exception
   {
-    resignFederationExecution(ResignAction.NO_ACTION);
-
-    destroyFederationExecution(FEDERATION_NAME);
-
+    resignFederationExecution();
+    destroyFederationExecution();
     disconnect();
   }
 
@@ -209,7 +191,12 @@ public class ObjectNameReservationTestNG
     rtiAmbassadors.get(0).releaseMultipleObjectInstanceName(names);
   }
 
-  protected static class TestFederateAmbassador
+  protected TestFederateAmbassador createFederateAmbassador(RTIambassador rtiAmbassador)
+  {
+    return new TestFederateAmbassador(rtiAmbassador);
+  }
+
+  public static class TestFederateAmbassador
     extends BaseFederateAmbassador
   {
     private final Set<String> reservedObjectInstanceNames = new HashSet<String>();

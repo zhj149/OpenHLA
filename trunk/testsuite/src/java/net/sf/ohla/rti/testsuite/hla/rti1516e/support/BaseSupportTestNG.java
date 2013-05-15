@@ -21,42 +21,37 @@ import net.sf.ohla.rti.testsuite.hla.rti1516e.BaseTestNG;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
-import hla.rti1516e.CallbackModel;
 import hla.rti1516e.NullFederateAmbassador;
-import hla.rti1516e.ResignAction;
+import hla.rti1516e.RTIambassador;
 
 public abstract class BaseSupportTestNG
-  extends BaseTestNG
+  extends BaseTestNG<NullFederateAmbassador>
 {
-  protected final String federationName;
-
-  protected BaseSupportTestNG(String federationName)
+  protected BaseSupportTestNG(String federationExecutionName)
   {
-    this.federationName = federationName;
-  }
-
-  protected BaseSupportTestNG(int rtiAmbassadorCount, String federationName)
-  {
-    super(rtiAmbassadorCount);
-
-    this.federationName = federationName;
+    super(federationExecutionName);
   }
 
   @BeforeClass
   public void setup()
     throws Exception
   {
-    rtiAmbassadors.get(0).connect(new NullFederateAmbassador(), CallbackModel.HLA_EVOKED);
-    rtiAmbassadors.get(0).createFederationExecution(federationName, fdd);
-    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE_1, federationName);
+    connect();
+    createFederationExecution();
+    joinFederationExecution();
   }
 
   @AfterClass
   public void teardown()
     throws Exception
   {
-    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
-    rtiAmbassadors.get(0).destroyFederationExecution(federationName);
-    rtiAmbassadors.get(0).disconnect();
+    resignFederationExecution();
+    destroyFederationExecution();
+    disconnect();
+  }
+
+  protected NullFederateAmbassador createFederateAmbassador(RTIambassador rtiAmbassador)
+  {
+    return new NullFederateAmbassador();
   }
 }

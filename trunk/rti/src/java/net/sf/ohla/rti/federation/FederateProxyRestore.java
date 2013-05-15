@@ -42,11 +42,9 @@ public class FederateProxyRestore
 
   private final File federateStateFile;
   private final File federateProxyStateFile;
-  private final File federateMessagesFile;
 
   private final InputStream federateStateInputStream;
   private final DataInputStream federateProxyStateInputStream;
-  private final DataInputStream federateMessagesInputStream;
 
   public FederateProxyRestore(FederateHandle federateHandle, String federateName, String federateType,
                               RandomAccessFile file)
@@ -64,24 +62,17 @@ public class FederateProxyRestore
     federateProxyStateFile = File.createTempFile(FederateProxySave.FEDERATE_PROXY_STATE, "restore");
     log.debug("Federate proxy state file: {}", federateProxyStateFile);
 
-    federateMessagesFile = File.createTempFile(FederateProxySave.FEDERATE_MESSAGES, "restore");
-    log.debug("Federate messages file: {}", federateMessagesFile);
-
     long federateStateFileLength = file.readLong();
     transfer(file, federateStateFileLength, federateStateFile);
 
     long federateProxyStateFileLength = file.readLong();
     transfer(file, federateProxyStateFileLength, federateProxyStateFile);
 
-    long federateMessagesFileLength = file.readLong();
-    transfer(file, federateMessagesFileLength, federateMessagesFile);
-
     // TODO: allow different types of input streams
 
     federateStateInputStream = new GZIPInputStream(new FileInputStream(federateStateFile));
     federateProxyStateInputStream =
       new DataInputStream(new GZIPInputStream(new FileInputStream(federateProxyStateFile)));
-    federateMessagesInputStream = new DataInputStream(new GZIPInputStream(new FileInputStream(federateMessagesFile)));
   }
 
   public FederateHandle getFederateHandle()
@@ -119,11 +110,6 @@ public class FederateProxyRestore
     federateProxy.restoreState(federateProxyStateInputStream, federateHandle, federateName, federateType);
     federateProxyStateInputStream.close();
     federateProxyStateFile.delete();
-
-    // TODO: need to handle any cached federate messages
-
-    federateMessagesInputStream.close();
-    federateMessagesFile.delete();
   }
 
   private void transfer(RandomAccessFile source, long length, File destination)

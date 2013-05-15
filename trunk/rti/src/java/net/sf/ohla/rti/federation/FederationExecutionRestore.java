@@ -16,7 +16,6 @@
 
 package net.sf.ohla.rti.federation;
 
-import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -33,10 +32,16 @@ import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
+import net.sf.ohla.rti.messages.FederationExecutionMessage;
+import net.sf.ohla.rti.messages.Message;
+import net.sf.ohla.rti.messages.MessageFactory;
 import net.sf.ohla.rti.messages.callbacks.FederationNotRestored;
 import net.sf.ohla.rti.messages.callbacks.FederationRestoreBegun;
 import net.sf.ohla.rti.messages.callbacks.FederationRestored;
 import net.sf.ohla.rti.messages.callbacks.InitiateFederateRestore;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.buffer.ChannelBuffers;
 
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.FederateRestoreStatus;
@@ -182,10 +187,14 @@ public class FederationExecutionRestore
     }
     catch (IOException ioe)
     {
+      ioe.printStackTrace();
+
       fail(RestoreFailureReason.RTI_UNABLE_TO_RESTORE);
     }
-    catch (CouldNotDecode couldNotDecode)
+    catch (CouldNotDecode cnd)
     {
+      cnd.printStackTrace();
+
       fail(RestoreFailureReason.RTI_UNABLE_TO_RESTORE);
     }
   }
@@ -240,66 +249,6 @@ public class FederationExecutionRestore
     try
     {
       federationExecution.restoreState(restoreFile);
-
-      int federationExecutionMessageCount = restoreFile.readInt();
-
-      DataInput in = new DataInputStream(new GZIPInputStream(new InputStream()
-      {
-        public int read()
-        throws IOException
-        {
-          return restoreFile.read();
-        }
-
-        @Override
-        public int read(byte b[], int off, int len)
-        throws IOException
-        {
-          return restoreFile.read(b, off, len);
-        }
-
-        @Override
-        public long skip(long n)
-        throws IOException
-        {
-          long skipped;
-
-          long availableToSkip = restoreFile.length() - restoreFile.getFilePointer();
-          if (n > availableToSkip)
-          {
-            skipped = availableToSkip;
-          }
-          else
-          {
-            skipped = n;
-          }
-          restoreFile.seek(restoreFile.getFilePointer() + n);
-          return skipped;
-        }
-
-        @Override
-        public int available()
-          throws IOException
-        {
-          return new Long(restoreFile.length() - restoreFile.getFilePointer()).intValue();
-        }
-
-        @Override
-        public void close()
-          throws IOException
-        {
-          super.close();
-        }
-      }));
-
-      for (int i = federationExecutionMessageCount; i > 0; i--)
-      {
-        FederateHandle sendingFederateHandle = IEEE1516eFederateHandle.decode(in);
-
-        int length = in.readInt();
-        byte[] buffer = new byte[length];
-        in.readFully(buffer);
-      }
     }
     catch (IOException e)
     {
@@ -315,7 +264,6 @@ public class FederationExecutionRestore
     }
 
     FederationRestored federationRestored = new FederationRestored();
-
     for (FederateRestoreMapping federateRestoreMapping : federateRestoreMappings.values())
     {
       federateRestoreMapping.federationRestored(federationRestored);
@@ -324,6 +272,53 @@ public class FederationExecutionRestore
         federateRestoreMapping.getPostRestoreFederateHandle(), federateRestoreMapping.getFederateProxy());
       federationExecution.getFederatesByName().put(
         federateRestoreMapping.getPostRestoreFederateName(), federateRestoreMapping.getFederateProxy());
+    }
+
+    // send the messages sent by federates after the save started, but before they were instructed to save
+    //
+    try
+    {
+      // read the uncompressed number of messages
+      //
+      int federationExecutionMessageCount = restoreFile.readInt();
+
+      // start reading the compressed part
+      //
+      DataInputStream in = new DataInputStream(new GZIPInputStream(new SavedFederateExecutionMessagesInputStream()));
+
+      for (; federationExecutionMessageCount > 0; federationExecutionMessageCount--)
+      {
+        FederateHandle sendingFederateHandle = IEEE1516eFederateHandle.decode(in);
+
+        ChannelBuffer buffer = ChannelBuffers.buffer(in.readInt());
+        buffer.writeBytes(in, buffer.writableBytes());
+
+        Message message = MessageFactory.createMessage(
+          buffer, federationExecution.getTimeManager().getLogicalTimeFactory());
+        assert message instanceof FederationExecutionMessage;
+
+        ((FederationExecutionMessage) message).execute(
+          federationExecution, federationExecution.getFederate(sendingFederateHandle));
+      }
+    }
+    catch (IOException e)
+    {
+      e.printStackTrace();
+
+      // TODO: ??
+    }
+    finally
+    {
+      try
+      {
+        restoreFile.close();
+      }
+      catch (IOException e)
+      {
+        e.printStackTrace();
+
+        // TODO: ??
+      }
     }
   }
 
@@ -421,6 +416,49 @@ public class FederationExecutionRestore
     public void federationRestored(FederationRestored federationRestored)
     {
       federateProxy.federationRestored(federationRestored);
+    }
+  }
+
+  private class SavedFederateExecutionMessagesInputStream
+    extends InputStream
+  {
+    public int read()
+    throws IOException
+    {
+      return restoreFile.read();
+    }
+
+    @Override
+    public int read(byte b[], int off, int len)
+    throws IOException
+    {
+      return restoreFile.read(b, off, len);
+    }
+
+    @Override
+    public long skip(long n)
+    throws IOException
+    {
+      long skipped;
+
+      long availableToSkip = restoreFile.length() - restoreFile.getFilePointer();
+      if (n > availableToSkip)
+      {
+        skipped = availableToSkip;
+      }
+      else
+      {
+        skipped = n;
+      }
+      restoreFile.seek(restoreFile.getFilePointer() + n);
+      return skipped;
+    }
+
+    @Override
+    public int available()
+      throws IOException
+    {
+      return new Long(restoreFile.length() - restoreFile.getFilePointer()).intValue();
     }
   }
 

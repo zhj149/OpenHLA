@@ -26,7 +26,7 @@ import hla.rti1516e.exceptions.InvalidTransportationType;
 public class TransportationSupportTestNG
   extends BaseSupportTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA Transportation Support Test Federation";
+  private static final String FEDERATION_NAME = TransportationSupportTestNG.class.getSimpleName();
 
   public TransportationSupportTestNG()
   {

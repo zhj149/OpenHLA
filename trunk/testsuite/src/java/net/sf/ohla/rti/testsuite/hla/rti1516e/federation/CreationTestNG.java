@@ -29,7 +29,6 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import hla.rti1516e.CallbackModel;
 import hla.rti1516e.FederationExecutionInformation;
 import hla.rti1516e.FederationExecutionInformationSet;
 import hla.rti1516e.RTIambassador;
@@ -40,34 +39,30 @@ import hla.rti1516e.exceptions.FederationExecutionDoesNotExist;
 
 @Test
 public class CreationTestNG
-  extends BaseTestNG
+  extends BaseTestNG<CreationTestNG.TestFederateAmbassador>
 {
-  private static final String FEDERATION_NAME = "OHLA Creation Test Federation";
-
-  private TestFederateAmbassador federateAmbassador;
+  private static final String FEDERATION_NAME = CreationTestNG.class.getSimpleName();
 
   private final Set<FederationExecutionInformation> createdFederationExecutionInformations =
     new HashSet<FederationExecutionInformation>();
 
   public CreationTestNG()
   {
-    super(1);
+    super(FEDERATION_NAME);
   }
 
   @BeforeClass
   public void setup()
     throws Exception
   {
-    federateAmbassador = new TestFederateAmbassador(rtiAmbassadors.get(0));
-
-    rtiAmbassadors.get(0).connect(federateAmbassador, CallbackModel.HLA_EVOKED);
+    connect();
   }
 
   @AfterClass
   public void tearDown()
     throws Exception
   {
-    rtiAmbassadors.get(0).disconnect();
+    disconnect();
   }
 
   @Test
@@ -121,7 +116,7 @@ public class CreationTestNG
   {
     rtiAmbassadors.get(0).listFederationExecutions();
 
-    federateAmbassador.checkReportedFederationExecutions(createdFederationExecutionInformations);
+    federateAmbassadors.get(0).checkReportedFederationExecutions(createdFederationExecutionInformations);
   }
 
   @Test(dependsOnMethods = {"testListFederationExecutions"})
@@ -152,7 +147,12 @@ public class CreationTestNG
     rtiAmbassadors.get(0).destroyFederationExecution("xxx");
   }
 
-  private class TestFederateAmbassador
+  protected TestFederateAmbassador createFederateAmbassador(RTIambassador rtiAmbassador)
+  {
+    return new TestFederateAmbassador(rtiAmbassador);
+  }
+
+  public static class TestFederateAmbassador
     extends BaseFederateAmbassador
   {
     private final Set<FederationExecutionInformation> reportedFederationExecutionInformations =

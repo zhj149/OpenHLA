@@ -802,47 +802,47 @@
   <component name="libraryTable">
     <library name="cal10n">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/../../thirdparty/cal10n/lib/cal10n-api-0.7.4.jar!/" />
+        <root url="jar://$PROJECT_DIR$/../../thirdparty/cal10n/lib/cal10n-api-0.8.1.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES>
-        <root url="jar://$PROJECT_DIR$/../../thirdparty/cal10n/lib/cal10n-api-0.7.4-sources.jar!/" />
+        <root url="jar://$PROJECT_DIR$/../../thirdparty/cal10n/lib/cal10n-api-0.8.1-sources.jar!/" />
       </SOURCES>
     </library>
     <library name="logback">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/../../thirdparty/logback/lib/logback-core-0.9.29.jar!/" />
-        <root url="jar://$PROJECT_DIR$/../../thirdparty/logback/lib/logback-classic-0.9.29.jar!/" />
+        <root url="jar://$PROJECT_DIR$/../../thirdparty/logback/lib/logback-classic-1.0.13.jar!/" />
+        <root url="jar://$PROJECT_DIR$/../../thirdparty/logback/lib/logback-core-1.0.13.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES>
-        <root url="jar://$PROJECT_DIR$/../../thirdparty/logback/lib/logback-core-0.9.29-sources.jar!/" />
-        <root url="jar://$PROJECT_DIR$/../../thirdparty/logback/lib/logback-classic-0.9.29-sources.jar!/" />
+        <root url="jar://$PROJECT_DIR$/../../thirdparty/logback/lib/logback-classic-1.0.13-sources.jar!/" />
+        <root url="jar://$PROJECT_DIR$/../../thirdparty/logback/lib/logback-core-1.0.13-sources.jar!/" />
       </SOURCES>
     </library>
     <library name="netty">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/../../thirdparty/netty/lib/netty-3.5.7.Final.jar!/" />
+        <root url="jar://$PROJECT_DIR$/../../thirdparty/netty/lib/netty-3.6.5.Final.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES>
-        <root url="jar://$PROJECT_DIR$/../../thirdparty/netty/lib/netty-3.5.7.Final-sources.jar!/" />
+        <root url="jar://$PROJECT_DIR$/../../thirdparty/netty/lib/netty-3.6.5.Final-sources.jar!/" />
       </SOURCES>
     </library>
     <library name="slf4j">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/../../thirdparty/slf4j/lib/slf4j-ext-1.6.2.jar!/" />
-        <root url="jar://$PROJECT_DIR$/../../thirdparty/slf4j/lib/slf4j-api-1.6.2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/../../thirdparty/slf4j/lib/slf4j-api-1.7.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/../../thirdparty/slf4j/lib/slf4j-ext-1.7.5.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES>
-        <root url="jar://$PROJECT_DIR$/../../thirdparty/slf4j/lib/slf4j-ext-1.6.2-sources.jar!/" />
-        <root url="jar://$PROJECT_DIR$/../../thirdparty/slf4j/lib/slf4j-api-1.6.2-sources.jar!/" />
+        <root url="jar://$PROJECT_DIR$/../../thirdparty/slf4j/lib/slf4j-api-1.7.5-sources.jar!/" />
+        <root url="jar://$PROJECT_DIR$/../../thirdparty/slf4j/lib/slf4j-ext-1.7.5-sources.jar!/" />
       </SOURCES>
     </library>
     <library name="testng">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/../../thirdparty/testng/lib/testng-6.2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/../../thirdparty/testng/lib/testng-6.8.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES />

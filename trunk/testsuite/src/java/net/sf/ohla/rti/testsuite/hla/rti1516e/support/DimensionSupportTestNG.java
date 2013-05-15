@@ -34,7 +34,7 @@ import hla.rti1516e.exceptions.NameNotFound;
 public class DimensionSupportTestNG
   extends BaseSupportTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA Dimension Support Test Federation";
+  private static final String FEDERATION_NAME = DimensionSupportTestNG.class.getSimpleName();
 
   public DimensionSupportTestNG()
   {

@@ -26,7 +26,7 @@ import hla.rti1516e.exceptions.InvalidResignAction;
 public class FederateSupportTestNG
   extends BaseSupportTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA Federate Support Test Federation";
+  private static final String FEDERATION_NAME = FederateSupportTestNG.class.getSimpleName();
 
   public FederateSupportTestNG()
   {
