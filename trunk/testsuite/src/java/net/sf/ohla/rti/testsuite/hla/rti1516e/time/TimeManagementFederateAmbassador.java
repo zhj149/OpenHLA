@@ -16,6 +16,7 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti1516e.time;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -47,12 +48,24 @@ public class TimeManagementFederateAmbassador
   private Map<ObjectInstanceHandle, TestObjectInstance> objectInstances =
     new HashMap<ObjectInstanceHandle, TestObjectInstance>();
 
+  private InteractionClassHandle interactionClassHandle;
   private ParameterHandleValueMap parameterValues;
-  private LogicalTime receiveTime;
+  private byte[] tag;
+  private OrderType sentOrderType;
+  private TransportationTypeHandle transportationTypeHandle;
+  private LogicalTime receiveInteractionTime;
+  private OrderType receivedOrderType;
+  private MessageRetractionHandle messageRetractionHandle;
+  private SupplementalReceiveInfo receiveInfo;
 
   public TimeManagementFederateAmbassador(RTIambassador rtiAmbassador)
   {
     super(rtiAmbassador);
+  }
+
+  public Map<ObjectInstanceHandle, TestObjectInstance> getObjectInstances()
+  {
+    return objectInstances;
   }
 
   public void checkTimeRegulationEnabled()
@@ -252,21 +265,24 @@ public class TimeManagementFederateAmbassador
     assert objectInstances.get(objectInstanceHandle).isRemoved();
   }
 
-  public void checkParameterValues(ParameterHandleValueMap parameterValues, LogicalTime receiveTime)
+  public void checkParameterValues(
+    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues, byte[] tag,
+    OrderType sentOrderType, TransportationTypeHandle transportationTypeHandle, LogicalTime receiveInteractionTime,
+    OrderType receivedOrderType, MessageRetractionHandle messageRetractionHandle, FederateHandle federateHandle)
     throws Exception
   {
-    evokeCallbackWhile(new Callable<Boolean>()
-    {
-      public Boolean call()
-      {
-        return TimeManagementFederateAmbassador.this.parameterValues == null;
-      }
-    });
+    evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return TimeManagementFederateAmbassador.this.interactionClassHandle == null; } });
 
+    assert this.interactionClassHandle != null;
+    assert interactionClassHandle.equals(this.interactionClassHandle);
     assert parameterValues.equals(this.parameterValues);
-    assert receiveTime == null || receiveTime.equals(this.receiveTime);
-
-    this.parameterValues = null;
+    assert Arrays.equals(tag, this.tag);
+    assert this.sentOrderType == sentOrderType;
+    assert transportationTypeHandle.equals(this.transportationTypeHandle);
+    assert receiveInteractionTime == null || receiveInteractionTime.equals(this.receiveInteractionTime);
+    assert receivedOrderType == null || receivedOrderType == this.receivedOrderType;
+    assert messageRetractionHandle == null || messageRetractionHandle.equals(this.messageRetractionHandle);
+    assert !receiveInfo.hasProducingFederate() || federateHandle.equals(receiveInfo.getProducingFederate());
   }
 
   public void checkParameterValuesNotReceived()
@@ -281,6 +297,24 @@ public class TimeManagementFederateAmbassador
     }, 1, 0.5);
 
     assert parameterValues == null;
+  }
+
+  @Override
+  public void reset()
+  {
+    super.reset();
+
+    objectInstances.clear();
+
+    interactionClassHandle = null;
+    parameterValues = null;
+    tag = null;
+    sentOrderType = null;
+    transportationTypeHandle = null;
+    receiveInteractionTime = null;
+    receivedOrderType = null;
+    messageRetractionHandle = null;
+    receiveInfo = null;
   }
 
   @Override
@@ -363,7 +397,16 @@ public class TimeManagementFederateAmbassador
     InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues, byte[] tag,
     OrderType sentOrderType, TransportationTypeHandle transportationTypeHandle, SupplementalReceiveInfo receiveInfo)
   {
+    this.interactionClassHandle = interactionClassHandle;
     this.parameterValues = parameterValues;
+    this.tag = tag;
+    this.sentOrderType = sentOrderType;
+    this.transportationTypeHandle = transportationTypeHandle;
+    this.receiveInfo = receiveInfo;
+
+    receiveInteractionTime = null;
+    receivedOrderType = null;
+    messageRetractionHandle = null;
   }
 
   @Override
@@ -373,8 +416,16 @@ public class TimeManagementFederateAmbassador
     OrderType receivedOrderType, SupplementalReceiveInfo receiveInfo)
     throws FederateInternalError
   {
+    this.interactionClassHandle = interactionClassHandle;
     this.parameterValues = parameterValues;
-    receiveTime = time;
+    this.tag = tag;
+    this.sentOrderType = sentOrderType;
+    this.transportationTypeHandle = transportationTypeHandle;
+    receiveInteractionTime = time;
+    this.receivedOrderType = receivedOrderType;
+    this.receiveInfo = receiveInfo;
+
+    messageRetractionHandle = null;
   }
 
   @Override
@@ -383,7 +434,14 @@ public class TimeManagementFederateAmbassador
     OrderType sentOrderType, TransportationTypeHandle transportationTypeHandle, LogicalTime time,
     OrderType receivedOrderType, MessageRetractionHandle messageRetractionHandle, SupplementalReceiveInfo receiveInfo)
   {
+    this.interactionClassHandle = interactionClassHandle;
     this.parameterValues = parameterValues;
-    receiveTime = time;
+    this.tag = tag;
+    this.sentOrderType = sentOrderType;
+    this.transportationTypeHandle = transportationTypeHandle;
+    receiveInteractionTime = time;
+    this.receivedOrderType = receivedOrderType;
+    this.messageRetractionHandle = messageRetractionHandle;
+    this.receiveInfo = receiveInfo;
   }
 }

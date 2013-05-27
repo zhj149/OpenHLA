@@ -9,10 +9,13 @@ import hla.rti1516e.InteractionClassHandle;
 import hla.rti1516e.ParameterHandle;
 import hla.rti1516e.ParameterHandleValueMap;
 import hla.rti1516e.RTIambassador;
+import hla.rti1516e.TransportationTypeHandle;
 
 public abstract class BaseInteractionTestNG
   extends BaseTestNG<InteractionFederateAmbassador>
 {
+  protected TransportationTypeHandle reliableTransportationTypeHandle;
+
   protected InteractionClassHandle testInteractionClassHandle;
   protected InteractionClassHandle testInteractionClassHandle2;
 
@@ -36,6 +39,8 @@ public abstract class BaseInteractionTestNG
     connect();
     createFederationExecution();
     joinFederationExecution();
+
+    reliableTransportationTypeHandle = rtiAmbassadors.get(0).getTransportationTypeHandle(HLA_RELIABLE);
 
     testInteractionClassHandle = rtiAmbassadors.get(0).getInteractionClassHandle(TEST_INTERACTION);
     ParameterHandle parameterHandle1 = rtiAmbassadors.get(0).getParameterHandle(testInteractionClassHandle, PARAMETER1);

@@ -87,8 +87,7 @@ public class MessageDecoder
           decodeMessage(context, buffer);
         }
       }
-    }
-    while (message == null && buffer.readable());
+    } while (message == null && buffer.readable());
   }
 
   private void decodeMessage(ChannelHandlerContext context, ChannelBuffer buffer)

@@ -6,18 +6,27 @@ import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.AttributeHandleValueMap;
 import hla.rti1516e.InteractionClassHandle;
+import hla.rti1516e.MessageRetractionHandle;
 import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.ParameterHandle;
 import hla.rti1516e.ParameterHandleValueMap;
+import hla.rti1516e.TransportationTypeHandle;
 
 public abstract class BaseTimeAdvanceRequestTestNG
   extends BaseTimeManagementTestNG
 {
-  protected ParameterHandleValueMap testParameterValues;
+  protected TransportationTypeHandle reliableTransportationTypeHandle;
 
+  protected InteractionClassHandle testInteractionClassHandle;
+  protected ParameterHandleValueMap testParameterValues;
+  protected MessageRetractionHandle testInteractionMessageRetractionHandle;
+
+  protected ObjectClassHandle testObjectClassHandle;
   protected ObjectInstanceHandle testObjectInstanceHandle;
+  protected String testObjectInstanceName;
   protected AttributeHandleValueMap testAttributeValues;
+  protected MessageRetractionHandle testUpdateAttributesMessageRetractionHandle;
 
   protected BaseTimeAdvanceRequestTestNG(String federationName)
   {
@@ -28,6 +37,8 @@ public abstract class BaseTimeAdvanceRequestTestNG
   public void baseTimeAdvanceRequestSetup()
     throws Exception
   {
+    reliableTransportationTypeHandle = rtiAmbassadors.get(0).getTransportationTypeHandle(HLA_RELIABLE);
+
     rtiAmbassadors.get(0).enableTimeRegulation(lookahead1);
     rtiAmbassadors.get(1).enableTimeRegulation(lookahead1);
 
@@ -40,7 +51,7 @@ public abstract class BaseTimeAdvanceRequestTestNG
     federateAmbassadors.get(0).checkTimeConstrainedEnabled(initial);
     federateAmbassadors.get(1).checkTimeConstrainedEnabled(initial);
 
-    InteractionClassHandle testInteractionClassHandle = rtiAmbassadors.get(0).getInteractionClassHandle(TEST_INTERACTION);
+    testInteractionClassHandle = rtiAmbassadors.get(0).getInteractionClassHandle(TEST_INTERACTION);
 
     ParameterHandle parameterHandle1 = rtiAmbassadors.get(0).getParameterHandle(testInteractionClassHandle, PARAMETER1);
     ParameterHandle parameterHandle2 = rtiAmbassadors.get(0).getParameterHandle(testInteractionClassHandle, PARAMETER2);
@@ -54,7 +65,7 @@ public abstract class BaseTimeAdvanceRequestTestNG
     rtiAmbassadors.get(0).publishInteractionClass(testInteractionClassHandle);
     rtiAmbassadors.get(1).subscribeInteractionClass(testInteractionClassHandle);
 
-    ObjectClassHandle testObjectClassHandle = rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT);
+    testObjectClassHandle = rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT);
 
     AttributeHandle attributeHandle1 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle, ATTRIBUTE1);
     AttributeHandle attributeHandle2 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle, ATTRIBUTE2);
@@ -69,6 +80,7 @@ public abstract class BaseTimeAdvanceRequestTestNG
     rtiAmbassadors.get(1).subscribeObjectClassAttributes(testObjectClassHandle, testObjectAttributeHandles);
 
     testObjectInstanceHandle = rtiAmbassadors.get(0).registerObjectInstance(testObjectClassHandle);
+    testObjectInstanceName = rtiAmbassadors.get(0).getObjectInstanceName(testObjectInstanceHandle);
 
     federateAmbassadors.get(1).checkObjectInstanceHandle(testObjectInstanceHandle);
 
@@ -78,8 +90,5 @@ public abstract class BaseTimeAdvanceRequestTestNG
     testAttributeValues.put(attributeHandle3, ATTRIBUTE3_VALUE.getBytes());
 
     synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE, federateAmbassadors);
-
-    rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle, testParameterValues, TAG, five);
-    rtiAmbassadors.get(0).updateAttributeValues(testObjectInstanceHandle, testAttributeValues, TAG, ten);
   }
 }
