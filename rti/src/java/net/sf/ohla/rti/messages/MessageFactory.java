@@ -78,6 +78,9 @@ public class MessageFactory
     Message message;
     switch (type)
     {
+      case FDD_UPDATED:
+        message = new FDDUpdated(buffer);
+        break;
       case CREATE_FEDERATION_EXECUTION:
         message = new CreateFederationExecution(buffer);
         break;

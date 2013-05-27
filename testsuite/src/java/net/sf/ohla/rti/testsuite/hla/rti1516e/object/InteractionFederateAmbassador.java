@@ -19,6 +19,8 @@ public class InteractionFederateAmbassador
   private InteractionClassHandle interactionClassHandle;
   private ParameterHandleValueMap parameterValues;
   private byte[] tag;
+  private OrderType sentOrderType;
+  private TransportationTypeHandle transportationTypeHandle;
   private SupplementalReceiveInfo receiveInfo;
 
   public InteractionFederateAmbassador(RTIambassador rtiAmbassador)
@@ -28,7 +30,7 @@ public class InteractionFederateAmbassador
 
   public void checkParameterValues(
     InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues, byte[] tag,
-    FederateHandle federateHandle)
+    OrderType sentOrderType, TransportationTypeHandle transportationTypeHandle, FederateHandle federateHandle)
     throws Exception
   {
     evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return InteractionFederateAmbassador.this.interactionClassHandle == null; } });
@@ -37,6 +39,8 @@ public class InteractionFederateAmbassador
     assert interactionClassHandle.equals(this.interactionClassHandle);
     assert parameterValues.equals(this.parameterValues);
     assert Arrays.equals(tag, this.tag);
+    assert this.sentOrderType == sentOrderType;
+    assert transportationTypeHandle.equals(this.transportationTypeHandle);
     assert !receiveInfo.hasProducingFederate() || federateHandle.equals(receiveInfo.getProducingFederate());
   }
 
@@ -58,6 +62,8 @@ public class InteractionFederateAmbassador
     this.interactionClassHandle = interactionClassHandle;
     this.parameterValues = parameterValues;
     this.tag = tag;
+    this.sentOrderType = sentOrderType;
+    this.transportationTypeHandle = transportationTypeHandle;
     this.receiveInfo = receiveInfo;
   }
 }

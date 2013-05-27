@@ -21,6 +21,7 @@ import org.testng.annotations.Test;
 import hla.rti1516e.exceptions.InteractionClassNotDefined;
 import hla.rti1516e.exceptions.InteractionClassNotPublished;
 import hla.rti1516e.exceptions.InteractionParameterNotDefined;
+import hla.rti1516e.OrderType;
 
 @Test
 public class InteractionTestNG
@@ -40,9 +41,11 @@ public class InteractionTestNG
     rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle2, testParameterValues2, TAG);
 
     federateAmbassadors.get(1).checkParameterValues(
-      testInteractionClassHandle, testParameterValues, TAG, federateHandles.get(0));
+      testInteractionClassHandle, testParameterValues, TAG, OrderType.RECEIVE, reliableTransportationTypeHandle,
+      federateHandles.get(0));
     federateAmbassadors.get(2).checkParameterValues(
-      testInteractionClassHandle2, testParameterValues2, TAG, federateHandles.get(0));
+      testInteractionClassHandle2, testParameterValues2, TAG, OrderType.RECEIVE, reliableTransportationTypeHandle,
+      federateHandles.get(0));
   }
 
   @Test(expectedExceptions = {InteractionClassNotDefined.class})

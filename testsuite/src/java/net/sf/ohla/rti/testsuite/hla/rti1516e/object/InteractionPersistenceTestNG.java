@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import hla.rti1516e.OrderType;
 import hla.rti1516e.ResignAction;
 
 @Test
@@ -53,9 +54,11 @@ public class InteractionPersistenceTestNG
     throws Exception
   {
     federateAmbassadors.get(1).checkParameterValues(
-      testInteractionClassHandle, testParameterValues, TAG, federateHandles.get(0));
+      testInteractionClassHandle, testParameterValues, TAG, OrderType.RECEIVE, reliableTransportationTypeHandle,
+      federateHandles.get(0));
     federateAmbassadors.get(2).checkParameterValues(
-      testInteractionClassHandle2, testParameterValues2, TAG, federateHandles.get(0));
+      testInteractionClassHandle2, testParameterValues2, TAG, OrderType.RECEIVE, reliableTransportationTypeHandle,
+      federateHandles.get(0));
   }
 
   @Test(dependsOnMethods = "testReceiveInteractionAfterSave")
@@ -94,8 +97,10 @@ public class InteractionPersistenceTestNG
     federateAmbassadors.get(2).checkFederationRestored(SAVE_NAME);
 
     federateAmbassadors.get(1).checkParameterValues(
-      testInteractionClassHandle, testParameterValues, TAG, federateHandles.get(0));
+      testInteractionClassHandle, testParameterValues, TAG, OrderType.RECEIVE, reliableTransportationTypeHandle,
+      federateHandles.get(0));
     federateAmbassadors.get(2).checkParameterValues(
-      testInteractionClassHandle2, testParameterValues2, TAG, federateHandles.get(0));
+      testInteractionClassHandle2, testParameterValues2, TAG, OrderType.RECEIVE, reliableTransportationTypeHandle,
+      federateHandles.get(0));
   }
 }

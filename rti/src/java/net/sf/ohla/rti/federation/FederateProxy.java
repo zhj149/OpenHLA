@@ -1353,14 +1353,22 @@ public class FederateProxy
 
       for (int count = in.readInt(); count > 0; count--)
       {
-        ChannelBuffer buffer = ChannelBuffers.buffer(in.readInt());
-        buffer.writeBytes(in, buffer.writableBytes());
+        size = in.readInt();
+        if (size > 0)
+        {
+          ChannelBuffer buffer = ChannelBuffers.buffer(size + 4);
 
-        Message message = MessageFactory.createMessage(
-          buffer, federationExecution.getTimeManager().getLogicalTimeFactory());
-        assert message instanceof TimeStampOrderedMessage;
+          buffer.writeInt(size);
+          buffer.readerIndex(4);
 
-        queuedTimeStampOrderedMessages.add(new QueuedTimeStampOrderedMessage((TimeStampOrderedMessage) message));
+          buffer.writeBytes(in, size);
+
+          Message message = MessageFactory.createMessage(
+            buffer, federationExecution.getTimeManager().getLogicalTimeFactory());
+          assert message instanceof TimeStampOrderedMessage;
+
+          queuedTimeStampOrderedMessages.add(new QueuedTimeStampOrderedMessage((TimeStampOrderedMessage) message));
+        }
       }
     }
     else
@@ -1450,11 +1458,16 @@ public class FederateProxy
       out.writeInt(queuedTimeStampOrderedMessages.size());
       for (QueuedTimeStampOrderedMessage timeStampOrderedMessage : queuedTimeStampOrderedMessages)
       {
-        if (!timeStampOrderedMessage.isCancelled())
+        if (timeStampOrderedMessage.isCancelled())
+        {
+          out.writeInt(0);
+        }
+        else
         {
           ChannelBuffer buffer = timeStampOrderedMessage.getTimeStampOrderedMessage().getBuffer();
 
-          out.writeInt(buffer.readableBytes());
+          // the length of the message is already in the buffer
+          //
           buffer.readBytes(out, buffer.readableBytes());
         }
       }

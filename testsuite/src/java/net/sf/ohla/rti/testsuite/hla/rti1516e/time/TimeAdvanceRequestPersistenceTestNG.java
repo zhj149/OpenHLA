@@ -2,10 +2,14 @@ package net.sf.ohla.rti.testsuite.hla.rti1516e.time;
 
 import java.util.UUID;
 
+import net.sf.ohla.rti.testsuite.hla.rti1516e.object.TestObjectInstance;
+
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import hla.rti1516e.ResignAction;
+import hla.rti1516e.OrderType;
+import hla.rti1516e.exceptions.InTimeAdvancingState;
 import hla.rti1516e.exceptions.LogicalTimeAlreadyPassed;
 import hla.rti1516e.time.HLAinteger64TimeFactory;
 
@@ -25,7 +29,12 @@ public class TimeAdvanceRequestPersistenceTestNG
   public void setup()
     throws Exception
   {
-    // advance both federates 4
+    testInteractionMessageRetractionHandle =
+      rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle, testParameterValues, TAG, five).handle;
+    testUpdateAttributesMessageRetractionHandle =
+      rtiAmbassadors.get(0).updateAttributeValues(testObjectInstanceHandle, testAttributeValues, TAG, ten).handle;
+
+    // advance both federates to 3
     //
     rtiAmbassadors.get(0).timeAdvanceRequest(three);
     rtiAmbassadors.get(1).timeAdvanceRequest(three);
@@ -35,13 +44,13 @@ public class TimeAdvanceRequestPersistenceTestNG
 
     rtiAmbassadors.get(0).requestFederationSave(SAVE_NAME);
 
-    federateAmbassadors.get(1).checkInitiateFederateSave(SAVE_NAME);
-
-    // the save has started, but the sending federate hasn't acknowledged so he can still send messages, they will be
-    // saved along with the federation state and sent upon continuation (or a restore)
-    //
-
     federateAmbassadors.get(0).checkInitiateFederateSave(SAVE_NAME);
+
+    // advance federate 1 to 4 before he knows a save was initiated the message will be delivered after the save/restore
+    //
+    rtiAmbassadors.get(1).timeAdvanceRequest(four);
+
+    federateAmbassadors.get(1).checkInitiateFederateSave(SAVE_NAME);
 
     rtiAmbassadors.get(0).federateSaveBegun();
     rtiAmbassadors.get(1).federateSaveBegun();
@@ -60,7 +69,15 @@ public class TimeAdvanceRequestPersistenceTestNG
     rtiAmbassadors.get(0).timeAdvanceRequest(two);
   }
 
-  @Test(dependsOnMethods = { "testTimeAdvanceRequestToLogicalTimeAlreadyPassed" })
+  @Test(expectedExceptions = { InTimeAdvancingState.class })
+  public void testTimeAdvanceRequestWhileInTimeAdvancingState()
+    throws Exception
+  {
+    rtiAmbassadors.get(1).timeAdvanceRequest(four);
+  }
+
+  @Test(dependsOnMethods = { "testTimeAdvanceRequestToLogicalTimeAlreadyPassed",
+                             "testTimeAdvanceRequestWhileInTimeAdvancingState"})
   public void testTimeAdvanceRequestAfterSave()
     throws Exception
   {
@@ -68,9 +85,8 @@ public class TimeAdvanceRequestPersistenceTestNG
     //
     rtiAmbassadors.get(0).timeAdvanceRequest(ten);
 
-    // advance federate 1 to 4
+    // federate 1 should be advancing to 4 after the save
     //
-    rtiAmbassadors.get(1).timeAdvanceRequest(four);
     federateAmbassadors.get(1).checkTimeAdvanceGrant(four);
 
     // nothing should be received yet
@@ -83,7 +99,9 @@ public class TimeAdvanceRequestPersistenceTestNG
 
     // the first message should be received
     //
-    federateAmbassadors.get(1).checkParameterValues(testParameterValues, five);
+    federateAmbassadors.get(1).checkParameterValues(
+      testInteractionClassHandle, testParameterValues, TAG, OrderType.TIMESTAMP, reliableTransportationTypeHandle,
+      five, OrderType.TIMESTAMP, testInteractionMessageRetractionHandle, federateHandles.get(0));
 
     federateAmbassadors.get(1).checkTimeAdvanceGrant(five);
 
@@ -133,14 +151,37 @@ public class TimeAdvanceRequestPersistenceTestNG
 
     federateAmbassadors.get(0).checkInitiateFederateRestore(SAVE_NAME, FEDERATE_TYPE_1, federateHandles.get(0));
     federateAmbassadors.get(1).checkInitiateFederateRestore(SAVE_NAME, FEDERATE_TYPE_2, federateHandles.get(1));
-    federateAmbassadors.get(2).checkInitiateFederateRestore(SAVE_NAME, FEDERATE_TYPE_3, federateHandles.get(2));
 
     rtiAmbassadors.get(0).federateRestoreComplete();
     rtiAmbassadors.get(1).federateRestoreComplete();
-    rtiAmbassadors.get(2).federateRestoreComplete();
 
     federateAmbassadors.get(0).checkFederationRestored(SAVE_NAME);
     federateAmbassadors.get(1).checkFederationRestored(SAVE_NAME);
-    federateAmbassadors.get(2).checkFederationRestored(SAVE_NAME);
+
+    federateAmbassadors.get(1).getObjectInstances().put(
+      testObjectInstanceHandle,
+      new TestObjectInstance(testObjectInstanceHandle, testObjectClassHandle, testObjectInstanceName, federateHandles.get(0)));
+
+    try
+    {
+      rtiAmbassadors.get(0).timeAdvanceRequest(two);
+      assert false;
+    }
+    catch (LogicalTimeAlreadyPassed ltap)
+    {
+      // intentionally empty
+    }
+
+    try
+    {
+      rtiAmbassadors.get(1).timeAdvanceRequest(four);
+      assert false;
+    }
+    catch (InTimeAdvancingState itas)
+    {
+      // intentionally empty
+    }
+
+    testTimeAdvanceRequestAfterSave();
   }
 }

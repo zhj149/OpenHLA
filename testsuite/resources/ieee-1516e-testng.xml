@@ -76,16 +76,17 @@
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.InitialTimeStateTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.TimeAdvancingExceptionsTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.TimeConstrainedTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.TimeConstrainedPersistenceTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.EnableTimeConstrainedExceptionsTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.TimeRegulationTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.TimeRegulationPersistenceTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.EnableTimeRegulationExceptionsTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.TimeAdvanceRequestTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.TimeAdvanceRequestPersistenceTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.TimeAdvanceRequestAvailableTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.NextMessageRequestTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.NextMessageRequestAvailableTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.FlushQueueRequestTestNG"/>
-      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.TimeRegulationPersistenceTestNG"/>
-      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.TimeConstrainedPersistenceTestNG"/>
     </classes>
   </test>
 </suite>
