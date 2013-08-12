@@ -165,24 +165,14 @@
       <entry name=".+\.(gif|png|jpeg|jpg)" />
     </resourceExtensions>
     <wildcardResourcePatterns>
-      <entry name="?*.properties" />
-      <entry name="?*.xml" />
-      <entry name="?*.gif" />
-      <entry name="?*.png" />
-      <entry name="?*.jpeg" />
-      <entry name="?*.jpg" />
-      <entry name="?*.html" />
-      <entry name="?*.dtd" />
-      <entry name="?*.tld" />
-      <entry name="?*.properties" />
-      <entry name="?*.xml" />
-      <entry name="?*.html" />
-      <entry name="?*.dtd" />
-      <entry name="?*.tld" />
-      <entry name="?*.gif" />
-      <entry name="?*.png" />
-      <entry name="?*.jpeg" />
-      <entry name="?*.jpg" />
+      <entry name="!?*.java" />
+      <entry name="!?*.form" />
+      <entry name="!?*.class" />
+      <entry name="!?*.groovy" />
+      <entry name="!?*.scala" />
+      <entry name="!?*.flex" />
+      <entry name="!?*.kt" />
+      <entry name="!?*.clj" />
     </wildcardResourcePatterns>
     <annotationProcessing>
       <profile default="true" name="Default" enabled="false">
@@ -418,6 +408,8 @@
             <emptyLine />
             <package name="javax" withSubpackages="true" static="false" />
             <emptyLine />
+            <package name="javafx.*" withSubpackages="true" static="false" />
+            <emptyLine />
             <package name="net" withSubpackages="true" static="false" />
             <emptyLine />
             <package name="org.apache" withSubpackages="true" static="false" />
@@ -427,6 +419,8 @@
             <package name="hla.rti" withSubpackages="true" static="false" />
             <emptyLine />
             <package name="hla.rti1516" withSubpackages="true" static="false" />
+            <emptyLine />
+            <package name="hla.rti1516e.*" withSubpackages="true" static="false" />
             <emptyLine />
             <package name="" withSubpackages="true" static="false" />
             <emptyLine />
@@ -542,6 +536,206 @@
             <option name="CONTINUATION_INDENT_SIZE" value="2" />
             <option name="TAB_SIZE" value="2" />
           </indentOptions>
+          <arrangement>
+            <groups>
+              <group>
+                <type>GETTERS_AND_SETTERS</type>
+                <order>KEEP</order>
+              </group>
+            </groups>
+            <rules>
+              <rule>
+                <match>
+                  <AND>
+                    <TYPE>FIELD</TYPE>
+                    <MODIFIER>PUBLIC</MODIFIER>
+                    <MODIFIER>STATIC</MODIFIER>
+                    <MODIFIER>FINAL</MODIFIER>
+                  </AND>
+                </match>
+              </rule>
+              <rule>
+                <match>
+                  <AND>
+                    <TYPE>FIELD</TYPE>
+                    <MODIFIER>PROTECTED</MODIFIER>
+                    <MODIFIER>STATIC</MODIFIER>
+                    <MODIFIER>FINAL</MODIFIER>
+                  </AND>
+                </match>
+              </rule>
+              <rule>
+                <match>
+                  <AND>
+                    <TYPE>FIELD</TYPE>
+                    <MODIFIER>PACKAGE_PRIVATE</MODIFIER>
+                    <MODIFIER>STATIC</MODIFIER>
+                    <MODIFIER>FINAL</MODIFIER>
+                  </AND>
+                </match>
+              </rule>
+              <rule>
+                <match>
+                  <AND>
+                    <TYPE>FIELD</TYPE>
+                    <MODIFIER>PRIVATE</MODIFIER>
+                    <MODIFIER>STATIC</MODIFIER>
+                    <MODIFIER>FINAL</MODIFIER>
+                  </AND>
+                </match>
+              </rule>
+              <rule>
+                <match>
+                  <AND>
+                    <TYPE>FIELD</TYPE>
+                    <MODIFIER>PUBLIC</MODIFIER>
+                    <MODIFIER>STATIC</MODIFIER>
+                  </AND>
+                </match>
+              </rule>
+              <rule>
+                <match>
+                  <AND>
+                    <TYPE>FIELD</TYPE>
+                    <MODIFIER>PROTECTED</MODIFIER>
+                    <MODIFIER>STATIC</MODIFIER>
+                  </AND>
+                </match>
+              </rule>
+              <rule>
+                <match>
+                  <AND>
+                    <TYPE>FIELD</TYPE>
+                    <MODIFIER>PACKAGE_PRIVATE</MODIFIER>
+                    <MODIFIER>STATIC</MODIFIER>
+                  </AND>
+                </match>
+              </rule>
+              <rule>
+                <match>
+                  <AND>
+                    <TYPE>FIELD</TYPE>
+                    <MODIFIER>PRIVATE</MODIFIER>
+                    <MODIFIER>STATIC</MODIFIER>
+                  </AND>
+                </match>
+              </rule>
+              <rule>
+                <match>
+                  <AND>
+                    <TYPE>FIELD</TYPE>
+                    <MODIFIER>PUBLIC</MODIFIER>
+                    <MODIFIER>FINAL</MODIFIER>
+                  </AND>
+                </match>
+              </rule>
+              <rule>
+                <match>
+                  <AND>
+                    <TYPE>FIELD</TYPE>
+                    <MODIFIER>PROTECTED</MODIFIER>
+                    <MODIFIER>FINAL</MODIFIER>
+                  </AND>
+                </match>
+              </rule>
+              <rule>
+                <match>
+                  <AND>
+                    <TYPE>FIELD</TYPE>
+                    <MODIFIER>PACKAGE_PRIVATE</MODIFIER>
+                    <MODIFIER>FINAL</MODIFIER>
+                  </AND>
+                </match>
+              </rule>
+              <rule>
+                <match>
+                  <AND>
+                    <TYPE>FIELD</TYPE>
+                    <MODIFIER>PRIVATE</MODIFIER>
+                    <MODIFIER>FINAL</MODIFIER>
+                  </AND>
+                </match>
+              </rule>
+              <rule>
+                <match>
+                  <AND>
+                    <TYPE>FIELD</TYPE>
+                    <MODIFIER>PUBLIC</MODIFIER>
+                  </AND>
+                </match>
+              </rule>
+              <rule>
+                <match>
+                  <AND>
+                    <TYPE>FIELD</TYPE>
+                    <MODIFIER>PROTECTED</MODIFIER>
+                  </AND>
+                </match>
+              </rule>
+              <rule>
+                <match>
+                  <AND>
+                    <TYPE>FIELD</TYPE>
+                    <MODIFIER>PACKAGE_PRIVATE</MODIFIER>
+                  </AND>
+                </match>
+              </rule>
+              <rule>
+                <match>
+                  <AND>
+                    <TYPE>FIELD</TYPE>
+                    <MODIFIER>PRIVATE</MODIFIER>
+                  </AND>
+                </match>
+              </rule>
+              <rule>
+                <match>
+                  <TYPE>FIELD</TYPE>
+                </match>
+              </rule>
+              <rule>
+                <match>
+                  <TYPE>CONSTRUCTOR</TYPE>
+                </match>
+              </rule>
+              <rule>
+                <match>
+                  <AND>
+                    <TYPE>METHOD</TYPE>
+                    <MODIFIER>STATIC</MODIFIER>
+                  </AND>
+                </match>
+              </rule>
+              <rule>
+                <match>
+                  <TYPE>METHOD</TYPE>
+                </match>
+              </rule>
+              <rule>
+                <match>
+                  <TYPE>ENUM</TYPE>
+                </match>
+              </rule>
+              <rule>
+                <match>
+                  <TYPE>INTERFACE</TYPE>
+                </match>
+              </rule>
+              <rule>
+                <match>
+                  <AND>
+                    <TYPE>CLASS</TYPE>
+                    <MODIFIER>STATIC</MODIFIER>
+                  </AND>
+                </match>
+              </rule>
+              <rule>
+                <match>
+                  <TYPE>CLASS</TYPE>
+                </match>
+              </rule>
+            </rules>
+          </arrangement>
         </codeStyleSettings>
         <codeStyleSettings language="XML">
           <indentOptions>
@@ -565,6 +759,7 @@
   </component>
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/Examples.iml" filepath="$PROJECT_DIR$/Examples.iml" />
       <module fileurl="file://$PROJECT_DIR$/HLA 1.3.iml" filepath="$PROJECT_DIR$/HLA 1.3.iml" />
       <module fileurl="file://$PROJECT_DIR$/IEEE 1516.iml" filepath="$PROJECT_DIR$/IEEE 1516.iml" />
       <module fileurl="file://$PROJECT_DIR$/IEEE 1516e.iml" filepath="$PROJECT_DIR$/IEEE 1516e.iml" />

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright (c) 2005-2011, Michael Newcomb
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~       http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.StackPane?>
+
+<VBox xmlns:fx="http://javafx.com/javafx/2.2"
+      fx:id="vbox"
+      fx:controller="net.sf.ohla.examples.circles.CirclesController"
+      prefWidth="400"
+      prefHeight="400">
+  <fx:define>
+    <String fx:id="foo" fx:value="foo string"/>
+  </fx:define>
+  <HBox>
+    <ComboBox fx:id="hlaVersion"
+              promptText="Select HLA Version"
+              visibleRowCount="10">
+      <items>
+        <FXCollections fx:factory="observableArrayList">
+          <HLAVersion fx:value="HLA_1_3"/>
+          <HLAVersion fx:value="IEEE_1516"/>
+          <HLAVersion fx:value="IEEE_1516e"/>
+        </FXCollections>
+      </items>
+    </ComboBox>
+    <Button text="${foo}" onAction="#createFederate"/>
+  </HBox>
+</VBox>
+<fx:root type="javafx.scene.layout.StackPane" xmlns:fx="http://javafx.com/fxml">
+  <StackPane fx:id="circlesPane"/>
+  <BorderPane fx:id="controlsPane">
+  </BorderPane>
+</fx:root>

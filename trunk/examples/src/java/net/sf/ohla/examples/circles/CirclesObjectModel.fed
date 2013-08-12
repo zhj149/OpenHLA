@@ -1,0 +1,27 @@
+(FED
+  (Federation Circles)
+  (FEDversion v1.3)
+  (spaces )
+  (objects
+    (class objectRoot
+      (attribute privilegeToDelete HLAreliable TimeStamp)
+
+      (class RTIprivate)
+
+      (class Circle
+        (attribute Center HLAreliable Receive)
+        (attribute Radius HLAreliable Receive)
+        (attribute Color HLAreliable Receive)
+      )
+    )
+  )
+  (interactions
+    (class interactionRoot HLAreliable TimeStamp
+      (class RTIprivate HLAreliable TimeStamp)
+
+      (class Buzz HLAreliable Receive
+        (parameter Name)
+      )
+    )
+  )
+)
