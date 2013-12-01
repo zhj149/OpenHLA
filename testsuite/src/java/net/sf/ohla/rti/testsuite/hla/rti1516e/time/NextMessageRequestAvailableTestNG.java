@@ -16,15 +16,10 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti1516e.time;
 
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import hla.rti1516e.InteractionClassHandle;
 import hla.rti1516e.MessageRetractionHandle;
 import hla.rti1516e.OrderType;
-import hla.rti1516e.ParameterHandle;
-import hla.rti1516e.ParameterHandleValueMap;
-import hla.rti1516e.TransportationTypeHandle;
 
 @Test
 public class NextMessageRequestAvailableTestNG

@@ -8,7 +8,7 @@ import hla.rti1516e.ParameterHandle;
 import hla.rti1516e.ParameterHandleValueMap;
 import hla.rti1516e.TransportationTypeHandle;
 
-public class BaseNextMessageRequestTestNG
+public abstract class BaseNextMessageRequestTestNG
   extends BaseTimeManagementTestNG
 {
   protected TransportationTypeHandle reliableTransportationTypeHandle;
