@@ -1,7 +1,5 @@
 package net.sf.ohla.rti.testsuite.hla.rti1516e.time;
 
-import java.net.URL;
-
 import java.util.UUID;
 
 import org.testng.annotations.BeforeClass;

@@ -7,8 +7,8 @@ import net.sf.ohla.rti.testsuite.hla.rti1516e.object.TestObjectInstance;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import hla.rti1516e.ResignAction;
 import hla.rti1516e.OrderType;
+import hla.rti1516e.ResignAction;
 import hla.rti1516e.exceptions.InTimeAdvancingState;
 import hla.rti1516e.exceptions.LogicalTimeAlreadyPassed;
 import hla.rti1516e.time.HLAinteger64TimeFactory;
