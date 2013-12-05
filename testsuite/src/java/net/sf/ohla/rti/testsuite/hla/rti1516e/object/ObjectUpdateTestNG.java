@@ -185,6 +185,7 @@ public class ObjectUpdateTestNG
     {
       super(rtiAmbassador);
     }
+
     public void checkObjectInstanceHandle(final ObjectInstanceHandle objectInstanceHandle)
       throws Exception
     {

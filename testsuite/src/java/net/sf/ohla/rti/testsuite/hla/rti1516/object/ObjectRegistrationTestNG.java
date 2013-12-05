@@ -16,16 +16,14 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti1516.object;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
+import net.sf.ohla.rti.testsuite.hla.rti1516.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti1516.BaseTestNG;
-import net.sf.ohla.rti.testsuite.hla.rti1516.SynchronizedFederateAmbassador;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -45,11 +43,9 @@ import hla.rti1516.ResignAction;
 
 @Test
 public class ObjectRegistrationTestNG
-  extends BaseTestNG
+  extends BaseTestNG<ObjectRegistrationTestNG.TestFederateAmbassador>
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516 Object Registration Test Federation";
-
-  private final List<TestFederateAmbassador> federateAmbassadors = new ArrayList<TestFederateAmbassador>(5);
+  private static final String FEDERATION_NAME = ObjectRegistrationTestNG.class.getSimpleName();
 
   private ObjectClassHandle testObjectClassHandle;
   private AttributeHandleSet testObjectAttributeHandles;
@@ -63,31 +59,15 @@ public class ObjectRegistrationTestNG
 
   public ObjectRegistrationTestNG()
   {
-    super(5);
+    super(5, FEDERATION_NAME);
   }
 
   @BeforeClass
   public void setup()
     throws Exception
   {
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(0)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(1)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(2)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(3)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(4)));
-
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
-
-    rtiAmbassadors.get(0).joinFederationExecution(
-      FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(0), mobileFederateServices);
-    rtiAmbassadors.get(1).joinFederationExecution(
-      FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(1), mobileFederateServices);
-    rtiAmbassadors.get(2).joinFederationExecution(
-      FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(2), mobileFederateServices);
-    rtiAmbassadors.get(3).joinFederationExecution(
-      FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(3), mobileFederateServices);
-    rtiAmbassadors.get(4).joinFederationExecution(
-      FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(4), mobileFederateServices);
+    createFederationExecution();
+    joinFederationExecution();
 
     testObjectClassHandle = rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT);
     AttributeHandle attributeHandle1 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle, ATTRIBUTE1);
@@ -126,8 +106,7 @@ public class ObjectRegistrationTestNG
     throws Exception
   {
     resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
-
-    destroyFederationExecution(FEDERATION_NAME);
+    destroyFederationExecution();
   }
 
   @Test
@@ -272,8 +251,13 @@ public class ObjectRegistrationTestNG
     rtiAmbassadors.get(2).registerObjectInstance(testObjectClassHandle, TEST_OBJECT);
   }
 
-  private static class TestFederateAmbassador
-    extends SynchronizedFederateAmbassador
+  protected TestFederateAmbassador createFederateAmbassador(RTIambassador rtiAmbassador)
+  {
+    return new TestFederateAmbassador(rtiAmbassador);
+  }
+
+  public static class TestFederateAmbassador
+    extends BaseFederateAmbassador
   {
     private final Set<String> reservedObjectInstanceNames = new HashSet<String>();
 

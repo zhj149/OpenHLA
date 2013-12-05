@@ -28,7 +28,7 @@ import hla.rti1516.ObjectClassHandle;
 public class ObjectSupportTestNG
   extends BaseSupportTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516 Object Support Test Federation";
+  private static final String FEDERATION_NAME = ObjectSupportTestNG.class.getSimpleName();
 
   public ObjectSupportTestNG()
   {

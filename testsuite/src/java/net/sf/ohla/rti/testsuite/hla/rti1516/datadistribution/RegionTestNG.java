@@ -27,19 +27,19 @@ import hla.rti1516.DimensionHandleSet;
 import hla.rti1516.InvalidDimensionHandle;
 import hla.rti1516.InvalidRangeBound;
 import hla.rti1516.InvalidRegion;
+import hla.rti1516.RTIambassador;
 import hla.rti1516.RangeBounds;
 import hla.rti1516.RegionDoesNotContainSpecifiedDimension;
 import hla.rti1516.RegionHandle;
 import hla.rti1516.RegionHandleSet;
 import hla.rti1516.RegionNotCreatedByThisFederate;
-import hla.rti1516.ResignAction;
 import hla.rti1516.jlc.NullFederateAmbassador;
 
 @Test
-public class RegionSupportTestNG
-  extends BaseTestNG
+public class RegionTestNG
+  extends BaseTestNG<NullFederateAmbassador>
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516 Region Test Federation";
+  private static final String FEDERATION_NAME = RegionTestNG.class.getSimpleName();
 
   private DimensionHandle dimensionHandle1;
   private DimensionHandle dimensionHandle2;
@@ -51,21 +51,17 @@ public class RegionSupportTestNG
 
   private RangeBounds rangeBounds = new RangeBounds(5L, 44L);
 
-  public RegionSupportTestNG()
+  public RegionTestNG()
   {
-    super(2);
+    super(2, FEDERATION_NAME);
   }
 
   @BeforeClass
   public void setup()
     throws Exception
   {
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
-
-    rtiAmbassadors.get(0).joinFederationExecution(
-      FEDERATE_TYPE, FEDERATION_NAME, new NullFederateAmbassador(), mobileFederateServices);
-    rtiAmbassadors.get(1).joinFederationExecution(
-      FEDERATE_TYPE, FEDERATION_NAME, new NullFederateAmbassador(), mobileFederateServices);
+    createFederationExecution();
+    joinFederationExecution();
 
     dimensionHandle1 = rtiAmbassadors.get(0).getDimensionHandle(DIMENSION1);
     dimensionHandle2 = rtiAmbassadors.get(0).getDimensionHandle(DIMENSION2);
@@ -77,9 +73,8 @@ public class RegionSupportTestNG
   public void teardown()
     throws Exception
   {
-    resignFederationExecution(ResignAction.NO_ACTION);
-
-    destroyFederationExecution(FEDERATION_NAME);
+    resignFederationExecution();
+    destroyFederationExecution();
   }
 
   @Test
@@ -250,5 +245,10 @@ public class RegionSupportTestNG
     throws Exception
   {
     rtiAmbassadors.get(0).deleteRegion(regionHandle2);
+  }
+
+  protected NullFederateAmbassador createFederateAmbassador(RTIambassador rtiAmbassador)
+  {
+    return new NullFederateAmbassador();
   }
 }

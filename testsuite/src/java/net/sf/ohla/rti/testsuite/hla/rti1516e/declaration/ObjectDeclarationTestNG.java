@@ -42,7 +42,6 @@ public class ObjectDeclarationTestNG
     super(FEDERATION_NAME);
   }
 
-
   @BeforeClass
   public void setup()
     throws Exception

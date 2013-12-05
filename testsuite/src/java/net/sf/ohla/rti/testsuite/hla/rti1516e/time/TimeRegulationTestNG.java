@@ -51,7 +51,7 @@ public class TimeRegulationTestNG
     rtiAmbassadors.get(0).enableTimeRegulation(lookahead1);
   }
 
-  @Test(dependsOnMethods = {"testEnableTimeRegulationAgain"})
+  @Test(dependsOnMethods = {"testEnableTimeRegulation"})
   public void testModifyLookahead()
     throws Exception
   {

@@ -19,6 +19,7 @@ package net.sf.ohla.rti.testsuite.hla.rti1516e.time;
 import org.testng.annotations.Test;
 
 import hla.rti1516e.MessageRetractionHandle;
+import hla.rti1516e.MessageRetractionReturn;
 import hla.rti1516e.OrderType;
 
 @Test
@@ -66,8 +67,10 @@ public class NextMessageRequestAvailableTestNG
 
     // send another message at time 3
     //
-    MessageRetractionHandle testInteractionMessageRetractionHandle2 =
-      rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle2, testParameterValues, TAG, three).handle;
+    MessageRetractionReturn testInteractionMessageRetraction2 =
+      rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle2, testParameterValues, TAG, three);
+    assert testInteractionMessageRetraction2.retractionHandleIsValid;
+    MessageRetractionHandle testInteractionMessageRetractionHandle2 = testInteractionMessageRetraction2.handle;
 
     // advance federate 0 to 3
     //
@@ -121,8 +124,9 @@ public class NextMessageRequestAvailableTestNG
 
     // send another message at time 4
     //
-    MessageRetractionHandle testInteractionMessageRetractionHandle3 =
-      rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle3, testParameterValues, TAG, four).handle;
+    MessageRetractionReturn testInteractionMessageRetraction3 =
+      rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle3, testParameterValues, TAG, four);
+    MessageRetractionHandle testInteractionMessageRetractionHandle3 = testInteractionMessageRetraction3.handle;
 
     // advance federate 0 to 4
     //

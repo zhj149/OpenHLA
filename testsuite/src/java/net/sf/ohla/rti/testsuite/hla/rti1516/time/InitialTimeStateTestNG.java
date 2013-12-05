@@ -22,7 +22,7 @@ import org.testng.annotations.Test;
 public class InitialTimeStateTestNG
   extends BaseTimeManagementTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516 Initial Time State Test Federation";
+  private static final String FEDERATION_NAME = InitialTimeStateTestNG.class.getSimpleName();
 
   public InitialTimeStateTestNG()
   {

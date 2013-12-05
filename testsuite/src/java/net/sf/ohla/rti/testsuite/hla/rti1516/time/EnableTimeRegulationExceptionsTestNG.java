@@ -25,7 +25,7 @@ import hla.rti1516.RequestForTimeRegulationPending;
 public class EnableTimeRegulationExceptionsTestNG
   extends BaseTimeManagementTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516 Enable Time Regulation Exceptions Test Federation";
+  private static final String FEDERATION_NAME = EnableTimeRegulationExceptionsTestNG.class.getSimpleName();
 
   public EnableTimeRegulationExceptionsTestNG()
   {

@@ -28,6 +28,7 @@ import hla.rti1516.AttributeNotRecognized;
 import hla.rti1516.AttributeNotSubscribed;
 import hla.rti1516.CouldNotDiscover;
 import hla.rti1516.CouldNotInitiateRestore;
+import hla.rti1516.FederateHandleRestoreStatusPair;
 import hla.rti1516.InteractionClassNotRecognized;
 import hla.rti1516.InteractionClassNotSubscribed;
 import hla.rti1516.InteractionParameterNotRecognized;
@@ -192,6 +193,21 @@ public class IEEE1516FederateAmbassadorBridge
   public void federationSaveStatusResponse(FederateHandleSaveStatusPair[] response)
     throws FederateInternalError
   {
+    hla.rti1516.FederateHandleSaveStatusPair[] ieee1516Response =
+      new hla.rti1516.FederateHandleSaveStatusPair[response.length];
+    for (int i = 0; i < response.length; i++)
+    {
+      ieee1516Response[i] = rtiAmbassador.convert(response[i]);
+    }
+
+    try
+    {
+      rtiAmbassador.getIEEE1516FederateAmbassador().federationSaveStatusResponse(ieee1516Response);
+    }
+    catch (hla.rti1516.FederateInternalError fie)
+    {
+      throw new FederateInternalError(fie.getMessage(), fie);
+    }
   }
 
   public void requestFederationRestoreSucceeded(String label)
@@ -283,6 +299,20 @@ public class IEEE1516FederateAmbassadorBridge
   public void federationRestoreStatusResponse(FederateRestoreStatus[] response)
     throws FederateInternalError
   {
+    FederateHandleRestoreStatusPair[] ieee1516Response = new FederateHandleRestoreStatusPair[response.length];
+    for (int i = 0; i < response.length; i++)
+    {
+      ieee1516Response[i] = rtiAmbassador.convert(response[i]);
+    }
+
+    try
+    {
+      rtiAmbassador.getIEEE1516FederateAmbassador().federationRestoreStatusResponse(ieee1516Response);
+    }
+    catch (hla.rti1516.FederateInternalError fie)
+    {
+      throw new FederateInternalError(fie.getMessage(), fie);
+    }
   }
 
   public void reportFederationExecutions(FederationExecutionInformationSet federationExecutionInformations)
@@ -295,7 +325,8 @@ public class IEEE1516FederateAmbassadorBridge
   {
     try
     {
-      rtiAmbassador.getIEEE1516FederateAmbassador().startRegistrationForObjectClass(rtiAmbassador.convert(objectClassHandle));
+      rtiAmbassador.getIEEE1516FederateAmbassador().startRegistrationForObjectClass(
+        rtiAmbassador.convert(objectClassHandle));
     }
     catch (hla.rti1516.ObjectClassNotPublished ocnp)
     {
@@ -312,7 +343,8 @@ public class IEEE1516FederateAmbassadorBridge
   {
     try
     {
-      rtiAmbassador.getIEEE1516FederateAmbassador().stopRegistrationForObjectClass(rtiAmbassador.convert(objectClassHandle));
+      rtiAmbassador.getIEEE1516FederateAmbassador().stopRegistrationForObjectClass(
+        rtiAmbassador.convert(objectClassHandle));
     }
     catch (hla.rti1516.ObjectClassNotPublished ocnp)
     {

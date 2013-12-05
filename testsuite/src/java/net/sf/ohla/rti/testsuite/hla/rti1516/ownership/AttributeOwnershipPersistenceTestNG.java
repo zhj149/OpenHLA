@@ -18,6 +18,7 @@ package net.sf.ohla.rti.testsuite.hla.rti1516.ownership;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 
 import net.sf.ohla.rti.testsuite.hla.rti1516.BaseFederateAmbassador;
@@ -29,31 +30,30 @@ import org.testng.annotations.Test;
 
 import hla.rti1516.AttributeHandle;
 import hla.rti1516.AttributeHandleSet;
-import hla.rti1516.AttributeNotDefined;
-import hla.rti1516.AttributeNotOwned;
+import hla.rti1516.CouldNotDiscover;
 import hla.rti1516.FederateHandle;
 import hla.rti1516.FederateInternalError;
 import hla.rti1516.ObjectClassHandle;
+import hla.rti1516.ObjectClassNotRecognized;
 import hla.rti1516.ObjectInstanceHandle;
-import hla.rti1516.ObjectInstanceNotKnown;
 import hla.rti1516.RTIambassador;
 import hla.rti1516.ResignAction;
 
 @Test
-public class AttributeDivestitureTestNG
-  extends BaseTestNG<AttributeDivestitureTestNG.TestFederateAmbassador>
+public class AttributeOwnershipPersistenceTestNG
+  extends BaseTestNG<AttributeOwnershipPersistenceTestNG.TestFederateAmbassador>
 {
-  private static final String FEDERATION_NAME = AttributeDivestitureTestNG.class.getSimpleName();
+  private static final String FEDERATION_NAME = AttributeOwnershipPersistenceTestNG.class.getSimpleName();
+  private static final String SAVE_NAME = FEDERATION_NAME + UUID.randomUUID();
 
   private ObjectInstanceHandle testObjectInstanceHandle;
-  private ObjectInstanceHandle testObjectInstanceHandle2;
 
   private AttributeHandle attributeHandle1;
   private AttributeHandle attributeHandle2;
   private AttributeHandle attributeHandle3;
   private AttributeHandle attributeHandle4;
 
-  public AttributeDivestitureTestNG()
+  public AttributeOwnershipPersistenceTestNG()
   {
     super(3, FEDERATION_NAME);
   }
@@ -87,14 +87,57 @@ public class AttributeDivestitureTestNG
     rtiAmbassadors.get(1).subscribeObjectClassAttributes(testObjectClassHandle, testObjectAttributeHandles);
 
     testObjectInstanceHandle = rtiAmbassadors.get(0).registerObjectInstance(testObjectClassHandle);
-    testObjectInstanceHandle2 = rtiAmbassadors.get(1).registerObjectInstance(testObjectClassHandle);
 
     // ensure the objects arrive
     //
-    federateAmbassadors.get(0).checkObjectInstanceHandle(testObjectInstanceHandle2);
     federateAmbassadors.get(1).checkObjectInstanceHandle(testObjectInstanceHandle);
 
     synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE, federateAmbassadors);
+
+    rtiAmbassadors.get(0).requestFederationSave(SAVE_NAME);
+
+    federateAmbassadors.get(0).checkInitiateFederateSave(SAVE_NAME);
+    federateAmbassadors.get(1).checkInitiateFederateSave(SAVE_NAME);
+    federateAmbassadors.get(2).checkInitiateFederateSave(SAVE_NAME);
+
+    rtiAmbassadors.get(0).federateSaveBegun();
+    rtiAmbassadors.get(1).federateSaveBegun();
+    rtiAmbassadors.get(2).federateSaveBegun();
+
+    rtiAmbassadors.get(0).federateSaveComplete();
+    rtiAmbassadors.get(1).federateSaveComplete();
+    rtiAmbassadors.get(2).federateSaveComplete();
+
+    federateAmbassadors.get(0).checkFederationSaved(SAVE_NAME);
+    federateAmbassadors.get(1).checkFederationSaved(SAVE_NAME);
+    federateAmbassadors.get(2).checkFederationSaved(SAVE_NAME);
+
+    resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
+    destroyFederationExecution();
+
+    for (TestFederateAmbassador testFederateAmbassador : federateAmbassadors)
+    {
+      testFederateAmbassador.reset();
+    }
+
+    createFederationExecution();
+    joinFederationExecution();
+
+    rtiAmbassadors.get(0).requestFederationRestore(SAVE_NAME);
+
+    federateAmbassadors.get(0).checkRequestFederationRestoreSucceeded(SAVE_NAME);
+
+    federateAmbassadors.get(0).checkInitiateFederateRestore(SAVE_NAME, federateHandles.get(0));
+    federateAmbassadors.get(1).checkInitiateFederateRestore(SAVE_NAME, federateHandles.get(1));
+    federateAmbassadors.get(2).checkInitiateFederateRestore(SAVE_NAME, federateHandles.get(2));
+
+    rtiAmbassadors.get(0).federateRestoreComplete();
+    rtiAmbassadors.get(1).federateRestoreComplete();
+    rtiAmbassadors.get(2).federateRestoreComplete();
+
+    federateAmbassadors.get(0).checkFederationRestored(SAVE_NAME);
+    federateAmbassadors.get(1).checkFederationRestored(SAVE_NAME);
+    federateAmbassadors.get(2).checkFederationRestored(SAVE_NAME);
   }
 
   @AfterClass
@@ -106,65 +149,39 @@ public class AttributeDivestitureTestNG
   }
 
   @Test
-  public void testUnconditionalAttributeOwnershipDivestiture()
+  public void testIsAttributeOwnedByFederate()
     throws Exception
   {
-    AttributeHandleSet attributeHandles = rtiAmbassadors.get(0).getAttributeHandleSetFactory().create();
-    attributeHandles.add(attributeHandle1);
-    attributeHandles.add(attributeHandle2);
+    assert rtiAmbassadors.get(0).isAttributeOwnedByFederate(testObjectInstanceHandle, attributeHandle1);
+    assert rtiAmbassadors.get(0).isAttributeOwnedByFederate(testObjectInstanceHandle, attributeHandle2);
+    assert !rtiAmbassadors.get(0).isAttributeOwnedByFederate(testObjectInstanceHandle, attributeHandle3);
 
-    rtiAmbassadors.get(0).unconditionalAttributeOwnershipDivestiture(testObjectInstanceHandle, attributeHandles);
+    assert !rtiAmbassadors.get(1).isAttributeOwnedByFederate(testObjectInstanceHandle, attributeHandle1);
+    assert !rtiAmbassadors.get(1).isAttributeOwnedByFederate(testObjectInstanceHandle, attributeHandle2);
+    assert !rtiAmbassadors.get(1).isAttributeOwnedByFederate(testObjectInstanceHandle, attributeHandle3);
+  }
 
-    assert !rtiAmbassadors.get(0).isAttributeOwnedByFederate(testObjectInstanceHandle, attributeHandle1);
-    assert !rtiAmbassadors.get(0).isAttributeOwnedByFederate(testObjectInstanceHandle, attributeHandle2);
-
+  @Test
+  public void testQueryAttributeOwnership()
+    throws Exception
+  {
     rtiAmbassadors.get(0).queryAttributeOwnership(testObjectInstanceHandle, attributeHandle1);
     rtiAmbassadors.get(0).queryAttributeOwnership(testObjectInstanceHandle, attributeHandle2);
+    rtiAmbassadors.get(0).queryAttributeOwnership(testObjectInstanceHandle, attributeHandle3);
+    rtiAmbassadors.get(1).queryAttributeOwnership(testObjectInstanceHandle, attributeHandle1);
+    rtiAmbassadors.get(1).queryAttributeOwnership(testObjectInstanceHandle, attributeHandle2);
+    rtiAmbassadors.get(1).queryAttributeOwnership(testObjectInstanceHandle, attributeHandle3);
 
-    federateAmbassadors.get(0).checkAttributeIsUnowned(testObjectInstanceHandle, attributeHandle1);
-    federateAmbassadors.get(0).checkAttributeIsUnowned(testObjectInstanceHandle, attributeHandle2);
-  }
-
-  @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
-  public void testUnconditionalAttributeOwnershipDivestitureWithNullObjectInstanceHandle()
-    throws Exception
-  {
-    AttributeHandleSet attributeHandles = rtiAmbassadors.get(0).getAttributeHandleSetFactory().create();
-    attributeHandles.add(attributeHandle1);
-    attributeHandles.add(attributeHandle2);
-
-    rtiAmbassadors.get(0).unconditionalAttributeOwnershipDivestiture(null, attributeHandles);
-  }
-
-  @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
-  public void testUnconditionalAttributeOwnershipDivestitureWithUnknownObjectInstanceHandle()
-    throws Exception
-  {
-    AttributeHandleSet attributeHandles = rtiAmbassadors.get(0).getAttributeHandleSetFactory().create();
-    attributeHandles.add(attributeHandle1);
-    attributeHandles.add(attributeHandle2);
-
-    rtiAmbassadors.get(2).unconditionalAttributeOwnershipDivestiture(testObjectInstanceHandle, attributeHandles);
-  }
-
-  @Test(expectedExceptions = {AttributeNotDefined.class})
-  public void testUnconditionalAttributeOwnershipDivestitureWithUndefinedAttributeHandle()
-    throws Exception
-  {
-    AttributeHandleSet attributeHandles = rtiAmbassadors.get(0).getAttributeHandleSetFactory().create();
-    attributeHandles.add(attributeHandle4);
-
-    rtiAmbassadors.get(1).unconditionalAttributeOwnershipDivestiture(testObjectInstanceHandle, attributeHandles);
-  }
-
-  @Test(expectedExceptions = {AttributeNotOwned.class})
-  public void testUnconditionalAttributeOwnershipDivestitureOfUnownedAttribute()
-    throws Exception
-  {
-    AttributeHandleSet attributeHandles = rtiAmbassadors.get(0).getAttributeHandleSetFactory().create();
-    attributeHandles.add(attributeHandle3);
-
-    rtiAmbassadors.get(0).unconditionalAttributeOwnershipDivestiture(testObjectInstanceHandle, attributeHandles);
+    federateAmbassadors.get(0).checkAttributeIsOwnedByFederate(
+      testObjectInstanceHandle, attributeHandle1, federateHandles.get(0));
+    federateAmbassadors.get(0).checkAttributeIsOwnedByFederate(
+      testObjectInstanceHandle, attributeHandle2, federateHandles.get(0));
+    federateAmbassadors.get(0).checkAttributeIsUnowned(testObjectInstanceHandle, attributeHandle3);
+    federateAmbassadors.get(1).checkAttributeIsOwnedByFederate(
+      testObjectInstanceHandle, attributeHandle1, federateHandles.get(0));
+    federateAmbassadors.get(1).checkAttributeIsOwnedByFederate(
+      testObjectInstanceHandle, attributeHandle2, federateHandles.get(0));
+    federateAmbassadors.get(1).checkAttributeIsUnowned(testObjectInstanceHandle, attributeHandle3);
   }
 
   protected TestFederateAmbassador createFederateAmbassador(RTIambassador rtiAmbassador)
@@ -197,6 +214,23 @@ public class AttributeDivestitureTestNG
       assert objectInstances.containsKey(objectInstanceHandle);
     }
 
+    public void checkAttributeIsOwnedByFederate(
+      final ObjectInstanceHandle objectInstanceHandle, final AttributeHandle attributeHandle,
+      FederateHandle federateHandle)
+      throws Exception
+    {
+      evokeCallbackWhile(new Callable<Boolean>()
+      {
+        public Boolean call()
+        {
+          return !objectInstances.containsKey(objectInstanceHandle) ||
+                 objectInstances.get(objectInstanceHandle).get(attributeHandle) == null;
+        }
+      });
+
+      assert federateHandle.equals(objectInstances.get(objectInstanceHandle).get(attributeHandle));
+    }
+
     public void checkAttributeIsUnowned(
       final ObjectInstanceHandle objectInstanceHandle, final AttributeHandle attributeHandle)
       throws Exception
@@ -209,7 +243,7 @@ public class AttributeDivestitureTestNG
     @Override
     public void discoverObjectInstance(
       ObjectInstanceHandle objectInstanceHandle, ObjectClassHandle objectClassHandle, String objectInstanceName)
-      throws FederateInternalError
+      throws CouldNotDiscover, ObjectClassNotRecognized, FederateInternalError
     {
       objectInstances.put(objectInstanceHandle, new HashMap<AttributeHandle, Object>());
     }

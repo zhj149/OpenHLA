@@ -26,7 +26,7 @@ import hla.rti1516.jlc.NullFederateAmbassador;
 public class FederateSupportTestNG
   extends BaseSupportTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516 Federate Support Test Federation";
+  private static final String FEDERATION_NAME = FederateSupportTestNG.class.getSimpleName();
 
   public FederateSupportTestNG()
   {

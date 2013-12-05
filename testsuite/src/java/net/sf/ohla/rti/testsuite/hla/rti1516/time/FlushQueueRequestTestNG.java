@@ -20,16 +20,24 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import hla.rti1516.InteractionClassHandle;
+import hla.rti1516.MessageRetractionHandle;
+import hla.rti1516.MessageRetractionReturn;
+import hla.rti1516.OrderType;
 import hla.rti1516.ParameterHandle;
 import hla.rti1516.ParameterHandleValueMap;
+import hla.rti1516.TransportationType;
 
 @Test
 public class FlushQueueRequestTestNG
   extends BaseTimeManagementTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516 Flush Queue Request Test Federation";
+  private static final String FEDERATION_NAME = FlushQueueRequestTestNG.class.getSimpleName();
 
+  private InteractionClassHandle testInteractionClassHandle;
   private ParameterHandleValueMap testParameterValues;
+
+  private MessageRetractionHandle testInteractionMessageRetractionHandle1;
+  private MessageRetractionHandle testInteractionMessageRetractionHandle2;
 
   public FlushQueueRequestTestNG()
     throws Exception
@@ -53,7 +61,7 @@ public class FlushQueueRequestTestNG
     federateAmbassadors.get(0).checkTimeConstrainedEnabled(initial);
     federateAmbassadors.get(1).checkTimeConstrainedEnabled(initial);
 
-    InteractionClassHandle testInteractionClassHandle = rtiAmbassadors.get(0).getInteractionClassHandle(TEST_INTERACTION);
+    testInteractionClassHandle = rtiAmbassadors.get(0).getInteractionClassHandle(TEST_INTERACTION);
 
     ParameterHandle parameterHandle1 = rtiAmbassadors.get(0).getParameterHandle(testInteractionClassHandle, PARAMETER1);
     ParameterHandle parameterHandle2 = rtiAmbassadors.get(0).getParameterHandle(testInteractionClassHandle, PARAMETER2);
@@ -70,18 +78,32 @@ public class FlushQueueRequestTestNG
 
     synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE, federateAmbassadors);
 
-    rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle, testParameterValues, TAG, five);
-    rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle, testParameterValues, TAG, ten);
+    MessageRetractionReturn messageRetractionReturn1 =
+      rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle, testParameterValues, TAG, five);
+    assert messageRetractionReturn1.retractionHandleIsValid;
+    testInteractionMessageRetractionHandle1 = messageRetractionReturn1.handle;
+
+    MessageRetractionReturn messageRetractionReturn2 =
+      rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle, testParameterValues, TAG, ten);
+    assert messageRetractionReturn2.retractionHandleIsValid;
+    testInteractionMessageRetractionHandle2 = messageRetractionReturn2.handle;
   }
 
   @Test
-  public void testTimeAdvanceRequest()
+  public void testFlushQueueRequest()
     throws Exception
   {
     rtiAmbassadors.get(1).flushQueueRequest(initial);
 
-    federateAmbassadors.get(1).checkParameterValues(testParameterValues, five);
-    federateAmbassadors.get(1).checkParameterValues(testParameterValues, ten);
+    federateAmbassadors.get(1).checkParameterValues(
+      testInteractionClassHandle, testParameterValues, TAG, OrderType.TIMESTAMP, TransportationType.HLA_RELIABLE,
+      five, OrderType.TIMESTAMP, testInteractionMessageRetractionHandle1);
+
+    federateAmbassadors.get(1).reset();
+
+    federateAmbassadors.get(1).checkParameterValues(
+      testInteractionClassHandle, testParameterValues, TAG, OrderType.TIMESTAMP, TransportationType.HLA_RELIABLE,
+      ten, OrderType.TIMESTAMP, testInteractionMessageRetractionHandle2);
 
     federateAmbassadors.get(1).checkTimeAdvanceGrant(initial);
   }

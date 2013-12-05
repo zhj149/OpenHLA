@@ -16,15 +16,13 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti1516.ownership;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import net.sf.ohla.rti.testsuite.hla.rti1516.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti1516.BaseTestNG;
-import net.sf.ohla.rti.testsuite.hla.rti1516.SynchronizedFederateAmbassador;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -44,12 +42,9 @@ import hla.rti1516.ResignAction;
 
 @Test
 public class AttributeAcquisitionTestNG
-  extends BaseTestNG
+  extends BaseTestNG<AttributeAcquisitionTestNG.TestFederateAmbassador>
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516 Attribute Ownership Acquisition Test Federation";
-
-  private final List<FederateHandle> federateHandles = new ArrayList<FederateHandle>(3);
-  private final List<TestFederateAmbassador> federateAmbassadors = new ArrayList<TestFederateAmbassador>(3);
+  private static final String FEDERATION_NAME = AttributeAcquisitionTestNG.class.getSimpleName();
 
   private ObjectInstanceHandle testObjectInstanceHandle;
   private ObjectInstanceHandle testObjectInstanceHandle2;
@@ -61,25 +56,15 @@ public class AttributeAcquisitionTestNG
 
   public AttributeAcquisitionTestNG()
   {
-    super(3);
+    super(3, FEDERATION_NAME);
   }
 
   @BeforeClass
   public void setup()
     throws Exception
   {
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(0)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(1)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(2)));
-
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
-
-    federateHandles.add(rtiAmbassadors.get(0).joinFederationExecution(
-      FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(0), mobileFederateServices));
-    federateHandles.add(rtiAmbassadors.get(1).joinFederationExecution(
-      FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(1), mobileFederateServices));
-    federateHandles.add(rtiAmbassadors.get(2).joinFederationExecution(
-      FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(2), mobileFederateServices));
+    createFederationExecution();
+    joinFederationExecution();
 
     ObjectClassHandle testObjectClassHandle = rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT);
     ObjectClassHandle testObjectClassHandle2 = rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT2);
@@ -123,8 +108,7 @@ public class AttributeAcquisitionTestNG
     throws Exception
   {
     resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
-
-    destroyFederationExecution(FEDERATION_NAME);
+    destroyFederationExecution();
   }
 
   @Test
@@ -185,8 +169,13 @@ public class AttributeAcquisitionTestNG
     rtiAmbassadors.get(1).attributeOwnershipAcquisition(testObjectInstanceHandle, attributeHandles, TAG);
   }
 
-  private static class TestFederateAmbassador
-    extends SynchronizedFederateAmbassador
+  protected TestFederateAmbassador createFederateAmbassador(RTIambassador rtiAmbassador)
+  {
+    return new TestFederateAmbassador(rtiAmbassador);
+  }
+
+  public static class TestFederateAmbassador
+    extends BaseFederateAmbassador
   {
     private final Map<ObjectInstanceHandle, Map<AttributeHandle, Object>> objectInstances =
       new HashMap<ObjectInstanceHandle, Map<AttributeHandle, Object>>();

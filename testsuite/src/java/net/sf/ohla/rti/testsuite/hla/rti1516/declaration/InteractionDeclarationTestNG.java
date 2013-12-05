@@ -16,17 +16,22 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti1516.declaration;
 
+import net.sf.ohla.rti.testsuite.hla.rti1516.BaseTestNG;
+
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import hla.rti1516.InteractionClassHandle;
 import hla.rti1516.InteractionClassNotDefined;
+import hla.rti1516.RTIambassador;
+import hla.rti1516.jlc.NullFederateAmbassador;
 
 @Test
 public class InteractionDeclarationTestNG
-  extends BaseDeclarationTestNG
+  extends BaseTestNG<NullFederateAmbassador>
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516 Interaction Declaration Test Federation";
+  private static final String FEDERATION_NAME = InteractionDeclarationTestNG.class.getSimpleName();
 
   private InteractionClassHandle testInteractionClassHandle;
 
@@ -39,9 +44,18 @@ public class InteractionDeclarationTestNG
   public void setup()
     throws Exception
   {
-    super.setup();
+    createFederationExecution();
+    joinFederationExecution();
 
     testInteractionClassHandle = rtiAmbassadors.get(0).getInteractionClassHandle(TEST_INTERACTION);
+  }
+
+  @AfterClass
+  public void teardown()
+    throws Exception
+  {
+    resignFederationExecution();
+    destroyFederationExecution();
   }
 
   @Test
@@ -98,5 +112,10 @@ public class InteractionDeclarationTestNG
     throws Exception
   {
     rtiAmbassadors.get(0).unsubscribeInteractionClass(null);
+  }
+
+  protected NullFederateAmbassador createFederateAmbassador(RTIambassador rtiAmbassador)
+  {
+    return new NullFederateAmbassador();
   }
 }

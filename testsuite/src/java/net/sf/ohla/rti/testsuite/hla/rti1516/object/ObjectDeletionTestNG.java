@@ -16,15 +16,13 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti1516.object;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import net.sf.ohla.rti.testsuite.hla.rti1516.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti1516.BaseTestNG;
-import net.sf.ohla.rti.testsuite.hla.rti1516.SynchronizedFederateAmbassador;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -43,39 +41,24 @@ import hla.rti1516.ResignAction;
 
 @Test
 public class ObjectDeletionTestNG
-  extends BaseTestNG
+  extends BaseTestNG<ObjectDeletionTestNG.TestFederateAmbassador>
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516 Object Deletion Test Federation";
-
-  private final List<TestFederateAmbassador> federateAmbassadors = new ArrayList<TestFederateAmbassador>(4);
+  private static final String FEDERATION_NAME = ObjectDeletionTestNG.class.getSimpleName();
 
   private ObjectInstanceHandle testObjectInstanceHandle;
   private ObjectInstanceHandle testObjectInstanceHandle2;
 
   public ObjectDeletionTestNG()
   {
-    super(4);
+    super(4, FEDERATION_NAME);
   }
 
   @BeforeClass
   public void setup()
     throws Exception
   {
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(0)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(1)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(2)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(3)));
-
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
-
-    rtiAmbassadors.get(0).joinFederationExecution(
-      FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(0), mobileFederateServices);
-    rtiAmbassadors.get(1).joinFederationExecution(
-      FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(1), mobileFederateServices);
-    rtiAmbassadors.get(2).joinFederationExecution(
-      FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(2), mobileFederateServices);
-    rtiAmbassadors.get(3).joinFederationExecution(
-      FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(3), mobileFederateServices);
+    createFederationExecution();
+    joinFederationExecution();
 
     ObjectClassHandle testObjectClassHandle = rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT);
     AttributeHandle attributeHandle1 = rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle, ATTRIBUTE1);
@@ -121,12 +104,11 @@ public class ObjectDeletionTestNG
     throws Exception
   {
     // the first RTI has been resigned already
-
+    //
     rtiAmbassadors.remove(0);
 
     resignFederationExecution(ResignAction.UNCONDITIONALLY_DIVEST_ATTRIBUTES);
-
-    destroyFederationExecution(FEDERATION_NAME);
+    destroyFederationExecution();
   }
 
   @Test
@@ -169,8 +151,13 @@ public class ObjectDeletionTestNG
     federateAmbassadors.get(1).checkRemoved(testObjectInstanceHandle, null);
   }
 
-  private static class TestFederateAmbassador
-    extends SynchronizedFederateAmbassador
+  protected TestFederateAmbassador createFederateAmbassador(RTIambassador rtiAmbassador)
+  {
+    return new TestFederateAmbassador(rtiAmbassador);
+  }
+
+  public static class TestFederateAmbassador
+    extends BaseFederateAmbassador
   {
     private final Map<ObjectInstanceHandle, TestObjectInstance> objectInstances =
       new HashMap<ObjectInstanceHandle, TestObjectInstance>();
@@ -209,9 +196,8 @@ public class ObjectDeletionTestNG
     }
 
     @Override
-    public void removeObjectInstance(
-      ObjectInstanceHandle objectInstanceHandle, byte[] tag, OrderType sentOrderType)
-      throws FederateInternalError
+    public void removeObjectInstance(ObjectInstanceHandle objectInstanceHandle, byte[] tag, OrderType sentOrderType)
+      throws ObjectInstanceNotKnown, FederateInternalError
     {
       objectInstances.get(objectInstanceHandle).setRemoved(tag);
     }

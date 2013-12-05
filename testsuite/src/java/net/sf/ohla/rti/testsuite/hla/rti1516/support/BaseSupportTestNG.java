@@ -21,40 +21,35 @@ import net.sf.ohla.rti.testsuite.hla.rti1516.BaseTestNG;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
-import hla.rti1516.ResignAction;
+import hla.rti1516.RTIambassador;
 import hla.rti1516.jlc.NullFederateAmbassador;
 
 public abstract class BaseSupportTestNG
-  extends BaseTestNG
+  extends BaseTestNG<NullFederateAmbassador>
 {
-  protected final String federationName;
-
-  protected BaseSupportTestNG(String federationName)
+  protected BaseSupportTestNG(String federationExecutionName)
   {
-    this.federationName = federationName;
-  }
-
-  protected BaseSupportTestNG(int rtiAmbassadorCount, String federationName)
-  {
-    super(rtiAmbassadorCount);
-
-    this.federationName = federationName;
+    super(federationExecutionName);
   }
 
   @BeforeClass
   public void setup()
     throws Exception
   {
-    rtiAmbassadors.get(0).createFederationExecution(federationName, fdd);
-    rtiAmbassadors.get(0).joinFederationExecution(
-      FEDERATE_TYPE, federationName, new NullFederateAmbassador(), mobileFederateServices);
+    createFederationExecution();
+    joinFederationExecution();
   }
 
   @AfterClass
   public void teardown()
     throws Exception
   {
-    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
-    rtiAmbassadors.get(0).destroyFederationExecution(federationName);
+    resignFederationExecution();
+    destroyFederationExecution();
+  }
+
+  protected NullFederateAmbassador createFederateAmbassador(RTIambassador rtiAmbassador)
+  {
+    return new NullFederateAmbassador();
   }
 }

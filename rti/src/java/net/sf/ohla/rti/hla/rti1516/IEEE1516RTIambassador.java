@@ -66,6 +66,8 @@ import hla.rti1516.FederateAlreadyExecutionMember;
 import hla.rti1516.FederateAmbassador;
 import hla.rti1516.FederateHandle;
 import hla.rti1516.FederateHandleFactory;
+import hla.rti1516.FederateHandleRestoreStatusPair;
+import hla.rti1516.FederateHandleSaveStatusPair;
 import hla.rti1516.FederateHandleSet;
 import hla.rti1516.FederateHandleSetFactory;
 import hla.rti1516.FederateHasNotBegunSave;
@@ -143,9 +145,11 @@ import hla.rti1516.ResignAction;
 import hla.rti1516.RestoreFailureReason;
 import hla.rti1516.RestoreInProgress;
 import hla.rti1516.RestoreNotRequested;
+import hla.rti1516.RestoreStatus;
 import hla.rti1516.SaveFailureReason;
 import hla.rti1516.SaveInProgress;
 import hla.rti1516.SaveNotInitiated;
+import hla.rti1516.SaveStatus;
 import hla.rti1516.ServiceGroup;
 import hla.rti1516.SynchronizationPointFailureReason;
 import hla.rti1516.SynchronizationPointLabelNotAnnounced;
@@ -157,6 +161,7 @@ import hla.rti1516.TimeRegulationIsNotEnabled;
 import hla.rti1516.TransportationType;
 
 import hla.rti1516e.CallbackModel;
+import hla.rti1516e.FederateRestoreStatus;
 import hla.rti1516e.TransportationTypeHandle;
 import hla.rti1516e.exceptions.AlreadyConnected;
 import hla.rti1516e.exceptions.CallNotAllowedFromWithinCallback;
@@ -2888,7 +2893,7 @@ public class IEEE1516RTIambassador
     }
     catch (hla.rti1516e.exceptions.AsynchronousDeliveryAlreadyEnabled adae)
     {
-      new AsynchronousDeliveryAlreadyEnabled(adae);
+      throw new AsynchronousDeliveryAlreadyEnabled(adae);
     }
     catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
@@ -5494,6 +5499,28 @@ public class IEEE1516RTIambassador
   public SaveFailureReason convert(hla.rti1516e.SaveFailureReason saveFailureReason)
   {
     return SaveFailureReason.values()[saveFailureReason.ordinal()];
+  }
+
+  public FederateHandleSaveStatusPair convert(hla.rti1516e.FederateHandleSaveStatusPair federateHandleSaveStatusPair)
+  {
+    return new FederateHandleSaveStatusPair(
+      convert(federateHandleSaveStatusPair.handle), convert(federateHandleSaveStatusPair.status));
+  }
+
+  public SaveStatus convert(hla.rti1516e.SaveStatus saveStatus)
+  {
+    return SaveStatus.values()[saveStatus.ordinal()];
+  }
+
+  public FederateHandleRestoreStatusPair convert(FederateRestoreStatus federateRestoreStatus)
+  {
+    return new FederateHandleRestoreStatusPair(
+      convert(federateRestoreStatus.preRestoreHandle), convert(federateRestoreStatus.status));
+  }
+
+  public RestoreStatus convert(hla.rti1516e.RestoreStatus restoreStatus)
+  {
+    return RestoreStatus.values()[restoreStatus.ordinal()];
   }
 
   public hla.rti1516e.SaveFailureReason convert(SaveFailureReason saveFailureReason)
