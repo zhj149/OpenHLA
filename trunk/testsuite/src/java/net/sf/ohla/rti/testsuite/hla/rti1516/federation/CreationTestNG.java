@@ -18,6 +18,7 @@ package net.sf.ohla.rti.testsuite.hla.rti1516.federation;
 
 import java.net.URL;
 
+import net.sf.ohla.rti.testsuite.hla.rti1516.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti1516.BaseTestNG;
 
 import org.testng.annotations.AfterClass;
@@ -27,22 +28,26 @@ import org.testng.annotations.Test;
 import hla.rti1516.CouldNotOpenFDD;
 import hla.rti1516.ErrorReadingFDD;
 import hla.rti1516.FederationExecutionDoesNotExist;
+import hla.rti1516.RTIambassador;
 
 @Test
 public class CreationTestNG
-  extends BaseTestNG
+  extends BaseTestNG<BaseFederateAmbassador>
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516 Creation Test Federation";
+  private static final String FEDERATION_NAME = CreationTestNG.class.getSimpleName();
+
+  private RTIambassador rtiAmbassador;
 
   public CreationTestNG()
   {
-    super(1);
+    super(FEDERATION_NAME);
   }
 
   @BeforeClass
   public void setup()
     throws Exception
   {
+    rtiAmbassador = rtiFactory.getRtiAmbassador();
   }
 
   @AfterClass
@@ -55,69 +60,75 @@ public class CreationTestNG
   public void testCreateFederation()
     throws Exception
   {
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
+    rtiAmbassador.createFederationExecution(FEDERATION_NAME, fdd);
   }
 
   @Test(expectedExceptions = {IllegalArgumentException.class})
   public void testCreateFederationWithNullFederationExecutionName()
     throws Exception
   {
-    rtiAmbassadors.get(0).createFederationExecution(null, fdd);
+    rtiAmbassador.createFederationExecution(null, fdd);
   }
 
   @Test(expectedExceptions = {IllegalArgumentException.class})
   public void testCreateFederationWithEmptyFederationExecutionName()
     throws Exception
   {
-    rtiAmbassadors.get(0).createFederationExecution("", fdd);
+    rtiAmbassador.createFederationExecution("", fdd);
   }
 
   @Test(expectedExceptions = {CouldNotOpenFDD.class})
   public void testCreateFederationWithNullFDD()
     throws Exception
   {
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, null);
+    rtiAmbassador.createFederationExecution(FEDERATION_NAME, null);
   }
 
   @Test(expectedExceptions = {ErrorReadingFDD.class})
   public void testCreateFederationWithBadFDD()
     throws Exception
   {
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, badFDD);
+    rtiAmbassador.createFederationExecution(FEDERATION_NAME, badFDD);
   }
 
   @Test(expectedExceptions = {CouldNotOpenFDD.class})
   public void testCreateFederationWithUnfindableFDD()
     throws Exception
   {
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, new URL("file://xxx"));
+    rtiAmbassador.createFederationExecution(FEDERATION_NAME, new URL("file://xxx"));
   }
 
   @Test(dependsOnMethods = {"testCreateFederation"})
   public void testDestroyFederationExecution()
     throws Exception
   {
-    rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
+    rtiAmbassador.destroyFederationExecution(FEDERATION_NAME);
   }
 
   @Test(expectedExceptions = {IllegalArgumentException.class})
   public void testDestroyFederationExecutionWithNullFederationExecutionName()
     throws Exception
   {
-    rtiAmbassadors.get(0).destroyFederationExecution(null);
+    rtiAmbassador.destroyFederationExecution(null);
   }
 
   @Test(expectedExceptions = {IllegalArgumentException.class})
   public void testDestroyFederationExecutionWithEmptyFederationExecutionName()
     throws Exception
   {
-    rtiAmbassadors.get(0).destroyFederationExecution("");
+    rtiAmbassador.destroyFederationExecution("");
   }
 
   @Test(expectedExceptions = {FederationExecutionDoesNotExist.class})
   public void testDestroyFederationExecutionThatDoesNotExist()
     throws Exception
   {
-    rtiAmbassadors.get(0).destroyFederationExecution("xxx");
+    rtiAmbassador.destroyFederationExecution("xxx");
+  }
+
+  @Override
+  protected BaseFederateAmbassador createFederateAmbassador(RTIambassador rtiAmbassador)
+  {
+    return new BaseFederateAmbassador(rtiAmbassador);
   }
 }

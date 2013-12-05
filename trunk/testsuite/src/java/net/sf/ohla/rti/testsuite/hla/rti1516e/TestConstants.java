@@ -25,7 +25,7 @@ public interface TestConstants
   static final String FDD = "TestObjectModel-ieee-1516e.xml";
   static final String BAD_FDD = FDD + ".bad";
 
-  static final String FEDERATE_NAME = "Test Federate Name";
+  static final String FEDERATE_TYPE = "Test Federate";
 
   static final String FEDERATE_TYPE_1 = "Test Federate 1";
   static final String FEDERATE_TYPE_2 = "Test Federate 2";

@@ -21,6 +21,7 @@ import org.testng.annotations.Test;
 
 import hla.rti1516e.InteractionClassHandle;
 import hla.rti1516e.MessageRetractionHandle;
+import hla.rti1516e.MessageRetractionReturn;
 import hla.rti1516e.OrderType;
 import hla.rti1516e.ParameterHandle;
 import hla.rti1516e.ParameterHandleValueMap;
@@ -81,10 +82,15 @@ public class FlushQueueRequestTestNG
 
     synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE, federateAmbassadors);
 
-    testInteractionMessageRetractionHandle1 =
-      rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle, testParameterValues, TAG, five).handle;
-    testInteractionMessageRetractionHandle2 =
-      rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle, testParameterValues, TAG, ten).handle;
+    MessageRetractionReturn messageRetractionReturn1 =
+      rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle, testParameterValues, TAG, five);
+    assert messageRetractionReturn1.retractionHandleIsValid;
+    testInteractionMessageRetractionHandle1 = messageRetractionReturn1.handle;
+
+    MessageRetractionReturn messageRetractionReturn2 =
+      rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle, testParameterValues, TAG, ten);
+    assert messageRetractionReturn2.retractionHandleIsValid;
+    testInteractionMessageRetractionHandle2 = messageRetractionReturn2.handle;
   }
 
   @Test

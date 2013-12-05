@@ -9,7 +9,7 @@ import hla.rti1516.TimeConstrainedIsNotEnabled;
 public class TimeConstrainedTestNG
   extends BaseTimeManagementTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516 Time Constrained Test Federation";
+  private static final String FEDERATION_NAME = TimeConstrainedTestNG.class.getSimpleName();
 
   public TimeConstrainedTestNG()
   {

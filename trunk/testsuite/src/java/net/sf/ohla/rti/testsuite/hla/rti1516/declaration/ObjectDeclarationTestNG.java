@@ -16,18 +16,23 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti1516.declaration;
 
+import net.sf.ohla.rti.testsuite.hla.rti1516.BaseTestNG;
+
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import hla.rti1516.AttributeHandleSet;
 import hla.rti1516.ObjectClassHandle;
 import hla.rti1516.ObjectClassNotDefined;
+import hla.rti1516.RTIambassador;
+import hla.rti1516.jlc.NullFederateAmbassador;
 
 @Test
 public class ObjectDeclarationTestNG
-  extends BaseDeclarationTestNG
+  extends BaseTestNG<NullFederateAmbassador>
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516 Object Declaration Test Federation";
+  private static final String FEDERATION_NAME = ObjectDeclarationTestNG.class.getSimpleName();
 
   private ObjectClassHandle testObjectClassHandle;
   private AttributeHandleSet testAttributeHandles;
@@ -41,7 +46,8 @@ public class ObjectDeclarationTestNG
   public void setup()
     throws Exception
   {
-    super.setup();
+    createFederationExecution();
+    joinFederationExecution();
 
     testObjectClassHandle = rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT);
 
@@ -50,6 +56,14 @@ public class ObjectDeclarationTestNG
     testAttributeHandles.add(rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle, ATTRIBUTE1));
     testAttributeHandles.add(rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle, ATTRIBUTE2));
     testAttributeHandles.add(rtiAmbassadors.get(0).getAttributeHandle(testObjectClassHandle, ATTRIBUTE3));
+  }
+
+  @AfterClass
+  public void teardown()
+    throws Exception
+  {
+    resignFederationExecution();
+    destroyFederationExecution();
   }
 
   @Test
@@ -120,5 +134,10 @@ public class ObjectDeclarationTestNG
     throws Exception
   {
     rtiAmbassadors.get(0).unsubscribeObjectClass(null);
+  }
+
+  protected NullFederateAmbassador createFederateAmbassador(RTIambassador rtiAmbassador)
+  {
+    return new NullFederateAmbassador();
   }
 }

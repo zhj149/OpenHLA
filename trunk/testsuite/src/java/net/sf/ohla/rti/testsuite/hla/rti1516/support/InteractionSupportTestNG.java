@@ -28,7 +28,7 @@ import hla.rti1516.ParameterHandle;
 public class InteractionSupportTestNG
   extends BaseSupportTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516 Interaction Support Test Federation";
+  private static final String FEDERATION_NAME = InteractionSupportTestNG.class.getSimpleName();
 
   public InteractionSupportTestNG()
   {
@@ -97,6 +97,7 @@ public class InteractionSupportTestNG
     throws Exception
   {
     InteractionClassHandle interactionClassHandle = rtiAmbassadors.get(0).getInteractionClassHandle(TEST_INTERACTION);
+
     rtiAmbassadors.get(0).getParameterName(interactionClassHandle, null);
   }
 }

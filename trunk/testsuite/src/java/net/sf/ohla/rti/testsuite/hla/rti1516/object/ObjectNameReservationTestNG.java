@@ -16,14 +16,12 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti1516.object;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
+import net.sf.ohla.rti.testsuite.hla.rti1516.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti1516.BaseTestNG;
-import net.sf.ohla.rti.testsuite.hla.rti1516.SynchronizedFederateAmbassador;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -32,41 +30,28 @@ import org.testng.annotations.Test;
 import hla.rti1516.FederateInternalError;
 import hla.rti1516.IllegalName;
 import hla.rti1516.RTIambassador;
-import hla.rti1516.ResignAction;
 
 @Test
 public class ObjectNameReservationTestNG
-  extends BaseTestNG
+  extends BaseTestNG<ObjectNameReservationTestNG.TestFederateAmbassador>
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516 Object Name Reservation Test Federation";
+  private static final String FEDERATION_NAME = ObjectNameReservationTestNG.class.getSimpleName();
 
   private static final String ILLEGAL_NAME_1 = "HLA illegal name 1";
 
   private static final String LEGAL_NAME_1 = "legal name 1";
 
-  private final List<TestFederateAmbassador> federateAmbassadors = new ArrayList<TestFederateAmbassador>(3);
-
   public ObjectNameReservationTestNG()
   {
-    super(3);
+    super(3, FEDERATION_NAME);
   }
 
   @BeforeClass
   public void setup()
     throws Exception
   {
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(0)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(1)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(2)));
-
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fdd);
-
-    rtiAmbassadors.get(0).joinFederationExecution(
-      FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(0), mobileFederateServices);
-    rtiAmbassadors.get(1).joinFederationExecution(
-      FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(1), mobileFederateServices);
-    rtiAmbassadors.get(2).joinFederationExecution(
-      FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(2), mobileFederateServices);
+    createFederationExecution();
+    joinFederationExecution();
 
     synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE, federateAmbassadors);
   }
@@ -75,9 +60,8 @@ public class ObjectNameReservationTestNG
   public void teardown()
     throws Exception
   {
-    resignFederationExecution(ResignAction.NO_ACTION);
-
-    destroyFederationExecution(FEDERATION_NAME);
+    resignFederationExecution();
+    destroyFederationExecution();
   }
 
   @Test(expectedExceptions = {IllegalName.class})
@@ -105,8 +89,13 @@ public class ObjectNameReservationTestNG
     federateAmbassadors.get(0).checkObjectInstanceNameNotReserved(LEGAL_NAME_1);
   }
 
+  protected TestFederateAmbassador createFederateAmbassador(RTIambassador rtiAmbassador)
+  {
+    return new TestFederateAmbassador(rtiAmbassador);
+  }
+
   protected static class TestFederateAmbassador
-    extends SynchronizedFederateAmbassador
+    extends BaseFederateAmbassador
   {
     private final Set<String> reservedObjectInstanceNames = new HashSet<String>();
     private final Set<String> notReservedObjectInstanceNames = new HashSet<String>();

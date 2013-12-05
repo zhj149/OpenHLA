@@ -1,11 +1,27 @@
-package net.sf.ohla.rti.testsuite.hla.rti1516e.object;
+/*
+ * Copyright (c) 2005-2011, Michael Newcomb
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package net.sf.ohla.rti.testsuite.hla.rti1516.object;
 
 import java.util.UUID;
 
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import hla.rti1516e.OrderType;
+import hla.rti1516.OrderType;
 
 @Test
 public class InteractionPersistenceTestNG
@@ -53,11 +69,9 @@ public class InteractionPersistenceTestNG
     throws Exception
   {
     federateAmbassadors.get(1).checkParameterValues(
-      testInteractionClassHandle, testParameterValues, TAG, OrderType.RECEIVE, reliableTransportationTypeHandle,
-      federateHandles.get(0));
+      testInteractionClassHandle, testParameterValues, TAG, OrderType.RECEIVE);
     federateAmbassadors.get(2).checkParameterValues(
-      testInteractionClassHandle2, testParameterValues2, TAG, OrderType.RECEIVE, reliableTransportationTypeHandle,
-      federateHandles.get(0));
+      testInteractionClassHandle2, testParameterValues2, TAG, OrderType.RECEIVE);
   }
 
   @Test(dependsOnMethods = "testReceiveInteractionAfterSave")
@@ -68,14 +82,12 @@ public class InteractionPersistenceTestNG
 
     resignFederationExecution();
     destroyFederationExecution(FEDERATION_NAME);
-    disconnect();
 
     for (InteractionFederateAmbassador federateAmbassador : federateAmbassadors)
     {
       federateAmbassador.reset();
     }
 
-    connect();
     createFederationExecution();
     joinFederationExecution();
 
@@ -83,9 +95,9 @@ public class InteractionPersistenceTestNG
 
     federateAmbassadors.get(0).checkRequestFederationRestoreSucceeded(SAVE_NAME);
 
-    federateAmbassadors.get(0).checkInitiateFederateRestore(SAVE_NAME, FEDERATE_TYPE_1, federateHandles.get(0));
-    federateAmbassadors.get(1).checkInitiateFederateRestore(SAVE_NAME, FEDERATE_TYPE_2, federateHandles.get(1));
-    federateAmbassadors.get(2).checkInitiateFederateRestore(SAVE_NAME, FEDERATE_TYPE_3, federateHandles.get(2));
+    federateAmbassadors.get(0).checkInitiateFederateRestore(SAVE_NAME, federateHandles.get(0));
+    federateAmbassadors.get(1).checkInitiateFederateRestore(SAVE_NAME, federateHandles.get(1));
+    federateAmbassadors.get(2).checkInitiateFederateRestore(SAVE_NAME, federateHandles.get(2));
 
     rtiAmbassadors.get(0).federateRestoreComplete();
     rtiAmbassadors.get(1).federateRestoreComplete();
@@ -96,10 +108,8 @@ public class InteractionPersistenceTestNG
     federateAmbassadors.get(2).checkFederationRestored(SAVE_NAME);
 
     federateAmbassadors.get(1).checkParameterValues(
-      testInteractionClassHandle, testParameterValues, TAG, OrderType.RECEIVE, reliableTransportationTypeHandle,
-      federateHandles.get(0));
+      testInteractionClassHandle, testParameterValues, TAG, OrderType.RECEIVE);
     federateAmbassadors.get(2).checkParameterValues(
-      testInteractionClassHandle2, testParameterValues2, TAG, OrderType.RECEIVE, reliableTransportationTypeHandle,
-      federateHandles.get(0));
+      testInteractionClassHandle2, testParameterValues2, TAG, OrderType.RECEIVE);
   }
 }

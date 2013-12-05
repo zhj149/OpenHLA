@@ -26,7 +26,7 @@ import hla.rti1516.TransportationType;
 public class TransportationSupportTestNG
   extends BaseSupportTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516 Transportation Support Test Federation";
+  private static final String FEDERATION_NAME = TransportationSupportTestNG.class.getSimpleName();
 
   public TransportationSupportTestNG()
   {

@@ -74,10 +74,10 @@ public class JoiningTestNG
     throws Exception
   {
     FederateHandle federateHandle =
-      rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_NAME, FEDERATE_TYPE_1, FEDERATION_NAME);
+      rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, FEDERATE_TYPE, FEDERATION_NAME);
 
-    assert FEDERATE_NAME.equals(rtiAmbassadors.get(0).getFederateName(federateHandle));
-    assert federateHandle.equals(rtiAmbassadors.get(0).getFederateHandle(FEDERATE_NAME));
+    assert FEDERATE_TYPE.equals(rtiAmbassadors.get(0).getFederateName(federateHandle));
+    assert federateHandle.equals(rtiAmbassadors.get(0).getFederateHandle(FEDERATE_TYPE));
 
     rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
   }

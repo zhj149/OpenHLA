@@ -25,7 +25,7 @@ import hla.rti1516.InTimeAdvancingState;
 public class TimeAdvancingExceptionsTestNG
   extends BaseTimeManagementTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516 Time Advancing Exceptions Test Federation";
+  private static final String FEDERATION_NAME = TimeAdvancingExceptionsTestNG.class.getSimpleName();
 
   public TimeAdvancingExceptionsTestNG()
   {

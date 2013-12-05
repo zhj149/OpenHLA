@@ -24,43 +24,65 @@ import java.util.List;
 import net.sf.ohla.rti.hla.rti1516.Integer64TimeFactory;
 import net.sf.ohla.rti.hla.rti1516.Integer64TimeIntervalFactory;
 
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 
+import hla.rti1516.CouldNotOpenFDD;
+import hla.rti1516.ErrorReadingFDD;
+import hla.rti1516.FederateAlreadyExecutionMember;
+import hla.rti1516.FederateAmbassador;
+import hla.rti1516.FederateHandle;
 import hla.rti1516.FederateNotExecutionMember;
 import hla.rti1516.FederateOwnsAttributes;
 import hla.rti1516.FederatesCurrentlyJoined;
+import hla.rti1516.FederationExecutionAlreadyExists;
 import hla.rti1516.FederationExecutionDoesNotExist;
 import hla.rti1516.MobileFederateServices;
 import hla.rti1516.OwnershipAcquisitionPending;
 import hla.rti1516.RTIambassador;
 import hla.rti1516.RTIinternalError;
 import hla.rti1516.ResignAction;
+import hla.rti1516.RestoreInProgress;
+import hla.rti1516.SaveInProgress;
 import hla.rti1516.jlc.RtiFactory;
 import hla.rti1516.jlc.RtiFactoryFactory;
 
-public abstract class BaseTestNG
+public abstract class BaseTestNG<FA extends FederateAmbassador>
   implements TestConstants
 {
   protected final int rtiAmbassadorCount;
+
+  protected final String federationExecutionName;
+
   protected final List<RTIambassador> rtiAmbassadors;
+  protected final List<FederateHandle> federateHandles;
+  protected final List<FA> federateAmbassadors;
 
   protected URL fdd;
   protected URL badFDD;
+
+  protected RtiFactory rtiFactory;
 
   protected final MobileFederateServices mobileFederateServices =
     new MobileFederateServices(new Integer64TimeFactory(), new Integer64TimeIntervalFactory());
 
   protected BaseTestNG()
   {
-    this(1);
+    this(1, null);
   }
 
-  protected BaseTestNG(int rtiAmbassadorCount)
+  protected BaseTestNG(String federationExecutionName)
+  {
+    this(1, federationExecutionName);
+  }
+
+  protected BaseTestNG(int rtiAmbassadorCount, String federationExecutionName)
   {
     this.rtiAmbassadorCount = rtiAmbassadorCount;
+    this.federationExecutionName = federationExecutionName;
 
     rtiAmbassadors = new ArrayList<RTIambassador>(rtiAmbassadorCount);
+    federateHandles = new ArrayList<FederateHandle>(rtiAmbassadorCount);
+    federateAmbassadors = new ArrayList<FA>(rtiAmbassadorCount);
   }
 
   @BeforeClass
@@ -73,43 +95,20 @@ public abstract class BaseTestNG
     badFDD = Thread.currentThread().getContextClassLoader().getResource(BAD_FDD);
     assert badFDD != null : "could not locate: " + BAD_FDD;
 
-    RtiFactory rtiFactory = RtiFactoryFactory.getRtiFactory();
-    for (int count = rtiAmbassadorCount; count > 0; count--)
-    {
-      rtiAmbassadors.add(rtiFactory.getRtiAmbassador());
-    }
+    rtiFactory = RtiFactoryFactory.getRtiFactory();
   }
 
-  @AfterClass
-  public final void baseTeardown()
-    throws Exception
+  protected void createFederationExecution()
+    throws ErrorReadingFDD, CouldNotOpenFDD, FederationExecutionAlreadyExists, RTIinternalError
   {
+    RTIambassador rtiAmbassador = rtiFactory.getRtiAmbassador();
+    rtiAmbassador.createFederationExecution(federationExecutionName, fdd);
   }
 
-  protected void synchronize(String synchronizationPointLabel,
-                             List<? extends SynchronizedFederateAmbassador> federateAmbassadors)
-    throws Exception
+  protected void destroyFederationExecution()
+    throws FederationExecutionDoesNotExist, RTIinternalError, InterruptedException
   {
-    federateAmbassadors.get(0).registerSynchronizationPoint(synchronizationPointLabel);
-
-    for (SynchronizedFederateAmbassador federateAmbassador : federateAmbassadors)
-    {
-      federateAmbassador.waitForAnnounceSynchronizationPoint(synchronizationPointLabel);
-    }
-
-    for (SynchronizedFederateAmbassador federateAmbassador : federateAmbassadors)
-    {
-      federateAmbassador.waitForFederationSynchronized(synchronizationPointLabel);
-    }
-  }
-
-  protected void resignFederationExecution(ResignAction resignAction)
-    throws FederateNotExecutionMember, FederateOwnsAttributes, OwnershipAcquisitionPending, RTIinternalError
-  {
-    for (RTIambassador rtiAmbassador : rtiAmbassadors)
-    {
-      rtiAmbassador.resignFederationExecution(resignAction);
-    }
+    destroyFederationExecution(federationExecutionName);
   }
 
   protected void destroyFederationExecution(String federationExecutionName)
@@ -121,12 +120,13 @@ public abstract class BaseTestNG
   protected void destroyFederationExecution(String federationExecutionName, int attempts)
     throws FederationExecutionDoesNotExist, RTIinternalError, InterruptedException
   {
+    RTIambassador rtiAmbassador = rtiFactory.getRtiAmbassador();
     boolean done = false;
     for(; !done && attempts > 0; attempts--)
     {
       try
       {
-        rtiAmbassadors.get(0).destroyFederationExecution(federationExecutionName);
+        rtiAmbassador.destroyFederationExecution(federationExecutionName);
 
         done = true;
       }
@@ -136,4 +136,82 @@ public abstract class BaseTestNG
       }
     }
   }
+
+  protected void joinFederationExecution()
+    throws FederationExecutionDoesNotExist, RestoreInProgress, SaveInProgress,
+           RTIinternalError, FederateAlreadyExecutionMember
+  {
+    for (int count = rtiAmbassadorCount; count > 0; count--)
+    {
+      RTIambassador rtiAmbassador = rtiFactory.getRtiAmbassador();
+      rtiAmbassadors.add(rtiAmbassador);
+
+      FA federateAmbassador = createFederateAmbassador(rtiAmbassador);
+      federateAmbassadors.add(federateAmbassador);
+    }
+
+    switch (rtiAmbassadors.size())
+    {
+      case 4:
+        federateHandles.add(0, rtiAmbassadors.get(3).joinFederationExecution(
+          FEDERATE_TYPE_4, federationExecutionName, federateAmbassadors.get(3), mobileFederateServices));
+      case 3:
+        federateHandles.add(0, rtiAmbassadors.get(2).joinFederationExecution(
+          FEDERATE_TYPE_3, federationExecutionName, federateAmbassadors.get(2), mobileFederateServices));
+      case 2:
+        federateHandles.add(0, rtiAmbassadors.get(1).joinFederationExecution(
+          FEDERATE_TYPE_2, federationExecutionName, federateAmbassadors.get(1), mobileFederateServices));
+      case 1:
+        federateHandles.add(0, rtiAmbassadors.get(0).joinFederationExecution(
+          FEDERATE_TYPE_1, federationExecutionName, federateAmbassadors.get(0), mobileFederateServices));
+        break;
+      default:
+      {
+        int i = 0;
+        for (RTIambassador rtiAmbassador : rtiAmbassadors)
+        {
+          federateHandles.add(rtiAmbassador.joinFederationExecution(
+            FEDERATE_TYPE_1, federationExecutionName, federateAmbassadors.get(i++), mobileFederateServices));
+        }
+      }
+    }
+  }
+
+  protected void resignFederationExecution()
+    throws FederateNotExecutionMember, FederateOwnsAttributes, OwnershipAcquisitionPending, RTIinternalError
+  {
+    resignFederationExecution(ResignAction.NO_ACTION);
+  }
+
+  protected void resignFederationExecution(ResignAction resignAction)
+    throws FederateNotExecutionMember, FederateOwnsAttributes, OwnershipAcquisitionPending, RTIinternalError
+  {
+    for (RTIambassador rtiAmbassador : rtiAmbassadors)
+    {
+      rtiAmbassador.resignFederationExecution(resignAction);
+    }
+    rtiAmbassadors.clear();
+
+    federateHandles.clear();
+    federateAmbassadors.clear();
+  }
+
+  protected void synchronize(
+    String synchronizationPointLabel, List<? extends BaseFederateAmbassador> federateAmbassadors)
+    throws Exception
+  {
+    federateAmbassadors.get(0).registerSynchronizationPoint(synchronizationPointLabel);
+
+    for (BaseFederateAmbassador federateAmbassador : federateAmbassadors)
+    {
+      federateAmbassador.waitForAnnounceSynchronizationPoint(synchronizationPointLabel);
+    }
+
+    for (BaseFederateAmbassador federateAmbassador : federateAmbassadors)
+    {
+      federateAmbassador.waitForFederationSynchronized(synchronizationPointLabel);
+    }
+  }
+
+  protected abstract FA createFederateAmbassador(RTIambassador rtiAmbassador);
 }

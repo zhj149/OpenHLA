@@ -34,7 +34,7 @@ import hla.rti1516.ObjectClassHandle;
 public class DimensionSupportTestNG
   extends BaseSupportTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516 Dimension Support Test Federation";
+  private static final String FEDERATION_NAME = DimensionSupportTestNG.class.getSimpleName();
 
   public DimensionSupportTestNG()
   {

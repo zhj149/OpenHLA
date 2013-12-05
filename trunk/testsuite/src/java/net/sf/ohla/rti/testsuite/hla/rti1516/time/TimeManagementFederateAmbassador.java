@@ -1,10 +1,11 @@
 package net.sf.ohla.rti.testsuite.hla.rti1516.time;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import net.sf.ohla.rti.testsuite.hla.rti1516.SynchronizedFederateAmbassador;
+import net.sf.ohla.rti.testsuite.hla.rti1516.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti1516.object.TestObjectInstance;
 
 import hla.rti1516.AttributeHandleValueMap;
@@ -29,7 +30,7 @@ import hla.rti1516.TimeQueryReturn;
 import hla.rti1516.TransportationType;
 
 public class TimeManagementFederateAmbassador
-  extends SynchronizedFederateAmbassador
+  extends BaseFederateAmbassador
 {
   private LogicalTime timeRegulationEnabledTime;
   private LogicalTime timeConstrainedEnabledTime;
@@ -38,12 +39,23 @@ public class TimeManagementFederateAmbassador
   private Map<ObjectInstanceHandle, TestObjectInstance> objectInstances =
     new HashMap<ObjectInstanceHandle, TestObjectInstance>();
 
+  private InteractionClassHandle interactionClassHandle;
   private ParameterHandleValueMap parameterValues;
-  private LogicalTime receiveTime;
+  private byte[] tag;
+  private OrderType sentOrderType;
+  private TransportationType transportationType;
+  private LogicalTime receiveInteractionTime;
+  private OrderType receivedOrderType;
+  private MessageRetractionHandle messageRetractionHandle;
 
   public TimeManagementFederateAmbassador(RTIambassador rtiAmbassador)
   {
     super(rtiAmbassador);
+  }
+
+  public Map<ObjectInstanceHandle, TestObjectInstance> getObjectInstances()
+  {
+    return objectInstances;
   }
 
   public void checkTimeRegulationEnabled()
@@ -243,21 +255,23 @@ public class TimeManagementFederateAmbassador
     assert objectInstances.get(objectInstanceHandle).isRemoved();
   }
 
-  public void checkParameterValues(ParameterHandleValueMap parameterValues, LogicalTime receiveTime)
+  public void checkParameterValues(
+    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues, byte[] tag,
+    OrderType sentOrderType, TransportationType transportationType, LogicalTime receiveInteractionTime,
+    OrderType receivedOrderType, MessageRetractionHandle messageRetractionHandle)
     throws Exception
   {
-    evokeCallbackWhile(new Callable<Boolean>()
-    {
-      public Boolean call()
-      {
-        return TimeManagementFederateAmbassador.this.parameterValues == null;
-      }
-    });
+    evokeCallbackWhile(new Callable<Boolean>() { public Boolean call() { return TimeManagementFederateAmbassador.this.interactionClassHandle == null; } });
 
+    assert this.interactionClassHandle != null;
+    assert interactionClassHandle.equals(this.interactionClassHandle);
     assert parameterValues.equals(this.parameterValues);
-    assert receiveTime == null || receiveTime.equals(this.receiveTime);
-
-    this.parameterValues = null;
+    assert Arrays.equals(tag, this.tag);
+    assert this.sentOrderType == sentOrderType;
+    assert this.transportationType == transportationType;
+    assert receiveInteractionTime == null || receiveInteractionTime.equals(this.receiveInteractionTime);
+    assert receivedOrderType == null || receivedOrderType == this.receivedOrderType;
+    assert messageRetractionHandle == null || messageRetractionHandle.equals(this.messageRetractionHandle);
   }
 
   public void checkParameterValuesNotReceived()
@@ -272,6 +286,23 @@ public class TimeManagementFederateAmbassador
     }, 1, 0.5);
 
     assert parameterValues == null;
+  }
+
+  @Override
+  public void reset()
+  {
+    super.reset();
+
+    objectInstances.clear();
+
+    interactionClassHandle = null;
+    parameterValues = null;
+    tag = null;
+    sentOrderType = null;
+    transportationType = null;
+    receiveInteractionTime = null;
+    receivedOrderType = null;
+    messageRetractionHandle = null;
   }
 
   @Override
@@ -387,7 +418,11 @@ public class TimeManagementFederateAmbassador
     throws InteractionClassNotRecognized, InteractionParameterNotRecognized, InteractionClassNotSubscribed,
            FederateInternalError
   {
+    this.interactionClassHandle = interactionClassHandle;
     this.parameterValues = parameterValues;
+    this.tag = tag;
+    this.sentOrderType = sentOrderType;
+    this.transportationType = transportationType;
   }
 
   @Override
@@ -397,7 +432,11 @@ public class TimeManagementFederateAmbassador
     throws InteractionClassNotRecognized, InteractionParameterNotRecognized, InteractionClassNotSubscribed,
            FederateInternalError
   {
+    this.interactionClassHandle = interactionClassHandle;
     this.parameterValues = parameterValues;
+    this.tag = tag;
+    this.sentOrderType = sentOrderType;
+    this.transportationType = transportationType;
   }
 
   @Override
@@ -407,8 +446,13 @@ public class TimeManagementFederateAmbassador
     throws InteractionClassNotRecognized, InteractionParameterNotRecognized, InteractionClassNotSubscribed,
            FederateInternalError
   {
+    this.interactionClassHandle = interactionClassHandle;
     this.parameterValues = parameterValues;
-    receiveTime = sentTime;
+    this.tag = tag;
+    this.sentOrderType = sentOrderType;
+    this.transportationType = transportationType;
+    receiveInteractionTime = sentTime;
+    this.receivedOrderType = receivedOrderType;
   }
 
   @Override
@@ -418,8 +462,13 @@ public class TimeManagementFederateAmbassador
     throws InteractionClassNotRecognized, InteractionParameterNotRecognized, InteractionClassNotSubscribed,
            FederateInternalError
   {
+    this.interactionClassHandle = interactionClassHandle;
     this.parameterValues = parameterValues;
-    receiveTime = sentTime;
+    this.tag = tag;
+    this.sentOrderType = sentOrderType;
+    this.transportationType = transportationType;
+    receiveInteractionTime = sentTime;
+    this.receivedOrderType = receivedOrderType;
   }
 
   @Override
@@ -430,8 +479,14 @@ public class TimeManagementFederateAmbassador
     throws InteractionClassNotRecognized, InteractionParameterNotRecognized, InteractionClassNotSubscribed,
            InvalidLogicalTime, FederateInternalError
   {
+    this.interactionClassHandle = interactionClassHandle;
     this.parameterValues = parameterValues;
-    receiveTime = sentTime;
+    this.tag = tag;
+    this.sentOrderType = sentOrderType;
+    this.transportationType = transportationType;
+    receiveInteractionTime = sentTime;
+    this.receivedOrderType = receivedOrderType;
+    this.messageRetractionHandle = messageRetractionHandle;
   }
 
   @Override
@@ -442,7 +497,13 @@ public class TimeManagementFederateAmbassador
     throws InteractionClassNotRecognized, InteractionParameterNotRecognized, InteractionClassNotSubscribed,
            InvalidLogicalTime, FederateInternalError
   {
+    this.interactionClassHandle = interactionClassHandle;
     this.parameterValues = parameterValues;
-    receiveTime = sentTime;
+    this.tag = tag;
+    this.sentOrderType = sentOrderType;
+    this.transportationType = transportationType;
+    receiveInteractionTime = sentTime;
+    this.receivedOrderType = receivedOrderType;
+    this.messageRetractionHandle = messageRetractionHandle;
   }
 }

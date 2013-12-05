@@ -10,7 +10,7 @@ import hla.rti1516.TimeRegulationIsNotEnabled;
 public class TimeRegulationTestNG
   extends BaseTimeManagementTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516 Time Regulation Test Federation";
+  private static final String FEDERATION_NAME = TimeRegulationTestNG.class.getSimpleName();
 
   public TimeRegulationTestNG()
   {
