@@ -16,28 +16,28 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti1516e;
 
-import java.util.concurrent.Callable;
-import java.util.Map;
 import java.util.HashMap;
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Callable;
 
+import hla.rti1516e.FederateHandle;
+import hla.rti1516e.FederateHandleSaveStatusPair;
+import hla.rti1516e.FederateHandleSet;
+import hla.rti1516e.FederateRestoreStatus;
+import hla.rti1516e.LogicalTime;
 import hla.rti1516e.NullFederateAmbassador;
 import hla.rti1516e.RTIambassador;
-import hla.rti1516e.FederateHandle;
-import hla.rti1516e.FederateHandleSet;
-import hla.rti1516e.LogicalTime;
+import hla.rti1516e.RestoreFailureReason;
 import hla.rti1516e.SaveFailureReason;
 import hla.rti1516e.SaveStatus;
-import hla.rti1516e.RestoreFailureReason;
-import hla.rti1516e.FederateRestoreStatus;
-import hla.rti1516e.FederateHandleSaveStatusPair;
+import hla.rti1516e.exceptions.FederateInternalError;
 import hla.rti1516e.exceptions.FederateNotExecutionMember;
-import hla.rti1516e.exceptions.RestoreInProgress;
-import hla.rti1516e.exceptions.SaveInProgress;
 import hla.rti1516e.exceptions.NotConnected;
 import hla.rti1516e.exceptions.RTIinternalError;
-import hla.rti1516e.exceptions.FederateInternalError;
+import hla.rti1516e.exceptions.RestoreInProgress;
+import hla.rti1516e.exceptions.SaveInProgress;
 
 public class BaseFederateAmbassador
   extends NullFederateAmbassador
@@ -188,33 +188,6 @@ public class BaseFederateAmbassador
         return !synchronizedSynchronizationPoints.contains(synchronizationPointLabel);
       }
     });
-  }
-
-  @Override
-  public void announceSynchronizationPoint(String synchronizationPointLabel, byte[] tag)
-    throws FederateInternalError
-  {
-    assert !announcedSynchronizationPoints.contains(synchronizationPointLabel);
-
-    announcedSynchronizationPoints.add(synchronizationPointLabel);
-    try
-    {
-      rtiAmbassador.synchronizationPointAchieved(synchronizationPointLabel);
-    }
-    catch (Throwable t)
-    {
-      throw new FederateInternalError(t.getMessage(), t);
-    }
-  }
-
-  @Override
-  public void federationSynchronized(String synchronizationPointLabel, FederateHandleSet failedToSync)
-    throws FederateInternalError
-  {
-    assert announcedSynchronizationPoints.contains(synchronizationPointLabel);
-    assert !synchronizedSynchronizationPoints.contains(synchronizationPointLabel);
-
-    synchronizedSynchronizationPoints.add(synchronizationPointLabel);
   }
 
   public void checkInitiateFederateSave(String label)
@@ -402,8 +375,33 @@ public class BaseFederateAmbassador
   }
 
   @Override
-  public void initiateFederateSave(String label)
+  public void announceSynchronizationPoint(String synchronizationPointLabel, byte[] tag)
     throws FederateInternalError
+  {
+    assert !announcedSynchronizationPoints.contains(synchronizationPointLabel);
+
+    announcedSynchronizationPoints.add(synchronizationPointLabel);
+    try
+    {
+      rtiAmbassador.synchronizationPointAchieved(synchronizationPointLabel);
+    }
+    catch (Throwable t)
+    {
+      throw new FederateInternalError(t.getMessage(), t);
+    }
+  }
+
+  @Override
+  public void federationSynchronized(String synchronizationPointLabel, FederateHandleSet failedToSync)
+  {
+    assert announcedSynchronizationPoints.contains(synchronizationPointLabel);
+    assert !synchronizedSynchronizationPoints.contains(synchronizationPointLabel);
+
+    synchronizedSynchronizationPoints.add(synchronizationPointLabel);
+  }
+
+  @Override
+  public void initiateFederateSave(String label)
   {
     assert currentSaveLabel == null;
 
@@ -414,7 +412,6 @@ public class BaseFederateAmbassador
 
   @Override
   public void initiateFederateSave(String label, LogicalTime time)
-    throws FederateInternalError
   {
     assert currentSaveLabel == null;
 
@@ -425,7 +422,6 @@ public class BaseFederateAmbassador
 
   @Override
   public void federationSaved()
-    throws FederateInternalError
   {
     assert !successfulFederationSaves.contains(currentSaveLabel);
     assert !unsuccessfulFederationSaves.containsKey(currentSaveLabel);
@@ -437,7 +433,6 @@ public class BaseFederateAmbassador
 
   @Override
   public void federationNotSaved(SaveFailureReason reason)
-    throws FederateInternalError
   {
     assert !successfulFederationSaves.contains(currentSaveLabel);
     assert !unsuccessfulFederationSaves.containsKey(currentSaveLabel);
@@ -449,14 +444,12 @@ public class BaseFederateAmbassador
 
   @Override
   public void federationSaveStatusResponse(FederateHandleSaveStatusPair[] response)
-    throws FederateInternalError
   {
     saveStatusResponse.putAll(toMap(response));
   }
 
   @Override
   public void requestFederationRestoreSucceeded(String label)
-    throws FederateInternalError
   {
     assert !successfulFederationRestoreRequests.contains(label);
     assert !unsuccessfulFederationRestoreRequests.contains(label);
@@ -466,7 +459,6 @@ public class BaseFederateAmbassador
 
   @Override
   public void requestFederationRestoreFailed(String label)
-    throws FederateInternalError
   {
     assert !successfulFederationRestoreRequests.contains(label);
     assert !unsuccessfulFederationRestoreRequests.contains(label);
@@ -476,7 +468,6 @@ public class BaseFederateAmbassador
 
   @Override
   public void federationRestoreBegun()
-    throws FederateInternalError
   {
     assert !federateRestoreBegun;
 
@@ -485,7 +476,6 @@ public class BaseFederateAmbassador
 
   @Override
   public void initiateFederateRestore(String label, String federateName, FederateHandle federateHandle)
-    throws FederateInternalError
   {
     assert currentRestoreLabel == null;
 
@@ -496,7 +486,6 @@ public class BaseFederateAmbassador
 
   @Override
   public void federationRestored()
-    throws FederateInternalError
   {
     assert !successfulFederationRestores.contains(currentRestoreLabel);
     assert !unsuccessfulFederationRestores.containsKey(currentRestoreLabel);
@@ -509,7 +498,6 @@ public class BaseFederateAmbassador
 
   @Override
   public void federationNotRestored(RestoreFailureReason reason)
-    throws FederateInternalError
   {
     assert !successfulFederationRestores.contains(currentRestoreLabel);
     assert !unsuccessfulFederationRestores.containsKey(currentRestoreLabel);
@@ -522,7 +510,6 @@ public class BaseFederateAmbassador
 
   @Override
   public void federationRestoreStatusResponse(FederateRestoreStatus[] response)
-    throws FederateInternalError
   {
     restoreStatusResponse.putAll(toMap(response));
   }

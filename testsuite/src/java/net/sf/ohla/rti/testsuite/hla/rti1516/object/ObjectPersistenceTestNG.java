@@ -216,7 +216,7 @@ public class ObjectPersistenceTestNG
     federateAmbassadors.get(0).checkObjectInstanceNameNotReserved(TEST_OBJECT);
   }
 
-  @Test(expectedExceptions = {ObjectInstanceNameInUse.class})
+  @Test(expectedExceptions = ObjectInstanceNameInUse.class)
   public void testRegisterObjectInstanceByNameAgain()
     throws Exception
   {

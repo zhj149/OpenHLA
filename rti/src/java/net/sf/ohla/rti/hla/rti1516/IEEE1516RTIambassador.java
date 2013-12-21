@@ -477,7 +477,7 @@ public class IEEE1516RTIambassador
   {
     if (resignAction == null)
     {
-      throw new RTIinternalError(I18n.getMessage(ExceptionMessages.RESIGN_ACTION_IS_NULL));
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.RESIGN_ACTION_IS_NULL));
     }
 
     try

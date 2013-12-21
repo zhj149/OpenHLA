@@ -92,21 +92,21 @@ public class RegionTestNG
     regionHandle2 = rtiAmbassadors.get(1).createRegion(dimensionHandles);
   }
 
-  @Test(expectedExceptions = {InvalidDimensionHandle.class})
+  @Test(expectedExceptions = InvalidDimensionHandle.class)
   public void testCreateRegionWithNullDimensionHandles()
     throws Exception
   {
     rtiAmbassadors.get(0).createRegion(null);
   }
 
-  @Test(expectedExceptions = {InvalidDimensionHandle.class})
+  @Test(expectedExceptions = InvalidDimensionHandle.class)
   public void testCreateRegionWithEmptyDimensionHandles()
     throws Exception
   {
     rtiAmbassadors.get(0).createRegion(rtiAmbassadors.get(0).getDimensionHandleSetFactory().create());
   }
 
-  @Test(dependsOnMethods = {"testCreateRegion"})
+  @Test(dependsOnMethods = "testCreateRegion")
   public void testGetRangeBounds()
     throws Exception
   {
@@ -127,7 +127,7 @@ public class RegionTestNG
     assert rtiAmbassadors.get(1).getDimensionUpperBound(dimensionHandle3) == rangeBounds3.upper;
   }
 
-  @Test(dependsOnMethods = {"testGetRangeBounds"})
+  @Test(dependsOnMethods = "testGetRangeBounds")
   public void testSetRangeBounds()
     throws Exception
   {
@@ -143,98 +143,98 @@ public class RegionTestNG
     assert rangeBounds.lower == this.rangeBounds.lower;
   }
 
-  @Test(dependsOnMethods = {"testCreateRegion"}, expectedExceptions = {InvalidRegion.class})
+  @Test(dependsOnMethods = "testCreateRegion", expectedExceptions = InvalidRegion.class)
   public void testGetRangeBoundsOfInvalidRegion()
     throws Exception
   {
     rtiAmbassadors.get(0).getRangeBounds(regionHandle2, dimensionHandle1);
   }
 
-  @Test(dependsOnMethods = {"testCreateRegion"}, expectedExceptions = {InvalidRegion.class})
+  @Test(dependsOnMethods = "testCreateRegion", expectedExceptions = InvalidRegion.class)
   public void testGetRangeBoundsWithNullRegionHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).getRangeBounds(null, dimensionHandle1);
   }
 
-  @Test(dependsOnMethods = {"testCreateRegion"}, expectedExceptions = {RegionDoesNotContainSpecifiedDimension.class})
+  @Test(dependsOnMethods = "testCreateRegion", expectedExceptions = RegionDoesNotContainSpecifiedDimension.class)
   public void testGetRangeBoundsWithNullDimensionHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).getRangeBounds(regionHandle, null);
   }
 
-  @Test(dependsOnMethods = {"testCreateRegion"}, expectedExceptions = {RegionDoesNotContainSpecifiedDimension.class})
+  @Test(dependsOnMethods = "testCreateRegion", expectedExceptions = RegionDoesNotContainSpecifiedDimension.class)
   public void testGetRangeBoundsWithDimensionHandleNotContainedInRegion()
     throws Exception
   {
     rtiAmbassadors.get(0).getRangeBounds(regionHandle, dimensionHandle4);
   }
 
-  @Test(dependsOnMethods = {"testCreateRegion"}, expectedExceptions = {InvalidRegion.class})
+  @Test(dependsOnMethods = "testCreateRegion", expectedExceptions = InvalidRegion.class)
   public void testSetRangeBoundsWithNullRegionHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).setRangeBounds(null, dimensionHandle1, rangeBounds);
   }
 
-  @Test(dependsOnMethods = {"testCreateRegion"}, expectedExceptions = {RegionDoesNotContainSpecifiedDimension.class})
+  @Test(dependsOnMethods = "testCreateRegion", expectedExceptions = RegionDoesNotContainSpecifiedDimension.class)
   public void testSetRangeBoundsWithNullDimensionHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).setRangeBounds(regionHandle, null, rangeBounds);
   }
 
-  @Test(dependsOnMethods = {"testCreateRegion"}, expectedExceptions = {InvalidRangeBound.class})
+  @Test(dependsOnMethods = "testCreateRegion", expectedExceptions = InvalidRangeBound.class)
   public void testSetRangeBoundsWithNullRangeBounds()
     throws Exception
   {
     rtiAmbassadors.get(0).setRangeBounds(regionHandle, dimensionHandle1, null);
   }
 
-  @Test(dependsOnMethods = {"testCreateRegion"}, expectedExceptions = {InvalidRangeBound.class})
+  @Test(dependsOnMethods = "testCreateRegion", expectedExceptions = InvalidRangeBound.class)
   public void testSetRangeBoundsWithRangeBoundsLowerLessThanZero()
     throws Exception
   {
     rtiAmbassadors.get(0).setRangeBounds(regionHandle, dimensionHandle1, new RangeBounds(-1L, 100L));
   }
 
-  @Test(dependsOnMethods = {"testCreateRegion"}, expectedExceptions = {InvalidRangeBound.class})
+  @Test(dependsOnMethods = "testCreateRegion", expectedExceptions = InvalidRangeBound.class)
   public void testSetRangeBoundsWithRangeBoundsLowerEqualToUpper()
     throws Exception
   {
     rtiAmbassadors.get(0).setRangeBounds(regionHandle, dimensionHandle1, new RangeBounds(100L, 100L));
   }
 
-  @Test(dependsOnMethods = {"testCreateRegion"}, expectedExceptions = {InvalidRangeBound.class})
+  @Test(dependsOnMethods = "testCreateRegion", expectedExceptions = InvalidRangeBound.class)
   public void testSetRangeBoundsWithRangeBoundsLowerGreaterThanUpper()
     throws Exception
   {
     rtiAmbassadors.get(0).setRangeBounds(regionHandle, dimensionHandle1, new RangeBounds(1000L, 100L));
   }
 
-  @Test(dependsOnMethods = {"testCreateRegion"}, expectedExceptions = {InvalidRangeBound.class})
+  @Test(dependsOnMethods = "testCreateRegion", expectedExceptions = InvalidRangeBound.class)
   public void testSetRangeBoundsWithRangeBoundsUpperGreaterThanDimensionUpper()
     throws Exception
   {
     rtiAmbassadors.get(0).setRangeBounds(regionHandle, dimensionHandle1, new RangeBounds(5L, 10000L));
   }
 
-  @Test(dependsOnMethods = {"testCreateRegion"}, expectedExceptions = {RegionDoesNotContainSpecifiedDimension.class})
+  @Test(dependsOnMethods = "testCreateRegion", expectedExceptions = RegionDoesNotContainSpecifiedDimension.class)
   public void testSetRangeBoundsWithDimensionHandleNotContainedInRegion()
     throws Exception
   {
     rtiAmbassadors.get(0).setRangeBounds(regionHandle, dimensionHandle4, rangeBounds);
   }
 
-  @Test(dependsOnMethods = {"testCreateRegion"}, expectedExceptions = {RegionNotCreatedByThisFederate.class})
+  @Test(dependsOnMethods = "testCreateRegion", expectedExceptions = RegionNotCreatedByThisFederate.class)
   public void testSetRangeBoundsOfRegionNotCreatedByThisFederate()
     throws Exception
   {
     rtiAmbassadors.get(0).setRangeBounds(regionHandle2, dimensionHandle4, rangeBounds);
   }
 
-  @Test(dependsOnMethods = {"testCreateRegion"}, expectedExceptions = {RegionNotCreatedByThisFederate.class})
+  @Test(dependsOnMethods = "testCreateRegion", expectedExceptions = RegionNotCreatedByThisFederate.class)
   public void testCommitRegionModificationsOfRegionNotCreatedByThisFederate()
     throws Exception
   {
@@ -243,14 +243,14 @@ public class RegionTestNG
     rtiAmbassadors.get(0).commitRegionModifications(regionHandles);
   }
 
-  @Test(dependsOnMethods = {"testGetRangeBounds"})
+  @Test(dependsOnMethods = "testGetRangeBounds")
   public void testDeleteRegion()
     throws Exception
   {
     rtiAmbassadors.get(1).deleteRegion(regionHandle2);
   }
 
-  @Test(dependsOnMethods = {"testCreateRegion"}, expectedExceptions = {RegionNotCreatedByThisFederate.class})
+  @Test(dependsOnMethods = "testCreateRegion", expectedExceptions = RegionNotCreatedByThisFederate.class)
   public void testDeleteRegionOfRegionNotCreatedByThisFederate()
     throws Exception
   {

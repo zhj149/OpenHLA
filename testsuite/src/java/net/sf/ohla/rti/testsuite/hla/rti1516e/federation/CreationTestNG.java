@@ -75,42 +75,42 @@ public class CreationTestNG
       new FederationExecutionInformation(FEDERATION_NAME, LOGICAL_TIME_IMPLEMENTATION));
   }
 
-  @Test(expectedExceptions = {IllegalArgumentException.class})
+  @Test(expectedExceptions = IllegalArgumentException.class)
   public void testCreateSingleFDDFederationWithNullFederationExecutionName()
     throws Exception
   {
     rtiAmbassadors.get(0).createFederationExecution(null, fdd);
   }
 
-  @Test(expectedExceptions = {IllegalArgumentException.class})
+  @Test(expectedExceptions = IllegalArgumentException.class)
   public void testCreateSingleFDDFederationWithEmptyFederationExecutionName()
     throws Exception
   {
     rtiAmbassadors.get(0).createFederationExecution("", fdd);
   }
 
-  @Test(expectedExceptions = {CouldNotOpenFDD.class})
+  @Test(expectedExceptions = CouldNotOpenFDD.class)
   public void testCreateSingleFDDFederationWithNullFDD()
     throws Exception
   {
     rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, (URL) null);
   }
 
-  @Test(expectedExceptions = {ErrorReadingFDD.class})
+  @Test(expectedExceptions = ErrorReadingFDD.class)
   public void testCreateSingleFDDFederationWithBadFDD()
     throws Exception
   {
     rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, badFDD);
   }
 
-  @Test(expectedExceptions = {CouldNotOpenFDD.class})
+  @Test(expectedExceptions = CouldNotOpenFDD.class)
   public void testCreateSingleFDDFederationWithUnfindableFDD()
     throws Exception
   {
     rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, new URL("file://xxx"));
   }
 
-  @Test(dependsOnMethods = {"testCreateSingleFDDFederation"})
+  @Test(dependsOnMethods = "testCreateSingleFDDFederation")
   public void testListFederationExecutions()
     throws Exception
   {
@@ -119,28 +119,28 @@ public class CreationTestNG
     federateAmbassadors.get(0).checkReportedFederationExecutions(createdFederationExecutionInformations);
   }
 
-  @Test(dependsOnMethods = {"testListFederationExecutions"})
+  @Test(dependsOnMethods = "testListFederationExecutions")
   public void testDestroyFederationExecution()
     throws Exception
   {
     rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
   }
 
-  @Test(expectedExceptions = {IllegalArgumentException.class})
+  @Test(expectedExceptions = IllegalArgumentException.class)
   public void testDestroyFederationExecutionWithNullFederationExecutionName()
     throws Exception
   {
     rtiAmbassadors.get(0).destroyFederationExecution(null);
   }
 
-  @Test(expectedExceptions = {IllegalArgumentException.class})
+  @Test(expectedExceptions = IllegalArgumentException.class)
   public void testDestroyFederationExecutionWithEmptyFederationExecutionName()
     throws Exception
   {
     rtiAmbassadors.get(0).destroyFederationExecution("");
   }
 
-  @Test(expectedExceptions = {FederationExecutionDoesNotExist.class})
+  @Test(expectedExceptions = FederationExecutionDoesNotExist.class)
   public void testDestroyFederationExecutionThatDoesNotExist()
     throws Exception
   {

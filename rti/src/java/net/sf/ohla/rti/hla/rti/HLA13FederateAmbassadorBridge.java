@@ -390,7 +390,7 @@ public class HLA13FederateAmbassadorBridge
     try
     {
       rtiAmbassador.getHLA13FederateAmbassador().discoverObjectInstance(
-        rtiAmbassador.add(objectInstanceHandle), rtiAmbassador.convert(objectClassHandle), objectInstanceName);
+        rtiAmbassador.convert(objectInstanceHandle), rtiAmbassador.convert(objectClassHandle), objectInstanceName);
     }
     catch (hla.rti.CouldNotDiscover cnd)
     {
@@ -414,7 +414,7 @@ public class HLA13FederateAmbassadorBridge
     try
     {
       rtiAmbassador.getHLA13FederateAmbassador().discoverObjectInstance(
-        rtiAmbassador.add(objectInstanceHandle), rtiAmbassador.convert(objectClassHandle), objectInstanceName);
+        rtiAmbassador.convert(objectInstanceHandle), rtiAmbassador.convert(objectClassHandle), objectInstanceName);
     }
     catch (hla.rti.CouldNotDiscover cnd)
     {

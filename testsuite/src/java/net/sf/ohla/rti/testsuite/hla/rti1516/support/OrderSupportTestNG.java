@@ -51,21 +51,21 @@ public class OrderSupportTestNG
     assert TIMESTAMP.equals(rtiAmbassadors.get(0).getOrderName(orderType));
   }
 
-  @Test(expectedExceptions = {InvalidOrderName.class})
+  @Test(expectedExceptions = InvalidOrderName.class)
   public void testGetOrderTypeOfUnknownOrderName()
     throws Exception
   {
     rtiAmbassadors.get(0).getOrderType(UNKNOWN_ORDER_TYPE);
   }
 
-  @Test(expectedExceptions = {InvalidOrderName.class})
+  @Test(expectedExceptions = InvalidOrderName.class)
   public void testGetOrderTypeOfNullOrderName()
     throws Exception
   {
     rtiAmbassadors.get(0).getOrderType(null);
   }
 
-  @Test(expectedExceptions = {InvalidOrderType.class})
+  @Test(expectedExceptions = InvalidOrderType.class)
   public void testGetOrderNameOfNullOrderType()
     throws Exception
   {

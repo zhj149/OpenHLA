@@ -71,7 +71,7 @@ public class TimeConstrainedPersistenceTestNG
     federateAmbassadors.get(0).checkFederationRestored(SAVE_NAME);
   }
 
-  @Test(expectedExceptions = { TimeConstrainedAlreadyEnabled.class })
+  @Test(expectedExceptions = TimeConstrainedAlreadyEnabled.class)
   public void testEnableTimeConstrainedAgain()
     throws Exception
   {

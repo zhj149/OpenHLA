@@ -73,14 +73,14 @@ public class ObjectNameReservationTestNG
     disconnect();
   }
 
-  @Test(expectedExceptions = {IllegalName.class})
+  @Test(expectedExceptions = IllegalName.class)
   public void testReserveIllegalObjectInstanceName()
     throws Exception
   {
     rtiAmbassadors.get(0).reserveObjectInstanceName(ILLEGAL_NAME_1);
   }
 
-  @Test(expectedExceptions = {IllegalName.class})
+  @Test(expectedExceptions = IllegalName.class)
   public void testReserveIllegalObjectInstanceNames()
     throws Exception
   {
@@ -100,7 +100,7 @@ public class ObjectNameReservationTestNG
     federateAmbassadors.get(0).checkObjectInstanceNameReserved(LEGAL_NAME_1);
   }
 
-  @Test(dependsOnMethods = {"testReserveObjectInstanceName"})
+  @Test(dependsOnMethods = "testReserveObjectInstanceName")
   public void testReserveObjectInstanceNameAgain()
     throws Exception
   {
@@ -123,7 +123,7 @@ public class ObjectNameReservationTestNG
     federateAmbassadors.get(1).checkObjectInstanceNameReserved(LEGAL_NAME_3);
   }
 
-  @Test(dependsOnMethods = {"testReserveMultipleObjectInstanceName"})
+  @Test(dependsOnMethods = "testReserveMultipleObjectInstanceName")
   public void testReserveMultipleObjectInstanceNameAgain()
     throws Exception
   {
@@ -173,14 +173,14 @@ public class ObjectNameReservationTestNG
     federateAmbassadors.get(2).checkObjectInstanceNameReserved(LEGAL_NAME_6);
   }
 
-  @Test(expectedExceptions = {ObjectInstanceNameNotReserved.class})
+  @Test(expectedExceptions = ObjectInstanceNameNotReserved.class)
   public void testReleaseUnreservedObjectInstanceName()
     throws Exception
   {
     rtiAmbassadors.get(0).releaseObjectInstanceName("xxx");
   }
 
-  @Test(expectedExceptions = {ObjectInstanceNameNotReserved.class})
+  @Test(expectedExceptions = ObjectInstanceNameNotReserved.class)
   public void testReleaseMultipleUnreservedObjectInstanceNames()
     throws Exception
   {

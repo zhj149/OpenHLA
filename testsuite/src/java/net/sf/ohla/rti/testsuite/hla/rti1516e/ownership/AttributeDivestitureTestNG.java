@@ -127,7 +127,7 @@ public class AttributeDivestitureTestNG
     federateAmbassadors.get(0).checkAttributeIsUnowned(testObjectInstanceHandle, attributeHandle2);
   }
 
-  @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
+  @Test(expectedExceptions = ObjectInstanceNotKnown.class)
   public void testUnconditionalAttributeOwnershipDivestitureWithNullObjectInstanceHandle()
     throws Exception
   {
@@ -138,7 +138,7 @@ public class AttributeDivestitureTestNG
     rtiAmbassadors.get(0).unconditionalAttributeOwnershipDivestiture(null, attributeHandles);
   }
 
-  @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
+  @Test(expectedExceptions = ObjectInstanceNotKnown.class)
   public void testUnconditionalAttributeOwnershipDivestitureWithUnknownObjectInstanceHandle()
     throws Exception
   {
@@ -149,7 +149,7 @@ public class AttributeDivestitureTestNG
     rtiAmbassadors.get(2).unconditionalAttributeOwnershipDivestiture(testObjectInstanceHandle, attributeHandles);
   }
 
-  @Test(expectedExceptions = {AttributeNotDefined.class})
+  @Test(expectedExceptions = AttributeNotDefined.class)
   public void testUnconditionalAttributeOwnershipDivestitureWithUndefinedAttributeHandle()
     throws Exception
   {
@@ -159,7 +159,7 @@ public class AttributeDivestitureTestNG
     rtiAmbassadors.get(1).unconditionalAttributeOwnershipDivestiture(testObjectInstanceHandle, attributeHandles);
   }
 
-  @Test(expectedExceptions = {AttributeNotOwned.class})
+  @Test(expectedExceptions = AttributeNotOwned.class)
   public void testUnconditionalAttributeOwnershipDivestitureOfUnownedAttribute()
     throws Exception
   {

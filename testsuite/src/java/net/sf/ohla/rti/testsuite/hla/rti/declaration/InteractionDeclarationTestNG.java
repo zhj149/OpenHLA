@@ -16,16 +16,21 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti.declaration;
 
+import net.sf.ohla.rti.testsuite.hla.rti.BaseTestNG;
+
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import hla.rti.InteractionClassNotDefined;
+import hla.rti.jlc.NullFederateAmbassador;
+import hla.rti.jlc.RTIambassadorEx;
 
 @Test
 public class InteractionDeclarationTestNG
-  extends BaseDeclarationTestNG
+  extends BaseTestNG<NullFederateAmbassador>
 {
-  private static final String FEDERATION_NAME = "OHLA HLA 1.3 Interaction Declaration Test Federation";
+  private static final String FEDERATION_NAME = InteractionDeclarationTestNG.class.getSimpleName();
 
   private int testInteractionClassHandle;
 
@@ -38,9 +43,18 @@ public class InteractionDeclarationTestNG
   public void setup()
     throws Exception
   {
-    super.setup();
+    createFederationExecution();
+    joinFederationExecution();
 
     testInteractionClassHandle = rtiAmbassadors.get(0).getInteractionClassHandle(TEST_INTERACTION);
+  }
+
+  @AfterClass
+  public void teardown()
+    throws Exception
+  {
+    resignFederationExecution();
+    destroyFederationExecution();
   }
 
   @Test
@@ -50,21 +64,21 @@ public class InteractionDeclarationTestNG
     rtiAmbassadors.get(0).publishInteractionClass(testInteractionClassHandle);
   }
 
-  @Test(dependsOnMethods = {"testPublishInteractionClass"})
+  @Test(dependsOnMethods = "testPublishInteractionClass")
   public void testUnpublishInteractionClass()
     throws Exception
   {
     rtiAmbassadors.get(0).unpublishInteractionClass(testInteractionClassHandle);
   }
 
-  @Test(expectedExceptions = {InteractionClassNotDefined.class})
+  @Test(expectedExceptions = InteractionClassNotDefined.class)
   public void testPublishInteractionClassOfInvalidInteractionClassHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).publishInteractionClass(-1);
   }
 
-  @Test(expectedExceptions = {InteractionClassNotDefined.class})
+  @Test(expectedExceptions = InteractionClassNotDefined.class)
   public void testUnpublishInteractionClassOfInvalidInteractionClassHandle()
     throws Exception
   {
@@ -78,24 +92,29 @@ public class InteractionDeclarationTestNG
     rtiAmbassadors.get(0).subscribeInteractionClass(testInteractionClassHandle);
   }
 
-  @Test(dependsOnMethods = {"testSubscribeInteractionClass"})
+  @Test(dependsOnMethods = "testSubscribeInteractionClass")
   public void testUnsubscribeInteractionClass()
     throws Exception
   {
     rtiAmbassadors.get(0).unsubscribeInteractionClass(testInteractionClassHandle);
   }
 
-  @Test(expectedExceptions = {InteractionClassNotDefined.class})
+  @Test(expectedExceptions = InteractionClassNotDefined.class)
   public void testSubscribeInteractionClassOfInvalidInteractionClassHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).subscribeInteractionClass(-1);
   }
 
-  @Test(expectedExceptions = {InteractionClassNotDefined.class})
+  @Test(expectedExceptions = InteractionClassNotDefined.class)
   public void testUnsubscribeInteractionClassOfInvalidInteractionClassHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).unsubscribeInteractionClass(-1);
+  }
+
+  protected NullFederateAmbassador createFederateAmbassador(RTIambassadorEx rtiAmbassador)
+  {
+    return new NullFederateAmbassador();
   }
 }

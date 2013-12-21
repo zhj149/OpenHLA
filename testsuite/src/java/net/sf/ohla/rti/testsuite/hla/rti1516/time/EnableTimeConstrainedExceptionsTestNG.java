@@ -39,42 +39,42 @@ public class EnableTimeConstrainedExceptionsTestNG
     rtiAmbassadors.get(0).enableTimeConstrained();
   }
 
-  @Test(expectedExceptions = {RequestForTimeConstrainedPending.class})
+  @Test(expectedExceptions = RequestForTimeConstrainedPending.class)
   public void testEnableTimeConstrainedWhileEnableTimeConstrainedPending()
     throws Exception
   {
     rtiAmbassadors.get(0).enableTimeConstrained();
   }
 
-  @Test(expectedExceptions = {RequestForTimeConstrainedPending.class})
+  @Test(expectedExceptions = RequestForTimeConstrainedPending.class)
   public void testTimeAdvanceRequestWhileEnableTimeConstrainedPending()
     throws Exception
   {
     rtiAmbassadors.get(0).timeAdvanceRequest(oneHundred);
   }
 
-  @Test(expectedExceptions = {RequestForTimeConstrainedPending.class})
+  @Test(expectedExceptions = RequestForTimeConstrainedPending.class)
   public void testTimeAdvanceRequestAvailableWhileEnableTimeConstrainedPending()
     throws Exception
   {
     rtiAmbassadors.get(0).timeAdvanceRequestAvailable(oneHundred);
   }
 
-  @Test(expectedExceptions = {RequestForTimeConstrainedPending.class})
+  @Test(expectedExceptions = RequestForTimeConstrainedPending.class)
   public void testNextMessageRequestWhileEnableTimeConstrainedPending()
     throws Exception
   {
     rtiAmbassadors.get(0).nextMessageRequest(oneHundred);
   }
 
-  @Test(expectedExceptions = {RequestForTimeConstrainedPending.class})
+  @Test(expectedExceptions = RequestForTimeConstrainedPending.class)
   public void testNextMessageRequestAvailableWhileEnableTimeConstrainedPending()
     throws Exception
   {
     rtiAmbassadors.get(0).nextMessageRequestAvailable(oneHundred);
   }
 
-  @Test(expectedExceptions = {RequestForTimeConstrainedPending.class})
+  @Test(expectedExceptions = RequestForTimeConstrainedPending.class)
   public void testFlushQueueRequestWhileEnableTimeConstrainedPending()
     throws Exception
   {

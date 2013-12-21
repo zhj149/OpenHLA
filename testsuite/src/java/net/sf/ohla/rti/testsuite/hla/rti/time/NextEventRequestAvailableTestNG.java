@@ -16,82 +16,20 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti.time;
 
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import hla.rti.SuppliedParameters;
+import hla.rti.EventRetractionHandle;
 
 @Test
 public class NextEventRequestAvailableTestNG
-  extends BaseTimeManagementTestNG
+  extends BaseNextEventRequestTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA HLA 1.3 Next Event Request Available Test Federation";
-
-  private int testInteractionClassHandle2;
-  private int testInteractionClassHandle3;
-
-  private SuppliedParameters testSuppliedParameters;
+  private static final String FEDERATION_NAME = NextEventRequestAvailableTestNG.class.getSimpleName();
 
   public NextEventRequestAvailableTestNG()
     throws Exception
   {
-    super(5, FEDERATION_NAME);
-  }
-
-  @BeforeClass
-  public void setup()
-    throws Exception
-  {
-    rtiAmbassadors.get(0).enableTimeRegulation(initial, lookahead1);
-    rtiAmbassadors.get(1).enableTimeRegulation(initial, lookahead2);
-    rtiAmbassadors.get(2).enableTimeRegulation(initial, lookahead2);
-    rtiAmbassadors.get(3).enableTimeRegulation(initial, lookahead1);
-    rtiAmbassadors.get(4).enableTimeRegulation(initial, lookahead1);
-
-    federateAmbassadors.get(0).checkTimeRegulationEnabled(initial);
-    federateAmbassadors.get(1).checkTimeRegulationEnabled(initial);
-    federateAmbassadors.get(2).checkTimeRegulationEnabled(initial);
-    federateAmbassadors.get(3).checkTimeRegulationEnabled(initial);
-    federateAmbassadors.get(4).checkTimeRegulationEnabled(initial);
-
-    rtiAmbassadors.get(0).enableTimeConstrained();
-    rtiAmbassadors.get(1).enableTimeConstrained();
-    rtiAmbassadors.get(2).enableTimeConstrained();
-    rtiAmbassadors.get(3).enableTimeConstrained();
-    rtiAmbassadors.get(4).enableTimeConstrained();
-
-    federateAmbassadors.get(0).checkTimeConstrainedEnabled(initial);
-    federateAmbassadors.get(1).checkTimeConstrainedEnabled(initial);
-    federateAmbassadors.get(2).checkTimeConstrainedEnabled(initial);
-    federateAmbassadors.get(3).checkTimeConstrainedEnabled(initial);
-    federateAmbassadors.get(4).checkTimeConstrainedEnabled(initial);
-
-    int testInteractionClassHandle = rtiAmbassadors.get(0).getInteractionClassHandle(TEST_INTERACTION);
-    testInteractionClassHandle2 = rtiAmbassadors.get(0).getInteractionClassHandle(TEST_INTERACTION2);
-    testInteractionClassHandle3 = rtiAmbassadors.get(0).getInteractionClassHandle(TEST_INTERACTION3);
-
-    int parameterHandle1 = rtiAmbassadors.get(0).getParameterHandle(PARAMETER1, testInteractionClassHandle);
-    int parameterHandle2 = rtiAmbassadors.get(0).getParameterHandle(PARAMETER2, testInteractionClassHandle);
-    int parameterHandle3 = rtiAmbassadors.get(0).getParameterHandle(PARAMETER3, testInteractionClassHandle);
-
-    testSuppliedParameters = rtiFactory.createSuppliedParameters();
-    testSuppliedParameters.add(parameterHandle1, PARAMETER1_VALUE.getBytes());
-    testSuppliedParameters.add(parameterHandle2, PARAMETER2_VALUE.getBytes());
-    testSuppliedParameters.add(parameterHandle3, PARAMETER3_VALUE.getBytes());
-
-    rtiAmbassadors.get(0).publishInteractionClass(testInteractionClassHandle2);
-    rtiAmbassadors.get(0).publishInteractionClass(testInteractionClassHandle3);
-
-    rtiAmbassadors.get(1).subscribeInteractionClass(testInteractionClassHandle2);
-    rtiAmbassadors.get(2).subscribeInteractionClass(testInteractionClassHandle2);
-
-    rtiAmbassadors.get(3).subscribeInteractionClass(testInteractionClassHandle3);
-    rtiAmbassadors.get(4).subscribeInteractionClass(testInteractionClassHandle3);
-
-    synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE, federateAmbassadors);
-
-    rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle2, testSuppliedParameters, TAG, three);
-    rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle3, testSuppliedParameters, TAG, four);
+    super(FEDERATION_NAME);
   }
 
   @Test
@@ -115,12 +53,17 @@ public class NextEventRequestAvailableTestNG
 
     // verify their received interactions
     //
-    federateAmbassadors.get(1).checkReceivedInteraction(testSuppliedParameters, three);
-    federateAmbassadors.get(2).checkReceivedInteraction(testSuppliedParameters, three);
+    federateAmbassadors.get(1).checkReceivedInteraction(testParameterValues, three);
+    federateAmbassadors.get(2).checkReceivedInteraction(testParameterValues, three);
+
+    federateAmbassadors.get(1).reset();
+    federateAmbassadors.get(2).reset();
 
     // send another message at time 3
     //
-    rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle2, testSuppliedParameters, TAG, three);
+    EventRetractionHandle testEventRetractionHandle2 =
+      rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle2, testParameterValues, TAG, three);
+    assert testEventRetractionHandle2 != null;
 
     // advance federate 0 to 3
     //
@@ -138,8 +81,8 @@ public class NextEventRequestAvailableTestNG
 
     // verify their received interactions
     //
-    federateAmbassadors.get(1).checkReceivedInteraction(testSuppliedParameters, three);
-    federateAmbassadors.get(2).checkReceivedInteraction(testSuppliedParameters, three);
+    federateAmbassadors.get(1).checkReceivedInteraction(testParameterValues, three);
+    federateAmbassadors.get(2).checkReceivedInteraction(testParameterValues, three);
 
     // advance federates 1 and 2 to 5
     //
@@ -158,12 +101,15 @@ public class NextEventRequestAvailableTestNG
 
     // verify their received interactions
     //
-    federateAmbassadors.get(3).checkReceivedInteraction(testSuppliedParameters, four);
-    federateAmbassadors.get(4).checkReceivedInteraction(testSuppliedParameters, four);
+    federateAmbassadors.get(3).checkReceivedInteraction(testParameterValues, four);
+    federateAmbassadors.get(4).checkReceivedInteraction(testParameterValues, four);
+
+    federateAmbassadors.get(3).reset();
+    federateAmbassadors.get(4).reset();
 
     // send another message at time 4
     //
-    rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle3, testSuppliedParameters, TAG, four);
+    rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle3, testParameterValues, TAG, four);
 
     // advance federate 0 to 4
     //
@@ -185,8 +131,8 @@ public class NextEventRequestAvailableTestNG
 
     // verify their received interactions
     //
-    federateAmbassadors.get(3).checkReceivedInteraction(testSuppliedParameters, four);
-    federateAmbassadors.get(4).checkReceivedInteraction(testSuppliedParameters, four);
+    federateAmbassadors.get(3).checkReceivedInteraction(testParameterValues, four);
+    federateAmbassadors.get(4).checkReceivedInteraction(testParameterValues, four);
 
     // advance federates 0, 3 and 4 to 5
     //

@@ -25,7 +25,7 @@ import hla.rti.NameNotFound;
 public class TransportationSupportTestNG
   extends BaseSupportTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA HLA 1.3 Transportation Support Test Federation";
+  private static final String FEDERATION_NAME = TransportationSupportTestNG.class.getSimpleName();
 
   public TransportationSupportTestNG()
   {
@@ -48,21 +48,21 @@ public class TransportationSupportTestNG
     assert HLA_BEST_EFFORT.equals(rtiAmbassadors.get(0).getTransportationName(bestEffortTransportationHandle));
   }
 
-  @Test(expectedExceptions = {NameNotFound.class})
-  public void testGetTransportationHandleWithNullTransportationType()
-    throws Exception
-  {
-    rtiAmbassadors.get(0).getTransportationHandle(null);
-  }
-
-  @Test(expectedExceptions = {NameNotFound.class})
+  @Test(expectedExceptions = NameNotFound.class)
   public void testGetTransportationHandleOfUnknownTransportationType()
     throws Exception
   {
     rtiAmbassadors.get(0).getTransportationHandle(UNKNOWN_TRANSPORTATION_TYPE);
   }
 
-  @Test(expectedExceptions = {InvalidTransportationHandle.class})
+  @Test(expectedExceptions = NameNotFound.class)
+  public void testGetTransportationHandleWithNullTransportationType()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).getTransportationHandle(null);
+  }
+
+  @Test(expectedExceptions = InvalidTransportationHandle.class)
   public void testGetTransportationNameOfInvalidTransportationHandle()
     throws Exception
   {

@@ -16,14 +16,12 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti.object;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import net.sf.ohla.rti.testsuite.hla.rti.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti.BaseTestNG;
-import net.sf.ohla.rti.testsuite.hla.rti.SynchronizedFederateAmbassador;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -39,11 +37,9 @@ import hla.rti.jlc.RTIambassadorEx;
 
 @Test
 public class ObjectRegistrationTestNG
-  extends BaseTestNG
+  extends BaseTestNG<ObjectRegistrationTestNG.TestFederateAmbassador>
 {
-  private static final String FEDERATION_NAME = "OHLA HLA 1.3 Object Registration Test Federation";
-
-  private final List<TestFederateAmbassador> federateAmbassadors = new ArrayList<TestFederateAmbassador>(5);
+  private static final String FEDERATION_NAME = ObjectRegistrationTestNG.class.getSimpleName();
 
   private int testObjectClassHandle;
   private AttributeHandleSet testObjectAttributeHandles;
@@ -57,26 +53,15 @@ public class ObjectRegistrationTestNG
 
   public ObjectRegistrationTestNG()
   {
-    super(5);
+    super(5, FEDERATION_NAME);
   }
 
   @BeforeClass
   public void setup()
     throws Exception
   {
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(0)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(1)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(2)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(3)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(4)));
-
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fed);
-
-    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(0));
-    rtiAmbassadors.get(1).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(1));
-    rtiAmbassadors.get(2).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(2));
-    rtiAmbassadors.get(3).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(3));
-    rtiAmbassadors.get(4).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(4));
+    createFederationExecution();
+    joinFederationExecution();
 
     testObjectClassHandle = rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT);
     int attributeHandle1 = rtiAmbassadors.get(0).getAttributeHandle(ATTRIBUTE1, testObjectClassHandle);
@@ -115,8 +100,7 @@ public class ObjectRegistrationTestNG
     throws Exception
   {
     resignFederationExecution(ResignAction.RELEASE_ATTRIBUTES);
-
-    destroyFederationExecution(FEDERATION_NAME);
+    destroyFederationExecution();
   }
 
   @Test
@@ -167,7 +151,7 @@ public class ObjectRegistrationTestNG
     assert testObjectClassHandle == rtiAmbassadors.get(2).getObjectClass(objectInstanceHandle2);
   }
 
-  @Test(dependsOnMethods = {"testRegisterObjectInstanceByName"}, expectedExceptions = {ObjectAlreadyRegistered.class})
+  @Test(dependsOnMethods = "testRegisterObjectInstanceByName", expectedExceptions = ObjectAlreadyRegistered.class)
   public void testRegisterObjectInstanceByNameAgain()
     throws Exception
   {
@@ -200,53 +184,57 @@ public class ObjectRegistrationTestNG
       rtiAmbassadors.get(4).getObjectInstanceHandle(objectInstanceName2));
   }
 
-  @Test(expectedExceptions = {ObjectClassNotDefined.class})
+  @Test(expectedExceptions = ObjectClassNotDefined.class)
   public void testRegisterObjectInstanceWithNullObjectClassHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).registerObjectInstance(-1);
   }
 
-  @Test(expectedExceptions = {ObjectClassNotDefined.class})
+  @Test(expectedExceptions = ObjectClassNotDefined.class)
   public void testRegisterObjectInstanceByNameWithNullObjectClassHandle()
     throws Exception
   {
-    rtiAmbassadors.get(0).registerObjectInstance(-1, TEST_OBJECT2);
+    rtiAmbassadors.get(0).registerObjectInstance(-1, "xxx");
   }
 
-  @Test(expectedExceptions = {RTIinternalError.class})
+  @Test(expectedExceptions = RTIinternalError.class)
   public void testRegisterObjectInstanceByNameWithNullObjectInstanceName()
     throws Exception
   {
     rtiAmbassadors.get(0).registerObjectInstance(testObjectClassHandle, null);
   }
 
-  @Test(expectedExceptions = {RTIinternalError.class})
+  @Test(expectedExceptions = RTIinternalError.class)
   public void testRegisterObjectInstanceByNameWithEmptyObjectInstanceName()
     throws Exception
   {
     rtiAmbassadors.get(0).registerObjectInstance(testObjectClassHandle, "");
   }
 
-  @Test(expectedExceptions = {ObjectClassNotPublished.class})
+  @Test(expectedExceptions = ObjectClassNotPublished.class)
   public void testRegisterObjectInstanceOfUnpublishedObjectClass()
     throws Exception
   {
     rtiAmbassadors.get(2).registerObjectInstance(testObjectClassHandle);
   }
 
-  @Test(expectedExceptions = {ObjectClassNotPublished.class})
+  @Test(expectedExceptions = ObjectClassNotPublished.class)
   public void testRegisterObjectInstanceByNameOfUnpublishedObjectClass()
     throws Exception
   {
-    rtiAmbassadors.get(2).registerObjectInstance(testObjectClassHandle, "xxx");
+    rtiAmbassadors.get(2).registerObjectInstance(testObjectClassHandle, "yyy");
   }
 
-  private static class TestFederateAmbassador
-    extends SynchronizedFederateAmbassador
+  protected TestFederateAmbassador createFederateAmbassador(RTIambassadorEx rtiAmbassador)
   {
-    private final Map<String, TestObjectInstance> objectInstances =
-      new HashMap<String, TestObjectInstance>();
+    return new TestFederateAmbassador(rtiAmbassador);
+  }
+
+  public static class TestFederateAmbassador
+    extends BaseFederateAmbassador
+  {
+    private final Map<String, TestObjectInstance> objectInstances = new HashMap<String, TestObjectInstance>();
 
     public TestFederateAmbassador(RTIambassadorEx rtiAmbassador)
     {

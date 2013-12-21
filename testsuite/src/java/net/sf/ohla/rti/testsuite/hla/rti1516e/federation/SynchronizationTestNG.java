@@ -38,7 +38,6 @@ import hla.rti1516e.NullFederateAmbassador;
 import hla.rti1516e.RTIambassador;
 import hla.rti1516e.ResignAction;
 import hla.rti1516e.SynchronizationPointFailureReason;
-import hla.rti1516e.exceptions.FederateInternalError;
 import hla.rti1516e.exceptions.SynchronizationPointLabelNotAnnounced;
 
 @Test
@@ -112,7 +111,7 @@ public class SynchronizationTestNG
     federateAmbassadors.get(2).checkFederationSynchronized(SYNCHRONIZATION_POINT_2, null);
   }
 
-  @Test(dependsOnMethods = {"testRegisterFederationSynchronizationPoint"})
+  @Test(dependsOnMethods = "testRegisterFederationSynchronizationPoint")
   public void testRegisterFederationSynchronizationPointAgain()
     throws Exception
   {
@@ -122,7 +121,7 @@ public class SynchronizationTestNG
       SYNCHRONIZATION_POINT_1, SynchronizationPointFailureReason.SYNCHRONIZATION_POINT_LABEL_NOT_UNIQUE);
   }
 
-  @Test(expectedExceptions = {SynchronizationPointLabelNotAnnounced.class})
+  @Test(expectedExceptions = SynchronizationPointLabelNotAnnounced.class)
   public void testSynchronizationPointAchievedOfUnannouncedSynchronizationPoint()
     throws Exception
   {
@@ -284,28 +283,24 @@ public class SynchronizationTestNG
 
     @Override
     public void synchronizationPointRegistrationSucceeded(String label)
-      throws FederateInternalError
     {
       successfullyRegisteredSynchronizationPoints.add(label);
     }
 
     @Override
     public void synchronizationPointRegistrationFailed(String label, SynchronizationPointFailureReason reason)
-      throws FederateInternalError
     {
       unsuccessfullyRegisteredSynchronizationPoints.put(label, reason);
     }
 
     @Override
     public void announceSynchronizationPoint(String label, byte[] tag)
-      throws FederateInternalError
     {
       announcedSynchronizationPoints.put(label, tag);
     }
 
     @Override
     public void federationSynchronized(String label, FederateHandleSet failedToSynchronize)
-      throws FederateInternalError
     {
       federationSynchronized.put(label, failedToSynchronize);
     }

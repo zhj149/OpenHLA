@@ -142,28 +142,28 @@ public class ObjectUpdateTestNG
       testObjectInstanceHandle2, testObjectAttributeValues2, federateHandles.get(0), TAG);
   }
 
-  @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
+  @Test(expectedExceptions = ObjectInstanceNotKnown.class)
   public void testUpdateAttributeValuesWithNullObjectInstanceHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).updateAttributeValues(null, testObjectAttributeValues2, null);
   }
 
-  @Test(expectedExceptions = {AttributeNotDefined.class})
+  @Test(expectedExceptions = AttributeNotDefined.class)
   public void testUpdateAttributeValuesWithUndefinedAttributes()
     throws Exception
   {
     rtiAmbassadors.get(0).updateAttributeValues(testObjectInstanceHandle, testObjectAttributeValues2, null);
   }
 
-  @Test(expectedExceptions = {AttributeNotOwned.class})
+  @Test(expectedExceptions = AttributeNotOwned.class)
   public void testUpdateAttributeValuesOfUnownedAttribute()
     throws Exception
   {
     rtiAmbassadors.get(1).updateAttributeValues(testObjectInstanceHandle, testObjectAttributeValues, null);
   }
 
-  @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
+  @Test(expectedExceptions = ObjectInstanceNotKnown.class)
   public void testUpdateAttributeValuesOfUnknownObject()
     throws Exception
   {

@@ -26,68 +26,82 @@ import hla.rti.FederateNotExecutionMember;
 import hla.rti.FederationExecutionDoesNotExist;
 import hla.rti.ResignAction;
 import hla.rti.jlc.NullFederateAmbassador;
+import hla.rti.jlc.RTIambassadorEx;
 
 @Test
 public class JoiningTestNG
-  extends BaseTestNG
+  extends BaseTestNG<NullFederateAmbassador>
 {
-  private static final String FEDERATION_NAME = "OHLA HLA 1.3 Joining Test Federation";
+  private static final String FEDERATION_NAME = JoiningTestNG.class.getSimpleName();
+
+  public JoiningTestNG()
+  {
+    super(FEDERATION_NAME);
+  }
 
   @BeforeClass
   public void setup()
     throws Exception
   {
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fed);
+    createFederationExecution();
   }
 
   @AfterClass
   public void teardown()
     throws Exception
   {
-    rtiAmbassadors.get(0).destroyFederationExecution(FEDERATION_NAME);
+    destroyFederationExecution();
   }
 
   @Test
   public void testJoinFederationExecution()
     throws Exception
   {
-    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME, new NullFederateAmbassador());
-
-    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
+    RTIambassadorEx rtiAmbassador = rtiFactory.createRtiAmbassador();
+    rtiAmbassador.joinFederationExecution(
+      FEDERATE_TYPE, FEDERATION_NAME, new NullFederateAmbassador(), mobileFederateServices);
+    rtiAmbassador.resignFederationExecution(ResignAction.NO_ACTION);
   }
 
-  @Test(expectedExceptions = {IllegalArgumentException.class})
+  @Test(expectedExceptions = IllegalArgumentException.class)
   public void testJoinFederationExecutionWithNullFederateType()
     throws Exception
   {
-    rtiAmbassadors.get(0).joinFederationExecution(null, FEDERATION_NAME, new NullFederateAmbassador());
+    rtiFactory.createRtiAmbassador().joinFederationExecution(
+      null, FEDERATION_NAME, new NullFederateAmbassador(), mobileFederateServices);
   }
 
-  @Test(expectedExceptions = {IllegalArgumentException.class})
+  @Test(expectedExceptions = IllegalArgumentException.class)
   public void testJoinFederationExecutionWithNullFederationExecutionName()
     throws Exception
   {
-    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, null, new NullFederateAmbassador());
+    rtiFactory.createRtiAmbassador().joinFederationExecution(
+      FEDERATE_TYPE, null, new NullFederateAmbassador(), mobileFederateServices);
   }
 
-  @Test(expectedExceptions = {IllegalArgumentException.class})
+  @Test(expectedExceptions = IllegalArgumentException.class)
   public void testJoinFederationExecutionWithNullFederateAmbassador()
     throws Exception
   {
-    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME, null);
+    rtiFactory.createRtiAmbassador().joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME, null);
   }
 
-  @Test(expectedExceptions = {FederationExecutionDoesNotExist.class})
+  @Test(expectedExceptions = FederationExecutionDoesNotExist.class)
   public void testJoinFederationThatDoesNotExist()
     throws Exception
   {
-    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, "xxx", new NullFederateAmbassador());
+    rtiFactory.createRtiAmbassador().joinFederationExecution(FEDERATE_TYPE, "xxx", new NullFederateAmbassador());
   }
 
-  @Test(expectedExceptions = {FederateNotExecutionMember.class})
+  @Test(expectedExceptions = FederateNotExecutionMember.class)
   public void testResignFederationExecutionNotExecutionMemberOf()
     throws Exception
   {
-    rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
+    rtiFactory.createRtiAmbassador().resignFederationExecution(ResignAction.NO_ACTION);
+  }
+
+  protected NullFederateAmbassador createFederateAmbassador(RTIambassadorEx rtiAmbassador)
+  {
+    return new NullFederateAmbassador();
   }
 }

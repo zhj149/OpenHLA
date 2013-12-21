@@ -40,7 +40,6 @@ public class FlushQueueRequestTestNG
   private MessageRetractionHandle testInteractionMessageRetractionHandle2;
 
   public FlushQueueRequestTestNG()
-    throws Exception
   {
     super(2, FEDERATION_NAME);
   }

@@ -73,21 +73,21 @@ public class ObjectDeclarationTestNG
     rtiAmbassadors.get(0).publishObjectClassAttributes(testObjectClassHandle, testAttributeHandles);
   }
 
-  @Test(dependsOnMethods = {"testPublishObjectClass"})
+  @Test(dependsOnMethods = "testPublishObjectClass")
   public void testUnpublishObjectClass()
     throws Exception
   {
     rtiAmbassadors.get(0).unpublishObjectClass(testObjectClassHandle);
   }
 
-  @Test(expectedExceptions = {ObjectClassNotDefined.class})
+  @Test(expectedExceptions = ObjectClassNotDefined.class)
   public void testPublishObjectClassOfNullObjectClassHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).publishObjectClassAttributes(null, testAttributeHandles);
   }
 
-  @Test(expectedExceptions = {ObjectClassNotDefined.class})
+  @Test(expectedExceptions = ObjectClassNotDefined.class)
   public void testUnpublishObjectClassOfNullObjectClassHandle()
     throws Exception
   {
@@ -101,35 +101,35 @@ public class ObjectDeclarationTestNG
     rtiAmbassadors.get(0).subscribeObjectClassAttributes(testObjectClassHandle, testAttributeHandles);
   }
 
-  @Test(dependsOnMethods = {"testSubscribeObjectClass"})
+  @Test(dependsOnMethods = "testSubscribeObjectClass")
   public void testUnsubscribeObjectClass()
     throws Exception
   {
     rtiAmbassadors.get(0).unsubscribeObjectClass(testObjectClassHandle);
   }
 
-  @Test(dependsOnMethods = {"testUnsubscribeObjectClass"})
+  @Test(dependsOnMethods = "testUnsubscribeObjectClass")
   public void testSubscribeObjectClassAttributes()
     throws Exception
   {
     rtiAmbassadors.get(0).subscribeObjectClassAttributes(testObjectClassHandle, testAttributeHandles);
   }
 
-  @Test(dependsOnMethods = {"testSubscribeObjectClassAttributes"})
+  @Test(dependsOnMethods = "testSubscribeObjectClassAttributes")
   public void testUnsubscribeObjectClassAttributes()
     throws Exception
   {
     rtiAmbassadors.get(0).unsubscribeObjectClassAttributes(testObjectClassHandle, testAttributeHandles);
   }
 
-  @Test(expectedExceptions = {ObjectClassNotDefined.class})
+  @Test(expectedExceptions = ObjectClassNotDefined.class)
   public void testSubscribeObjectClassAttributesOfNullObjectClassHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).subscribeObjectClassAttributes(null, testAttributeHandles);
   }
 
-  @Test(expectedExceptions = {ObjectClassNotDefined.class})
+  @Test(expectedExceptions = ObjectClassNotDefined.class)
   public void testUnsubscribeObjectClassOfNullObjectClassHandle()
     throws Exception
   {

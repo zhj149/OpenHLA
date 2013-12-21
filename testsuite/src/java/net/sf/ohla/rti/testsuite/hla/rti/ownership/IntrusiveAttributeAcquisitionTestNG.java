@@ -16,44 +16,29 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti.ownership;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import net.sf.ohla.rti.testsuite.hla.rti.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti.BaseTestNG;
-import net.sf.ohla.rti.testsuite.hla.rti.SynchronizedFederateAmbassador;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import hla.rti.AttributeAcquisitionWasNotRequested;
-import hla.rti.AttributeAlreadyOwned;
-import hla.rti.AttributeDivestitureWasNotRequested;
 import hla.rti.AttributeHandleSet;
 import hla.rti.AttributeNotDefined;
-import hla.rti.AttributeNotKnown;
-import hla.rti.AttributeNotOwned;
-import hla.rti.AttributeNotPublished;
-import hla.rti.CouldNotDiscover;
-import hla.rti.FederateInternalError;
 import hla.rti.HandleIterator;
-import hla.rti.ObjectClassNotKnown;
-import hla.rti.ObjectNotKnown;
 import hla.rti.ResignAction;
 import hla.rti.jlc.RTIambassadorEx;
 
 @Test
 public class IntrusiveAttributeAcquisitionTestNG
-  extends BaseTestNG
+  extends BaseTestNG<IntrusiveAttributeAcquisitionTestNG.TestFederateAmbassador>
 {
-  private static final String FEDERATION_NAME = "OHLA HLA 1.3 Intrusive Attribute Ownership Acquisition Test Federation";
-
-  private final List<Integer> federateHandles = new ArrayList<Integer>(3);
-  private final List<TestFederateAmbassador> federateAmbassadors = new ArrayList<TestFederateAmbassador>(3);
+  private static final String FEDERATION_NAME = IntrusiveAttributeAcquisitionTestNG.class.getSimpleName();
 
   private String testObjectInstanceName;
   private String testObjectInstanceName2;
@@ -65,25 +50,15 @@ public class IntrusiveAttributeAcquisitionTestNG
 
   public IntrusiveAttributeAcquisitionTestNG()
   {
-    super(3);
+    super(3, FEDERATION_NAME);
   }
 
   @BeforeClass
   public void setup()
     throws Exception
   {
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(0)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(1)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(2)));
-
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fed);
-
-    federateHandles.add(rtiAmbassadors.get(0).joinFederationExecution(
-      FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(0)));
-    federateHandles.add(rtiAmbassadors.get(1).joinFederationExecution(
-      FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(1)));
-    federateHandles.add(rtiAmbassadors.get(2).joinFederationExecution(
-      FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(2)));
+    createFederationExecution();
+    joinFederationExecution();
 
     int testObjectClassHandle = rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT);
     int testObjectClassHandle2 = rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT2);
@@ -128,8 +103,7 @@ public class IntrusiveAttributeAcquisitionTestNG
     throws Exception
   {
     resignFederationExecution(ResignAction.RELEASE_ATTRIBUTES);
-
-    destroyFederationExecution(FEDERATION_NAME);
+    destroyFederationExecution();
   }
 
   @Test
@@ -220,8 +194,13 @@ public class IntrusiveAttributeAcquisitionTestNG
       rtiAmbassadors.get(0).getObjectInstanceHandle(testObjectInstanceName), attributeHandle3, federateHandles.get(1));
   }
 
-  private static class TestFederateAmbassador
-    extends SynchronizedFederateAmbassador
+  protected TestFederateAmbassador createFederateAmbassador(RTIambassadorEx rtiAmbassador)
+  {
+    return new TestFederateAmbassador(rtiAmbassador);
+  }
+
+  public static class TestFederateAmbassador
+    extends BaseFederateAmbassador
   {
     private final Map<Integer, Map<Integer, Object>> objectInstances = new HashMap<Integer, Map<Integer, Object>>();
     private final Map<String, Integer> objectInstanceHandlesByName = new HashMap<String, Integer>();
@@ -266,8 +245,8 @@ public class IntrusiveAttributeAcquisitionTestNG
 
       Object[] acquisition = releaseRequestedAttributes.get(objectInstanceHandle);
       assert acquisition != null;
-      assert attributeHandles.equals(acquisition[0]);
-      assert Arrays.equals(tag, (byte[]) acquisition[1]);
+      assert acquisition[0].equals(attributeHandles);
+      assert Arrays.equals((byte[]) acquisition[1], tag);
     }
 
     public void checkAttributeDivestitureRequested(
@@ -315,7 +294,6 @@ public class IntrusiveAttributeAcquisitionTestNG
 
     @Override
     public void discoverObjectInstance(int objectInstanceHandle, int objectClassHandle, String objectInstanceName)
-      throws CouldNotDiscover, ObjectClassNotKnown, FederateInternalError
     {
       objectInstances.put(objectInstanceHandle, new HashMap<Integer, Object>());
       objectInstanceHandlesByName.put(objectInstanceName, objectInstanceHandle);
@@ -324,15 +302,12 @@ public class IntrusiveAttributeAcquisitionTestNG
     @Override
     public void requestAttributeOwnershipRelease(
       int objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
-      throws ObjectNotKnown, AttributeNotKnown, AttributeNotOwned, FederateInternalError
     {
       releaseRequestedAttributes.put(objectInstanceHandle, new Object[]{attributeHandles, tag});
     }
 
     @Override
     public void attributeOwnershipDivestitureNotification(int objectInstanceHandle, AttributeHandleSet attributeHandles)
-      throws ObjectNotKnown, AttributeNotKnown, AttributeNotOwned, AttributeDivestitureWasNotRequested,
-             FederateInternalError
     {
       AttributeHandleSet divestitureRequestedAttributes =
         this.divestitureRequestedAttributes.get(objectInstanceHandle);
@@ -358,29 +333,24 @@ public class IntrusiveAttributeAcquisitionTestNG
 
     @Override
     public void attributeOwnershipAcquisitionNotification(int objectInstanceHandle, AttributeHandleSet attributeHandles)
-      throws ObjectNotKnown, AttributeNotKnown, AttributeAcquisitionWasNotRequested, AttributeAlreadyOwned,
-             AttributeNotPublished, FederateInternalError
     {
       acquiredAttributes.put(objectInstanceHandle, attributeHandles);
     }
 
     @Override
     public void informAttributeOwnership(int objectInstanceHandle, int attributeHandle, int federateHandle)
-      throws ObjectNotKnown, AttributeNotKnown, FederateInternalError
     {
       setAttributeOwnership(objectInstanceHandle, attributeHandle, federateHandle);
     }
 
     @Override
     public void attributeIsNotOwned(int objectInstanceHandle, int attributeHandle)
-      throws ObjectNotKnown, AttributeNotKnown, FederateInternalError
     {
       setAttributeOwnership(objectInstanceHandle, attributeHandle, Boolean.FALSE);
     }
 
     @Override
     public void attributeOwnedByRTI(int objectInstanceHandle, int attributeHandle)
-      throws ObjectNotKnown, AttributeNotKnown, FederateInternalError
     {
       setAttributeOwnership(objectInstanceHandle, attributeHandle, Boolean.TRUE);
     }

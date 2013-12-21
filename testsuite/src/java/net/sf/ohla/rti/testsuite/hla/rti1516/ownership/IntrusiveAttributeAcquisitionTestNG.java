@@ -31,7 +31,6 @@ import org.testng.annotations.Test;
 import hla.rti1516.AttributeHandle;
 import hla.rti1516.AttributeHandleSet;
 import hla.rti1516.FederateHandle;
-import hla.rti1516.FederateInternalError;
 import hla.rti1516.ObjectClassHandle;
 import hla.rti1516.ObjectInstanceHandle;
 import hla.rti1516.RTIambassador;
@@ -283,7 +282,6 @@ public class IntrusiveAttributeAcquisitionTestNG
     @Override
     public void discoverObjectInstance(
       ObjectInstanceHandle objectInstanceHandle, ObjectClassHandle objectClassHandle, String objectInstanceName)
-      throws FederateInternalError
     {
       objectInstances.put(objectInstanceHandle, new HashMap<AttributeHandle, Object>());
     }
@@ -291,7 +289,6 @@ public class IntrusiveAttributeAcquisitionTestNG
     @Override
     public void requestAttributeOwnershipRelease(
       ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
-      throws FederateInternalError
     {
       releaseRequestedAttributes.put(objectInstanceHandle, new Object[]{attributeHandles, tag});
     }
@@ -299,7 +296,6 @@ public class IntrusiveAttributeAcquisitionTestNG
     @Override
     public void requestDivestitureConfirmation(
       ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
-      throws FederateInternalError
     {
       AttributeHandleSet divestitureRequestedAttributes =
         this.divestitureRequestedAttributes.get(objectInstanceHandle);
@@ -316,7 +312,6 @@ public class IntrusiveAttributeAcquisitionTestNG
     @Override
     public void attributeOwnershipAcquisitionNotification(
       ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
-      throws FederateInternalError
     {
       acquiredAttributes.put(objectInstanceHandle, new Object[]{attributeHandles, tag});
     }
@@ -324,21 +319,18 @@ public class IntrusiveAttributeAcquisitionTestNG
     @Override
     public void informAttributeOwnership(
       ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle, FederateHandle federateHandle)
-      throws FederateInternalError
     {
       setAttributeOwnership(objectInstanceHandle, attributeHandle, federateHandle);
     }
 
     @Override
     public void attributeIsNotOwned(ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle)
-      throws FederateInternalError
     {
       setAttributeOwnership(objectInstanceHandle, attributeHandle, Boolean.FALSE);
     }
 
     @Override
     public void attributeIsOwnedByRTI(ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle)
-      throws FederateInternalError
     {
       setAttributeOwnership(objectInstanceHandle, attributeHandle, Boolean.TRUE);
     }

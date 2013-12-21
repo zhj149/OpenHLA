@@ -93,14 +93,14 @@ public class TimeAdvanceRequestTestNG
     federateAmbassadors.get(1).checkTimeAdvanceGrant(ten);
   }
 
-  @Test(dependsOnMethods = { "testTimeAdvanceRequest" }, expectedExceptions = { LogicalTimeAlreadyPassed.class })
+  @Test(dependsOnMethods = "testTimeAdvanceRequest", expectedExceptions = LogicalTimeAlreadyPassed.class)
   public void testTimeAdvanceRequestToLogicalTimeAlreadyPassed()
     throws Exception
   {
     rtiAmbassadors.get(0).timeAdvanceRequest(five);
   }
 
-  @Test(dependsOnMethods = { "testTimeAdvanceRequest" })
+  @Test(dependsOnMethods = "testTimeAdvanceRequest")
   public void testTimeAdvanceRequestToSameTime()
     throws Exception
   {

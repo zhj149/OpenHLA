@@ -160,7 +160,7 @@ public class ObjectRegionTestNG
     federateAmbassadors.get(2).checkObjectInstanceHandle(objectInstanceHandle);
   }
 
-  @Test(dependsOnMethods = {"testRegisterObjectInstanceWithRegions"})
+  @Test(dependsOnMethods = "testRegisterObjectInstanceWithRegions")
   public void testUpdateAttributeValues()
     throws Exception
   {

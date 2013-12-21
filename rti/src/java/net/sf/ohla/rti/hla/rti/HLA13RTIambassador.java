@@ -16,18 +16,20 @@
 
 package net.sf.ohla.rti.hla.rti;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.URL;
 
 import java.util.HashMap;
 import java.util.ListIterator;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.fdd.ObjectClass;
@@ -35,6 +37,7 @@ import net.sf.ohla.rti.fed.FED;
 import net.sf.ohla.rti.fed.RoutingSpace;
 import net.sf.ohla.rti.fed.javacc.FEDParser;
 import net.sf.ohla.rti.federate.CallbackManager;
+import net.sf.ohla.rti.federate.Federate;
 import net.sf.ohla.rti.federate.FederateChannelHandler;
 import net.sf.ohla.rti.federate.FederateChannelHandlerFactory;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
@@ -43,6 +46,7 @@ import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeSetRegionSetPairList;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eInteractionClassHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectInstanceHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRTIambassador;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandleSet;
@@ -224,24 +228,23 @@ public class HLA13RTIambassador
   private static final I18nLogger log = I18nLogger.getLogger(HLA13RTIambassador.class);
 
   private final IEEE1516eRTIambassador rtiAmbassador =
-    new IEEE1516eRTIambassador(new HLA13FederateChannelHandlerFactory());
+    new IEEE1516eRTIambassador(new HLA13FederateChannelHandlerFactory(), new FederateSaveStateProcessor());
 
-  private final Lock objectInstanceNameReservationsLock = new ReentrantLock(true);
   private final Map<String, ReserveObjectInstanceNameResult> objectInstanceNameReservations =
     new HashMap<String, ReserveObjectInstanceNameResult>();
 
-  private AtomicInteger objectInstanceHandleCount = new AtomicInteger();
+  private final Map<ObjectInstanceHandle, Integer> objectInstanceHandles =
+    new HashMap<ObjectInstanceHandle, Integer>();
+  private final Map<Integer, ObjectInstanceHandle> ieee1516eObjectInstanceHandles =
+    new HashMap<Integer, ObjectInstanceHandle>();
 
-  private final ConcurrentMap<ObjectInstanceHandle, Integer> objectInstanceHandles =
-    new ConcurrentHashMap<ObjectInstanceHandle, Integer>();
-  private final ConcurrentMap<Integer, ObjectInstanceHandle> ieee1516eObjectInstanceHandles =
-    new ConcurrentHashMap<Integer, ObjectInstanceHandle>();
-
-  private final AtomicInteger regionCount = new AtomicInteger();
-
-  private final Lock regionsLock = new ReentrantLock(true);
   private final Map<Integer, HLA13Region> regions = new HashMap<Integer, HLA13Region>();
   private final Map<Integer, HLA13Region> temporaryRegions = new HashMap<Integer, HLA13Region>();
+
+  private final double tickTime;
+
+  private int objectInstanceHandleCount;
+  private int regionCount;
 
   private FED fed;
 
@@ -251,8 +254,6 @@ public class HLA13RTIambassador
   private hla.rti1516e.LogicalTimeFactory ieee1516eLogicalTimeFactory;
 
   private FederateAmbassador federateAmbassador;
-
-  private final double tickTime;
 
   public HLA13RTIambassador()
     throws RTIinternalError
@@ -291,38 +292,29 @@ public class HLA13RTIambassador
 
   public HLA13Region createTemporaryRegion(RoutingSpace routingSpace, RegionHandleSet regionHandles)
   {
-    HLA13Region region = new HLA13Region(
-      regionCount.incrementAndGet(), routingSpace.getRoutingSpaceHandle(),
-      rtiAmbassador.getFederate().getRegionManager().getRegionsSafely(regionHandles));
-    regionsLock.lock();
-    try
+    HLA13Region region;
+    synchronized (regions)
     {
+      region = new HLA13Region(
+        ++regionCount, routingSpace.getRoutingSpaceHandle(),
+        rtiAmbassador.getFederate().getRegionManager().getRegionsSafely(regionHandles));
+
       temporaryRegions.put(region.getToken(), region);
-    }
-    finally
-    {
-      regionsLock.unlock();
     }
     return region;
   }
 
   public void deleteTemporaryRegion(HLA13Region region)
   {
-    regionsLock.lock();
-    try
+    synchronized (regions)
     {
       temporaryRegions.remove(region.getToken());
-    }
-    finally
-    {
-      regionsLock.unlock();
     }
   }
 
   public void deleteTemporaryRegions(HLA13Region[] regions)
   {
-    regionsLock.lock();
-    try
+    synchronized (regions)
     {
       for (HLA13Region region : regions)
       {
@@ -331,10 +323,6 @@ public class HLA13RTIambassador
           temporaryRegions.remove(region.getToken());
         }
       }
-    }
-    finally
-    {
-      regionsLock.unlock();
     }
   }
 
@@ -1519,7 +1507,7 @@ public class HLA13RTIambassador
   {
     try
     {
-      return add(rtiAmbassador.registerObjectInstance(convertToObjectClassHandle(objectClassHandle)));
+      return convert(rtiAmbassador.registerObjectInstance(convertToObjectClassHandle(objectClassHandle)));
     }
     catch (hla.rti1516e.exceptions.ObjectClassNotPublished ocnp)
     {
@@ -1555,27 +1543,27 @@ public class HLA13RTIambassador
     throws ObjectClassNotDefined, ObjectClassNotPublished, ObjectAlreadyRegistered, FederateNotExecutionMember,
            SaveInProgress, RestoreInProgress, RTIinternalError
   {
+    if (objectInstanceName == null)
+    {
+      throw new RTIinternalError(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_NAME_IS_NULL));
+    }
+    else if (objectInstanceName.isEmpty())
+    {
+      throw new RTIinternalError(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_NAME_IS_EMPTY));
+    }
+    else if (objectInstanceName.startsWith("HLA"))
+    {
+      throw new RTIinternalError(I18n.getMessage(
+        ExceptionMessages.OBJECT_INSTANCE_NAME_STARTS_WITH_HLA, objectInstanceName));
+    }
+
     try
     {
       ReserveObjectInstanceNameResult result;
 
-      objectInstanceNameReservationsLock.lock();
-      try
+      synchronized (objectInstanceNameReservations)
       {
-        if (objectInstanceName == null)
-        {
-          throw new RTIinternalError(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_NAME_IS_NULL));
-        }
-        else if (objectInstanceName.isEmpty())
-        {
-          throw new RTIinternalError(I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_NAME_IS_EMPTY));
-        }
-        else if (objectInstanceName.startsWith("HLA"))
-        {
-          throw new RTIinternalError(I18n.getMessage(
-            ExceptionMessages.OBJECT_INSTANCE_NAME_STARTS_WITH_HLA, objectInstanceName));
-        }
-        else if (objectInstanceNameReservations.containsKey(objectInstanceName))
+        if (objectInstanceNameReservations.containsKey(objectInstanceName))
         {
           throw new ObjectAlreadyRegistered(objectInstanceName);
         }
@@ -1583,10 +1571,6 @@ public class HLA13RTIambassador
         result = new ReserveObjectInstanceNameResult();
 
         objectInstanceNameReservations.put(objectInstanceName, result);
-      }
-      finally
-      {
-        objectInstanceNameReservationsLock.unlock();
       }
 
       rtiAmbassador.reserveObjectInstanceName(objectInstanceName);
@@ -1602,7 +1586,9 @@ public class HLA13RTIambassador
           throw new RTIinternalError(fie.getMessage(), fie);
         }
 
-        return add(rtiAmbassador.registerObjectInstance(
+        // TODO: consider releasing name reservation if registration fails
+
+        return convert(rtiAmbassador.registerObjectInstance(
           convertToObjectClassHandle(objectClassHandle), objectInstanceName));
       }
       else
@@ -1983,6 +1969,8 @@ public class HLA13RTIambassador
     }
     catch (hla.rti1516e.exceptions.AttributeAlreadyBeingChanged aabc)
     {
+      // TODO: don't allow this to happen?
+
       throw new RTIinternalError(aabc);
     }
     catch (hla.rti1516e.exceptions.AttributeNotOwned ano)
@@ -3420,16 +3408,12 @@ public class HLA13RTIambassador
       throw new RTIinternalError(rtiie);
     }
 
-    HLA13Region region = new HLA13Region(
-      regionCount.incrementAndGet(), routingSpace.getRoutingSpaceHandle(), routingSpace.getDimensions(), regionHandles);
-    regionsLock.lock();
-    try
+    HLA13Region region;
+    synchronized (regions)
     {
+      region = new HLA13Region(
+        ++regionCount, routingSpace.getRoutingSpaceHandle(), routingSpace.getDimensions(), regionHandles);
       regions.put(region.getToken(), region);
-    }
-    finally
-    {
-      regionsLock.unlock();
     }
 
     return region;
@@ -3605,7 +3589,7 @@ public class HLA13RTIambassador
 
     try
     {
-      return add(rtiAmbassador.registerObjectInstanceWithRegions(
+      return convert(rtiAmbassador.registerObjectInstanceWithRegions(
         convertToObjectClassHandle(objectClassHandle), asrspl));
     }
     catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
@@ -3692,7 +3676,7 @@ public class HLA13RTIambassador
 
     try
     {
-      return add(rtiAmbassador.registerObjectInstanceWithRegions(
+      return convert(rtiAmbassador.registerObjectInstanceWithRegions(
         convertToObjectClassHandle(objectClassHandle), asrspl, name));
     }
     catch (hla.rti1516e.exceptions.ObjectClassNotDefined ocnd)
@@ -5221,8 +5205,7 @@ public class HLA13RTIambassador
   public Region getRegion(int regionToken)
     throws RegionNotKnown, FederateNotExecutionMember, RTIinternalError
   {
-    regionsLock.lock();
-    try
+    synchronized (regions)
     {
       HLA13Region region = regions.get(regionToken);
       if (region == null)
@@ -5293,10 +5276,6 @@ public class HLA13RTIambassador
       {
         throw new RTIinternalError(rtiie);
       }
-    }
-    finally
-    {
-      regionsLock.unlock();
     }
   }
 
@@ -5467,22 +5446,36 @@ public class HLA13RTIambassador
     }
   }
 
-  public int add(ObjectInstanceHandle objectInstanceHandle)
+  public int convert(ObjectInstanceHandle objectInstanceHandle)
   {
-    Integer hla13ObjectInstanceHandle = objectInstanceHandleCount.incrementAndGet();
-    objectInstanceHandles.put(objectInstanceHandle, hla13ObjectInstanceHandle);
-    ieee1516eObjectInstanceHandles.put(hla13ObjectInstanceHandle, objectInstanceHandle);
+    Integer hla13ObjectInstanceHandle;
+    synchronized (objectInstanceHandles)
+    {
+      hla13ObjectInstanceHandle = objectInstanceHandles.get(objectInstanceHandle);
+
+      if (hla13ObjectInstanceHandle == null)
+      {
+        hla13ObjectInstanceHandle = ++objectInstanceHandleCount;
+        objectInstanceHandles.put(objectInstanceHandle, hla13ObjectInstanceHandle);
+        ieee1516eObjectInstanceHandles.put(hla13ObjectInstanceHandle, objectInstanceHandle);
+      }
+    }
     return hla13ObjectInstanceHandle;
   }
 
-  public int convert(ObjectInstanceHandle objectInstanceHandle)
-  {
-    return objectInstanceHandles.get(objectInstanceHandle);
-  }
-
   public ObjectInstanceHandle convertToObjectInstanceHandle(int objectInstanceHandle)
+    throws ObjectNotKnown
   {
-    return ieee1516eObjectInstanceHandles.get(objectInstanceHandle);
+    ObjectInstanceHandle ieee1516eObjectInstanceHandle;
+    synchronized (objectInstanceHandles)
+    {
+      ieee1516eObjectInstanceHandle = ieee1516eObjectInstanceHandles.get(objectInstanceHandle);
+    }
+    if (ieee1516eObjectInstanceHandle == null)
+    {
+      throw new ObjectNotKnown(Integer.toString(objectInstanceHandle));
+    }
+    return ieee1516eObjectInstanceHandle;
   }
 
   public int convert(ObjectClassHandle objectClassHandle)
@@ -5700,6 +5693,68 @@ public class HLA13RTIambassador
     }
   }
 
+  private void saveState(DataOutput out)
+    throws IOException
+  {
+    synchronized (objectInstanceHandles)
+    {
+      out.writeInt(objectInstanceHandleCount);
+
+      out.writeInt(objectInstanceHandles.size());
+      for (Map.Entry<ObjectInstanceHandle, Integer> entry : objectInstanceHandles.entrySet())
+      {
+        ((IEEE1516eObjectInstanceHandle) entry.getKey()).writeTo(out);
+        out.writeInt(entry.getValue());
+      }
+    }
+
+    synchronized (regions)
+    {
+      out.writeInt(regionCount);
+
+      out.writeInt(regions.size());
+      for (HLA13Region region : regions.values())
+      {
+        region.writeTo(out);
+      }
+    }
+  }
+
+  private void restoreState(DataInput in)
+    throws IOException
+  {
+    synchronized (objectInstanceHandles)
+    {
+      objectInstanceHandles.clear();
+      ieee1516eObjectInstanceHandles.clear();
+
+      objectInstanceHandleCount = in.readInt();
+
+      for (int i = in.readInt(); i > 0; i--)
+      {
+        IEEE1516eObjectInstanceHandle ieee1516eObjectInstanceHandle = new IEEE1516eObjectInstanceHandle(in);
+        Integer hla13ObjectInstanceHandle = in.readInt();
+
+        objectInstanceHandles.put(ieee1516eObjectInstanceHandle, hla13ObjectInstanceHandle);
+        ieee1516eObjectInstanceHandles.put(hla13ObjectInstanceHandle, ieee1516eObjectInstanceHandle);
+      }
+    }
+
+    synchronized (regions)
+    {
+      regions.clear();
+      temporaryRegions.clear();
+
+      regionCount = in.readInt();
+
+      for (int i = in.readInt(); i > 0; i--)
+      {
+        HLA13Region region = new HLA13Region(in);
+        regions.put(region.getToken(), region);
+      }
+    }
+  }
+
   private class HLA13FederateChannelHandler
     extends FederateChannelHandler
   {
@@ -5714,27 +5769,25 @@ public class HLA13RTIambassador
       switch (message.getType())
       {
         case OBJECT_INSTANCE_NAME_RESERVATION_SUCCEEDED:
-          objectInstanceNameReservationsLock.lock();
-          try
+          synchronized (objectInstanceNameReservations)
           {
-            objectInstanceNameReservations.remove(
-              ((ObjectInstanceNameReservationSucceeded) message).getObjectInstanceName()).complete(true);
-          }
-          finally
-          {
-            objectInstanceNameReservationsLock.unlock();
+            ReserveObjectInstanceNameResult reserveObjectInstanceNameResult = objectInstanceNameReservations.remove(
+              ((ObjectInstanceNameReservationSucceeded) message).getObjectInstanceName());
+            if (reserveObjectInstanceNameResult != null)
+            {
+              reserveObjectInstanceNameResult.complete(true);
+            }
           }
           break;
         case OBJECT_INSTANCE_NAME_RESERVATION_FAILED:
-          objectInstanceNameReservationsLock.lock();
-          try
+          synchronized (objectInstanceNameReservations)
           {
-            objectInstanceNameReservations.remove(
-              ((ObjectInstanceNameReservationFailed) message).getName()).complete(false);
-          }
-          finally
-          {
-            objectInstanceNameReservationsLock.unlock();
+            ReserveObjectInstanceNameResult reserveObjectInstanceNameResult = objectInstanceNameReservations.remove(
+              ((ObjectInstanceNameReservationFailed) message).getObjectInstanceName());
+            if (reserveObjectInstanceNameResult != null)
+            {
+              reserveObjectInstanceNameResult.complete(true);
+            }
           }
           break;
         default:
@@ -5749,6 +5802,31 @@ public class HLA13RTIambassador
     public FederateChannelHandler create(Executor executor, CallbackManager callbackManager)
     {
       return new HLA13FederateChannelHandler(executor, callbackManager);
+    }
+  }
+
+  private class FederateSaveStateProcessor
+    implements Federate.SaveStateProcessor
+  {
+    @Override
+    public byte[] createExtraSaveState()
+      throws IOException
+    {
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      DataOutputStream out = new DataOutputStream(baos);
+      saveState(out);
+      out.close();
+      return baos.toByteArray();
+    }
+
+    @Override
+    public void processExtraSaveState(byte[] extraSaveState)
+      throws IOException
+    {
+      ByteArrayInputStream bais = new ByteArrayInputStream(extraSaveState);
+      DataInputStream in = new DataInputStream(bais);
+      restoreState(in);
+      in.close();
     }
   }
 
@@ -5775,6 +5853,7 @@ public class HLA13RTIambassador
         }
         catch (InterruptedException ie)
         {
+          // intentionally empty
         }
       }
       return succeeded;

@@ -21,6 +21,7 @@
       <class name="net.sf.ohla.rti.testsuite.hla.rti.federation.CreationTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti.federation.JoiningTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti.federation.SynchronizationTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti.federation.SaveRestoreTestNG"/>
     </classes>
   </test>
   <test name="HLA 1.3 - Declaration Management">
@@ -35,6 +36,9 @@
       <class name="net.sf.ohla.rti.testsuite.hla.rti.object.ObjectUpdateTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti.object.ObjectDeletionTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti.object.InteractionTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti.object.InteractionPersistenceTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti.object.ObjectPersistenceTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti.object.DeclarationPersistenceTestNG"/>
     </classes>
   </test>
   <test name="HLA 1.3 - Ownership Management">
@@ -44,11 +48,13 @@
       <class name="net.sf.ohla.rti.testsuite.hla.rti.ownership.AttributeAcquisitionTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti.ownership.NegotiatedAttributeDivestitureTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti.ownership.IntrusiveAttributeAcquisitionTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti.ownership.AttributeOwnershipPersistenceTestNG"/>
     </classes>
   </test>
   <test name="HLA 1.3 - Data Distribution Management">
     <classes>
-      <class name="net.sf.ohla.rti.testsuite.hla.rti.datadistribution.RegionSupportTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti.datadistribution.RegionTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti.datadistribution.RegionPersistenceTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti.datadistribution.ObjectRegionTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti.datadistribution.InteractionRegionTestNG"/>
     </classes>
@@ -68,10 +74,13 @@
       <class name="net.sf.ohla.rti.testsuite.hla.rti.time.InitialTimeStateTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti.time.TimeAdvancingExceptionsTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti.time.TimeConstrainedTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti.time.TimeConstrainedPersistenceTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti.time.EnableTimeConstrainedExceptionsTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti.time.TimeRegulationTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti.time.TimeRegulationPersistenceTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti.time.EnableTimeRegulationExceptionsTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti.time.TimeAdvanceRequestTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti.time.TimeAdvanceRequestPersistenceTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti.time.TimeAdvanceRequestAvailableTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti.time.NextEventRequestTestNG"/>
       <class name="net.sf.ohla.rti.testsuite.hla.rti.time.NextEventRequestAvailableTestNG"/>

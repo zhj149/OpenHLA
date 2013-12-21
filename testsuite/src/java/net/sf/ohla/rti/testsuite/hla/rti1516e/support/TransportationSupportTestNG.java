@@ -52,21 +52,21 @@ public class TransportationSupportTestNG
     assert HLA_BEST_EFFORT.equals(rtiAmbassadors.get(0).getTransportationTypeName(transportationTypeHandle));
   }
 
-  @Test(expectedExceptions = {InvalidTransportationName.class})
+  @Test(expectedExceptions = InvalidTransportationName.class)
   public void testGetTransportationTypeOfUnknownTransportationType()
     throws Exception
   {
     rtiAmbassadors.get(0).getTransportationTypeHandle(UNKNOWN_TRANSPORTATION_TYPE);
   }
 
-  @Test(expectedExceptions = {InvalidTransportationName.class})
+  @Test(expectedExceptions = InvalidTransportationName.class)
   public void testGetTransportationTypeOfNullTransportationType()
     throws Exception
   {
     rtiAmbassadors.get(0).getTransportationTypeHandle(null);
   }
 
-  @Test(expectedExceptions = {InvalidTransportationType.class})
+  @Test(expectedExceptions = InvalidTransportationType.class)
   public void testGetTransportationTypeNameOfNullTransportationTypeHandle()
     throws Exception
   {

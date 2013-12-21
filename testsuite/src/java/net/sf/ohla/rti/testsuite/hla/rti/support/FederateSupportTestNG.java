@@ -26,28 +26,28 @@ import hla.rti.jlc.NullFederateAmbassador;
 public class FederateSupportTestNG
   extends BaseSupportTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA HLA 1.3 Federate Support Test Federation";
+  private static final String FEDERATION_NAME = FederateSupportTestNG.class.getSimpleName();
 
   public FederateSupportTestNG()
   {
     super(FEDERATION_NAME);
   }
 
-  @Test(expectedExceptions = {FederateAlreadyExecutionMember.class})
+  @Test(expectedExceptions = FederateAlreadyExecutionMember.class)
   public void testJoinFederationExecutionAlreadyExecutionMemberOf()
     throws Exception
   {
     rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME, new NullFederateAmbassador());
   }
 
-  @Test(expectedExceptions = {IllegalArgumentException.class})
+  @Test(expectedExceptions = IllegalArgumentException.class)
   public void testJoinFederationExecutionWithNullFederateAmbassador()
     throws Exception
   {
     rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME, null);
   }
 
-  @Test(expectedExceptions = {InvalidResignAction.class})
+  @Test(expectedExceptions = InvalidResignAction.class)
   public void testResignFederationExecutionWithInvalidResignAction()
     throws Exception
   {

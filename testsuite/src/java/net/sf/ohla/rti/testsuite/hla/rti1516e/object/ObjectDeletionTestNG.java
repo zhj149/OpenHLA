@@ -124,21 +124,21 @@ public class ObjectDeletionTestNG
     federateAmbassadors.get(2).checkRemoved(testObjectInstanceHandle2, TAG, federateHandles.get(0));
   }
 
-  @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
+  @Test(expectedExceptions = ObjectInstanceNotKnown.class)
   public void testDeleteObjectInstanceWithNullObjectInstanceHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).deleteObjectInstance(null, TAG);
   }
 
-  @Test(expectedExceptions = {DeletePrivilegeNotHeld.class})
+  @Test(expectedExceptions = DeletePrivilegeNotHeld.class)
   public void testDeleteUnownedObjectInstance()
     throws Exception
   {
     rtiAmbassadors.get(1).deleteObjectInstance(testObjectInstanceHandle, TAG);
   }
 
-  @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
+  @Test(expectedExceptions = ObjectInstanceNotKnown.class)
   public void testDeleteUnknownObject()
     throws Exception
   {

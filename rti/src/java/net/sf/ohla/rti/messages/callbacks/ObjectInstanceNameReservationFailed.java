@@ -45,7 +45,7 @@ public class ObjectInstanceNameReservationFailed
     super(buffer);
   }
 
-  public String getName()
+  public String getObjectInstanceName()
   {
     return s;
   }

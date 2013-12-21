@@ -41,21 +41,21 @@ public class TimeConstrainedTestNG
     federateAmbassadors.get(0).checkTimeConstrainedEnabled(initial);
   }
 
-  @Test(dependsOnMethods = {"testEnableTimeConstrained"}, expectedExceptions = {TimeConstrainedAlreadyEnabled.class})
+  @Test(dependsOnMethods = "testEnableTimeConstrained", expectedExceptions = TimeConstrainedAlreadyEnabled.class)
   public void testEnableTimeConstrainedAgain()
     throws Exception
   {
     rtiAmbassadors.get(0).enableTimeConstrained();
   }
 
-  @Test(dependsOnMethods = {"testEnableTimeConstrainedAgain"})
+  @Test(dependsOnMethods = "testEnableTimeConstrainedAgain")
   public void testDisableTimeConstrained()
     throws Exception
   {
     rtiAmbassadors.get(0).disableTimeConstrained();
   }
 
-  @Test(dependsOnMethods = {"testDisableTimeConstrained"}, expectedExceptions = {TimeConstrainedIsNotEnabled.class})
+  @Test(dependsOnMethods = "testDisableTimeConstrained", expectedExceptions = TimeConstrainedIsNotEnabled.class)
   public void testDisableTimeConstrainedAgain()
     throws Exception
   {

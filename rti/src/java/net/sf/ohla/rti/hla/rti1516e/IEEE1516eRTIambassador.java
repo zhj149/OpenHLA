@@ -206,6 +206,8 @@ public class IEEE1516eRTIambassador
 
   private final FederateChannelHandlerFactory federateChannelHandlerFactory;
 
+  private final Federate.SaveStateProcessor saveStateProcessor;
+
   private Channel rtiChannel;
 
   private FederateAmbassador federateAmbassador;
@@ -232,12 +234,24 @@ public class IEEE1516eRTIambassador
 
   public IEEE1516eRTIambassador()
   {
-    this(new DefaultFederateChannelHandlerFactory());
+    this(new DefaultFederateChannelHandlerFactory(), null);
   }
 
   public IEEE1516eRTIambassador(FederateChannelHandlerFactory federateChannelHandlerFactory)
   {
+    this(federateChannelHandlerFactory, null);
+  }
+
+  public IEEE1516eRTIambassador(Federate.SaveStateProcessor saveStateProcessor)
+  {
+    this(new DefaultFederateChannelHandlerFactory(), saveStateProcessor);
+  }
+
+  public IEEE1516eRTIambassador(
+    FederateChannelHandlerFactory federateChannelHandlerFactory, Federate.SaveStateProcessor saveStateProcessor)
+  {
     this.federateChannelHandlerFactory = federateChannelHandlerFactory;
+    this.saveStateProcessor = saveStateProcessor;
   }
 
   public Federate getFederate()
@@ -703,7 +717,7 @@ public class IEEE1516eRTIambassador
 
         federate = new Federate(
           federateName, federateType, federationExecutionName, additionalFDDs, federateAmbassador,
-          callbackManager, rtiChannel);
+          callbackManager, rtiChannel, saveStateProcessor);
       }
       finally
       {

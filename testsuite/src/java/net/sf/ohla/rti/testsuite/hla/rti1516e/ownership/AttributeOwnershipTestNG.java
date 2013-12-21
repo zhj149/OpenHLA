@@ -116,28 +116,28 @@ public class AttributeOwnershipTestNG
     assert !rtiAmbassadors.get(1).isAttributeOwnedByFederate(testObjectInstanceHandle, attributeHandle3);
   }
 
-  @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
+  @Test(expectedExceptions = ObjectInstanceNotKnown.class)
   public void testIsAttributeOwnedByFederateWithNullObjectInstanceHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).isAttributeOwnedByFederate(null, attributeHandle1);
   }
 
-  @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
+  @Test(expectedExceptions = ObjectInstanceNotKnown.class)
   public void testIsAttributeOwnedByFederateWithUnknownObjectInstanceHandle()
     throws Exception
   {
     rtiAmbassadors.get(2).isAttributeOwnedByFederate(testObjectInstanceHandle, attributeHandle1);
   }
 
-  @Test(expectedExceptions = {AttributeNotDefined.class})
+  @Test(expectedExceptions = AttributeNotDefined.class)
   public void testIsAttributeOwnedByFederateWithNullAttributeHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).isAttributeOwnedByFederate(testObjectInstanceHandle, null);
   }
 
-  @Test(expectedExceptions = {AttributeNotDefined.class})
+  @Test(expectedExceptions = AttributeNotDefined.class)
   public void testIsAttributeOwnedByFederateWithUndefinedAttributeHandle()
     throws Exception
   {
@@ -167,28 +167,28 @@ public class AttributeOwnershipTestNG
     federateAmbassadors.get(1).checkAttributeIsUnowned(testObjectInstanceHandle, attributeHandle3);
   }
 
-  @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
+  @Test(expectedExceptions = ObjectInstanceNotKnown.class)
   public void testQueryAttributeOwnershipOfNullObjectInstanceHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).queryAttributeOwnership(null, attributeHandle1);
   }
 
-  @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
+  @Test(expectedExceptions = ObjectInstanceNotKnown.class)
   public void testQueryAttributeOwnershipWithUnknownObjectInstanceHandle()
     throws Exception
   {
     rtiAmbassadors.get(2).queryAttributeOwnership(testObjectInstanceHandle, attributeHandle1);
   }
 
-  @Test(expectedExceptions = {AttributeNotDefined.class})
+  @Test(expectedExceptions = AttributeNotDefined.class)
   public void testQueryAttributeOwnershipWithNullAttributeHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).isAttributeOwnedByFederate(testObjectInstanceHandle, null);
   }
 
-  @Test(expectedExceptions = {AttributeNotDefined.class})
+  @Test(expectedExceptions = AttributeNotDefined.class)
   public void testQueryAttributeOwnershipWithUndefinedAttributeHandle()
     throws Exception
   {

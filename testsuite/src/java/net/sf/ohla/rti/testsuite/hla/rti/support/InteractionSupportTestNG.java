@@ -26,7 +26,7 @@ import hla.rti.NameNotFound;
 public class InteractionSupportTestNG
   extends BaseSupportTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA HLA 1.3 Interaction Support Test Federation";
+  private static final String FEDERATION_NAME = InteractionSupportTestNG.class.getSimpleName();
 
   public InteractionSupportTestNG()
   {
@@ -41,14 +41,14 @@ public class InteractionSupportTestNG
     assert TEST_INTERACTION.equals(rtiAmbassadors.get(0).getInteractionClassName(interactionClassHandle));
   }
 
-  @Test(expectedExceptions = {NameNotFound.class})
+  @Test(expectedExceptions = NameNotFound.class)
   public void testGetInteractionClassHandleOfUnknownInteraction()
     throws Exception
   {
     rtiAmbassadors.get(0).getInteractionClassHandle(UNKNOWN_INTERACTION);
   }
 
-  @Test(expectedExceptions = {InteractionClassNotDefined.class})
+  @Test(expectedExceptions = InteractionClassNotDefined.class)
   public void testGetInteractionClassNameOfInvalidInteractionClassHandle()
     throws Exception
   {
@@ -64,14 +64,14 @@ public class InteractionSupportTestNG
     assert PARAMETER1.equals(rtiAmbassadors.get(0).getParameterName(parameterHandle, interactionClassHandle));
   }
 
-  @Test(expectedExceptions = {InteractionClassNotDefined.class})
+  @Test(expectedExceptions = InteractionClassNotDefined.class)
   public void testGetParameterHandleOfInvalidInteractionClassHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).getParameterHandle(PARAMETER1, -1);
   }
 
-  @Test(expectedExceptions = {NameNotFound.class})
+  @Test(expectedExceptions = NameNotFound.class)
   public void testGetParameterHandleOfUnknownParameter()
     throws Exception
   {
@@ -80,7 +80,7 @@ public class InteractionSupportTestNG
     rtiAmbassadors.get(0).getParameterHandle(UNKNOWN_PARAMETER, interactionClassHandle);
   }
 
-  @Test(expectedExceptions = {InteractionClassNotDefined.class})
+  @Test(expectedExceptions = InteractionClassNotDefined.class)
   public void testGetParameterNameOfInvalidInteractionClassHandle()
     throws Exception
   {
@@ -90,7 +90,7 @@ public class InteractionSupportTestNG
     rtiAmbassadors.get(0).getParameterName(parameterHandle, -1);
   }
 
-  @Test(expectedExceptions = {InteractionParameterNotDefined.class})
+  @Test(expectedExceptions = InteractionParameterNotDefined.class)
   public void testGetParameterNameOfInvalidParameterHandle()
     throws Exception
   {
