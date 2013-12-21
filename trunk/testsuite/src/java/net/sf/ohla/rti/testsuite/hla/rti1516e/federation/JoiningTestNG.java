@@ -82,28 +82,28 @@ public class JoiningTestNG
     rtiAmbassadors.get(0).resignFederationExecution(ResignAction.NO_ACTION);
   }
 
-  @Test(expectedExceptions = {IllegalArgumentException.class})
+  @Test(expectedExceptions = IllegalArgumentException.class)
   public void testJoinFederationExecutionWithNullFederateType()
     throws Exception
   {
     rtiAmbassadors.get(0).joinFederationExecution(null, FEDERATION_NAME);
   }
 
-  @Test(expectedExceptions = {IllegalArgumentException.class})
+  @Test(expectedExceptions = IllegalArgumentException.class)
   public void testJoinFederationExecutionWithNullFederationExecutionName()
     throws Exception
   {
     rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE_1, null);
   }
 
-  @Test(expectedExceptions = {FederationExecutionDoesNotExist.class})
+  @Test(expectedExceptions = FederationExecutionDoesNotExist.class)
   public void testJoinFederationThatDoesNotExist()
     throws Exception
   {
     rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE_1, "xxx");
   }
 
-  @Test(expectedExceptions = {FederateNotExecutionMember.class})
+  @Test(expectedExceptions = FederateNotExecutionMember.class)
   public void testResignFederationExecutionNotExecutionMemberOf()
     throws Exception
   {

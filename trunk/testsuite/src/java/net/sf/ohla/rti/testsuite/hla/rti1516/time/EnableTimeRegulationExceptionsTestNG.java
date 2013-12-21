@@ -39,42 +39,42 @@ public class EnableTimeRegulationExceptionsTestNG
     rtiAmbassadors.get(0).enableTimeRegulation(lookahead1);
   }
 
-  @Test(expectedExceptions = {RequestForTimeRegulationPending.class})
+  @Test(expectedExceptions = RequestForTimeRegulationPending.class)
   public void testEnableTimeRegulationWhileEnableTimeRegulationPending()
     throws Exception
   {
     rtiAmbassadors.get(0).enableTimeRegulation(lookahead1);
   }
 
-  @Test(expectedExceptions = {RequestForTimeRegulationPending.class})
+  @Test(expectedExceptions = RequestForTimeRegulationPending.class)
   public void testTimeAdvanceRequestWhileEnableTimeRegulationPending()
     throws Exception
   {
     rtiAmbassadors.get(0).timeAdvanceRequest(oneHundred);
   }
 
-  @Test(expectedExceptions = {RequestForTimeRegulationPending.class})
+  @Test(expectedExceptions = RequestForTimeRegulationPending.class)
   public void testTimeAdvanceRequestAvailableWhileEnableTimeRegulationPending()
     throws Exception
   {
     rtiAmbassadors.get(0).timeAdvanceRequestAvailable(oneHundred);
   }
 
-  @Test(expectedExceptions = {RequestForTimeRegulationPending.class})
+  @Test(expectedExceptions = RequestForTimeRegulationPending.class)
   public void testNextMessageRequestWhileEnableTimeRegulationPending()
     throws Exception
   {
     rtiAmbassadors.get(0).nextMessageRequest(oneHundred);
   }
 
-  @Test(expectedExceptions = {RequestForTimeRegulationPending.class})
+  @Test(expectedExceptions = RequestForTimeRegulationPending.class)
   public void testNextMessageRequestAvailableWhileEnableTimeRegulationPending()
     throws Exception
   {
     rtiAmbassadors.get(0).nextMessageRequestAvailable(oneHundred);
   }
 
-  @Test(expectedExceptions = {RequestForTimeRegulationPending.class})
+  @Test(expectedExceptions = RequestForTimeRegulationPending.class)
   public void testFlushQueueRequestWhileEnableTimeRegulationPending()
     throws Exception
   {

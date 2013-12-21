@@ -26,7 +26,7 @@ import hla.rti.ObjectClassNotDefined;
 public class ObjectSupportTestNG
   extends BaseSupportTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA HLA 1.3 Object Support Test Federation";
+  private static final String FEDERATION_NAME = ObjectSupportTestNG.class.getSimpleName();
 
   public ObjectSupportTestNG()
   {
@@ -42,21 +42,21 @@ public class ObjectSupportTestNG
     assert TEST_OBJECT.equals(rtiAmbassadors.get(0).getObjectClassName(objectClassHandle));
   }
 
-  @Test(expectedExceptions = {NameNotFound.class})
+  @Test(expectedExceptions = NameNotFound.class)
   public void testGetObjectClassHandleOfUnknownObject()
     throws Exception
   {
     rtiAmbassadors.get(0).getObjectClassHandle(UNKNOWN_OBJECT);
   }
 
-  @Test(expectedExceptions = {NameNotFound.class})
+  @Test(expectedExceptions = NameNotFound.class)
   public void testGetObjectClassHandleWithNullObjectClassName()
     throws Exception
   {
     rtiAmbassadors.get(0).getObjectClassHandle(null);
   }
 
-  @Test(expectedExceptions = {ObjectClassNotDefined.class})
+  @Test(expectedExceptions = ObjectClassNotDefined.class)
   public void testGetObjectClassNameOfInvalidObjectClassHandle()
     throws Exception
   {
@@ -73,14 +73,14 @@ public class ObjectSupportTestNG
     assert ATTRIBUTE1.equals(rtiAmbassadors.get(0).getAttributeName(attributeHandle, objectClassHandle));
   }
 
-  @Test(expectedExceptions = {ObjectClassNotDefined.class})
+  @Test(expectedExceptions = ObjectClassNotDefined.class)
   public void testGetAttributeHandleOfInvalidObjectClassHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).getAttributeHandle(ATTRIBUTE1, -1);
   }
 
-  @Test(expectedExceptions = {NameNotFound.class})
+  @Test(expectedExceptions = NameNotFound.class)
   public void testGetAttributeHandleOfUnknownAttribute()
     throws Exception
   {
@@ -88,7 +88,7 @@ public class ObjectSupportTestNG
       UNKNOWN_ATTRIBUTE, rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT));
   }
 
-  @Test(expectedExceptions = {ObjectClassNotDefined.class})
+  @Test(expectedExceptions = ObjectClassNotDefined.class)
   public void testGetAttributeNameOfInvalidObjectClassHandle()
     throws Exception
   {
@@ -98,7 +98,7 @@ public class ObjectSupportTestNG
     rtiAmbassadors.get(0).getAttributeName(attributeHandle, -1);
   }
 
-  @Test(expectedExceptions = {AttributeNotDefined.class})
+  @Test(expectedExceptions = AttributeNotDefined.class)
   public void testGetAttributeNameOfInvalidAttributeHandle()
     throws Exception
   {

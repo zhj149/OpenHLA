@@ -25,7 +25,7 @@ import hla.rti.TimeConstrainedWasNotEnabled;
 public class TimeConstrainedTestNG
   extends BaseTimeManagementTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516 Time Constrained Test Federation";
+  private static final String FEDERATION_NAME = TimeConstrainedTestNG.class.getSimpleName();
 
   public TimeConstrainedTestNG()
   {
@@ -41,21 +41,21 @@ public class TimeConstrainedTestNG
     federateAmbassadors.get(0).checkTimeConstrainedEnabled(initial);
   }
 
-  @Test(dependsOnMethods = {"testEnableTimeConstrained"}, expectedExceptions = {TimeConstrainedAlreadyEnabled.class})
+  @Test(dependsOnMethods = "testEnableTimeConstrained", expectedExceptions = TimeConstrainedAlreadyEnabled.class)
   public void testEnableTimeConstrainedAgain()
     throws Exception
   {
     rtiAmbassadors.get(0).enableTimeConstrained();
   }
 
-  @Test(dependsOnMethods = {"testEnableTimeConstrainedAgain"})
+  @Test(dependsOnMethods = "testEnableTimeConstrainedAgain")
   public void testDisableTimeConstrained()
     throws Exception
   {
     rtiAmbassadors.get(0).disableTimeConstrained();
   }
 
-  @Test(dependsOnMethods = {"testDisableTimeConstrained"}, expectedExceptions = {TimeConstrainedWasNotEnabled.class})
+  @Test(dependsOnMethods = "testDisableTimeConstrained", expectedExceptions = TimeConstrainedWasNotEnabled.class)
   public void testDisableTimeConstrainedAgain()
     throws Exception
   {

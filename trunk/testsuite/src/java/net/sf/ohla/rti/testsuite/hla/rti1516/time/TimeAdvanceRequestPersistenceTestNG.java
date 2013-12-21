@@ -78,14 +78,14 @@ public class TimeAdvanceRequestPersistenceTestNG
     federateAmbassadors.get(1).checkFederationSaved(SAVE_NAME);
   }
 
-  @Test(expectedExceptions = { LogicalTimeAlreadyPassed.class })
+  @Test(expectedExceptions = LogicalTimeAlreadyPassed.class)
   public void testTimeAdvanceRequestToLogicalTimeAlreadyPassed()
     throws Exception
   {
     rtiAmbassadors.get(0).timeAdvanceRequest(two);
   }
 
-  @Test(expectedExceptions = { InTimeAdvancingState.class })
+  @Test(expectedExceptions = InTimeAdvancingState.class)
   public void testTimeAdvanceRequestWhileInTimeAdvancingState()
     throws Exception
   {

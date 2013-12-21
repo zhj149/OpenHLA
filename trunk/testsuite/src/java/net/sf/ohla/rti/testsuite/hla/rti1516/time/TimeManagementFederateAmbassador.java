@@ -9,19 +9,11 @@ import net.sf.ohla.rti.testsuite.hla.rti1516.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti1516.object.TestObjectInstance;
 
 import hla.rti1516.AttributeHandleValueMap;
-import hla.rti1516.AttributeNotRecognized;
-import hla.rti1516.AttributeNotSubscribed;
-import hla.rti1516.FederateInternalError;
 import hla.rti1516.InteractionClassHandle;
-import hla.rti1516.InteractionClassNotRecognized;
-import hla.rti1516.InteractionClassNotSubscribed;
-import hla.rti1516.InteractionParameterNotRecognized;
-import hla.rti1516.InvalidLogicalTime;
 import hla.rti1516.LogicalTime;
 import hla.rti1516.MessageRetractionHandle;
 import hla.rti1516.ObjectClassHandle;
 import hla.rti1516.ObjectInstanceHandle;
-import hla.rti1516.ObjectInstanceNotKnown;
 import hla.rti1516.OrderType;
 import hla.rti1516.ParameterHandleValueMap;
 import hla.rti1516.RTIambassador;
@@ -324,99 +316,90 @@ public class TimeManagementFederateAmbassador
   }
 
   @Override
-  public void discoverObjectInstance(ObjectInstanceHandle objectInstanceHandle, ObjectClassHandle objectClassHandle,
-                                     String objectInstanceName)
+  public void discoverObjectInstance(
+    ObjectInstanceHandle objectInstanceHandle, ObjectClassHandle objectClassHandle, String objectInstanceName)
   {
     objectInstances.put(objectInstanceHandle, new TestObjectInstance(
       objectInstanceHandle, objectClassHandle, objectInstanceName));
   }
 
   @Override
-  public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues,
-                                     byte[] tag, OrderType sentOrderType, TransportationType transportationType)
-    throws ObjectInstanceNotKnown, AttributeNotRecognized, AttributeNotSubscribed, FederateInternalError
+  public void reflectAttributeValues(
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues, byte[] tag,
+    OrderType sentOrderType, TransportationType transportationType)
   {
     objectInstances.get(objectInstanceHandle).setAttributeValues(attributeValues, tag, null, null);
   }
 
   @Override
-  public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues,
-                                     byte[] tag, OrderType sentOrderType, TransportationType transportationType,
-                                     RegionHandleSet regionHandles)
-    throws ObjectInstanceNotKnown, AttributeNotRecognized, AttributeNotSubscribed, FederateInternalError
+  public void reflectAttributeValues(
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues, byte[] tag,
+    OrderType sentOrderType, TransportationType transportationType, RegionHandleSet regionHandles)
   {
     objectInstances.get(objectInstanceHandle).setAttributeValues(attributeValues, tag, null, regionHandles);
   }
 
   @Override
-  public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues,
-                                     byte[] tag, OrderType sentOrderType, TransportationType transportationType,
-                                     LogicalTime updateTime, OrderType receivedOrderType)
-    throws ObjectInstanceNotKnown, AttributeNotRecognized, AttributeNotSubscribed, FederateInternalError
+  public void reflectAttributeValues(
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues, byte[] tag,
+    OrderType sentOrderType, TransportationType transportationType, LogicalTime updateTime, OrderType receivedOrderType)
   {
     objectInstances.get(objectInstanceHandle).setAttributeValues(attributeValues, tag, updateTime, null);
   }
 
   @Override
-  public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues,
-                                     byte[] tag, OrderType sentOrderType, TransportationType transportationType,
-                                     LogicalTime updateTime, OrderType receivedOrderType, RegionHandleSet regionHandles)
-    throws ObjectInstanceNotKnown, AttributeNotRecognized, AttributeNotSubscribed, FederateInternalError
+  public void reflectAttributeValues(
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues, byte[] tag,
+    OrderType sentOrderType, TransportationType transportationType, LogicalTime updateTime, OrderType receivedOrderType,
+    RegionHandleSet regionHandles)
   {
     objectInstances.get(objectInstanceHandle).setAttributeValues(attributeValues, tag, updateTime, regionHandles);
   }
 
   @Override
-  public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues,
-                                     byte[] tag, OrderType sentOrderType, TransportationType transportationType,
-                                     LogicalTime updateTime, OrderType receivedOrderType,
-                                     MessageRetractionHandle messageRetractionHandle)
-    throws ObjectInstanceNotKnown, AttributeNotRecognized, AttributeNotSubscribed, InvalidLogicalTime,
-           FederateInternalError
+  public void reflectAttributeValues(
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues, byte[] tag,
+    OrderType sentOrderType, TransportationType transportationType, LogicalTime updateTime, OrderType receivedOrderType,
+    MessageRetractionHandle messageRetractionHandle)
   {
     objectInstances.get(objectInstanceHandle).setAttributeValues(attributeValues, tag, updateTime, null);
   }
 
   @Override
-  public void reflectAttributeValues(ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues,
-                                     byte[] tag, OrderType sentOrderType, TransportationType transportationType,
-                                     LogicalTime updateTime, OrderType receivedOrderType,
-                                     MessageRetractionHandle messageRetractionHandle, RegionHandleSet regionHandles)
-    throws ObjectInstanceNotKnown, AttributeNotRecognized, AttributeNotSubscribed, InvalidLogicalTime,
-           FederateInternalError
+  public void reflectAttributeValues(
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues, byte[] tag,
+    OrderType sentOrderType, TransportationType transportationType, LogicalTime updateTime, OrderType receivedOrderType,
+    MessageRetractionHandle messageRetractionHandle, RegionHandleSet regionHandles)
   {
     objectInstances.get(objectInstanceHandle).setAttributeValues(attributeValues, tag, updateTime, regionHandles);
   }
 
   @Override
   public void removeObjectInstance(ObjectInstanceHandle objectInstanceHandle, byte[] tag, OrderType sentOrderType)
-    throws ObjectInstanceNotKnown, FederateInternalError
   {
     objectInstances.get(objectInstanceHandle).setRemoved(tag);
   }
 
   @Override
-  public void removeObjectInstance(ObjectInstanceHandle objectInstanceHandle, byte[] tag, OrderType sentOrderType,
-                                   LogicalTime deleteTime, OrderType receivedOrderType)
-    throws ObjectInstanceNotKnown, FederateInternalError
+  public void removeObjectInstance(
+    ObjectInstanceHandle objectInstanceHandle, byte[] tag, OrderType sentOrderType, LogicalTime deleteTime,
+    OrderType receivedOrderType)
   {
     objectInstances.get(objectInstanceHandle).setRemoved(tag);
   }
 
   @Override
-  public void removeObjectInstance(ObjectInstanceHandle objectInstanceHandle, byte[] tag, OrderType sentOrderType,
-                                   LogicalTime deleteTime, OrderType receivedOrderType,
-                                   MessageRetractionHandle messageRetractionHandle)
-    throws ObjectInstanceNotKnown, InvalidLogicalTime, FederateInternalError
+  public void removeObjectInstance(
+    ObjectInstanceHandle objectInstanceHandle, byte[] tag, OrderType sentOrderType, LogicalTime deleteTime,
+    OrderType receivedOrderType, MessageRetractionHandle messageRetractionHandle)
   {
     objectInstances.get(objectInstanceHandle).setRemoved(tag);
   }
 
   @Override
-  public void receiveInteraction(InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues,
-                                 byte[] tag, OrderType sentOrderType, TransportationType transportationType)
-    throws InteractionClassNotRecognized, InteractionParameterNotRecognized, InteractionClassNotSubscribed,
-           FederateInternalError
+  public void receiveInteraction(
+    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues, byte[] tag,
+    OrderType sentOrderType, TransportationType transportationType)
   {
     this.interactionClassHandle = interactionClassHandle;
     this.parameterValues = parameterValues;
@@ -426,11 +409,9 @@ public class TimeManagementFederateAmbassador
   }
 
   @Override
-  public void receiveInteraction(InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues,
-                                 byte[] tag, OrderType sentOrderType, TransportationType transportationType,
-                                 RegionHandleSet regionHandles)
-    throws InteractionClassNotRecognized, InteractionParameterNotRecognized, InteractionClassNotSubscribed,
-           FederateInternalError
+  public void receiveInteraction(
+    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues, byte[] tag,
+    OrderType sentOrderType, TransportationType transportationType, RegionHandleSet regionHandles)
   {
     this.interactionClassHandle = interactionClassHandle;
     this.parameterValues = parameterValues;
@@ -440,11 +421,9 @@ public class TimeManagementFederateAmbassador
   }
 
   @Override
-  public void receiveInteraction(InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues,
-                                 byte[] tag, OrderType sentOrderType, TransportationType transportationType,
-                                 LogicalTime sentTime, OrderType receivedOrderType)
-    throws InteractionClassNotRecognized, InteractionParameterNotRecognized, InteractionClassNotSubscribed,
-           FederateInternalError
+  public void receiveInteraction(
+    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues, byte[] tag,
+    OrderType sentOrderType, TransportationType transportationType, LogicalTime sentTime, OrderType receivedOrderType)
   {
     this.interactionClassHandle = interactionClassHandle;
     this.parameterValues = parameterValues;
@@ -456,11 +435,10 @@ public class TimeManagementFederateAmbassador
   }
 
   @Override
-  public void receiveInteraction(InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues,
-                                 byte[] tag, OrderType sentOrderType, TransportationType transportationType,
-                                 LogicalTime sentTime, OrderType receivedOrderType, RegionHandleSet regionHandles)
-    throws InteractionClassNotRecognized, InteractionParameterNotRecognized, InteractionClassNotSubscribed,
-           FederateInternalError
+  public void receiveInteraction(
+    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues, byte[] tag,
+    OrderType sentOrderType, TransportationType transportationType, LogicalTime sentTime, OrderType receivedOrderType,
+    RegionHandleSet regionHandles)
   {
     this.interactionClassHandle = interactionClassHandle;
     this.parameterValues = parameterValues;
@@ -472,12 +450,10 @@ public class TimeManagementFederateAmbassador
   }
 
   @Override
-  public void receiveInteraction(InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues,
-                                 byte[] tag, OrderType sentOrderType, TransportationType transportationType,
-                                 LogicalTime sentTime, OrderType receivedOrderType,
-                                 MessageRetractionHandle messageRetractionHandle)
-    throws InteractionClassNotRecognized, InteractionParameterNotRecognized, InteractionClassNotSubscribed,
-           InvalidLogicalTime, FederateInternalError
+  public void receiveInteraction(
+    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues, byte[] tag,
+    OrderType sentOrderType, TransportationType transportationType, LogicalTime sentTime, OrderType receivedOrderType,
+    MessageRetractionHandle messageRetractionHandle)
   {
     this.interactionClassHandle = interactionClassHandle;
     this.parameterValues = parameterValues;
@@ -490,12 +466,10 @@ public class TimeManagementFederateAmbassador
   }
 
   @Override
-  public void receiveInteraction(InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues,
-                                 byte[] tag, OrderType sentOrderType, TransportationType transportationType,
-                                 LogicalTime sentTime, OrderType receivedOrderType,
-                                 MessageRetractionHandle messageRetractionHandle, RegionHandleSet regionHandles)
-    throws InteractionClassNotRecognized, InteractionParameterNotRecognized, InteractionClassNotSubscribed,
-           InvalidLogicalTime, FederateInternalError
+  public void receiveInteraction(
+    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues, byte[] tag,
+    OrderType sentOrderType, TransportationType transportationType, LogicalTime sentTime, OrderType receivedOrderType,
+    MessageRetractionHandle messageRetractionHandle, RegionHandleSet regionHandles)
   {
     this.interactionClassHandle = interactionClassHandle;
     this.parameterValues = parameterValues;

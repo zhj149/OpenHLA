@@ -43,14 +43,14 @@ public class InteractionSupportTestNG
     assert TEST_INTERACTION.equals(rtiAmbassadors.get(0).getInteractionClassName(interactionClassHandle));
   }
 
-  @Test(expectedExceptions = {NameNotFound.class})
+  @Test(expectedExceptions = NameNotFound.class)
   public void testGetInteractionClassHandleOfUnknownInteraction()
     throws Exception
   {
     rtiAmbassadors.get(0).getInteractionClassHandle(UNKNOWN_INTERACTION);
   }
 
-  @Test(expectedExceptions = {InvalidInteractionClassHandle.class})
+  @Test(expectedExceptions = InvalidInteractionClassHandle.class)
   public void testGetInteractionClassNameOfInvalidInteractionClassHandle()
     throws Exception
   {
@@ -66,14 +66,14 @@ public class InteractionSupportTestNG
     assert PARAMETER1.equals(rtiAmbassadors.get(0).getParameterName(interactionClassHandle, parameterHandle));
   }
 
-  @Test(expectedExceptions = {InvalidInteractionClassHandle.class})
+  @Test(expectedExceptions = InvalidInteractionClassHandle.class)
   public void testGetParameterHandleOfInvalidInteractionClassHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).getParameterHandle(null, PARAMETER1);
   }
 
-  @Test(expectedExceptions = {NameNotFound.class})
+  @Test(expectedExceptions = NameNotFound.class)
   public void testGetParameterHandleOfUnknownParameter()
     throws Exception
   {
@@ -82,7 +82,7 @@ public class InteractionSupportTestNG
     rtiAmbassadors.get(0).getParameterHandle(interactionClassHandle, UNKNOWN_PARAMETER);
   }
 
-  @Test(expectedExceptions = {InvalidInteractionClassHandle.class})
+  @Test(expectedExceptions = InvalidInteractionClassHandle.class)
   public void testGetParameterNameOfInvalidInteractionClassHandle()
     throws Exception
   {
@@ -92,7 +92,7 @@ public class InteractionSupportTestNG
     rtiAmbassadors.get(0).getParameterName(null, parameterHandle);
   }
 
-  @Test(expectedExceptions = {InvalidParameterHandle.class})
+  @Test(expectedExceptions = InvalidParameterHandle.class)
   public void testGetParameterNameOfInvalidParameterHandle()
     throws Exception
   {

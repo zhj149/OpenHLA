@@ -38,21 +38,21 @@ public class ConnectionTestNG
     rtiAmbassadors.get(0).connect(new NullFederateAmbassador(), CallbackModel.HLA_EVOKED);
   }
 
-  @Test(dependsOnMethods = {"testDefaultConnect"}, expectedExceptions = {AlreadyConnected.class})
+  @Test(dependsOnMethods = "testDefaultConnect", expectedExceptions = AlreadyConnected.class)
   public void testAlreadyConnected()
     throws Exception
   {
     rtiAmbassadors.get(0).connect(new NullFederateAmbassador(), CallbackModel.HLA_EVOKED);
   }
 
-  @Test(dependsOnMethods = {"testAlreadyConnected"})
+  @Test(dependsOnMethods = "testAlreadyConnected")
   public void testDisconnect()
     throws Exception
   {
     rtiAmbassadors.get(0).disconnect();
   }
 
-  @Test(dependsOnMethods = {"testDisconnect"})
+  @Test(dependsOnMethods = "testDisconnect")
   public void testConnectUsingLocalSettingsDesignator()
     throws Exception
   {
@@ -61,7 +61,7 @@ public class ConnectionTestNG
     rtiAmbassadors.get(0).disconnect();
   }
 
-  @Test(dependsOnMethods = {"testDisconnect"}, expectedExceptions = {ConnectionFailed.class})
+  @Test(dependsOnMethods = "testDisconnect", expectedExceptions = ConnectionFailed.class)
   public void testConnectionFailed()
     throws Exception
   {
@@ -69,21 +69,21 @@ public class ConnectionTestNG
       new NullFederateAmbassador(), CallbackModel.HLA_EVOKED, CONNECTION_FAILED_LOCAL_SETTINGS_DESIGNATOR);
   }
 
-  @Test(dependsOnMethods = {"testDisconnect"}, expectedExceptions = {InvalidLocalSettingsDesignator.class})
+  @Test(dependsOnMethods = "testDisconnect", expectedExceptions = InvalidLocalSettingsDesignator.class)
   public void testInvalidLocalSettingsDesignator()
     throws Exception
   {
     rtiAmbassadors.get(0).connect(new NullFederateAmbassador(), CallbackModel.HLA_EVOKED, "xxx");
   }
 
-  @Test(dependsOnMethods = {"testDisconnect"}, expectedExceptions = {IllegalArgumentException.class})
+  @Test(dependsOnMethods = "testDisconnect", expectedExceptions = IllegalArgumentException.class)
   public void testConnectWithNullFederateAmbassador()
     throws Exception
   {
     rtiAmbassadors.get(0).connect(null, CallbackModel.HLA_EVOKED);
   }
 
-  @Test(dependsOnMethods = {"testDisconnect"}, expectedExceptions = {IllegalArgumentException.class})
+  @Test(dependsOnMethods = "testDisconnect", expectedExceptions = IllegalArgumentException.class)
   public void testConnectWithNullCallbackModel()
     throws Exception
   {

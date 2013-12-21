@@ -44,21 +44,21 @@ public class ObjectSupportTestNG
     assert TEST_OBJECT.equals(rtiAmbassadors.get(0).getObjectClassName(objectClassHandle));
   }
 
-  @Test(expectedExceptions = {NameNotFound.class})
+  @Test(expectedExceptions = NameNotFound.class)
   public void testGetObjectClassHandleOfUnknownObject()
     throws Exception
   {
     rtiAmbassadors.get(0).getObjectClassHandle(UNKNOWN_OBJECT);
   }
 
-  @Test(expectedExceptions = {NameNotFound.class})
+  @Test(expectedExceptions = NameNotFound.class)
   public void testGetObjectClassHandleWithNullObjectClassName()
     throws Exception
   {
     rtiAmbassadors.get(0).getObjectClassHandle(null);
   }
 
-  @Test(expectedExceptions = {InvalidObjectClassHandle.class})
+  @Test(expectedExceptions = InvalidObjectClassHandle.class)
   public void testGetObjectClassNameOfInvalidObjectClassHandle()
     throws Exception
   {
@@ -75,14 +75,14 @@ public class ObjectSupportTestNG
     assert ATTRIBUTE1.equals(rtiAmbassadors.get(0).getAttributeName(objectClassHandle, attributeHandle));
   }
 
-  @Test(expectedExceptions = {InvalidObjectClassHandle.class})
+  @Test(expectedExceptions = InvalidObjectClassHandle.class)
   public void testGetAttributeHandleOfInvalidObjectClassHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).getAttributeHandle(null, ATTRIBUTE1);
   }
 
-  @Test(expectedExceptions = {NameNotFound.class})
+  @Test(expectedExceptions = NameNotFound.class)
   public void testGetAttributeHandleOfUnknownAttribute()
     throws Exception
   {
@@ -90,7 +90,7 @@ public class ObjectSupportTestNG
       rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT), UNKNOWN_ATTRIBUTE);
   }
 
-  @Test(expectedExceptions = {InvalidObjectClassHandle.class})
+  @Test(expectedExceptions = InvalidObjectClassHandle.class)
   public void testGetAttributeNameOfInvalidObjectClassHandle()
     throws Exception
   {
@@ -100,7 +100,7 @@ public class ObjectSupportTestNG
     rtiAmbassadors.get(0).getAttributeName(null, attributeHandle);
   }
 
-  @Test(expectedExceptions = {InvalidAttributeHandle.class})
+  @Test(expectedExceptions = InvalidAttributeHandle.class)
   public void testGetAttributeNameOfInvalidAttributeHandle()
     throws Exception
   {

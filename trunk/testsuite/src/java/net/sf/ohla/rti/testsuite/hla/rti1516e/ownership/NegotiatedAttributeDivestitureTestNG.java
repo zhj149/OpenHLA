@@ -154,7 +154,7 @@ public class NegotiatedAttributeDivestitureTestNG
     assert rtiAmbassadors.get(2).isAttributeOwnedByFederate(testObjectInstanceHandle, attributeHandle2);
   }
 
-  @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
+  @Test(expectedExceptions = ObjectInstanceNotKnown.class)
   public void testNegotiatedAttributeOwnershipDivestitureWithNullObjectInstanceHandle()
     throws Exception
   {
@@ -165,7 +165,7 @@ public class NegotiatedAttributeDivestitureTestNG
     rtiAmbassadors.get(0).negotiatedAttributeOwnershipDivestiture(null, attributeHandles, TAG);
   }
 
-  @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
+  @Test(expectedExceptions = ObjectInstanceNotKnown.class)
   public void testNegotiatedAttributeOwnershipDivestitureWithUnknownObjectInstanceHandle()
     throws Exception
   {
@@ -176,7 +176,7 @@ public class NegotiatedAttributeDivestitureTestNG
     rtiAmbassadors.get(4).negotiatedAttributeOwnershipDivestiture(testObjectInstanceHandle, attributeHandles, TAG);
   }
 
-  @Test(expectedExceptions = {AttributeNotDefined.class})
+  @Test(expectedExceptions = AttributeNotDefined.class)
   public void testNegotiatedAttributeOwnershipDivestitureWithUndefinedAttributeHandle()
     throws Exception
   {
@@ -186,7 +186,7 @@ public class NegotiatedAttributeDivestitureTestNG
     rtiAmbassadors.get(0).negotiatedAttributeOwnershipDivestiture(testObjectInstanceHandle, attributeHandles, TAG);
   }
 
-  @Test(expectedExceptions = {AttributeNotOwned.class})
+  @Test(expectedExceptions = AttributeNotOwned.class)
   public void testNegotiatedAttributeOwnershipDivestitureOfUnownedAttribute()
     throws Exception
   {

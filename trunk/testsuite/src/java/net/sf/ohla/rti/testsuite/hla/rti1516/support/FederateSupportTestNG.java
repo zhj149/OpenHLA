@@ -19,7 +19,6 @@ package net.sf.ohla.rti.testsuite.hla.rti1516.support;
 import org.testng.annotations.Test;
 
 import hla.rti1516.FederateAlreadyExecutionMember;
-import hla.rti1516.RTIinternalError;
 import hla.rti1516.jlc.NullFederateAmbassador;
 
 @Test
@@ -33,7 +32,7 @@ public class FederateSupportTestNG
     super(FEDERATION_NAME);
   }
 
-  @Test(expectedExceptions = {FederateAlreadyExecutionMember.class})
+  @Test(expectedExceptions = FederateAlreadyExecutionMember.class)
   public void testJoinFederationExecutionAlreadyExecutionMemberOf()
     throws Exception
   {
@@ -41,7 +40,14 @@ public class FederateSupportTestNG
       FEDERATE_TYPE, FEDERATION_NAME, new NullFederateAmbassador(), mobileFederateServices);
   }
 
-  @Test(expectedExceptions = {RTIinternalError.class})
+  @Test(expectedExceptions = IllegalArgumentException.class)
+  public void testJoinFederationExecutionWithNullFederateAmbassador()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME, null, mobileFederateServices);
+  }
+
+  @Test(expectedExceptions = IllegalArgumentException.class)
   public void testResignFederationExecutionWithInvalidResignAction()
     throws Exception
   {

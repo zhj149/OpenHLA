@@ -16,9 +16,6 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti.time;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import net.sf.ohla.rti.hla.rti.HLA13RTIambassador;
 import net.sf.ohla.rti.hla.rti.Integer64Time;
 import net.sf.ohla.rti.hla.rti.Integer64TimeInterval;
@@ -34,14 +31,9 @@ import hla.rti.jlc.RTIambassadorEx;
 
 import hla.rti1516e.time.HLAinteger64TimeFactory;
 
-public class BaseTimeManagementTestNG
-  extends BaseTestNG
+public abstract class BaseTimeManagementTestNG
+  extends BaseTestNG<TimeManagementFederateAmbassador>
 {
-  protected final String federationName;
-
-  protected final List<Integer> federateHandles;
-  protected final List<TimeManagementFederateAmbassador> federateAmbassadors;
-
   protected final LogicalTime initial;
   protected final LogicalTime infinity;
 
@@ -64,10 +56,7 @@ public class BaseTimeManagementTestNG
 
   protected BaseTimeManagementTestNG(String federationName)
   {
-    this.federationName = federationName;
-
-    federateHandles = new ArrayList<Integer>(rtiAmbassadorCount);
-    federateAmbassadors = new ArrayList<TimeManagementFederateAmbassador>(rtiAmbassadorCount);
+    super(federationName);
 
     initial = mobileFederateServices._timeFactory.makeInitial();
 
@@ -81,12 +70,7 @@ public class BaseTimeManagementTestNG
 
   protected BaseTimeManagementTestNG(int rtiAmbassadorCount, String federationName)
   {
-    super(rtiAmbassadorCount);
-
-    this.federationName = federationName;
-
-    federateHandles = new ArrayList<Integer>(rtiAmbassadorCount);
-    federateAmbassadors = new ArrayList<TimeManagementFederateAmbassador>(rtiAmbassadorCount);
+    super(rtiAmbassadorCount, federationName);
 
     initial = mobileFederateServices._timeFactory.makeInitial();
 
@@ -102,19 +86,8 @@ public class BaseTimeManagementTestNG
   public void baseTimeSetup()
     throws Exception
   {
-    for (RTIambassadorEx rtiAmbassador : rtiAmbassadors)
-    {
-      TimeManagementFederateAmbassador federateAmbassador = new TimeManagementFederateAmbassador(rtiAmbassador);
-      federateAmbassadors.add(federateAmbassador);
-    }
-
-    rtiAmbassadors.get(0).createFederationExecution(federationName, fed);
-
-    for (int i = 0; i < rtiAmbassadorCount; i++)
-    {
-      federateHandles.add(rtiAmbassadors.get(i).joinFederationExecution(
-        FEDERATE_TYPE, federationName, federateAmbassadors.get(i), mobileFederateServices));
-    }
+    createFederationExecution();
+    joinFederationExecution();
   }
 
   @AfterClass
@@ -122,7 +95,11 @@ public class BaseTimeManagementTestNG
     throws Exception
   {
     resignFederationExecution(ResignAction.RELEASE_ATTRIBUTES);
+    destroyFederationExecution();
+  }
 
-    destroyFederationExecution(federationName);
+  protected TimeManagementFederateAmbassador createFederateAmbassador(RTIambassadorEx rtiAmbassador)
+  {
+    return new TimeManagementFederateAmbassador(rtiAmbassador);
   }
 }

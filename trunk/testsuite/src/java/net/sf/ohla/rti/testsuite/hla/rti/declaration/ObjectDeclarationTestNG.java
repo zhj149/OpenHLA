@@ -16,17 +16,22 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti.declaration;
 
+import net.sf.ohla.rti.testsuite.hla.rti.BaseTestNG;
+
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import hla.rti.AttributeHandleSet;
 import hla.rti.ObjectClassNotDefined;
+import hla.rti.jlc.NullFederateAmbassador;
+import hla.rti.jlc.RTIambassadorEx;
 
 @Test
 public class ObjectDeclarationTestNG
-  extends BaseDeclarationTestNG
+  extends BaseTestNG<NullFederateAmbassador>
 {
-  private static final String FEDERATION_NAME = "OHLA HL 1.3 Object Declaration Test Federation";
+  private static final String FEDERATION_NAME = ObjectDeclarationTestNG.class.getSimpleName();
 
   private int testObjectClassHandle;
   private AttributeHandleSet testAttributeHandles;
@@ -40,7 +45,8 @@ public class ObjectDeclarationTestNG
   public void setup()
     throws Exception
   {
-    super.setup();
+    createFederationExecution();
+    joinFederationExecution();
 
     testObjectClassHandle = rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT);
 
@@ -51,6 +57,14 @@ public class ObjectDeclarationTestNG
     testAttributeHandles.add(rtiAmbassadors.get(0).getAttributeHandle(ATTRIBUTE3, testObjectClassHandle));
   }
 
+  @AfterClass
+  public void teardown()
+    throws Exception
+  {
+    resignFederationExecution();
+    destroyFederationExecution();
+  }
+
   @Test
   public void testPublishObjectClass()
     throws Exception
@@ -58,21 +72,21 @@ public class ObjectDeclarationTestNG
     rtiAmbassadors.get(0).publishObjectClass(testObjectClassHandle, testAttributeHandles);
   }
 
-  @Test(dependsOnMethods = {"testPublishObjectClass"})
+  @Test(dependsOnMethods = "testPublishObjectClass")
   public void testUnpublishObjectClass()
     throws Exception
   {
     rtiAmbassadors.get(0).unpublishObjectClass(testObjectClassHandle);
   }
 
-  @Test(expectedExceptions = {ObjectClassNotDefined.class})
+  @Test(expectedExceptions = ObjectClassNotDefined.class)
   public void testPublishObjectClassOfInvalidObjectClassHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).publishObjectClass(-1, testAttributeHandles);
   }
 
-  @Test(expectedExceptions = {ObjectClassNotDefined.class})
+  @Test(expectedExceptions = ObjectClassNotDefined.class)
   public void testUnpublishObjectClassOfInvalidObjectClassHandle()
     throws Exception
   {
@@ -86,38 +100,43 @@ public class ObjectDeclarationTestNG
     rtiAmbassadors.get(0).subscribeObjectClassAttributes(testObjectClassHandle, testAttributeHandles);
   }
 
-  @Test(dependsOnMethods = {"testSubscribeObjectClass"})
+  @Test(dependsOnMethods = "testSubscribeObjectClass")
   public void testUnsubscribeObjectClass()
     throws Exception
   {
     rtiAmbassadors.get(0).unsubscribeObjectClass(testObjectClassHandle);
   }
 
-  @Test(dependsOnMethods = {"testUnsubscribeObjectClass"})
+  @Test(dependsOnMethods = "testUnsubscribeObjectClass")
   public void testSubscribeObjectClassAttributes()
     throws Exception
   {
     rtiAmbassadors.get(0).subscribeObjectClassAttributes(testObjectClassHandle, testAttributeHandles);
   }
 
-  @Test(dependsOnMethods = {"testSubscribeObjectClassAttributes"})
+  @Test(dependsOnMethods = "testSubscribeObjectClassAttributes")
   public void testUnsubscribeObjectClassAttributes()
     throws Exception
   {
     rtiAmbassadors.get(0).unsubscribeObjectClass(testObjectClassHandle);
   }
 
-  @Test(expectedExceptions = {ObjectClassNotDefined.class})
+  @Test(expectedExceptions = ObjectClassNotDefined.class)
   public void testSubscribeObjectClassAttributesOfInvalidObjectClassHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).subscribeObjectClassAttributes(-1, testAttributeHandles);
   }
 
-  @Test(expectedExceptions = {ObjectClassNotDefined.class})
+  @Test(expectedExceptions = ObjectClassNotDefined.class)
   public void testUnsubscribeObjectClassOfNullObjectClassHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).unsubscribeObjectClass(-1);
+  }
+
+  protected NullFederateAmbassador createFederateAmbassador(RTIambassadorEx rtiAmbassador)
+  {
+    return new NullFederateAmbassador();
   }
 }

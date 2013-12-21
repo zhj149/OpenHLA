@@ -25,7 +25,7 @@ import hla.rti.EnableTimeRegulationPending;
 public class EnableTimeRegulationExceptionsTestNG
   extends BaseTimeManagementTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA HLA 1.3 Enable Time Regulation Exceptions Test Federation";
+  private static final String FEDERATION_NAME = EnableTimeRegulationExceptionsTestNG.class.getSimpleName();
 
   public EnableTimeRegulationExceptionsTestNG()
   {
@@ -39,42 +39,42 @@ public class EnableTimeRegulationExceptionsTestNG
     rtiAmbassadors.get(0).enableTimeRegulation(initial, lookahead1);
   }
 
-  @Test(expectedExceptions = {EnableTimeRegulationPending.class})
+  @Test(expectedExceptions = EnableTimeRegulationPending.class)
   public void testEnableTimeRegulationWhileEnableTimeRegulationPending()
     throws Exception
   {
     rtiAmbassadors.get(0).enableTimeRegulation(initial, lookahead1);
   }
 
-  @Test(expectedExceptions = {EnableTimeRegulationPending.class})
+  @Test(expectedExceptions = EnableTimeRegulationPending.class)
   public void testTimeAdvanceRequestWhileEnableTimeRegulationPending()
     throws Exception
   {
     rtiAmbassadors.get(0).timeAdvanceRequest(oneHundred);
   }
 
-  @Test(expectedExceptions = {EnableTimeRegulationPending.class})
+  @Test(expectedExceptions = EnableTimeRegulationPending.class)
   public void testTimeAdvanceRequestAvailableWhileEnableTimeRegulationPending()
     throws Exception
   {
     rtiAmbassadors.get(0).timeAdvanceRequestAvailable(oneHundred);
   }
 
-  @Test(expectedExceptions = {EnableTimeRegulationPending.class})
+  @Test(expectedExceptions = EnableTimeRegulationPending.class)
   public void testNextMessageRequestWhileEnableTimeRegulationPending()
     throws Exception
   {
     rtiAmbassadors.get(0).nextEventRequest(oneHundred);
   }
 
-  @Test(expectedExceptions = {EnableTimeRegulationPending.class})
+  @Test(expectedExceptions = EnableTimeRegulationPending.class)
   public void testNextMessageRequestAvailableWhileEnableTimeRegulationPending()
     throws Exception
   {
     rtiAmbassadors.get(0).nextEventRequestAvailable(oneHundred);
   }
 
-  @Test(expectedExceptions = {EnableTimeRegulationPending.class})
+  @Test(expectedExceptions = EnableTimeRegulationPending.class)
   public void testFlushQueueRequestWhileEnableTimeRegulationPending()
     throws Exception
   {

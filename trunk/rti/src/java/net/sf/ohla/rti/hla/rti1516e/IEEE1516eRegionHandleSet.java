@@ -16,6 +16,10 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import java.util.HashSet;
 
 import net.sf.ohla.rti.Protocol;
@@ -29,6 +33,28 @@ public class IEEE1516eRegionHandleSet
   extends HashSet<RegionHandle>
   implements RegionHandleSet
 {
+  public IEEE1516eRegionHandleSet()
+  {
+  }
+
+  public IEEE1516eRegionHandleSet(DataInput in)
+    throws IOException
+  {
+    for (int count = in.readInt(); count > 0; count--)
+    {
+      add(IEEE1516eRegionHandle.decode(in));
+    }
+  }
+
+  public void writeTo(DataOutput out)
+    throws IOException
+  {
+    out.writeInt(size());
+    for (RegionHandle federateHandle : this)
+    {
+      ((IEEE1516eRegionHandle) federateHandle).writeTo(out);
+    }
+  }
 
   public static void encode(ChannelBuffer buffer, RegionHandleSet regionHandles)
   {

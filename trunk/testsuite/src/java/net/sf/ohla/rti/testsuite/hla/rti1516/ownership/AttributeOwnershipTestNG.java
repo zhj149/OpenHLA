@@ -31,7 +31,6 @@ import hla.rti1516.AttributeHandle;
 import hla.rti1516.AttributeHandleSet;
 import hla.rti1516.AttributeNotDefined;
 import hla.rti1516.FederateHandle;
-import hla.rti1516.FederateInternalError;
 import hla.rti1516.ObjectClassHandle;
 import hla.rti1516.ObjectInstanceHandle;
 import hla.rti1516.ObjectInstanceNotKnown;
@@ -114,28 +113,28 @@ public class AttributeOwnershipTestNG
     assert !rtiAmbassadors.get(1).isAttributeOwnedByFederate(testObjectInstanceHandle, attributeHandle3);
   }
 
-  @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
+  @Test(expectedExceptions = ObjectInstanceNotKnown.class)
   public void testIsAttributeOwnedByFederateWithNullObjectInstanceHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).isAttributeOwnedByFederate(null, attributeHandle1);
   }
 
-  @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
+  @Test(expectedExceptions = ObjectInstanceNotKnown.class)
   public void testIsAttributeOwnedByFederateWithUnknownObjectInstanceHandle()
     throws Exception
   {
     rtiAmbassadors.get(2).isAttributeOwnedByFederate(testObjectInstanceHandle, attributeHandle1);
   }
 
-  @Test(expectedExceptions = {AttributeNotDefined.class})
+  @Test(expectedExceptions = AttributeNotDefined.class)
   public void testIsAttributeOwnedByFederateWithNullAttributeHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).isAttributeOwnedByFederate(testObjectInstanceHandle, null);
   }
 
-  @Test(expectedExceptions = {AttributeNotDefined.class})
+  @Test(expectedExceptions = AttributeNotDefined.class)
   public void testIsAttributeOwnedByFederateWithUndefinedAttributeHandle()
     throws Exception
   {
@@ -165,28 +164,28 @@ public class AttributeOwnershipTestNG
     federateAmbassadors.get(1).checkAttributeIsUnowned(testObjectInstanceHandle, attributeHandle3);
   }
 
-  @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
+  @Test(expectedExceptions = ObjectInstanceNotKnown.class)
   public void testQueryAttributeOwnershipOfNullObjectInstanceHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).queryAttributeOwnership(null, attributeHandle1);
   }
 
-  @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
+  @Test(expectedExceptions = ObjectInstanceNotKnown.class)
   public void testQueryAttributeOwnershipWithUnknownObjectInstanceHandle()
     throws Exception
   {
     rtiAmbassadors.get(2).queryAttributeOwnership(testObjectInstanceHandle, attributeHandle1);
   }
 
-  @Test(expectedExceptions = {AttributeNotDefined.class})
+  @Test(expectedExceptions = AttributeNotDefined.class)
   public void testQueryAttributeOwnershipWithNullAttributeHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).isAttributeOwnedByFederate(testObjectInstanceHandle, null);
   }
 
-  @Test(expectedExceptions = {AttributeNotDefined.class})
+  @Test(expectedExceptions = AttributeNotDefined.class)
   public void testQueryAttributeOwnershipWithUndefinedAttributeHandle()
     throws Exception
   {
@@ -252,7 +251,6 @@ public class AttributeOwnershipTestNG
     @Override
     public void discoverObjectInstance(
       ObjectInstanceHandle objectInstanceHandle, ObjectClassHandle objectClassHandle, String objectInstanceName)
-      throws FederateInternalError
     {
       objectInstances.put(objectInstanceHandle, new HashMap<AttributeHandle, Object>());
     }
@@ -260,21 +258,18 @@ public class AttributeOwnershipTestNG
     @Override
     public void informAttributeOwnership(
       ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle, FederateHandle federateHandle)
-      throws FederateInternalError
     {
       setAttributeOwnership(objectInstanceHandle, attributeHandle, federateHandle);
     }
 
     @Override
     public void attributeIsNotOwned(ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle)
-      throws FederateInternalError
     {
       setAttributeOwnership(objectInstanceHandle, attributeHandle, Boolean.FALSE);
     }
 
     @Override
     public void attributeIsOwnedByRTI(ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle)
-      throws FederateInternalError
     {
       setAttributeOwnership(objectInstanceHandle, attributeHandle, Boolean.TRUE);
     }

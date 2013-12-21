@@ -221,6 +221,15 @@ import hla.rti1516e.exceptions.TimeRegulationIsNotEnabled;
 
 public class Federate
 {
+  public interface SaveStateProcessor
+  {
+    byte[] createExtraSaveState()
+      throws IOException;
+
+    void processExtraSaveState(byte[] extraSaveState)
+      throws IOException;
+  }
+
   private final String federateType;
   private final String federationExecutionName;
 
@@ -232,6 +241,8 @@ public class Federate
    * The channel to the RTI.
    */
   private final Channel rtiChannel;
+
+  private final SaveStateProcessor saveStateProcessor;
 
   private volatile FDD fdd;
 
@@ -303,7 +314,7 @@ public class Federate
 
   public Federate(String federateName, String federateType, String federationExecutionName,
                   List<FDD> additionalFDDs, FederateAmbassador federateAmbassador, CallbackManager callbackManager,
-                  Channel rtiChannel)
+                  Channel rtiChannel, SaveStateProcessor saveStateProcessor)
     throws CouldNotCreateLogicalTimeFactory, FederateNameAlreadyInUse, FederationExecutionDoesNotExist, InconsistentFDD,
            SaveInProgress, RestoreInProgress, RTIinternalError
   {
@@ -312,6 +323,7 @@ public class Federate
     this.federateAmbassador = federateAmbassador;
     this.callbackManager = callbackManager;
     this.rtiChannel = rtiChannel;
+    this.saveStateProcessor = saveStateProcessor;
 
     ((FederateChannelHandler) rtiChannel.getPipeline().get(FederateChannelHandler.NAME)).setFederate(this);
 
@@ -3336,6 +3348,17 @@ public class Federate
     regionManager.saveState(out);
     messageRetractionManager.saveState(out);
     timeManager.saveState(out);
+
+    if (saveStateProcessor != null)
+    {
+      byte[] extraSaveState = saveStateProcessor.createExtraSaveState();
+      out.writeInt(extraSaveState.length);
+      out.write(extraSaveState);
+    }
+    else
+    {
+      out.writeInt(0);
+    }
   }
 
   public void restoreState(DataInput in)
@@ -3351,6 +3374,14 @@ public class Federate
     regionManager.restoreState(in);
     messageRetractionManager.restoreState(in, logicalTimeFactory);
     timeManager.restoreState(in, logicalTimeFactory);
+
+    int extraSaveStateLength = in.readInt();
+    if (extraSaveStateLength > 0 && saveStateProcessor != null)
+    {
+      byte[] extraSaveState = new byte[extraSaveStateLength];
+      in.readFully(extraSaveState);
+      saveStateProcessor.processExtraSaveState(extraSaveState);
+    }
   }
 
   @Override

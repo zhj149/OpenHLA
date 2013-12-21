@@ -72,7 +72,7 @@ public class TimeRegulationPersistenceTestNG
     federateAmbassadors.get(0).checkFederationRestored(SAVE_NAME);
   }
 
-  @Test(expectedExceptions = { TimeRegulationAlreadyEnabled.class })
+  @Test(expectedExceptions = TimeRegulationAlreadyEnabled.class)
   public void testEnableTimeRegulationAgain()
     throws Exception
   {

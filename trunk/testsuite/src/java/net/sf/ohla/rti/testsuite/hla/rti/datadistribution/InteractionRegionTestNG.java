@@ -16,13 +16,11 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti.datadistribution;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.Callable;
 
+import net.sf.ohla.rti.testsuite.hla.rti.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti.BaseTestNG;
-import net.sf.ohla.rti.testsuite.hla.rti.SynchronizedFederateAmbassador;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -34,17 +32,14 @@ import hla.rti.InteractionParameterNotDefined;
 import hla.rti.ReceivedInteraction;
 import hla.rti.Region;
 import hla.rti.RegionNotKnown;
-import hla.rti.ResignAction;
 import hla.rti.SuppliedParameters;
 import hla.rti.jlc.RTIambassadorEx;
 
 @Test
 public class InteractionRegionTestNG
-  extends BaseTestNG
+  extends BaseTestNG<InteractionRegionTestNG.TestFederateAmbassador>
 {
-  private static final String FEDERATION_NAME = "OHLA HLA 1.3 Interaction Region Test Federation";
-
-  private final List<TestFederateAmbassador> federateAmbassadors = new ArrayList<TestFederateAmbassador>(3);
+  private static final String FEDERATION_NAME = InteractionRegionTestNG.class.getSimpleName();
 
   private Region region1;
 
@@ -56,22 +51,15 @@ public class InteractionRegionTestNG
 
   public InteractionRegionTestNG()
   {
-    super(3);
+    super(3, FEDERATION_NAME);
   }
 
   @BeforeClass
   public void setup()
     throws Exception
   {
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(0)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(1)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(2)));
-
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fed);
-
-    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(0));
-    rtiAmbassadors.get(1).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(1));
-    rtiAmbassadors.get(2).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(2));
+    createFederationExecution();
+    joinFederationExecution();
 
     int routingSpaceHandle = rtiAmbassadors.get(0).getRoutingSpaceHandle(ROUTING_SPACE);
 
@@ -114,9 +102,8 @@ public class InteractionRegionTestNG
   public void teardown()
     throws Exception
   {
-    resignFederationExecution(ResignAction.NO_ACTION);
-
-    destroyFederationExecution(FEDERATION_NAME);
+    resignFederationExecution();
+    destroyFederationExecution();
   }
 
   @Test
@@ -128,36 +115,41 @@ public class InteractionRegionTestNG
     federateAmbassadors.get(1).checkSuppliedParameters(testInteractionClassHandle, testParameterValues, TAG);
   }
 
-  @Test(expectedExceptions = {InteractionClassNotDefined.class})
+  @Test(expectedExceptions = InteractionClassNotDefined.class)
   public void testSendInteractionWithRegionWithInvalidInteractionClassHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).sendInteractionWithRegion(-1, testParameterValues, TAG, region1);
   }
 
-  @Test(expectedExceptions = {RegionNotKnown.class})
+  @Test(expectedExceptions = RegionNotKnown.class)
   public void testSendInteractionWithRegionWithNullRegion()
     throws Exception
   {
     rtiAmbassadors.get(0).sendInteractionWithRegion(testInteractionClassHandle2, testParameterValues, TAG, null);
   }
 
-  @Test(expectedExceptions = {InteractionClassNotPublished.class})
+  @Test(expectedExceptions = InteractionClassNotPublished.class)
   public void testSendUnpublishedInteractionWithRegion()
     throws Exception
   {
     rtiAmbassadors.get(2).sendInteractionWithRegion(testInteractionClassHandle2, testParameterValues2, TAG, region1);
   }
 
-  @Test(expectedExceptions = {InteractionParameterNotDefined.class})
+  @Test(expectedExceptions = InteractionParameterNotDefined.class)
   public void testSendInteractionWithRegionsWithUndefinedParameters()
     throws Exception
   {
     rtiAmbassadors.get(2).sendInteractionWithRegion(testInteractionClassHandle, testParameterValues2, TAG, region1);
   }
 
-  private static class TestFederateAmbassador
-    extends SynchronizedFederateAmbassador
+  protected TestFederateAmbassador createFederateAmbassador(RTIambassadorEx rtiAmbassador)
+  {
+    return new  TestFederateAmbassador(rtiAmbassador);
+  }
+
+  public static class TestFederateAmbassador
+    extends BaseFederateAmbassador
   {
     private Integer interactionClassHandle;
     private ReceivedInteraction receivedInteraction;

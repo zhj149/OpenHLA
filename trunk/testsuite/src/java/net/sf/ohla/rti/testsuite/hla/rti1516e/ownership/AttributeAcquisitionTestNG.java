@@ -131,7 +131,7 @@ public class AttributeAcquisitionTestNG
       testObjectInstanceHandle2, attributeHandle1, federateHandles.get(0));
   }
 
-  @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
+  @Test(expectedExceptions = ObjectInstanceNotKnown.class)
   public void testAttributeOwnershipAcquisitionWithNullObjectInstanceHandle()
     throws Exception
   {
@@ -141,7 +141,7 @@ public class AttributeAcquisitionTestNG
     rtiAmbassadors.get(0).attributeOwnershipAcquisition(null, attributeHandles, TAG);
   }
 
-  @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
+  @Test(expectedExceptions = ObjectInstanceNotKnown.class)
   public void testAttributeOwnershipAcquisitionWithUnknownObjectInstanceHandle()
     throws Exception
   {
@@ -151,7 +151,7 @@ public class AttributeAcquisitionTestNG
     rtiAmbassadors.get(2).attributeOwnershipAcquisition(testObjectInstanceHandle, attributeHandles, TAG);
   }
 
-  @Test(expectedExceptions = {AttributeNotDefined.class})
+  @Test(expectedExceptions = AttributeNotDefined.class)
   public void testAttributeOwnershipAcquisitionWithUndefinedAttributeHandle()
     throws Exception
   {
@@ -161,7 +161,7 @@ public class AttributeAcquisitionTestNG
     rtiAmbassadors.get(1).attributeOwnershipAcquisition(testObjectInstanceHandle, attributeHandles, TAG);
   }
 
-  @Test(expectedExceptions = {AttributeNotPublished.class})
+  @Test(expectedExceptions = AttributeNotPublished.class)
   public void testUnpublishedAttributeOwnershipAcquisition()
     throws Exception
   {

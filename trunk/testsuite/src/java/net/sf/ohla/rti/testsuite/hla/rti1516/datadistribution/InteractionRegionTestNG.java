@@ -137,14 +137,14 @@ public class InteractionRegionTestNG
     federateAmbassadors.get(1).checkParameterValues(testInteractionClassHandle, testParameterValues, TAG, true);
   }
 
-  @Test(expectedExceptions = {InteractionClassNotDefined.class})
+  @Test(expectedExceptions = InteractionClassNotDefined.class)
   public void testSendInteractionWithRegionsWithNullInteractionClassHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).sendInteractionWithRegions(null, testParameterValues, regionHandles1, TAG);
   }
 
-  @Test(expectedExceptions = {InteractionClassNotPublished.class})
+  @Test(expectedExceptions = InteractionClassNotPublished.class)
   public void testSendUnpublishedInteractionWithRegions()
     throws Exception
   {
@@ -152,7 +152,7 @@ public class InteractionRegionTestNG
       testInteractionClassHandle2, testParameterValues2, regionHandles1, TAG);
   }
 
-  @Test(expectedExceptions = {InteractionParameterNotDefined.class})
+  @Test(expectedExceptions = InteractionParameterNotDefined.class)
   public void testSendInteractionWithRegionsWithUndefinedParameters()
     throws Exception
   {

@@ -26,15 +26,15 @@ import hla.rti.ArrayIndexOutOfBounds;
 import hla.rti.InvalidExtents;
 import hla.rti.Region;
 import hla.rti.RegionNotKnown;
-import hla.rti.ResignAction;
 import hla.rti.SpaceNotDefined;
 import hla.rti.jlc.NullFederateAmbassador;
+import hla.rti.jlc.RTIambassadorEx;
 
 @Test
-public class RegionSupportTestNG
-  extends BaseTestNG
+public class RegionTestNG
+  extends BaseTestNG<NullFederateAmbassador>
 {
-  private static final String FEDERATION_NAME = "OHLA HLA 1.3 Region Test Federation";
+  private static final String FEDERATION_NAME = RegionTestNG.class.getSimpleName();
 
   private int routingSpaceHandle;
 
@@ -52,19 +52,17 @@ public class RegionSupportTestNG
   private long rangeLowerBound = 5L;
   private long rangeUpperBound = 44L;
 
-  public RegionSupportTestNG()
+  public RegionTestNG()
   {
-    super(2);
+    super(2, FEDERATION_NAME);
   }
 
   @BeforeClass
   public void setup()
     throws Exception
   {
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fed);
-
-    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME, new NullFederateAmbassador());
-    rtiAmbassadors.get(1).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME, new NullFederateAmbassador());
+    createFederationExecution();
+    joinFederationExecution();
 
     routingSpaceHandle = rtiAmbassadors.get(0).getRoutingSpaceHandle(ROUTING_SPACE);
 
@@ -78,9 +76,8 @@ public class RegionSupportTestNG
   public void teardown()
     throws Exception
   {
-    resignFederationExecution(ResignAction.NO_ACTION);
-
-    destroyFederationExecution(FEDERATION_NAME);
+    resignFederationExecution();
+    destroyFederationExecution();
   }
 
   @Test
@@ -99,21 +96,21 @@ public class RegionSupportTestNG
     regionToken2 = rtiAmbassadors.get(1).getRegionToken(region2);
   }
 
-  @Test(expectedExceptions = {SpaceNotDefined.class})
+  @Test(expectedExceptions = SpaceNotDefined.class)
   public void testCreateRegionWithInvalidRoutingSpaceHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).createRegion(-1, 1);
   }
 
-  @Test(expectedExceptions = {InvalidExtents.class})
+  @Test(expectedExceptions = InvalidExtents.class)
   public void testCreateRegionWithInvalidExtents()
     throws Exception
   {
     rtiAmbassadors.get(0).createRegion(routingSpaceHandle, 0);
   }
 
-  @Test(dependsOnMethods = {"testCreateRegion"})
+  @Test(dependsOnMethods = "testCreateRegion")
   public void testGetRangeBounds()
     throws Exception
   {
@@ -128,7 +125,7 @@ public class RegionSupportTestNG
     assert region.getRangeUpperBound(0, dimensionHandle4) == Long.MAX_VALUE;
   }
 
-  @Test(dependsOnMethods = {"testGetRangeBounds"})
+  @Test(dependsOnMethods = "testGetRangeBounds")
   public void testSetRangeBounds()
     throws Exception
   {
@@ -143,80 +140,85 @@ public class RegionSupportTestNG
     assert region.getRangeUpperBound(0, dimensionHandle1) == rangeUpperBound;
   }
 
-  @Test(dependsOnMethods = {"testCreateRegion"}, expectedExceptions = {RegionNotKnown.class})
+  @Test(dependsOnMethods = "testCreateRegion", expectedExceptions = RegionNotKnown.class)
   public void testGetRegionOfInvalidRegionToken()
     throws Exception
   {
     rtiAmbassadors.get(0).getRegion(-1);
   }
 
-  @Test(dependsOnMethods = {"testCreateRegion"}, expectedExceptions = {ArrayIndexOutOfBounds.class})
+  @Test(dependsOnMethods = "testCreateRegion", expectedExceptions = ArrayIndexOutOfBounds.class)
   public void testGetRangeLowerBoundWithInvalidExtent()
     throws Exception
   {
     region.getRangeLowerBound(-1, dimensionHandle1);
   }
 
-  @Test(dependsOnMethods = {"testCreateRegion"}, expectedExceptions = {ArrayIndexOutOfBounds.class})
+  @Test(dependsOnMethods = "testCreateRegion", expectedExceptions = ArrayIndexOutOfBounds.class)
   public void testGetRangeLowerBoundWithInvalidDimensionHandle()
     throws Exception
   {
     region.getRangeLowerBound(0, -1);
   }
 
-  @Test(dependsOnMethods = {"testCreateRegion"}, expectedExceptions = {ArrayIndexOutOfBounds.class})
+  @Test(dependsOnMethods = "testCreateRegion", expectedExceptions = ArrayIndexOutOfBounds.class)
   public void testGetRangeUpperBoundWithInvalidExtent()
     throws Exception
   {
     region.getRangeUpperBound(-1, dimensionHandle1);
   }
 
-  @Test(dependsOnMethods = {"testCreateRegion"}, expectedExceptions = {ArrayIndexOutOfBounds.class})
+  @Test(dependsOnMethods = "testCreateRegion", expectedExceptions = ArrayIndexOutOfBounds.class)
   public void testGetRangeUpperBoundWithInvalidDimensionHandle()
     throws Exception
   {
     region.getRangeUpperBound(0, -1);
   }
 
-  @Test(dependsOnMethods = {"testCreateRegion"}, expectedExceptions = {ArrayIndexOutOfBounds.class})
+  @Test(dependsOnMethods = "testCreateRegion", expectedExceptions = ArrayIndexOutOfBounds.class)
   public void testSetRangeLowerBoundWithInvalidExtent()
     throws Exception
   {
     region.setRangeLowerBound(-1, dimensionHandle1, 0L);
   }
 
-  @Test(dependsOnMethods = {"testCreateRegion"}, expectedExceptions = {ArrayIndexOutOfBounds.class})
+  @Test(dependsOnMethods = "testCreateRegion", expectedExceptions = ArrayIndexOutOfBounds.class)
   public void testSetRangeLowerBoundWithInvalidDimensionHandle()
     throws Exception
   {
     region.setRangeLowerBound(0, -1, 0L);
   }
 
-  @Test(dependsOnMethods = {"testCreateRegion"}, expectedExceptions = {ArrayIndexOutOfBounds.class})
+  @Test(dependsOnMethods = "testCreateRegion", expectedExceptions = ArrayIndexOutOfBounds.class)
   public void testSetRangeUpperBoundWithInvalidExtent()
     throws Exception
   {
     region.setRangeUpperBound(-1, dimensionHandle1, 0L);
   }
 
-  @Test(dependsOnMethods = {"testCreateRegion"}, expectedExceptions = {ArrayIndexOutOfBounds.class})
+  @Test(dependsOnMethods = "testCreateRegion", expectedExceptions = ArrayIndexOutOfBounds.class)
   public void testSetRangeUpperBoundWithInvalidDimensionHandle()
     throws Exception
   {
     region.setRangeUpperBound(0, -1, 0L);
   }
 
-  @Test(dependsOnMethods = {"testCreateRegion"})
+  @Test(dependsOnMethods = "testCreateRegion")
   public void testDeleteRegion()
     throws Exception
   {
     rtiAmbassadors.get(1).deleteRegion(region2);
   }
 
-  @Test(expectedExceptions = {RegionNotKnown.class})
+  @Test(expectedExceptions = RegionNotKnown.class)
   public void testDeleteRegionWithNullRegion()
     throws Exception
   {
     rtiAmbassadors.get(0).deleteRegion(null);
+  }
+
+  protected NullFederateAmbassador createFederateAmbassador(RTIambassadorEx rtiAmbassador)
+  {
+    return new NullFederateAmbassador();
   }
 }

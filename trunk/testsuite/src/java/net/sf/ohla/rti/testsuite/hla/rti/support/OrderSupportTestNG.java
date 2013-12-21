@@ -25,7 +25,7 @@ import hla.rti.NameNotFound;
 public class OrderSupportTestNG
   extends BaseSupportTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA HLA 1.3 Order Support Test Federation";
+  private static final String FEDERATION_NAME = OrderSupportTestNG.class.getSimpleName();
 
   public OrderSupportTestNG()
   {
@@ -48,21 +48,21 @@ public class OrderSupportTestNG
     assert TIMESTAMP.equals(rtiAmbassadors.get(0).getOrderingName(receiveOrderingHandle));
   }
 
-  @Test(expectedExceptions = {NameNotFound.class})
-  public void testGetOrderingHandleWithNullOrderingName()
-    throws Exception
-  {
-    rtiAmbassadors.get(0).getOrderingHandle(null);
-  }
-
-  @Test(expectedExceptions = {NameNotFound.class})
+  @Test(expectedExceptions = NameNotFound.class)
   public void testGetOrderingHandleOfUnknownOrderingName()
     throws Exception
   {
     rtiAmbassadors.get(0).getOrderingHandle(UNKNOWN_ORDER_TYPE);
   }
 
-  @Test(expectedExceptions = {InvalidOrderingHandle.class})
+  @Test(expectedExceptions = NameNotFound.class)
+  public void testGetOrderingHandleWithNullOrderingName()
+    throws Exception
+  {
+    rtiAmbassadors.get(0).getOrderingHandle(null);
+  }
+
+  @Test(expectedExceptions = InvalidOrderingHandle.class)
   public void testGetOrderingNameOfInvalidOrderingHandle()
     throws Exception
   {

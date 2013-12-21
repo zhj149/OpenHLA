@@ -33,28 +33,28 @@ public class FederateSupportTestNG
     super(FEDERATION_NAME);
   }
 
-  @Test(expectedExceptions = {FederateAlreadyExecutionMember.class})
+  @Test(expectedExceptions = FederateAlreadyExecutionMember.class)
   public void testJoinFederationExecutionAlreadyExecutionMemberOf()
     throws Exception
   {
     rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE_1, FEDERATION_NAME);
   }
 
-  @Test(expectedExceptions = {InvalidResignAction.class})
+  @Test(expectedExceptions = InvalidResignAction.class)
   public void testResignFederationExecutionWithInvalidResignAction()
     throws Exception
   {
     rtiAmbassadors.get(0).resignFederationExecution(null);
   }
 
-  @Test(expectedExceptions = {InvalidFederateHandle.class})
+  @Test(expectedExceptions = InvalidFederateHandle.class)
   public void testGetFederateNameWithNullFederateHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).getFederateName(null);
   }
 
-  @Test(expectedExceptions = {IllegalArgumentException.class})
+  @Test(expectedExceptions = IllegalArgumentException.class)
   public void testGetFederateHandleWithNullFederateName()
     throws Exception
   {

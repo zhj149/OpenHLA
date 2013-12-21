@@ -57,69 +57,69 @@ public class CreationTestNG
   }
 
   @Test
-  public void testCreateFederation()
+  public void testCreateFederationExecution()
     throws Exception
   {
     rtiAmbassador.createFederationExecution(FEDERATION_NAME, fdd);
   }
 
-  @Test(expectedExceptions = {IllegalArgumentException.class})
+  @Test(expectedExceptions = IllegalArgumentException.class)
   public void testCreateFederationWithNullFederationExecutionName()
     throws Exception
   {
     rtiAmbassador.createFederationExecution(null, fdd);
   }
 
-  @Test(expectedExceptions = {IllegalArgumentException.class})
+  @Test(expectedExceptions = IllegalArgumentException.class)
   public void testCreateFederationWithEmptyFederationExecutionName()
     throws Exception
   {
     rtiAmbassador.createFederationExecution("", fdd);
   }
 
-  @Test(expectedExceptions = {CouldNotOpenFDD.class})
+  @Test(expectedExceptions = CouldNotOpenFDD.class)
   public void testCreateFederationWithNullFDD()
     throws Exception
   {
     rtiAmbassador.createFederationExecution(FEDERATION_NAME, null);
   }
 
-  @Test(expectedExceptions = {ErrorReadingFDD.class})
+  @Test(expectedExceptions = ErrorReadingFDD.class)
   public void testCreateFederationWithBadFDD()
     throws Exception
   {
     rtiAmbassador.createFederationExecution(FEDERATION_NAME, badFDD);
   }
 
-  @Test(expectedExceptions = {CouldNotOpenFDD.class})
+  @Test(expectedExceptions = CouldNotOpenFDD.class)
   public void testCreateFederationWithUnfindableFDD()
     throws Exception
   {
     rtiAmbassador.createFederationExecution(FEDERATION_NAME, new URL("file://xxx"));
   }
 
-  @Test(dependsOnMethods = {"testCreateFederation"})
+  @Test(dependsOnMethods = "testCreateFederationExecution")
   public void testDestroyFederationExecution()
     throws Exception
   {
     rtiAmbassador.destroyFederationExecution(FEDERATION_NAME);
   }
 
-  @Test(expectedExceptions = {IllegalArgumentException.class})
+  @Test(expectedExceptions = IllegalArgumentException.class)
   public void testDestroyFederationExecutionWithNullFederationExecutionName()
     throws Exception
   {
     rtiAmbassador.destroyFederationExecution(null);
   }
 
-  @Test(expectedExceptions = {IllegalArgumentException.class})
+  @Test(expectedExceptions = IllegalArgumentException.class)
   public void testDestroyFederationExecutionWithEmptyFederationExecutionName()
     throws Exception
   {
     rtiAmbassador.destroyFederationExecution("");
   }
 
-  @Test(expectedExceptions = {FederationExecutionDoesNotExist.class})
+  @Test(expectedExceptions = FederationExecutionDoesNotExist.class)
   public void testDestroyFederationExecutionThatDoesNotExist()
     throws Exception
   {

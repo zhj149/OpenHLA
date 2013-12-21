@@ -31,7 +31,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import hla.rti1516.FederateHandle;
-import hla.rti1516.FederateHandleRestoreStatusPair;
 import hla.rti1516.RTIambassador;
 import hla.rti1516.ResignAction;
 import hla.rti1516.RestoreStatus;
@@ -112,7 +111,7 @@ public class SaveRestoreTestNG
       SaveStatus.NO_SAVE_IN_PROGRESS, SaveStatus.NO_SAVE_IN_PROGRESS, SaveStatus.NO_SAVE_IN_PROGRESS);
   }
 
-  @Test(dependsOnMethods = {"testRequestFederationSave"})
+  @Test(dependsOnMethods = "testRequestFederationSave")
   public void testRequestFederationRestore()
     throws Exception
   {

@@ -191,33 +191,6 @@ public class BaseFederateAmbassador
     });
   }
 
-  @Override
-  public void announceSynchronizationPoint(String synchronizationPointLabel, byte[] tag)
-    throws FederateInternalError
-  {
-    assert !announcedSynchronizationPoints.contains(synchronizationPointLabel);
-
-    announcedSynchronizationPoints.add(synchronizationPointLabel);
-    try
-    {
-      rtiAmbassador.synchronizationPointAchieved(synchronizationPointLabel);
-    }
-    catch (Throwable t)
-    {
-      throw new FederateInternalError(t.getMessage(), t);
-    }
-  }
-
-  @Override
-  public void federationSynchronized(String synchronizationPointLabel)
-    throws FederateInternalError
-  {
-    assert announcedSynchronizationPoints.contains(synchronizationPointLabel);
-    assert !synchronizedSynchronizationPoints.contains(synchronizationPointLabel);
-
-    synchronizedSynchronizationPoints.add(synchronizationPointLabel);
-  }
-
   public void checkInitiateFederateSave(String label)
     throws Exception
   {
@@ -393,6 +366,33 @@ public class BaseFederateAmbassador
     assert BaseFederateAmbassador.this.restoreStatusResponse.equals(restoreStatusResponse);
 
     this.restoreStatusResponse.clear();
+  }
+
+  @Override
+  public void announceSynchronizationPoint(String synchronizationPointLabel, byte[] tag)
+    throws FederateInternalError
+  {
+    assert !announcedSynchronizationPoints.contains(synchronizationPointLabel);
+
+    announcedSynchronizationPoints.add(synchronizationPointLabel);
+    try
+    {
+      rtiAmbassador.synchronizationPointAchieved(synchronizationPointLabel);
+    }
+    catch (Throwable t)
+    {
+      throw new FederateInternalError(t.getMessage(), t);
+    }
+  }
+
+  @Override
+  public void federationSynchronized(String synchronizationPointLabel)
+    throws FederateInternalError
+  {
+    assert announcedSynchronizationPoints.contains(synchronizationPointLabel);
+    assert !synchronizedSynchronizationPoints.contains(synchronizationPointLabel);
+
+    synchronizedSynchronizationPoints.add(synchronizationPointLabel);
   }
 
   @Override

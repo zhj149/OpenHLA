@@ -16,11 +16,9 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti.federation;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -42,43 +40,29 @@ import hla.rti.jlc.RTIambassadorEx;
 
 @Test
 public class SynchronizationTestNG
-  extends BaseTestNG
+  extends BaseTestNG<SynchronizationTestNG.TestFederateAmbassador>
 {
-  private static final String FEDERATION_NAME = "OHLA HLA 1.3 Synchronization Test Federation";
-
-  private final List<TestFederateAmbassador> federateAmbassadors = new ArrayList<TestFederateAmbassador>(3);
-  private final List<Integer> federateHandles = new ArrayList<Integer>(3);
+  private static final String FEDERATION_NAME = SynchronizationTestNG.class.getSimpleName();
 
   public SynchronizationTestNG()
   {
-    super(3);
+    super(3, FEDERATION_NAME);
   }
 
   @BeforeClass
   public void setup()
     throws Exception
   {
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(0)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(1)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(2)));
-
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fed);
-
-    federateHandles.add(rtiAmbassadors.get(0).joinFederationExecution(
-      FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(0)));
-    federateHandles.add(rtiAmbassadors.get(1).joinFederationExecution(
-      FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(1)));
-    federateHandles.add(rtiAmbassadors.get(2).joinFederationExecution(
-      FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(2)));
+    createFederationExecution();
+    joinFederationExecution();
   }
 
   @AfterClass
   public void teardown()
     throws Exception
   {
-    resignFederationExecution(ResignAction.NO_ACTION);
-
-    destroyFederationExecution(FEDERATION_NAME);
+    resignFederationExecution();
+    destroyFederationExecution();
   }
 
   @Test
@@ -123,7 +107,7 @@ public class SynchronizationTestNG
     federateAmbassadors.get(2).checkFederationSynchronized(SYNCHRONIZATION_POINT_2);
   }
 
-  @Test(dependsOnMethods = {"testRegisterFederationSynchronizationPoint"})
+  @Test(dependsOnMethods = "testRegisterFederationSynchronizationPoint")
   public void testRegisterFederationSynchronizationPointAgain()
     throws Exception
   {
@@ -132,7 +116,7 @@ public class SynchronizationTestNG
     federateAmbassadors.get(0).checkSynchronizationPointRegistrationFailed(SYNCHRONIZATION_POINT_1);
   }
 
-  @Test(expectedExceptions = {SynchronizationLabelNotAnnounced.class})
+  @Test(expectedExceptions = SynchronizationLabelNotAnnounced.class)
   public void testSynchronizationPointAchievedOfUnannouncedSynchronizationPoint()
     throws Exception
   {
@@ -182,6 +166,11 @@ public class SynchronizationTestNG
     rtiAmbassadors.get(0).registerFederationSynchronizationPoint(SYNCHRONIZATION_POINT_4, TAG, synchronizationSet);
 
     federateAmbassadors.get(0).checkSynchronizationPointRegistrationFailed(SYNCHRONIZATION_POINT_4);
+  }
+
+  protected TestFederateAmbassador createFederateAmbassador(RTIambassadorEx rtiAmbassador)
+  {
+    return new TestFederateAmbassador(rtiAmbassador);
   }
 
   protected static class TestFederateAmbassador

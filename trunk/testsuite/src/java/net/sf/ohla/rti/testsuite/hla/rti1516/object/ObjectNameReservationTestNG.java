@@ -64,7 +64,7 @@ public class ObjectNameReservationTestNG
     destroyFederationExecution();
   }
 
-  @Test(expectedExceptions = {IllegalName.class})
+  @Test(expectedExceptions = IllegalName.class)
   public void testReserveIllegalObjectInstanceName()
     throws Exception
   {
@@ -80,7 +80,7 @@ public class ObjectNameReservationTestNG
     federateAmbassadors.get(0).checkObjectInstanceNameReserved(LEGAL_NAME_1);
   }
 
-  @Test(dependsOnMethods = {"testReserveObjectInstanceName"})
+  @Test(dependsOnMethods = "testReserveObjectInstanceName")
   public void testReserveObjectInstanceNameAgain()
     throws Exception
   {

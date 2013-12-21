@@ -19,18 +19,22 @@ package net.sf.ohla.rti.testsuite.hla.rti.time;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import hla.rti.EventRetractionHandle;
 import hla.rti.SuppliedParameters;
 
 @Test
 public class FlushQueueRequestTestNG
   extends BaseTimeManagementTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA HLA 1.3 Flush Queue Request Test Federation";
+  private static final String FEDERATION_NAME = FlushQueueRequestTestNG.class.getSimpleName();
 
+  private int testInteractionClassHandle;
   private SuppliedParameters testSuppliedParameters;
 
+  private EventRetractionHandle testInteractionEventRetractionHandle1;
+  private EventRetractionHandle testInteractionEventRetractionHandle2;
+
   public FlushQueueRequestTestNG()
-    throws Exception
   {
     super(2, FEDERATION_NAME);
   }
@@ -51,7 +55,7 @@ public class FlushQueueRequestTestNG
     federateAmbassadors.get(0).checkTimeConstrainedEnabled(initial);
     federateAmbassadors.get(1).checkTimeConstrainedEnabled(initial);
 
-    int testInteractionClassHandle = rtiAmbassadors.get(0).getInteractionClassHandle(TEST_INTERACTION);
+    testInteractionClassHandle = rtiAmbassadors.get(0).getInteractionClassHandle(TEST_INTERACTION);
 
     int parameterHandle1 = rtiAmbassadors.get(0).getParameterHandle(PARAMETER1, testInteractionClassHandle);
     int parameterHandle2 = rtiAmbassadors.get(0).getParameterHandle(PARAMETER2, testInteractionClassHandle);
@@ -68,12 +72,16 @@ public class FlushQueueRequestTestNG
 
     synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE, federateAmbassadors);
 
-    rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle, testSuppliedParameters, TAG, five);
-    rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle, testSuppliedParameters, TAG, ten);
+    testInteractionEventRetractionHandle1 =
+      rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle, testSuppliedParameters, TAG, five);
+    assert testInteractionEventRetractionHandle1 != null;
+    testInteractionEventRetractionHandle2 =
+      rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle, testSuppliedParameters, TAG, ten);
+    assert testInteractionEventRetractionHandle2 != null;
   }
 
   @Test
-  public void testTimeAdvanceRequest()
+  public void testFlushQueueRequest()
     throws Exception
   {
     rtiAmbassadors.get(1).flushQueueRequest(initial);

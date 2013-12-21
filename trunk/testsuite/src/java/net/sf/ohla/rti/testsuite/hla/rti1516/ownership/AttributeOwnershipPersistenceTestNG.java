@@ -30,11 +30,8 @@ import org.testng.annotations.Test;
 
 import hla.rti1516.AttributeHandle;
 import hla.rti1516.AttributeHandleSet;
-import hla.rti1516.CouldNotDiscover;
 import hla.rti1516.FederateHandle;
-import hla.rti1516.FederateInternalError;
 import hla.rti1516.ObjectClassHandle;
-import hla.rti1516.ObjectClassNotRecognized;
 import hla.rti1516.ObjectInstanceHandle;
 import hla.rti1516.RTIambassador;
 import hla.rti1516.ResignAction;
@@ -243,7 +240,6 @@ public class AttributeOwnershipPersistenceTestNG
     @Override
     public void discoverObjectInstance(
       ObjectInstanceHandle objectInstanceHandle, ObjectClassHandle objectClassHandle, String objectInstanceName)
-      throws CouldNotDiscover, ObjectClassNotRecognized, FederateInternalError
     {
       objectInstances.put(objectInstanceHandle, new HashMap<AttributeHandle, Object>());
     }
@@ -251,21 +247,18 @@ public class AttributeOwnershipPersistenceTestNG
     @Override
     public void informAttributeOwnership(
       ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle, FederateHandle federateHandle)
-      throws FederateInternalError
     {
       setAttributeOwnership(objectInstanceHandle, attributeHandle, federateHandle);
     }
 
     @Override
     public void attributeIsNotOwned(ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle)
-      throws FederateInternalError
     {
       setAttributeOwnership(objectInstanceHandle, attributeHandle, Boolean.FALSE);
     }
 
     @Override
     public void attributeIsOwnedByRTI(ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle)
-      throws FederateInternalError
     {
       setAttributeOwnership(objectInstanceHandle, attributeHandle, Boolean.TRUE);
     }

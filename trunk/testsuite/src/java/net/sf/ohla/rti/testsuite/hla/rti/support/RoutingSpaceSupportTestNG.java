@@ -29,7 +29,7 @@ import hla.rti.SpaceNotDefined;
 public class RoutingSpaceSupportTestNG
   extends BaseSupportTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA HLA 1.3 RoutingSpace Support Test Federation";
+  private static final String FEDERATION_NAME = RoutingSpaceSupportTestNG.class.getSimpleName();
 
   public RoutingSpaceSupportTestNG()
   {
@@ -44,14 +44,14 @@ public class RoutingSpaceSupportTestNG
     assert ROUTING_SPACE.equals(rtiAmbassadors.get(0).getRoutingSpaceName(routingSpaceHandle));
   }
 
-  @Test(expectedExceptions = {NameNotFound.class})
+  @Test(expectedExceptions = NameNotFound.class)
   public void testGetRoutingSpaceHandleOfUnknownRoutingSpace()
     throws Exception
   {
     rtiAmbassadors.get(0).getRoutingSpaceHandle(UNKNOWN_ROUTING_SPACE);
   }
 
-  @Test(expectedExceptions = {SpaceNotDefined.class})
+  @Test(expectedExceptions = SpaceNotDefined.class)
   public void testGetRoutingSpaceNameOfInvalidRoutingSpaceHandle()
     throws Exception
   {
@@ -68,14 +68,14 @@ public class RoutingSpaceSupportTestNG
     assert DIMENSION1.equals(rtiAmbassadors.get(0).getDimensionName(dimensionHandle, routingSpaceHandle));
   }
 
-  @Test(expectedExceptions = {SpaceNotDefined.class})
+  @Test(expectedExceptions = SpaceNotDefined.class)
   public void testGetDimensionHandleOfInvalidRoutingSpaceHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).getDimensionHandle(DIMENSION1, Integer.MIN_VALUE);
   }
 
-  @Test(expectedExceptions = {NameNotFound.class})
+  @Test(expectedExceptions = NameNotFound.class)
   public void testGetDimensionHandleOfUnknownDimension()
     throws Exception
   {
@@ -83,7 +83,7 @@ public class RoutingSpaceSupportTestNG
       UNKNOWN_DIMENSION, rtiAmbassadors.get(0).getRoutingSpaceHandle(ROUTING_SPACE));
   }
 
-  @Test(expectedExceptions = {SpaceNotDefined.class})
+  @Test(expectedExceptions = SpaceNotDefined.class)
   public void testGetDimensionNameOfInvalidRoutingSpaceHandle()
     throws Exception
   {
@@ -93,7 +93,7 @@ public class RoutingSpaceSupportTestNG
     rtiAmbassadors.get(0).getDimensionName(dimensionHandle, Integer.MIN_VALUE);
   }
 
-  @Test(expectedExceptions = {DimensionNotDefined.class})
+  @Test(expectedExceptions = DimensionNotDefined.class)
   public void testGetDimensionNameOfInvalidDimensionHandle()
     throws Exception
   {
@@ -114,7 +114,7 @@ public class RoutingSpaceSupportTestNG
       attributeHandle, objectClassHandle);
   }
 
-  @Test(expectedExceptions = {ObjectClassNotDefined.class})
+  @Test(expectedExceptions = ObjectClassNotDefined.class)
   public void testGetAttributeRoutingSpaceHandleOfInvalidObjectClassHandle()
     throws Exception
   {
@@ -124,7 +124,7 @@ public class RoutingSpaceSupportTestNG
     rtiAmbassadors.get(0).getAttributeRoutingSpaceHandle(attributeHandle, Integer.MIN_VALUE);
   }
 
-  @Test(expectedExceptions = {AttributeNotDefined.class})
+  @Test(expectedExceptions = AttributeNotDefined.class)
   public void testGetAttributeRoutingSpaceHandleOfInvalidAttributeHandle()
     throws Exception
   {
@@ -143,7 +143,7 @@ public class RoutingSpaceSupportTestNG
     assert routingSpaceHandle == rtiAmbassadors.get(0).getInteractionRoutingSpaceHandle(interactionClassHandle);
   }
 
-  @Test(expectedExceptions = {InteractionClassNotDefined.class})
+  @Test(expectedExceptions = InteractionClassNotDefined.class)
   public void testGetInteractionRoutingSpaceHandleOfInvalidInteractionClassHandle()
     throws Exception
   {

@@ -23,6 +23,13 @@ public interface TestConstants
 
   static final String FEDERATE_TYPE = "Test Federate";
 
+  static final String FEDERATE_TYPE_1 = "Test Federate 1";
+  static final String FEDERATE_TYPE_2 = "Test Federate 2";
+  static final String FEDERATE_TYPE_3 = "Test Federate 3";
+  static final String FEDERATE_TYPE_4 = "Test Federate 4";
+
+  static final String LOGICAL_TIME_IMPLEMENTATION = "HLAfloat64Time";
+
   static final String SYNCHRONIZATION_POINT_1 = "Synchronization Point 1";
   static final String SYNCHRONIZATION_POINT_2 = "Synchronization Point 2";
   static final String SYNCHRONIZATION_POINT_3 = "Synchronization Point 3";
@@ -64,6 +71,9 @@ public interface TestConstants
   static final String PARAMETER4 = "Parameter4";
   static final String PARAMETER5 = "Parameter5";
   static final String PARAMETER6 = "Parameter6";
+  static final String PARAMETER7 = "Parameter7";
+  static final String PARAMETER8 = "Parameter8";
+  static final String PARAMETER9 = "Parameter9";
 
   static final String UNKNOWN_PARAMETER = "UnknownParameter";
 

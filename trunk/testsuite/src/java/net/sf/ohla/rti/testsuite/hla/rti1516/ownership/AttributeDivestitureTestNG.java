@@ -32,7 +32,6 @@ import hla.rti1516.AttributeHandleSet;
 import hla.rti1516.AttributeNotDefined;
 import hla.rti1516.AttributeNotOwned;
 import hla.rti1516.FederateHandle;
-import hla.rti1516.FederateInternalError;
 import hla.rti1516.ObjectClassHandle;
 import hla.rti1516.ObjectInstanceHandle;
 import hla.rti1516.ObjectInstanceNotKnown;
@@ -125,7 +124,7 @@ public class AttributeDivestitureTestNG
     federateAmbassadors.get(0).checkAttributeIsUnowned(testObjectInstanceHandle, attributeHandle2);
   }
 
-  @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
+  @Test(expectedExceptions = ObjectInstanceNotKnown.class)
   public void testUnconditionalAttributeOwnershipDivestitureWithNullObjectInstanceHandle()
     throws Exception
   {
@@ -136,7 +135,7 @@ public class AttributeDivestitureTestNG
     rtiAmbassadors.get(0).unconditionalAttributeOwnershipDivestiture(null, attributeHandles);
   }
 
-  @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
+  @Test(expectedExceptions = ObjectInstanceNotKnown.class)
   public void testUnconditionalAttributeOwnershipDivestitureWithUnknownObjectInstanceHandle()
     throws Exception
   {
@@ -147,7 +146,7 @@ public class AttributeDivestitureTestNG
     rtiAmbassadors.get(2).unconditionalAttributeOwnershipDivestiture(testObjectInstanceHandle, attributeHandles);
   }
 
-  @Test(expectedExceptions = {AttributeNotDefined.class})
+  @Test(expectedExceptions = AttributeNotDefined.class)
   public void testUnconditionalAttributeOwnershipDivestitureWithUndefinedAttributeHandle()
     throws Exception
   {
@@ -157,7 +156,7 @@ public class AttributeDivestitureTestNG
     rtiAmbassadors.get(1).unconditionalAttributeOwnershipDivestiture(testObjectInstanceHandle, attributeHandles);
   }
 
-  @Test(expectedExceptions = {AttributeNotOwned.class})
+  @Test(expectedExceptions = AttributeNotOwned.class)
   public void testUnconditionalAttributeOwnershipDivestitureOfUnownedAttribute()
     throws Exception
   {
@@ -209,7 +208,6 @@ public class AttributeDivestitureTestNG
     @Override
     public void discoverObjectInstance(
       ObjectInstanceHandle objectInstanceHandle, ObjectClassHandle objectClassHandle, String objectInstanceName)
-      throws FederateInternalError
     {
       objectInstances.put(objectInstanceHandle, new HashMap<AttributeHandle, Object>());
     }
@@ -217,21 +215,18 @@ public class AttributeDivestitureTestNG
     @Override
     public void informAttributeOwnership(
       ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle, FederateHandle federateHandle)
-      throws FederateInternalError
     {
       setAttributeOwnership(objectInstanceHandle, attributeHandle, federateHandle);
     }
 
     @Override
     public void attributeIsNotOwned(ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle)
-      throws FederateInternalError
     {
       setAttributeOwnership(objectInstanceHandle, attributeHandle, Boolean.FALSE);
     }
 
     @Override
     public void attributeIsOwnedByRTI(ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle)
-      throws FederateInternalError
     {
       setAttributeOwnership(objectInstanceHandle, attributeHandle, Boolean.TRUE);
     }

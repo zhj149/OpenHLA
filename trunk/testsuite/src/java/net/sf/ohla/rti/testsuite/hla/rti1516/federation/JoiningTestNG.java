@@ -79,6 +79,14 @@ public class JoiningTestNG
       FEDERATE_TYPE, null, new NullFederateAmbassador(), mobileFederateServices);
   }
 
+  @Test(expectedExceptions = IllegalArgumentException.class)
+  public void testJoinFederationExecutionWithNullFederateAmbassador()
+    throws Exception
+  {
+    rtiFactory.getRtiAmbassador().joinFederationExecution(
+      FEDERATE_TYPE, FEDERATION_NAME, null, mobileFederateServices);
+  }
+
   @Test(expectedExceptions = FederationExecutionDoesNotExist.class)
   public void testJoinFederationThatDoesNotExist()
     throws Exception

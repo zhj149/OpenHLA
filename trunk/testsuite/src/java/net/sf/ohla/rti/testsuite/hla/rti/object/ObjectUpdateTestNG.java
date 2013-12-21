@@ -16,15 +16,13 @@
 
 package net.sf.ohla.rti.testsuite.hla.rti.object;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import net.sf.ohla.rti.testsuite.hla.rti.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti.BaseTestNG;
-import net.sf.ohla.rti.testsuite.hla.rti.SynchronizedFederateAmbassador;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -44,11 +42,9 @@ import hla.rti.jlc.RTIambassadorEx;
 
 @Test
 public class ObjectUpdateTestNG
-  extends BaseTestNG
+  extends BaseTestNG<ObjectUpdateTestNG.TestFederateAmbassador>
 {
-  private static final String FEDERATION_NAME = "OHLA HLA 1.3 Object Update Test Federation";
-
-  private final List<TestFederateAmbassador> federateAmbassadors = new ArrayList<TestFederateAmbassador>(4);
+  private static final String FEDERATION_NAME = ObjectUpdateTestNG.class.getSimpleName();
 
   private SuppliedAttributes testObjectAttributeValues;
   private SuppliedAttributes testObjectAttributeValues2;
@@ -61,24 +57,15 @@ public class ObjectUpdateTestNG
 
   public ObjectUpdateTestNG()
   {
-    super(4);
+    super(4, FEDERATION_NAME);
   }
 
   @BeforeClass
   public void setup()
     throws Exception
   {
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(0)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(1)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(2)));
-    federateAmbassadors.add(new TestFederateAmbassador(rtiAmbassadors.get(3)));
-
-    rtiAmbassadors.get(0).createFederationExecution(FEDERATION_NAME, fed);
-
-    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(0));
-    rtiAmbassadors.get(1).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(1));
-    rtiAmbassadors.get(2).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(2));
-    rtiAmbassadors.get(3).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME, federateAmbassadors.get(3));
+    createFederationExecution();
+    joinFederationExecution();
 
     int testObjectClassHandle = rtiAmbassadors.get(0).getObjectClassHandle(TEST_OBJECT);
     int attributeHandle1 = rtiAmbassadors.get(0).getAttributeHandle(ATTRIBUTE1, testObjectClassHandle);
@@ -141,8 +128,7 @@ public class ObjectUpdateTestNG
     throws Exception
   {
     resignFederationExecution(ResignAction.RELEASE_ATTRIBUTES);
-
-    destroyFederationExecution(FEDERATION_NAME);
+    destroyFederationExecution();
   }
 
   @Test
@@ -155,21 +141,21 @@ public class ObjectUpdateTestNG
     federateAmbassadors.get(2).checkAttributeValues(testObjectInstanceName2, testObjectAttributeValues2, TAG);
   }
 
-  @Test(expectedExceptions = {ObjectNotKnown.class})
+  @Test(expectedExceptions = ObjectNotKnown.class)
   public void testUpdateAttributeValuesWithInvalidObjectInstanceHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).updateAttributeValues(-1, testObjectAttributeValues2, null);
   }
 
-  @Test(expectedExceptions = {AttributeNotDefined.class})
+  @Test(expectedExceptions = AttributeNotDefined.class)
   public void testUpdateAttributeValuesWithUndefinedAttributes()
     throws Exception
   {
     rtiAmbassadors.get(0).updateAttributeValues(testObjectInstanceHandle, testObjectAttributeValues2, null);
   }
 
-  @Test(expectedExceptions = {AttributeNotOwned.class})
+  @Test(expectedExceptions = AttributeNotOwned.class)
   public void testUpdateAttributeValuesOfUnownedAttribute()
     throws Exception
   {
@@ -177,15 +163,20 @@ public class ObjectUpdateTestNG
       rtiAmbassadors.get(1).getObjectInstanceHandle(testObjectInstanceName), testObjectAttributeValues, null);
   }
 
-  @Test(expectedExceptions = {ObjectNotKnown.class})
+  @Test(expectedExceptions = ObjectNotKnown.class)
   public void testUpdateAttributeValuesOfUnknownObject()
     throws Exception
   {
     rtiAmbassadors.get(3).updateAttributeValues(100, testObjectAttributeValues, null);
   }
 
-  private static class TestFederateAmbassador
-    extends SynchronizedFederateAmbassador
+  protected TestFederateAmbassador createFederateAmbassador(RTIambassadorEx rtiAmbassador)
+  {
+    return new TestFederateAmbassador(rtiAmbassador);
+  }
+
+  public static class TestFederateAmbassador
+    extends BaseFederateAmbassador
   {
     private final Map<String, TestObjectInstance> objectInstances =
       new HashMap<String, TestObjectInstance>();

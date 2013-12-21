@@ -16,12 +16,17 @@
 
 package net.sf.ohla.rti.hla.rti;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import net.sf.ohla.rti.fdd.Dimension;
 import net.sf.ohla.rti.federate.FederateRegion;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandleSet;
 
 import hla.rti.ArrayIndexOutOfBounds;
@@ -77,6 +82,22 @@ public class HLA13Region
     }
   }
 
+  public HLA13Region(DataInput in)
+    throws IOException
+  {
+    token = in.readInt();
+    routingSpaceHandle = in.readInt();
+
+    int extentsCount = in.readInt();
+    extents = new ArrayList<Extent>(extentsCount);
+    for (; extentsCount > 0; extentsCount--)
+    {
+      extents.add(new Extent(in));
+    }
+
+    regionHandles = new IEEE1516eRegionHandleSet(in);
+  }
+
   public int getToken()
   {
     return token;
@@ -109,6 +130,21 @@ public class HLA13Region
     }
 
     return extents.get(extentIndex);
+  }
+
+  public void writeTo(DataOutput out)
+    throws IOException
+  {
+    out.writeInt(token);
+    out.writeInt(routingSpaceHandle);
+
+    out.writeInt(extents.size());
+    for (Extent extent : extents)
+    {
+      extent.writeTo(out);
+    }
+
+    ((IEEE1516eRegionHandleSet) regionHandles).writeTo(out);
   }
 
   public int getSpaceHandle()
@@ -190,6 +226,21 @@ public class HLA13Region
       }
     }
 
+    private Extent(DataInput in)
+      throws IOException
+    {
+      regionHandle = IEEE1516eRegionHandle.decode(in);
+
+      int rangeBoundsCount = in.readInt();
+      rangeBounds = new ArrayList<RangeBounds>(rangeBoundsCount);
+      for (; rangeBoundsCount > 0; rangeBoundsCount--)
+      {
+        long lower = in.readLong();
+        long upper = in.readLong();
+        rangeBounds.add(new RangeBounds(lower, upper));
+      }
+    }
+
     public RegionHandle getRegionHandle()
     {
       return regionHandle;
@@ -233,6 +284,19 @@ public class HLA13Region
       throws ArrayIndexOutOfBounds
     {
       rangeBounds.set(dimensionHandle, new RangeBounds(getRangeBounds(dimensionHandle).lower, upperBound));
+    }
+
+    public void writeTo(DataOutput out)
+      throws IOException
+    {
+      ((IEEE1516eRegionHandle) regionHandle).writeTo(out);
+
+      out.writeInt(rangeBounds.size());
+      for (RangeBounds rangeBounds : this.rangeBounds)
+      {
+        out.writeLong(rangeBounds.lower);
+        out.writeLong(rangeBounds.upper);
+      }
     }
   }
 }

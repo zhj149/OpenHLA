@@ -65,21 +65,21 @@ public class InteractionDeclarationTestNG
     rtiAmbassadors.get(0).publishInteractionClass(testInteractionClassHandle);
   }
 
-  @Test(dependsOnMethods = {"testPublishInteractionClass"})
+  @Test(dependsOnMethods = "testPublishInteractionClass")
   public void testUnpublishInteractionClass()
     throws Exception
   {
     rtiAmbassadors.get(0).unpublishInteractionClass(testInteractionClassHandle);
   }
 
-  @Test(expectedExceptions = {InteractionClassNotDefined.class})
+  @Test(expectedExceptions = InteractionClassNotDefined.class)
   public void testPublishInteractionClassOfNullInteractionClassHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).publishInteractionClass(null);
   }
 
-  @Test(expectedExceptions = {InteractionClassNotDefined.class})
+  @Test(expectedExceptions = InteractionClassNotDefined.class)
   public void testUnpublishInteractionClassOfNullInteractionClassHandle()
     throws Exception
   {
@@ -93,21 +93,21 @@ public class InteractionDeclarationTestNG
     rtiAmbassadors.get(0).subscribeInteractionClass(testInteractionClassHandle);
   }
 
-  @Test(dependsOnMethods = {"testSubscribeInteractionClass"})
+  @Test(dependsOnMethods = "testSubscribeInteractionClass")
   public void testUnsubscribeInteractionClass()
     throws Exception
   {
     rtiAmbassadors.get(0).unsubscribeInteractionClass(testInteractionClassHandle);
   }
 
-  @Test(expectedExceptions = {InteractionClassNotDefined.class})
+  @Test(expectedExceptions = InteractionClassNotDefined.class)
   public void testSubscribeInteractionClassOfNullInteractionClassHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).subscribeInteractionClass(null);
   }
 
-  @Test(expectedExceptions = {InteractionClassNotDefined.class})
+  @Test(expectedExceptions = InteractionClassNotDefined.class)
   public void testUnsubscribeInteractionClassOfNullInteractionClassHandle()
     throws Exception
   {

@@ -20,20 +20,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import net.sf.ohla.rti.testsuite.hla.rti.SynchronizedFederateAmbassador;
+import net.sf.ohla.rti.testsuite.hla.rti.BaseFederateAmbassador;
 import net.sf.ohla.rti.testsuite.hla.rti.object.TestObjectInstance;
 
-import hla.rti.AttributeNotKnown;
-import hla.rti.CouldNotDiscover;
 import hla.rti.EventRetractionHandle;
-import hla.rti.FederateInternalError;
-import hla.rti.FederateOwnsAttributes;
-import hla.rti.InteractionClassNotKnown;
-import hla.rti.InteractionParameterNotKnown;
-import hla.rti.InvalidFederationTime;
 import hla.rti.LogicalTime;
-import hla.rti.ObjectClassNotKnown;
-import hla.rti.ObjectNotKnown;
 import hla.rti.ReceivedInteraction;
 import hla.rti.ReflectedAttributes;
 import hla.rti.SuppliedAttributes;
@@ -41,7 +32,7 @@ import hla.rti.SuppliedParameters;
 import hla.rti.jlc.RTIambassadorEx;
 
 public class TimeManagementFederateAmbassador
-  extends SynchronizedFederateAmbassador
+  extends BaseFederateAmbassador
 {
   private LogicalTime timeRegulationEnabledTime;
   private LogicalTime timeConstrainedEnabledTime;
@@ -58,6 +49,11 @@ public class TimeManagementFederateAmbassador
   public TimeManagementFederateAmbassador(RTIambassadorEx rtiAmbassador)
   {
     super(rtiAmbassador);
+  }
+
+  public Map<String, TestObjectInstance> getObjectInstances()
+  {
+    return objectInstances;
   }
 
   public void checkTimeRegulationEnabled()
@@ -89,7 +85,7 @@ public class TimeManagementFederateAmbassador
       }
     });
 
-    assert time.equals(timeRegulationEnabledTime) : time + " != " + timeRegulationEnabledTime;
+    assert time.equals(timeRegulationEnabledTime);
   }
 
   public void checkTimeConstrainedEnabled()
@@ -137,7 +133,7 @@ public class TimeManagementFederateAmbassador
       }
     });
 
-    assert time.equals(federateTime) : time + " != " + federateTime;
+    assert time.equals(federateTime);
   }
 
   public void checkTimeAdvanceGrantNotGranted(LogicalTime time)
@@ -256,6 +252,19 @@ public class TimeManagementFederateAmbassador
   }
 
   @Override
+  public void reset()
+  {
+    super.reset();
+
+    objectInstances.clear();
+
+    interactionClassHandle = null;
+    receivedInteraction = null;
+    tag = null;
+    receiveTime = null;
+  }
+
+  @Override
   public void timeRegulationEnabled(LogicalTime time)
   {
     timeRegulationEnabledTime = time;
@@ -275,7 +284,6 @@ public class TimeManagementFederateAmbassador
 
   @Override
   public void discoverObjectInstance(int objectInstanceHandle, int objectClassHandle, String objectInstanceName)
-    throws CouldNotDiscover, ObjectClassNotKnown, FederateInternalError
   {
     TestObjectInstance objectInstance =
       new TestObjectInstance(objectInstanceHandle, objectClassHandle, objectInstanceName);
@@ -285,46 +293,42 @@ public class TimeManagementFederateAmbassador
 
   @Override
   public void reflectAttributeValues(int objectInstanceHandle, ReflectedAttributes attributes, byte[] tag)
-    throws ObjectNotKnown, AttributeNotKnown, FederateOwnsAttributes, FederateInternalError
   {
     objectInstancesByHandle.get(objectInstanceHandle).setReflectedAttributes(attributes, tag, null);
   }
 
   @Override
-  public void reflectAttributeValues(int objectInstanceHandle, ReflectedAttributes attributes, byte[] tag,
-                                     LogicalTime reflectTime, EventRetractionHandle eventRetractionHandle)
-    throws ObjectNotKnown, AttributeNotKnown, FederateOwnsAttributes, InvalidFederationTime, FederateInternalError
+  public void reflectAttributeValues(
+    int objectInstanceHandle, ReflectedAttributes attributes, byte[] tag, LogicalTime reflectTime,
+    EventRetractionHandle eventRetractionHandle)
   {
     objectInstancesByHandle.get(objectInstanceHandle).setReflectedAttributes(attributes, tag, reflectTime);
   }
 
   @Override
   public void removeObjectInstance(int objectInstanceHandle, byte[] tag)
-    throws ObjectNotKnown, FederateInternalError
   {
     objectInstancesByHandle.get(objectInstanceHandle).setRemoved(tag);
   }
 
   @Override
-  public void removeObjectInstance(int objectInstanceHandle, byte[] tag, LogicalTime removeTime,
-                                   EventRetractionHandle eventRetractionHandle)
-    throws ObjectNotKnown, InvalidFederationTime, FederateInternalError
+  public void removeObjectInstance(
+    int objectInstanceHandle, byte[] tag, LogicalTime removeTime, EventRetractionHandle eventRetractionHandle)
   {
     objectInstancesByHandle.get(objectInstanceHandle).setRemoved(tag);
   }
 
   @Override
   public void receiveInteraction(int interactionClassHandle, ReceivedInteraction receivedInteraction, byte[] tag)
-    throws InteractionClassNotKnown, InteractionParameterNotKnown, FederateInternalError
   {
     this.interactionClassHandle = interactionClassHandle;
     this.receivedInteraction = receivedInteraction;
   }
 
   @Override
-  public void receiveInteraction(int interactionClassHandle, ReceivedInteraction receivedInteraction, byte[] tag,
-                                 LogicalTime receiveTime, EventRetractionHandle eventRetractionHandle)
-    throws InteractionClassNotKnown, InteractionParameterNotKnown, InvalidFederationTime, FederateInternalError
+  public void receiveInteraction(
+    int interactionClassHandle, ReceivedInteraction receivedInteraction, byte[] tag, LogicalTime receiveTime,
+    EventRetractionHandle eventRetractionHandle)
   {
     this.interactionClassHandle = interactionClassHandle;
     this.receivedInteraction = receivedInteraction;

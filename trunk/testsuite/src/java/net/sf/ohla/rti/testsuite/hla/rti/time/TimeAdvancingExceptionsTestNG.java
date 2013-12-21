@@ -26,7 +26,7 @@ import hla.rti.TimeAdvanceAlreadyInProgress;
 public class TimeAdvancingExceptionsTestNG
   extends BaseTimeManagementTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA IEEE 1516 Time Advancing Exceptions Test Federation";
+  private static final String FEDERATION_NAME = TimeAdvancingExceptionsTestNG.class.getSimpleName();
 
   public TimeAdvancingExceptionsTestNG()
   {
@@ -61,280 +61,280 @@ public class TimeAdvancingExceptionsTestNG
     rtiAmbassadors.get(9).flushQueueRequest(ten);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testEnableTimeRegulationWhileInTimeAdvanceRequest()
     throws Exception
   {
     rtiAmbassadors.get(0).enableTimeRegulation(initial, lookahead1);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testEnableTimeRegulationWhileInTimeAdvanceRequestAvailable()
     throws Exception
   {
     rtiAmbassadors.get(2).enableTimeRegulation(initial, lookahead1);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testEnableTimeRegulationWhileInNextEventRequest()
     throws Exception
   {
     rtiAmbassadors.get(4).enableTimeRegulation(initial, lookahead1);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testEnableTimeRegulationWhileInNextEventRequestAvailable()
     throws Exception
   {
     rtiAmbassadors.get(6).enableTimeRegulation(initial, lookahead1);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testEnableTimeRegulationWhileInFlushQueueRequest()
     throws Exception
   {
     rtiAmbassadors.get(8).enableTimeRegulation(initial, lookahead1);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testEnableTimeConstrainedWhileInTimeAdvanceRequest()
     throws Exception
   {
     rtiAmbassadors.get(0).enableTimeConstrained();
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testEnableTimeConstrainedWhileInTimeAdvanceRequestAvailable()
     throws Exception
   {
     rtiAmbassadors.get(2).enableTimeConstrained();
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testEnableTimeConstrainedWhileInNextEventRequest()
     throws Exception
   {
     rtiAmbassadors.get(4).enableTimeConstrained();
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testEnableTimeConstrainedWhileInNextEventRequestAvailable()
     throws Exception
   {
     rtiAmbassadors.get(6).enableTimeConstrained();
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testEnableTimeConstrainedWhileInFlushQueueRequest()
     throws Exception
   {
     rtiAmbassadors.get(8).enableTimeConstrained();
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testTimeAdvanceRequestWhileInTimeAdvanceRequest()
     throws Exception
   {
     rtiAmbassadors.get(0).timeAdvanceRequest(oneHundred);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testTimeAdvanceRequestWhileInTimeAdvanceRequestAvailable()
     throws Exception
   {
     rtiAmbassadors.get(2).timeAdvanceRequest(oneHundred);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testTimeAdvanceRequestWhileInNextEventRequest()
     throws Exception
   {
     rtiAmbassadors.get(4).timeAdvanceRequest(oneHundred);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testTimeAdvanceRequestWhileInNextEventRequestAvailable()
     throws Exception
   {
     rtiAmbassadors.get(6).timeAdvanceRequest(oneHundred);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testTimeAdvanceRequestWhileInFlushQueueRequest()
     throws Exception
   {
     rtiAmbassadors.get(8).timeAdvanceRequest(oneHundred);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testTimeAdvanceRequestAvailableWhileInTimeAdvanceRequest()
     throws Exception
   {
     rtiAmbassadors.get(0).timeAdvanceRequestAvailable(oneHundred);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testTimeAdvanceRequestAvailableWhileInTimeAdvanceRequestAvailable()
     throws Exception
   {
     rtiAmbassadors.get(2).timeAdvanceRequestAvailable(oneHundred);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testTimeAdvanceRequestAvailableWhileInNextEventRequest()
     throws Exception
   {
     rtiAmbassadors.get(4).timeAdvanceRequestAvailable(oneHundred);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testTimeAdvanceRequestAvailableWhileInNextEventRequestAvailable()
     throws Exception
   {
     rtiAmbassadors.get(6).timeAdvanceRequestAvailable(oneHundred);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testTimeAdvanceRequestAvailableWhileInFlushQueueRequest()
     throws Exception
   {
     rtiAmbassadors.get(8).timeAdvanceRequestAvailable(oneHundred);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testNextEventRequestWhileInTimeAdvanceRequest()
     throws Exception
   {
     rtiAmbassadors.get(0).nextEventRequest(oneHundred);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testNextEventRequestWhileInTimeAdvanceRequestAvailable()
     throws Exception
   {
     rtiAmbassadors.get(2).nextEventRequest(oneHundred);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testNextEventRequestWhileInNextEventRequest()
     throws Exception
   {
     rtiAmbassadors.get(4).nextEventRequest(oneHundred);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testNextEventRequestWhileInNextEventRequestAvailable()
     throws Exception
   {
     rtiAmbassadors.get(6).nextEventRequest(oneHundred);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testNextEventRequestWhileInFlushQueueRequest()
     throws Exception
   {
     rtiAmbassadors.get(8).nextEventRequest(oneHundred);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testNextEventRequestAvailableWhileInTimeAdvanceRequest()
     throws Exception
   {
     rtiAmbassadors.get(0).nextEventRequestAvailable(oneHundred);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testNextEventRequestAvailableWhileInTimeAdvanceRequestAvailable()
     throws Exception
   {
     rtiAmbassadors.get(2).nextEventRequestAvailable(oneHundred);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testNextEventRequestAvailableWhileInNextEventRequest()
     throws Exception
   {
     rtiAmbassadors.get(4).nextEventRequestAvailable(oneHundred);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testNextEventRequestAvailableWhileInNextEventRequestAvailable()
     throws Exception
   {
     rtiAmbassadors.get(6).nextEventRequestAvailable(oneHundred);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testNextEventRequestAvailableWhileInFlushQueueRequest()
     throws Exception
   {
     rtiAmbassadors.get(8).nextEventRequestAvailable(oneHundred);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testFlushQueueRequestWhileInTimeAdvanceRequest()
     throws Exception
   {
     rtiAmbassadors.get(0).flushQueueRequest(oneHundred);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testFlushQueueRequestWhileInTimeAdvanceRequestAvailable()
     throws Exception
   {
     rtiAmbassadors.get(2).flushQueueRequest(oneHundred);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testFlushQueueRequestWhileInNextEventRequest()
     throws Exception
   {
     rtiAmbassadors.get(4).flushQueueRequest(oneHundred);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testFlushQueueRequestWhileInNextEventRequestAvailable()
     throws Exception
   {
     rtiAmbassadors.get(6).flushQueueRequest(oneHundred);
   }
 
-  @Test(expectedExceptions = {TimeAdvanceAlreadyInProgress.class})
+  @Test(expectedExceptions = TimeAdvanceAlreadyInProgress.class)
   public void testFlushQueueRequestWhileInFlushQueueRequest()
     throws Exception
   {
     rtiAmbassadors.get(8).flushQueueRequest(oneHundred);
   }
 
-  @Test(expectedExceptions = {RTIinternalError.class})
+  @Test(expectedExceptions = RTIinternalError.class)
   public void testModifiyLookaheadWhileInTimeAdvanceRequest()
     throws Exception
   {
     rtiAmbassadors.get(1).modifyLookahead(lookahead1);
   }
 
-  @Test(expectedExceptions = {RTIinternalError.class})
+  @Test(expectedExceptions = RTIinternalError.class)
   public void testModifiyLookaheadWhileInTimeAdvanceRequestAvailable()
     throws Exception
   {
     rtiAmbassadors.get(3).modifyLookahead(lookahead1);
   }
 
-  @Test(expectedExceptions = {RTIinternalError.class})
+  @Test(expectedExceptions = RTIinternalError.class)
   public void testModifiyLookaheadWhileInNextEventRequest()
     throws Exception
   {
     rtiAmbassadors.get(5).modifyLookahead(lookahead1);
   }
 
-  @Test(expectedExceptions = {RTIinternalError.class})
+  @Test(expectedExceptions = RTIinternalError.class)
   public void testModifiyLookaheadWhileInNextEventRequestAvailable()
     throws Exception
   {
     rtiAmbassadors.get(7).modifyLookahead(lookahead1);
   }
 
-  @Test(expectedExceptions = {RTIinternalError.class})
+  @Test(expectedExceptions = RTIinternalError.class)
   public void testModifiyLookaheadWhileInFlushQueueRequest()
     throws Exception
   {

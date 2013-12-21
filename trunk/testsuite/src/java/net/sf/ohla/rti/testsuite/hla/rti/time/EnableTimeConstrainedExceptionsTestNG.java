@@ -25,7 +25,7 @@ import hla.rti.EnableTimeConstrainedPending;
 public class EnableTimeConstrainedExceptionsTestNG
   extends BaseTimeManagementTestNG
 {
-  private static final String FEDERATION_NAME = "OHLA HLA 1.3 Enable Time Constrained Exceptions Test Federation";
+  private static final String FEDERATION_NAME = EnableTimeConstrainedExceptionsTestNG.class.getSimpleName();
 
   public EnableTimeConstrainedExceptionsTestNG()
   {
@@ -39,42 +39,42 @@ public class EnableTimeConstrainedExceptionsTestNG
     rtiAmbassadors.get(0).enableTimeConstrained();
   }
 
-  @Test(expectedExceptions = {EnableTimeConstrainedPending.class})
+  @Test(expectedExceptions = EnableTimeConstrainedPending.class)
   public void testEnableTimeConstrainedWhileEnableTimeConstrainedPending()
     throws Exception
   {
     rtiAmbassadors.get(0).enableTimeConstrained();
   }
 
-  @Test(expectedExceptions = {EnableTimeConstrainedPending.class})
+  @Test(expectedExceptions = EnableTimeConstrainedPending.class)
   public void testTimeAdvanceRequestWhileEnableTimeConstrainedPending()
     throws Exception
   {
     rtiAmbassadors.get(0).timeAdvanceRequest(oneHundred);
   }
 
-  @Test(expectedExceptions = {EnableTimeConstrainedPending.class})
+  @Test(expectedExceptions = EnableTimeConstrainedPending.class)
   public void testTimeAdvanceRequestAvailableWhileEnableTimeConstrainedPending()
     throws Exception
   {
     rtiAmbassadors.get(0).timeAdvanceRequestAvailable(oneHundred);
   }
 
-  @Test(expectedExceptions = {EnableTimeConstrainedPending.class})
+  @Test(expectedExceptions = EnableTimeConstrainedPending.class)
   public void testNextEventRequestWhileEnableTimeConstrainedPending()
     throws Exception
   {
     rtiAmbassadors.get(0).nextEventRequest(oneHundred);
   }
 
-  @Test(expectedExceptions = {EnableTimeConstrainedPending.class})
+  @Test(expectedExceptions = EnableTimeConstrainedPending.class)
   public void testNextEventRequestAvailableWhileEnableTimeConstrainedPending()
     throws Exception
   {
     rtiAmbassadors.get(0).nextEventRequestAvailable(oneHundred);
   }
 
-  @Test(expectedExceptions = {EnableTimeConstrainedPending.class})
+  @Test(expectedExceptions = EnableTimeConstrainedPending.class)
   public void testFlushQueueRequestWhileEnableTimeConstrainedPending()
     throws Exception
   {

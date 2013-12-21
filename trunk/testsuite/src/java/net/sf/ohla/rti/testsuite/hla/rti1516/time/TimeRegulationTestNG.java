@@ -28,14 +28,14 @@ public class TimeRegulationTestNG
     assert lookahead1.equals(rtiAmbassadors.get(0).queryLookahead());
   }
 
-  @Test(dependsOnMethods = {"testEnableTimeRegulation"}, expectedExceptions = {TimeRegulationAlreadyEnabled.class})
+  @Test(dependsOnMethods = "testEnableTimeRegulation", expectedExceptions = TimeRegulationAlreadyEnabled.class)
   public void testEnableTimeRegulationAgain()
     throws Exception
   {
     rtiAmbassadors.get(0).enableTimeRegulation(lookahead1);
   }
 
-  @Test(dependsOnMethods = {"testEnableTimeRegulation"})
+  @Test(dependsOnMethods = "testEnableTimeRegulation")
   public void testModifyLookahead()
     throws Exception
   {
@@ -46,35 +46,35 @@ public class TimeRegulationTestNG
     assert lookahead1.equals(rtiAmbassadors.get(0).queryLookahead());
   }
 
-  @Test(dependsOnMethods = {"testModifyLookahead"})
+  @Test(dependsOnMethods = "testModifyLookahead")
   public void testDisableTimeRegulation()
     throws Exception
   {
     rtiAmbassadors.get(0).disableTimeRegulation();
   }
 
-  @Test(dependsOnMethods = {"testDisableTimeRegulation"}, expectedExceptions = {TimeRegulationIsNotEnabled.class})
+  @Test(dependsOnMethods = "testDisableTimeRegulation", expectedExceptions = TimeRegulationIsNotEnabled.class)
   public void testDisableTimeRegulationAgain()
     throws Exception
   {
     rtiAmbassadors.get(0).disableTimeRegulation();
   }
 
-  @Test(dependsOnMethods = {"testDisableTimeRegulation"}, expectedExceptions = {TimeRegulationIsNotEnabled.class})
+  @Test(dependsOnMethods = "testDisableTimeRegulation", expectedExceptions = TimeRegulationIsNotEnabled.class)
   public void testQueryLookaheadWhenTimeRegulationDisabled()
     throws Exception
   {
     rtiAmbassadors.get(0).queryLookahead();
   }
 
-  @Test(dependsOnMethods = {"testDisableTimeRegulation"}, expectedExceptions = {TimeRegulationIsNotEnabled.class})
+  @Test(dependsOnMethods = "testDisableTimeRegulation", expectedExceptions = TimeRegulationIsNotEnabled.class)
   public void testModifyLookaheadWhenTimeRegulationDisabled()
     throws Exception
   {
     rtiAmbassadors.get(0).modifyLookahead(lookahead1);
   }
 
-  @Test(dependsOnMethods = {"testDisableTimeRegulation"}, expectedExceptions = {InvalidLookahead.class})
+  @Test(dependsOnMethods = "testDisableTimeRegulation", expectedExceptions = InvalidLookahead.class)
   public void testEnableTimeRegulationWithNullLookahead()
     throws Exception
   {

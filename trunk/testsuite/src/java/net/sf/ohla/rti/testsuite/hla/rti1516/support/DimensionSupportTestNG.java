@@ -50,14 +50,14 @@ public class DimensionSupportTestNG
     assert DIMENSION1_UPPER_BOUND == rtiAmbassadors.get(0).getDimensionUpperBound(dimensionHandle);
   }
 
-  @Test(expectedExceptions = {NameNotFound.class})
+  @Test(expectedExceptions = NameNotFound.class)
   public void testGetDimensionHandleOfUnknownDimension()
     throws Exception
   {
     rtiAmbassadors.get(0).getDimensionHandle(UNKNOWN_DIMENSION);
   }
 
-  @Test(expectedExceptions = {InvalidDimensionHandle.class})
+  @Test(expectedExceptions = InvalidDimensionHandle.class)
   public void testGetDimensionNameOfInvalidDimensionHandle()
     throws Exception
   {
@@ -79,7 +79,7 @@ public class DimensionSupportTestNG
     assert dimensionHandleSet.isEmpty();
   }
 
-  @Test(expectedExceptions = {InvalidObjectClassHandle.class})
+  @Test(expectedExceptions = InvalidObjectClassHandle.class)
   public void testGetAvailableDimensionsForClassAttributeOfInvalidObjectClassHandle()
     throws Exception
   {
@@ -112,7 +112,7 @@ public class DimensionSupportTestNG
     assert dimensionHandleSet.isEmpty();
   }
 
-  @Test(expectedExceptions = {InvalidInteractionClassHandle.class})
+  @Test(expectedExceptions = InvalidInteractionClassHandle.class)
   public void testGetAvailableDimensionsForClassAttributeOfInvalidInteractionClassHandle()
     throws Exception
   {

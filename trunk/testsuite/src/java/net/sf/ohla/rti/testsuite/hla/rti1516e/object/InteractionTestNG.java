@@ -48,21 +48,21 @@ public class InteractionTestNG
       federateHandles.get(0));
   }
 
-  @Test(expectedExceptions = {InteractionClassNotDefined.class})
+  @Test(expectedExceptions = InteractionClassNotDefined.class)
   public void testSendInteractionWithNullInteractionClassHandle()
     throws Exception
   {
     rtiAmbassadors.get(0).sendInteraction(null, testParameterValues, TAG);
   }
 
-  @Test(expectedExceptions = {InteractionClassNotPublished.class})
+  @Test(expectedExceptions = InteractionClassNotPublished.class)
   public void testSendUnpublishedInteraction()
     throws Exception
   {
     rtiAmbassadors.get(2).sendInteraction(testInteractionClassHandle, testParameterValues, TAG);
   }
 
-  @Test(expectedExceptions = {InteractionParameterNotDefined.class})
+  @Test(expectedExceptions = InteractionParameterNotDefined.class)
   public void testSendInteractionWithUndefinedParameters()
     throws Exception
   {

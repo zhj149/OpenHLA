@@ -33,7 +33,6 @@ import hla.rti1516.AttributeHandleSet;
 import hla.rti1516.AttributeNotDefined;
 import hla.rti1516.AttributeNotPublished;
 import hla.rti1516.FederateHandle;
-import hla.rti1516.FederateInternalError;
 import hla.rti1516.ObjectClassHandle;
 import hla.rti1516.ObjectInstanceHandle;
 import hla.rti1516.ObjectInstanceNotKnown;
@@ -129,7 +128,7 @@ public class AttributeAcquisitionTestNG
       testObjectInstanceHandle2, attributeHandle1, federateHandles.get(0));
   }
 
-  @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
+  @Test(expectedExceptions = ObjectInstanceNotKnown.class)
   public void testAttributeOwnershipAcquisitionWithNullObjectInstanceHandle()
     throws Exception
   {
@@ -139,7 +138,7 @@ public class AttributeAcquisitionTestNG
     rtiAmbassadors.get(0).attributeOwnershipAcquisition(null, attributeHandles, TAG);
   }
 
-  @Test(expectedExceptions = {ObjectInstanceNotKnown.class})
+  @Test(expectedExceptions = ObjectInstanceNotKnown.class)
   public void testAttributeOwnershipAcquisitionWithUnknownObjectInstanceHandle()
     throws Exception
   {
@@ -149,7 +148,7 @@ public class AttributeAcquisitionTestNG
     rtiAmbassadors.get(2).attributeOwnershipAcquisition(testObjectInstanceHandle, attributeHandles, TAG);
   }
 
-  @Test(expectedExceptions = {AttributeNotDefined.class})
+  @Test(expectedExceptions = AttributeNotDefined.class)
   public void testAttributeOwnershipAcquisitionWithUndefinedAttributeHandle()
     throws Exception
   {
@@ -159,7 +158,7 @@ public class AttributeAcquisitionTestNG
     rtiAmbassadors.get(1).attributeOwnershipAcquisition(testObjectInstanceHandle, attributeHandles, TAG);
   }
 
-  @Test(expectedExceptions = {AttributeNotPublished.class})
+  @Test(expectedExceptions = AttributeNotPublished.class)
   public void testUnpublishedAttributeOwnershipAcquisition()
     throws Exception
   {
@@ -179,7 +178,6 @@ public class AttributeAcquisitionTestNG
   {
     private final Map<ObjectInstanceHandle, Map<AttributeHandle, Object>> objectInstances =
       new HashMap<ObjectInstanceHandle, Map<AttributeHandle, Object>>();
-
     private final Map<ObjectInstanceHandle, Object[]> acquiredAttributes =
       new HashMap<ObjectInstanceHandle, Object[]>();
 
@@ -240,7 +238,6 @@ public class AttributeAcquisitionTestNG
     @Override
     public void discoverObjectInstance(
       ObjectInstanceHandle objectInstanceHandle, ObjectClassHandle objectClassHandle, String objectInstanceName)
-      throws FederateInternalError
     {
       objectInstances.put(objectInstanceHandle, new HashMap<AttributeHandle, Object>());
     }
@@ -248,7 +245,6 @@ public class AttributeAcquisitionTestNG
     @Override
     public void attributeOwnershipAcquisitionNotification(
       ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
-      throws FederateInternalError
     {
       acquiredAttributes.put(objectInstanceHandle, new Object[]{attributeHandles, tag});
     }
@@ -256,21 +252,18 @@ public class AttributeAcquisitionTestNG
     @Override
     public void informAttributeOwnership(
       ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle, FederateHandle federateHandle)
-      throws FederateInternalError
     {
       setAttributeOwnership(objectInstanceHandle, attributeHandle, federateHandle);
     }
 
     @Override
     public void attributeIsNotOwned(ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle)
-      throws FederateInternalError
     {
       setAttributeOwnership(objectInstanceHandle, attributeHandle, Boolean.FALSE);
     }
 
     @Override
     public void attributeIsOwnedByRTI(ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle)
-      throws FederateInternalError
     {
       setAttributeOwnership(objectInstanceHandle, attributeHandle, Boolean.TRUE);
     }
