@@ -56,6 +56,11 @@ public class TimeManagementFederateAmbassador
     return objectInstances;
   }
 
+  public Map<Integer, TestObjectInstance> getObjectInstancesByHandle()
+  {
+    return objectInstancesByHandle;
+  }
+
   public void checkTimeRegulationEnabled()
     throws Exception
   {

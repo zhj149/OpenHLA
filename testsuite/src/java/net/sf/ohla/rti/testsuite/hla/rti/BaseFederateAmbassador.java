@@ -68,60 +68,6 @@ public class BaseFederateAmbassador
     this.rtiAmbassador = rtiAmbassador;
   }
 
-  protected void evokeCallbackWhile(Callable<Boolean> test)
-    throws Exception
-  {
-    evokeCallbackWhile(test, 5);
-  }
-
-  protected void evokeCallbackWhile(Callable<Boolean> test, double minimumTime)
-    throws Exception
-  {
-    evokeCallbackWhile(test, 5, minimumTime);
-  }
-
-  protected void evokeCallbackWhile(Callable<Boolean> test, int count)
-    throws Exception
-  {
-    evokeCallbackWhile(test, count, 1.0);
-  }
-
-  protected void evokeCallbackWhile(Callable<Boolean> test, int count, double minimumTime)
-    throws Exception
-  {
-    for (; count > 0 && test.call(); count--)
-    {
-      rtiAmbassador.tick(minimumTime, minimumTime * 2);
-    }
-  }
-
-  protected void doEvokeCallbackWhile(Callable<Boolean> test)
-    throws Exception
-  {
-    doEvokeCallbackWhile(test, 5);
-  }
-
-  protected void doEvokeCallbackWhile(Callable<Boolean> test, double minimumTime)
-    throws Exception
-  {
-    doEvokeCallbackWhile(test, 5, minimumTime);
-  }
-
-  protected void doEvokeCallbackWhile(Callable<Boolean> test, int count)
-    throws Exception
-  {
-    doEvokeCallbackWhile(test, count, 1.0);
-  }
-
-  protected void doEvokeCallbackWhile(Callable<Boolean> test, int count, double minimumTime)
-    throws Exception
-  {
-    do
-    {
-      rtiAmbassador.tick(minimumTime, minimumTime * 2);
-    } while (--count > 0 && test.call());
-  }
-
   public void reset()
   {
     announcedSynchronizationPoints.clear();
@@ -175,42 +121,6 @@ public class BaseFederateAmbassador
         return !synchronizedSynchronizationPoints.contains(synchronizationPointLabel);
       }
     });
-  }
-
-  protected void checkReceivedInteraction(
-    ReceivedInteraction receivedInteraction, SuppliedParameters suppliedParameters)
-    throws ArrayIndexOutOfBounds
-  {
-    assert suppliedParameters.size() == receivedInteraction.size();
-    for (int i = 0; i < receivedInteraction.size(); i++)
-    {
-      for (int j = 0; j < suppliedParameters.size(); j++)
-      {
-        if (receivedInteraction.getParameterHandle(i) ==
-            suppliedParameters.getHandle(j))
-        {
-          assert Arrays.equals(receivedInteraction.getValue(i), suppliedParameters.getValue(j));
-        }
-      }
-    }
-  }
-
-  protected void checkReflectedAttributes(
-    ReflectedAttributes reflectedAttributes, SuppliedAttributes suppliedAttributes, boolean hasRegions)
-    throws ArrayIndexOutOfBounds
-  {
-    assert suppliedAttributes.size() == reflectedAttributes.size();
-    for (int i = 0; i < reflectedAttributes.size(); i++)
-    {
-      for (int j = 0; j < suppliedAttributes.size(); j++)
-      {
-        if (reflectedAttributes.getAttributeHandle(i) == suppliedAttributes.getHandle(j))
-        {
-          assert Arrays.equals(reflectedAttributes.getValue(i), suppliedAttributes.getValue(j));
-          assert (hasRegions && reflectedAttributes.getRegion(i) != null) || !hasRegions;
-        }
-      }
-    }
   }
 
   public void checkInitiateFederateSave(final String label)
@@ -453,5 +363,95 @@ public class BaseFederateAmbassador
 
     currentRestoreLabel = null;
     federateRestoreBegun = false;
+  }
+
+  protected void evokeCallbackWhile(Callable<Boolean> test)
+    throws Exception
+  {
+    evokeCallbackWhile(test, 5);
+  }
+
+  protected void evokeCallbackWhile(Callable<Boolean> test, double minimumTime)
+    throws Exception
+  {
+    evokeCallbackWhile(test, 5, minimumTime);
+  }
+
+  protected void evokeCallbackWhile(Callable<Boolean> test, int count)
+    throws Exception
+  {
+    evokeCallbackWhile(test, count, 1.0);
+  }
+
+  protected void evokeCallbackWhile(Callable<Boolean> test, int count, double minimumTime)
+    throws Exception
+  {
+    for (; count > 0 && test.call(); count--)
+    {
+      rtiAmbassador.tick();
+    }
+  }
+
+  protected void doEvokeCallbackWhile(Callable<Boolean> test)
+    throws Exception
+  {
+    doEvokeCallbackWhile(test, 5);
+  }
+
+  protected void doEvokeCallbackWhile(Callable<Boolean> test, double minimumTime)
+    throws Exception
+  {
+    doEvokeCallbackWhile(test, 5, minimumTime);
+  }
+
+  protected void doEvokeCallbackWhile(Callable<Boolean> test, int count)
+    throws Exception
+  {
+    doEvokeCallbackWhile(test, count, 1.0);
+  }
+
+  protected void doEvokeCallbackWhile(Callable<Boolean> test, int count, double minimumTime)
+    throws Exception
+  {
+    do
+    {
+      rtiAmbassador.tick();
+    } while (--count > 0 && test.call());
+  }
+
+  protected void checkReceivedInteraction(
+    ReceivedInteraction receivedInteraction, SuppliedParameters suppliedParameters)
+    throws ArrayIndexOutOfBounds
+  {
+    assert suppliedParameters.size() == receivedInteraction.size();
+    for (int i = 0; i < receivedInteraction.size(); i++)
+    {
+      for (int j = 0; j < suppliedParameters.size(); j++)
+      {
+        if (receivedInteraction.getParameterHandle(i) ==
+            suppliedParameters.getHandle(j))
+        {
+          assert Arrays.equals(receivedInteraction.getValue(i), suppliedParameters.getValue(j));
+        }
+      }
+    }
+  }
+
+  protected void checkReflectedAttributes(
+    ReflectedAttributes reflectedAttributes, SuppliedAttributes suppliedAttributes, boolean hasRegions)
+    throws ArrayIndexOutOfBounds
+  {
+    assert suppliedAttributes.size() == reflectedAttributes.size();
+    for (int i = 0; i < reflectedAttributes.size(); i++)
+    {
+      for (int j = 0; j < suppliedAttributes.size(); j++)
+      {
+        if (reflectedAttributes.getAttributeHandle(i) == suppliedAttributes.getHandle(j))
+        {
+          assert Arrays.equals(reflectedAttributes.getValue(i), suppliedAttributes.getValue(j));
+          assert (hasRegions && reflectedAttributes.getRegion(i) != null) || !hasRegions;
+        }
+      }
+    }
   }
 }

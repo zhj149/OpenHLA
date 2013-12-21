@@ -166,9 +166,10 @@ public class TimeAdvanceRequestPersistenceTestNG
     federateAmbassadors.get(1).checkFederationRestored(SAVE_NAME);
 
     int testObjectInstanceHandle = rtiAmbassadors.get(1).getObjectInstanceHandle(testObjectInstanceName);
-    federateAmbassadors.get(1).getObjectInstances().put(
-      testObjectInstanceName,
-      new TestObjectInstance(testObjectInstanceHandle, testObjectClassHandle, testObjectInstanceName));
+    TestObjectInstance testObjectInstance =
+      new TestObjectInstance(testObjectInstanceHandle, testObjectClassHandle, testObjectInstanceName);
+    federateAmbassadors.get(1).getObjectInstances().put(testObjectInstanceName, testObjectInstance);
+    federateAmbassadors.get(1).getObjectInstancesByHandle().put(testObjectInstanceHandle, testObjectInstance);
 
     try
     {
