@@ -341,6 +341,11 @@ public class IEEE1516RTIambassador
     throws FederateAlreadyExecutionMember, FederationExecutionDoesNotExist, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
+    if (federateAmbassador == null)
+    {
+      throw new IllegalArgumentException(I18n.getMessage(ExceptionMessages.FEDERATE_AMBASSADOR_IS_NULL));
+    }
+
     boolean justConnected;
 
     // join/resign federation execution calls typcially indicate a connect/disconnect

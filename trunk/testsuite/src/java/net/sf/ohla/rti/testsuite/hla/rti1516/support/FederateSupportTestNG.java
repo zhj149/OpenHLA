@@ -41,13 +41,6 @@ public class FederateSupportTestNG
   }
 
   @Test(expectedExceptions = IllegalArgumentException.class)
-  public void testJoinFederationExecutionWithNullFederateAmbassador()
-    throws Exception
-  {
-    rtiAmbassadors.get(0).joinFederationExecution(FEDERATE_TYPE, FEDERATION_NAME, null, mobileFederateServices);
-  }
-
-  @Test(expectedExceptions = IllegalArgumentException.class)
   public void testResignFederationExecutionWithInvalidResignAction()
     throws Exception
   {

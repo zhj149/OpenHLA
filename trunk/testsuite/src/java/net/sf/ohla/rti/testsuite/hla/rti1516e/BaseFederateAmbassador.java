@@ -77,60 +77,6 @@ public class BaseFederateAmbassador
     this.rtiAmbassador = rtiAmbassador;
   }
 
-  protected void evokeCallbackWhile(Callable<Boolean> test)
-    throws Exception
-  {
-    evokeCallbackWhile(test, 5);
-  }
-
-  protected void evokeCallbackWhile(Callable<Boolean> test, double minimumTime)
-    throws Exception
-  {
-    evokeCallbackWhile(test, 5, minimumTime);
-  }
-
-  protected void evokeCallbackWhile(Callable<Boolean> test, int count)
-    throws Exception
-  {
-    evokeCallbackWhile(test, count, 1.0);
-  }
-
-  protected void evokeCallbackWhile(Callable<Boolean> test, int count, double minimumTime)
-    throws Exception
-  {
-    for (; count > 0 && test.call(); count--)
-    {
-      rtiAmbassador.evokeCallback(minimumTime);
-    }
-  }
-
-  protected void doEvokeCallbackWhile(Callable<Boolean> test)
-    throws Exception
-  {
-    doEvokeCallbackWhile(test, 5);
-  }
-
-  protected void doEvokeCallbackWhile(Callable<Boolean> test, double minimumTime)
-    throws Exception
-  {
-    doEvokeCallbackWhile(test, 5, minimumTime);
-  }
-
-  protected void doEvokeCallbackWhile(Callable<Boolean> test, int count)
-    throws Exception
-  {
-    doEvokeCallbackWhile(test, count, 1.0);
-  }
-
-  protected void doEvokeCallbackWhile(Callable<Boolean> test, int count, double minimumTime)
-    throws Exception
-  {
-    do
-    {
-      rtiAmbassador.evokeCallback(minimumTime);
-    } while (--count > 0 && test.call());
-  }
-
   public void reset()
   {
     announcedSynchronizationPoints.clear();
@@ -512,6 +458,60 @@ public class BaseFederateAmbassador
   public void federationRestoreStatusResponse(FederateRestoreStatus[] response)
   {
     restoreStatusResponse.putAll(toMap(response));
+  }
+
+  protected void evokeCallbackWhile(Callable<Boolean> test)
+    throws Exception
+  {
+    evokeCallbackWhile(test, 5);
+  }
+
+  protected void evokeCallbackWhile(Callable<Boolean> test, double minimumTime)
+    throws Exception
+  {
+    evokeCallbackWhile(test, 5, minimumTime);
+  }
+
+  protected void evokeCallbackWhile(Callable<Boolean> test, int count)
+    throws Exception
+  {
+    evokeCallbackWhile(test, count, 1.0);
+  }
+
+  protected void evokeCallbackWhile(Callable<Boolean> test, int count, double minimumTime)
+    throws Exception
+  {
+    for (; count > 0 && test.call(); count--)
+    {
+      rtiAmbassador.evokeCallback(minimumTime);
+    }
+  }
+
+  protected void doEvokeCallbackWhile(Callable<Boolean> test)
+    throws Exception
+  {
+    doEvokeCallbackWhile(test, 5);
+  }
+
+  protected void doEvokeCallbackWhile(Callable<Boolean> test, double minimumTime)
+    throws Exception
+  {
+    doEvokeCallbackWhile(test, 5, minimumTime);
+  }
+
+  protected void doEvokeCallbackWhile(Callable<Boolean> test, int count)
+    throws Exception
+  {
+    doEvokeCallbackWhile(test, count, 1.0);
+  }
+
+  protected void doEvokeCallbackWhile(Callable<Boolean> test, int count, double minimumTime)
+    throws Exception
+  {
+    do
+    {
+      rtiAmbassador.evokeCallback(minimumTime);
+    } while (--count > 0 && test.call());
   }
 
   private static Map<FederateHandle, SaveStatus> toMap(FederateHandleSaveStatusPair[] response)
