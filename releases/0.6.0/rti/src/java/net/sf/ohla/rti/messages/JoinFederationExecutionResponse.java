@@ -1,0 +1,129 @@
+/*
+ * Copyright (c) 2006-2007, Michael Newcomb
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package net.sf.ohla.rti.messages;
+
+import net.sf.ohla.rti.Protocol;
+import net.sf.ohla.rti.fdd.FDD;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+
+import hla.rti1516e.FederateHandle;
+
+public class JoinFederationExecutionResponse
+  extends EnumMessage<JoinFederationExecutionResponse.Response>
+  implements FederateMessage
+{
+  public enum Response
+  {
+    SUCCESS, FEDERATE_NAME_ALREADY_IN_USE, FEDERATION_EXECUTION_DOES_NOT_EXIST, SAVE_IN_PROGRESS, RESTORE_IN_PROGRESS,
+    INCONSISTENT_FDD
+  }
+
+  private final FederateHandle federateHandle;
+  private final String federateName;
+  private final FDD fdd;
+  private final String logicalTimeImplementationName;
+
+  public JoinFederationExecutionResponse(Response response)
+  {
+    super(MessageType.JOIN_FEDERATION_EXECUTION_RESPONSE, response);
+
+    assert response != Response.SUCCESS;
+
+    federateName = null;
+    federateHandle = null;
+    fdd = null;
+    logicalTimeImplementationName = null;
+
+    encodingFinished();
+  }
+
+  public JoinFederationExecutionResponse(String federateName, FederateHandle federateHandle, FDD fdd,
+                                         String logicalTimeImplementationName)
+  {
+    super(MessageType.JOIN_FEDERATION_EXECUTION_RESPONSE, Response.SUCCESS);
+
+    this.federateName = federateName;
+    this.federateHandle = federateHandle;
+    this.fdd = fdd;
+    this.logicalTimeImplementationName = logicalTimeImplementationName;
+
+    Protocol.encodeString(buffer, federateName);
+    IEEE1516eFederateHandle.encode(buffer, federateHandle);
+    FDD.encode(buffer, fdd);
+    Protocol.encodeString(buffer, logicalTimeImplementationName);
+
+    encodingFinished();
+  }
+
+  public JoinFederationExecutionResponse(ChannelBuffer buffer)
+  {
+    super(buffer, Response.values());
+
+    if (e == Response.SUCCESS)
+    {
+      federateName = Protocol.decodeString(buffer);
+      federateHandle = IEEE1516eFederateHandle.decode(buffer);
+      fdd = FDD.decode(buffer);
+      logicalTimeImplementationName = Protocol.decodeString(buffer);
+    }
+    else
+    {
+      federateName = null;
+      federateHandle = null;
+      fdd = null;
+      logicalTimeImplementationName = null;
+    }
+  }
+
+  public String getFederateName()
+  {
+    return federateName;
+  }
+
+  public FederateHandle getFederateHandle()
+  {
+    return federateHandle;
+  }
+
+  public FDD getFDD()
+  {
+    return fdd;
+  }
+
+  public String getLogicalTimeImplementationName()
+  {
+    return logicalTimeImplementationName;
+  }
+
+  public Response getResponse()
+  {
+    return e;
+  }
+
+  public MessageType getType()
+  {
+    return MessageType.JOIN_FEDERATION_EXECUTION_RESPONSE;
+  }
+
+  public void execute(Federate federate)
+  {
+    federate.joinFederationExecutionResponse(this);
+  }
+}
