@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module relativePaths="true" type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="false">
+    <output url="file://$MODULE_DIR$/../output/ieee-1516/classes" />
+    <exclude-output />
+    <content url="file://$MODULE_DIR$/../../ieee-1516">
+      <sourceFolder url="file://$MODULE_DIR$/../../ieee-1516/src/c++" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../ieee-1516/src/java" isTestSource="false" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+  <component name="copyright">
+    <Base>
+      <setting name="state" value="2" />
+    </Base>
+  </component>
+</module>
+

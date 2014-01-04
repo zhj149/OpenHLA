@@ -1,0 +1,257 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright (c) 2005-2011, Michael Newcomb
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<objectModel>
+
+  <objects>
+    <objectClass>
+      <name>HLAobjectRoot</name>
+      <objectClass>
+        <name>TestObject</name>
+        <attribute>
+          <name>Attribute1</name>
+          <dimensions>
+            <dimension>Dimension1</dimension>
+          </dimensions>
+          <transportation>HLAreliable</transportation>
+          <order>TimeStamp</order>
+        </attribute>
+        <attribute>
+          <name>Attribute2</name>
+          <dimensions>
+            <dimension>Dimension2</dimension>
+          </dimensions>
+          <transportation>HLAreliable</transportation>
+          <order>TimeStamp</order>
+        </attribute>
+        <attribute>
+          <name>Attribute3</name>
+          <dimensions>
+            <dimension>Dimension1</dimension>
+            <dimension>Dimension2</dimension>
+          </dimensions>
+          <transportation>HLAreliable</transportation>
+          <order>TimeStamp</order>
+        </attribute>
+        <attribute>
+          <name>BestEffortReceiveAttribute</name>
+          <transportation>HLAbestEffort</transportation>
+          <order>Receive</order>
+        </attribute>
+        <attribute>
+          <name>BestEffortTimeStampAttribute</name>
+          <transportation>HLAbestEffort</transportation>
+          <order>TimeStamp</order>
+        </attribute>
+        <attribute>
+          <name>ReliableReceiveAttribute</name>
+          <transportation>HLAreliable</transportation>
+          <order>Receive</order>
+        </attribute>
+        <attribute>
+          <name>ReliableTimeStampAttribute</name>
+          <transportation>HLAreliable</transportation>
+          <order>TimeStamp</order>
+        </attribute>
+        <objectClass>
+          <name>TestObject2</name>
+          <attribute>
+            <name>Attribute4</name>
+            <dimensions>
+              <dimension>Dimension1</dimension>
+            </dimensions>
+            <transportation>HLAreliable</transportation>
+            <order>TimeStamp</order>
+          </attribute>
+          <attribute>
+            <name>Attribute5</name>
+            <dimensions>
+              <dimension>Dimension2</dimension>
+            </dimensions>
+            <transportation>HLAreliable</transportation>
+            <order>TimeStamp</order>
+          </attribute>
+          <attribute>
+            <name>Attribute6</name>
+            <dimensions>
+              <dimension>Dimension1</dimension>
+              <dimension>Dimension2</dimension>
+            </dimensions>
+            <transportation>HLAreliable</transportation>
+            <order>TimeStamp</order>
+          </attribute>
+        </objectClass>
+      </objectClass>
+    </objectClass>
+  </objects>
+
+  <interactions>
+    <interactionClass>
+      <name>HLAinteractionRoot</name>
+      <transportation>HLAreliable</transportation>
+      <order>Receive</order>
+      <interactionClass>
+        <name>TestInteraction</name>
+        <dimensions>
+          <dimension>Dimension3</dimension>
+          <dimension>Dimension4</dimension>
+        </dimensions>
+        <transportation>HLAreliable</transportation>
+        <order>TimeStamp</order>
+        <parameter>
+          <name>Parameter1</name>
+        </parameter>
+        <parameter>
+          <name>Parameter2</name>
+        </parameter>
+        <parameter>
+          <name>Parameter3</name>
+        </parameter>
+
+        <interactionClass>
+          <name>TestInteraction2</name>
+          <dimensions>
+            <dimension>Dimension3</dimension>
+            <dimension>Dimension4</dimension>
+          </dimensions>
+          <transportation>HLAreliable</transportation>
+          <order>TimeStamp</order>
+          <parameter>
+            <name>Parameter4</name>
+          </parameter>
+          <parameter>
+            <name>Parameter5</name>
+          </parameter>
+          <parameter>
+            <name>Parameter6</name>
+          </parameter>
+        </interactionClass>
+
+        <interactionClass>
+          <name>TestInteraction3</name>
+          <dimensions>
+            <dimension>Dimension3</dimension>
+            <dimension>Dimension4</dimension>
+          </dimensions>
+          <transportation>HLAreliable</transportation>
+          <order>TimeStamp</order>
+          <parameter>
+            <name>Parameter7</name>
+          </parameter>
+          <parameter>
+            <name>Parameter8</name>
+          </parameter>
+          <parameter>
+            <name>Parameter9</name>
+          </parameter>
+        </interactionClass>
+      </interactionClass>
+
+      <interactionClass>
+        <name>BestEffortReceiveInteraction</name>
+        <dimensions>
+          <dimension>Dimension3</dimension>
+        </dimensions>
+        <transportation>HLAbestEffort</transportation>
+        <order>Receive</order>
+        <parameter>
+          <name>Parameter1</name>
+        </parameter>
+        <parameter>
+          <name>Parameter2</name>
+        </parameter>
+        <parameter>
+          <name>Parameter3</name>
+        </parameter>
+      </interactionClass>
+
+      <interactionClass>
+        <name>BestEffortTimeStampInteraction</name>
+        <dimensions>
+          <dimension>Dimension3</dimension>
+        </dimensions>
+        <transportation>HLAbestEffort</transportation>
+        <order>TimeStamp</order>
+        <parameter>
+          <name>Parameter1</name>
+        </parameter>
+        <parameter>
+          <name>Parameter2</name>
+        </parameter>
+        <parameter>
+          <name>Parameter3</name>
+        </parameter>
+      </interactionClass>
+
+      <interactionClass>
+        <name>ReliableReceiveInteraction</name>
+        <dimensions>
+          <dimension>Dimension3</dimension>
+        </dimensions>
+        <transportation>HLAreliable</transportation>
+        <order>Receive</order>
+        <parameter>
+          <name>Parameter1</name>
+        </parameter>
+        <parameter>
+          <name>Parameter2</name>
+        </parameter>
+        <parameter>
+          <name>Parameter3</name>
+        </parameter>
+      </interactionClass>
+
+      <interactionClass>
+        <name>ReliableTimeStampInteraction</name>
+        <dimensions>
+          <dimension>Dimension3</dimension>
+        </dimensions>
+        <transportation>HLAreliable</transportation>
+        <order>TimeStamp</order>
+        <parameter>
+          <name>Parameter1</name>
+        </parameter>
+        <parameter>
+          <name>Parameter2</name>
+        </parameter>
+        <parameter>
+          <name>Parameter3</name>
+        </parameter>
+      </interactionClass>
+    </interactionClass>
+  </interactions>
+
+  <dimensions>
+    <dimension>
+      <name>Dimension1</name>
+      <upperBound>100</upperBound>
+    </dimension>
+    <dimension>
+      <name>Dimension2</name>
+      <upperBound>1000</upperBound>
+    </dimension>
+    <dimension>
+      <name>Dimension3</name>
+      <upperBound>10000</upperBound>
+    </dimension>
+    <dimension>
+      <name>Dimension4</name>
+      <upperBound>100000</upperBound>
+    </dimension>
+  </dimensions>
+
+</objectModel>
