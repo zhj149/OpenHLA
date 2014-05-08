@@ -16,60 +16,61 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.InteractionClassHandles;
+import net.sf.ohla.rti.util.RegionHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandleSet;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.InteractionClassHandle;
 import hla.rti1516e.RegionHandleSet;
 
 public class SubscribeInteractionClassWithRegions
-  extends InteractionClassMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.SubscribeInteractionClassWithRegions, FederationExecutionMessageProtos.SubscribeInteractionClassWithRegions.Builder>
   implements FederationExecutionMessage
 {
-  private final boolean passive;
-  private final RegionHandleSet regionHandles;
-
   public SubscribeInteractionClassWithRegions(
     InteractionClassHandle interactionClassHandle, RegionHandleSet regionHandles, boolean passive)
   {
-    super(MessageType.SUBSCRIBE_INTERACTION_CLASS_WITH_REGIONS, interactionClassHandle);
+    super(FederationExecutionMessageProtos.SubscribeInteractionClassWithRegions.newBuilder());
 
-    this.passive = passive;
-    this.regionHandles = regionHandles;
-
-    Protocol.encodeBoolean(buffer, passive);
-    IEEE1516eRegionHandleSet.encode(buffer, regionHandles);
-
-    encodingFinished();
+    builder.setInteractionClassHandle(InteractionClassHandles.convert(interactionClassHandle));
+    builder.addAllRegionHandles(RegionHandles.convertToProto(regionHandles));
+    builder.setPassive(passive);
   }
 
-  public SubscribeInteractionClassWithRegions(ChannelBuffer buffer)
+  public SubscribeInteractionClassWithRegions(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    passive = Protocol.decodeBoolean(buffer);
-    regionHandles = IEEE1516eRegionHandleSet.decode(buffer);
+    super(FederationExecutionMessageProtos.SubscribeInteractionClassWithRegions.newBuilder(), in);
   }
 
-  public boolean isPassive()
+  public InteractionClassHandle getInteractionClassHandle()
   {
-    return passive;
+    return InteractionClassHandles.convert(builder.getInteractionClassHandle());
   }
 
   public RegionHandleSet getRegionHandles()
   {
-    return regionHandles;
+    return RegionHandles.convertFromProto(builder.getRegionHandlesList());
   }
 
-  public MessageType getType()
+  public boolean isPassive()
   {
-    return MessageType.SUBSCRIBE_INTERACTION_CLASS_WITH_REGIONS;
+    return builder.getPassive();
   }
 
+  @Override
+  public MessageProtos.MessageType getMessageType()
+  {
+    return MessageProtos.MessageType.SUBSCRIBE_INTERACTION_CLASS_WITH_REGIONS;
+  }
+
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.subscribeInteractionClassWithRegions(federateProxy, this);

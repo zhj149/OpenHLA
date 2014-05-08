@@ -16,61 +16,54 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
-import java.io.DataInput;
-import java.io.IOException;
-
-import net.sf.ohla.rti.IntegerHandle;
-
-import org.jboss.netty.buffer.ChannelBuffer;
+import java.nio.ByteBuffer;
 
 import hla.rti1516e.TransportationTypeHandle;
 
 public class IEEE1516eTransportationTypeHandle
-  extends IntegerHandle
   implements TransportationTypeHandle
 {
   public static final IEEE1516eTransportationTypeHandle HLA_RELIABLE = new IEEE1516eTransportationTypeHandle(0);
   public static final IEEE1516eTransportationTypeHandle HLA_BEST_EFFORT = new IEEE1516eTransportationTypeHandle(1);
 
-  private static final IEEE1516eTransportationTypeHandle[] cache;
-  static
-  {
-    // TODO: get cache size from properties
-
-    cache = new IEEE1516eTransportationTypeHandle[] { HLA_RELIABLE, HLA_BEST_EFFORT };
-
-    for (int i = 1; i < cache.length; i++)
-    {
-      cache[i] = new IEEE1516eTransportationTypeHandle(i);
-    }
-  }
+  public final int handle;
 
   public IEEE1516eTransportationTypeHandle(int handle)
   {
-    super(handle);
+    this.handle = handle;
   }
 
-  public static void encode(ChannelBuffer buffer, TransportationTypeHandle transportationTypeHandle)
+  public int getHandle()
   {
-    ((IEEE1516eTransportationTypeHandle) transportationTypeHandle).encode(buffer);
+    return handle;
   }
 
-  public static TransportationTypeHandle decode(DataInput in)
-    throws IOException
+  public int encodedLength()
   {
-    int handle = decodeHandle(in);
-    return handle < cache.length ? cache[handle] : new IEEE1516eTransportationTypeHandle(handle);
+    return 4;
   }
 
-  public static TransportationTypeHandle decode(ChannelBuffer buffer)
+  public void encode(byte[] buffer, int offset)
   {
-    int handle = decodeHandle(buffer);
-    return handle < cache.length ? cache[handle] : new IEEE1516eTransportationTypeHandle(handle);
+    ByteBuffer.wrap(buffer, offset, 4).putInt(handle);
   }
 
-  public static IEEE1516eTransportationTypeHandle decode(byte[] buffer, int offset)
+  @Override
+  public boolean equals(Object rhs)
   {
-    int handle = decodeHandle(buffer, offset);
-    return handle < cache.length ? cache[handle] : new IEEE1516eTransportationTypeHandle(handle);
+    return this == rhs || (rhs instanceof IEEE1516eTransportationTypeHandle &&
+                           handle == ((IEEE1516eTransportationTypeHandle) rhs).handle);
+  }
+
+  @Override
+  public int hashCode()
+  {
+    return handle;
+  }
+
+  @Override
+  public String toString()
+  {
+    return Integer.toString(handle);
   }
 }

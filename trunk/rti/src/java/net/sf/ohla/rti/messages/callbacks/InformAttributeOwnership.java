@@ -16,13 +16,17 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.FederateHandles;
+import net.sf.ohla.rti.util.ObjectInstanceHandles;
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
-import net.sf.ohla.rti.messages.MessageType;
-import net.sf.ohla.rti.messages.ObjectInstanceAttributeMessage;
+import net.sf.ohla.rti.messages.AbstractMessage;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.FederateHandle;
@@ -30,43 +34,39 @@ import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class InformAttributeOwnership
-  extends ObjectInstanceAttributeMessage
+  extends
+  AbstractMessage<FederateMessageProtos.InformAttributeOwnership, FederateMessageProtos.InformAttributeOwnership.Builder>
   implements Callback
 {
-  private final FederateHandle federateHandle;
-
   public InformAttributeOwnership(
     ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle, FederateHandle federateHandle)
   {
-    super(MessageType.INFORM_ATTRIBUTE_OWNERSHIP, objectInstanceHandle, attributeHandle);
+    super(FederateMessageProtos.InformAttributeOwnership.newBuilder());
 
-    this.federateHandle = federateHandle;
-
-    IEEE1516eFederateHandle.encode(buffer, federateHandle);
-
-    encodingFinished();
+    builder.setObjectInstanceHandle(ObjectInstanceHandles.convert(objectInstanceHandle));
+    builder.setAttributeHandle(AttributeHandles.convert(attributeHandle));
+    builder.setFederateHandle(FederateHandles.convert(federateHandle));
   }
 
-  public InformAttributeOwnership(ChannelBuffer buffer)
+  public InformAttributeOwnership(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    federateHandle = IEEE1516eFederateHandle.decode(buffer);
+    super(FederateMessageProtos.InformAttributeOwnership.newBuilder(), in);
   }
 
-  public FederateHandle getFederateHandle()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return federateHandle;
+    return MessageProtos.MessageType.INFORM_ATTRIBUTE_OWNERSHIP;
   }
 
-  public MessageType getType()
-  {
-    return MessageType.INFORM_ATTRIBUTE_OWNERSHIP;
-  }
-
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.informAttributeOwnership(objectInstanceHandle, attributeHandle, federateHandle);
+    federateAmbassador.informAttributeOwnership(
+      ObjectInstanceHandles.convert(builder.getObjectInstanceHandle()),
+      AttributeHandles.convert(builder.getAttributeHandle()),
+      FederateHandles.convert(builder.getFederateHandle()));
   }
 }

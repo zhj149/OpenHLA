@@ -17,9 +17,10 @@
 package net.sf.ohla.rti.federation;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
-import net.sf.ohla.rti.SubscriptionManager;
+import net.sf.ohla.rti.util.SubscriptionManager;
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleValueMapFactory;
 import net.sf.ohla.rti.messages.SendInteraction;
@@ -31,6 +32,7 @@ import net.sf.ohla.rti.messages.callbacks.ReflectAttributeValues;
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleValueMap;
 import hla.rti1516e.DimensionHandle;
+import hla.rti1516e.FederateHandle;
 import hla.rti1516e.OrderType;
 import hla.rti1516e.ParameterHandleValueMap;
 import hla.rti1516e.RangeBounds;
@@ -39,6 +41,13 @@ import hla.rti1516e.RegionHandle;
 public class FederateProxySubscriptionManager
   extends SubscriptionManager
 {
+  private final FederateProxy federateProxy;
+
+  public FederateProxySubscriptionManager(FederateProxy federateProxy)
+  {
+    this.federateProxy = federateProxy;
+  }
+
   public DiscoverObjectInstance discoverObjectInstance(FederationExecutionObjectInstance objectInstance)
   {
     DiscoverObjectInstance discoverObjectInstance;
@@ -60,8 +69,8 @@ public class FederateProxySubscriptionManager
   }
 
   public ReflectAttributeValues reflectAttributeValues(
-    FederateProxy federateProxy, FederationExecutionObjectInstance objectInstance,
-    UpdateAttributeValues updateAttributeValues, boolean timeStampOrdered)
+    FederateHandle producingFederateHandle, FederationExecutionObjectInstance objectInstance,
+    UpdateAttributeValues updateAttributeValues, OrderType orderType)
   {
     ReflectAttributeValues reflectAttributeValues;
 
@@ -89,7 +98,7 @@ public class FederateProxySubscriptionManager
           {
             if (sentRegions == null)
             {
-              sentRegions = new HashMap<RegionHandle, Map<DimensionHandle, RangeBounds>>();
+              sentRegions = new HashMap<>();
             }
 
             // copy all the regions
@@ -129,29 +138,50 @@ public class FederateProxySubscriptionManager
       {
         reflectAttributeValues = null;
       }
-      else if (timeStampOrdered)
-      {
-        reflectAttributeValues = new ReflectAttributeValues(
-          updateAttributeValues.getObjectInstanceHandle(), trimmedAttributeValues, updateAttributeValues.getTag(),
-          OrderType.TIMESTAMP, updateAttributeValues.getTransportationTypeHandle(), updateAttributeValues.getTime(),
-          updateAttributeValues.getMessageRetractionHandle(), federateProxy.getFederateHandle(), sentRegions);
-      }
       else
       {
         reflectAttributeValues = new ReflectAttributeValues(
-          updateAttributeValues.getObjectInstanceHandle(), trimmedAttributeValues, updateAttributeValues.getTag(),
-          OrderType.RECEIVE, updateAttributeValues.getTransportationTypeHandle(), updateAttributeValues.getTime(), null,
-          federateProxy.getFederateHandle(), sentRegions);
+          updateAttributeValues.getBuilder(), trimmedAttributeValues, orderType,
+          producingFederateHandle, sentRegions);
       }
     }
 
     return reflectAttributeValues;
   }
 
-  public ReceiveInteraction receiveInteraction(
-    FederateProxy federateProxy, InteractionClass interactionClass, SendInteraction sendInteraction,
-    boolean timeStampOrdered)
+  public boolean wouldReflectAttributeValues(
+    FederationExecutionObjectInstance objectInstance, UpdateAttributeValues updateAttributeValues)
   {
+    boolean wouldReflectAttributeValues = false;
+
+    ObjectClassSubscription objectClassSubscription =
+      getSubscribedObjectClassSubscription(objectInstance.getObjectClass());
+    if (objectClassSubscription != null)
+    {
+      for (Iterator<AttributeHandle> i = updateAttributeValues.getAttributeValues().keySet().iterator();
+           i.hasNext() && !wouldReflectAttributeValues;)
+      {
+        AttributeHandle attributeHandle = i.next();
+
+        AttributeSubscription attributeSubscription = objectClassSubscription.getAttributeSubscription(attributeHandle);
+        if (attributeSubscription != null && objectInstance.regionsIntersect(
+          attributeHandle, federateProxy.getFederationExecution().getRegionManager(),
+          attributeSubscription.getSubscribedRegionHandles()))
+        {
+          wouldReflectAttributeValues = true;
+        }
+      }
+    }
+
+    return wouldReflectAttributeValues;
+  }
+
+  public ReceiveInteraction receiveInteraction(
+    FederateHandle producingFederateHandle, SendInteraction sendInteraction, OrderType receivedOrderType)
+  {
+    InteractionClass interactionClass = federateProxy.getFederationExecution().getFDD().getInteractionClassSafely(
+      sendInteraction.getInteractionClassHandle());
+
     ReceiveInteraction receiveInteraction;
 
     InteractionClassSubscription interactionClassSubscription =
@@ -207,12 +237,12 @@ public class FederateProxySubscriptionManager
           interactionClassSubscription.getSubscribedRegionHandles(), sendInteraction.getSentRegionHandles(),
           interactionClassSubscription.getInteractionClass()))
         {
-          trimmedParameterValues = null;
+          trimmedParameterValues =
+            interactionClassSubscription.trim(interactionClass, sendInteraction.getParameterValues());
         }
         else
         {
-          trimmedParameterValues =
-            interactionClassSubscription.trim(interactionClass, sendInteraction.getParameterValues());
+          trimmedParameterValues = null;
         }
       }
 
@@ -220,22 +250,45 @@ public class FederateProxySubscriptionManager
       {
         receiveInteraction = null;
       }
-      else if (timeStampOrdered)
-      {
-        receiveInteraction = new ReceiveInteraction(
-          interactionClass.getInteractionClassHandle(), trimmedParameterValues, sendInteraction.getTag(),
-          OrderType.TIMESTAMP, sendInteraction.getTransportationTypeHandle(), sendInteraction.getTime(),
-          sendInteraction.getMessageRetractionHandle(), federateProxy.getFederateHandle(), sentRegions);
-      }
       else
       {
         receiveInteraction = new ReceiveInteraction(
-          interactionClass.getInteractionClassHandle(), trimmedParameterValues, sendInteraction.getTag(),
-          OrderType.RECEIVE, sendInteraction.getTransportationTypeHandle(), sendInteraction.getTime(), null,
-          federateProxy.getFederateHandle(), sentRegions);
+          sendInteraction.getBuilder(), trimmedParameterValues, receivedOrderType,
+          producingFederateHandle, sentRegions);
       }
     }
 
     return receiveInteraction;
+  }
+
+  public boolean wouldReceiveInteraction(SendInteraction sendInteraction)
+  {
+    InteractionClass interactionClass = federateProxy.getFederationExecution().getFDD().getInteractionClassSafely(
+      sendInteraction.getInteractionClassHandle());
+
+    boolean wouldReceiveInteraction;
+
+    InteractionClassSubscription interactionClassSubscription =
+      getSubscribedInteractionClassSubscription(interactionClass);
+    if (interactionClassSubscription == null)
+    {
+      wouldReceiveInteraction = false;
+    }
+    else if (sendInteraction.getSentRegionHandles() == null)
+    {
+      wouldReceiveInteraction = interactionClassSubscription.getSubscribedRegionHandles().isEmpty();
+    }
+    else if (interactionClassSubscription.getSubscribedRegionHandles().isEmpty())
+    {
+      wouldReceiveInteraction = false;
+    }
+    else
+    {
+      wouldReceiveInteraction = federateProxy.getFederationExecution().getRegionManager().intersectsOnly(
+        interactionClassSubscription.getSubscribedRegionHandles(), sendInteraction.getSentRegionHandles(),
+        interactionClassSubscription.getInteractionClass());
+    }
+
+    return wouldReceiveInteraction;
   }
 }

@@ -16,10 +16,6 @@
 
 package net.sf.ohla.rti.federation;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -27,13 +23,17 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.FederateHandles;
+import net.sf.ohla.rti.util.OrderTypes;
+import net.sf.ohla.rti.util.RegionHandles;
+import net.sf.ohla.rti.util.TransportationTypeHandles;
 import net.sf.ohla.rti.fdd.Attribute;
 import net.sf.ohla.rti.fdd.ObjectClass;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandle;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandle;
+import net.sf.ohla.rti.proto.FederationExecutionSaveProtos.FederationExecutionState.FederationExecutionObjectManagerState.FederationExecutionObjectInstanceState.FederationExecutionAttributeInstanceState;
+import net.sf.ohla.rti.proto.OHLAProtos;
 
+import com.google.protobuf.ByteString;
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.DimensionHandle;
 import hla.rti1516e.FederateHandle;
@@ -67,13 +67,12 @@ public class FederationExecutionAttributeInstance
    * The 'ownership' line. When federates request ownership of this attribute they are placed into a line and given
    * ownership based upon when they entered the line.
    */
-  private final LinkedHashSet<FederateHandle> requestingOwnerships = new LinkedHashSet<FederateHandle>();
+  private final LinkedHashSet<FederateHandle> requestingOwnerships = new LinkedHashSet<>();
 
-  private final Map<RegionHandle, FederationExecutionRegion> regionRealizations =
-    new HashMap<RegionHandle, FederationExecutionRegion>();
+  private final Map<RegionHandle, FederationExecutionRegion> regionRealizations = new HashMap<>();
 
   private final Map<FederateHandle, Map<RegionHandle, FederationExecutionRegion>> pendingRegionAssociations =
-    new HashMap<FederateHandle, Map<RegionHandle, FederationExecutionRegion>>();
+    new HashMap<>();
 
   public FederationExecutionAttributeInstance(Attribute attribute)
   {
@@ -83,54 +82,45 @@ public class FederationExecutionAttributeInstance
     orderType = attribute.getOrderType();
   }
 
-  public FederationExecutionAttributeInstance(DataInput in, ObjectClass objectClass,
-                                              FederationExecution federationExecution)
-    throws IOException
+  public FederationExecutionAttributeInstance(
+    FederationExecutionAttributeInstanceState attributeInstanceState, ObjectClass objectClass, FederationExecution federationExecution)
   {
-    attribute = objectClass.getAttributeSafely(IEEE1516eAttributeHandle.decode(in));
+    attribute = objectClass.getAttributeSafely(AttributeHandles.convert(attributeInstanceState.getAttributeHandle()));
 
-    updateRate = in.readDouble();
+    updateRate = attributeInstanceState.getUpdateRate();
 
-    transportationTypeHandle = IEEE1516eTransportationTypeHandle.decode(in);
-    orderType = OrderType.values()[in.readInt()];
+    transportationTypeHandle = TransportationTypeHandles.convert(attributeInstanceState.getTransportationTypeHandle());
+    orderType = OrderTypes.convert(attributeInstanceState.getOrderType());
 
-    if (in.readBoolean())
+    if (attributeInstanceState.hasOwningFederateHandle())
     {
-      owner = IEEE1516eFederateHandle.decode(in);
+      owner = FederateHandles.convert(attributeInstanceState.getOwningFederateHandle());
     }
 
-    wantsToDivest = in.readBoolean();
+    wantsToDivest = attributeInstanceState.getWantsToDivest();
 
-    int length = in.readInt();
-    if (length == 0)
+    if (attributeInstanceState.hasDivestingTag())
     {
-      divestingTag = null;
-    }
-    else
-    {
-      divestingTag = new byte[length];
-      in.readFully(divestingTag);
+      divestingTag = attributeInstanceState.getDivestingTag().toByteArray();
     }
 
-    for (int count = in.readInt(); count > 0; count--)
-    {
-      requestingOwnerships.add(IEEE1516eFederateHandle.decode(in));
-    }
+    requestingOwnerships.addAll(
+      FederateHandles.convertFromProto(attributeInstanceState.getRequestingOwnershipFederateHandlesList()));
 
-    for (int count = in.readInt(); count > 0; count--)
+    for (OHLAProtos.RegionHandle regionHandleProto : attributeInstanceState.getRegionRealizationsList())
     {
-      RegionHandle regionHandle = IEEE1516eRegionHandle.decode(in);
+      RegionHandle regionHandle = RegionHandles.convert(regionHandleProto);
       regionRealizations.put(regionHandle, federationExecution.getRegionManager().getRegions().get(regionHandle));
     }
 
-    for (int count = in.readInt(); count > 0; count--)
+    for (FederationExecutionAttributeInstanceState.PendingRegionAssociation pendingRegionAssociationProto : attributeInstanceState.getPendingRegionAssociationsList())
     {
-      Map<RegionHandle, FederationExecutionRegion> pendingRegionAssociation =
-        new HashMap<RegionHandle, FederationExecutionRegion>();
-      pendingRegionAssociations.put(IEEE1516eFederateHandle.decode(in), pendingRegionAssociation);
-      for (int count2 = in.readInt(); count2 > 0; count2--)
+      Map<RegionHandle, FederationExecutionRegion> pendingRegionAssociation = new HashMap<>();
+      pendingRegionAssociations.put(
+        FederateHandles.convert(pendingRegionAssociationProto.getFederateHandle()), pendingRegionAssociation);
+      for (OHLAProtos.RegionHandle regionHandleProto : pendingRegionAssociationProto.getRegionHandlesList())
       {
-        RegionHandle regionHandle = IEEE1516eRegionHandle.decode(in);
+        RegionHandle regionHandle = RegionHandles.convert(regionHandleProto);
         pendingRegionAssociation.put(
           regionHandle, federationExecution.getRegionManager().getRegions().get(regionHandle));
       }
@@ -189,7 +179,7 @@ public class FederationExecutionAttributeInstance
         this.pendingRegionAssociations.get(federateProxy.getFederateHandle());
       if (pendingRegionAssociations == null)
       {
-        pendingRegionAssociations = new HashMap<RegionHandle, FederationExecutionRegion>();
+        pendingRegionAssociations = new HashMap<>();
         this.pendingRegionAssociations.put(federateProxy.getFederateHandle(), pendingRegionAssociations);
       }
       pendingRegionAssociations.put(region.getRegionHandle(), region);
@@ -383,63 +373,44 @@ public class FederationExecutionAttributeInstance
     }
   }
 
-  public void writeTo(DataOutput out)
-    throws IOException
+  public FederationExecutionAttributeInstanceState.Builder saveState()
   {
-    ((IEEE1516eAttributeHandle) attribute.getAttributeHandle()).writeTo(out);
+    FederationExecutionAttributeInstanceState.Builder attributeInstanceState = FederationExecutionAttributeInstanceState.newBuilder();
 
-    out.writeDouble(updateRate);
+    attributeInstanceState.setAttributeHandle(AttributeHandles.convert(attribute.getAttributeHandle()));
+    attributeInstanceState.setUpdateRate(updateRate);
+    attributeInstanceState.setTransportationTypeHandle(TransportationTypeHandles.convert(transportationTypeHandle));
+    attributeInstanceState.setOrderType(OrderTypes.convert(orderType));
 
-    ((IEEE1516eTransportationTypeHandle) transportationTypeHandle).writeTo(out);
-    out.writeInt(orderType.ordinal());
-
-    if (owner == null)
+    if (owner != null)
     {
-      out.writeBoolean(false);
-    }
-    else
-    {
-      out.writeBoolean(true);
-      ((IEEE1516eFederateHandle) owner).writeTo(out);
+      attributeInstanceState.setOwningFederateHandle(FederateHandles.convert(owner));
     }
 
-    out.writeBoolean(wantsToDivest);
+    attributeInstanceState.setWantsToDivest(wantsToDivest);
 
-    if (divestingTag == null)
+    if (divestingTag != null)
     {
-      // TODO: maybe write -1 for null?
-
-      out.writeInt(0);
-    }
-    else
-    {
-      out.writeInt(divestingTag.length);
-      out.write(divestingTag);
+      attributeInstanceState.setDivestingTag(ByteString.copyFrom(divestingTag));
     }
 
-    out.writeInt(requestingOwnerships.size());
-    for (FederateHandle requestingOwnership : requestingOwnerships)
-    {
-      ((IEEE1516eFederateHandle) requestingOwnership).writeTo(out);
-    }
+    attributeInstanceState.addAllRequestingOwnershipFederateHandles(
+      FederateHandles.convertToProto(requestingOwnerships));
 
-    out.writeInt(regionRealizations.size());
-    for (RegionHandle regionHandle : regionRealizations.keySet())
-    {
-      ((IEEE1516eRegionHandle) regionHandle).writeTo(out);
-    }
+    attributeInstanceState.addAllRegionRealizations(RegionHandles.convertToProto(regionRealizations.keySet()));
 
-    out.writeInt(pendingRegionAssociations.size());
     for (Map.Entry<FederateHandle, Map<RegionHandle, FederationExecutionRegion>> entry : pendingRegionAssociations.entrySet())
     {
-      ((IEEE1516eFederateHandle) entry.getKey()).writeTo(out);
+      FederationExecutionAttributeInstanceState.PendingRegionAssociation.Builder pendingRegionAssociation =
+        FederationExecutionAttributeInstanceState.PendingRegionAssociation.newBuilder();
 
-      out.writeInt(entry.getValue().size());
-      for (RegionHandle regionHandle : entry.getValue().keySet())
-      {
-        ((IEEE1516eRegionHandle) regionHandle).writeTo(out);
-      }
+      pendingRegionAssociation.setFederateHandle(FederateHandles.convert(entry.getKey()));
+      pendingRegionAssociation.addAllRegionHandles(RegionHandles.convertToProto(entry.getValue().keySet()));
+
+      attributeInstanceState.addPendingRegionAssociations(pendingRegionAssociation);
     }
+
+    return attributeInstanceState;
   }
 
   /**

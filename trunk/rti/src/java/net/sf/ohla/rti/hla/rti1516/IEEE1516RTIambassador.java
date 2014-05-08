@@ -18,13 +18,7 @@ package net.sf.ohla.rti.hla.rti1516;
 
 import java.net.URL;
 
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSetFactory;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandle;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eInteractionClassHandle;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRTIambassador;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandle;
 import net.sf.ohla.rti.i18n.ExceptionMessages;
@@ -227,50 +221,23 @@ public class IEEE1516RTIambassador
         rtiAmbassador.createFederationExecution(
           federationExecutionName, IEEE1516FDDParser.parseFDD(fdd), logicalTimeImplementationName);
       }
-      catch (CouldNotCreateLogicalTimeFactory cncltf)
-      {
-        throw new RTIinternalError(cncltf);
-      }
       catch (hla.rti1516e.exceptions.FederationExecutionAlreadyExists feae)
       {
         throw new FederationExecutionAlreadyExists(feae);
       }
-      catch (NotConnected nc)
+      catch (CouldNotCreateLogicalTimeFactory | NotConnected  | hla.rti1516e.exceptions.RTIinternalError e)
       {
-        throw new RTIinternalError(nc);
-      }
-      catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-      {
-        throw new RTIinternalError(rtiie);
+        throw new RTIinternalError(e);
       }
       finally
       {
         disconnectQuietly(rtiAmbassador);
       }
     }
-    catch (ConnectionFailed cf)
+    catch (ConnectionFailed | InvalidLocalSettingsDesignator | UnsupportedCallbackModel | AlreadyConnected |
+      CallNotAllowedFromWithinCallback | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(cf.getMessage(), cf);
-    }
-    catch (InvalidLocalSettingsDesignator ilsd)
-    {
-      throw new RTIinternalError(ilsd.getMessage(), ilsd);
-    }
-    catch (UnsupportedCallbackModel ucm)
-    {
-      throw new RTIinternalError(ucm.getMessage(), ucm);
-    }
-    catch (AlreadyConnected ac)
-    {
-      throw new RTIinternalError(ac.getMessage(), ac);
-    }
-    catch (CallNotAllowedFromWithinCallback cnafwc)
-    {
-      throw new RTIinternalError(cnafwc.getMessage(), cnafwc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie.getMessage(), rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -296,42 +263,19 @@ public class IEEE1516RTIambassador
       {
         throw new FederationExecutionDoesNotExist(fedne);
       }
-      catch (NotConnected nc)
+      catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
       {
-        throw new RTIinternalError(nc);
-      }
-      catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-      {
-        throw new RTIinternalError(rtiie);
+        throw new RTIinternalError(e);
       }
       finally
       {
         disconnectQuietly(rtiAmbassador);
       }
     }
-    catch (ConnectionFailed cf)
+    catch (ConnectionFailed | InvalidLocalSettingsDesignator | UnsupportedCallbackModel | AlreadyConnected |
+      CallNotAllowedFromWithinCallback | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(cf.getMessage(), cf);
-    }
-    catch (InvalidLocalSettingsDesignator ilsd)
-    {
-      throw new RTIinternalError(ilsd.getMessage(), ilsd);
-    }
-    catch (UnsupportedCallbackModel ucm)
-    {
-      throw new RTIinternalError(ucm.getMessage(), ucm);
-    }
-    catch (AlreadyConnected ac)
-    {
-      throw new RTIinternalError(ac.getMessage(), ac);
-    }
-    catch (CallNotAllowedFromWithinCallback cnafwc)
-    {
-      throw new RTIinternalError(cnafwc.getMessage(), cnafwc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie.getMessage(), rtiie);
+      throw new RTIinternalError(e.getMessage(), e);
     }
   }
 
@@ -358,29 +302,14 @@ public class IEEE1516RTIambassador
 
       justConnected = true;
     }
-    catch (ConnectionFailed cf)
+    catch (ConnectionFailed | CallNotAllowedFromWithinCallback | hla.rti1516e.exceptions.RTIinternalError |
+      InvalidLocalSettingsDesignator | UnsupportedCallbackModel e)
     {
-      throw new RTIinternalError(cf.getMessage(), cf);
-    }
-    catch (InvalidLocalSettingsDesignator ilsd)
-    {
-      throw new RTIinternalError(ilsd.getMessage(), ilsd);
-    }
-    catch (UnsupportedCallbackModel ucm)
-    {
-      throw new RTIinternalError(ucm.getMessage(), ucm);
+      throw new RTIinternalError(e);
     }
     catch (AlreadyConnected ac)
     {
       justConnected = false;
-    }
-    catch (CallNotAllowedFromWithinCallback cnafwc)
-    {
-      throw new RTIinternalError(cnafwc.getMessage(), cnafwc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie.getMessage(), rtiie);
     }
 
     this.federateAmbassador = federateAmbassador;
@@ -399,14 +328,14 @@ public class IEEE1516RTIambassador
 
       return convert(ieee1516eFederateHandle);
     }
-    catch (CouldNotCreateLogicalTimeFactory cncltf)
+    catch (CouldNotCreateLogicalTimeFactory | CallNotAllowedFromWithinCallback | hla.rti1516e.exceptions.RTIinternalError e)
     {
       if (justConnected)
       {
         disconnectQuietly();
       }
 
-      throw new RTIinternalError(cncltf);
+      throw new RTIinternalError(e);
     }
     catch (hla.rti1516e.exceptions.FederationExecutionDoesNotExist fedne)
     {
@@ -448,24 +377,6 @@ public class IEEE1516RTIambassador
     {
       throw new RTIinternalError(nc);
     }
-    catch (CallNotAllowedFromWithinCallback cnafwc)
-    {
-      if (justConnected)
-      {
-        disconnectQuietly();
-      }
-
-      throw new RTIinternalError(cnafwc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      if (justConnected)
-      {
-        disconnectQuietly();
-      }
-
-      throw new RTIinternalError(rtiie);
-    }
     catch (RuntimeException re)
     {
       if (justConnected)
@@ -493,10 +404,6 @@ public class IEEE1516RTIambassador
       //
       disconnectQuietly();
     }
-    catch (InvalidResignAction ira)
-    {
-      throw new RTIinternalError(ira);
-    }
     catch (hla.rti1516e.exceptions.OwnershipAcquisitionPending oap)
     {
       throw new OwnershipAcquisitionPending(oap);
@@ -505,21 +412,13 @@ public class IEEE1516RTIambassador
     {
       throw new FederateOwnsAttributes(foa);
     }
-    catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
+    catch (hla.rti1516e.exceptions.FederateNotExecutionMember | NotConnected e)
     {
-      throw new FederateNotExecutionMember(fnem);
+      throw new FederateNotExecutionMember(e);
     }
-    catch (NotConnected nc)
+    catch (InvalidResignAction | CallNotAllowedFromWithinCallback | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new FederateNotExecutionMember(nc);
-    }
-    catch (CallNotAllowedFromWithinCallback cnafwc)
-    {
-      throw new RTIinternalError(cnafwc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -542,13 +441,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -559,10 +454,6 @@ public class IEEE1516RTIambassador
     try
     {
       rtiAmbassador.registerFederationSynchronizationPoint(label, tag, convert(federateHandles));
-    }
-    catch (hla.rti1516e.exceptions.InvalidFederateHandle ifh)
-    {
-      throw new RTIinternalError(ifh);
     }
     catch (hla.rti1516e.exceptions.SaveInProgress sip)
     {
@@ -576,13 +467,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (hla.rti1516e.exceptions.InvalidFederateHandle | NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -610,13 +497,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -640,13 +523,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -682,13 +561,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -711,13 +586,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -740,13 +611,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -769,13 +636,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -794,13 +657,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -823,13 +682,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -852,13 +707,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -881,13 +732,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -906,13 +753,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -950,13 +793,9 @@ public class IEEE1516RTIambassador
       {
         throw new FederateNotExecutionMember(fnem);
       }
-      catch (NotConnected nc)
+      catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
       {
-        throw new RTIinternalError(nc);
-      }
-      catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-      {
-        throw new RTIinternalError(rtiie);
+        throw new RTIinternalError(e);
       }
     }
   }
@@ -994,13 +833,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -1037,13 +872,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -1075,13 +906,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -1113,13 +940,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -1158,13 +981,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -1197,13 +1016,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -1235,13 +1050,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -1273,13 +1084,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -1316,13 +1123,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -1359,13 +1162,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -1397,13 +1196,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -1430,13 +1225,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -1473,13 +1264,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -1524,13 +1311,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -1572,13 +1355,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -1621,13 +1400,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -1669,13 +1444,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -1718,13 +1489,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -1761,13 +1528,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -1804,13 +1567,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -1846,13 +1605,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -1900,13 +1655,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -1939,13 +1690,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -1988,13 +1735,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -2041,13 +1784,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -2064,10 +1803,6 @@ public class IEEE1516RTIambassador
     try
     {
       rtiAmbassador.confirmDivestiture(convert(objectInstanceHandle), convert(attributeHandles), tag);
-    }
-    catch (NoAcquisitionPending nap)
-    {
-      throw new RTIinternalError(nap);
     }
     catch (hla.rti1516e.exceptions.AttributeDivestitureWasNotRequested adwnr)
     {
@@ -2097,13 +1832,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NoAcquisitionPending | NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -2153,13 +1884,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -2214,13 +1941,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -2263,13 +1986,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -2316,13 +2035,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -2368,13 +2083,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -2415,13 +2126,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -2463,13 +2170,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -2514,13 +2217,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -2547,13 +2246,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -2589,13 +2284,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -2622,13 +2313,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -2673,13 +2360,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -2724,20 +2407,15 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
   public void nextMessageRequest(LogicalTime time)
-    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState,
-           RequestForTimeRegulationPending, RequestForTimeConstrainedPending,
-           FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
+    throws InvalidLogicalTime, LogicalTimeAlreadyPassed, InTimeAdvancingState, RequestForTimeRegulationPending,
+           RequestForTimeConstrainedPending, FederateNotExecutionMember, SaveInProgress, RestoreInProgress,
            RTIinternalError
   {
     try
@@ -2776,13 +2454,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -2827,13 +2501,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -2878,13 +2548,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -2912,13 +2578,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -2946,13 +2608,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -2975,13 +2633,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -3004,13 +2658,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -3033,13 +2683,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -3075,13 +2721,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -3108,13 +2750,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -3150,13 +2788,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -3194,13 +2828,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -3233,13 +2863,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -3275,13 +2901,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -3313,13 +2935,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -3355,13 +2973,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -3416,13 +3030,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -3485,13 +3095,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -3536,13 +3142,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -3583,13 +3185,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -3635,13 +3233,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -3687,13 +3281,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -3735,13 +3325,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -3792,13 +3378,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -3850,13 +3432,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -3898,13 +3476,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -3961,13 +3535,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4023,13 +3593,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4075,13 +3641,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4100,13 +3662,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4130,13 +3688,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4164,13 +3718,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4207,13 +3757,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4232,13 +3778,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4262,13 +3804,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4296,13 +3834,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4339,13 +3873,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4364,13 +3894,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4389,13 +3915,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4414,13 +3936,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4444,13 +3962,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4469,13 +3983,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4514,13 +4024,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4539,13 +4045,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4569,13 +4071,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4594,13 +4092,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4624,13 +4118,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4649,13 +4139,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4679,13 +4165,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4713,13 +4195,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4747,13 +4225,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4781,13 +4255,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4815,13 +4285,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4849,13 +4315,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4883,13 +4345,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4917,13 +4375,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4951,13 +4405,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -4989,13 +4439,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -5036,13 +4482,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -5095,13 +4537,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -5120,13 +4558,9 @@ public class IEEE1516RTIambassador
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (NotConnected | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -5137,21 +4571,13 @@ public class IEEE1516RTIambassador
     {
       return rtiAmbassador.normalizeServiceGroup(convert(serviceGroup));
     }
-    catch (InvalidServiceGroup isg)
-    {
-      throw new RTIinternalError(isg);
-    }
     catch (hla.rti1516e.exceptions.FederateNotExecutionMember fnem)
     {
       throw new FederateNotExecutionMember(fnem);
     }
-    catch (NotConnected nc)
+    catch (InvalidServiceGroup | NotConnected  | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(nc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -5162,13 +4588,9 @@ public class IEEE1516RTIambassador
     {
       return rtiAmbassador.evokeCallback(seconds);
     }
-    catch (CallNotAllowedFromWithinCallback cnafwc)
+    catch (CallNotAllowedFromWithinCallback | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(cnafwc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -5179,13 +4601,9 @@ public class IEEE1516RTIambassador
     {
       return rtiAmbassador.evokeMultipleCallbacks(minimumTime, maximumTime);
     }
-    catch (CallNotAllowedFromWithinCallback cnafwc)
+    catch (CallNotAllowedFromWithinCallback | hla.rti1516e.exceptions.RTIinternalError e)
     {
-      throw new RTIinternalError(cnafwc);
-    }
-    catch (hla.rti1516e.exceptions.RTIinternalError rtiie)
-    {
-      throw new RTIinternalError(rtiie);
+      throw new RTIinternalError(e);
     }
   }
 
@@ -5313,7 +4731,7 @@ public class IEEE1516RTIambassador
 
   public hla.rti1516e.FederateHandle convert(FederateHandle federateHandle)
   {
-    return new IEEE1516eFederateHandle(((IEEE1516FederateHandle) federateHandle).getHandle());
+    return ((IEEE1516FederateHandle) federateHandle).getFederateHandle();
   }
 
   public hla.rti1516e.AttributeHandleSet convert(AttributeHandleSet attributeHandles)
@@ -5426,7 +4844,7 @@ public class IEEE1516RTIambassador
 
   public hla.rti1516e.ObjectClassHandle convert(ObjectClassHandle objectClassHandle)
   {
-    return new IEEE1516eObjectClassHandle(((IEEE1516ObjectClassHandle) objectClassHandle).getHandle());
+    return ((IEEE1516ObjectClassHandle) objectClassHandle).getObjectClassHandle();
   }
 
   public AttributeHandle convert(hla.rti1516e.AttributeHandle attributeHandle)
@@ -5436,7 +4854,7 @@ public class IEEE1516RTIambassador
 
   public hla.rti1516e.AttributeHandle convert(AttributeHandle attributeHandle)
   {
-    return new IEEE1516eAttributeHandle(((IEEE1516AttributeHandle) attributeHandle).getHandle());
+    return ((IEEE1516AttributeHandle) attributeHandle).getAttributeHandle();
   }
 
   public DimensionHandle convert(hla.rti1516e.DimensionHandle dimensionHandle)
@@ -5446,7 +4864,7 @@ public class IEEE1516RTIambassador
 
   public hla.rti1516e.DimensionHandle convert(DimensionHandle dimensionHandle)
   {
-    return new IEEE1516eDimensionHandle(((IEEE1516DimensionHandle) dimensionHandle).getHandle());
+    return ((IEEE1516DimensionHandle) dimensionHandle).getDimensionHandle();
   }
 
   public InteractionClassHandle convert(hla.rti1516e.InteractionClassHandle interactionClassHandle)
@@ -5456,7 +4874,7 @@ public class IEEE1516RTIambassador
 
   public hla.rti1516e.InteractionClassHandle convert(InteractionClassHandle interactionClassHandle)
   {
-    return new IEEE1516eInteractionClassHandle(((IEEE1516InteractionClassHandle) interactionClassHandle).getHandle());
+    return ((IEEE1516InteractionClassHandle) interactionClassHandle).getInteractionClassHandle();
   }
 
   public ParameterHandle convert(hla.rti1516e.ParameterHandle parameterHandle)
@@ -5466,7 +4884,7 @@ public class IEEE1516RTIambassador
 
   public hla.rti1516e.ParameterHandle convert(ParameterHandle parameterHandle)
   {
-    return new IEEE1516eParameterHandle(((IEEE1516ParameterHandle) parameterHandle).getHandle());
+    return ((IEEE1516ParameterHandle) parameterHandle).getParameterHandle();
   }
 
   public TransportationType convert(TransportationTypeHandle transportationTypeHandle)
@@ -5702,7 +5120,7 @@ public class IEEE1516RTIambassador
     }
     catch (Throwable t)
     {
-      log.warn(LogMessages.UNEXPECTED_EXCEPTION, t);
+      log.warn(LogMessages.UNEXPECTED_EXCEPTION, t, t);
     }
   }
 }

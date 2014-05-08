@@ -16,37 +16,64 @@
 
 package net.sf.ohla.rti.messages;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import java.io.IOException;
+
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
+
+import com.google.protobuf.CodedInputStream;
 
 public class RequestFederationRestoreResponse
-  extends EnumResponse<RequestFederationRestoreResponse.Response>
+  extends AbstractMessage<FederateMessageProtos.RequestFederationRestoreResponse, FederateMessageProtos.RequestFederationRestoreResponse.Builder>
+  implements Response
 {
-  public enum Response
+  public RequestFederationRestoreResponse(long requestId)
   {
-    SUCCESS, SAVE_IN_PROGRESS, RESTORE_IN_PROGRESS, RTI_INTERNAL_ERROR
+    super(FederateMessageProtos.RequestFederationRestoreResponse.newBuilder());
+
+    builder.setRequestId(requestId);
   }
 
-  public RequestFederationRestoreResponse(long id)
+  public RequestFederationRestoreResponse(
+    long requestId, FederateMessageProtos.RequestFederationRestoreResponse.Failure.Cause cause)
   {
-    super(MessageType.REQUEST_FEDERATION_RESTORE_RESPONSE, id, Response.SUCCESS);
+    this(requestId);
 
-    encodingFinished();
+    builder.setFailure(FederateMessageProtos.RequestFederationRestoreResponse.Failure.newBuilder().setCause(cause));
   }
 
-  public RequestFederationRestoreResponse(long id, Response response)
+  public RequestFederationRestoreResponse(CodedInputStream in)
+    throws IOException
   {
-    super(MessageType.REQUEST_FEDERATION_RESTORE_RESPONSE, id, response);
-
-    encodingFinished();
+    super(FederateMessageProtos.RequestFederationRestoreResponse.newBuilder(), in);
   }
 
-  public RequestFederationRestoreResponse(ChannelBuffer buffer)
+  public FederateMessageProtos.RequestFederationRestoreResponse.Failure.Cause getCause()
   {
-    super(buffer, Response.values());
+    return builder.getFailure().getCause();
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.REQUEST_FEDERATION_RESTORE_RESPONSE;
+    return MessageProtos.MessageType.REQUEST_FEDERATION_RESTORE_RESPONSE;
+  }
+
+  @Override
+  public long getRequestId()
+  {
+    return builder.getRequestId();
+  }
+
+  @Override
+  public boolean isSuccess()
+  {
+    return !builder.hasFailure();
+  }
+
+  @Override
+  public boolean isFailure()
+  {
+    return builder.hasFailure();
   }
 }

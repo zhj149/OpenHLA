@@ -16,52 +16,37 @@
 
 package net.sf.ohla.rti;
 
-import java.util.concurrent.Executor;
-
-import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.messages.CreateFederationExecution;
 import net.sf.ohla.rti.messages.DestroyFederationExecution;
-import net.sf.ohla.rti.messages.FederationExecutionMessage;
 import net.sf.ohla.rti.messages.JoinFederationExecution;
 import net.sf.ohla.rti.messages.ListFederationExecutions;
 import net.sf.ohla.rti.messages.Message;
-import net.sf.ohla.rti.messages.MessageChannelHandler;
 
+import org.jboss.netty.channel.ChannelEvent;
 import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.ChannelUpstreamHandler;
+import org.jboss.netty.channel.MessageEvent;
 
 public class RTIChannelHandler
-  extends MessageChannelHandler
+  implements ChannelUpstreamHandler
 {
-  public static final String NAME = "RTIChannelHandler";
+  public static final String NAME = RTIChannelHandler.class.getSimpleName();
 
   private final RTI rti;
 
-  private FederateProxy federateProxy;
-
-  public RTIChannelHandler(Executor executor, RTI rti)
+  public RTIChannelHandler(RTI rti)
   {
-    super(executor);
-
     this.rti = rti;
   }
 
-  public void setFederateProxy(FederateProxy federateProxy)
-  {
-    this.federateProxy = federateProxy;
-  }
-
   @Override
-  protected void messageReceived(ChannelHandlerContext context, Message message)
+  public void handleUpstream(ChannelHandlerContext context, ChannelEvent event)
+    throws Exception
   {
-    if (message instanceof FederationExecutionMessage)
+    if (event instanceof MessageEvent)
     {
-      assert federateProxy != null;
-
-      ((FederationExecutionMessage) message).execute(federateProxy.getFederationExecution(), federateProxy);
-    }
-    else
-    {
-      switch (message.getType())
+      Message message = (Message) ((MessageEvent) event).getMessage();
+      switch (message.getMessageType())
       {
         case CREATE_FEDERATION_EXECUTION:
           rti.createFederationExecution(context, (CreateFederationExecution) message);

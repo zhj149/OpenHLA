@@ -16,47 +16,53 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import java.io.IOException;
+
 import net.sf.ohla.rti.federate.Callback;
 import net.sf.ohla.rti.federate.Federate;
-import net.sf.ohla.rti.messages.EnumMessage;
+import net.sf.ohla.rti.messages.AbstractMessage;
 import net.sf.ohla.rti.messages.FederateMessage;
-import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.SaveFailureReason;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class FederationNotSaved
-  extends EnumMessage<SaveFailureReason>
+  extends AbstractMessage<FederateMessageProtos.FederationNotSaved, FederateMessageProtos.FederationNotSaved.Builder>
   implements Callback, FederateMessage
 {
   private Federate federate;
 
   public FederationNotSaved(SaveFailureReason saveFailureReason)
   {
-    super(MessageType.FEDERATION_NOT_SAVED, saveFailureReason);
+    super(FederateMessageProtos.FederationNotSaved.newBuilder());
 
-    encodingFinished();
+    builder.setSaveFailureReason(FederateMessageProtos.SaveFailureReason.values()[saveFailureReason.ordinal()]);
   }
 
-  public FederationNotSaved(ChannelBuffer buffer)
+  public FederationNotSaved(CodedInputStream in)
+    throws IOException
   {
-    super(buffer, SaveFailureReason.values());
+    super(FederateMessageProtos.FederationNotSaved.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.FEDERATION_NOT_SAVED;
+    return MessageProtos.MessageType.FEDERATION_NOT_SAVED;
   }
 
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federate.fireFederationNotSaved(e);
+    federate.fireFederationNotSaved(SaveFailureReason.values()[builder.getSaveFailureReason().ordinal()]);
   }
 
+  @Override
   public void execute(Federate federate)
   {
     this.federate = federate;

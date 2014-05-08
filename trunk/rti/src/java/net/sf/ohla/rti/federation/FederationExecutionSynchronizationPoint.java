@@ -16,12 +16,11 @@
 
 package net.sf.ohla.rti.federation;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-
+import net.sf.ohla.rti.util.FederateHandles;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandleSet;
+import net.sf.ohla.rti.proto.FederationExecutionSaveProtos.FederationExecutionState.FederationExecutionSynchonizationPointState;
 
+import com.google.protobuf.ByteString;
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.FederateHandleSet;
 
@@ -47,28 +46,20 @@ public class FederationExecutionSynchronizationPoint
     failedToSynchronize = new IEEE1516eFederateHandleSet();
   }
 
-  public FederationExecutionSynchronizationPoint(DataInput in)
-    throws IOException
+  public FederationExecutionSynchronizationPoint(FederationExecutionSynchonizationPointState synchonizationPointState)
   {
-    label = in.readUTF();
+    label = synchonizationPointState.getLabel();
 
-    int length = in.readInt();
-    if (length == 0)
-    {
-      tag = null;
-    }
-    else
-    {
-      tag = new byte[length];
-      in.readFully(tag);
-    }
+    tag = synchonizationPointState.hasTag() ? synchonizationPointState.getTag().toByteArray() : null;
 
-    federateHandles = new IEEE1516eFederateHandleSet(in);
+    federateHandles = FederateHandles.convertFromProto(synchonizationPointState.getFederateHandlesList());
 
-    exclusive = in.readBoolean();
+    exclusive = synchonizationPointState.getExclusive();
 
-    awaitingSynchronization = new IEEE1516eFederateHandleSet(in);
-    failedToSynchronize = new IEEE1516eFederateHandleSet(in);
+    awaitingSynchronization = FederateHandles.convertFromProto(
+      synchonizationPointState.getAwaitingSynchronizationList());
+    failedToSynchronize = FederateHandles.convertFromProto(
+      synchonizationPointState.getFailedToSynchronizeList());
   }
 
   public String getLabel()
@@ -121,26 +112,25 @@ public class FederationExecutionSynchronizationPoint
     return awaitingSynchronization.isEmpty();
   }
 
-  public void writeTo(DataOutput out)
-    throws IOException
+  public FederationExecutionSynchonizationPointState.Builder saveState()
   {
-    out.writeUTF(label);
+    FederationExecutionSynchonizationPointState.Builder synchonizationPointState =
+      FederationExecutionSynchonizationPointState.newBuilder();
 
-    if (tag == null)
+    synchonizationPointState.setLabel(label);
+
+    if (tag != null)
     {
-      out.writeInt(0);
-    }
-    else
-    {
-      out.writeInt(tag.length);
-      out.write(tag);
+      synchonizationPointState.setTag(ByteString.copyFrom(tag));
     }
 
-    ((IEEE1516eFederateHandleSet) federateHandles).writeTo(out);
+    synchonizationPointState.addAllFederateHandles(FederateHandles.convertToProto(federateHandles));
 
-    out.writeBoolean(exclusive);
+    synchonizationPointState.setExclusive(exclusive);
 
-    ((IEEE1516eFederateHandleSet) awaitingSynchronization).writeTo(out);
-    ((IEEE1516eFederateHandleSet) failedToSynchronize).writeTo(out);
+    synchonizationPointState.addAllAwaitingSynchronization(FederateHandles.convertToProto(awaitingSynchronization));
+    synchonizationPointState.addAllFailedToSynchronize(FederateHandles.convertToProto(failedToSynchronize));
+
+    return synchonizationPointState;
   }
 }

@@ -16,59 +16,82 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.LogicalTimes;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.LogicalTime;
 import hla.rti1516e.LogicalTimeFactory;
+import hla.rti1516e.exceptions.CouldNotEncode;
 
 public class RequestFederationSave
-  extends StringRequest<RequestFederationSaveResponse>
-  implements FederationExecutionMessage
+  extends
+  AbstractRequest<FederationExecutionMessageProtos.RequestFederationSave, FederationExecutionMessageProtos.RequestFederationSave.Builder, RequestFederationSaveResponse>
+implements FederationExecutionMessage
 {
-  private final LogicalTime time;
+  private volatile LogicalTime time;
 
   public RequestFederationSave(String label)
   {
-    this(label, null);
+    super(FederationExecutionMessageProtos.RequestFederationSave.newBuilder());
+
+    builder.setLabel(label);
   }
 
   public RequestFederationSave(String label, LogicalTime time)
+    throws CouldNotEncode
   {
-    super(MessageType.REQUEST_FEDERATION_SAVE, label);
+    this(label);
 
     this.time = time;
 
-    Protocol.encodeTime(buffer, time);
-
-    encodingFinished();
+    builder.setTime(LogicalTimes.convert(time));
   }
 
-  public RequestFederationSave(ChannelBuffer buffer, LogicalTimeFactory factory)
+  public RequestFederationSave(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    time = Protocol.decodeTime(buffer, factory);
+    super(FederationExecutionMessageProtos.RequestFederationSave.newBuilder(), in);
   }
 
   public String getLabel()
   {
-    return s;
+    return builder.getLabel();
   }
 
-  public LogicalTime getTime()
+  public LogicalTime getTime(LogicalTimeFactory logicalTimeFactory)
   {
+    if (time == null && builder.hasTime())
+    {
+      time = LogicalTimes.convert(logicalTimeFactory, builder.getTime());
+    }
     return time;
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.REQUEST_FEDERATION_SAVE;
+    return MessageProtos.MessageType.REQUEST_FEDERATION_SAVE;
   }
 
+  @Override
+  public long getRequestId()
+  {
+    return builder.getRequestId();
+  }
+
+  @Override
+  public void setRequestId(long requestId)
+  {
+    builder.setRequestId(requestId);
+  }
+
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.requestFederationSave(federateProxy, this);

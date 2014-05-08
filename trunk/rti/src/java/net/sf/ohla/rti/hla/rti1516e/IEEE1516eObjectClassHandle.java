@@ -16,60 +16,51 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-
-import net.sf.ohla.rti.Protocol;
-import net.sf.ohla.rti.IntegerHandle;
-
-import org.jboss.netty.buffer.ChannelBuffer;
+import java.nio.ByteBuffer;
 
 import hla.rti1516e.ObjectClassHandle;
 
 public class IEEE1516eObjectClassHandle
-  extends IntegerHandle
   implements ObjectClassHandle
 {
-  private static final IEEE1516eObjectClassHandle[] cache;
-  static
-  {
-    // TODO: get cache size from properties
-
-    cache = new IEEE1516eObjectClassHandle[1024];
-
-    for (int i = 1; i < cache.length; i++)
-    {
-      cache[i] = new IEEE1516eObjectClassHandle(i);
-    }
-  }
+  public final int handle;
 
   public IEEE1516eObjectClassHandle(int handle)
   {
-    super(handle);
+    this.handle = handle;
   }
 
-  public static void encode(ChannelBuffer buffer, ObjectClassHandle objectClassHandle)
+  public int getHandle()
   {
-    ((IEEE1516eObjectClassHandle) objectClassHandle).encode(buffer);
+    return handle;
   }
 
-  public static IEEE1516eObjectClassHandle decode(DataInput in)
-    throws IOException
+  public int encodedLength()
   {
-    int handle = decodeHandle(in);
-    return handle < cache.length ? cache[handle] : new IEEE1516eObjectClassHandle(handle);
+    return 4;
   }
 
-  public static IEEE1516eObjectClassHandle decode(ChannelBuffer buffer)
+  public void encode(byte[] buffer, int offset)
   {
-    int handle = decodeHandle(buffer);
-    return handle < cache.length ? cache[handle] : new IEEE1516eObjectClassHandle(handle);
+    ByteBuffer.wrap(buffer, offset, 4).putInt(handle);
   }
 
-  public static IEEE1516eObjectClassHandle decode(byte[] buffer, int offset)
+  @Override
+  public boolean equals(Object rhs)
   {
-    int handle = decodeHandle(buffer, offset);
-    return handle < cache.length ? cache[handle] : new IEEE1516eObjectClassHandle(handle);
+    return this == rhs ||
+           (rhs instanceof IEEE1516eObjectClassHandle && handle == ((IEEE1516eObjectClassHandle) rhs).handle);
+  }
+
+  @Override
+  public int hashCode()
+  {
+    return handle;
+  }
+
+  @Override
+  public String toString()
+  {
+    return Integer.toString(handle);
   }
 }

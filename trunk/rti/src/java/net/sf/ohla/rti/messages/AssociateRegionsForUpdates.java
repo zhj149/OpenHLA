@@ -16,60 +16,82 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.ObjectInstanceHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeSetRegionSetPairList;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectInstanceHandle;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.AttributeSetRegionSetPairList;
 import hla.rti1516e.ObjectInstanceHandle;
 
 public class AssociateRegionsForUpdates
-  extends AbstractRequest<AssociateRegionsForUpdatesResponse>
-  implements FederationExecutionMessage
+  extends
+  AbstractRequest<FederationExecutionMessageProtos.AssociateRegionsForUpdates, FederationExecutionMessageProtos.AssociateRegionsForUpdates.Builder, AssociateRegionsForUpdatesResponse>
+implements FederationExecutionMessage
 {
-  private final ObjectInstanceHandle objectInstanceHandle;
-  private final AttributeSetRegionSetPairList attributesAndRegions;
+  private volatile ObjectInstanceHandle objectInstanceHandle;
+  private volatile AttributeSetRegionSetPairList attributesAndRegions;
 
   public AssociateRegionsForUpdates(
     ObjectInstanceHandle objectInstanceHandle, AttributeSetRegionSetPairList attributesAndRegions)
   {
-    super(MessageType.ASSOCIATE_REGIONS_FOR_UPDATES);
+    super(FederationExecutionMessageProtos.AssociateRegionsForUpdates.newBuilder());
 
     this.objectInstanceHandle = objectInstanceHandle;
     this.attributesAndRegions = attributesAndRegions;
 
-    IEEE1516eObjectInstanceHandle.encode(buffer, objectInstanceHandle);
-    IEEE1516eAttributeSetRegionSetPairList.encode(buffer, attributesAndRegions);
-
-    encodingFinished();
+    builder.setObjectInstanceHandle(ObjectInstanceHandles.convert(objectInstanceHandle));
+    builder.addAllAttributeRegionAssociations(AttributeHandles.convert(attributesAndRegions));
   }
 
-  public AssociateRegionsForUpdates(ChannelBuffer buffer)
+  public AssociateRegionsForUpdates(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    objectInstanceHandle = IEEE1516eObjectInstanceHandle.decode(buffer);
-    attributesAndRegions = IEEE1516eAttributeSetRegionSetPairList.decode(buffer);
+    super(FederationExecutionMessageProtos.AssociateRegionsForUpdates.newBuilder(), in);
   }
 
   public ObjectInstanceHandle getObjectInstanceHandle()
   {
+    if (objectInstanceHandle == null)
+    {
+      objectInstanceHandle = ObjectInstanceHandles.convert(builder.getObjectInstanceHandle());
+    }
     return objectInstanceHandle;
   }
 
   public AttributeSetRegionSetPairList getAttributesAndRegions()
   {
+    if (attributesAndRegions == null)
+    {
+      attributesAndRegions = AttributeHandles.convert(builder.getAttributeRegionAssociationsList());
+    }
     return attributesAndRegions;
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.ASSOCIATE_REGIONS_FOR_UPDATES;
+    return MessageProtos.MessageType.ASSOCIATE_REGIONS_FOR_UPDATES;
   }
 
+  @Override
+  public long getRequestId()
+  {
+    return builder.getRequestId();
+  }
+
+  @Override
+  public void setRequestId(long requestId)
+  {
+    builder.setRequestId(requestId);
+  }
+
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.associateRegionsForUpdates(federateProxy, this);

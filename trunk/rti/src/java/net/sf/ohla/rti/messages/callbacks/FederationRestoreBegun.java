@@ -16,76 +16,72 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.FederateHandles;
 import net.sf.ohla.rti.federate.Callback;
 import net.sf.ohla.rti.federate.Federate;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
+import net.sf.ohla.rti.messages.AbstractMessage;
 import net.sf.ohla.rti.messages.FederateMessage;
-import net.sf.ohla.rti.messages.MessageType;
-import net.sf.ohla.rti.messages.StringMessage;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class FederationRestoreBegun
-  extends StringMessage
+  extends
+  AbstractMessage<FederateMessageProtos.FederationRestoreBegun, FederateMessageProtos.FederationRestoreBegun.Builder>
   implements Callback, FederateMessage
 {
-  private final String federateName;
-  private final FederateHandle federateHandle;
-
   private Federate federate;
 
   public FederationRestoreBegun(String label, String federateName, FederateHandle federateHandle)
   {
-    super(MessageType.FEDERATION_RESTORE_BEGUN, label);
+    super(FederateMessageProtos.FederationRestoreBegun.newBuilder());
 
-    this.federateName = federateName;
-    this.federateHandle = federateHandle;
-
-    Protocol.encodeString(buffer, federateName);
-    IEEE1516eFederateHandle.encode(buffer, federateHandle);
-
-    encodingFinished();
+    builder.setLabel(label);
+    builder.setFederateName(federateName);
+    builder.setFederateHandle(FederateHandles.convert(federateHandle));
   }
 
-  public FederationRestoreBegun(ChannelBuffer buffer)
+  public FederationRestoreBegun(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    federateName = Protocol.decodeString(buffer);
-    federateHandle = IEEE1516eFederateHandle.decode(buffer);
+    super(FederateMessageProtos.FederationRestoreBegun.newBuilder(), in);
   }
 
   public String getLabel()
   {
-    return s;
+    return builder.getLabel();
   }
 
   public String getFederateName()
   {
-    return federateName;
+    return builder.getFederateName();
   }
 
   public FederateHandle getFederateHandle()
   {
-    return federateHandle;
+    return FederateHandles.convert(builder.getFederateHandle());
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.FEDERATION_RESTORE_BEGUN;
+    return MessageProtos.MessageType.FEDERATION_RESTORE_BEGUN;
   }
 
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
     federate.fireFederationRestoreBegun();
   }
 
+  @Override
   public void execute(Federate federate)
   {
     this.federate = federate;

@@ -16,37 +16,57 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import com.google.protobuf.CodedInputStream;
 
 public class GetFederateHandle
-  extends StringRequest<GetFederateHandleResponse>
-  implements FederationExecutionMessage
+  extends
+  AbstractRequest<FederationExecutionMessageProtos.GetFederateHandle, FederationExecutionMessageProtos.GetFederateHandle.Builder, GetFederateHandleResponse>
+implements FederationExecutionMessage
 {
   public GetFederateHandle(String federateName)
   {
-    super(MessageType.GET_FEDERATE_HANDLE, federateName);
+    super(FederationExecutionMessageProtos.GetFederateHandle.newBuilder());
 
-    encodingFinished();
+    builder.setFederateName(federateName);
   }
 
-  public GetFederateHandle(ChannelBuffer buffer)
+  public GetFederateHandle(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.GetFederateHandle.newBuilder(), in);
   }
 
   public String getFederateName()
   {
-    return s;
+    return builder.getFederateName();
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.GET_FEDERATE_HANDLE;
+    return MessageProtos.MessageType.GET_FEDERATE_HANDLE;
   }
 
+  @Override
+  public long getRequestId()
+  {
+    return builder.getRequestId();
+  }
+
+  @Override
+  public void setRequestId(long requestId)
+  {
+    builder.setRequestId(requestId);
+  }
+
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.getFederateHandle(federateProxy, this);

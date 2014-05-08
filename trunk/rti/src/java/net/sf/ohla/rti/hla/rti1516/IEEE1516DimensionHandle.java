@@ -16,22 +16,54 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
-import net.sf.ohla.rti.IntegerHandle;
+import java.nio.ByteBuffer;
+
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandle;
 
 import hla.rti1516.DimensionHandle;
 
 public class IEEE1516DimensionHandle
-  extends IntegerHandle
   implements DimensionHandle
 {
-  public IEEE1516DimensionHandle(byte[] buffer, int offset)
-  {
-    super(buffer, offset);
-  }
+  public final hla.rti1516e.DimensionHandle dimensionHandle;
 
   public IEEE1516DimensionHandle(hla.rti1516e.DimensionHandle dimensionHandle)
   {
-    super((IEEE1516eDimensionHandle) dimensionHandle);
+    this.dimensionHandle = dimensionHandle;
+  }
+
+  public hla.rti1516e.DimensionHandle getDimensionHandle()
+  {
+    return dimensionHandle;
+  }
+
+  public int encodedLength()
+  {
+    return dimensionHandle.encodedLength();
+  }
+
+  public void encode(byte[] buffer, int offset)
+  {
+    dimensionHandle.encode(buffer, offset);
+  }
+
+  @Override
+  public boolean equals(Object rhs)
+  {
+    return this == rhs ||
+           (rhs instanceof IEEE1516DimensionHandle &&
+            dimensionHandle.equals(((IEEE1516DimensionHandle) rhs).dimensionHandle));
+  }
+
+  @Override
+  public int hashCode()
+  {
+    return dimensionHandle.hashCode();
+  }
+
+  @Override
+  public String toString()
+  {
+    return dimensionHandle.toString();
   }
 }

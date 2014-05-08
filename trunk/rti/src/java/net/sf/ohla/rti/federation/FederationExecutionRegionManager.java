@@ -16,9 +16,7 @@
 
 package net.sf.ohla.rti.federation;
 
-import java.io.DataOutput;
 import java.io.IOException;
-import java.io.DataInput;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -32,7 +30,10 @@ import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.messages.CommitRegionModifications;
 import net.sf.ohla.rti.messages.CreateRegion;
 import net.sf.ohla.rti.messages.DeleteRegion;
+import net.sf.ohla.rti.proto.FederationExecutionSaveProtos.FederationExecutionState.FederationExecutionRegionManagerState;
 
+import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.CodedOutputStream;
 import hla.rti1516e.DimensionHandle;
 import hla.rti1516e.RangeBounds;
 import hla.rti1516e.RegionHandle;
@@ -41,15 +42,15 @@ public class FederationExecutionRegionManager
 {
   private final FederationExecution federationExecution;
 
-  private final ReadWriteLock regionsLock = new ReentrantReadWriteLock(true);
-  private final Map<RegionHandle, FederationExecutionRegion> regions = new HashMap<RegionHandle, FederationExecutionRegion>();
+  private final ReentrantReadWriteLock regionsLock = new ReentrantReadWriteLock(true);
+  private final Map<RegionHandle, FederationExecutionRegion> regions = new HashMap<>();
 
   public FederationExecutionRegionManager(FederationExecution federationExecution)
   {
     this.federationExecution = federationExecution;
   }
 
-  public ReadWriteLock getRegionsLock()
+  public ReentrantReadWriteLock getRegionsLock()
   {
     return regionsLock;
   }
@@ -129,7 +130,7 @@ public class FederationExecutionRegionManager
     }
     if (intersects)
     {
-      regions = new HashMap<RegionHandle, Map<DimensionHandle, RangeBounds>>();
+      regions = new HashMap<>();
       for (RegionHandle regionHandle : regionHandles)
       {
         FederationExecutionRegion region = this.regions.get(regionHandle);
@@ -220,22 +221,34 @@ public class FederationExecutionRegionManager
     return intersects;
   }
 
-  public void saveState(DataOutput out)
+  public void saveState(CodedOutputStream out)
     throws IOException
   {
-    out.writeInt(regions.size());
+    FederationExecutionRegionManagerState.Builder regionManagerState =
+      FederationExecutionRegionManagerState.newBuilder();
+
+    regionManagerState.setRegionStateCount(regions.size());
+
+    out.writeMessageNoTag(regionManagerState.build());
+
     for (FederationExecutionRegion region : regions.values())
     {
-      region.writeTo(out);
+      out.writeMessageNoTag(region.saveState().build());
     }
   }
 
-  public void restoreState(DataInput in)
+  public void restoreState(CodedInputStream in)
     throws IOException
   {
-    for (int i = in.readInt(); i > 0; i--)
+    FederationExecutionRegionManagerState regionManagerState =
+      in.readMessage(FederationExecutionRegionManagerState.PARSER, null);
+
+    for (int regionStateCount = regionManagerState.getRegionStateCount(); regionStateCount > 0; --regionStateCount)
     {
-      FederationExecutionRegion region = new FederationExecutionRegion(in);
+      FederationExecutionRegionManagerState.FederationExecutionRegionState regionState =
+        in.readMessage(FederationExecutionRegionManagerState.FederationExecutionRegionState.PARSER, null);
+
+      FederationExecutionRegion region = new FederationExecutionRegion(regionState);
       regions.put(region.getRegionHandle(), region);
     }
   }

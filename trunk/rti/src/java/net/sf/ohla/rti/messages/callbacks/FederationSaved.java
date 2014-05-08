@@ -16,46 +16,50 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import java.io.IOException;
+
 import net.sf.ohla.rti.federate.Callback;
 import net.sf.ohla.rti.federate.Federate;
 import net.sf.ohla.rti.messages.AbstractMessage;
 import net.sf.ohla.rti.messages.FederateMessage;
-import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class FederationSaved
-  extends AbstractMessage
+  extends AbstractMessage<FederateMessageProtos.FederationSaved, FederateMessageProtos.FederationSaved.Builder>
   implements Callback, FederateMessage
 {
   private Federate federate;
 
   public FederationSaved()
   {
-    super(MessageType.FEDERATION_SAVED);
-
-    encodingFinished();
+    super(FederateMessageProtos.FederationSaved.newBuilder());
   }
 
-  public FederationSaved(ChannelBuffer buffer)
+  public FederationSaved(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederateMessageProtos.FederationSaved.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.FEDERATION_SAVED;
+    return MessageProtos.MessageType.FEDERATION_SAVED;
   }
 
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
     federate.fireFederationSaved();
   }
 
+  @Override
   public void execute(Federate federate)
   {
     this.federate = federate;

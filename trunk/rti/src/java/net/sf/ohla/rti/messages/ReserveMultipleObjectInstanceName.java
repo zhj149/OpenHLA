@@ -16,39 +16,46 @@
 
 package net.sf.ohla.rti.messages;
 
-import java.util.Set;
+import java.io.IOException;
+
+import java.util.Collection;
 
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import com.google.protobuf.CodedInputStream;
 
 public class ReserveMultipleObjectInstanceName
-  extends StringsMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.ReserveMultipleObjectInstanceName, FederationExecutionMessageProtos.ReserveMultipleObjectInstanceName.Builder>
   implements FederationExecutionMessage
 {
-  public ReserveMultipleObjectInstanceName(Set<String> objectInstanceNames)
+  public ReserveMultipleObjectInstanceName(Collection<String> objectInstanceNames)
   {
-    super(MessageType.RESERVE_MULTIPLE_OBJECT_INSTANCE_NAME, objectInstanceNames);
+    super(FederationExecutionMessageProtos.ReserveMultipleObjectInstanceName.newBuilder());
 
-    encodingFinished();
+    builder.addAllObjectInstanceNames(objectInstanceNames);
   }
 
-  public ReserveMultipleObjectInstanceName(ChannelBuffer buffer)
+  public ReserveMultipleObjectInstanceName(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.ReserveMultipleObjectInstanceName.newBuilder(), in);
   }
 
-  public Set<String> getObjectInstanceNames()
+  public Collection<String> getObjectInstanceNames()
   {
-    return strings;
+    return builder.getObjectInstanceNamesList();
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.RESERVE_MULTIPLE_OBJECT_INSTANCE_NAME;
+    return MessageProtos.MessageType.RESERVE_MULTIPLE_OBJECT_INSTANCE_NAME;
   }
 
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.reserveMultipleObjectInstanceName(federateProxy, this);

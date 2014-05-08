@@ -16,30 +16,67 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
+
 import org.jboss.netty.buffer.ChannelBuffer;
 
+import com.google.protobuf.CodedInputStream;
+
 public class AbortFederationSaveResponse
-  extends EnumResponse<AbortFederationSaveResponse.Response>
+  extends
+  AbstractMessage<FederateMessageProtos.AbortFederationSaveResponse, FederateMessageProtos.AbortFederationSaveResponse.Builder>
+  implements Response
 {
-  public enum Response
+  public AbortFederationSaveResponse(long requestId)
   {
-    SUCCESS, SAVE_NOT_IN_PROGRESS
+    super(FederateMessageProtos.AbortFederationSaveResponse.newBuilder());
+
+    builder.setRequestId(requestId);
   }
 
-  public AbortFederationSaveResponse(long id, Response response)
+  public AbortFederationSaveResponse(long requestId,
+                                     FederateMessageProtos.AbortFederationSaveResponse.Failure.Cause cause)
   {
-    super(MessageType.ABORT_FEDERATION_SAVE_RESPONSE, id, response);
+    this(requestId);
 
-    encodingFinished();
+    builder.setFailure(FederateMessageProtos.AbortFederationSaveResponse.Failure.newBuilder().setCause(cause));
   }
 
-  public AbortFederationSaveResponse(ChannelBuffer buffer)
+  public AbortFederationSaveResponse(CodedInputStream in)
+    throws IOException
   {
-    super(buffer, AbortFederationSaveResponse.Response.values());
+    super(FederateMessageProtos.AbortFederationSaveResponse.newBuilder(), in);
   }
 
-  public MessageType getType()
+  public FederateMessageProtos.AbortFederationSaveResponse.Failure.Cause getCause()
   {
-    return MessageType.ABORT_FEDERATION_SAVE_RESPONSE;
+    return builder.getFailure().getCause();
+  }
+
+  @Override
+  public MessageProtos.MessageType getMessageType()
+  {
+    return MessageProtos.MessageType.ABORT_FEDERATION_SAVE_RESPONSE;
+  }
+
+  @Override
+  public long getRequestId()
+  {
+    return builder.getRequestId();
+  }
+
+  @Override
+  public boolean isSuccess()
+  {
+    return !builder.hasFailure();
+  }
+
+  @Override
+  public boolean isFailure()
+  {
+    return builder.hasFailure();
   }
 }

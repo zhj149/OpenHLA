@@ -16,38 +16,38 @@
 
 package net.sf.ohla.rti.federation;
 
-import java.io.DataInputStream;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.RandomAccessFile;
+
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
-import java.util.zip.GZIPInputStream;
 
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
+import net.sf.ohla.rti.util.FederateHandles;
 import net.sf.ohla.rti.messages.FederationExecutionMessage;
 import net.sf.ohla.rti.messages.Message;
-import net.sf.ohla.rti.messages.MessageFactory;
+import net.sf.ohla.rti.messages.Messages;
 import net.sf.ohla.rti.messages.callbacks.FederationNotRestored;
 import net.sf.ohla.rti.messages.callbacks.FederationRestoreBegun;
 import net.sf.ohla.rti.messages.callbacks.FederationRestored;
 import net.sf.ohla.rti.messages.callbacks.InitiateFederateRestore;
+import net.sf.ohla.rti.proto.FederationExecutionSaveProtos.FederationExecutionSaveHeader;
+import net.sf.ohla.rti.proto.FederationExecutionSaveProtos.SavedFederationExecutionMessage;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
-
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.FederateRestoreStatus;
 import hla.rti1516e.RestoreFailureReason;
 import hla.rti1516e.RestoreStatus;
-import hla.rti1516e.exceptions.CouldNotDecode;
 
 public class FederationExecutionRestore
 {
@@ -55,80 +55,66 @@ public class FederationExecutionRestore
 
   private final String label;
 
-  private final RandomAccessFile restoreFile;
+  private final Path restoreFile;
+  private final FileChannel restoreFileChannel;
 
   /**
    * {@code Map} of the post-restore {@link FederateHandle} to the {@link FederateRestoreMapping}.
    */
-  private final Map<FederateHandle, FederateRestoreMapping> federateRestoreMappings =
-    new HashMap<FederateHandle, FederateRestoreMapping>();
+  private final Map<FederateHandle, FederateRestoreMapping> federateRestoreMappings = new HashMap<>();
 
-  private final Set<FederateHandle> waitingForFederationToRestore = new HashSet<FederateHandle>();
+  private final Set<FederateHandle> waitingForFederationToRestore = new HashSet<>();
 
-  public FederationExecutionRestore(FederationExecution federationExecution, String label,
-                                    FederateProxy requestingFederateProxy)
+  public FederationExecutionRestore(
+    FederationExecution federationExecution, String label, FederateProxy requestingFederateProxy)
     throws IOException
   {
     this.federationExecution = federationExecution;
     this.label = label;
 
-    File file = new File(federationExecution.getSaveDirectory(), label + FederationExecutionSave.SAVE_FILE_EXTENSION);
+    restoreFile = federationExecution.getSaveDirectory().resolve(label + FederationExecutionSave.SAVE_FILE_EXTENSION);
 
     // TODO: check for existence of file and other stuff
 
-    restoreFile = new RandomAccessFile(file, "rw");
+    restoreFileChannel = FileChannel.open(restoreFile, StandardOpenOption.READ);
 
-    int federatesInSave = restoreFile.readInt();
+    FederationExecutionSaveHeader federationExecutionSaveHeader =
+      FederationExecutionSaveHeader.parseDelimitedFrom(Channels.newInputStream(restoreFileChannel));
 
     // quick check
     //
-    if (federatesInSave != federationExecution.getFederates().size())
+    if (federationExecutionSaveHeader.getFederateCount() != federationExecution.getFederates().size())
     {
       // TODO: not enough federates subscribed
     }
 
-    // organize the federate save headers by type
+    // organize the federate proxy restores by type
     //
-    Map<String, Collection<FederateSaveHeader>> federateSaveHeadersByType =
-      new HashMap<String, Collection<FederateSaveHeader>>();
-    for (int i = 0; i < federatesInSave; i++)
+    Multimap<String, FederateProxyRestore> federateProxyRestoresByType = HashMultimap.create();
+    for (int federateCount = federationExecutionSaveHeader.getFederateCount(); federateCount > 0; --federateCount)
     {
-      FederateSaveHeader federateSaveHeader = new FederateSaveHeader(restoreFile);
-
-      Collection<FederateSaveHeader> federateSaveHeadersOfType =
-        federateSaveHeadersByType.get(federateSaveHeader.getFederateType());
-      if (federateSaveHeadersOfType == null)
-      {
-        federateSaveHeadersOfType = new LinkedList<FederateSaveHeader>();
-        federateSaveHeadersByType.put(federateSaveHeader.getFederateType(), federateSaveHeadersOfType);
-      }
-      federateSaveHeadersOfType.add(federateSaveHeader);
+      FederateProxyRestore federateProxyRestore = new FederateProxyRestore(restoreFileChannel);
+      federateProxyRestoresByType.put(federateProxyRestore.getFederateType(), federateProxyRestore);
     }
 
     // organize the federates by type
     //
-    Map<String, Collection<FederateProxy>> federatesByType = new HashMap<String, Collection<FederateProxy>>();
+    Multimap<String, FederateProxy> federatesByType = HashMultimap.create();
     for (FederateProxy federate : federationExecution.getFederates().values())
     {
-      Collection<FederateProxy> federatesOfType = federatesByType.get(federate.getFederateType());
-      if (federatesOfType == null)
-      {
-        federatesOfType = new LinkedList<FederateProxy>();
-        federatesByType.put(federate.getFederateType(), federatesOfType);
-      }
-      federatesOfType.add(federate);
+      federatesByType.put(federate.getFederateType(), federate);
     }
 
     // ensure that there are the same number of types
     //
-    if (federateSaveHeadersByType.keySet().size() != federatesByType.keySet().size())
+    if (federateProxyRestoresByType.keySet().size() != federatesByType.keySet().size())
     {
       // TODO: incorrect number of federate types
     }
 
     // ensure that there are enough federates of each type and map the saved Federates to connected Federates
     //
-    for (Map.Entry<String, Collection<FederateSaveHeader>> entry : federateSaveHeadersByType.entrySet())
+    for (Map.Entry<String, Collection<FederateProxyRestore>> entry : federateProxyRestoresByType.asMap().entrySet())
     {
       Collection<FederateProxy> federatesOfType = federatesByType.get(entry.getKey());
       if (federatesOfType == null)
@@ -143,8 +129,8 @@ public class FederationExecutionRestore
       {
         // assign the current federates as the saved federates
 
-        Iterator<FederateSaveHeader> i = entry.getValue().iterator();
-        Iterator<FederateProxy> j = federatesOfType.iterator();
+        Iterator<FederateProxy> i = federatesOfType.iterator();
+        Iterator<FederateProxyRestore> j = entry.getValue().iterator();
         while (i.hasNext())
         {
           assert j.hasNext();
@@ -175,25 +161,14 @@ public class FederationExecutionRestore
   {
     try
     {
-      for (int count = federateRestoreMappings.size(); count > 0; count--)
+      for (FederateRestoreMapping federateRestoreMapping : federateRestoreMappings.values())
       {
-        FederateHandle federateHandle = IEEE1516eFederateHandle.decode(restoreFile);
-
-        FederateRestoreMapping federateRestoreMapping = federateRestoreMappings.get(federateHandle);
-        assert federateRestoreMapping != null;
-
-        federateRestoreMapping.initiate(restoreFile);
+        federateRestoreMapping.initiate();
       }
     }
     catch (IOException ioe)
     {
       ioe.printStackTrace();
-
-      fail(RestoreFailureReason.RTI_UNABLE_TO_RESTORE);
-    }
-    catch (CouldNotDecode cnd)
-    {
-      cnd.printStackTrace();
 
       fail(RestoreFailureReason.RTI_UNABLE_TO_RESTORE);
     }
@@ -246,19 +221,16 @@ public class FederationExecutionRestore
 
   public void federationRestored()
   {
+    CodedInputStream restoreFileCodedInputStream =
+      CodedInputStream.newInstance(Channels.newInputStream(restoreFileChannel));
+
     try
     {
-      federationExecution.restoreState(restoreFile);
+      federationExecution.restoreState(restoreFileCodedInputStream);
     }
     catch (IOException e)
     {
       e.printStackTrace();
-
-      // TODO: fail the restore
-    }
-    catch (CouldNotDecode couldNotDecode)
-    {
-      couldNotDecode.printStackTrace();
 
       // TODO: fail the restore
     }
@@ -276,25 +248,18 @@ public class FederationExecutionRestore
 
     // send the messages sent by federates after the save started, but before they were instructed to save
     //
-    try
+    try (FileChannel fileChannel = restoreFileChannel)
     {
-      // read the uncompressed number of messages
-      //
-      int federationExecutionMessageCount = restoreFile.readInt();
-
-      // start reading the compressed part
-      //
-      DataInputStream in = new DataInputStream(new GZIPInputStream(new SavedFederateExecutionMessagesInputStream()));
-
-      for (; federationExecutionMessageCount > 0; federationExecutionMessageCount--)
+      while (!restoreFileCodedInputStream.isAtEnd())
       {
-        FederateHandle sendingFederateHandle = IEEE1516eFederateHandle.decode(in);
+        SavedFederationExecutionMessage savedFederationExecutionMessage =
+          restoreFileCodedInputStream.readMessage(SavedFederationExecutionMessage.PARSER, null);
 
-        ChannelBuffer buffer = ChannelBuffers.buffer(in.readInt());
-        buffer.writeBytes(in, buffer.writableBytes());
+        FederateHandle sendingFederateHandle = FederateHandles.convert(
+          savedFederationExecutionMessage.getSendingFederateHandle());
 
-        Message message = MessageFactory.createMessage(
-          buffer, federationExecution.getTimeManager().getLogicalTimeFactory());
+        Message message = Messages.parseDelimitedFrom(
+          restoreFileCodedInputStream, savedFederationExecutionMessage.getFederationExecutionMessageType());
         assert message instanceof FederationExecutionMessage;
 
         ((FederationExecutionMessage) message).execute(
@@ -307,38 +272,23 @@ public class FederationExecutionRestore
 
       // TODO: ??
     }
-    finally
-    {
-      try
-      {
-        restoreFile.close();
-      }
-      catch (IOException e)
-      {
-        e.printStackTrace();
-
-        // TODO: ??
-      }
-    }
   }
 
   private class FederateRestoreMapping
   {
-    private final FederateSaveHeader federateSaveHeader;
     private final FederateProxy federateProxy;
+    private final FederateProxyRestore federateProxyRestore;
 
     private final FederateHandle preRestoreFederateHandle;
     private final String preRestoreFederateName;
 
-    private FederateProxyRestore federateProxyRestore;
-
     private volatile RestoreStatus restoreStatus;
 
-    public FederateRestoreMapping(FederateSaveHeader federateSaveHeader, FederateProxy federateProxy,
-                                  FederateProxy requestingFederateProxy)
+    public FederateRestoreMapping(
+      FederateProxy federateProxy, FederateProxyRestore federateProxyRestore, FederateProxy requestingFederateProxy)
     {
-      this.federateSaveHeader = federateSaveHeader;
       this.federateProxy = federateProxy;
+      this.federateProxyRestore = federateProxyRestore;
 
       preRestoreFederateHandle = federateProxy.getFederateHandle();
       preRestoreFederateName = federateProxy.getFederateName();
@@ -347,19 +297,19 @@ public class FederationExecutionRestore
         RestoreStatus.FEDERATE_WAITING_FOR_RESTORE_TO_BEGIN : RestoreStatus.NO_RESTORE_IN_PROGRESS;
     }
 
-    public FederateSaveHeader getFederateSaveHeader()
-    {
-      return federateSaveHeader;
-    }
-
     public FederateProxy getFederateProxy()
     {
       return federateProxy;
     }
 
+    public FederateProxyRestore getFederateProxyRestore()
+    {
+      return federateProxyRestore;
+    }
+
     public FederateRestoreStatus getFederateRestoreStatus()
     {
-      return new FederateRestoreStatus(preRestoreFederateHandle, federateSaveHeader.getFederateHandle(), restoreStatus);
+      return new FederateRestoreStatus(preRestoreFederateHandle, federateProxyRestore.getFederateHandle(), restoreStatus);
     }
 
     public FederateHandle getPreRestoreFederateHandle()
@@ -374,12 +324,12 @@ public class FederationExecutionRestore
 
     public FederateHandle getPostRestoreFederateHandle()
     {
-      return federateSaveHeader.getFederateHandle();
+      return federateProxyRestore.getFederateHandle();
     }
 
     public String getPostRestoreFederateName()
     {
-      return federateSaveHeader.getFederateName();
+      return federateProxyRestore.getFederateName();
     }
 
     public void begin()
@@ -387,18 +337,14 @@ public class FederationExecutionRestore
       // notify the Federate a restore has begun
       //
       federateProxy.federationRestoreBegun(new FederationRestoreBegun(
-        label, federateSaveHeader.getFederateName(), federateSaveHeader.getFederateHandle()));
+        label, federateProxyRestore.getFederateName(), federateProxyRestore.getFederateHandle()));
 
       restoreStatus = RestoreStatus.FEDERATE_PREPARED_TO_RESTORE;
     }
 
-    public void initiate(RandomAccessFile file)
-      throws IOException, CouldNotDecode
+    public void initiate()
+      throws IOException
     {
-      federateProxyRestore = new FederateProxyRestore(
-        federateSaveHeader.getFederateHandle(), federateSaveHeader.getFederateName(),
-        federateSaveHeader.getFederateType(), file);
-
       // tell the Federate to initiate the restore
       //
       federateProxy.initiateFederateRestore(new InitiateFederateRestore());
@@ -416,79 +362,6 @@ public class FederationExecutionRestore
     public void federationRestored(FederationRestored federationRestored)
     {
       federateProxy.federationRestored(federationRestored);
-    }
-  }
-
-  private class SavedFederateExecutionMessagesInputStream
-    extends InputStream
-  {
-    public int read()
-    throws IOException
-    {
-      return restoreFile.read();
-    }
-
-    @Override
-    public int read(byte b[], int off, int len)
-    throws IOException
-    {
-      return restoreFile.read(b, off, len);
-    }
-
-    @Override
-    public long skip(long n)
-    throws IOException
-    {
-      long skipped;
-
-      long availableToSkip = restoreFile.length() - restoreFile.getFilePointer();
-      if (n > availableToSkip)
-      {
-        skipped = availableToSkip;
-      }
-      else
-      {
-        skipped = n;
-      }
-      restoreFile.seek(restoreFile.getFilePointer() + n);
-      return skipped;
-    }
-
-    @Override
-    public int available()
-      throws IOException
-    {
-      return new Long(restoreFile.length() - restoreFile.getFilePointer()).intValue();
-    }
-  }
-
-  private static class FederateSaveHeader
-  {
-    private final IEEE1516eFederateHandle federateHandle;
-    private final String federateName;
-    private final String federateType;
-
-    public FederateSaveHeader(RandomAccessFile restoreFile)
-      throws IOException
-    {
-      federateHandle = IEEE1516eFederateHandle.decode(restoreFile);
-      federateName = restoreFile.readUTF();
-      federateType = restoreFile.readUTF();
-    }
-
-    public IEEE1516eFederateHandle getFederateHandle()
-    {
-      return federateHandle;
-    }
-
-    public String getFederateName()
-    {
-      return federateName;
-    }
-
-    public String getFederateType()
-    {
-      return federateType;
     }
   }
 }

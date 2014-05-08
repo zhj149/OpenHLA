@@ -16,8 +16,9 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandleFactory;
+
 import hla.rti1516.CouldNotDecode;
-import hla.rti1516.FederateNotExecutionMember;
 import hla.rti1516.ParameterHandle;
 import hla.rti1516.ParameterHandleFactory;
 
@@ -31,9 +32,16 @@ public class IEEE1516ParameterHandleFactory
   }
 
   public ParameterHandle decode(byte[] buffer, int offset)
-    throws CouldNotDecode, FederateNotExecutionMember
+    throws CouldNotDecode
   {
-    return new IEEE1516ParameterHandle(buffer, offset);
+    try
+    {
+      return new IEEE1516ParameterHandle(IEEE1516eParameterHandleFactory.INSTANCE.decode(buffer, offset));
+    }
+    catch (hla.rti1516e.exceptions.CouldNotDecode cnd)
+    {
+      throw new CouldNotDecode(cnd);
+    }
   }
 
   private Object readResolve()

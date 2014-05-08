@@ -16,32 +16,38 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import com.google.protobuf.CodedInputStream;
 
 public class QueryFederationRestoreStatus
-  extends AbstractMessage
-  implements FederationExecutionMessage
+  extends
+  AbstractMessage<FederationExecutionMessageProtos.QueryFederationRestoreStatus, FederationExecutionMessageProtos.QueryFederationRestoreStatus.Builder>
+implements FederationExecutionMessage
 {
   public QueryFederationRestoreStatus()
   {
-    super(MessageType.QUERY_FEDERATION_RESTORE_STATUS);
-
-    encodingFinished();
+    super(FederationExecutionMessageProtos.QueryFederationRestoreStatus.newBuilder());
   }
 
-  public QueryFederationRestoreStatus(ChannelBuffer buffer)
+  public QueryFederationRestoreStatus(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.QueryFederationRestoreStatus.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.QUERY_FEDERATION_RESTORE_STATUS;
+    return MessageProtos.MessageType.QUERY_FEDERATION_RESTORE_STATUS;
   }
 
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.queryFederationRestoreStatus(federateProxy, this);

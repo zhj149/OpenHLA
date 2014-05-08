@@ -16,16 +16,8 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
-import java.io.DataOutput;
-import java.io.IOException;
-import java.io.DataInput;
-
 import java.util.Collection;
 import java.util.HashSet;
-
-import net.sf.ohla.rti.Protocol;
-
-import org.jboss.netty.buffer.ChannelBuffer;
 
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.FederateHandleSet;
@@ -53,62 +45,5 @@ public class IEEE1516eFederateHandleSet
   public IEEE1516eFederateHandleSet(IEEE1516eFederateHandleSet federateHandleSet)
   {
     super(federateHandleSet);
-  }
-
-  public IEEE1516eFederateHandleSet(DataInput in)
-    throws IOException
-  {
-    for (int count = in.readInt(); count > 0; count--)
-    {
-      add(IEEE1516eFederateHandle.decode(in));
-    }
-  }
-
-  public void writeTo(DataOutput out)
-    throws IOException
-  {
-    out.writeInt(size());
-    for (FederateHandle federateHandle : this)
-    {
-      ((IEEE1516eFederateHandle) federateHandle).writeTo(out);
-    }
-  }
-
-  public static void encode(ChannelBuffer buffer, FederateHandleSet federateHandles)
-  {
-    if (federateHandles == null)
-    {
-      Protocol.encodeVarInt(buffer, 0);
-    }
-    else
-    {
-      Protocol.encodeVarInt(buffer, federateHandles.size());
-      for (FederateHandle federateHandle : federateHandles)
-      {
-        IEEE1516eFederateHandle.encode(buffer, federateHandle);
-      }
-    }
-  }
-
-  public static IEEE1516eFederateHandleSet decode(ChannelBuffer buffer)
-  {
-    IEEE1516eFederateHandleSet federateHandles;
-
-    int size = Protocol.decodeVarInt(buffer);
-    if (size == 0)
-    {
-      federateHandles = null;
-    }
-    else
-    {
-      federateHandles = new IEEE1516eFederateHandleSet();
-
-      for (; size > 0; size--)
-      {
-        federateHandles.add(IEEE1516eFederateHandle.decode(buffer));
-      }
-    }
-
-    return federateHandles;
   }
 }

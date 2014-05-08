@@ -16,76 +16,75 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.ObjectClassHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSet;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.ObjectClassHandle;
 
 public class SubscribeObjectClassAttributes
-  extends ObjectClassMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.SubscribeObjectClassAttributes, FederationExecutionMessageProtos.SubscribeObjectClassAttributes.Builder>
   implements FederationExecutionMessage
 {
-  private final AttributeHandleSet attributeHandles;
-  private final boolean passive;
-  private final String updateRateDesignator;
-
   public SubscribeObjectClassAttributes(
     ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles, boolean passive)
   {
-    this(objectClassHandle, attributeHandles, passive, null);
+    super(FederationExecutionMessageProtos.SubscribeObjectClassAttributes.newBuilder());
+
+    builder.setObjectClassHandle(ObjectClassHandles.convert(objectClassHandle));
+    builder.addAllAttributeHandles(AttributeHandles.convert(attributeHandles));
+    builder.setPassive(passive);
   }
 
   public SubscribeObjectClassAttributes(
     ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles, boolean passive,
     String updateRateDesignator)
   {
-    super(MessageType.SUBSCRIBE_OBJECT_CLASS_ATTRIBUTES, objectClassHandle);
+    this(objectClassHandle, attributeHandles, passive);
 
-    this.attributeHandles = attributeHandles;
-    this.passive = passive;
-    this.updateRateDesignator = updateRateDesignator;
-
-    IEEE1516eAttributeHandleSet.encode(buffer, attributeHandles);
-    Protocol.encodeBoolean(buffer, passive);
-    Protocol.encodeOptionalString(buffer, updateRateDesignator);
-
-    encodingFinished();
+    builder.setUpdateRateDesignator(updateRateDesignator);
   }
 
-  public SubscribeObjectClassAttributes(ChannelBuffer buffer)
+  public SubscribeObjectClassAttributes(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.SubscribeObjectClassAttributes.newBuilder(), in);
+  }
 
-    attributeHandles = IEEE1516eAttributeHandleSet.decode(buffer);
-    passive = Protocol.decodeBoolean(buffer);
-    updateRateDesignator = Protocol.decodeOptionalString(buffer);
+  public ObjectClassHandle getObjectClassHandle()
+  {
+    return ObjectClassHandles.convert(builder.getObjectClassHandle());
   }
 
   public AttributeHandleSet getAttributeHandles()
   {
-    return attributeHandles;
+    return AttributeHandles.convertAttributeHandles(builder.getAttributeHandlesList());
   }
 
   public boolean isPassive()
   {
-    return passive;
+    return builder.getPassive();
   }
 
   public String getUpdateRateDesignator()
   {
-    return updateRateDesignator;
+    return builder.getUpdateRateDesignator();
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.SUBSCRIBE_OBJECT_CLASS_ATTRIBUTES;
+    return MessageProtos.MessageType.SUBSCRIBE_OBJECT_CLASS_ATTRIBUTES;
   }
 
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.subscribeObjectClassAttributes(federateProxy, this);

@@ -16,6 +16,10 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
+import java.nio.ByteBuffer;
+
+import net.sf.ohla.rti.util.ParameterHandles;
+
 import hla.rti1516e.ParameterHandle;
 import hla.rti1516e.ParameterHandleFactory;
 import hla.rti1516e.exceptions.CouldNotDecode;
@@ -34,7 +38,7 @@ public class IEEE1516eParameterHandleFactory
   {
     try
     {
-      return IEEE1516eParameterHandle.decode(buffer, offset);
+      return ParameterHandles.convert(ByteBuffer.wrap(buffer, offset, 4).getInt());
     }
     catch (Throwable t)
     {

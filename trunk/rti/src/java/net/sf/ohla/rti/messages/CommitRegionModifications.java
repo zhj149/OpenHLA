@@ -16,75 +16,86 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
 import java.util.HashMap;
 import java.util.Map;
 
-import net.sf.ohla.rti.Protocol;
+import net.sf.ohla.rti.util.DimensionHandles;
+import net.sf.ohla.rti.util.RegionHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandle;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandle;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
+import net.sf.ohla.rti.proto.OHLAProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.DimensionHandle;
 import hla.rti1516e.RangeBounds;
 import hla.rti1516e.RegionHandle;
 
 public class CommitRegionModifications
-  extends AbstractMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.CommitRegionModifications, FederationExecutionMessageProtos.CommitRegionModifications.Builder>
   implements FederationExecutionMessage
 {
-  private final Map<RegionHandle, Map<DimensionHandle, RangeBounds>> regionModifications;
+  private volatile Map<RegionHandle, Map<DimensionHandle, RangeBounds>> regionModifications;
 
   public CommitRegionModifications(Map<RegionHandle, Map<DimensionHandle, RangeBounds>> regionModifications)
   {
-    super(MessageType.COMMIT_REGION_MODIFICATIONS);
+    super(FederationExecutionMessageProtos.CommitRegionModifications.newBuilder());
 
     this.regionModifications = regionModifications;
 
-    Protocol.encodeVarInt(buffer, regionModifications.size());
     for (Map.Entry<RegionHandle, Map<DimensionHandle, RangeBounds>> entry : regionModifications.entrySet())
     {
-      IEEE1516eRegionHandle.encode(buffer, entry.getKey());
-      Protocol.encodeVarInt(buffer, entry.getValue().size());
+      FederationExecutionMessageProtos.CommitRegionModifications.RegionModification.Builder regionModification =
+        FederationExecutionMessageProtos.CommitRegionModifications.RegionModification.newBuilder().setRegionHandle(RegionHandles.convert(entry.getKey()));
       for (Map.Entry<DimensionHandle, RangeBounds> entry2 : entry.getValue().entrySet())
       {
-        IEEE1516eDimensionHandle.encode(buffer, entry2.getKey());
-        Protocol.encodeRangeBounds(buffer, entry2.getValue());
+        regionModification.addDimensionRangeBounds(
+          OHLAProtos.DimensionRangeBound.newBuilder().setDimensionHandle(
+            DimensionHandles.convert(entry2.getKey())).setLowerBound(
+            entry2.getValue().lower).setUpperBound(
+            entry2.getValue().upper));
       }
+      builder.addRegionModifications(regionModification);
     }
-
-    encodingFinished();
   }
 
-  public CommitRegionModifications(ChannelBuffer buffer)
+  public CommitRegionModifications(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    regionModifications = new HashMap<RegionHandle, Map<DimensionHandle, RangeBounds>>();
-
-    for (int count = Protocol.decodeVarInt(buffer); count > 0; count--)
-    {
-      Map<DimensionHandle, RangeBounds> rangeBounds = new HashMap<DimensionHandle, RangeBounds>();
-      regionModifications.put(IEEE1516eRegionHandle.decode(buffer), rangeBounds);
-      for (int count2 = Protocol.decodeVarInt(buffer); count2 > 0; count2--)
-      {
-        rangeBounds.put(IEEE1516eDimensionHandle.decode(buffer), Protocol.decodeRangeBounds(buffer));
-      }
-    }
+    super(FederationExecutionMessageProtos.CommitRegionModifications.newBuilder(), in);
   }
 
   public Map<RegionHandle, Map<DimensionHandle, RangeBounds>> getRegionModifications()
   {
+    if (regionModifications == null)
+    {
+      Map<RegionHandle, Map<DimensionHandle, RangeBounds>> regionModifications = new HashMap<>();
+      for (FederationExecutionMessageProtos.CommitRegionModifications.RegionModification regionModification : builder.getRegionModificationsList())
+      {
+        Map<DimensionHandle, RangeBounds> dimensionRangeBounds = new HashMap<>();
+        for (OHLAProtos.DimensionRangeBound dimensionRangeBound : regionModification.getDimensionRangeBoundsList())
+        {
+          dimensionRangeBounds.put(
+            DimensionHandles.convert(dimensionRangeBound.getDimensionHandle()),
+            new RangeBounds(dimensionRangeBound.getLowerBound(), dimensionRangeBound.getUpperBound()));
+        }
+        regionModifications.put(RegionHandles.convert(regionModification.getRegionHandle()), dimensionRangeBounds);
+      }
+      this.regionModifications = regionModifications;
+    }
     return regionModifications;
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.COMMIT_REGION_MODIFICATIONS;
+    return MessageProtos.MessageType.COMMIT_REGION_MODIFICATIONS;
   }
 
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.commitRegionModifications(federateProxy, this);

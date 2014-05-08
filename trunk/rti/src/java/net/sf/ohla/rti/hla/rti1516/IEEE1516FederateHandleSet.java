@@ -18,7 +18,6 @@ package net.sf.ohla.rti.hla.rti1516;
 
 import java.util.HashSet;
 
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandleSetFactory;
 
 import hla.rti1516.FederateHandle;
@@ -45,7 +44,7 @@ public class IEEE1516FederateHandleSet
     hla.rti1516e.FederateHandleSet ieee1516eFederateHandles = IEEE1516eFederateHandleSetFactory.INSTANCE.create();
     for (FederateHandle federateHandle : federateHandles)
     {
-      ieee1516eFederateHandles.add(new IEEE1516eFederateHandle(((IEEE1516FederateHandle) federateHandle).getHandle()));
+      ieee1516eFederateHandles.add(((IEEE1516FederateHandle) federateHandle).getFederateHandle());
     }
     return ieee1516eFederateHandles;
   }

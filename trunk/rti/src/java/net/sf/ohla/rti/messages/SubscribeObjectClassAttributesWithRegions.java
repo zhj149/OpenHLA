@@ -16,76 +16,75 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.ObjectClassHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeSetRegionSetPairList;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.AttributeSetRegionSetPairList;
 import hla.rti1516e.ObjectClassHandle;
 
 public class SubscribeObjectClassAttributesWithRegions
-  extends ObjectClassMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.SubscribeObjectClassAttributesWithRegions, FederationExecutionMessageProtos.SubscribeObjectClassAttributesWithRegions.Builder>
   implements FederationExecutionMessage
 {
-  private final AttributeSetRegionSetPairList attributesAndRegions;
-  private final boolean passive;
-  private final String updateRateDesignator;
-
   public SubscribeObjectClassAttributesWithRegions(
     ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions, boolean passive)
   {
-    this(objectClassHandle, attributesAndRegions, passive, null);
+    super(FederationExecutionMessageProtos.SubscribeObjectClassAttributesWithRegions.newBuilder());
+
+    builder.setObjectClassHandle(ObjectClassHandles.convert(objectClassHandle));
+    builder.addAllAttributeRegionAssociations(AttributeHandles.convert(attributesAndRegions));
+    builder.setPassive(passive);
   }
 
   public SubscribeObjectClassAttributesWithRegions(
     ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions,
     boolean passive, String updateRateDesignator)
   {
-    super(MessageType.SUBSCRIBE_OBJECT_CLASS_ATTRIBUTES_WITH_REGIONS, objectClassHandle);
+    this(objectClassHandle, attributesAndRegions, passive);
 
-    this.attributesAndRegions = attributesAndRegions;
-    this.passive = passive;
-    this.updateRateDesignator = updateRateDesignator;
-
-    IEEE1516eAttributeSetRegionSetPairList.encode(buffer, attributesAndRegions);
-    Protocol.encodeBoolean(buffer, passive);
-    Protocol.encodeOptionalString(buffer, updateRateDesignator);
-
-    encodingFinished();
+    builder.setUpdateRateDesignator(updateRateDesignator);
   }
 
-  public SubscribeObjectClassAttributesWithRegions(ChannelBuffer buffer)
+  public SubscribeObjectClassAttributesWithRegions(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.SubscribeObjectClassAttributesWithRegions.newBuilder(), in);
+  }
 
-    attributesAndRegions = IEEE1516eAttributeSetRegionSetPairList.decode(buffer);
-    passive = Protocol.decodeBoolean(buffer);
-    updateRateDesignator = Protocol.decodeOptionalString(buffer);
+  public ObjectClassHandle getObjectClassHandle()
+  {
+    return ObjectClassHandles.convert(builder.getObjectClassHandle());
   }
 
   public AttributeSetRegionSetPairList getAttributesAndRegions()
   {
-    return attributesAndRegions;
+    return AttributeHandles.convert(builder.getAttributeRegionAssociationsList());
   }
 
   public boolean isPassive()
   {
-    return passive;
+    return builder.getPassive();
   }
 
   public String getUpdateRateDesignator()
   {
-    return updateRateDesignator;
+    return builder.getUpdateRateDesignator();
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.SUBSCRIBE_OBJECT_CLASS_ATTRIBUTES_WITH_REGIONS;
+    return MessageProtos.MessageType.SUBSCRIBE_OBJECT_CLASS_ATTRIBUTES_WITH_REGIONS;
   }
 
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.subscribeObjectClassAttributesWithRegions(federateProxy, this);

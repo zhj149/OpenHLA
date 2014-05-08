@@ -16,37 +16,43 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
+import net.sf.ohla.rti.proto.OHLAProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.ResignAction;
 
 public class ResignFederationExecution
-  extends EnumMessage<ResignAction>
-  implements FederationExecutionMessage
+  extends
+  AbstractMessage<FederationExecutionMessageProtos.ResignFederationExecution, FederationExecutionMessageProtos.ResignFederationExecution.Builder>
+implements FederationExecutionMessage
 {
   public ResignFederationExecution(ResignAction resignAction)
   {
-    super(MessageType.RESIGN_FEDERATION_EXECUTION, resignAction);
+    super(FederationExecutionMessageProtos.ResignFederationExecution.newBuilder());
 
-    encodingFinished();
+    builder.setResignAction(OHLAProtos.ResignAction.values()[resignAction.ordinal()]);
   }
 
-  public ResignFederationExecution(ChannelBuffer buffer)
+  public ResignFederationExecution(CodedInputStream in)
+    throws IOException
   {
-    super(buffer, ResignAction.values());
+    super(FederationExecutionMessageProtos.ResignFederationExecution.newBuilder(), in);
   }
 
   public ResignAction getResignAction()
   {
-    return e;
+    return ResignAction.values()[builder.getResignAction().ordinal()];
   }
 
-  public MessageType getType()
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.RESIGN_FEDERATION_EXECUTION;
+    return MessageProtos.MessageType.RESIGN_FEDERATION_EXECUTION;
   }
 
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)

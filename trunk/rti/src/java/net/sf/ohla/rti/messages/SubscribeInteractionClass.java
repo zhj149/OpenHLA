@@ -16,48 +16,52 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.InteractionClassHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.InteractionClassHandle;
 
 public class SubscribeInteractionClass
-  extends InteractionClassMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.SubscribeInteractionClass, FederationExecutionMessageProtos.SubscribeInteractionClass.Builder>
   implements FederationExecutionMessage
 {
-  private final boolean passive;
-
   public SubscribeInteractionClass(InteractionClassHandle interactionClassHandle, boolean passive)
   {
-    super(MessageType.SUBSCRIBE_INTERACTION_CLASS, interactionClassHandle);
+    super(FederationExecutionMessageProtos.SubscribeInteractionClass.newBuilder());
 
-    this.passive = passive;
-
-    Protocol.encodeBoolean(buffer, passive);
-
-    encodingFinished();
+    builder.setInteractionClassHandle(InteractionClassHandles.convert(interactionClassHandle));
+    builder.setPassive(passive);
   }
 
-  public SubscribeInteractionClass(ChannelBuffer buffer)
+  public SubscribeInteractionClass(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.SubscribeInteractionClass.newBuilder(), in);
+  }
 
-    passive = Protocol.decodeBoolean(buffer);
+  public InteractionClassHandle getInteractionClassHandle()
+  {
+    return InteractionClassHandles.convert(builder.getInteractionClassHandle());
   }
 
   public boolean isPassive()
   {
-    return passive;
+    return builder.getPassive();
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.SUBSCRIBE_INTERACTION_CLASS;
+    return MessageProtos.MessageType.SUBSCRIBE_INTERACTION_CLASS;
   }
 
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.subscribeInteractionClass(federateProxy, this);

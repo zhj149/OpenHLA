@@ -16,30 +16,64 @@
 
 package net.sf.ohla.rti.messages;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import java.io.IOException;
+
+import net.sf.ohla.rti.messages.proto.ConnectedMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
+
+import com.google.protobuf.CodedInputStream;
 
 public class CreateFederationExecutionResponse
-  extends EnumResponse<CreateFederationExecutionResponse.Response>
+  extends
+  AbstractMessage<ConnectedMessageProtos.CreateFederationExecutionResponse, ConnectedMessageProtos.CreateFederationExecutionResponse.Builder>
+  implements Response
 {
-  public enum Response
+  public CreateFederationExecutionResponse(long requestId)
   {
-    SUCCESS, FEDERATION_EXECUTION_ALREADY_EXISTS, COULD_NOT_CREATE_LOGICAL_TIME_FACTORY
+    super(ConnectedMessageProtos.CreateFederationExecutionResponse.newBuilder());
+
+    builder.setRequestId(requestId);
   }
 
-  public CreateFederationExecutionResponse(long id, Response response)
+  public CreateFederationExecutionResponse(long requestId,
+                                           ConnectedMessageProtos.CreateFederationExecutionResponse.Failure.Cause cause)
   {
-    super(MessageType.CREATE_FEDERATION_EXECUTION_RESPONSE, id, response);
+    this(requestId);
 
-    encodingFinished();
+    builder.setFailure(ConnectedMessageProtos.CreateFederationExecutionResponse.Failure.newBuilder().setCause(cause));
   }
 
-  public CreateFederationExecutionResponse(ChannelBuffer buffer)
+  public CreateFederationExecutionResponse(CodedInputStream in)
+    throws IOException
   {
-    super(buffer, Response.values());
+    super(ConnectedMessageProtos.CreateFederationExecutionResponse.newBuilder(), in);
   }
 
-  public MessageType getType()
+  public ConnectedMessageProtos.CreateFederationExecutionResponse.Failure getFailure()
   {
-    return MessageType.CREATE_FEDERATION_EXECUTION_RESPONSE;
+    return builder.getFailure();
+  }
+
+  public MessageProtos.MessageType getMessageType()
+  {
+    return MessageProtos.MessageType.CREATE_FEDERATION_EXECUTION_RESPONSE;
+  }
+
+  @Override
+  public long getRequestId()
+  {
+    return builder.getRequestId();
+  }
+
+  @Override
+  public boolean isSuccess()
+  {
+    return !builder.hasFailure();
+  }
+
+  @Override
+  public boolean isFailure()
+  {
+    return builder.hasFailure();
   }
 }

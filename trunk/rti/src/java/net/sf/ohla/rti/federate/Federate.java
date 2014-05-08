@@ -16,10 +16,6 @@
 
 package net.sf.ohla.rti.federate;
 
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.DataOutputStream;
 import java.io.IOException;
 
 import java.util.HashMap;
@@ -36,6 +32,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.fdd.ObjectClass;
+import net.sf.ohla.rti.hla.rti.HLA13RTIambassador;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleFactory;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSetFactory;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleValueMapFactory;
@@ -56,23 +53,24 @@ import net.sf.ohla.rti.i18n.I18n;
 import net.sf.ohla.rti.i18n.I18nLogger;
 import net.sf.ohla.rti.i18n.LogMessages;
 import net.sf.ohla.rti.messages.AbortFederationRestore;
+import net.sf.ohla.rti.messages.AbortFederationRestoreResponse;
 import net.sf.ohla.rti.messages.AbortFederationSave;
+import net.sf.ohla.rti.messages.AbortFederationSaveResponse;
 import net.sf.ohla.rti.messages.FederateStateFrame;
-import net.sf.ohla.rti.messages.FederateStateInputStream;
-import net.sf.ohla.rti.messages.FederateStateOutputStream;
 import net.sf.ohla.rti.messages.GetFederateHandle;
 import net.sf.ohla.rti.messages.GetFederateHandleResponse;
 import net.sf.ohla.rti.messages.GetFederateName;
 import net.sf.ohla.rti.messages.GetFederateNameResponse;
 import net.sf.ohla.rti.messages.JoinFederationExecution;
 import net.sf.ohla.rti.messages.JoinFederationExecutionResponse;
-import net.sf.ohla.rti.messages.MessageDecoder;
 import net.sf.ohla.rti.messages.QueryFederationRestoreStatus;
 import net.sf.ohla.rti.messages.QueryFederationSaveStatus;
 import net.sf.ohla.rti.messages.QueryInteractionTransportationType;
 import net.sf.ohla.rti.messages.RegisterFederationSynchronizationPoint;
 import net.sf.ohla.rti.messages.RequestFederationRestore;
+import net.sf.ohla.rti.messages.RequestFederationRestoreResponse;
 import net.sf.ohla.rti.messages.RequestFederationSave;
+import net.sf.ohla.rti.messages.RequestFederationSaveResponse;
 import net.sf.ohla.rti.messages.RequestObjectClassAttributeValueUpdate;
 import net.sf.ohla.rti.messages.RequestObjectClassAttributeValueUpdateWithRegions;
 import net.sf.ohla.rti.messages.ResignFederationExecution;
@@ -85,11 +83,14 @@ import net.sf.ohla.rti.messages.callbacks.ReceiveInteraction;
 import net.sf.ohla.rti.messages.callbacks.ReflectAttributeValues;
 import net.sf.ohla.rti.messages.callbacks.RemoveObjectInstance;
 import net.sf.ohla.rti.messages.callbacks.ReportInteractionTransportationType;
+import net.sf.ohla.rti.proto.FederationExecutionSaveProtos;
 
 import org.jboss.netty.channel.Channel;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
+import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.CodedOutputStream;
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleFactory;
 import hla.rti1516e.AttributeHandleSet;
@@ -153,6 +154,7 @@ import hla.rti1516e.exceptions.AttributeRelevanceAdvisorySwitchIsOn;
 import hla.rti1516e.exceptions.AttributeScopeAdvisorySwitchIsOff;
 import hla.rti1516e.exceptions.AttributeScopeAdvisorySwitchIsOn;
 import hla.rti1516e.exceptions.CouldNotCreateLogicalTimeFactory;
+import hla.rti1516e.exceptions.CouldNotEncode;
 import hla.rti1516e.exceptions.DeletePrivilegeNotHeld;
 import hla.rti1516e.exceptions.FederateHandleNotKnown;
 import hla.rti1516e.exceptions.FederateHasNotBegunSave;
@@ -221,15 +223,6 @@ import hla.rti1516e.exceptions.TimeRegulationIsNotEnabled;
 
 public class Federate
 {
-  public interface SaveStateProcessor
-  {
-    byte[] createExtraSaveState()
-      throws IOException;
-
-    void processExtraSaveState(byte[] extraSaveState)
-      throws IOException;
-  }
-
   private final String federateType;
   private final String federationExecutionName;
 
@@ -242,7 +235,7 @@ public class Federate
    */
   private final Channel rtiChannel;
 
-  private final SaveStateProcessor saveStateProcessor;
+  private final HLA13RTIambassador hla13RTIambassador;
 
   private volatile FDD fdd;
 
@@ -259,8 +252,7 @@ public class Federate
   private FederateRestore federateRestore;
 
   private final Lock synchronizationPointLock = new ReentrantLock(true);
-  private final Map<String, FederateSynchronizationPoint> synchronizationPoints =
-    new HashMap<String, FederateSynchronizationPoint>();
+  private final Map<String, FederateSynchronizationPoint> synchronizationPoints = new HashMap<>();
 
   private boolean asynchronousDeliveryEnabled;
 
@@ -308,13 +300,13 @@ public class Federate
 
   private boolean conveyProducingFederate = true;
 
-  private final Exchanger<Object> joinExchanger = new Exchanger<Object>();
+  private final Exchanger<Object> joinExchanger = new Exchanger<>();
 
   private final CountDownLatch resignedLatch = new CountDownLatch(1);
 
   public Federate(String federateName, String federateType, String federationExecutionName,
                   List<FDD> additionalFDDs, FederateAmbassador federateAmbassador, CallbackManager callbackManager,
-                  Channel rtiChannel, SaveStateProcessor saveStateProcessor)
+                  Channel rtiChannel, HLA13RTIambassador hla13RTIambassador)
     throws CouldNotCreateLogicalTimeFactory, FederateNameAlreadyInUse, FederationExecutionDoesNotExist, InconsistentFDD,
            SaveInProgress, RestoreInProgress, RTIinternalError
   {
@@ -323,9 +315,10 @@ public class Federate
     this.federateAmbassador = federateAmbassador;
     this.callbackManager = callbackManager;
     this.rtiChannel = rtiChannel;
-    this.saveStateProcessor = saveStateProcessor;
+    this.hla13RTIambassador = hla13RTIambassador;
 
-    ((FederateChannelHandler) rtiChannel.getPipeline().get(FederateChannelHandler.NAME)).setFederate(this);
+    rtiChannel.getPipeline().addBefore(
+      CallbackChannelHandler.NAME, FederateChannelHandler.NAME, new FederateChannelHandler(this));
 
     JoinFederationExecution joinFederationExecution = new JoinFederationExecution(
       federateName, federateType, federationExecutionName, additionalFDDs);
@@ -339,52 +332,53 @@ public class Federate
     {
       JoinFederationExecutionResponse response =
         (JoinFederationExecutionResponse) joinExchanger.exchange(joinCompleteLatch);
-      switch (response.getResponse())
+      if (response.isFailure())
       {
-        case FEDERATE_NAME_ALREADY_IN_USE:
-          throw new FederateNameAlreadyInUse(federateName);
-        case FEDERATION_EXECUTION_DOES_NOT_EXIST:
-          throw new FederationExecutionDoesNotExist(I18n.getMessage(
-            ExceptionMessages.FEDERATION_EXECUTION_DOES_NOT_EXIST, federationExecutionName));
-        case INCONSISTENT_FDD:
-          // TODO: provide more useful information
-          //
-          throw new InconsistentFDD("");
-        case SAVE_IN_PROGRESS:
-          throw new SaveInProgress(I18n.getMessage(ExceptionMessages.SAVE_IN_PROGRESS, federationExecutionName));
-        case RESTORE_IN_PROGRESS:
-          throw new RestoreInProgress(I18n.getMessage(ExceptionMessages.RESTORE_IN_PROGRESS, federationExecutionName));
-        case SUCCESS:
-          this.federateName = response.getFederateName();
-          federateHandle = response.getFederateHandle();
+        switch (response.getCause())
+        {
+          case FEDERATE_NAME_ALREADY_IN_USE:
+            throw new FederateNameAlreadyInUse(federateName);
+          case FEDERATION_EXECUTION_DOES_NOT_EXIST:
+            throw new FederationExecutionDoesNotExist(I18n.getMessage(
+              ExceptionMessages.FEDERATION_EXECUTION_DOES_NOT_EXIST, federationExecutionName));
+          case INCONSISTENT_FDD:
+            // TODO: provide more useful information
+            //
+            throw new InconsistentFDD("");
+          case SAVE_IN_PROGRESS:
+            throw new SaveInProgress(I18n.getMessage(ExceptionMessages.SAVE_IN_PROGRESS, federationExecutionName));
+          case RESTORE_IN_PROGRESS:
+            throw new RestoreInProgress(I18n.getMessage(ExceptionMessages.RESTORE_IN_PROGRESS, federationExecutionName));
+          default:
+            throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION));
+        }
+      }
+      else
+      {
+        this.federateName = response.getFederateName();
+        federateHandle = response.getFederateHandle();
 
-          marker = MarkerFactory.getMarker(federationExecutionName + "." + this.federateName);
-          log = I18nLogger.getLogger(marker, getClass());
+        marker = MarkerFactory.getMarker(federationExecutionName + "." + this.federateName);
+        log = I18nLogger.getLogger(marker, getClass());
 
-          fdd = response.getFDD();
+        fdd = response.getFDD();
 
-          logicalTimeFactory = LogicalTimeFactoryFactory.getLogicalTimeFactory(
-            response.getLogicalTimeImplementationName());
+        logicalTimeFactory = LogicalTimeFactoryFactory.getLogicalTimeFactory(
+          response.getLogicalTimeImplementationName());
 
-          if (logicalTimeFactory == null)
-          {
-            rtiChannel.write(new ResignFederationExecution(ResignAction.NO_ACTION));
+        if (logicalTimeFactory == null)
+        {
+          rtiChannel.write(new ResignFederationExecution(ResignAction.NO_ACTION));
 
-            throw new CouldNotCreateLogicalTimeFactory(I18n.getMessage(
-              ExceptionMessages.COULD_NOT_CREATE_LOGICAL_TIME_FACTORY, response.getLogicalTimeImplementationName()));
-          }
-          else
-          {
-            timeManager = new FederateTimeManager(this, logicalTimeFactory);
+          throw new CouldNotCreateLogicalTimeFactory(I18n.getMessage(
+            ExceptionMessages.COULD_NOT_CREATE_LOGICAL_TIME_FACTORY, response.getLogicalTimeImplementationName()));
+        }
+        else
+        {
+          timeManager = new FederateTimeManager(this, logicalTimeFactory);
 
-            ((MessageDecoder) rtiChannel.getPipeline().get(MessageDecoder.NAME)).setLogicalTimeFactory(
-              logicalTimeFactory);
-
-            success = true;
-          }
-          break;
-        default:
-          throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION));
+          success = true;
+        }
       }
     }
     catch (InterruptedException ie)
@@ -395,7 +389,7 @@ public class Federate
     {
       if (!success)
       {
-        ((FederateChannelHandler) rtiChannel.getPipeline().get(FederateChannelHandler.NAME)).setFederate(null);
+        rtiChannel.getPipeline().remove(FederateChannelHandler.NAME);
       }
 
       joinCompleteLatch.countDown();
@@ -697,7 +691,7 @@ public class Federate
 
   public void resignedFederationExecution()
   {
-    ((FederateChannelHandler) rtiChannel.getPipeline().get(FederateChannelHandler.NAME)).setFederate(null);
+    rtiChannel.getPipeline().remove(FederateChannelHandler.NAME);
 
     resignedLatch.countDown();
   }
@@ -764,19 +758,20 @@ public class Federate
       checkIfActive();
 
       RequestFederationSave requestFederationSave = new RequestFederationSave(label);
-
       rtiChannel.write(requestFederationSave);
 
-      switch (requestFederationSave.getResponse().getResponse())
+      RequestFederationSaveResponse response = requestFederationSave.getResponse();
+      if (response.isFailure())
       {
-        case SAVE_IN_PROGRESS:
-          throw new SaveInProgress(I18n.getMessage(ExceptionMessages.SAVE_IN_PROGRESS, federationExecutionName));
-        case RESTORE_IN_PROGRESS:
-          throw new RestoreInProgress(I18n.getMessage(ExceptionMessages.RESTORE_IN_PROGRESS, federationExecutionName));
-        case RTI_INTERNAL_ERROR:
-          throw new RTIinternalError("");
-        case SUCCESS:
-          break;
+        switch (response.getCause())
+        {
+          case SAVE_IN_PROGRESS:
+            throw new SaveInProgress(I18n.getMessage(ExceptionMessages.SAVE_IN_PROGRESS, federationExecutionName));
+          case RESTORE_IN_PROGRESS:
+            throw new RestoreInProgress(I18n.getMessage(ExceptionMessages.RESTORE_IN_PROGRESS, federationExecutionName));
+          case RTI_INTERNAL_ERROR:
+            throw new RTIinternalError("");
+        }
       }
     }
     finally
@@ -801,21 +796,27 @@ public class Federate
       RequestFederationSave requestFederationSave = new RequestFederationSave(label, time);
       rtiChannel.write(requestFederationSave);
 
-      switch (requestFederationSave.getResponse().getResponse())
+      RequestFederationSaveResponse response = requestFederationSave.getResponse();
+      if (response.isFailure())
       {
-        case LOGICAL_TIME_ALREADY_PASSED:
-          throw new LogicalTimeAlreadyPassed(I18n.getMessage(ExceptionMessages.LOGICAL_TIME_ALREADY_PASSED, time));
-        case FEDERATE_UNABLE_TO_USE_TIME:
-          throw new FederateUnableToUseTime(I18n.getMessage(ExceptionMessages.FEDERATE_UNABLE_TO_USE_TIME, this));
-        case SAVE_IN_PROGRESS:
-          throw new SaveInProgress(I18n.getMessage(ExceptionMessages.SAVE_IN_PROGRESS, federationExecutionName));
-        case RESTORE_IN_PROGRESS:
-          throw new RestoreInProgress(I18n.getMessage(ExceptionMessages.RESTORE_IN_PROGRESS, federationExecutionName));
-        case RTI_INTERNAL_ERROR:
-          throw new RTIinternalError("");
-        case SUCCESS:
-          break;
+        switch (response.getCause())
+        {
+          case LOGICAL_TIME_ALREADY_PASSED:
+            throw new LogicalTimeAlreadyPassed(I18n.getMessage(ExceptionMessages.LOGICAL_TIME_ALREADY_PASSED, time));
+          case FEDERATE_UNABLE_TO_USE_TIME:
+            throw new FederateUnableToUseTime(I18n.getMessage(ExceptionMessages.FEDERATE_UNABLE_TO_USE_TIME, this));
+          case SAVE_IN_PROGRESS:
+            throw new SaveInProgress(I18n.getMessage(ExceptionMessages.SAVE_IN_PROGRESS, federationExecutionName));
+          case RESTORE_IN_PROGRESS:
+            throw new RestoreInProgress(I18n.getMessage(ExceptionMessages.RESTORE_IN_PROGRESS, federationExecutionName));
+          case RTI_INTERNAL_ERROR:
+            throw new RTIinternalError("");
+        }
       }
+    }
+    catch (CouldNotEncode cne)
+    {
+      throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION), cne);
     }
     finally
     {
@@ -897,15 +898,16 @@ public class Federate
     try
     {
       AbortFederationSave abortFederationSave = new AbortFederationSave();
-
       rtiChannel.write(abortFederationSave);
 
-      switch (abortFederationSave.getResponse().getResponse())
+      AbortFederationSaveResponse response = abortFederationSave.getResponse();
+      if (response.isFailure())
       {
-        case SAVE_NOT_IN_PROGRESS:
-          throw new SaveNotInProgress(I18n.getMessage(ExceptionMessages.SAVE_NOT_IN_PROGRESS, this));
-        case SUCCESS:
-          break;
+        switch (response.getCause())
+        {
+          case SAVE_NOT_IN_PROGRESS:
+            throw new SaveNotInProgress(I18n.getMessage(ExceptionMessages.SAVE_NOT_IN_PROGRESS, this));
+        }
       }
     }
     finally
@@ -941,14 +943,16 @@ public class Federate
       RequestFederationRestore requestFederationRestore = new RequestFederationRestore(label);
       rtiChannel.write(requestFederationRestore);
 
-      switch (requestFederationRestore.getResponse().getResponse())
+      RequestFederationRestoreResponse response = requestFederationRestore.getResponse();
+      if (response.isFailure())
       {
-        case SAVE_IN_PROGRESS:
-          throw new SaveInProgress(I18n.getMessage(ExceptionMessages.SAVE_IN_PROGRESS, federationExecutionName));
-        case RESTORE_IN_PROGRESS:
-          throw new RestoreInProgress(I18n.getMessage(ExceptionMessages.RESTORE_IN_PROGRESS, federationExecutionName));
-        case SUCCESS:
-          break;
+        switch (response.getCause())
+        {
+          case SAVE_IN_PROGRESS:
+            throw new SaveInProgress(I18n.getMessage(ExceptionMessages.SAVE_IN_PROGRESS, federationExecutionName));
+          case RESTORE_IN_PROGRESS:
+            throw new RestoreInProgress(I18n.getMessage(ExceptionMessages.RESTORE_IN_PROGRESS, federationExecutionName));
+        }
       }
     }
     finally
@@ -1008,16 +1012,17 @@ public class Federate
     try
     {
       AbortFederationRestore abortFederationRestore = new AbortFederationRestore();
-
       rtiChannel.write(abortFederationRestore);
 
-      switch (abortFederationRestore.getResponse().getResponse())
+      AbortFederationRestoreResponse response = abortFederationRestore.getResponse();
+      if (response.isFailure())
       {
-        case RESTORE_NOT_IN_PROGRESS:
-          throw new RestoreNotInProgress(I18n.getMessage(
-            ExceptionMessages.RESTORE_NOT_IN_PROGRESS, federationExecutionName));
-        case SUCCESS:
-          break;
+        switch (response.getCause())
+        {
+          case RESTORE_NOT_IN_PROGRESS:
+            throw new RestoreNotInProgress(I18n.getMessage(
+              ExceptionMessages.RESTORE_NOT_IN_PROGRESS, federationExecutionName));
+        }
       }
     }
     finally
@@ -2667,15 +2672,21 @@ public class Federate
         rtiChannel.write(getFederateHandle);
 
         GetFederateHandleResponse response = getFederateHandle.getResponse();
-        switch (response.getResponse())
+        if (response.isSuccess())
         {
-          case NAME_NOT_FOUND:
-            throw new NameNotFound(I18n.getMessage(ExceptionMessages.FEDERATE_NAME_NOT_FOUND, federateName));
-          case SUCCESS:
-            federateHandle = response.getFederateHandle();
-            break;
-          default:
-            throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION));
+          federateHandle = response.getFederateHandle();
+        }
+        else
+        {
+          assert response.isFailure();
+
+          switch (response.getCause())
+          {
+            case NAME_NOT_FOUND:
+              throw new NameNotFound(I18n.getMessage(ExceptionMessages.FEDERATE_NAME_NOT_FOUND, federateName));
+            default:
+              throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION));
+          }
         }
       }
       return federateHandle;
@@ -2703,16 +2714,22 @@ public class Federate
         rtiChannel.write(getFederateName);
 
         GetFederateNameResponse response = getFederateName.getResponse();
-        switch (response.getResponse())
+        if (response.isSuccess())
         {
-          case FEDERATE_HANDLE_NOT_KNOWN:
-            throw new FederateHandleNotKnown(I18n.getMessage(
-              ExceptionMessages.FEDERATE_HANDLE_NOT_KNOWN, federateHandle));
-          case SUCCESS:
-            federateName = response.getFederateName();
-            break;
-          default:
-            throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION));
+          federateName = response.getFederateName();
+        }
+        else
+        {
+          assert response.isFailure();
+
+          switch (response.getCause())
+          {
+            case FEDERATE_HANDLE_NOT_KNOWN:
+              throw new FederateHandleNotKnown(I18n.getMessage(
+                ExceptionMessages.FEDERATE_HANDLE_NOT_KNOWN, federateHandle));
+            default:
+              throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION));
+          }
         }
       }
       return federateName;
@@ -2830,8 +2847,7 @@ public class Federate
   public DimensionHandleSet getAvailableDimensionsForInteractionClass(InteractionClassHandle interactionClassHandle)
     throws InvalidInteractionClassHandle, RTIinternalError
   {
-    return fdd.getAvailableDimensionsForInteractionClass(
-      interactionClassHandle, getDimensionHandleSetFactory().create());
+    return fdd.getAvailableDimensionsForInteractionClass(interactionClassHandle);
   }
 
   public TransportationTypeHandle getTransportationTypeHandle(String name)
@@ -3335,13 +3351,20 @@ public class Federate
     }
   }
 
-  public void saveState(DataOutput out)
+  public void saveState(CodedOutputStream out)
     throws IOException
   {
-    out.writeInt(synchronizationPoints.size());
+    FederationExecutionSaveProtos.FederateState.Builder federateState =
+      FederationExecutionSaveProtos.FederateState.newBuilder();
+
+    federateState.setSynchonizationPointStateCount(synchronizationPoints.size());
+    federateState.setHasHLA13RTIAmbassadorState(hla13RTIambassador != null);
+
+    out.writeMessageNoTag(federateState.build());
+
     for (FederateSynchronizationPoint synchronizationPoint : synchronizationPoints.values())
     {
-      synchronizationPoint.writeTo(out);
+      out.writeMessageNoTag(synchronizationPoint.saveState().build());
     }
 
     objectManager.saveState(out);
@@ -3349,38 +3372,36 @@ public class Federate
     messageRetractionManager.saveState(out);
     timeManager.saveState(out);
 
-    if (saveStateProcessor != null)
+    if (hla13RTIambassador != null)
     {
-      byte[] extraSaveState = saveStateProcessor.createExtraSaveState();
-      out.writeInt(extraSaveState.length);
-      out.write(extraSaveState);
-    }
-    else
-    {
-      out.writeInt(0);
+      hla13RTIambassador.saveState(out);
     }
   }
 
-  public void restoreState(DataInput in)
+  public void restoreState(CodedInputStream in)
     throws IOException
   {
-    for (int i = in.readInt(); i > 0; i--)
+    FederationExecutionSaveProtos.FederateState federateState =
+      in.readMessage(FederationExecutionSaveProtos.FederateState.PARSER, null);
+
+    for (int synchonizationPointStateCount = federateState.getSynchonizationPointStateCount();
+         synchonizationPointStateCount > 0; --synchonizationPointStateCount)
     {
-      FederateSynchronizationPoint synchronizationPoint = new FederateSynchronizationPoint(in);
+      FederationExecutionSaveProtos.FederateState.FederateSynchonizationPointState synchonizationPointState =
+        in.readMessage(FederationExecutionSaveProtos.FederateState.FederateSynchonizationPointState.PARSER, null);
+
+      FederateSynchronizationPoint synchronizationPoint = new FederateSynchronizationPoint(synchonizationPointState);
       synchronizationPoints.put(synchronizationPoint.getLabel(), synchronizationPoint);
     }
 
     objectManager.restoreState(in);
     regionManager.restoreState(in);
-    messageRetractionManager.restoreState(in, logicalTimeFactory);
-    timeManager.restoreState(in, logicalTimeFactory);
+    messageRetractionManager.restoreState(in);
+    timeManager.restoreState(in);
 
-    int extraSaveStateLength = in.readInt();
-    if (extraSaveStateLength > 0 && saveStateProcessor != null)
+    if (!in.isAtEnd() && hla13RTIambassador != null)
     {
-      byte[] extraSaveState = new byte[extraSaveStateLength];
-      in.readFully(extraSaveState);
-      saveStateProcessor.processExtraSaveState(extraSaveState);
+      hla13RTIambassador.restoreState(in);
     }
   }
 
@@ -3420,145 +3441,6 @@ public class Federate
       default:
         assert federateState == FederateState.ACTIVE;
         break;
-    }
-  }
-
-  private class FederateStateReader
-    implements Runnable
-  {
-    private final FederateStateInputStream federateStateInputStream = new FederateStateInputStream();
-
-    private boolean done = false;
-
-    public FederateStateReader()
-    {
-      new Thread(this).start();
-    }
-
-    public FederateStateInputStream getFederateStateInputStream()
-    {
-      return federateStateInputStream;
-    }
-
-    public synchronized void awaitUninterruptibly()
-    {
-      while (!done)
-      {
-        try
-        {
-          wait();
-        }
-        catch (InterruptedException ie)
-        {
-        }
-      }
-    }
-
-    public void run()
-    {
-      DataInputStream in = new DataInputStream(federateStateInputStream);
-      try
-      {
-        for (int i = in.readInt(); i > 0; i--)
-        {
-          FederateSynchronizationPoint synchronizationPoint = new FederateSynchronizationPoint(in);
-          synchronizationPoints.put(synchronizationPoint.getLabel(), synchronizationPoint);
-        }
-
-        objectManager.restoreState(in);
-        regionManager.restoreState(in);
-        messageRetractionManager.restoreState(in, logicalTimeFactory);
-        timeManager.restoreState(in, logicalTimeFactory);
-      }
-      catch (IOException ioe)
-      {
-        log.warn(LogMessages.UNABLE_TO_RESTORE_FEDERATE_STATE, ioe);
-      }
-      finally
-      {
-        try
-        {
-          in.close();
-        }
-        catch (IOException ioe)
-        {
-          log.warn(LogMessages.UNABLE_TO_RESTORE_FEDERATE_STATE, ioe);
-        }
-
-        synchronized (this)
-        {
-          done = true;
-
-          notifyAll();
-        }
-      }
-    }
-  }
-
-  private class FederateStateWriter
-    implements Runnable
-  {
-    private boolean done;
-
-    public FederateStateWriter()
-    {
-      new Thread(this).start();
-    }
-
-    public synchronized void awaitUninterruptibly()
-    {
-      while (!done)
-      {
-        try
-        {
-          wait();
-        }
-        catch (InterruptedException ie)
-        {
-        }
-      }
-    }
-
-    public void run()
-    {
-      DataOutputStream out = new DataOutputStream(new FederateStateOutputStream(8192, rtiChannel));
-      try
-      {
-        out.writeInt(synchronizationPoints.size());
-        for (FederateSynchronizationPoint synchronizationPoint : synchronizationPoints.values())
-        {
-          synchronizationPoint.writeTo(out);
-        }
-
-        objectManager.saveState(out);
-        regionManager.saveState(out);
-        messageRetractionManager.saveState(out);
-        timeManager.saveState(out);
-      }
-      catch (IOException ioe)
-      {
-        log.warn(LogMessages.UNABLE_TO_SAVE_FEDERATE_STATE, ioe);
-      }
-      finally
-      {
-        try
-        {
-          out.close();
-        }
-        catch (IOException ioe)
-        {
-          log.warn(LogMessages.UNABLE_TO_SAVE_FEDERATE_STATE, ioe);
-
-          // TODO: close connection
-        }
-
-        synchronized (this)
-        {
-          done = true;
-
-          notifyAll();
-        }
-      }
     }
   }
 }

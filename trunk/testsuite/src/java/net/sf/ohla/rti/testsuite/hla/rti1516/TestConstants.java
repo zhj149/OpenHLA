@@ -18,10 +18,6 @@ package net.sf.ohla.rti.testsuite.hla.rti1516;
 
 public interface TestConstants
 {
-  static final String FEDERATION_NAME = "OHLA Test Federation";
-  static final String NONEXISTANT_FEDERATION_NAME =
-    FEDERATION_NAME + " - Non-Existant Federation";
-
   static final String FDD = "TestObjectModel-ieee-1516.xml";
   static final String BAD_FDD = FDD + ".bad";
 
@@ -112,4 +108,5 @@ public interface TestConstants
   static final String HLA_BEST_EFFORT = "HLAbestEffort";
 
   static final String SYNCHRONIZATION_POINT_SETUP_COMPLETE = "SetupComplete";
+  static final String SYNCHRONIZATION_POINT_SETUP_COMPLETE2 = "SetupComplete2";
 }

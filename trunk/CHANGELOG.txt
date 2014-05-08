@@ -1,3 +1,8 @@
+0.7 alpha
+  - port to Netty 4
+  - port to Google Protocol Buffers
+  - performance tests
+
 0.6 alpha
   - completed Time Management implementation
   - completed Save/Restore functionality

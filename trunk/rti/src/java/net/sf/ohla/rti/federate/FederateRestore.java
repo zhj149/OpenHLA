@@ -1,28 +1,28 @@
 package net.sf.ohla.rti.federate;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.InputStream;
+
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 import java.util.concurrent.CountDownLatch;
 
+import net.sf.ohla.rti.util.MoreChannels;
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
 import net.sf.ohla.rti.i18n.I18nLogger;
 import net.sf.ohla.rti.i18n.LogMessages;
-import net.sf.ohla.rti.i18n.I18n;
-import net.sf.ohla.rti.i18n.ExceptionMessages;
-import net.sf.ohla.rti.messages.FederateStateFrame;
-import net.sf.ohla.rti.messages.FederateRestoreNotComplete;
 import net.sf.ohla.rti.messages.FederateRestoreComplete;
+import net.sf.ohla.rti.messages.FederateRestoreNotComplete;
+import net.sf.ohla.rti.messages.FederateStateFrame;
 import net.sf.ohla.rti.messages.callbacks.FederationRestoreBegun;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.common.util.concurrent.Uninterruptibles;
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.RestoreStatus;
 import hla.rti1516e.exceptions.RTIinternalError;
@@ -40,8 +40,8 @@ public class FederateRestore
 
   private final Federate federate;
 
-  private final File federateStateFile;
-  private final OutputStream federateStateOutputStream;
+  private final Path federateStateFile;
+  private final FileChannel federateStateFileChannel;
 
   private final String label;
 
@@ -63,10 +63,10 @@ public class FederateRestore
 
     log = I18nLogger.getLogger(federate.getMarker(), getClass());
 
-    federateStateFile = File.createTempFile(FEDERATE_STATE, "restore");
+    federateStateFile = Files.createTempFile(FEDERATE_STATE, "restore");
     log.debug("Federate state file: {}", federateStateFile);
 
-    federateStateOutputStream = new BufferedOutputStream(new FileOutputStream(federateStateFile));
+    federateStateFileChannel = FileChannel.open(federateStateFile, StandardOpenOption.WRITE);
   }
 
   public String getLabel()
@@ -97,15 +97,11 @@ public class FederateRestore
   public void addFederateStateFrame(FederateStateFrame federateStateFrame)
     throws IOException
   {
-    ChannelBuffer buffer = federateStateFrame.getBuffer();
-
-    assert buffer.readable();
-
-    buffer.getBytes(buffer.readerIndex(), federateStateOutputStream, buffer.readableBytes());
+    MoreChannels.writeFully(federateStateFileChannel, federateStateFrame.getPayload().asReadOnlyByteBuffer());
 
     if (federateStateFrame.isLast())
     {
-      federateStateOutputStream.close();
+      federateStateFileChannel.close();
 
       federateStateReceived.countDown();
     }
@@ -132,17 +128,7 @@ public class FederateRestore
   {
     assert restoreStatus == RestoreStatus.FEDERATE_RESTORING;
 
-    do
-    {
-      try
-      {
-        federateStateRestored.await();
-      }
-      catch (InterruptedException ie)
-      {
-        // intentionally empty
-      }
-    } while (federateStateRestored.getCount() > 0);
+    Uninterruptibles.awaitUninterruptibly(federateStateRestored);
 
     restoreStatus = RestoreStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_RESTORE;
 
@@ -154,8 +140,8 @@ public class FederateRestore
     {
       federate.getRTIChannel().write(new FederateRestoreNotComplete());
 
-      throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNABLE_TO_RESTORE_FEDERATE_STATE, federate),
-                                 exception);
+      throw new RTIinternalError(
+        I18n.getMessage(ExceptionMessages.UNABLE_TO_RESTORE_FEDERATE_STATE, federate), exception);
     }
   }
 
@@ -164,17 +150,7 @@ public class FederateRestore
   {
     assert restoreStatus == RestoreStatus.FEDERATE_RESTORING;
 
-    do
-    {
-      try
-      {
-        federateStateRestored.await();
-      }
-      catch (InterruptedException ie)
-      {
-        // intentionally empty
-      }
-    } while (federateStateRestored.getCount() > 0);
+    Uninterruptibles.awaitUninterruptibly(federateStateRestored);
 
     restoreStatus = RestoreStatus.FEDERATE_WAITING_FOR_FEDERATION_TO_RESTORE;
 
@@ -182,8 +158,8 @@ public class FederateRestore
 
     if (exception != null)
     {
-      throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNABLE_TO_RESTORE_FEDERATE_STATE, federate),
-                                 exception);
+      throw new RTIinternalError(
+        I18n.getMessage(ExceptionMessages.UNABLE_TO_RESTORE_FEDERATE_STATE, federate), exception);
     }
   }
 
@@ -192,42 +168,12 @@ public class FederateRestore
   {
     public void run()
     {
-      do
-      {
-        try
-        {
-          federateStateReceived.await();
-        }
-        catch (InterruptedException ie)
-        {
-          // intentionally empty
-        }
-      } while (federateStateReceived.getCount() > 0);
+      Uninterruptibles.awaitUninterruptibly(federateStateReceived);
 
-      try
+      try (InputStream in = Channels.newInputStream(FileChannel.open(federateStateFile, StandardOpenOption.READ)))
       {
-        DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(federateStateFile)));
-        try
-        {
-          federate.restoreState(in);
-        }
-        finally
-        {
-          in.close();
-
-          if (federateStateFile.delete())
-          {
-          }
-          else
-          {
-          }
-        }
-      }
-      catch (FileNotFoundException fnfe)
-      {
-        log.warn(LogMessages.UNABLE_TO_RESTORE_FEDERATE_STATE, fnfe);
-
-        exception = fnfe;
+        CodedInputStream codedInputStream = CodedInputStream.newInstance(in);
+        federate.restoreState(codedInputStream);
       }
       catch (IOException ioe)
       {
@@ -238,6 +184,15 @@ public class FederateRestore
       finally
       {
         federateStateRestored.countDown();
+      }
+
+      try
+      {
+        Files.delete(federateStateFile);
+      }
+      catch (IOException ioe)
+      {
+        log.warn(LogMessages.UNEXPECTED_EXCEPTION, ioe, ioe);
       }
     }
   }

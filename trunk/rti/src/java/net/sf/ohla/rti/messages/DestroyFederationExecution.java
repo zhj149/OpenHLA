@@ -16,40 +16,60 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import net.sf.ohla.rti.RTI;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
+import net.sf.ohla.rti.messages.proto.RTIMessageProtos;
+
+import org.jboss.netty.channel.ChannelHandlerContext;
+
+import com.google.protobuf.CodedInputStream;
 
 public class DestroyFederationExecution
-  extends AbstractRequest<DestroyFederationExecutionResponse>
+  extends
+  AbstractRequest<RTIMessageProtos.DestroyFederationExecution, RTIMessageProtos.DestroyFederationExecution.Builder, DestroyFederationExecutionResponse>
+  implements RTIMessage
 {
-  private final String federationExecutionName;
-
   public DestroyFederationExecution(String federationExecutionName)
   {
-    super(MessageType.DESTROY_FEDERATION_EXECUTION);
+    super(RTIMessageProtos.DestroyFederationExecution.newBuilder());
 
-    this.federationExecutionName = federationExecutionName;
-
-    Protocol.encodeString(buffer, federationExecutionName);
-
-    encodingFinished();
+    builder.setFederationExecutionName(federationExecutionName);
   }
 
-  public DestroyFederationExecution(ChannelBuffer buffer)
+  public DestroyFederationExecution(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    federationExecutionName = Protocol.decodeString(buffer);
+    super(RTIMessageProtos.DestroyFederationExecution.newBuilder(), in);
   }
 
   public String getFederationExecutionName()
   {
-    return federationExecutionName;
+    return builder.getFederationExecutionName();
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.DESTROY_FEDERATION_EXECUTION;
+    return MessageProtos.MessageType.DESTROY_FEDERATION_EXECUTION;
+  }
+
+  @Override
+  public long getRequestId()
+  {
+    return builder.getRequestId();
+  }
+
+  @Override
+  public void setRequestId(long requestId)
+  {
+    builder.setRequestId(requestId);
+  }
+
+  @Override
+  public void execute(RTI rti, ChannelHandlerContext context)
+  {
+    rti.destroyFederationExecution(context, this);
   }
 }

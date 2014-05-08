@@ -16,6 +16,10 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
+import java.nio.ByteBuffer;
+
+import net.sf.ohla.rti.util.InteractionClassHandles;
+
 import hla.rti1516e.InteractionClassHandle;
 import hla.rti1516e.InteractionClassHandleFactory;
 import hla.rti1516e.exceptions.CouldNotDecode;
@@ -34,7 +38,7 @@ public class IEEE1516eInteractionClassHandleFactory
   {
     try
     {
-      return IEEE1516eInteractionClassHandle.decode(buffer, offset);
+      return InteractionClassHandles.convert(ByteBuffer.wrap(buffer, offset, 4).getInt());
     }
     catch (Throwable t)
     {

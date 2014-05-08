@@ -16,36 +16,55 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.ObjectInstanceHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.ObjectInstanceHandle;
 
 public class AttributeOwnershipAcquisitionIfAvailable
-  extends ObjectInstanceAttributesMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.AttributeOwnershipAcquisitionIfAvailable, FederationExecutionMessageProtos.AttributeOwnershipAcquisitionIfAvailable.Builder>
   implements FederationExecutionMessage
 {
   public AttributeOwnershipAcquisitionIfAvailable(
     ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
   {
-    super(MessageType.ATTRIBUTE_OWNERSHIP_ACQUISITION_IF_AVAILABLE, objectInstanceHandle, attributeHandles);
+    super(FederationExecutionMessageProtos.AttributeOwnershipAcquisitionIfAvailable.newBuilder());
 
-    encodingFinished();
+    builder.setObjectInstanceHandle(ObjectInstanceHandles.convert(objectInstanceHandle));
+    builder.addAllAttributeHandles(AttributeHandles.convert(attributeHandles));
   }
 
-  public AttributeOwnershipAcquisitionIfAvailable(ChannelBuffer buffer)
+  public AttributeOwnershipAcquisitionIfAvailable(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.AttributeOwnershipAcquisitionIfAvailable.newBuilder(), in);
   }
 
-  public MessageType getType()
+  public ObjectInstanceHandle getObjectInstanceHandle()
   {
-    return MessageType.ATTRIBUTE_OWNERSHIP_ACQUISITION_IF_AVAILABLE;
+    return ObjectInstanceHandles.convert(builder.getObjectInstanceHandle());
   }
 
+  public AttributeHandleSet getAttributeHandles()
+  {
+    return AttributeHandles.convertAttributeHandles(builder.getAttributeHandlesList());
+  }
+
+  @Override
+  public MessageProtos.MessageType getMessageType()
+  {
+    return MessageProtos.MessageType.ATTRIBUTE_OWNERSHIP_ACQUISITION_IF_AVAILABLE;
+  }
+
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.attributeOwnershipAcquisitionIfAvailable(federateProxy, this);

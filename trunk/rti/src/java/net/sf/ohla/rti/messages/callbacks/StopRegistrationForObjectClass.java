@@ -16,38 +16,47 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.ObjectClassHandles;
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.messages.MessageType;
-import net.sf.ohla.rti.messages.ObjectClassMessage;
+import net.sf.ohla.rti.messages.AbstractMessage;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class StopRegistrationForObjectClass
-  extends ObjectClassMessage
-  implements Callback
+  extends
+  AbstractMessage<FederateMessageProtos.StopRegistrationForObjectClass, FederateMessageProtos.StopRegistrationForObjectClass.Builder>
+implements Callback
 {
   public StopRegistrationForObjectClass(ObjectClassHandle objectClassHandle)
   {
-    super(MessageType.STOP_REGISTRATION_FOR_OBJECT_CLASS, objectClassHandle);
+    super(FederateMessageProtos.StopRegistrationForObjectClass.newBuilder());
+
+    builder.setObjectClassHandle(ObjectClassHandles.convert(objectClassHandle));
   }
 
-  public StopRegistrationForObjectClass(ChannelBuffer buffer)
+  public StopRegistrationForObjectClass(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederateMessageProtos.StopRegistrationForObjectClass.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.STOP_REGISTRATION_FOR_OBJECT_CLASS;
+    return MessageProtos.MessageType.STOP_REGISTRATION_FOR_OBJECT_CLASS;
   }
 
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.startRegistrationForObjectClass(objectClassHandle);
+    federateAmbassador.startRegistrationForObjectClass(ObjectClassHandles.convert(builder.getObjectClassHandle()));
   }
 }

@@ -16,24 +16,50 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
-import net.sf.ohla.rti.IntegerHandle;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
-
-import hla.rti1516.CouldNotDecode;
 import hla.rti1516.ObjectClassHandle;
 
 public class IEEE1516ObjectClassHandle
-  extends IntegerHandle
   implements ObjectClassHandle
 {
-  public IEEE1516ObjectClassHandle(byte[] buffer, int offset)
-    throws CouldNotDecode
-  {
-    super(buffer, offset);
-  }
+  public final hla.rti1516e.ObjectClassHandle objectClassHandle;
 
   public IEEE1516ObjectClassHandle(hla.rti1516e.ObjectClassHandle objectClassHandle)
   {
-    super((IEEE1516eObjectClassHandle) objectClassHandle);
+    this.objectClassHandle = objectClassHandle;
+  }
+
+  public hla.rti1516e.ObjectClassHandle getObjectClassHandle()
+  {
+    return objectClassHandle;
+  }
+
+  public int encodedLength()
+  {
+    return objectClassHandle.encodedLength();
+  }
+
+  public void encode(byte[] buffer, int offset)
+  {
+    objectClassHandle.encode(buffer, offset);
+  }
+
+  @Override
+  public boolean equals(Object rhs)
+  {
+    return this == rhs ||
+           (rhs instanceof IEEE1516ObjectClassHandle &&
+            objectClassHandle.equals(((IEEE1516ObjectClassHandle) rhs).objectClassHandle));
+  }
+
+  @Override
+  public int hashCode()
+  {
+    return objectClassHandle.hashCode();
+  }
+
+  @Override
+  public String toString()
+  {
+    return objectClassHandle.toString();
   }
 }

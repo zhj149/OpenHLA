@@ -16,57 +16,74 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
+
+import com.google.protobuf.CodedInputStream;
 
 public class GetUpdateRateValueForAttributeResponse
-  extends EnumResponse<GetUpdateRateValueForAttributeResponse.Response>
+  extends
+  AbstractMessage<FederateMessageProtos.GetUpdateRateValueForAttributeResponse, FederateMessageProtos.GetUpdateRateValueForAttributeResponse.Builder>
+  implements Response
 {
-  public enum Response
-  {
-    SUCCESS, OBJECT_INSTANCE_NOT_KNOWN
-  }
-
-  private final double updateRate;
-
   public GetUpdateRateValueForAttributeResponse(long requestId, double updateRate)
   {
-    super(MessageType.GET_UPDATE_RATE_VALUE_FOR_ATTRIBUTE_RESPONSE, requestId, Response.SUCCESS);
+    super(FederateMessageProtos.GetUpdateRateValueForAttributeResponse.newBuilder());
 
-    this.updateRate = updateRate;
-
-    Protocol.encodeDouble(buffer, updateRate);
-
-    encodingFinished();
+    builder.setRequestId(requestId);
+    builder.setSuccess(
+      FederateMessageProtos.GetUpdateRateValueForAttributeResponse.Success.newBuilder().setUpdateRate(updateRate));
   }
 
-  public GetUpdateRateValueForAttributeResponse(long id, Response response)
+  public GetUpdateRateValueForAttributeResponse(
+    long requestId, FederateMessageProtos.GetUpdateRateValueForAttributeResponse.Failure.Cause cause)
   {
-    super(MessageType.GET_UPDATE_RATE_VALUE_FOR_ATTRIBUTE_RESPONSE, id, response);
+    super(FederateMessageProtos.GetUpdateRateValueForAttributeResponse.newBuilder());
 
-    assert response != GetUpdateRateValueForAttributeResponse.Response.SUCCESS;
-
-    encodingFinished();
-
-    updateRate = 0.0;
+    builder.setRequestId(requestId);
+    builder.setFailure(
+      FederateMessageProtos.GetUpdateRateValueForAttributeResponse.Failure.newBuilder().setCause(cause));
   }
 
-  public GetUpdateRateValueForAttributeResponse(ChannelBuffer buffer)
+  public GetUpdateRateValueForAttributeResponse(CodedInputStream in)
+    throws IOException
   {
-    super(buffer, Response.values());
-
-    updateRate = response == GetUpdateRateValueForAttributeResponse.Response.SUCCESS ?
-      Protocol.decodeDouble(buffer) : 0.0;
+    super(FederateMessageProtos.GetUpdateRateValueForAttributeResponse.newBuilder(), in);
   }
 
   public double getUpdateRate()
   {
-    return updateRate;
+    return builder.getSuccess().getUpdateRate();
   }
 
-  public MessageType getType()
+  public FederateMessageProtos.GetUpdateRateValueForAttributeResponse.Failure.Cause getCause()
   {
-    return MessageType.GET_UPDATE_RATE_VALUE_FOR_ATTRIBUTE_RESPONSE;
+    return builder.getFailure().getCause();
+  }
+
+  @Override
+  public MessageProtos.MessageType getMessageType()
+  {
+    return MessageProtos.MessageType.GET_UPDATE_RATE_VALUE_FOR_ATTRIBUTE_RESPONSE;
+  }
+
+  @Override
+  public long getRequestId()
+  {
+    return builder.getRequestId();
+  }
+
+  @Override
+  public boolean isSuccess()
+  {
+    return builder.hasSuccess();
+  }
+
+  @Override
+  public boolean isFailure()
+  {
+    return builder.hasFailure();
   }
 }

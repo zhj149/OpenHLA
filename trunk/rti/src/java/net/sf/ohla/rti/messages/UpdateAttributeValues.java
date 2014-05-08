@@ -16,15 +16,21 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.AttributeValues;
+import net.sf.ohla.rti.util.LogicalTimes;
+import net.sf.ohla.rti.util.MessageRetractionHandles;
+import net.sf.ohla.rti.util.ObjectInstanceHandles;
+import net.sf.ohla.rti.util.TransportationTypeHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleValueMap;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eMessageRetractionHandle;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandle;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
+import net.sf.ohla.rti.proto.OHLAProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.ByteString;
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.AttributeHandleValueMap;
 import hla.rti1516e.LogicalTime;
 import hla.rti1516e.LogicalTimeFactory;
@@ -34,113 +40,115 @@ import hla.rti1516e.OrderType;
 import hla.rti1516e.TransportationTypeHandle;
 
 public class UpdateAttributeValues
-  extends ObjectInstanceMessage
-  implements FederationExecutionMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.UpdateAttributeValues, FederationExecutionMessageProtos.UpdateAttributeValues.Builder>
+  implements FederationExecutionMessage, TimeStampOrderedMessage
 {
-  private final AttributeHandleValueMap attributeValues;
-  private final byte[] tag;
-  private final OrderType sentOrderType;
-  private final TransportationTypeHandle transportationTypeHandle;
-  private final LogicalTime time;
-  private final MessageRetractionHandle messageRetractionHandle;
+  private volatile OrderType sentOrderType;
+  private volatile LogicalTime time;
+  private volatile MessageRetractionHandle messageRetractionHandle;
 
-  public UpdateAttributeValues(
-    ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues, byte[] tag,
-    TransportationTypeHandle transportationTypeHandle)
+  public UpdateAttributeValues(FederationExecutionMessageProtos.UpdateAttributeValues messageLite)
   {
-    super(MessageType.UPDATE_ATTRIBUTE_VALUES, objectInstanceHandle);
-
-    this.attributeValues = attributeValues;
-    this.tag = tag;
-    this.transportationTypeHandle = transportationTypeHandle;
-
-    sentOrderType = OrderType.RECEIVE;
-    time = null;
-    messageRetractionHandle = null;
-
-    IEEE1516eAttributeHandleValueMap.encode(buffer, attributeValues);
-    Protocol.encodeBytes(buffer, tag);
-    Protocol.encodeEnum(buffer, sentOrderType);
-    IEEE1516eTransportationTypeHandle.encode(buffer, transportationTypeHandle);
-    Protocol.encodeNullTime(buffer);
-    IEEE1516eMessageRetractionHandle.encode(buffer, messageRetractionHandle);
-
-    encodingFinished();
+    super(messageLite);
   }
 
   public UpdateAttributeValues(
-    ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues, byte[] tag,
-    OrderType sentOrderType, TransportationTypeHandle transportationTypeHandle, LogicalTime time,
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues,
+    TransportationTypeHandle transportationTypeHandle, byte[] tag)
+  {
+    super(FederationExecutionMessageProtos.UpdateAttributeValues.newBuilder());
+
+    builder.setObjectInstanceHandle(ObjectInstanceHandles.convert(objectInstanceHandle));
+    builder.addAllAttributeValues(AttributeValues.convert(attributeValues));
+    builder.setTransportationTypeHandle(TransportationTypeHandles.convert(transportationTypeHandle));
+
+    if (tag != null)
+    {
+      builder.setTag(ByteString.copyFrom(tag));
+    }
+  }
+
+  public UpdateAttributeValues(
+    ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues,
+    TransportationTypeHandle transportationTypeHandle, byte[] tag, OrderType sentOrderType, LogicalTime time,
     MessageRetractionHandle messageRetractionHandle)
   {
-    super(MessageType.UPDATE_ATTRIBUTE_VALUES, objectInstanceHandle);
+    this(objectInstanceHandle, attributeValues, transportationTypeHandle, tag);
 
-    this.attributeValues = attributeValues;
-    this.tag = tag;
-    this.sentOrderType = sentOrderType;
-    this.transportationTypeHandle = transportationTypeHandle;
     this.time = time;
-    this.messageRetractionHandle = messageRetractionHandle;
 
-    IEEE1516eAttributeHandleValueMap.encode(buffer, attributeValues);
-    Protocol.encodeBytes(buffer, tag);
-    Protocol.encodeEnum(buffer, sentOrderType);
-    IEEE1516eTransportationTypeHandle.encode(buffer, transportationTypeHandle);
-    Protocol.encodeTime(buffer, time);
-    IEEE1516eMessageRetractionHandle.encode(buffer, messageRetractionHandle);
-
-    encodingFinished();
+    builder.setSentOrderType(OHLAProtos.OrderType.values()[sentOrderType.ordinal()]);
+    builder.setTime(LogicalTimes.convert(time));
+    builder.setMessageRetractionHandle(MessageRetractionHandles.convert(messageRetractionHandle));
   }
 
-  public UpdateAttributeValues(ChannelBuffer buffer, LogicalTimeFactory factory)
+  public UpdateAttributeValues(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.UpdateAttributeValues.newBuilder(), in);
+  }
 
-    attributeValues = IEEE1516eAttributeHandleValueMap.decode(buffer);
-    tag = Protocol.decodeBytes(buffer);
-    sentOrderType = Protocol.decodeEnum(buffer, OrderType.values());
-    transportationTypeHandle = IEEE1516eTransportationTypeHandle.decode(buffer);
-    time = Protocol.decodeTime(buffer, factory);
-    messageRetractionHandle = IEEE1516eMessageRetractionHandle.decode(buffer);
+  public ObjectInstanceHandle getObjectInstanceHandle()
+  {
+    return ObjectInstanceHandles.convert(builder.getObjectInstanceHandle());
   }
 
   public AttributeHandleValueMap getAttributeValues()
   {
-    return attributeValues;
+    return AttributeValues.convert(builder.getAttributeValuesList());
   }
 
   public byte[] getTag()
   {
-    return tag;
+    return builder.hasTag() ? builder.getTag().toByteArray() : null;
   }
 
   public OrderType getSentOrderType()
   {
+    if (sentOrderType == null)
+    {
+      sentOrderType = OrderType.values()[builder.getSentOrderType().ordinal()];
+    }
     return sentOrderType;
   }
 
   public TransportationTypeHandle getTransportationTypeHandle()
   {
-    return transportationTypeHandle;
+    return TransportationTypeHandles.convert(builder.getTransportationTypeHandle());
   }
 
-  public LogicalTime getTime()
+  public LogicalTime getTime(LogicalTimeFactory logicalTimeFactory)
   {
+    if (time == null && builder.hasTime())
+    {
+      time = LogicalTimes.convert(logicalTimeFactory, builder.getTime());
+    }
     return time;
   }
 
   public MessageRetractionHandle getMessageRetractionHandle()
   {
+    if (messageRetractionHandle == null && builder.hasMessageRetractionHandle())
+    {
+      messageRetractionHandle = MessageRetractionHandles.convert(builder.getMessageRetractionHandle());
+    }
     return messageRetractionHandle;
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.UPDATE_ATTRIBUTE_VALUES;
+    return MessageProtos.MessageType.UPDATE_ATTRIBUTE_VALUES;
   }
 
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
+    if (builder.hasTime())
+    {
+      time = LogicalTimes.convert(federationExecution.getTimeManager().getLogicalTimeFactory(), builder.getTime());
+    }
+
     federationExecution.updateAttributeValues(federateProxy, this);
   }
 }

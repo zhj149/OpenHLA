@@ -19,7 +19,6 @@ package net.sf.ohla.rti.messages;
 import net.sf.ohla.rti.federate.Federate;
 
 public interface FederateMessage
-  extends Message
 {
   void execute(Federate federate);
 }

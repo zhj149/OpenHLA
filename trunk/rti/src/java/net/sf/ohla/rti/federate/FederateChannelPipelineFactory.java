@@ -18,8 +18,10 @@ package net.sf.ohla.rti.federate;
 
 import java.util.concurrent.Executor;
 
+import net.sf.ohla.rti.messages.MessageChannelHandler;
 import net.sf.ohla.rti.messages.MessageDecoder;
 import net.sf.ohla.rti.messages.MessageEncoder;
+import net.sf.ohla.rti.messages.RequestResponseChannelHandler;
 
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
@@ -30,14 +32,11 @@ public class FederateChannelPipelineFactory
 {
   private final Executor executor;
   private final CallbackManager callbackManager;
-  private final FederateChannelHandlerFactory federateChannelHandlerFactory;
 
-  public FederateChannelPipelineFactory(Executor executor, CallbackManager callbackManager,
-                                        FederateChannelHandlerFactory federateChannelHandlerFactory)
+  public FederateChannelPipelineFactory(Executor executor, CallbackManager callbackManager)
   {
     this.executor = executor;
     this.callbackManager = callbackManager;
-    this.federateChannelHandlerFactory = federateChannelHandlerFactory;
   }
 
   public ChannelPipeline getPipeline()
@@ -47,7 +46,9 @@ public class FederateChannelPipelineFactory
 
     pipeline.addLast(MessageEncoder.NAME, new MessageEncoder());
     pipeline.addLast(MessageDecoder.NAME, new MessageDecoder());
-    pipeline.addLast(FederateChannelHandler.NAME, federateChannelHandlerFactory.create(executor, callbackManager));
+    pipeline.addLast(MessageChannelHandler.NAME, new MessageChannelHandler(executor));
+    pipeline.addLast(RequestResponseChannelHandler.NAME, new RequestResponseChannelHandler());
+    pipeline.addLast(CallbackChannelHandler.NAME, new CallbackChannelHandler(callbackManager));
 
     return pipeline;
   }

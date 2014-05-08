@@ -16,47 +16,50 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.ObjectClassHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSet;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.ObjectClassHandle;
 
 public class PublishObjectClassAttributes
-  extends ObjectClassMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.PublishObjectClassAttributes, FederationExecutionMessageProtos.PublishObjectClassAttributes.Builder>
   implements FederationExecutionMessage
 {
-  private final AttributeHandleSet attributeHandles;
-
   public PublishObjectClassAttributes(ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles)
   {
-    super(MessageType.PUBLISH_OBJECT_CLASS_ATTRIBUTES, objectClassHandle);
+    super(FederationExecutionMessageProtos.PublishObjectClassAttributes.newBuilder());
 
-    this.attributeHandles = attributeHandles;
-
-    IEEE1516eAttributeHandleSet.encode(buffer, attributeHandles);
-
-    encodingFinished();
+    builder.setObjectClassHandle(ObjectClassHandles.convert(objectClassHandle));
+    builder.addAllAttributeHandles(AttributeHandles.convert(attributeHandles));
   }
 
-  public PublishObjectClassAttributes(ChannelBuffer buffer)
+  public PublishObjectClassAttributes(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.PublishObjectClassAttributes.newBuilder(), in);
+  }
 
-    attributeHandles = IEEE1516eAttributeHandleSet.decode(buffer);
+  public ObjectClassHandle getObjectClassHandle()
+  {
+    return ObjectClassHandles.convert(builder.getObjectClassHandle());
   }
 
   public AttributeHandleSet getAttributeHandles()
   {
-    return attributeHandles;
+    return AttributeHandles.convertAttributeHandles(builder.getAttributeHandlesList());
   }
 
-  public MessageType getType()
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.PUBLISH_OBJECT_CLASS_ATTRIBUTES;
+    return MessageProtos.MessageType.PUBLISH_OBJECT_CLASS_ATTRIBUTES;
   }
 
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)

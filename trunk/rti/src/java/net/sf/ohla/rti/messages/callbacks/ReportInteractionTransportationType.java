@@ -16,14 +16,17 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.FederateHandles;
+import net.sf.ohla.rti.util.InteractionClassHandles;
+import net.sf.ohla.rti.util.TransportationTypeHandles;
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandle;
-import net.sf.ohla.rti.messages.InteractionClassMessage;
-import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.AbstractMessage;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.InteractionClassHandle;
@@ -31,44 +34,40 @@ import hla.rti1516e.TransportationTypeHandle;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class ReportInteractionTransportationType
-  extends InteractionClassMessage
+  extends
+  AbstractMessage<FederateMessageProtos.ReportInteractionTransportationType, FederateMessageProtos.ReportInteractionTransportationType.Builder>
   implements Callback
 {
-  private final FederateHandle federateHandle;
-  private final TransportationTypeHandle transportationTypeHandle;
-
   public ReportInteractionTransportationType(
     InteractionClassHandle interactionClassHandle, FederateHandle federateHandle,
     TransportationTypeHandle transportationTypeHandle)
   {
-    super(MessageType.REPORT_INTERACTION_TRANSPORTATION_TYPE, interactionClassHandle);
+    super(FederateMessageProtos.ReportInteractionTransportationType.newBuilder());
 
-    this.federateHandle = federateHandle;
-    this.transportationTypeHandle = transportationTypeHandle;
-
-    IEEE1516eFederateHandle.encode(buffer, federateHandle);
-    IEEE1516eTransportationTypeHandle.encode(buffer, transportationTypeHandle);
-
-    encodingFinished();
+    builder.setInteractionClassHandle(InteractionClassHandles.convert(interactionClassHandle));
+    builder.setFederateHandle(FederateHandles.convert(federateHandle));
+    builder.setTransportationTypeHandle(TransportationTypeHandles.convert(transportationTypeHandle));
   }
 
-  public ReportInteractionTransportationType(ChannelBuffer buffer)
+  public ReportInteractionTransportationType(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    federateHandle = IEEE1516eFederateHandle.decode(buffer);
-    transportationTypeHandle = IEEE1516eTransportationTypeHandle.decode(buffer);
+    super(FederateMessageProtos.ReportInteractionTransportationType.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.REPORT_INTERACTION_TRANSPORTATION_TYPE;
+    return MessageProtos.MessageType.REPORT_INTERACTION_TRANSPORTATION_TYPE;
   }
 
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
     federateAmbassador.reportInteractionTransportationType(
-      federateHandle, interactionClassHandle, transportationTypeHandle);
+      FederateHandles.convert(builder.getFederateHandle()),
+      InteractionClassHandles.convert(builder.getInteractionClassHandle()),
+      TransportationTypeHandles.convert(builder.getTransportationTypeHandle()));
   }
 }

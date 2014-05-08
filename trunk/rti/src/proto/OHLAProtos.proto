@@ -1,0 +1,170 @@
+package ohla.rti.proto;
+
+option java_package = "net.sf.ohla.rti.proto";
+
+enum AdvanceRequestType
+{
+  NONE = 1;
+  TIME_ADVANCE_REQUEST = 2;
+  TIME_ADVANCE_REQUEST_AVAILABLE = 3;
+  NEXT_MESSAGE_REQUEST = 4;
+  NEXT_MESSAGE_REQUEST_AVAILABLE = 5;
+  FLUSH_QUEUE_REQUEST = 6;
+}
+
+enum OrderType
+{
+  RECEIVE = 1;
+  TIMESTAMP = 2;
+}
+
+enum ResignAction
+{
+  UNCONDITIONALLY_DIVEST_ATTRIBUTES = 1;
+  DELETE_OBJECTS = 2;
+  CANCEL_PENDING_OWNERSHIP_ACQUISITIONS = 3;
+  DELETE_OBJECTS_THEN_DIVEST = 4;
+  CANCEL_THEN_DELETE_THEN_DIVEST = 5;
+  NO_ACTION = 6;
+}
+
+message MessageRetractionHandle
+{
+  required uint32 federateHandle = 1;
+  required uint64 messageRetractionHandle = 2;
+}
+
+message ObjectInstanceHandle
+{
+  required uint32 federateHandle = 1;
+  required uint64 objectInstanceHandle = 2;
+}
+
+message RegionHandle
+{
+  required uint32 federateHandle = 1;
+  required uint32 regionHandle = 2;
+}
+
+message DimensionRangeBound
+{
+  required uint32 dimensionHandle = 1;
+  required uint64 lowerBound = 2;
+  required uint64 upperBound = 3;
+}
+
+message PublishedObjectClass
+{
+  required uint32 objectClassHandle = 1;
+  repeated uint32 attributeHandles = 2;
+}
+
+message RegionSubscription
+{
+  required RegionHandle regionHandle = 1;
+  required bool passive = 2;
+}
+
+message AttributeSubscription
+{
+  required uint32 attributeHandle = 1;
+  required bool defaultRegionSubscribed = 2;
+  required bool defaultRegionSubscriptionPassive = 3;
+  repeated RegionSubscription regionSubscriptions = 4;
+}
+
+message ObjectClassSubscription
+{
+  required uint32 objectClassHandle = 1;
+  repeated AttributeSubscription attributeSubscription = 2;
+}
+
+message InteractionClassSubscription
+{
+  required uint32 interactionClassHandle = 1;
+  required bool defaultRegionSubscribed = 2;
+  required bool defaultRegionSubscriptionPassive = 3;
+  repeated RegionSubscription regionSubscriptions = 4;
+}
+
+message SubscriptionManagerState
+{
+  repeated ObjectClassSubscription objectClassSubscriptions = 1;
+  repeated InteractionClassSubscription interactionClassSubscriptions = 2;
+}
+
+message FDD
+{
+  message Dimension
+  {
+    required uint32 dimensionHandle = 1;
+    required string dimensionName = 2;
+    required uint64 upperBound = 3;
+  }
+
+  message ObjectClass
+  {
+    message Attribute
+    {
+      required uint32 attributeHandle = 1;
+      required string attributeName = 2;
+
+      repeated uint32 dimensionHandles = 3;
+
+      required uint32 transportationTypeHandle = 4;
+      required OrderType orderType = 5;
+    }
+
+    required uint32 objectClassHandle = 1;
+    required string objectClassName = 2;
+
+    optional uint32 superObjectClassHandle = 3;
+
+    repeated Attribute attributes = 4;
+  }
+
+  message InteractionClass
+  {
+    message Parameter
+    {
+      required uint32 parameterHandle = 1;
+      required string parameterName = 2;
+    }
+
+    required uint32 interactionClassHandle = 1;
+    required string interactionClassName = 2;
+
+    optional uint32 superInteractionClassHandle = 3;
+
+    repeated uint32 dimensionHandles = 4;
+
+    required uint32 transportationTypeHandle = 5;
+    required OrderType orderType = 6;
+
+    repeated Parameter parameters = 7;
+  }
+
+  message FED
+  {
+    message RoutingSpace
+    {
+      required uint32 routingSpaceHandle = 1;
+      required string routingSpaceName = 2;
+
+      repeated uint32 dimensionHandles = 3;
+
+      repeated string aliases = 4;
+    }
+
+    optional string fedName = 1;
+
+    repeated RoutingSpace routingSpace = 2;
+  }
+
+  repeated string sources = 1;
+  repeated ObjectClass objectClasses = 2;
+  repeated InteractionClass interactionClasses = 3;
+  repeated Dimension dimensions = 4;
+
+  required FED fed = 5;
+}

@@ -1,0 +1,27 @@
+The FederationExecution save file format:
+
+FederationExecutionSaveHeader (CodedOutputStream.writeMessageNoTag())
+
+| FederateSaveHeader (CodedOutputStream.writeMessageNoTag())
+| FederateState (bytes - length in FederateSaveHeader.federateStateLength)
+| FederateProxyState (bytes - length in FederateSaveHeader.federateProxyStateLength)
+         :
+| FederateSaveHeader (CodedOutputStream.writeMessageNoTag())
+| FederateState (bytes - length in FederateSaveHeader.federateStateLength)
+| FederateProxyState (bytes - length in FederateSaveHeader.federateProxyStateLength)
+
+FederationExecutionState (CodedOutputStream.writeMessageNoTag())
+ | FederationExecutionSynchronizationPoint* (CodedOutputStream.writeMessageNoTag(), number in FederationExecutionSaveHeader)
+ | FederationExecutionObjectManagerState (CodedOutputStream.writeMessageNoTag())
+   | ReservedObjectInstanceName* (CodedOutputStream.writeMessageNoTag(), number in FederationExecutionObjectManagerState)
+   | FederationExecutionObjectInstance* (CodedOutputStream.writeMessageNoTag(), number in FederationExecutionObjectManagerState)
+ | FederationExecutionRegionManagerState (CodedOutputStream.writeMessageNoTag())
+   | FederationExecutionRegionState (CodedOutputStream.writeMessageNoTag(), number in FederationExecutionRegionManagerState)
+ | FederationExecutionTimeManagerState (CodedOutputStream.writeMessageNoTag())
+ | TimeStampOrderedMessageQueue (CodedOutputStream.writeMessageNoTag())
+
+| SavedFederationExecutionMessage (CodedOutputStream.writeMessageNoTag())
+| FederationExecutionMessage (CodedOutputStream.writeMessageNoTag())
+         :
+| SavedFederationExecutionMessage (CodedOutputStream.writeMessageNoTag())
+| FederationExecutionMessage (CodedOutputStream.writeMessageNoTag())

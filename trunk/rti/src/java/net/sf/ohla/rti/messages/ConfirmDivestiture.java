@@ -16,49 +16,65 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.ObjectInstanceHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.ByteString;
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.ObjectInstanceHandle;
 
 public class ConfirmDivestiture
-  extends ObjectInstanceAttributesMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.ConfirmDivestiture, FederationExecutionMessageProtos.ConfirmDivestiture.Builder>
   implements FederationExecutionMessage
 {
-  private final byte[] tag;
-
   public ConfirmDivestiture(ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
   {
-    super(MessageType.CONFIRM_DIVESTITURE, objectInstanceHandle, attributeHandles);
+    super(FederationExecutionMessageProtos.ConfirmDivestiture.newBuilder());
 
-    this.tag = tag;
+    builder.setObjectInstanceHandle(ObjectInstanceHandles.convert(objectInstanceHandle));
+    builder.addAllAttributeHandles(AttributeHandles.convert(attributeHandles));
 
-    Protocol.encodeBytes(buffer, tag);
-
-    encodingFinished();
+    if (tag != null)
+    {
+      builder.setTag(ByteString.copyFrom(tag));
+    }
   }
 
-  public ConfirmDivestiture(ChannelBuffer buffer)
+  public ConfirmDivestiture(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.ConfirmDivestiture.newBuilder(), in);
+  }
 
-    tag = Protocol.decodeBytes(buffer);
+  public ObjectInstanceHandle getObjectInstanceHandle()
+  {
+    return ObjectInstanceHandles.convert(builder.getObjectInstanceHandle());
+  }
+
+  public AttributeHandleSet getAttributeHandles()
+  {
+    return AttributeHandles.convertAttributeHandles(builder.getAttributeHandlesList());
   }
 
   public byte[] getTag()
   {
-    return tag;
+    return builder.hasTag() ? builder.getTag().toByteArray() : null;
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.CONFIRM_DIVESTITURE;
+    return MessageProtos.MessageType.CONFIRM_DIVESTITURE;
   }
 
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.confirmDivestiture(federateProxy, this);

@@ -16,42 +16,60 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSet;
+import java.io.IOException;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.AttributeHandleSet;
 
 public class AttributeOwnershipDivestitureIfWantedResponse
-  extends AbstractResponse
+  extends
+  AbstractMessage<FederateMessageProtos.AttributeOwnershipDivestitureIfWantedResponse, FederateMessageProtos.AttributeOwnershipDivestitureIfWantedResponse.Builder>
+  implements Response
 {
-  private final AttributeHandleSet attributeHandles;
-
-  public AttributeOwnershipDivestitureIfWantedResponse(long id, AttributeHandleSet attributeHandles)
+  public AttributeOwnershipDivestitureIfWantedResponse(long requestid, AttributeHandleSet attributeHandles)
   {
-    super(MessageType.ATTRIBUTE_OWNERSHIP_DIVESTITURE_IF_WANTED_RESPONSE, id);
+    super(FederateMessageProtos.AttributeOwnershipDivestitureIfWantedResponse.newBuilder());
 
-    this.attributeHandles = attributeHandles;
-
-    IEEE1516eAttributeHandleSet.encode(buffer, attributeHandles);
-
-    encodingFinished();
+    builder.setRequestId(requestid);
+    builder.addAllAttributeHandles(AttributeHandles.convert(attributeHandles));
   }
 
-  public AttributeOwnershipDivestitureIfWantedResponse(ChannelBuffer buffer)
+  public AttributeOwnershipDivestitureIfWantedResponse(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    attributeHandles = IEEE1516eAttributeHandleSet.decode(buffer);
+    super(FederateMessageProtos.AttributeOwnershipDivestitureIfWantedResponse.newBuilder(), in);
   }
 
   public AttributeHandleSet getAttributeHandles()
   {
-    return attributeHandles;
+    return AttributeHandles.convertAttributeHandles(builder.getAttributeHandlesList());
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.ATTRIBUTE_OWNERSHIP_DIVESTITURE_IF_WANTED_RESPONSE;
+    return MessageProtos.MessageType.ATTRIBUTE_OWNERSHIP_DIVESTITURE_IF_WANTED_RESPONSE;
+  }
+
+  @Override
+  public long getRequestId()
+  {
+    return builder.getRequestId();
+  }
+
+  @Override
+  public boolean isSuccess()
+  {
+    return true;
+  }
+
+  @Override
+  public boolean isFailure()
+  {
+    return false;
   }
 }

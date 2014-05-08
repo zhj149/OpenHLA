@@ -16,49 +16,46 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
+
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import com.google.protobuf.CodedInputStream;
 
 public class SynchronizationPointAchieved
-  extends StringMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.SynchronizationPointAchieved, FederationExecutionMessageProtos.SynchronizationPointAchieved.Builder>
   implements FederationExecutionMessage
 {
-  private final boolean success;
-
-  public SynchronizationPointAchieved(String label, boolean success)
+  public SynchronizationPointAchieved(String label, boolean successful)
   {
-    super(MessageType.SYNCHRONIZATION_POINT_ACHIEVED, label);
+    super(FederationExecutionMessageProtos.SynchronizationPointAchieved.newBuilder());
 
-    this.success = success;
-
-    Protocol.encodeBoolean(buffer, success);
-
-    encodingFinished();
+    builder.setLabel(label);
+    builder.setSuccessful(successful);
   }
 
-  public SynchronizationPointAchieved(ChannelBuffer buffer)
+  public SynchronizationPointAchieved(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    success = Protocol.decodeBoolean(buffer);
+    super(FederationExecutionMessageProtos.SynchronizationPointAchieved.newBuilder(), in);
   }
 
   public String getLabel()
   {
-    return s;
+    return builder.getLabel();
   }
 
-  public boolean isSuccess()
+  public boolean wasSuccessful()
   {
-    return success;
+    return builder.getSuccessful();
   }
 
-  public MessageType getType()
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.SYNCHRONIZATION_POINT_ACHIEVED;
+    return MessageProtos.MessageType.SYNCHRONIZATION_POINT_ACHIEVED;
   }
 
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)

@@ -16,63 +16,75 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.FederateHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandleSet;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.ByteString;
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateHandleSet;
 
 public class RegisterFederationSynchronizationPoint
-  extends StringMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.RegisterFederationSynchronizationPoint, FederationExecutionMessageProtos.RegisterFederationSynchronizationPoint.Builder>
   implements FederationExecutionMessage
 {
-  private final byte[] tag;
-  private final FederateHandleSet federateHandles;
+  private volatile FederateHandleSet federateHandles;
 
   public RegisterFederationSynchronizationPoint(String label, byte[] tag, FederateHandleSet federateHandles)
   {
-    super(MessageType.REGISTER_FEDERATION_SYNCHRONIZATION_POINT, label);
+    super(FederationExecutionMessageProtos.RegisterFederationSynchronizationPoint.newBuilder());
 
-    this.tag = tag;
     this.federateHandles = federateHandles;
 
-    Protocol.encodeBytes(buffer, tag);
-    IEEE1516eFederateHandleSet.encode(buffer, federateHandles);
+    builder.setLabel(label);
 
-    encodingFinished();
+    if (federateHandles != null)
+    {
+      builder.addAllFederateHandles(FederateHandles.convertToProto(federateHandles));
+    }
+
+    if (tag != null)
+    {
+      builder.setTag(ByteString.copyFrom(tag));
+    }
   }
 
-  public RegisterFederationSynchronizationPoint(ChannelBuffer buffer)
+  public RegisterFederationSynchronizationPoint(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    tag = Protocol.decodeBytes(buffer);
-    federateHandles = IEEE1516eFederateHandleSet.decode(buffer);
+    super(FederationExecutionMessageProtos.RegisterFederationSynchronizationPoint.newBuilder(), in);
   }
 
   public String getLabel()
   {
-    return s;
+    return builder.getLabel();
   }
 
   public byte[] getTag()
   {
-    return tag;
+    return builder.hasTag() ? builder.getTag().toByteArray() : null;
   }
 
   public FederateHandleSet getFederateHandles()
   {
+    if (federateHandles == null)
+    {
+      federateHandles = FederateHandles.convertFromProto(builder.getFederateHandlesList());
+    }
     return federateHandles;
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.REGISTER_FEDERATION_SYNCHRONIZATION_POINT;
+    return MessageProtos.MessageType.REGISTER_FEDERATION_SYNCHRONIZATION_POINT;
   }
 
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.registerFederationSynchronizationPoint(federateProxy, this);

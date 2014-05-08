@@ -16,29 +16,39 @@
 
 package net.sf.ohla.rti.federate;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
-import net.sf.ohla.rti.MessageRetractionManager;
+import net.sf.ohla.rti.util.LogicalTimes;
+import net.sf.ohla.rti.util.MessageRetractionHandles;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eMessageRetractionHandle;
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
 import net.sf.ohla.rti.messages.Retract;
+import net.sf.ohla.rti.proto.FederationExecutionSaveProtos.FederateState.FederateMessageRetractionManagerState;
 
+import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.CodedOutputStream;
 import hla.rti1516e.LogicalTime;
 import hla.rti1516e.LogicalTimeFactory;
 import hla.rti1516e.MessageRetractionHandle;
 import hla.rti1516e.exceptions.MessageCanNoLongerBeRetracted;
 
 public class FederateMessageRetractionManager
-  extends MessageRetractionManager
 {
   private final Federate federate;
 
-  private final AtomicLong messageRetractionCount = new AtomicLong();
+  private final Lock messageRetractionsLock = new ReentrantLock(true);
+  private final Map<MessageRetractionHandle, MessageRetraction> messageRetractions = new HashMap<>();
+  private final Queue<MessageRetraction> messageRetractionsByExpiration = new PriorityQueue<>();
+
+  private long nextMessageRetractionHandle;
 
   public FederateMessageRetractionManager(Federate federate)
   {
@@ -48,11 +58,32 @@ public class FederateMessageRetractionManager
   public MessageRetractionHandle add(LogicalTime time)
   {
     MessageRetractionHandle messageRetractionHandle =
-      new IEEE1516eMessageRetractionHandle(federate.getFederateHandle(), messageRetractionCount.incrementAndGet());
+      new IEEE1516eMessageRetractionHandle(federate.getFederateHandle(), ++nextMessageRetractionHandle);
 
     add(new MessageRetraction(messageRetractionHandle, time));
 
     return messageRetractionHandle;
+  }
+
+  @SuppressWarnings("unchecked")
+  public void clear(LogicalTime time)
+  {
+    messageRetractionsLock.lock();
+    try
+    {
+      for (MessageRetraction messageRetraction = messageRetractionsByExpiration.peek();
+           messageRetraction != null && messageRetraction.getExpiration().compareTo(time) < 0;
+           messageRetraction = messageRetractionsByExpiration.peek())
+      {
+        messageRetractions.remove(messageRetraction.getMessageRetractionHandle());
+
+        messageRetractionsByExpiration.poll();
+      }
+    }
+    finally
+    {
+      messageRetractionsLock.unlock();
+    }
   }
 
   @SuppressWarnings("unchecked")
@@ -88,21 +119,109 @@ public class FederateMessageRetractionManager
     }
   }
 
-  @Override
-  public void saveState(DataOutput out)
+  public void saveState(CodedOutputStream out)
     throws IOException
   {
-    super.saveState(out);
+    FederateMessageRetractionManagerState.Builder messageRetractionManagerState =
+      FederateMessageRetractionManagerState.newBuilder();
 
-    out.writeLong(messageRetractionCount.get());
+    messageRetractionManagerState.setNextMessageRetractionHandle(nextMessageRetractionHandle);
+    messageRetractionManagerState.setMessageRetractionCount(messageRetractions.size());
+
+    out.writeMessageNoTag(messageRetractionManagerState.build());
+
+    for (MessageRetraction messageRetraction : messageRetractions.values())
+    {
+      messageRetraction.saveState(out);
+    }
   }
 
-  @Override
-  public void restoreState(DataInput in, LogicalTimeFactory logicalTimeFactory)
+  public void restoreState(CodedInputStream in)
     throws IOException
   {
-    super.restoreState(in, logicalTimeFactory);
+    FederateMessageRetractionManagerState messageRetractionManagerState =
+      in.readMessage(FederateMessageRetractionManagerState.PARSER, null);
 
-    messageRetractionCount.set(in.readLong());
+    nextMessageRetractionHandle = messageRetractionManagerState.getNextMessageRetractionHandle();
+
+    messageRetractions.clear();
+    messageRetractionsByExpiration.clear();
+    for (int messageRetractionCount = messageRetractionManagerState.getMessageRetractionCount();
+         messageRetractionCount > 0; --messageRetractionCount)
+    {
+      MessageRetraction messageRetraction = new MessageRetraction(federate.getLogicalTimeFactory(), in);
+      messageRetractions.put(messageRetraction.getMessageRetractionHandle(), messageRetraction);
+      messageRetractionsByExpiration.offer(messageRetraction);
+    }
+  }
+
+  private void add(MessageRetraction messageRetraction)
+  {
+    messageRetractionsLock.lock();
+    try
+    {
+      messageRetractions.put(messageRetraction.getMessageRetractionHandle(), messageRetraction);
+      messageRetractionsByExpiration.offer(messageRetraction);
+    }
+    finally
+    {
+      messageRetractionsLock.unlock();
+    }
+  }
+
+  private class MessageRetraction
+    implements Comparable<MessageRetraction>
+  {
+    protected final MessageRetractionHandle messageRetractionHandle;
+    protected final LogicalTime expiration;
+
+    public MessageRetraction(MessageRetractionHandle messageRetractionHandle, LogicalTime expiration)
+    {
+      this.messageRetractionHandle = messageRetractionHandle;
+      this.expiration = expiration;
+    }
+
+    public MessageRetraction(LogicalTimeFactory logicalTimeFactory, CodedInputStream in)
+      throws IOException
+    {
+      FederateMessageRetractionManagerState.MessageRetraction messageRetraction =
+        in.readMessage(FederateMessageRetractionManagerState.MessageRetraction.PARSER, null);
+
+      messageRetractionHandle = MessageRetractionHandles.convert(messageRetraction.getMessageRetractionHandle());
+      expiration = LogicalTimes.convert(logicalTimeFactory, messageRetraction.getExpiration());
+    }
+
+    public MessageRetractionHandle getMessageRetractionHandle()
+    {
+      return messageRetractionHandle;
+    }
+
+    public LogicalTime getExpiration()
+    {
+      return expiration;
+    }
+
+    public boolean retract()
+    {
+      return true;
+    }
+
+    public void saveState(CodedOutputStream out)
+      throws IOException
+    {
+      FederateMessageRetractionManagerState.MessageRetraction.Builder messageRetraction =
+        FederateMessageRetractionManagerState.MessageRetraction.newBuilder();
+
+      messageRetraction.setMessageRetractionHandle(MessageRetractionHandles.convert(messageRetractionHandle));
+      messageRetraction.setExpiration(LogicalTimes.convert(expiration));
+
+      out.writeMessageNoTag(messageRetraction.build());
+    }
+
+    @SuppressWarnings("unchecked")
+    public int compareTo(MessageRetraction rhs)
+    {
+      return expiration.compareTo(rhs.expiration);
+    }
   }
 }

@@ -16,51 +16,63 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.LogicalTimes;
 import net.sf.ohla.rti.federate.Callback;
 import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.AbstractMessage;
 import net.sf.ohla.rti.messages.FederateMessage;
-import net.sf.ohla.rti.messages.LogicalTimeMessage;
-import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.LogicalTime;
-import hla.rti1516e.LogicalTimeFactory;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class TimeConstrainedEnabled
-  extends LogicalTimeMessage
-  implements Callback, FederateMessage
+  extends
+  AbstractMessage<FederateMessageProtos.TimeConstrainedEnabled, FederateMessageProtos.TimeConstrainedEnabled.Builder>
+implements Callback, FederateMessage
 {
   private Federate federate;
+  private LogicalTime time;
 
   public TimeConstrainedEnabled(LogicalTime time)
   {
-    super(MessageType.TIME_CONSTRAINED_ENABLED, time);
+    super(FederateMessageProtos.TimeConstrainedEnabled.newBuilder());
 
-    encodingFinished();
+    this.time = time;
+
+    builder.setTime(LogicalTimes.convert(time));
   }
 
-  public TimeConstrainedEnabled(ChannelBuffer buffer, LogicalTimeFactory logicalTimeFactory)
+  public TimeConstrainedEnabled(CodedInputStream in)
+    throws IOException
   {
-    super(buffer, logicalTimeFactory);
+    super(FederateMessageProtos.TimeConstrainedEnabled.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.TIME_CONSTRAINED_ENABLED;
+    return MessageProtos.MessageType.TIME_CONSTRAINED_ENABLED;
   }
 
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
     federate.timeConstrainedEnabled(time);
   }
 
+  @Override
   public void execute(Federate federate)
   {
     this.federate = federate;
+
+    time = LogicalTimes.convert(federate.getLogicalTimeFactory(), builder.getTime());
 
     federate.getCallbackManager().add(this, false);
   }

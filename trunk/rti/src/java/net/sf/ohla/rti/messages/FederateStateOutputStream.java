@@ -25,17 +25,15 @@ import org.jboss.netty.channel.Channel;
 public class FederateStateOutputStream
   extends OutputStream
 {
-  private final int bufferSize;
   private final Channel channel;
 
-  private ChannelBuffer buffer;
+  private final ChannelBuffer buffer;
 
-  public FederateStateOutputStream(int bufferSize, Channel channel)
+  public FederateStateOutputStream(Channel channel, int bufferSize)
   {
-    this.bufferSize = bufferSize;
     this.channel = channel;
 
-    createBuffer();
+    buffer = ChannelBuffers.buffer(bufferSize);
   }
 
   @Override
@@ -90,20 +88,11 @@ public class FederateStateOutputStream
   {
     sendBuffer(false);
 
-    createBuffer();
-  }
-
-  private void createBuffer()
-  {
-    buffer = ChannelBuffers.buffer(bufferSize);
-
-    // skip the header
-    //
-    buffer.writerIndex(FederateStateFrame.HEADER_SIZE);
+    buffer.clear();
   }
 
   private void sendBuffer(boolean last)
   {
-    channel.write(new FederateStateFrame(buffer, last));
+    channel.write(new FederateStateFrame(buffer.array(), 0, buffer.readableBytes(), last));
   }
 }

@@ -16,8 +16,6 @@
 
 package net.sf.ohla.rti.federate;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 import java.util.Collection;
@@ -30,16 +28,16 @@ import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.FederateHandles;
+import net.sf.ohla.rti.util.ObjectClassHandles;
+import net.sf.ohla.rti.util.ObjectInstanceHandles;
 import net.sf.ohla.rti.fdd.Attribute;
 import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.fdd.TransportationType;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSet;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSetFactory;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectInstanceHandle;
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
 import net.sf.ohla.rti.messages.AssociateRegionsForUpdates;
@@ -58,9 +56,10 @@ import net.sf.ohla.rti.messages.RequestObjectInstanceAttributeValueUpdate;
 import net.sf.ohla.rti.messages.UnassociateRegionsForUpdates;
 import net.sf.ohla.rti.messages.UnconditionalAttributeOwnershipDivestiture;
 import net.sf.ohla.rti.messages.UpdateAttributeValues;
-import net.sf.ohla.rti.messages.callbacks.ReflectAttributeValues;
-import net.sf.ohla.rti.messages.callbacks.RemoveObjectInstance;
+import net.sf.ohla.rti.proto.FederationExecutionSaveProtos.FederateState.FederateObjectManagerState.FederateObjectInstanceState;
 
+import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.CodedOutputStream;
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.AttributeHandleValueMap;
@@ -92,29 +91,26 @@ import hla.rti1516e.exceptions.RTIinternalError;
 
 public class FederateObjectInstance
 {
-  private final FederateHandle producingFederateHandle;
   private final ObjectInstanceHandle objectInstanceHandle;
   private final ObjectClass objectClass;
   private final String objectInstanceName;
+  private final FederateHandle producingFederateHandle;
 
-  private final Map<AttributeHandle, FederateAttributeInstance> attributes =
-    new HashMap<AttributeHandle, FederateAttributeInstance>();
+  private final Map<AttributeHandle, FederateAttributeInstance> attributes = new HashMap<>();
 
-  private final Set<AttributeHandle> attributeHandlesBeingAcquired =
-    new HashSet<AttributeHandle>();
-  private final Set<AttributeHandle> attributeHandlesBeingAcquiredIfAvailable =
-    new HashSet<AttributeHandle>();
+  private final Set<AttributeHandle> attributeHandlesBeingAcquired = new HashSet<>();
+  private final Set<AttributeHandle> attributeHandlesBeingAcquiredIfAvailable = new HashSet<>();
 
   private final ReadWriteLock objectLock = new ReentrantReadWriteLock(true);
 
   public FederateObjectInstance(
-    FederateHandle producingFederateHandle, ObjectInstanceHandle objectInstanceHandle, ObjectClass objectClass,
-    String objectInstanceName)
+    ObjectInstanceHandle objectInstanceHandle, ObjectClass objectClass, String objectInstanceName,
+    FederateHandle producingFederateHandle)
   {
-    this.producingFederateHandle = producingFederateHandle;
     this.objectInstanceHandle = objectInstanceHandle;
     this.objectClass = objectClass;
     this.objectInstanceName = objectInstanceName;
+    this.producingFederateHandle = producingFederateHandle;
   }
 
   public FederateObjectInstance(
@@ -144,7 +140,7 @@ public class FederateObjectInstance
     ObjectClass objectClass, AttributeHandleSet publishedAttributeHandles,
     AttributeSetRegionSetPairList attributesAndRegions)
   {
-    this(federate.getFederateHandle(), objectInstanceHandle, objectClass, objectInstanceName);
+    this(objectInstanceHandle, objectClass, objectInstanceName, federate.getFederateHandle());
 
     for (AttributeHandle attributeHandle : publishedAttributeHandles)
     {
@@ -182,31 +178,27 @@ public class FederateObjectInstance
     }
   }
 
-  public FederateObjectInstance(DataInput in, FDD fdd)
+  public FederateObjectInstance(FDD fdd, CodedInputStream in)
     throws IOException
   {
-    producingFederateHandle = IEEE1516eFederateHandle.decode(in);
-    objectInstanceHandle = new IEEE1516eObjectInstanceHandle(in);
+    FederateObjectInstanceState objectInstanceState = in.readMessage(FederateObjectInstanceState.PARSER, null);
 
-    objectClass = fdd.getObjectClassSafely(IEEE1516eObjectClassHandle.decode(in));
+    producingFederateHandle = FederateHandles.convert(objectInstanceState.getProducingFederateHandle());
+    objectInstanceHandle = ObjectInstanceHandles.convert(objectInstanceState.getObjectInstanceHandle());
+    objectClass = fdd.getObjectClassSafely(ObjectClassHandles.convert(objectInstanceState.getObjectClassHandle()));
+    objectInstanceName = objectInstanceState.getObjectInstanceName();
 
-    objectInstanceName = in.readUTF();
-
-    for (int count = in.readInt(); count > 0; count--)
+    for (FederateObjectInstanceState.FederateAttributeInstanceState attributeInstanceState : objectInstanceState.getAttributeInstanceStatesList())
     {
-      FederateAttributeInstance federateAttributeInstance = new FederateAttributeInstance(in, objectClass);
+      FederateAttributeInstance federateAttributeInstance =
+        new FederateAttributeInstance(attributeInstanceState, objectClass);
       attributes.put(federateAttributeInstance.getAttributeHandle(), federateAttributeInstance);
     }
 
-    for (int count = in.readInt(); count > 0; count--)
-    {
-      attributeHandlesBeingAcquired.add(IEEE1516eAttributeHandle.decode(in));
-    }
-
-    for (int count = in.readInt(); count > 0; count--)
-    {
-      attributeHandlesBeingAcquiredIfAvailable.add(IEEE1516eAttributeHandle.decode(in));
-    }
+    attributeHandlesBeingAcquired.addAll(
+      AttributeHandles.convertAttributeHandles(objectInstanceState.getAttributeHandlesBeingAcquiredList()));
+    attributeHandlesBeingAcquiredIfAvailable.addAll(
+      AttributeHandles.convertAttributeHandles(objectInstanceState.getAttributeHandlesBeingAcquiredIfAvailableList()));
   }
 
   public FederateHandle getProducingFederateHandle()
@@ -243,7 +235,7 @@ public class FederateObjectInstance
       checkIfAttributeNotOwned(attributeValues.keySet());
 
       federate.getRTIChannel().write(new UpdateAttributeValues(
-        objectInstanceHandle, attributeValues, tag, TransportationType.HLA_RELIABLE.getTransportationTypeHandle()));
+        objectInstanceHandle, attributeValues, TransportationType.HLA_RELIABLE.getTransportationTypeHandle(), tag));
     }
     finally
     {
@@ -265,8 +257,8 @@ public class FederateObjectInstance
       }
 
       federate.getRTIChannel().write(new UpdateAttributeValues(
-        objectInstanceHandle, attributeValues, tag, sentOrderType,
-        TransportationType.HLA_RELIABLE.getTransportationTypeHandle(), updateTime, messageRetractionHandle));
+        objectInstanceHandle, attributeValues, TransportationType.HLA_RELIABLE.getTransportationTypeHandle(), tag,
+        sentOrderType, updateTime, messageRetractionHandle));
     }
     finally
     {
@@ -415,7 +407,7 @@ public class FederateObjectInstance
         {
           if (ownedAttributes == null)
           {
-            ownedAttributes = new LinkedList<Attribute>();
+            ownedAttributes = new LinkedList<>();
           }
           ownedAttributes.add(attributeInstance.getAttribute());
         }
@@ -423,7 +415,7 @@ public class FederateObjectInstance
         {
           if (attributesAlreadyBeingAcquired == null)
           {
-            attributesAlreadyBeingAcquired = new LinkedList<Attribute>();
+            attributesAlreadyBeingAcquired = new LinkedList<>();
           }
           attributesAlreadyBeingAcquired.add(objectClass.getAttributeSafely(attributeHandle));
         }
@@ -608,16 +600,22 @@ public class FederateObjectInstance
       federate.getRTIChannel().write(getUpdateRateValueForAttribute);
 
       GetUpdateRateValueForAttributeResponse response = getUpdateRateValueForAttribute.getResponse();
-      switch (response.getResponse())
+      if (response.isSuccess())
       {
-        case OBJECT_INSTANCE_NOT_KNOWN:
-          throw new ObjectInstanceNotKnown(I18n.getMessage(
-            ExceptionMessages.OBJECT_INSTANCE_HANDLE_NOT_KNOWN, objectInstanceHandle));
-        case SUCCESS:
-          updateRate = response.getUpdateRate();
-          break;
-        default:
-          throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION));
+        updateRate = response.getUpdateRate();
+      }
+      else
+      {
+        assert response.isFailure();
+
+        switch (response.getCause())
+        {
+          case OBJECT_INSTANCE_NOT_KNOWN:
+            throw new ObjectInstanceNotKnown(I18n.getMessage(
+              ExceptionMessages.OBJECT_INSTANCE_HANDLE_NOT_KNOWN, objectInstanceHandle));
+          default:
+            throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION));
+        }
       }
     }
     finally
@@ -754,15 +752,16 @@ public class FederateObjectInstance
       federate.getRTIChannel().write(associateRegionsForUpdates);
 
       AssociateRegionsForUpdatesResponse response = associateRegionsForUpdates.getResponse();
-      switch (response.getResponse())
+      if (response.isFailure())
       {
-        case OBJECT_INSTANCE_NOT_KNOWN:
-          throw new ObjectInstanceNotKnown(
-            I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_HANDLE_NOT_KNOWN, objectInstanceHandle));
-        case SUCCESS:
-          break;
-        default:
-          throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION));
+        switch (response.getCause())
+        {
+          case OBJECT_INSTANCE_NOT_KNOWN:
+            throw new ObjectInstanceNotKnown(
+              I18n.getMessage(ExceptionMessages.OBJECT_INSTANCE_HANDLE_NOT_KNOWN, objectInstanceHandle));
+          default:
+            throw new RTIinternalError(I18n.getMessage(ExceptionMessages.UNEXPECTED_EXCEPTION));
+        }
       }
     }
     finally
@@ -886,80 +885,61 @@ public class FederateObjectInstance
   }
 
   public void fireReflectAttributeValues(
-    ReflectAttributeValues reflectAttributeValues, FederateAmbassador federateAmbassador,
-    FederateRegionManager regionManager)
-    throws FederateInternalError
+    FederateAmbassador federateAmbassador, AttributeHandleValueMap attributeValues, byte[] tag, OrderType sentOrderType,
+    TransportationTypeHandle transportationTypeHandle, LogicalTime time, OrderType receivedOrderType,
+    MessageRetractionHandle messageRetractionHandle, FederateAmbassador.SupplementalReflectInfo supplementalReflectInfo)
+  throws FederateInternalError
   {
     objectLock.readLock().lock();
     try
     {
-      if (reflectAttributeValues.hasSentRegions())
-      {
-        reflectAttributeValues.setSentRegions(
-          regionManager.createTemporaryRegions(reflectAttributeValues.getRegions()));
-      }
-
-      OrderType sentOrderType = reflectAttributeValues.getSentOrderType();
-      LogicalTime time = reflectAttributeValues.getTime();
-
-      if (sentOrderType == OrderType.TIMESTAMP)
+      if (receivedOrderType == OrderType.TIMESTAMP)
       {
         federateAmbassador.reflectAttributeValues(
-          objectInstanceHandle, reflectAttributeValues.getAttributeValues(), reflectAttributeValues.getTag(),
-          OrderType.TIMESTAMP, reflectAttributeValues.getTransportationTypeHandle(), time,
-          OrderType.TIMESTAMP, reflectAttributeValues.getMessageRetractionHandle(), reflectAttributeValues);
+          objectInstanceHandle, attributeValues, tag, OrderType.TIMESTAMP, transportationTypeHandle, time,
+          OrderType.TIMESTAMP, messageRetractionHandle, supplementalReflectInfo);
       }
       else if (time == null)
       {
         federateAmbassador.reflectAttributeValues(
-          objectInstanceHandle, reflectAttributeValues.getAttributeValues(), reflectAttributeValues.getTag(),
-          sentOrderType, reflectAttributeValues.getTransportationTypeHandle(), reflectAttributeValues);
+          objectInstanceHandle, attributeValues, tag, sentOrderType, transportationTypeHandle, supplementalReflectInfo);
       }
       else
       {
         federateAmbassador.reflectAttributeValues(
-          objectInstanceHandle, reflectAttributeValues.getAttributeValues(), reflectAttributeValues.getTag(),
-          sentOrderType, reflectAttributeValues.getTransportationTypeHandle(), time, OrderType.RECEIVE,
-          reflectAttributeValues);
+          objectInstanceHandle, attributeValues, tag, sentOrderType, transportationTypeHandle, time, OrderType.RECEIVE,
+          supplementalReflectInfo);
       }
     }
     finally
     {
       objectLock.readLock().unlock();
-
-      if (reflectAttributeValues.hasSentRegions())
-      {
-        regionManager.deleteTemporaryRegions(reflectAttributeValues.getSentRegions());
-      }
     }
   }
 
   public void fireRemoveObjectInstance(
-    RemoveObjectInstance removeObjectInstance, FederateAmbassador federateAmbassador)
+    FederateAmbassador federateAmbassador, byte[] tag, OrderType sentOrderType, LogicalTime time,
+    OrderType receivedOrderType, MessageRetractionHandle messageRetractionHandle,
+    FederateAmbassador.SupplementalRemoveInfo supplementalRemoveInfo)
     throws FederateInternalError
   {
     objectLock.readLock().lock();
     try
     {
-      OrderType sentOrderType = removeObjectInstance.getSentOrderType();
-      LogicalTime time = removeObjectInstance.getTime();
-
-      if (sentOrderType == OrderType.TIMESTAMP)
+      if (receivedOrderType == OrderType.TIMESTAMP)
       {
         federateAmbassador.removeObjectInstance(
-          objectInstanceHandle, removeObjectInstance.getTag(), OrderType.TIMESTAMP, time, OrderType.TIMESTAMP,
-          removeObjectInstance.getMessageRetractionHandle(), removeObjectInstance);
+          objectInstanceHandle, tag, OrderType.TIMESTAMP, time, OrderType.TIMESTAMP, messageRetractionHandle,
+          supplementalRemoveInfo);
       }
       else if (time == null)
       {
-        federateAmbassador.removeObjectInstance(
-          objectInstanceHandle, removeObjectInstance.getTag(), sentOrderType, removeObjectInstance);
+        federateAmbassador.removeObjectInstance(objectInstanceHandle, tag, sentOrderType, supplementalRemoveInfo);
       }
       else
       {
         federateAmbassador.removeObjectInstance(
-          objectInstanceHandle, removeObjectInstance.getTag(), sentOrderType, time, OrderType.RECEIVE,
-          removeObjectInstance);
+          objectInstanceHandle, tag, sentOrderType, time, OrderType.RECEIVE, supplementalRemoveInfo);
       }
     }
     finally
@@ -994,31 +974,26 @@ public class FederateObjectInstance
     }
   }
 
-  public void writeTo(DataOutput out)
+  public void saveState(CodedOutputStream out)
     throws IOException
   {
-    ((IEEE1516eFederateHandle) producingFederateHandle).writeTo(out);
-    ((IEEE1516eObjectInstanceHandle) objectInstanceHandle).writeTo(out);
-    ((IEEE1516eObjectClassHandle) objectClass.getObjectClassHandle()).writeTo(out);
-    out.writeUTF(objectInstanceName);
+    FederateObjectInstanceState.Builder objectInstanceState = FederateObjectInstanceState.newBuilder();
 
-    out.writeInt(attributes.size());
+    objectInstanceState.setProducingFederateHandle(FederateHandles.convert(producingFederateHandle));
+    objectInstanceState.setObjectInstanceHandle(ObjectInstanceHandles.convert(objectInstanceHandle));
+    objectInstanceState.setObjectClassHandle(ObjectClassHandles.convert(objectClass.getObjectClassHandle()));
+    objectInstanceState.setObjectInstanceName(objectInstanceName);
+
     for (FederateAttributeInstance federateAttributeInstance : attributes.values())
     {
-      federateAttributeInstance.writeTo(out);
+      objectInstanceState.addAttributeInstanceStates(federateAttributeInstance.saveState());
     }
 
-    out.writeInt(attributeHandlesBeingAcquired.size());
-    for (AttributeHandle attributeHandle : attributeHandlesBeingAcquired)
-    {
-      ((IEEE1516eAttributeHandle) attributeHandle).writeTo(out);
-    }
+    objectInstanceState.addAllAttributeHandlesBeingAcquired(AttributeHandles.convert(attributeHandlesBeingAcquired));
+    objectInstanceState.addAllAttributeHandlesBeingAcquiredIfAvailable(
+      AttributeHandles.convert(attributeHandlesBeingAcquiredIfAvailable));
 
-    out.writeInt(attributeHandlesBeingAcquiredIfAvailable.size());
-    for (AttributeHandle attributeHandle : attributeHandlesBeingAcquiredIfAvailable)
-    {
-      ((IEEE1516eAttributeHandle) attributeHandle).writeTo(out);
-    }
+    out.writeMessageNoTag(objectInstanceState.build());
   }
 
   @Override
@@ -1107,7 +1082,7 @@ public class FederateObjectInstance
       {
         if (ownedAttributes == null)
         {
-          ownedAttributes = new LinkedList<Attribute>();
+          ownedAttributes = new LinkedList<>();
         }
         ownedAttributes.add(attributeInstance.getAttribute());
       }

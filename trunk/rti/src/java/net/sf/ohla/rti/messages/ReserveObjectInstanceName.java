@@ -16,37 +16,44 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import com.google.protobuf.CodedInputStream;
 
 public class ReserveObjectInstanceName
-  extends StringMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.ReserveObjectInstanceName, FederationExecutionMessageProtos.ReserveObjectInstanceName.Builder>
   implements FederationExecutionMessage
 {
   public ReserveObjectInstanceName(String objectInstanceName)
   {
-    super(MessageType.RESERVE_OBJECT_INSTANCE_NAME, objectInstanceName);
+    super(FederationExecutionMessageProtos.ReserveObjectInstanceName.newBuilder());
 
-    encodingFinished();
+    builder.setObjectInstanceName(objectInstanceName);
   }
 
-  public ReserveObjectInstanceName(ChannelBuffer buffer)
+  public ReserveObjectInstanceName(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.ReserveObjectInstanceName.newBuilder(), in);
   }
 
   public String getObjectInstanceName()
   {
-    return s;
+    return builder.getObjectInstanceName();
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.RESERVE_OBJECT_INSTANCE_NAME;
+    return MessageProtos.MessageType.RESERVE_OBJECT_INSTANCE_NAME;
   }
 
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.reserveObjectInstanceName(federateProxy, this);

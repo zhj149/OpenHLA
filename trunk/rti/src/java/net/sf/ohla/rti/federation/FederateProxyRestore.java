@@ -16,63 +16,63 @@
 
 package net.sf.ohla.rti.federation;
 
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.RandomAccessFile;
+import java.io.OutputStream;
 
-import java.util.zip.GZIPInputStream;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
-import net.sf.ohla.rti.i18n.I18nLogger;
+import net.sf.ohla.rti.util.FederateHandles;
+import net.sf.ohla.rti.util.MoreChannels;
 import net.sf.ohla.rti.messages.FederateStateOutputStream;
+import net.sf.ohla.rti.proto.FederationExecutionSaveProtos.FederateSaveHeader;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
+
+import com.google.common.io.ByteStreams;
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateHandle;
-import hla.rti1516e.exceptions.CouldNotDecode;
 
 public class FederateProxyRestore
 {
-  private static final I18nLogger log = I18nLogger.getLogger(FederateProxyRestore.class);
-
   private final FederateHandle federateHandle;
   private final String federateName;
   private final String federateType;
 
-  private final File federateStateFile;
-  private final File federateProxyStateFile;
+  private final Path federateStateFile;
+  private final Path federateProxyStateFile;
 
-  private final InputStream federateStateInputStream;
-  private final DataInputStream federateProxyStateInputStream;
-
-  public FederateProxyRestore(FederateHandle federateHandle, String federateName, String federateType,
-                              RandomAccessFile file)
+  public FederateProxyRestore(FileChannel restoreFileChannel)
     throws IOException
   {
-    this.federateHandle = federateHandle;
-    this.federateName = federateName;
-    this.federateType = federateType;
+    FederateSaveHeader federateSaveHeader =
+      FederateSaveHeader.parseDelimitedFrom(Channels.newInputStream(restoreFileChannel));
 
-    log.debug("Federate restore: {} - {}", federateHandle, federateName);
+    federateHandle = FederateHandles.convert(federateSaveHeader.getFederateHandle());
+    federateName = federateSaveHeader.getFederateName();
+    federateType = federateSaveHeader.getFederateType();
 
-    federateStateFile = File.createTempFile(FederateProxySave.FEDERATE_STATE, "restore");
-    log.debug("Federate state file: {}", federateStateFile);
+    Marker marker = MarkerFactory.getMarker(federateHandle.toString());
+    Logger logger = LoggerFactory.getLogger(FederateProxyRestore.class);
+    logger.debug(marker, "Federate restore: {}-{}", federateHandle, federateName);
 
-    federateProxyStateFile = File.createTempFile(FederateProxySave.FEDERATE_PROXY_STATE, "restore");
-    log.debug("Federate proxy state file: {}", federateProxyStateFile);
+    federateStateFile = Files.createTempFile(FederateProxySave.FEDERATE_STATE, "restore");
+    logger.debug(marker, "Federate state file: {}", federateStateFile);
 
-    long federateStateFileLength = file.readLong();
-    transfer(file, federateStateFileLength, federateStateFile);
+    federateProxyStateFile = Files.createTempFile(FederateProxySave.FEDERATE_PROXY_STATE, "restore");
+    logger.debug(marker, "Federate proxy state file: {}", federateProxyStateFile);
 
-    long federateProxyStateFileLength = file.readLong();
-    transfer(file, federateProxyStateFileLength, federateProxyStateFile);
-
-    // TODO: allow different types of input streams
-
-    federateStateInputStream = new GZIPInputStream(new FileInputStream(federateStateFile));
-    federateProxyStateInputStream =
-      new DataInputStream(new GZIPInputStream(new FileInputStream(federateProxyStateFile)));
+    MoreChannels.transferToFully(
+      restoreFileChannel, federateStateFile, federateSaveHeader.getFederateStateLength());
+    MoreChannels.transferToFully(
+      restoreFileChannel, federateProxyStateFile, federateSaveHeader.getFederateProxyStateLength());
   }
 
   public FederateHandle getFederateHandle()
@@ -91,42 +91,23 @@ public class FederateProxyRestore
   }
 
   public void restore(FederateProxy federateProxy)
-    throws IOException, CouldNotDecode
+    throws IOException
   {
     // send the Federate state over to the Federate
     //
-    FederateStateOutputStream out = new FederateStateOutputStream(8192, federateProxy.getFederateChannel());
-    byte[] buffer = new byte[4096];
-    for (int bytesRead = federateStateInputStream.read(buffer); bytesRead >= 0;)
+    try (InputStream in = Channels.newInputStream(FileChannel.open(federateStateFile, StandardOpenOption.READ));
+         OutputStream out = new FederateStateOutputStream(federateProxy.getFederateChannel(), 4096))
     {
-      out.write(buffer, 0, bytesRead);
-
-      bytesRead = federateStateInputStream.read(buffer);
+      ByteStreams.copy(in, out);
     }
-    out.close();
-    federateStateInputStream.close();
-    federateStateFile.delete();
 
-    federateProxy.restoreState(federateProxyStateInputStream, federateHandle, federateName, federateType);
-    federateProxyStateInputStream.close();
-    federateProxyStateFile.delete();
-  }
-
-  private void transfer(RandomAccessFile source, long length, File destination)
-    throws IOException
-  {
-    FileOutputStream out = new FileOutputStream(destination);
-
-    long position = source.getFilePointer();
-    do
+    try (InputStream in = Channels.newInputStream(FileChannel.open(federateProxyStateFile, StandardOpenOption.READ)))
     {
-      long bytesTransferred = source.getChannel().transferTo(position, length, out.getChannel());
-      length -= bytesTransferred;
-      position += bytesTransferred;
-    } while (length > 0);
+      CodedInputStream codedInputStream = CodedInputStream.newInstance(in);
+      federateProxy.restoreState(federateHandle, federateName, federateType, codedInputStream);
+    }
 
-    source.seek(position);
-
-    out.close();
+    Files.delete(federateStateFile);
+    Files.delete(federateProxyStateFile);
   }
 }

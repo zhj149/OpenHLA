@@ -16,43 +16,72 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import net.sf.ohla.rti.util.LogicalTimes;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.LogicalTime;
 import hla.rti1516e.LogicalTimeFactory;
 
 public class QueryLITSResponse
-  extends AbstractResponse
+  extends AbstractMessage<FederateMessageProtos.QueryLITSResponse, FederateMessageProtos.QueryLITSResponse.Builder>
+  implements Response
 {
-  private final LogicalTime lits;
+  private volatile LogicalTime lits;
 
   public QueryLITSResponse(long requestId, LogicalTime lits)
   {
-    super(MessageType.QUERY_LITS_RESPONSE, requestId);
+    super(FederateMessageProtos.QueryLITSResponse.newBuilder());
 
     this.lits = lits;
 
-    Protocol.encodeTime(buffer, lits);
+    builder.setRequestId(requestId);
 
-    encodingFinished();
+    if (lits != null)
+    {
+      builder.setLits(LogicalTimes.convert(lits));
+    }
   }
 
-  public QueryLITSResponse(ChannelBuffer buffer, LogicalTimeFactory factory)
+  public QueryLITSResponse(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    lits = Protocol.decodeTime(buffer, factory);
+    super(FederateMessageProtos.QueryLITSResponse.newBuilder(), in);
   }
 
-  public LogicalTime getLITS()
+  public LogicalTime getLITS(LogicalTimeFactory logicalTimeFactory)
   {
+    if (lits == null && builder.hasLits())
+    {
+      lits = LogicalTimes.convert(logicalTimeFactory, builder.getLits());
+    }
     return lits;
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.QUERY_LITS_RESPONSE;
+    return MessageProtos.MessageType.QUERY_LITS_RESPONSE;
+  }
+
+  @Override
+  public long getRequestId()
+  {
+    return builder.getRequestId();
+  }
+
+  @Override
+  public boolean isSuccess()
+  {
+    return true;
+  }
+
+  @Override
+  public boolean isFailure()
+  {
+    return false;
   }
 }

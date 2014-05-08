@@ -16,6 +16,10 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
+import java.nio.ByteBuffer;
+
+import net.sf.ohla.rti.util.FederateHandles;
+
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.FederateHandleFactory;
 import hla.rti1516e.exceptions.CouldNotDecode;
@@ -34,7 +38,7 @@ public class IEEE1516eFederateHandleFactory
   {
     try
     {
-      return IEEE1516eFederateHandle.decode(buffer, offset);
+      return FederateHandles.convert(ByteBuffer.wrap(buffer, offset, 4).getInt());
     }
     catch (Throwable t)
     {

@@ -16,41 +16,50 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.ObjectInstanceHandles;
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.messages.MessageType;
-import net.sf.ohla.rti.messages.ObjectInstanceAttributesMessage;
+import net.sf.ohla.rti.messages.AbstractMessage;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class AttributesInScope
-  extends ObjectInstanceAttributesMessage
+  extends AbstractMessage<FederateMessageProtos.AttributesInScope, FederateMessageProtos.AttributesInScope.Builder>
   implements Callback
 {
   public AttributesInScope(ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
   {
-    super(MessageType.ATTRIBUTES_IN_SCOPE, objectInstanceHandle, attributeHandles);
+    super(FederateMessageProtos.AttributesInScope.newBuilder());
 
-    encodingFinished();
+    builder.setObjectInstanceHandle(ObjectInstanceHandles.convert(objectInstanceHandle));
+    builder.addAllAttributeHandles(AttributeHandles.convert(attributeHandles));
   }
 
-  public AttributesInScope(ChannelBuffer buffer)
+  public AttributesInScope(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederateMessageProtos.AttributesInScope.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.ATTRIBUTES_IN_SCOPE;
+    return MessageProtos.MessageType.ATTRIBUTES_IN_SCOPE;
   }
 
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.attributesInScope(objectInstanceHandle, attributeHandles);
+    federateAmbassador.attributesInScope(ObjectInstanceHandles.convert(builder.getObjectInstanceHandle()),
+                                         AttributeHandles.convertAttributeHandles(builder.getAttributeHandlesList()));
   }
 }

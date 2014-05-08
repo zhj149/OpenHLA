@@ -16,31 +16,37 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.federate.Federate;
+import java.io.IOException;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
+
+import com.google.protobuf.CodedInputStream;
 
 public class ResignedFederationExecution
-  extends AbstractMessage
-  implements FederateMessage
+  extends
+  AbstractMessage<FederateMessageProtos.ResignedFederationExecution, FederateMessageProtos.ResignedFederationExecution.Builder>
+implements FederateMessage
 {
   public ResignedFederationExecution()
   {
-    super(MessageType.RESIGNED_FEDERATION_EXECUTION);
-
-    encodingFinished();
+    super(FederateMessageProtos.ResignedFederationExecution.newBuilder());
   }
 
-  public ResignedFederationExecution(ChannelBuffer buffer)
+  public ResignedFederationExecution(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederateMessageProtos.ResignedFederationExecution.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.RESIGNED_FEDERATION_EXECUTION;
+    return MessageProtos.MessageType.RESIGNED_FEDERATION_EXECUTION;
   }
 
+  @Override
   public void execute(Federate federate)
   {
     federate.resignedFederationExecution();

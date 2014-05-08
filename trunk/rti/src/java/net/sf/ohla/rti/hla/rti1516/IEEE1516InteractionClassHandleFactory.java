@@ -16,8 +16,9 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eInteractionClassHandleFactory;
+
 import hla.rti1516.CouldNotDecode;
-import hla.rti1516.FederateNotExecutionMember;
 import hla.rti1516.InteractionClassHandle;
 import hla.rti1516.InteractionClassHandleFactory;
 
@@ -31,9 +32,16 @@ public class IEEE1516InteractionClassHandleFactory
   }
 
   public InteractionClassHandle decode(byte[] buffer, int offset)
-    throws CouldNotDecode, FederateNotExecutionMember
+    throws CouldNotDecode
   {
-    return new IEEE1516InteractionClassHandle(buffer, offset);
+    try
+    {
+      return new IEEE1516InteractionClassHandle(IEEE1516eInteractionClassHandleFactory.INSTANCE.decode(buffer, offset));
+    }
+    catch (hla.rti1516e.exceptions.CouldNotDecode cnd)
+    {
+      throw new CouldNotDecode(cnd);
+    }
   }
 
   private Object readResolve()

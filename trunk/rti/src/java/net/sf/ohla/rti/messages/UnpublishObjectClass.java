@@ -16,51 +16,57 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import java.util.Collection;
 import java.util.Set;
 
+import net.sf.ohla.rti.util.ObjectClassHandles;
+import net.sf.ohla.rti.util.ObjectInstanceHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.ObjectInstanceHandle;
 
 public class UnpublishObjectClass
-  extends ObjectInstancesMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.UnpublishObjectClass, FederationExecutionMessageProtos.UnpublishObjectClass.Builder>
   implements FederationExecutionMessage
 {
-  private final ObjectClassHandle objectClassHandle;
-
   public UnpublishObjectClass(ObjectClassHandle objectClassHandle, Set<ObjectInstanceHandle> objectInstanceHandles)
   {
-    super(MessageType.UNPUBLISH_OBJECT_CLASS, objectInstanceHandles);
+    super(FederationExecutionMessageProtos.UnpublishObjectClass.newBuilder());
 
-    this.objectClassHandle = objectClassHandle;
-
-    IEEE1516eObjectClassHandle.encode(buffer, objectClassHandle);
-
-    encodingFinished();
+    builder.setObjectClassHandle(ObjectClassHandles.convert(objectClassHandle));
+    builder.addAllObjectInstanceHandles(ObjectInstanceHandles.convert(objectInstanceHandles));
   }
 
-  public UnpublishObjectClass(ChannelBuffer buffer)
+  public UnpublishObjectClass(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    objectClassHandle = IEEE1516eObjectClassHandle.decode(buffer);
+    super(FederationExecutionMessageProtos.UnpublishObjectClass.newBuilder(), in);
   }
 
   public ObjectClassHandle getObjectClassHandle()
   {
-    return objectClassHandle;
+    return ObjectClassHandles.convert(builder.getObjectClassHandle());
   }
 
-  public MessageType getType()
+  public Collection<ObjectInstanceHandle> getObjectInstanceHandles()
   {
-    return MessageType.UNPUBLISH_OBJECT_CLASS;
+    return ObjectInstanceHandles.convert(builder.getObjectInstanceHandlesList());
   }
 
+  @Override
+  public MessageProtos.MessageType getMessageType()
+  {
+    return MessageProtos.MessageType.UNPUBLISH_OBJECT_CLASS;
+  }
+
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.unpublishObjectClass(federateProxy, this);

@@ -16,10 +16,8 @@
 
 package net.sf.ohla.rti.fdd;
 
-import net.sf.ohla.rti.Protocol;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandle;
-
-import org.jboss.netty.buffer.ChannelBuffer;
+import net.sf.ohla.rti.proto.OHLAProtos;
+import net.sf.ohla.rti.util.ParameterHandles;
 
 import hla.rti1516e.ParameterHandle;
 
@@ -34,10 +32,10 @@ public class Parameter
     this.parameterName = parameterName;
   }
 
-  public Parameter(ChannelBuffer buffer)
+  public Parameter(OHLAProtos.FDD.InteractionClass.Parameter parameter)
   {
-    parameterHandle = IEEE1516eParameterHandle.decode(buffer);
-    parameterName = Protocol.decodeString(buffer);
+    parameterHandle = ParameterHandles.convert(parameter.getParameterHandle());
+    parameterName = parameter.getParameterName();
   }
 
   public ParameterHandle getParameterHandle()
@@ -55,6 +53,13 @@ public class Parameter
     interactionClass.addParameterSafely(parameterName);
   }
 
+  public OHLAProtos.FDD.InteractionClass.Parameter.Builder toProto()
+  {
+    return OHLAProtos.FDD.InteractionClass.Parameter.newBuilder().setParameterHandle(
+      ParameterHandles.convert(parameterHandle)).setParameterName(
+      parameterName);
+  }
+
   @Override
   public int hashCode()
   {
@@ -65,16 +70,5 @@ public class Parameter
   public String toString()
   {
     return parameterName;
-  }
-
-  public static void encode(ChannelBuffer buffer, Parameter parameter)
-  {
-    IEEE1516eParameterHandle.encode(buffer, parameter.parameterHandle);
-    Protocol.encodeString(buffer, parameter.parameterName);
-  }
-
-  public static Parameter decode(ChannelBuffer buffer)
-  {
-    return new Parameter(buffer);
   }
 }

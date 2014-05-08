@@ -16,42 +16,57 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.LogicalTimeIntervals;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
-import hla.rti1516e.LogicalTimeFactory;
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.LogicalTimeInterval;
+import hla.rti1516e.exceptions.CouldNotEncode;
 
 public class EnableTimeRegulation
-  extends LogicalTimeIntervalMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.EnableTimeRegulation, FederationExecutionMessageProtos.EnableTimeRegulation.Builder>
   implements FederationExecutionMessage
 {
-  public EnableTimeRegulation(LogicalTimeInterval lookahead)
-  {
-    super(MessageType.ENABLE_TIME_REGULATION, lookahead);
+  private LogicalTimeInterval lookahead;
 
-    encodingFinished();
+  public EnableTimeRegulation(LogicalTimeInterval lookahead)
+    throws CouldNotEncode
+  {
+    super(FederationExecutionMessageProtos.EnableTimeRegulation.newBuilder());
+
+    this.lookahead = lookahead;
+
+    builder.setLookahead(LogicalTimeIntervals.convert(lookahead));
   }
 
-  public EnableTimeRegulation(ChannelBuffer buffer, LogicalTimeFactory factory)
+  public EnableTimeRegulation(CodedInputStream in)
+    throws IOException
   {
-    super(buffer, factory);
+    super(FederationExecutionMessageProtos.EnableTimeRegulation.newBuilder(), in);
   }
 
   public LogicalTimeInterval getLookahead()
   {
-    return interval;
+    return lookahead;
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.ENABLE_TIME_REGULATION;
+    return MessageProtos.MessageType.ENABLE_TIME_REGULATION;
   }
 
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
+    lookahead = LogicalTimeIntervals.convert(
+      federationExecution.getTimeManager().getLogicalTimeFactory(), builder.getLookahead());
+
     federationExecution.enableTimeRegulation(federateProxy, this);
   }
 }

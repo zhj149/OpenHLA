@@ -16,36 +16,55 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.ObjectInstanceHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.ObjectInstanceHandle;
 
 public class CancelAttributeOwnershipAcquisition
-  extends ObjectInstanceAttributesMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.CancelAttributeOwnershipAcquisition, FederationExecutionMessageProtos.CancelAttributeOwnershipAcquisition.Builder>
   implements FederationExecutionMessage
 {
   public CancelAttributeOwnershipAcquisition(
     ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
   {
-    super(MessageType.CANCEL_ATTRIBUTE_OWNERSHIP_ACQUISITION, objectInstanceHandle, attributeHandles);
+    super(FederationExecutionMessageProtos.CancelAttributeOwnershipAcquisition.newBuilder());
 
-    encodingFinished();
+    builder.setObjectInstanceHandle(ObjectInstanceHandles.convert(objectInstanceHandle));
+    builder.addAllAttributeHandles(AttributeHandles.convert(attributeHandles));
   }
 
-  public CancelAttributeOwnershipAcquisition(ChannelBuffer buffer)
+  public CancelAttributeOwnershipAcquisition(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.CancelAttributeOwnershipAcquisition.newBuilder(), in);
   }
 
-  public MessageType getType()
+  public ObjectInstanceHandle getObjectInstanceHandle()
   {
-    return MessageType.CANCEL_ATTRIBUTE_OWNERSHIP_ACQUISITION;
+    return ObjectInstanceHandles.convert(builder.getObjectInstanceHandle());
   }
 
+  public AttributeHandleSet getAttributeHandles()
+  {
+    return AttributeHandles.convertAttributeHandles(builder.getAttributeHandlesList());
+  }
+
+  @Override
+  public MessageProtos.MessageType getMessageType()
+  {
+    return MessageProtos.MessageType.CANCEL_ATTRIBUTE_OWNERSHIP_ACQUISITION;
+  }
+
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.cancelAttributeOwnershipAcquisition(federateProxy, this);

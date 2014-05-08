@@ -16,48 +16,59 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.FederateHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateHandle;
 
 public class GetFederateName
-  extends AbstractRequest<GetFederateNameResponse>
-  implements FederationExecutionMessage
+  extends
+  AbstractRequest<FederationExecutionMessageProtos.GetFederateName, FederationExecutionMessageProtos.GetFederateName.Builder, GetFederateNameResponse>
+implements FederationExecutionMessage
 {
-  private final FederateHandle federateHandle;
-
   public GetFederateName(FederateHandle federateHandle)
   {
-    super(MessageType.GET_FEDERATE_NAME);
+    super(FederationExecutionMessageProtos.GetFederateName.newBuilder());
 
-    this.federateHandle = federateHandle;
-
-    IEEE1516eFederateHandle.encode(buffer, federateHandle);
-
-    encodingFinished();
+    builder.setFederateHandle(FederateHandles.convert(federateHandle));
   }
 
-  public GetFederateName(ChannelBuffer buffer)
+  public GetFederateName(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    federateHandle = IEEE1516eFederateHandle.decode(buffer);
+    super(FederationExecutionMessageProtos.GetFederateName.newBuilder(), in);
   }
 
   public FederateHandle getFederateHandle()
   {
-    return federateHandle;
+    return FederateHandles.convert(builder.getFederateHandle());
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.GET_FEDERATE_NAME;
+    return MessageProtos.MessageType.GET_FEDERATE_NAME;
   }
 
+  @Override
+  public long getRequestId()
+  {
+    return builder.getRequestId();
+  }
+
+  @Override
+  public void setRequestId(long requestId)
+  {
+    builder.setRequestId(requestId);
+  }
+
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.getFederateName(federateProxy, this);

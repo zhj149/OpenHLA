@@ -16,15 +16,12 @@
 
 package net.sf.ohla.rti.federate;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -36,7 +33,10 @@ import net.sf.ohla.rti.i18n.I18n;
 import net.sf.ohla.rti.messages.CommitRegionModifications;
 import net.sf.ohla.rti.messages.CreateRegion;
 import net.sf.ohla.rti.messages.DeleteRegion;
+import net.sf.ohla.rti.proto.FederationExecutionSaveProtos.FederateState.FederateRegionManagerState;
 
+import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.CodedOutputStream;
 import hla.rti1516e.AttributeRegionAssociation;
 import hla.rti1516e.AttributeSetRegionSetPairList;
 import hla.rti1516e.DimensionHandle;
@@ -60,10 +60,10 @@ public class FederateRegionManager
   private final Federate federate;
 
   private final ReadWriteLock regionsLock = new ReentrantReadWriteLock(true);
-  private final Map<RegionHandle, FederateRegion> regions = new HashMap<RegionHandle, FederateRegion>();
-  private final Map<RegionHandle, FederateRegion> temporaryRegions = new HashMap<RegionHandle, FederateRegion>();
+  private final Map<RegionHandle, FederateRegion> regions = new HashMap<>();
+  private final Map<RegionHandle, FederateRegion> temporaryRegions = new HashMap<>();
 
-  private final AtomicInteger regionCount = new AtomicInteger();
+  private int nextRegionHandle;
 
   public FederateRegionManager(Federate federate)
   {
@@ -83,13 +83,13 @@ public class FederateRegionManager
   public RegionHandle createRegion(DimensionHandleSet dimensionHandles)
     throws RTIinternalError
   {
-    IEEE1516eRegionHandle regionHandle = new IEEE1516eRegionHandle(
-      federate.getFederateHandle(), regionCount.incrementAndGet());
+    IEEE1516eRegionHandle regionHandle;
 
-    FederateRegion federateRegion = new FederateRegion(regionHandle, dimensionHandles, federate.getFDD());
     regionsLock.writeLock().lock();
     try
     {
+      regionHandle = new IEEE1516eRegionHandle(federate.getFederateHandle(), ++nextRegionHandle);
+      FederateRegion federateRegion = new FederateRegion(regionHandle, dimensionHandles, federate.getFDD());
       regions.put(regionHandle, federateRegion);
     }
     finally
@@ -111,8 +111,7 @@ public class FederateRegionManager
     {
       for (Map<DimensionHandle, RangeBounds> region : regions)
       {
-        IEEE1516eRegionHandle regionHandle = new IEEE1516eRegionHandle(
-          federate.getFederateHandle(), regionCount.incrementAndGet());
+        IEEE1516eRegionHandle regionHandle = new IEEE1516eRegionHandle(federate.getFederateHandle(), ++nextRegionHandle);
         temporaryRegions.put(regionHandle, new FederateRegion(regionHandle, region));
         regionHandles.add(regionHandle);
       }
@@ -232,8 +231,7 @@ public class FederateRegionManager
         checkIfRegionNotCreatedByThisFederate(regionHandle);
       }
 
-      Map<RegionHandle, Map<DimensionHandle, RangeBounds>> regionModifications =
-        new HashMap<RegionHandle, Map<DimensionHandle, RangeBounds>>();
+      Map<RegionHandle, Map<DimensionHandle, RangeBounds>> regionModifications = new HashMap<>();
       for (RegionHandle regionHandle : regionHandles)
       {
         Map<DimensionHandle, RangeBounds> committedRegionModifications = regions.get(regionHandle).commit();
@@ -453,7 +451,7 @@ public class FederateRegionManager
 
   public Collection<FederateRegion> getRegionsSafely(RegionHandleSet regionHandles)
   {
-    Collection<FederateRegion> regions = new ArrayList<FederateRegion>(regionHandles.size());
+    Collection<FederateRegion> regions = new ArrayList<>(regionHandles.size());
     regionsLock.readLock().lock();
     try
     {
@@ -565,32 +563,38 @@ public class FederateRegionManager
     }
   }
 
-  public void saveState(DataOutput out)
+  public void saveState(CodedOutputStream out)
     throws IOException
   {
-    out.writeInt(regions.size());
-    for (FederateRegion federateRegion : regions.values())
-    {
-      federateRegion.writeTo(out);
-    }
-
     // temporary regions only exist during a 'message' (interaction/reflection) callback
     //
     assert temporaryRegions.isEmpty();
 
-    out.writeInt(regionCount.get());
+    FederateRegionManagerState.Builder regionManagerState = FederateRegionManagerState.newBuilder();
+
+    regionManagerState.setNextRegionHandle(nextRegionHandle);
+    regionManagerState.setRegionStateCount(regions.size());
+
+    out.writeMessageNoTag(regionManagerState.build());
+
+    for (FederateRegion federateRegion : regions.values())
+    {
+      federateRegion.saveState(out);
+    }
   }
 
-  public void restoreState(DataInput in)
+  public void restoreState(CodedInputStream in)
     throws IOException
   {
-    for (int count = in.readInt(); count > 0; count--)
+    FederateRegionManagerState regionManagerState = in.readMessage(FederateRegionManagerState.PARSER, null);
+
+    nextRegionHandle = regionManagerState.getNextRegionHandle();
+
+    for (int regionStateCount = regionManagerState.getRegionStateCount(); regionStateCount > 0; --regionStateCount)
     {
       FederateRegion federateRegion = new FederateRegion(in);
       regions.put(federateRegion.getRegionHandle(), federateRegion);
     }
-
-    regionCount.set(in.readInt());
   }
 
   private FederateRegion getRegion(RegionHandle regionHandle)

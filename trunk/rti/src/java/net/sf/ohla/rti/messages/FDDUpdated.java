@@ -16,45 +16,52 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
 import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import com.google.protobuf.CodedInputStream;
 
 public class FDDUpdated
-  extends AbstractMessage
-  implements FederateMessage
+  extends AbstractMessage<FederateMessageProtos.FDDUpdated, FederateMessageProtos.FDDUpdated.Builder>
+implements FederateMessage
 {
-  private final FDD fdd;
+  private volatile FDD fdd;
 
   public FDDUpdated(FDD fdd)
   {
-    super(MessageType.FDD_UPDATED);
+    super(FederateMessageProtos.FDDUpdated.newBuilder());
 
     this.fdd = fdd;
 
-    FDD.encode(buffer, fdd);
-
-    encodingFinished();
+    builder.setFdd(fdd.toProto());
   }
 
-  public FDDUpdated(ChannelBuffer buffer)
+  public FDDUpdated(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    fdd = FDD.decode(buffer);
+    super(FederateMessageProtos.FDDUpdated.newBuilder(), in);
   }
 
   public FDD getFdd()
   {
+    if (fdd == null)
+    {
+      fdd = new FDD(builder.getFdd());
+    }
     return fdd;
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.FDD_UPDATED;
+    return MessageProtos.MessageType.FDD_UPDATED;
   }
 
+  @Override
   public void execute(Federate federate)
   {
     federate.fddUpdated(fdd);

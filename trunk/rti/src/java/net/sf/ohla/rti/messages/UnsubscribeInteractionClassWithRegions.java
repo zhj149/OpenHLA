@@ -16,50 +16,55 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.InteractionClassHandles;
+import net.sf.ohla.rti.util.RegionHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandleSet;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.InteractionClassHandle;
 import hla.rti1516e.RegionHandleSet;
 
 public class UnsubscribeInteractionClassWithRegions
-  extends InteractionClassMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.UnsubscribeInteractionClassWithRegions, FederationExecutionMessageProtos.UnsubscribeInteractionClassWithRegions.Builder>
   implements FederationExecutionMessage
 {
-  private final RegionHandleSet regionHandles;
-
   public UnsubscribeInteractionClassWithRegions(
     InteractionClassHandle interactionClassHandle, RegionHandleSet regionHandles)
   {
-    super(MessageType.UNSUBSCRIBE_INTERACTION_CLASS_WITH_REGIONS, interactionClassHandle);
+    super(FederationExecutionMessageProtos.UnsubscribeInteractionClassWithRegions.newBuilder());
 
-    this.regionHandles = regionHandles;
-
-    IEEE1516eRegionHandleSet.encode(buffer, regionHandles);
-
-    encodingFinished();
+    builder.setInteractionClassHandle(InteractionClassHandles.convert(interactionClassHandle));
+    builder.addAllRegionHandles(RegionHandles.convertToProto(regionHandles));
   }
 
-  public UnsubscribeInteractionClassWithRegions(ChannelBuffer buffer)
+  public UnsubscribeInteractionClassWithRegions(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.UnsubscribeInteractionClassWithRegions.newBuilder(), in);
+  }
 
-    regionHandles = IEEE1516eRegionHandleSet.decode(buffer);
+  public InteractionClassHandle getInteractionClassHandle()
+  {
+    return InteractionClassHandles.convert(builder.getInteractionClassHandle());
   }
 
   public RegionHandleSet getRegionHandles()
   {
-    return regionHandles;
+    return RegionHandles.convertFromProto(builder.getRegionHandlesList());
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.UNSUBSCRIBE_INTERACTION_CLASS_WITH_REGIONS;
+    return MessageProtos.MessageType.UNSUBSCRIBE_INTERACTION_CLASS_WITH_REGIONS;
   }
 
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.unsubscribeInteractionClassWithRegions(federateProxy, this);

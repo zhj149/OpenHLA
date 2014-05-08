@@ -42,7 +42,6 @@ public class FlushQueueRequestTestNG
   private MessageRetractionHandle testInteractionMessageRetractionHandle2;
 
   public FlushQueueRequestTestNG()
-    throws Exception
   {
     super(2, FEDERATION_NAME);
   }
@@ -91,6 +90,8 @@ public class FlushQueueRequestTestNG
       rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle, testParameterValues, TAG, ten);
     assert messageRetractionReturn2.retractionHandleIsValid;
     testInteractionMessageRetractionHandle2 = messageRetractionReturn2.handle;
+
+    synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE2, federateAmbassadors);
   }
 
   @Test

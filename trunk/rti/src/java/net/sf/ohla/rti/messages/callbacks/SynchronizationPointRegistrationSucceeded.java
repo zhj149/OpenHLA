@@ -16,44 +16,45 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import java.io.IOException;
+
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.messages.MessageType;
-import net.sf.ohla.rti.messages.StringMessage;
+import net.sf.ohla.rti.messages.AbstractMessage;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class SynchronizationPointRegistrationSucceeded
-  extends StringMessage
-  implements Callback
+  extends
+  AbstractMessage<FederateMessageProtos.SynchronizationPointRegistrationSucceeded, FederateMessageProtos.SynchronizationPointRegistrationSucceeded.Builder>
+implements Callback
 {
-  public SynchronizationPointRegistrationSucceeded(String s)
+  public SynchronizationPointRegistrationSucceeded(String label)
   {
-    super(MessageType.SYNCHRONIZATION_POINT_REGISTRATION_SUCCEEDED, s);
+    super(FederateMessageProtos.SynchronizationPointRegistrationSucceeded.newBuilder());
 
-    encodingFinished();
+    builder.setLabel(label);
   }
 
-  public SynchronizationPointRegistrationSucceeded(ChannelBuffer buffer)
+  public SynchronizationPointRegistrationSucceeded(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederateMessageProtos.SynchronizationPointRegistrationSucceeded.newBuilder(), in);
   }
 
-  public String getLabel()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return s;
+    return MessageProtos.MessageType.SYNCHRONIZATION_POINT_REGISTRATION_SUCCEEDED;
   }
 
-  public MessageType getType()
-  {
-    return MessageType.SYNCHRONIZATION_POINT_REGISTRATION_SUCCEEDED;
-  }
-
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.synchronizationPointRegistrationSucceeded(s);
+    federateAmbassador.synchronizationPointRegistrationSucceeded(builder.getLabel());
   }
 }

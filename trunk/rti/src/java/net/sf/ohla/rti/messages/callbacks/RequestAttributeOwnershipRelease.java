@@ -16,51 +16,75 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.ObjectInstanceHandles;
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.messages.MessageType;
-import net.sf.ohla.rti.messages.ObjectInstanceAttributesMessage;
+import net.sf.ohla.rti.messages.AbstractMessage;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.ByteString;
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class RequestAttributeOwnershipRelease
-  extends ObjectInstanceAttributesMessage
+  extends
+  AbstractMessage<FederateMessageProtos.RequestAttributeOwnershipRelease, FederateMessageProtos.RequestAttributeOwnershipRelease.Builder>
   implements Callback
 {
-  private final byte[] tag;
-
   public RequestAttributeOwnershipRelease(
     ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
   {
-    super(MessageType.REQUEST_ATTRIBUTE_OWNERSHIP_RELEASE, objectInstanceHandle, attributeHandles);
+    super(FederateMessageProtos.RequestAttributeOwnershipRelease.newBuilder());
 
-    this.tag = tag;
+    builder.setObjectInstanceHandle(ObjectInstanceHandles.convert(objectInstanceHandle));
+    builder.addAllAttributeHandles(AttributeHandles.convert(attributeHandles));
 
-    Protocol.encodeBytes(buffer, tag);
-
-    encodingFinished();
+    if (tag != null)
+    {
+      builder.setTag(ByteString.copyFrom(tag));
+    }
   }
 
-  public RequestAttributeOwnershipRelease(ChannelBuffer buffer)
+  public RequestAttributeOwnershipRelease(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    tag = Protocol.decodeBytes(buffer);
+    super(FederateMessageProtos.RequestAttributeOwnershipRelease.newBuilder(), in);
   }
 
-  public MessageType getType()
+  public ObjectInstanceHandle getObjectInstanceHandle()
   {
-    return MessageType.REQUEST_ATTRIBUTE_OWNERSHIP_RELEASE;
+    return ObjectInstanceHandles.convert(builder.getObjectInstanceHandle());
   }
 
+  public AttributeHandleSet getAttributeHandles()
+  {
+    return AttributeHandles.convertAttributeHandles(builder.getAttributeHandlesList());
+  }
+
+  public byte[] getTag()
+  {
+    return builder.hasTag() ? builder.getTag().toByteArray() : null;
+  }
+
+  @Override
+  public MessageProtos.MessageType getMessageType()
+  {
+    return MessageProtos.MessageType.REQUEST_ATTRIBUTE_OWNERSHIP_RELEASE;
+  }
+
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.requestAttributeOwnershipRelease(objectInstanceHandle, attributeHandles, tag);
+    federateAmbassador.requestAttributeOwnershipRelease(
+      ObjectInstanceHandles.convert(builder.getObjectInstanceHandle()),
+      AttributeHandles.convertAttributeHandles(builder.getAttributeHandlesList()),
+      builder.hasTag() ? builder.getTag().toByteArray() : null);
   }
 }

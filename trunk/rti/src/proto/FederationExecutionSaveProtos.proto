@@ -1,0 +1,292 @@
+package ohla.rti.proto;
+
+option java_package = "net.sf.ohla.rti.proto";
+
+import "OHLAProtos.proto";
+import "MessageProtos.proto";
+import "FederationExecutionMessageProtos.proto";
+
+message FederationExecutionSaveHeader
+{
+  required string label = 1;
+  required string federationExecutionName = 2;
+  required uint32 federateCount = 3;
+
+  optional bytes saveTime = 4;
+
+  required FDD fdd = 5;
+
+  required uint64 realTime = 6;
+}
+
+message FederateSaveHeader
+{
+  required uint32 federateHandle = 1;
+  required string federateName = 2;
+  required string federateType = 3;
+  required uint64 federateStateLength = 4;
+  required uint64 federateProxyStateLength = 5;
+}
+
+message HLA13RTIAmbassadorState
+{
+  message ObjectInstanceHandleMapping
+  {
+    required ObjectInstanceHandle objectInstanceHandle = 1;
+    required uint32 mapping = 2;
+  }
+
+  message HLA13RegionState
+  {
+    message ExtentState
+    {
+      message RangeBounds
+      {
+        required uint64 upper = 1;
+        required uint64 lower = 2;
+      }
+
+      required RegionHandle regionHandle = 1;
+      repeated RangeBounds rangeBounds = 2;
+    }
+
+    required uint32 token = 1;
+    required uint32 routingSpaceHandle = 2;
+    repeated ExtentState extentStates = 3;
+  }
+
+  required uint32 nextObjectInstanceHandle = 1;
+  required uint32 nextRegionToken = 2;
+  required uint32 objectInstanceHandleMappingCount = 3;
+  required uint32 regionCount = 4;
+}
+
+message FederateState
+{
+  message FederateSynchonizationPointState
+  {
+    enum State
+    {
+      MOVING_TO_SYNCH_POINT = 1;
+      WAITING_FOR_REST_OF_FEDERATION_TO_SYNCHRONIZE = 2;
+    }
+
+    required string label = 1;
+    optional bytes tag = 2;
+    required State state = 3;
+  }
+
+  message FederateObjectManagerState
+  {
+    message FederateObjectInstanceState
+    {
+      message FederateAttributeInstanceState
+      {
+        required uint32 attributeHandle = 1;
+        required uint32 transportationTypeHandle = 2;
+        required OrderType orderType = 3;
+        required bool divesting = 4;
+      }
+
+      required uint32 producingFederateHandle = 1;
+      required ObjectInstanceHandle objectInstanceHandle = 2;
+      required uint32 objectClassHandle = 3;
+      required string objectInstanceName = 4;
+      repeated FederateAttributeInstanceState attributeInstanceStates = 5;
+      repeated uint32 attributeHandlesBeingAcquired = 6;
+      repeated uint32 attributeHandlesBeingAcquiredIfAvailable = 7;
+    }
+
+    repeated PublishedObjectClass publishedObjectClasses = 1;
+    repeated uint32 publishedInteractionClasses = 2;
+    repeated string reservedObjectInstanceNames = 3;
+    repeated string objectInstanceNamesBeingReserved = 4;
+    required uint32 nextObjectInstanceHandle = 5;
+    required uint32 objectInstanceStateCount = 6;
+  }
+
+  message FederateRegionManagerState
+  {
+    message FederateRegionState
+    {
+      message AssociatedObject
+      {
+        required ObjectInstanceHandle objectInstanceHandle = 1;
+        repeated uint32 attributeHandles = 2;
+      }
+
+      message SubscribedObjectClass
+      {
+        required uint32 objectClassHandle = 1;
+        repeated uint32 attributeHandles = 2;
+      }
+
+      required RegionHandle regionHandle = 1;
+      repeated DimensionRangeBound rangeBounds = 2;
+      repeated DimensionRangeBound uncommittedRangeBounds = 3;
+      repeated SubscribedObjectClass subscribedObjectClasses = 4;
+      repeated uint32 subscribedInteractionClasses = 5;
+      required uint32 associatedObjectCount = 6;
+    }
+
+    required uint32 nextRegionHandle = 1;
+    required uint32 regionStateCount = 2;
+  }
+
+  message FederateMessageRetractionManagerState
+  {
+    message MessageRetraction
+    {
+      required MessageRetractionHandle messageRetractionHandle = 1;
+      required bytes expiration = 2;
+    }
+
+    required uint64 nextMessageRetractionHandle = 1;
+    required uint32 messageRetractionCount = 2;
+  }
+
+  message FederateTimeManagerState
+  {
+    enum TemporalState
+    {
+      TIME_ADVANCING = 1;
+      TIME_GRANTED = 2;
+    }
+
+    enum TimeRegulatingState
+    {
+      TIME_REGULATING = 1;
+      BECOMING_TIME_REGULATING = 2;
+      NOT_TIME_REGULATING = 3;
+    }
+
+    enum TimeConstrainedState
+    {
+      TIME_CONSTRAINED = 1;
+      BECOMING_TIME_CONSTRAINED = 2;
+      NOT_TIME_CONSTRAINED = 3;
+    }
+
+    required TemporalState temporalState = 1;
+    required TimeRegulatingState timeRegulatingState = 2;
+    required TimeConstrainedState timeConstrainedState = 3;
+    required bytes federateTime = 4;
+    optional bytes lookahead = 5;
+    optional bytes lots = 6;
+    required AdvanceRequestType advanceRequestType = 7;
+    optional bytes advanceRequestTime = 8;
+  }
+
+  required uint32 synchonizationPointStateCount = 1;
+  required bool hasHLA13RTIAmbassadorState = 2;
+}
+
+message TimeStampOrderedMessageQueueState
+{
+  message TimeStampOrderedMessage
+  {
+    required uint32 producingFederateHandle = 1;
+    optional ohla.rti.messages.proto.SendInteraction sendInteraction = 2;
+    optional ohla.rti.messages.proto.UpdateAttributeValues updateAttributeValues = 3;
+    optional ohla.rti.messages.proto.DeleteObjectInstance deleteObjectInstance = 4;
+  }
+
+  required uint32 queuedTimeStampOrderedMessageCount = 1;
+}
+
+message FederateProxyState
+{
+  repeated PublishedObjectClass publishedObjectClasses = 1;
+  repeated uint32 publishedInteractionClasses = 2;
+  required bool timeRegulationEnabled = 3;
+  optional bytes lookahead = 4;
+  required bool timeConstrainedEnabled = 5;
+  required bool timeConstrainedPending = 6;
+  required AdvanceRequestType advanceRequestType = 7;
+  optional bytes advanceRequestTime = 8;
+  required bytes federateTime = 9;
+  optional bytes galt = 10;
+  optional bytes lots = 11;
+  required uint32 discoveredObjectInstanceHandleCount = 12;
+}
+
+message FederationExecutionState
+{
+  message FederationExecutionSynchonizationPointState
+  {
+    required string label = 1;
+    optional bytes tag = 2;
+    repeated uint32 federateHandles = 3;
+    required bool exclusive = 4;
+    repeated uint32 awaitingSynchronization = 5;
+    repeated uint32 failedToSynchronize = 6;
+  }
+
+  message FederationExecutionObjectManagerState
+  {
+    message ReservedObjectInstanceName
+    {
+      required string objectInstanceName = 1;
+      required uint32 federateHandle = 2;
+    }
+
+    message FederationExecutionObjectInstanceState
+    {
+      message FederationExecutionAttributeInstanceState
+      {
+        message PendingRegionAssociation
+        {
+          required uint32 federateHandle = 1;
+          repeated RegionHandle regionHandles = 2;
+        }
+
+        required uint32 attributeHandle = 1;
+        required double updateRate = 2;
+        required uint32 transportationTypeHandle = 3;
+        required OrderType orderType = 4;
+        optional uint32 owningFederateHandle = 5;
+        required bool wantsToDivest = 6;
+        optional bytes divestingTag = 7;
+        repeated uint32 requestingOwnershipFederateHandles = 8;
+        repeated RegionHandle regionRealizations = 9;
+        repeated PendingRegionAssociation pendingRegionAssociations = 10;
+      }
+
+      required uint32 producingFederateHandle = 1;
+      required ObjectInstanceHandle objectInstanceHandle = 2;
+      required uint32 objectClassHandle = 3;
+      required string objectInstanceName = 4;
+      repeated FederationExecutionAttributeInstanceState attributeInstanceStates = 5;
+    }
+
+    required uint32 reservedObjectInstanceNameCount = 1;
+    required uint32 objectInstanceStateCount = 2;
+  }
+
+  message FederationExecutionRegionManagerState
+  {
+    message FederationExecutionRegionState
+    {
+      required RegionHandle regionHandle = 1;
+      repeated DimensionRangeBound rangeBounds = 2;
+    }
+
+    required uint32 regionStateCount = 1;
+  }
+
+  message FederationExecutionTimeManagerState
+  {
+    repeated uint32 timeRegulatingFederateHandles = 1;
+    repeated uint32 timeConstrainedFederateHandles = 2;
+    optional bytes galt = 3;
+  }
+
+  required uint32 nextFederateHandle = 1;
+  required uint32 synchonizationPointStateCount = 2;
+}
+
+message SavedFederationExecutionMessage
+{
+  required uint32 sendingFederateHandle = 1;
+  required ohla.rti.messages.proto.MessageType federationExecutionMessageType = 2;
+}

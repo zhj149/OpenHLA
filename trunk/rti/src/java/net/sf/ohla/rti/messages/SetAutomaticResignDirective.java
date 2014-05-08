@@ -16,39 +16,46 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
+import net.sf.ohla.rti.proto.OHLAProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.ResignAction;
 
 public class SetAutomaticResignDirective
-  extends EnumMessage<ResignAction>
+  extends AbstractMessage<FederationExecutionMessageProtos.SetAutomaticResignDirective, FederationExecutionMessageProtos.SetAutomaticResignDirective.Builder>
   implements FederationExecutionMessage
 {
   public SetAutomaticResignDirective(ResignAction resignAction)
   {
-    super(MessageType.SET_AUTOMATIC_RESIGN_DIRECTIVE, resignAction);
+    super(FederationExecutionMessageProtos.SetAutomaticResignDirective.newBuilder());
 
-    encodingFinished();
+    builder.setResignAction(OHLAProtos.ResignAction.values()[resignAction.ordinal()]);
   }
 
-  public SetAutomaticResignDirective(ChannelBuffer buffer)
+  public SetAutomaticResignDirective(CodedInputStream in)
+    throws IOException
   {
-    super(buffer, ResignAction.values());
+    super(FederationExecutionMessageProtos.SetAutomaticResignDirective.newBuilder(), in);
   }
 
   public ResignAction getResignAction()
   {
-    return e;
+    return ResignAction.values()[builder.getResignAction().ordinal()];
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.SET_AUTOMATIC_RESIGN_DIRECTIVE;
+    return MessageProtos.MessageType.SET_AUTOMATIC_RESIGN_DIRECTIVE;
   }
 
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.setAutomaticResignDirective(federateProxy, this);

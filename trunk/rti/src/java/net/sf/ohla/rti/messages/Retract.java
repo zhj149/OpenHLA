@@ -16,48 +16,58 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.MessageRetractionHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eMessageRetractionHandle;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.MessageRetractionHandle;
 
 public class Retract
-  extends AbstractRequest<RetractResponse>
+  extends AbstractRequest<FederationExecutionMessageProtos.Retract, FederationExecutionMessageProtos.Retract.Builder, RetractResponse>
   implements FederationExecutionMessage
 {
-  private final MessageRetractionHandle messageRetractionHandle;
-
   public Retract(MessageRetractionHandle messageRetractionHandle)
   {
-    super(MessageType.RETRACT);
+    super(FederationExecutionMessageProtos.Retract.newBuilder());
 
-    this.messageRetractionHandle = messageRetractionHandle;
-
-    IEEE1516eMessageRetractionHandle.encode(buffer, messageRetractionHandle);
-
-    encodingFinished();
+    builder.setMessageRetractionHandle(MessageRetractionHandles.convert(messageRetractionHandle));
   }
 
-  public Retract(ChannelBuffer buffer)
+  public Retract(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    messageRetractionHandle = IEEE1516eMessageRetractionHandle.decode(buffer);
+    super(FederationExecutionMessageProtos.Retract.newBuilder(), in);
   }
 
   public MessageRetractionHandle getMessageRetractionHandle()
   {
-    return messageRetractionHandle;
+    return MessageRetractionHandles.convert(builder.getMessageRetractionHandle());
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.RETRACT;
+    return MessageProtos.MessageType.RETRACT;
   }
 
+  @Override
+  public long getRequestId()
+  {
+    return builder.getRequestId();
+  }
+
+  @Override
+  public void setRequestId(long requestId)
+  {
+    builder.setRequestId(requestId);
+  }
+
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.retract(federateProxy, this);

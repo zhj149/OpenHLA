@@ -1,0 +1,601 @@
+package ohla.rti.messages.proto;
+
+option java_package = "net.sf.ohla.rti.messages.proto";
+
+import "OHLAProtos.proto";
+import "MessageProtos.proto";
+
+message FDDUpdated
+{
+  required ohla.rti.proto.FDD fdd = 1;
+}
+
+message JoinFederationExecutionResponse
+{
+  message Success
+  {
+    required string federateName = 1;
+    required uint32 federateHandle = 2;
+    required ohla.rti.proto.FDD fdd = 3;
+    required string logicalTimeImplementationName = 4;
+  }
+
+  message Failure
+  {
+    enum Cause
+    {
+      FEDERATE_NAME_ALREADY_IN_USE = 2;
+      FEDERATION_EXECUTION_DOES_NOT_EXIST = 3;
+      SAVE_IN_PROGRESS = 4;
+      RESTORE_IN_PROGRESS = 5;
+      INCONSISTENT_FDD = 6;
+    }
+
+    required Cause cause = 1;
+  }
+
+  optional Success success = 1;
+  optional Failure failure = 2;
+}
+
+message RequestFederationSaveResponse
+{
+  message Failure
+  {
+    enum Cause
+    {
+      LOGICAL_TIME_ALREADY_PASSED = 1;
+      FEDERATE_UNABLE_TO_USE_TIME = 2;
+      SAVE_IN_PROGRESS = 3;
+      RESTORE_IN_PROGRESS = 4;
+      RTI_INTERNAL_ERROR = 5;
+    }
+
+    required Cause cause = 1;
+  }
+
+  required uint64 requestId = 1;
+
+  optional Failure failure = 2;
+}
+
+message AbortFederationSaveResponse
+{
+  message Failure
+  {
+    enum Cause
+    {
+      SAVE_NOT_IN_PROGRESS = 1;
+    }
+
+    required Cause cause = 1;
+  }
+
+  required uint64 requestId = 1;
+
+  optional Failure failure = 2;
+}
+
+message RequestFederationRestoreResponse
+{
+  message Failure
+  {
+    enum Cause
+    {
+      SAVE_IN_PROGRESS = 1;
+      RESTORE_IN_PROGRESS = 2;
+      RTI_INTERNAL_ERROR = 3;
+    }
+
+    required Cause cause = 1;
+  }
+
+  required uint64 requestId = 1;
+
+  optional Failure failure = 2;
+}
+
+message AbortFederationRestoreResponse
+{
+  message Failure
+  {
+    enum Cause
+    {
+      RESTORE_NOT_IN_PROGRESS = 1;
+    }
+
+    required Cause cause = 1;
+  }
+
+  required uint64 requestId = 1;
+
+  optional Failure failure = 2;
+}
+
+message ObjectInstanceNameReservationSucceeded
+{
+  required string objectInstanceName = 1;
+}
+
+message ObjectInstanceNameReservationFailed
+{
+  required string objectInstanceName = 1;
+}
+
+message MultipleObjectInstanceNameReservationSucceeded
+{
+  repeated string objectInstanceNames = 1;
+}
+
+message MultipleObjectInstanceNameReservationFailed
+{
+  repeated string objectInstanceNames = 1;
+}
+
+message ReportInteractionTransportationType
+{
+  required uint32 interactionClassHandle = 1;
+  required uint32 federateHandle = 2;
+  required uint32 transportationTypeHandle = 3;
+}
+
+message GetFederateHandleResponse
+{
+  message Success
+  {
+    required uint32 federateHandle = 1;
+  }
+
+  message Failure
+  {
+    enum Cause
+    {
+      NAME_NOT_FOUND = 1;
+    }
+
+    required Cause cause = 1;
+  }
+
+  required uint64 requestId = 1;
+
+  optional Success success = 2;
+  optional Failure failure = 3;
+}
+
+message GetFederateNameResponse
+{
+  message Success
+  {
+    required string federateName = 1;
+  }
+
+  message Failure
+  {
+    enum Cause
+    {
+      FEDERATE_HANDLE_NOT_KNOWN = 1;
+    }
+
+    required Cause cause = 1;
+  }
+
+  required uint64 requestId = 1;
+
+  optional Success success = 2;
+  optional Failure failure = 3;
+}
+
+message GetUpdateRateValueForAttributeResponse
+{
+  message Success
+  {
+    required double updateRate = 1;
+  }
+
+  message Failure
+  {
+    enum Cause
+    {
+      OBJECT_INSTANCE_NOT_KNOWN = 1;
+    }
+
+    required Cause cause = 2;
+  }
+
+  required uint64 requestId = 1;
+
+  optional Success success = 2;
+  optional Failure failure = 3;
+}
+
+message AttributeOwnershipDivestitureIfWantedResponse
+{
+  required uint64 requestId = 1;
+  repeated uint32 attributeHandles = 2;
+}
+
+message QueryGALTResponse
+{
+  required uint64 requestId = 1;
+  optional bytes galt = 2;
+}
+
+message QueryLITSResponse
+{
+  required uint64 requestId = 1;
+  optional bytes lits = 2;
+}
+
+message RetractResponse
+{
+  message Failure
+  {
+    enum Cause
+    {
+      SAVE_IN_PROGRESS = 1;
+      RESTORE_IN_PROGRESS = 2;
+    }
+
+    required Cause cause = 1;
+  }
+
+  required uint64 requestId = 1;
+
+  optional Failure failure = 2;
+}
+
+message AssociateRegionsForUpdatesResponse
+{
+  message Failure
+  {
+    enum Cause
+    {
+      SAVE_IN_PROGRESS = 1;
+      OBJECT_INSTANCE_NOT_KNOWN = 2;
+    }
+
+    required Cause cause = 1;
+  }
+
+  required uint64 requestId = 1;
+
+  optional Failure failure = 2;
+}
+
+message UnassociateRegionsForUpdatesResponse
+{
+  message Failure
+  {
+    enum Cause
+    {
+      SAVE_IN_PROGRESS = 1;
+      OBJECT_INSTANCE_NOT_KNOWN = 2;
+    }
+
+    required Cause cause = 1;
+  }
+
+  required uint64 requestId = 1;
+
+  optional Failure failure = 2;
+}
+
+message SynchronizationPointRegistrationSucceeded
+{
+  required string label = 1;
+}
+
+enum SynchronizationPointFailureReason
+{
+  SYNCHRONIZATION_POINT_LABEL_NOT_UNIQUE = 1;
+  SYNCHRONIZATION_SET_MEMBER_NOT_JOINED = 2;
+}
+
+message SynchronizationPointRegistrationFailed
+{
+  required string label = 1;
+  required SynchronizationPointFailureReason synchronizationPointFailureReason = 2;
+}
+
+message AnnounceSynchronizationPoint
+{
+  required string label = 1;
+  optional bytes tag = 2;
+}
+
+message FederationSynchronized
+{
+  required string label = 1;
+  repeated uint32 federateHandlesThatFailedToSynchronize = 2;
+}
+
+message InitiateFederateSave
+{
+  required string label = 1;
+  optional bytes time = 2;
+}
+
+message FederationSaved
+{
+}
+
+enum SaveFailureReason
+{
+  RTI_UNABLE_TO_SAVE = 1;
+  FEDERATE_REPORTED_FAILURE_DURING_SAVE = 2;
+  FEDERATE_RESIGNED_DURING_SAVE = 3;
+  RTI_DETECTED_FAILURE_DURING_SAVE = 4;
+  SAVE_TIME_CANNOT_BE_HONORED = 5;
+  SAVE_ABORTED = 6;
+}
+
+message FederationNotSaved
+{
+  required SaveFailureReason saveFailureReason = 1;
+}
+
+enum SaveStatus
+{
+  NO_SAVE_IN_PROGRESS = 1;
+  FEDERATE_INSTRUCTED_TO_SAVE = 2;
+  FEDERATE_SAVING = 3;
+  FEDERATE_WAITING_FOR_FEDERATION_TO_SAVE = 4;
+}
+
+message FederateSaveStatus
+{
+  required uint32 federateHandle = 1;
+  required SaveStatus saveStatus = 2;
+}
+
+message FederationSaveStatusResponse
+{
+  repeated FederateSaveStatus federationSaveStatus = 1;
+}
+
+message RequestFederationRestoreSucceeded
+{
+  required string label = 1;
+}
+
+message RequestFederationRestoreFailed
+{
+  required string label = 1;
+}
+
+message FederationRestoreBegun
+{
+  required string label = 1;
+  required string federateName = 2;
+  required uint32 federateHandle = 3;
+}
+
+message InitiateFederateRestore
+{
+}
+
+enum RestoreFailureReason
+{
+  RTI_UNABLE_TO_RESTORE = 1;
+  FEDERATE_REPORTED_FAILURE_DURING_RESTORE = 2;
+  FEDERATE_RESIGNED_DURING_RESTORE = 3;
+  RTI_DETECTED_FAILURE_DURING_RESTORE = 4;
+  RESTORE_ABORTED = 5;
+}
+
+message FederationRestored
+{
+}
+
+message FederationNotRestored
+{
+  required RestoreFailureReason restoreFailureReason = 1;
+}
+
+enum RestoreStatus
+{
+  NO_RESTORE_IN_PROGRESS = 1;
+  FEDERATE_RESTORE_REQUEST_PENDING = 2;
+  FEDERATE_WAITING_FOR_RESTORE_TO_BEGIN = 3;
+  FEDERATE_PREPARED_TO_RESTORE = 4;
+  FEDERATE_RESTORING = 5;
+  FEDERATE_WAITING_FOR_FEDERATION_TO_RESTORE = 6;
+}
+
+message FederateRestoreStatus
+{
+  required uint32 preRestoreFederateHandle = 1;
+  optional uint32 postRestoreFederateHandle = 2;
+  required RestoreStatus restoreStatus = 3;
+}
+
+message FederationRestoreStatusResponse
+{
+  repeated FederateRestoreStatus federationRestoreStatus = 1;
+}
+
+message StartRegistrationForObjectClass
+{
+  required uint32 objectClassHandle = 1;
+}
+
+message StopRegistrationForObjectClass
+{
+  required uint32 objectClassHandle = 1;
+}
+
+message TurnInteractionsOn
+{
+  required uint32 interactionClassHandle = 1;
+}
+
+message TurnInteractionsOff
+{
+  required uint32 interactionClassHandle = 1;
+}
+
+message DiscoverObjectInstance
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  required uint32 objectClassHandle = 2;
+  required string objectInstanceName = 3;
+  required uint32 producingFederateHandle = 4;
+}
+
+message Region
+{
+  repeated ohla.rti.proto.DimensionRangeBound dimensionRangeBounds = 1;
+}
+
+message ReflectAttributeValues
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  repeated ohla.rti.messages.proto.AttributeValue attributeValues = 2;
+  optional bytes tag = 3;
+  required ohla.rti.proto.OrderType sentOrderType = 4;
+  required ohla.rti.proto.OrderType receivedOrderType = 5;
+  required uint32 transportationTypeHandle = 6;
+  optional bytes time = 7;
+  optional ohla.rti.proto.MessageRetractionHandle messageRetractionHandle = 8;
+  required uint32 producingFederateHandle = 9;
+  repeated Region regions = 10;
+}
+
+message RemoveObjectInstance
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  optional bytes tag = 2;
+  required ohla.rti.proto.OrderType sentOrderType = 3;
+  required ohla.rti.proto.OrderType receivedOrderType = 4;
+  optional bytes time = 5;
+  optional ohla.rti.proto.MessageRetractionHandle messageRetractionHandle = 6;
+  required uint32 producingFederateHandle = 7;
+}
+
+message AttributesInScope
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  repeated uint32 attributeHandles = 2;
+}
+
+message AttributesOutOfScope
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  repeated uint32 attributeHandles = 2;
+}
+
+message ProvideAttributeValueUpdate
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  repeated uint32 attributeHandles = 2;
+  optional bytes tag = 3;
+}
+
+message TurnUpdatesOnForObjectInstance
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  repeated uint32 attributeHandles = 2;
+  required string updateRateDesignator = 3;
+}
+
+message TurnUpdatesOffForObjectInstance
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  repeated uint32 attributeHandles = 2;
+}
+
+message ReceiveInteraction
+{
+  required uint32 interactionClassHandle = 1;
+  repeated ohla.rti.messages.proto.ParameterValue parameterValues = 2;
+  optional bytes tag = 3;
+  required ohla.rti.proto.OrderType sentOrderType = 4;
+  required ohla.rti.proto.OrderType receivedOrderType = 5;
+  required uint32 transportationTypeHandle = 6;
+  optional bytes time = 7;
+  optional ohla.rti.proto.MessageRetractionHandle messageRetractionHandle = 8;
+  required uint32 producingFederateHandle = 9;
+  repeated Region regions = 10;
+}
+
+message RequestAttributeOwnershipAssumption
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  repeated uint32 attributeHandles = 2;
+  optional bytes tag = 3;
+}
+
+message RequestDivestitureConfirmation
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  repeated uint32 attributeHandles = 2;
+}
+
+message AttributeOwnershipAcquisitionNotification
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  repeated uint32 attributeHandles = 2;
+  optional bytes tag = 3;
+}
+
+message AttributeOwnershipUnavailable
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  repeated uint32 attributeHandles = 2;
+}
+
+message RequestAttributeOwnershipRelease
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  repeated uint32 attributeHandles = 2;
+  optional bytes tag = 3;
+}
+
+message ConfirmAttributeOwnershipAcquisitionCancellation
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  repeated uint32 attributeHandles = 2;
+}
+
+message InformAttributeOwnership
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  required uint32 attributeHandle = 2;
+  required uint32 federateHandle = 3;
+}
+
+message AttributeIsNotOwned
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  required uint32 attributeHandle = 2;
+}
+
+message AttributeIsOwnedByRTI
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  required uint32 attributeHandle = 2;
+}
+
+message TimeRegulationEnabled
+{
+  required bytes time = 1;
+}
+
+message TimeConstrainedEnabled
+{
+  required bytes time = 1;
+}
+
+message TimeAdvanceGrant
+{
+  required bytes time = 1;
+}
+
+message RequestRetraction
+{
+  required ohla.rti.proto.MessageRetractionHandle messageRetractionHandle = 1;
+}
+
+message ResignedFederationExecution
+{
+}

@@ -17,7 +17,9 @@
 package net.sf.ohla.rti.messages;
 
 public interface Response
-  extends Message
 {
   long getRequestId();
+
+  boolean isSuccess();
+  boolean isFailure();
 }

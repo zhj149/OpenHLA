@@ -16,32 +16,38 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import com.google.protobuf.CodedInputStream;
 
 public class FederateSaveNotComplete
-  extends AbstractMessage
-  implements FederationExecutionMessage
+  extends
+  AbstractMessage<FederationExecutionMessageProtos.FederateSaveNotComplete, FederationExecutionMessageProtos.FederateSaveNotComplete.Builder>
+implements FederationExecutionMessage
 {
   public FederateSaveNotComplete()
   {
-    super(MessageType.FEDERATE_SAVE_NOT_COMPLETE);
-
-    encodingFinished();
+    super(FederationExecutionMessageProtos.FederateSaveNotComplete.newBuilder());
   }
 
-  public FederateSaveNotComplete(ChannelBuffer buffer)
+  public FederateSaveNotComplete(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.FederateSaveNotComplete.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.FEDERATE_SAVE_NOT_COMPLETE;
+    return MessageProtos.MessageType.FEDERATE_SAVE_NOT_COMPLETE;
   }
 
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.federateSaveNotComplete(federateProxy, this);

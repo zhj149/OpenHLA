@@ -16,30 +16,63 @@
 
 package net.sf.ohla.rti.messages;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import java.io.IOException;
+
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
+
+import com.google.protobuf.CodedInputStream;
 
 public class RetractResponse
-  extends EnumResponse<RetractResponse.Response>
+  extends AbstractMessage<FederateMessageProtos.RetractResponse, FederateMessageProtos.RetractResponse.Builder>
+  implements Response
 {
-  public enum Response
+  public RetractResponse(long requestId)
   {
-    SUCCESS, SAVE_IN_PROGRESS, RESTORE_IN_PROGRESS
+    super(FederateMessageProtos.RetractResponse.newBuilder());
+
+    builder.setRequestId(requestId);
   }
 
-  public RetractResponse(long id, Response response)
+  public RetractResponse(long requestId, FederateMessageProtos.RetractResponse.Failure.Cause cause)
   {
-    super(MessageType.RETRACT_RESPONSE, id, response);
+    this(requestId);
 
-    encodingFinished();
+    builder.setFailure(FederateMessageProtos.RetractResponse.Failure.newBuilder().setCause(cause));
   }
 
-  public RetractResponse(ChannelBuffer buffer)
+  public RetractResponse(CodedInputStream in)
+    throws IOException
   {
-    super(buffer, Response.values());
+    super(FederateMessageProtos.RetractResponse.newBuilder(), in);
   }
 
-  public MessageType getType()
+  public FederateMessageProtos.RetractResponse.Failure.Cause getCause()
   {
-    return MessageType.RETRACT_RESPONSE;
+    return builder.getFailure().getCause();
+  }
+
+  @Override
+  public MessageProtos.MessageType getMessageType()
+  {
+    return MessageProtos.MessageType.RETRACT_RESPONSE;
+  }
+
+  @Override
+  public long getRequestId()
+  {
+    return builder.getRequestId();
+  }
+
+  @Override
+  public boolean isSuccess()
+  {
+    return !builder.hasFailure();
+  }
+
+  @Override
+  public boolean isFailure()
+  {
+    return builder.hasFailure();
   }
 }

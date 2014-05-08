@@ -16,51 +16,63 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.LogicalTimes;
 import net.sf.ohla.rti.federate.Callback;
 import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.AbstractMessage;
 import net.sf.ohla.rti.messages.FederateMessage;
-import net.sf.ohla.rti.messages.LogicalTimeMessage;
-import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.LogicalTime;
-import hla.rti1516e.LogicalTimeFactory;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class TimeRegulationEnabled
-  extends LogicalTimeMessage
-  implements Callback, FederateMessage
+  extends
+  AbstractMessage<FederateMessageProtos.TimeRegulationEnabled, FederateMessageProtos.TimeRegulationEnabled.Builder>
+implements Callback, FederateMessage
 {
   private Federate federate;
+  private LogicalTime time;
 
   public TimeRegulationEnabled(LogicalTime time)
   {
-    super(MessageType.TIME_REGULATION_ENABLED, time);
+    super(FederateMessageProtos.TimeRegulationEnabled.newBuilder());
 
-    encodingFinished();
+    this.time = time;
+
+    builder.setTime(LogicalTimes.convert(time));
   }
 
-  public TimeRegulationEnabled(ChannelBuffer buffer, LogicalTimeFactory logicalTimeFactory)
+  public TimeRegulationEnabled(CodedInputStream in)
+    throws IOException
   {
-    super(buffer, logicalTimeFactory);
+    super(FederateMessageProtos.TimeRegulationEnabled.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.TIME_REGULATION_ENABLED;
+    return MessageProtos.MessageType.TIME_REGULATION_ENABLED;
   }
 
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
     federate.timeRegulationEnabled(time);
   }
 
+  @Override
   public void execute(Federate federate)
   {
     this.federate = federate;
+
+    time = LogicalTimes.convert(federate.getLogicalTimeFactory(), builder.getTime());
 
     federate.getCallbackManager().add(this, false);
   }

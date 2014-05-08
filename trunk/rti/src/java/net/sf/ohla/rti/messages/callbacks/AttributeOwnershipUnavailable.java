@@ -16,41 +16,52 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.ObjectInstanceHandles;
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.messages.MessageType;
-import net.sf.ohla.rti.messages.ObjectInstanceAttributesMessage;
+import net.sf.ohla.rti.messages.AbstractMessage;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class AttributeOwnershipUnavailable
-  extends ObjectInstanceAttributesMessage
+  extends
+  AbstractMessage<FederateMessageProtos.AttributeOwnershipUnavailable, FederateMessageProtos.AttributeOwnershipUnavailable.Builder>
   implements Callback
 {
   public AttributeOwnershipUnavailable(ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
   {
-    super(MessageType.ATTRIBUTE_OWNERSHIP_UNAVAILABLE, objectInstanceHandle, attributeHandles);
+    super(FederateMessageProtos.AttributeOwnershipUnavailable.newBuilder());
 
-    encodingFinished();
+    builder.setObjectInstanceHandle(ObjectInstanceHandles.convert(objectInstanceHandle));
+    builder.addAllAttributeHandles(AttributeHandles.convert(attributeHandles));
   }
 
-  public AttributeOwnershipUnavailable(ChannelBuffer buffer)
+  public AttributeOwnershipUnavailable(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederateMessageProtos.AttributeOwnershipUnavailable.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.ATTRIBUTE_OWNERSHIP_UNAVAILABLE;
+    return MessageProtos.MessageType.ATTRIBUTE_OWNERSHIP_UNAVAILABLE;
   }
 
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.attributeOwnershipUnavailable(objectInstanceHandle, attributeHandles);
+    federateAmbassador.attributeOwnershipUnavailable(ObjectInstanceHandles.convert(builder.getObjectInstanceHandle()),
+                                                     AttributeHandles.convertAttributeHandles(
+                                                       builder.getAttributeHandlesList()));
   }
 }

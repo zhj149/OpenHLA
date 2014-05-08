@@ -18,9 +18,9 @@ package net.sf.ohla.rti.messages;
 
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
 public interface FederationExecutionMessage
-  extends Message
 {
   void execute(FederationExecution federationExecution, FederateProxy federateProxy);
 }

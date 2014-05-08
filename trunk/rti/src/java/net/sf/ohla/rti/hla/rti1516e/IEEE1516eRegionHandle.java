@@ -16,14 +16,6 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-
-import net.sf.ohla.rti.Protocol;
-
-import org.jboss.netty.buffer.ChannelBuffer;
-
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.RegionHandle;
 
@@ -40,23 +32,14 @@ public class IEEE1516eRegionHandle
     this.regionHandle = regionHandle;
   }
 
-  public int encodedLength()
+  public FederateHandle getFederateHandle()
   {
-    return federateHandle.encodedLength() + Protocol.encodedVarIntSize(regionHandle);
+    return federateHandle;
   }
 
-  public void encode(byte[] buffer, int offset)
+  public int getRegionHandle()
   {
-    Protocol.encodeVarInt(buffer, offset, regionHandle);
-    federateHandle.encode(buffer, offset + Protocol.encodedVarIntSize(regionHandle));
-  }
-
-  public void writeTo(DataOutput out)
-    throws IOException
-  {
-    out.writeInt(regionHandle);
-
-    ((IEEE1516eFederateHandle) federateHandle).writeTo(out);
+    return regionHandle;
   }
 
   @Override
@@ -80,46 +63,5 @@ public class IEEE1516eRegionHandle
   private boolean equals(IEEE1516eRegionHandle rhs)
   {
     return regionHandle == rhs.regionHandle && federateHandle.equals(rhs.federateHandle);
-  }
-
-  public static void encode(ChannelBuffer buffer, RegionHandle regionHandle)
-  {
-    if (regionHandle == null)
-    {
-      // encode 0 if the handle was null
-      //
-      Protocol.encodeVarInt(buffer, 0);
-    }
-    else
-    {
-      // encode the handle first, saves space when the RegionHandle is null
-      //
-      Protocol.encodeVarInt(buffer, ((IEEE1516eRegionHandle) regionHandle).regionHandle);
-
-      IEEE1516eFederateHandle.encode(buffer, ((IEEE1516eRegionHandle) regionHandle).federateHandle);
-    }
-  }
-
-  public static IEEE1516eRegionHandle decode(DataInput in)
-    throws IOException
-  {
-    // decode the handle first
-    //
-    int regionHandle = in.readInt();
-
-    // a 0 indicates the RegionHandle was null
-    //
-    return regionHandle == 0 ? null : new IEEE1516eRegionHandle(IEEE1516eFederateHandle.decode(in), regionHandle);
-  }
-
-  public static IEEE1516eRegionHandle decode(ChannelBuffer buffer)
-  {
-    // decode the handle first
-    //
-    int regionHandle = Protocol.decodeVarInt(buffer);
-
-    // a 0 indicates the RegionHandle was null
-    //
-    return regionHandle == 0 ? null : new IEEE1516eRegionHandle(IEEE1516eFederateHandle.decode(buffer), regionHandle);
   }
 }

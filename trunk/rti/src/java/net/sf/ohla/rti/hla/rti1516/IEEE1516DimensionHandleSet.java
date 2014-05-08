@@ -18,7 +18,6 @@ package net.sf.ohla.rti.hla.rti1516;
 
 import java.util.HashSet;
 
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSetFactory;
 
 import hla.rti1516.DimensionHandle;
@@ -45,8 +44,7 @@ public class IEEE1516DimensionHandleSet
     hla.rti1516e.DimensionHandleSet ieee1516eDimensionHandles = IEEE1516eDimensionHandleSetFactory.INSTANCE.create();
     for (DimensionHandle dimensionHandle : dimensionHandles)
     {
-      ieee1516eDimensionHandles.add(
-        new IEEE1516eDimensionHandle(((IEEE1516DimensionHandle) dimensionHandle).getHandle()));
+      ieee1516eDimensionHandles.add(((IEEE1516DimensionHandle) dimensionHandle).getDimensionHandle());
     }
     return ieee1516eDimensionHandles;
   }

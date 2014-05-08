@@ -17,10 +17,7 @@
 package net.sf.ohla.rti.messages;
 
 import java.util.LinkedList;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executor;
-import java.util.concurrent.atomic.AtomicLong;
 
 import net.sf.ohla.rti.i18n.I18nLogger;
 import net.sf.ohla.rti.i18n.LogMessages;
@@ -30,27 +27,24 @@ import org.jboss.netty.channel.ChannelEvent;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
+import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 
-public abstract class MessageChannelHandler
+public class MessageChannelHandler
   implements ChannelUpstreamHandler, ChannelDownstreamHandler
 {
-  private static final I18nLogger log = I18nLogger.getLogger(MessageChannelHandler.class);
+  public static final String NAME = MessageChannelHandler.class.getSimpleName();
 
   private final Executor executor;
 
   private final Object readLock = new Object();
-  private final LinkedList<ContextedMessage> messages = new LinkedList<ContextedMessage>();
+  private final LinkedList<ContextedMessage> messages = new LinkedList<>();
 
   private final Object writeLock = new Object();
   private boolean writeable = true;
 
-  private final AtomicLong requestCount = new AtomicLong();
-
-  private final ConcurrentMap<Long, Request> requests = new ConcurrentHashMap<Long, Request>();
-
-  protected MessageChannelHandler(Executor executor)
+  public MessageChannelHandler(Executor executor)
   {
     this.executor = executor;
   }
@@ -62,28 +56,17 @@ public abstract class MessageChannelHandler
     {
       Message message = (Message) ((MessageEvent) event).getMessage();
 
-      if (message instanceof Response)
+      boolean needsExecution;
+      synchronized (readLock)
       {
-        Request request = requests.remove(((Response) message).getRequestId());
+        needsExecution = messages.isEmpty();
 
-        assert request != null;
-
-        request.setResponse(message);
+        messages.add(new ContextedMessage(context, message));
       }
-      else
+
+      if (needsExecution)
       {
-        boolean needsExecution;
-        synchronized (readLock)
-        {
-          needsExecution = messages.isEmpty();
-
-          messages.add(new ContextedMessage(context, message));
-        }
-
-        if (needsExecution)
-        {
-          executor.execute(new DeliverMessage());
-        }
+        executor.execute(new DeliverMessage());
       }
     }
     else if (event instanceof ChannelStateEvent)
@@ -104,7 +87,9 @@ public abstract class MessageChannelHandler
     else if (event instanceof ExceptionEvent)
     {
       ExceptionEvent exceptionEvent = (ExceptionEvent) event;
-      log.warn(LogMessages.UNHANDLED_EXCEPTION, exceptionEvent.getCause(), exceptionEvent.getCause());
+
+      I18nLogger.getLogger(MessageChannelHandler.class).warn(
+        LogMessages.UNHANDLED_EXCEPTION, exceptionEvent.getCause(), exceptionEvent.getCause());
     }
   }
 
@@ -126,23 +111,10 @@ public abstract class MessageChannelHandler
           }
         }
       }
-
-      Message message = (Message) ((MessageEvent) event).getMessage();
-      if (message instanceof Request)
-      {
-        Request request = (Request) message;
-
-        long id = requestCount.incrementAndGet();
-        request.setId(id);
-
-        requests.put(id, request);
-      }
     }
 
     context.sendDownstream(event);
   }
-
-  protected abstract void messageReceived(ChannelHandlerContext context, Message message);
 
   private class ContextedMessage
     implements Runnable
@@ -158,7 +130,7 @@ public abstract class MessageChannelHandler
 
     public void run()
     {
-      messageReceived(context, message);
+      Channels.fireMessageReceived(context, message);
     }
   }
 
@@ -182,7 +154,7 @@ public abstract class MessageChannelHandler
         }
         catch (Throwable t)
         {
-          log.warn(LogMessages.UNHANDLED_EXCEPTION, t, t);
+          I18nLogger.getLogger(MessageChannelHandler.class).warn(LogMessages.UNHANDLED_EXCEPTION, t, t);
         }
         finally
         {
@@ -193,8 +165,7 @@ public abstract class MessageChannelHandler
             done = messages.isEmpty();
           }
         }
-      }
-      while (!done);
+      } while (!done);
     }
   }
 }

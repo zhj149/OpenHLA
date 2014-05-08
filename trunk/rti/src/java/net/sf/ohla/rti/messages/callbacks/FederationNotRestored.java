@@ -16,47 +16,55 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import java.io.IOException;
+
 import net.sf.ohla.rti.federate.Callback;
 import net.sf.ohla.rti.federate.Federate;
-import net.sf.ohla.rti.messages.EnumMessage;
+import net.sf.ohla.rti.messages.AbstractMessage;
 import net.sf.ohla.rti.messages.FederateMessage;
-import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.RestoreFailureReason;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class FederationNotRestored
-  extends EnumMessage<RestoreFailureReason>
+  extends
+  AbstractMessage<FederateMessageProtos.FederationNotRestored, FederateMessageProtos.FederationNotRestored.Builder>
   implements Callback, FederateMessage
 {
   private Federate federate;
 
   public FederationNotRestored(RestoreFailureReason restoreFailureReason)
   {
-    super(MessageType.FEDERATION_NOT_RESTORED, restoreFailureReason);
+    super(FederateMessageProtos.FederationNotRestored.newBuilder());
 
-    encodingFinished();
+    builder.setRestoreFailureReason(
+      FederateMessageProtos.RestoreFailureReason.values()[restoreFailureReason.ordinal()]);
   }
 
-  public FederationNotRestored(ChannelBuffer buffer)
+  public FederationNotRestored(CodedInputStream in)
+    throws IOException
   {
-    super(buffer, RestoreFailureReason.values());
+    super(FederateMessageProtos.FederationNotRestored.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.FEDERATION_NOT_RESTORED;
+    return MessageProtos.MessageType.FEDERATION_NOT_RESTORED;
   }
 
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federate.fireFederationNotRestored(e);
+    federate.fireFederationNotRestored(RestoreFailureReason.values()[builder.getRestoreFailureReason().ordinal()]);
   }
 
+  @Override
   public void execute(Federate federate)
   {
     this.federate = federate;

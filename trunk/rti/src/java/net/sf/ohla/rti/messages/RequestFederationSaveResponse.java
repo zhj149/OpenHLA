@@ -16,71 +16,65 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import hla.rti1516e.LogicalTime;
-import hla.rti1516e.LogicalTimeFactory;
+import com.google.protobuf.CodedInputStream;
 
 public class RequestFederationSaveResponse
-  extends EnumResponse<RequestFederationSaveResponse.Response>
+  extends
+  AbstractMessage<FederateMessageProtos.RequestFederationSaveResponse, FederateMessageProtos.RequestFederationSaveResponse.Builder>
+  implements Response
 {
-  public enum Response
+  public RequestFederationSaveResponse(long requestId)
   {
-    SUCCESS, LOGICAL_TIME_ALREADY_PASSED, FEDERATE_UNABLE_TO_USE_TIME, SAVE_IN_PROGRESS, RESTORE_IN_PROGRESS,
-    RTI_INTERNAL_ERROR
+    super(FederateMessageProtos.RequestFederationSaveResponse.newBuilder());
+
+    builder.setRequestId(requestId);
   }
 
-  private final LogicalTime time;
-
-  public RequestFederationSaveResponse(long id)
+  public RequestFederationSaveResponse(long requestId,
+                                       FederateMessageProtos.RequestFederationSaveResponse.Failure.Cause cause)
   {
-    super(MessageType.REQUEST_FEDERATION_SAVE_RESPONSE, id, Response.SUCCESS);
+    this(requestId);
 
-    time = null;
-
-    Protocol.encodeNullTime(buffer);
-
-    encodingFinished();
+    builder.setFailure(FederateMessageProtos.RequestFederationSaveResponse.Failure.newBuilder().setCause(cause));
   }
 
-  public RequestFederationSaveResponse(long id, Response response)
+  public RequestFederationSaveResponse(CodedInputStream in)
+    throws IOException
   {
-    super(MessageType.REQUEST_FEDERATION_SAVE_RESPONSE, id, response);
-
-    time = null;
-
-    Protocol.encodeNullTime(buffer);
-
-    encodingFinished();
+    super(FederateMessageProtos.RequestFederationSaveResponse.newBuilder(), in);
   }
 
-  public RequestFederationSaveResponse(long id, LogicalTime time)
+  public FederateMessageProtos.RequestFederationSaveResponse.Failure.Cause getCause()
   {
-    super(MessageType.REQUEST_FEDERATION_SAVE_RESPONSE, id, Response.LOGICAL_TIME_ALREADY_PASSED);
-
-    this.time = time;
-
-    Protocol.encodeTime(buffer, time);
-
-    encodingFinished();
+    return builder.getFailure().getCause();
   }
 
-  public RequestFederationSaveResponse(ChannelBuffer buffer, LogicalTimeFactory logicalTimeFactory)
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    super(buffer, Response.values());
-
-    time = Protocol.decodeTime(buffer, logicalTimeFactory);
+    return MessageProtos.MessageType.REQUEST_FEDERATION_SAVE_RESPONSE;
   }
 
-  public LogicalTime getTime()
+  @Override
+  public long getRequestId()
   {
-    return time;
+    return builder.getRequestId();
   }
 
-  public MessageType getType()
+  @Override
+  public boolean isSuccess()
   {
-    return MessageType.REQUEST_FEDERATION_SAVE_RESPONSE;
+    return !builder.hasFailure();
+  }
+
+  @Override
+  public boolean isFailure()
+  {
+    return builder.hasFailure();
   }
 }

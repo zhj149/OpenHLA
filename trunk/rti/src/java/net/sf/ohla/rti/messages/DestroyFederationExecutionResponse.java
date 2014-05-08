@@ -16,66 +16,80 @@
 
 package net.sf.ohla.rti.messages;
 
-import java.util.Collections;
-import java.util.Set;
+import java.io.IOException;
 
-import net.sf.ohla.rti.Protocol;
+import java.util.Collection;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import net.sf.ohla.rti.messages.proto.ConnectedMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
+
+import com.google.protobuf.CodedInputStream;
 
 public class DestroyFederationExecutionResponse
-  extends EnumResponse<DestroyFederationExecutionResponse.Response>
+  extends AbstractMessage<ConnectedMessageProtos.DestroyFederationExecutionResponse, ConnectedMessageProtos.DestroyFederationExecutionResponse.Builder>
+  implements Response
 {
-  public enum Response
+  public DestroyFederationExecutionResponse(long requestId)
   {
-    SUCCESS, FEDERATES_CURRENTLY_JOINED, FEDERATION_EXECUTION_DOES_NOT_EXIST
+    super(ConnectedMessageProtos.DestroyFederationExecutionResponse.newBuilder());
+
+    builder.setRequestId(requestId);
   }
 
-  private final Set<String> currentlyJoinedFederates;
-
-  public DestroyFederationExecutionResponse(long id, Response response)
+  public DestroyFederationExecutionResponse(
+    long requestId, ConnectedMessageProtos.DestroyFederationExecutionResponse.Failure.Cause cause)
   {
-    super(MessageType.DESTROY_FEDERATION_EXECUTION_RESPONSE, id, response);
+    this(requestId);
 
-    assert response != DestroyFederationExecutionResponse.Response.FEDERATES_CURRENTLY_JOINED;
-
-    currentlyJoinedFederates = null;
-
-    encodingFinished();
+    builder.setFailure(ConnectedMessageProtos.DestroyFederationExecutionResponse.Failure.newBuilder().setCause(cause));
   }
 
-  public DestroyFederationExecutionResponse(long id, Set<String> currentlyJoinedFederates)
+  public DestroyFederationExecutionResponse(long requestId, Collection<String> currentlyJoinedFederates)
   {
-    super(MessageType.DESTROY_FEDERATION_EXECUTION_RESPONSE, id, Response.FEDERATES_CURRENTLY_JOINED);
+    this(requestId);
 
-    this.currentlyJoinedFederates = currentlyJoinedFederates;
-
-    Protocol.encodeStrings(buffer, currentlyJoinedFederates);
-
-    encodingFinished();
+    builder.setFailure(ConnectedMessageProtos.DestroyFederationExecutionResponse.Failure.newBuilder().setCause(
+      ConnectedMessageProtos.DestroyFederationExecutionResponse.Failure.Cause.FEDERATES_CURRENTLY_JOINED).addAllCurrentlyJoinedFederates(
+      currentlyJoinedFederates));
   }
 
-  public DestroyFederationExecutionResponse(ChannelBuffer buffer)
+  public DestroyFederationExecutionResponse(CodedInputStream in)
+    throws IOException
   {
-    super(buffer, Response.values());
-
-    if (response == Response.FEDERATES_CURRENTLY_JOINED)
-    {
-      currentlyJoinedFederates = Protocol.decodeStringSet(buffer);
-    }
-    else
-    {
-      currentlyJoinedFederates = Collections.emptySet();
-    }
+    super(ConnectedMessageProtos.DestroyFederationExecutionResponse.newBuilder(), in);
   }
 
-  public Set<String> getCurrentlyJoinedFederates()
+  public Collection<String> getCurrentlyJoinedFederates()
   {
-    return currentlyJoinedFederates;
+    return builder.getFailure().getCurrentlyJoinedFederatesList();
   }
 
-  public MessageType getType()
+  public ConnectedMessageProtos.DestroyFederationExecutionResponse.Failure getFailure()
   {
-    return MessageType.DESTROY_FEDERATION_EXECUTION_RESPONSE;
+    return builder.getFailure();
+  }
+
+  @Override
+  public MessageProtos.MessageType getMessageType()
+  {
+    return MessageProtos.MessageType.DESTROY_FEDERATION_EXECUTION_RESPONSE;
+  }
+
+  @Override
+  public long getRequestId()
+  {
+    return builder.getRequestId();
+  }
+
+  @Override
+  public boolean isSuccess()
+  {
+    return !builder.hasFailure();
+  }
+
+  @Override
+  public boolean isFailure()
+  {
+    return builder.hasFailure();
   }
 }

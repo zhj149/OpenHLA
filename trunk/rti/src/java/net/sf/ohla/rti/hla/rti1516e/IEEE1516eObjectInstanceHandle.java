@@ -16,13 +16,7 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-
-import net.sf.ohla.rti.Protocol;
-
-import org.jboss.netty.buffer.ChannelBuffer;
+import java.nio.ByteBuffer;
 
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.ObjectInstanceHandle;
@@ -32,44 +26,46 @@ public class IEEE1516eObjectInstanceHandle
 {
   private final FederateHandle federateHandle;
 
-  private final int objectInstanceHandle;
+  private final long objectInstanceHandle;
 
-  public IEEE1516eObjectInstanceHandle(FederateHandle federateHandle, int objectInstanceHandle)
+  private transient volatile Integer hashCode;
+
+  public IEEE1516eObjectInstanceHandle(FederateHandle federateHandle, long objectInstanceHandle)
   {
     this.federateHandle = federateHandle;
     this.objectInstanceHandle = objectInstanceHandle;
   }
 
-  public IEEE1516eObjectInstanceHandle(DataInput in)
-    throws IOException
+  public FederateHandle getFederateHandle()
   {
-    federateHandle = IEEE1516eFederateHandle.decode(in);
-    objectInstanceHandle = in.readInt();
+    return federateHandle;
   }
 
-  public void writeTo(DataOutput out)
-    throws IOException
+  public long getObjectInstanceHandle()
   {
-    ((IEEE1516eFederateHandle) federateHandle).writeTo(out);
-
-    out.writeInt(objectInstanceHandle);
+    return objectInstanceHandle;
   }
 
   public int encodedLength()
   {
-    return federateHandle.encodedLength() + Protocol.encodedVarIntSize(objectInstanceHandle);
+    return federateHandle.encodedLength() + 8;
   }
 
   public void encode(byte[] buffer, int offset)
   {
-    Protocol.encodeVarInt(buffer, offset, objectInstanceHandle);
-    federateHandle.encode(buffer, offset + Protocol.encodedVarIntSize(objectInstanceHandle));
+    ByteBuffer.wrap(buffer, offset, 8).putLong(objectInstanceHandle);
+    federateHandle.encode(buffer, offset + 8);
   }
 
   @Override
   public int hashCode()
   {
-    return objectInstanceHandle & (((IEEE1516eFederateHandle) federateHandle).getHandle() << 24);
+    if (hashCode == null)
+    {
+      hashCode = ((((IEEE1516eFederateHandle) federateHandle).getHandle() << 24) &
+                  0xFF000000) | (((int) objectInstanceHandle) & 0xFFFFFF);
+    }
+    return hashCode;
   }
 
   @Override
@@ -88,48 +84,5 @@ public class IEEE1516eObjectInstanceHandle
   private boolean equals(IEEE1516eObjectInstanceHandle rhs)
   {
     return objectInstanceHandle == rhs.objectInstanceHandle && federateHandle.equals(rhs.federateHandle);
-  }
-
-  public static void encode(ChannelBuffer buffer, ObjectInstanceHandle objectInstanceHandle)
-  {
-    if (objectInstanceHandle == null)
-    {
-      // encode 0 if the handle was null
-      //
-      Protocol.encodeVarInt(buffer, 0);
-    }
-    else
-    {
-      // encode the handle first, saves space when the ObjectInstanceHandle is null
-      //
-      Protocol.encodeVarInt(buffer, ((IEEE1516eObjectInstanceHandle) objectInstanceHandle).objectInstanceHandle);
-
-      IEEE1516eFederateHandle.encode(
-        buffer, ((IEEE1516eObjectInstanceHandle) objectInstanceHandle).federateHandle);
-    }
-  }
-
-  public static IEEE1516eObjectInstanceHandle decode(ChannelBuffer buffer)
-  {
-    // decode the handle first
-    //
-    int objectInstanceHandle = Protocol.decodeVarInt(buffer);
-
-    // a 0 indicates the ObjectInstanceHandle was null
-    //
-    return objectInstanceHandle == 0 ? null :
-      new IEEE1516eObjectInstanceHandle(IEEE1516eFederateHandle.decode(buffer), objectInstanceHandle);
-  }
-
-  public static IEEE1516eObjectInstanceHandle decode(byte[] buffer, int offset)
-  {
-    // decode the handle first
-    //
-    int objectInstanceHandle = Protocol.decodeVarInt(buffer, offset);
-
-    // a 0 indicates the ObjectInstanceHandle was null
-    //
-    return objectInstanceHandle == 0 ?
-      null : new IEEE1516eObjectInstanceHandle(IEEE1516eFederateHandle.decode(buffer, offset), objectInstanceHandle);
   }
 }

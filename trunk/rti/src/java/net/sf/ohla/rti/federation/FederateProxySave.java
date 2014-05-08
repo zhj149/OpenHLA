@@ -16,41 +16,46 @@
 
 package net.sf.ohla.rti.federation;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.RandomAccessFile;
 
-import java.util.zip.GZIPOutputStream;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+
+import net.sf.ohla.rti.util.FederateHandles;
+import net.sf.ohla.rti.util.MoreChannels;
+import net.sf.ohla.rti.messages.FederateStateFrame;
+import net.sf.ohla.rti.proto.FederationExecutionSaveProtos;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 
+import com.google.protobuf.CodedOutputStream;
 import hla.rti1516e.FederateHandle;
 
 /**
  * The {@code FederateProxySave} represents the state of the {@link net.sf.ohla.rti.federate.Federate} and the
- * {@link FederateProxy}. It also contains any messages received by the {@link FederateProxy} during a save.
+ * {@link FederateProxy} at the time of a save.
  */
 public class FederateProxySave
 {
   public static final String FEDERATE_STATE = "Federate_State";
   public static final String FEDERATE_PROXY_STATE = "Federate_Proxy_State";
-  public static final String FEDERATE_MESSAGES = "Federate_Messages";
-
-  private static final Logger log = LoggerFactory.getLogger(FederateProxySave.class);
 
   private final FederateHandle federateHandle;
   private final String federateName;
   private final String federateType;
 
-  private final File federateStateFile;
-  private final File federateProxyStateFile;
+  private final Path federateStateFile;
+  private final Path federateProxyStateFile;
 
-  private final OutputStream federateStateOutputStream;
-  private final OutputStream federateProxyStateOutputStream;
+  private final FileChannel federateStateFileChannel;
+  private final FileChannel federateProxyStateFileChannel;
 
   public FederateProxySave(FederateProxy federateProxy)
     throws IOException
@@ -59,63 +64,56 @@ public class FederateProxySave
     federateName = federateProxy.getFederateName();
     federateType = federateProxy.getFederateType();
 
-    log.debug("Federate save: {}", federateProxy);
+    Marker marker = MarkerFactory.getMarker(federateHandle.toString());
+    Logger logger = LoggerFactory.getLogger(FederateProxySave.class);
+    logger.debug(marker, "Federate save: {}", federateProxy);
 
-    federateStateFile = File.createTempFile(FEDERATE_STATE, "save");
-    log.debug("Federate state file: {}", federateStateFile);
+    federateStateFile = Files.createTempFile(FEDERATE_STATE, "save");
+    logger.debug(marker, "Federate state file: {}", federateStateFile);
 
-    federateProxyStateFile = File.createTempFile(FEDERATE_PROXY_STATE, "save");
-    log.debug("Federate proxy state file: {}", federateProxyStateFile);
+    federateProxyStateFile = Files.createTempFile(FEDERATE_PROXY_STATE, "save");
+    logger.debug(marker, "Federate proxy state file: {}", federateProxyStateFile);
 
-    // TODO: allow different types of output streams
-
-    federateStateOutputStream = new GZIPOutputStream(new FileOutputStream(federateStateFile));
-    federateProxyStateOutputStream = new GZIPOutputStream(new FileOutputStream(federateProxyStateFile));
-  }
-
-  public OutputStream getFederateStateOutputStream()
-  {
-    return federateStateOutputStream;
+    federateStateFileChannel = FileChannel.open(federateStateFile, StandardOpenOption.WRITE);
+    federateProxyStateFileChannel = FileChannel.open(federateProxyStateFile, StandardOpenOption.WRITE);
   }
 
   public OutputStream getFederateProxyStateOutputStream()
   {
-    return federateProxyStateOutputStream;
+    return Channels.newOutputStream(federateProxyStateFileChannel);
   }
 
-  public void writeTo(RandomAccessFile file)
+  public void handleFederateStateFrame(FederateStateFrame federateStateFrame)
     throws IOException
   {
-    file.writeLong(federateStateFile.length());
-    transferThenDelete(federateStateFile, file);
-
-    file.writeLong(federateProxyStateFile.length());
-    transferThenDelete(federateProxyStateFile, file);
+    MoreChannels.writeFully(federateStateFileChannel, federateStateFrame.getPayload().asReadOnlyByteBuffer());
   }
 
-  private void transferThenDelete(File source, RandomAccessFile destination)
+  public void writeTo(FileChannel saveFileChannel, CodedOutputStream saveFileCodedOutputStream)
     throws IOException
   {
-    FileInputStream in = new FileInputStream(source);
+    federateStateFileChannel.close();
+    federateProxyStateFileChannel.close();
 
-    long length = source.length();
-    long position = destination.getFilePointer();
-    do
-    {
-      long bytesTransferred = destination.getChannel().transferFrom(in.getChannel(), position, length);
-      length -= bytesTransferred;
-      position += bytesTransferred;
-    } while (length > 0);
+    FederationExecutionSaveProtos.FederateSaveHeader.Builder federateSaveHeader =
+      FederationExecutionSaveProtos.FederateSaveHeader.newBuilder();
 
-    destination.seek(position);
+    federateSaveHeader.setFederateHandle(FederateHandles.convert(federateHandle));
+    federateSaveHeader.setFederateName(federateName);
+    federateSaveHeader.setFederateType(federateType);
 
-    in.close();
+    federateSaveHeader.setFederateStateLength(Files.size(federateStateFile));
+    federateSaveHeader.setFederateProxyStateLength(Files.size(federateProxyStateFile));
 
-    if (source.delete())
-    {
-    }
-    else
-    {
-    }
+    saveFileCodedOutputStream.writeMessageNoTag(federateSaveHeader.build());
+    saveFileCodedOutputStream.flush();
+
+    MoreChannels.transferFromFully(saveFileChannel, federateStateFile, Files.size(federateStateFile));
+    MoreChannels.transferFromFully(saveFileChannel, federateProxyStateFile, Files.size(federateProxyStateFile));
+
+    // TODO: need to be sure these files will be deleted
+
+    Files.delete(federateStateFile);
+    Files.delete(federateProxyStateFile);
   }
 }

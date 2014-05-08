@@ -16,41 +16,50 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.ObjectInstanceHandles;
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.messages.MessageType;
-import net.sf.ohla.rti.messages.ObjectInstanceAttributeMessage;
+import net.sf.ohla.rti.messages.AbstractMessage;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class AttributeIsNotOwned
-  extends ObjectInstanceAttributeMessage
+  extends AbstractMessage<FederateMessageProtos.AttributeIsNotOwned, FederateMessageProtos.AttributeIsNotOwned.Builder>
   implements Callback
 {
   public AttributeIsNotOwned(ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle)
   {
-    super(MessageType.ATTRIBUTE_IS_NOT_OWNED, objectInstanceHandle, attributeHandle);
+    super(FederateMessageProtos.AttributeIsNotOwned.newBuilder());
 
-    encodingFinished();
+    builder.setObjectInstanceHandle(ObjectInstanceHandles.convert(objectInstanceHandle));
+    builder.setAttributeHandle(AttributeHandles.convert(attributeHandle));
   }
 
-  public AttributeIsNotOwned(ChannelBuffer buffer)
+  public AttributeIsNotOwned(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederateMessageProtos.AttributeIsNotOwned.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.ATTRIBUTE_IS_NOT_OWNED;
+    return MessageProtos.MessageType.ATTRIBUTE_IS_NOT_OWNED;
   }
 
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.attributeIsNotOwned(objectInstanceHandle, attributeHandle);
+    federateAmbassador.attributeIsNotOwned(ObjectInstanceHandles.convert(builder.getObjectInstanceHandle()),
+                                           AttributeHandles.convert(builder.getAttributeHandle()));
   }
 }

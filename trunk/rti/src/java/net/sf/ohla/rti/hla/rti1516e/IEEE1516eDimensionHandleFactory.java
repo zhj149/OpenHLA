@@ -16,6 +16,10 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
+import java.nio.ByteBuffer;
+
+import net.sf.ohla.rti.util.DimensionHandles;
+
 import hla.rti1516e.DimensionHandle;
 import hla.rti1516e.DimensionHandleFactory;
 import hla.rti1516e.exceptions.CouldNotDecode;
@@ -34,7 +38,7 @@ public class IEEE1516eDimensionHandleFactory
   {
     try
     {
-      return IEEE1516eDimensionHandle.decode(buffer, offset);
+      return DimensionHandles.convert(ByteBuffer.wrap(buffer, offset, 4).getInt());
     }
     catch (Throwable t)
     {

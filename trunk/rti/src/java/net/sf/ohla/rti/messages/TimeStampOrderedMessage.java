@@ -16,15 +16,20 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.messages.proto.MessageProtos;
+
+import org.jboss.netty.channel.Channel;
+
 import hla.rti1516e.LogicalTime;
+import hla.rti1516e.LogicalTimeFactory;
 import hla.rti1516e.MessageRetractionHandle;
-import hla.rti1516e.OrderType;
 
 public interface TimeStampOrderedMessage
-  extends Message, Comparable<TimeStampOrderedMessage>
 {
-  LogicalTime getTime();
-  MessageRetractionHandle getMessageRetractionHandle();
+  MessageProtos.MessageType getMessageType();
 
-  TimeStampOrderedMessage makeReceiveOrdered();
+  LogicalTime getTime(LogicalTimeFactory logicalTimeFactory);
+  MessageRetractionHandle getMessageRetractionHandle();
 }

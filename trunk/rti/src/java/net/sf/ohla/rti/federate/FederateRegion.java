@@ -16,8 +16,6 @@
 
 package net.sf.ohla.rti.federate;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 import java.util.HashMap;
@@ -28,21 +26,25 @@ import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.DimensionHandles;
+import net.sf.ohla.rti.util.InteractionClassHandles;
+import net.sf.ohla.rti.util.ObjectClassHandles;
+import net.sf.ohla.rti.util.ObjectInstanceHandles;
+import net.sf.ohla.rti.util.RegionHandles;
 import net.sf.ohla.rti.fdd.Attribute;
 import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.fdd.ObjectClass;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSet;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSet;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSetFactory;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eInteractionClassHandle;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectInstanceHandle;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandle;
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
+import net.sf.ohla.rti.proto.FederationExecutionSaveProtos.FederateState.FederateRegionManagerState.FederateRegionState;
+import net.sf.ohla.rti.proto.OHLAProtos;
 
+import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.CodedOutputStream;
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.DimensionHandle;
@@ -63,19 +65,16 @@ public class FederateRegion
   private final DimensionHandleSet dimensionHandles;
 
   private final ReadWriteLock rangeBoundsLock = new ReentrantReadWriteLock(true);
-  private final Map<DimensionHandle, RangeBounds> rangeBounds = new HashMap<DimensionHandle, RangeBounds>();
-  private Map<DimensionHandle, RangeBounds> uncommittedRangeBounds = new HashMap<DimensionHandle, RangeBounds>();
+  private final Map<DimensionHandle, RangeBounds> rangeBounds = new HashMap<>();
+  private Map<DimensionHandle, RangeBounds> uncommittedRangeBounds = new HashMap<>();
 
   private final ReadWriteLock associatedObjectsLock = new ReentrantReadWriteLock(true);
-  private final Map<ObjectInstanceHandle, AttributeHandleSet> associatedObjects =
-    new HashMap<ObjectInstanceHandle, AttributeHandleSet>();
+  private final Map<ObjectInstanceHandle, AttributeHandleSet> associatedObjects = new HashMap<>();
 
   private final ReadWriteLock subscriptionLock = new ReentrantReadWriteLock(true);
-  private final Map<ObjectClassHandle, AttributeHandleSet> subscribedObjectClasses =
-    new HashMap<ObjectClassHandle, AttributeHandleSet>();
+  private final Map<ObjectClassHandle, AttributeHandleSet> subscribedObjectClasses = new HashMap<>();
 
-  private final Set<InteractionClassHandle> subscribedInteractionClasses =
-    new HashSet<InteractionClassHandle>();
+  private final Set<InteractionClassHandle> subscribedInteractionClasses = new HashSet<>();
 
   public FederateRegion(RegionHandle regionHandle, DimensionHandleSet dimensionHandles, FDD fdd)
   {
@@ -98,49 +97,50 @@ public class FederateRegion
     dimensionHandles = IEEE1516eDimensionHandleSetFactory.INSTANCE.create(rangeBounds.keySet());
   }
 
-  public FederateRegion(DataInput in)
+  public FederateRegion(CodedInputStream in)
     throws IOException
   {
-    regionHandle = IEEE1516eRegionHandle.decode(in);
-    dimensionHandles = new IEEE1516eDimensionHandleSet(in);
+    FederateRegionState regionState = in.readMessage(FederateRegionState.PARSER, null);
 
-    for (int count = in.readInt(); count > 0; count--)
+    regionHandle = RegionHandles.convert(regionState.getRegionHandle());
+
+    for (OHLAProtos.DimensionRangeBound dimensionRangeBound : regionState.getRangeBoundsList())
     {
-      DimensionHandle dimensionHandle = IEEE1516eDimensionHandle.decode(in);
-      long lower = in.readLong();
-      long upper = in.readLong();
+      DimensionHandle dimensionHandle = DimensionHandles.convert(dimensionRangeBound.getDimensionHandle());
+      long lower = dimensionRangeBound.getLowerBound();
+      long upper = dimensionRangeBound.getUpperBound();
 
       rangeBounds.put(dimensionHandle, new RangeBounds(lower, upper));
     }
+    dimensionHandles = new IEEE1516eDimensionHandleSet(rangeBounds.keySet());
 
-    for (int count = in.readInt(); count > 0; count--)
+    for (OHLAProtos.DimensionRangeBound dimensionRangeBound : regionState.getUncommittedRangeBoundsList())
     {
-      DimensionHandle dimensionHandle = IEEE1516eDimensionHandle.decode(in);
-      long lower = in.readLong();
-      long upper = in.readLong();
+      DimensionHandle dimensionHandle = DimensionHandles.convert(dimensionRangeBound.getDimensionHandle());
+      long lower = dimensionRangeBound.getLowerBound();
+      long upper = dimensionRangeBound.getUpperBound();
 
       uncommittedRangeBounds.put(dimensionHandle, new RangeBounds(lower, upper));
     }
 
-    for (int count = in.readInt(); count > 0; count--)
+    for (FederateRegionState.SubscribedObjectClass subscribedObjectClass : regionState.getSubscribedObjectClassesList())
     {
-      ObjectInstanceHandle objectInstanceHandle = new IEEE1516eObjectInstanceHandle(in);
-      AttributeHandleSet attributeHandles = new IEEE1516eAttributeHandleSet(in);
-
-      associatedObjects.put(objectInstanceHandle, attributeHandles);
+      subscribedObjectClasses.put(
+        ObjectClassHandles.convert(subscribedObjectClass.getObjectClassHandle()),
+        AttributeHandles.convertAttributeHandles(subscribedObjectClass.getAttributeHandlesList()));
     }
 
-    for (int count = in.readInt(); count > 0; count--)
-    {
-      ObjectClassHandle objectClassHandle = IEEE1516eObjectClassHandle.decode(in);
-      AttributeHandleSet attributeHandles = new IEEE1516eAttributeHandleSet(in);
+    subscribedInteractionClasses.addAll(
+      InteractionClassHandles.convertFromProto(regionState.getSubscribedInteractionClassesList()));
 
-      subscribedObjectClasses.put(objectClassHandle, attributeHandles);
-    }
-
-    for (int count = in.readInt(); count > 0; count--)
+    for (int associatedObjectCount = regionState.getAssociatedObjectCount(); associatedObjectCount > 0;
+         --associatedObjectCount)
     {
-      subscribedInteractionClasses.add(IEEE1516eInteractionClassHandle.decode(in));
+      FederateRegionState.AssociatedObject associatedObject =
+        in.readMessage(FederateRegionState.AssociatedObject.PARSER, null);
+
+      associatedObjects.put(ObjectInstanceHandles.convert(associatedObject.getObjectInstanceHandle()),
+                            AttributeHandles.convertAttributeHandles(associatedObject.getAttributeHandlesList()));
     }
   }
 
@@ -229,7 +229,7 @@ public class FederateRegion
 
       // start fresh
       //
-      uncommittedRangeBounds = new HashMap<DimensionHandle, RangeBounds>();
+      uncommittedRangeBounds = new HashMap<>();
 
       return committedRangeBounds;
     }
@@ -398,46 +398,54 @@ public class FederateRegion
     return intersect;
   }
 
-  public void writeTo(DataOutput out)
+  public void saveState(CodedOutputStream out)
     throws IOException
   {
-    ((IEEE1516eRegionHandle) regionHandle).writeTo(out);
-    ((IEEE1516eDimensionHandleSet) dimensionHandles).writeTo(out);
+    FederateRegionState.Builder regionState = FederateRegionState.newBuilder();
 
-    out.writeInt(rangeBounds.size());
+    regionState.setRegionHandle(RegionHandles.convert(regionHandle));
+
     for (Map.Entry<DimensionHandle, RangeBounds> entry : rangeBounds.entrySet())
     {
-      ((IEEE1516eDimensionHandle) entry.getKey()).writeTo(out);
-      out.writeLong(entry.getValue().lower);
-      out.writeLong(entry.getValue().upper);
+      regionState.addRangeBounds(
+        OHLAProtos.DimensionRangeBound.newBuilder().setDimensionHandle(
+          DimensionHandles.convert(entry.getKey())).setLowerBound(
+          entry.getValue().lower).setUpperBound(
+          entry.getValue().upper));
     }
 
-    out.writeInt(uncommittedRangeBounds.size());
     for (Map.Entry<DimensionHandle, RangeBounds> entry : uncommittedRangeBounds.entrySet())
     {
-      ((IEEE1516eDimensionHandle) entry.getKey()).writeTo(out);
-      out.writeLong(entry.getValue().lower);
-      out.writeLong(entry.getValue().upper);
+      regionState.addUncommittedRangeBounds(
+        OHLAProtos.DimensionRangeBound.newBuilder().setDimensionHandle(
+          DimensionHandles.convert(entry.getKey())).setLowerBound(
+          entry.getValue().lower).setUpperBound(
+          entry.getValue().upper));
     }
 
-    out.writeInt(associatedObjects.size());
-    for (Map.Entry<ObjectInstanceHandle, AttributeHandleSet> entry : associatedObjects.entrySet())
-    {
-      ((IEEE1516eObjectInstanceHandle) entry.getKey()).writeTo(out);
-      ((IEEE1516eAttributeHandleSet) entry.getValue()).writeTo(out);
-    }
-
-    out.writeInt(subscribedObjectClasses.size());
     for (Map.Entry<ObjectClassHandle, AttributeHandleSet> entry : subscribedObjectClasses.entrySet())
     {
-      ((IEEE1516eObjectClassHandle) entry.getKey()).writeTo(out);
-      ((IEEE1516eAttributeHandleSet) entry.getValue()).writeTo(out);
+      regionState.addSubscribedObjectClasses(
+        FederateRegionState.SubscribedObjectClass.newBuilder().setObjectClassHandle(
+          ObjectClassHandles.convert(entry.getKey())).addAllAttributeHandles(
+          AttributeHandles.convert(entry.getValue())));
     }
 
-    out.writeInt(subscribedInteractionClasses.size());
-    for (InteractionClassHandle interactionClassHandle : subscribedInteractionClasses)
+    regionState.addAllSubscribedInteractionClasses(
+      InteractionClassHandles.convertToProto(subscribedInteractionClasses));
+
+    regionState.setAssociatedObjectCount(associatedObjects.size());
+
+    out.writeMessageNoTag(regionState.build());
+
+    for (Map.Entry<ObjectInstanceHandle, AttributeHandleSet> entry : associatedObjects.entrySet())
     {
-      ((IEEE1516eInteractionClassHandle) interactionClassHandle).writeTo(out);
+      FederateRegionState.AssociatedObject.Builder associatedObject = FederateRegionState.AssociatedObject.newBuilder();
+
+      associatedObject.setObjectInstanceHandle(ObjectInstanceHandles.convert(entry.getKey()));
+      associatedObject.addAllAttributeHandles(AttributeHandles.convert(entry.getValue()));
+
+      out.writeMessageNoTag(associatedObject.build());
     }
   }
 

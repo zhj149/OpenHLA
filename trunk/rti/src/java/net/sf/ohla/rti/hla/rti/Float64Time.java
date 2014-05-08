@@ -236,6 +236,6 @@ public class Float64Time
 
   private int compareTo(Float64Time rhs)
   {
-    return (int) Math.round(time - rhs.time);
+    return Double.compare(time, rhs.time);
   }
 }

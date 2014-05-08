@@ -16,65 +16,63 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.FederateHandles;
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
 import net.sf.ohla.rti.messages.AbstractMessage;
-import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateAmbassador;
-import hla.rti1516e.FederateHandle;
 import hla.rti1516e.FederateHandleSaveStatusPair;
 import hla.rti1516e.SaveStatus;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class FederationSaveStatusResponse
-  extends AbstractMessage
+  extends
+  AbstractMessage<FederateMessageProtos.FederationSaveStatusResponse, FederateMessageProtos.FederationSaveStatusResponse.Builder>
   implements Callback
 {
-  private final FederateHandleSaveStatusPair[] response;
-
-  public FederationSaveStatusResponse(FederateHandleSaveStatusPair[] response)
+  public FederationSaveStatusResponse(FederateHandleSaveStatusPair[] federationSaveStatus)
   {
-    super(MessageType.FEDERATION_SAVE_STATUS_RESPONSE);
+    super(FederateMessageProtos.FederationSaveStatusResponse.newBuilder());
 
-    this.response = response;
-
-    Protocol.encodeVarInt(buffer, response.length);
-    for (FederateHandleSaveStatusPair status : response)
+    for (FederateHandleSaveStatusPair federateSaveStatus : federationSaveStatus)
     {
-      IEEE1516eFederateHandle.encode(buffer, status.handle);
-      Protocol.encodeEnum(buffer, status.status);
-    }
-
-    encodingFinished();
-  }
-
-  public FederationSaveStatusResponse(ChannelBuffer buffer)
-  {
-    super(buffer);
-
-    int length = Protocol.decodeVarInt(buffer);
-    response = new FederateHandleSaveStatusPair[length];
-    for (int i = 0; i < length; i++)
-    {
-      FederateHandle federateHandle = IEEE1516eFederateHandle.decode(buffer);
-      SaveStatus saveStatus = Protocol.decodeEnum(buffer, SaveStatus.values());
-
-      response[i] = new FederateHandleSaveStatusPair(federateHandle, saveStatus);
+      builder.addFederationSaveStatus(
+        FederateMessageProtos.FederateSaveStatus.newBuilder().setFederateHandle(
+          FederateHandles.convert(federateSaveStatus.handle)).setSaveStatus(
+          FederateMessageProtos.SaveStatus.values()[federateSaveStatus.status.ordinal()]));
     }
   }
 
-  public MessageType getType()
+  public FederationSaveStatusResponse(CodedInputStream in)
+    throws IOException
   {
-    return MessageType.FEDERATION_SAVE_STATUS_RESPONSE;
+    super(FederateMessageProtos.FederationSaveStatusResponse.newBuilder(), in);
   }
 
+  @Override
+  public MessageProtos.MessageType getMessageType()
+  {
+    return MessageProtos.MessageType.FEDERATION_SAVE_STATUS_RESPONSE;
+  }
+
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.federationSaveStatusResponse(response);
+    FederateHandleSaveStatusPair[] federationSaveStatus =
+      new FederateHandleSaveStatusPair[builder.getFederationSaveStatusCount()];
+    int i = 0;
+    for (FederateMessageProtos.FederateSaveStatus federateSaveStatus : builder.getFederationSaveStatusList())
+    {
+      federationSaveStatus[i++] = new FederateHandleSaveStatusPair(
+        FederateHandles.convert(federateSaveStatus.getFederateHandle()),
+        SaveStatus.values()[federateSaveStatus.getSaveStatus().ordinal()]);
+    }
+    federateAmbassador.federationSaveStatusResponse(federationSaveStatus);
   }
 }

@@ -16,32 +16,38 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import com.google.protobuf.CodedInputStream;
 
 public class FederateRestoreComplete
-  extends AbstractMessage
-  implements FederationExecutionMessage
+  extends
+  AbstractMessage<FederationExecutionMessageProtos.FederateRestoreComplete, FederationExecutionMessageProtos.FederateRestoreComplete.Builder>
+implements FederationExecutionMessage
 {
   public FederateRestoreComplete()
   {
-    super(MessageType.FEDERATE_RESTORE_COMPLETE);
-
-    encodingFinished();
+    super(FederationExecutionMessageProtos.FederateRestoreComplete.newBuilder());
   }
 
-  public FederateRestoreComplete(ChannelBuffer buffer)
+  public FederateRestoreComplete(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.FederateRestoreComplete.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.FEDERATE_RESTORE_COMPLETE;
+    return MessageProtos.MessageType.FEDERATE_RESTORE_COMPLETE;
   }
 
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.federateRestoreComplete(federateProxy, this);

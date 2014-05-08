@@ -16,36 +16,55 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.ObjectInstanceHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.ObjectInstanceHandle;
 
 public class UnconditionalAttributeOwnershipDivestiture
-  extends ObjectInstanceAttributesMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.UnconditionalAttributeOwnershipDivestiture, FederationExecutionMessageProtos.UnconditionalAttributeOwnershipDivestiture.Builder>
   implements FederationExecutionMessage
 {
   public UnconditionalAttributeOwnershipDivestiture(
     ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
   {
-    super(MessageType.UNCONDITIONAL_ATTRIBUTE_OWNERSHIP_DIVESTITURE, objectInstanceHandle, attributeHandles);
+    super(FederationExecutionMessageProtos.UnconditionalAttributeOwnershipDivestiture.newBuilder());
 
-    encodingFinished();
+    builder.setObjectInstanceHandle(ObjectInstanceHandles.convert(objectInstanceHandle));
+    builder.addAllAttributeHandles(AttributeHandles.convert(attributeHandles));
   }
 
-  public UnconditionalAttributeOwnershipDivestiture(ChannelBuffer buffer)
+  public UnconditionalAttributeOwnershipDivestiture(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.UnconditionalAttributeOwnershipDivestiture.newBuilder(), in);
   }
 
-  public MessageType getType()
+  public ObjectInstanceHandle getObjectInstanceHandle()
   {
-    return MessageType.UNCONDITIONAL_ATTRIBUTE_OWNERSHIP_DIVESTITURE;
+    return ObjectInstanceHandles.convert(builder.getObjectInstanceHandle());
   }
 
+  public AttributeHandleSet getAttributeHandles()
+  {
+    return AttributeHandles.convertAttributeHandles(builder.getAttributeHandlesList());
+  }
+
+  @Override
+  public MessageProtos.MessageType getMessageType()
+  {
+    return MessageProtos.MessageType.UNCONDITIONAL_ATTRIBUTE_OWNERSHIP_DIVESTITURE;
+  }
+
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.unconditionalAttributeOwnershipDivestiture(federateProxy, this);

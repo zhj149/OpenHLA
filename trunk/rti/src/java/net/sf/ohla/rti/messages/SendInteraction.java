@@ -16,16 +16,22 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.InteractionClassHandles;
+import net.sf.ohla.rti.util.LogicalTimes;
+import net.sf.ohla.rti.util.MessageRetractionHandles;
+import net.sf.ohla.rti.util.OrderTypes;
+import net.sf.ohla.rti.util.ParameterValues;
+import net.sf.ohla.rti.util.RegionHandles;
+import net.sf.ohla.rti.util.TransportationTypeHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eMessageRetractionHandle;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandleValueMap;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandleSet;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandle;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.ByteString;
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.InteractionClassHandle;
 import hla.rti1516e.LogicalTime;
 import hla.rti1516e.LogicalTimeFactory;
@@ -36,94 +42,54 @@ import hla.rti1516e.RegionHandleSet;
 import hla.rti1516e.TransportationTypeHandle;
 
 public class SendInteraction
-  extends InteractionClassMessage
-  implements FederationExecutionMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.SendInteraction, FederationExecutionMessageProtos.SendInteraction.Builder>
+  implements FederationExecutionMessage, TimeStampOrderedMessage
 {
-  private final ParameterHandleValueMap parameterValues;
-  private final byte[] tag;
-  private final OrderType sentOrderType;
-  private final TransportationTypeHandle transportationTypeHandle;
-  private final LogicalTime time;
-  private final MessageRetractionHandle messageRetractionHandle;
-  private final RegionHandleSet sentRegionHandles;
+  private volatile OrderType sentOrderType;
+  private volatile LogicalTime time;
+  private volatile MessageRetractionHandle messageRetractionHandle;
+  private volatile RegionHandleSet sentRegionHandles;
 
-  public SendInteraction(
-    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues, byte[] tag,
-    TransportationTypeHandle transportationTypeHandle)
+  public SendInteraction(FederationExecutionMessageProtos.SendInteraction messageLite)
   {
-    super(MessageType.SEND_INTERACTION, interactionClassHandle);
-
-    this.parameterValues = parameterValues;
-    this.tag = tag;
-    this.transportationTypeHandle = transportationTypeHandle;
-
-    sentOrderType = OrderType.RECEIVE;
-    time = null;
-    messageRetractionHandle = null;
-    sentRegionHandles = null;
-
-    IEEE1516eParameterHandleValueMap.encode(buffer, parameterValues);
-    Protocol.encodeBytes(buffer, tag);
-    Protocol.encodeEnum(buffer, sentOrderType);
-    IEEE1516eTransportationTypeHandle.encode(buffer, transportationTypeHandle);
-    Protocol.encodeNullTime(buffer);
-    IEEE1516eMessageRetractionHandle.encode(buffer, messageRetractionHandle);
-    IEEE1516eRegionHandleSet.encode(buffer, sentRegionHandles);
-
-    encodingFinished();
+    super(messageLite);
   }
 
   public SendInteraction(
-    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues, byte[] tag,
-    OrderType sentOrderType, TransportationTypeHandle transportationTypeHandle, LogicalTime time,
+    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues,
+    TransportationTypeHandle transportationTypeHandle, byte[] tag)
+  {
+    super(FederationExecutionMessageProtos.SendInteraction.newBuilder());
+
+    builder.setInteractionClassHandle(InteractionClassHandles.convert(interactionClassHandle));
+    builder.addAllParameterValues(ParameterValues.convert(parameterValues));
+    builder.setTransportationTypeHandle(TransportationTypeHandles.convert(transportationTypeHandle));
+
+    if (tag != null)
+    {
+      builder.setTag(ByteString.copyFrom(tag));
+    }
+  }
+
+  public SendInteraction(
+    InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues,
+    TransportationTypeHandle transportationTypeHandle, byte[] tag, OrderType sentOrderType, LogicalTime time,
     MessageRetractionHandle messageRetractionHandle)
   {
-    super(MessageType.SEND_INTERACTION, interactionClassHandle);
+    this(interactionClassHandle, parameterValues, transportationTypeHandle, tag);
 
-    this.parameterValues = parameterValues;
-    this.tag = tag;
-    this.sentOrderType = sentOrderType;
-    this.transportationTypeHandle = transportationTypeHandle;
-    this.time = time;
-    this.messageRetractionHandle = messageRetractionHandle;
-
-    sentRegionHandles = null;
-
-    IEEE1516eParameterHandleValueMap.encode(buffer, parameterValues);
-    Protocol.encodeBytes(buffer, tag);
-    Protocol.encodeEnum(buffer, sentOrderType);
-    IEEE1516eTransportationTypeHandle.encode(buffer, transportationTypeHandle);
-    Protocol.encodeTime(buffer, time);
-    IEEE1516eMessageRetractionHandle.encode(buffer, messageRetractionHandle);
-    IEEE1516eRegionHandleSet.encode(buffer, sentRegionHandles);
-
-    encodingFinished();
+    builder.setSentOrderType(OrderTypes.convert(sentOrderType));
+    builder.setTime(LogicalTimes.convert(time));
+    builder.setMessageRetractionHandle(MessageRetractionHandles.convert(messageRetractionHandle));
   }
 
   public SendInteraction(
     InteractionClassHandle interactionClassHandle, ParameterHandleValueMap parameterValues, byte[] tag,
     TransportationTypeHandle transportationTypeHandle, RegionHandleSet sentRegionHandles)
   {
-    super(MessageType.SEND_INTERACTION, interactionClassHandle);
+    this(interactionClassHandle, parameterValues, transportationTypeHandle, tag);
 
-    this.parameterValues = parameterValues;
-    this.tag = tag;
-    this.transportationTypeHandle = transportationTypeHandle;
-    this.sentRegionHandles = sentRegionHandles;
-
-    sentOrderType = OrderType.RECEIVE;
-    time = null;
-    messageRetractionHandle = null;
-
-    IEEE1516eParameterHandleValueMap.encode(buffer, parameterValues);
-    Protocol.encodeBytes(buffer, tag);
-    Protocol.encodeEnum(buffer, sentOrderType);
-    IEEE1516eTransportationTypeHandle.encode(buffer, transportationTypeHandle);
-    Protocol.encodeNullTime(buffer);
-    IEEE1516eMessageRetractionHandle.encode(buffer, messageRetractionHandle);
-    IEEE1516eRegionHandleSet.encode(buffer, sentRegionHandles);
-
-    encodingFinished();
+    builder.addAllSentRegionHandles(RegionHandles.convertToProto(sentRegionHandles));
   }
 
   public SendInteraction(
@@ -131,80 +97,71 @@ public class SendInteraction
     OrderType sentOrderType, TransportationTypeHandle transportationTypeHandle, LogicalTime time,
     MessageRetractionHandle messageRetractionHandle, RegionHandleSet sentRegionHandles)
   {
-    super(MessageType.SEND_INTERACTION, interactionClassHandle);
+    this(interactionClassHandle, parameterValues, transportationTypeHandle, tag, sentOrderType, time,
+         messageRetractionHandle);
 
-    this.parameterValues = parameterValues;
-    this.tag = tag;
-    this.sentOrderType = sentOrderType;
-    this.transportationTypeHandle = transportationTypeHandle;
-    this.time = time;
-    this.messageRetractionHandle = messageRetractionHandle;
-    this.sentRegionHandles = sentRegionHandles;
-
-    IEEE1516eParameterHandleValueMap.encode(buffer, parameterValues);
-    Protocol.encodeBytes(buffer, tag);
-    Protocol.encodeEnum(buffer, sentOrderType);
-    IEEE1516eTransportationTypeHandle.encode(buffer, transportationTypeHandle);
-    Protocol.encodeTime(buffer, time);
-    IEEE1516eMessageRetractionHandle.encode(buffer, messageRetractionHandle);
-    IEEE1516eRegionHandleSet.encode(buffer, sentRegionHandles);
-
-    encodingFinished();
+    builder.addAllSentRegionHandles(RegionHandles.convertToProto(sentRegionHandles));
   }
 
-  public SendInteraction(ChannelBuffer buffer, LogicalTimeFactory timeFactory)
+  public SendInteraction(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.SendInteraction.newBuilder(), in);
+  }
 
-    parameterValues = IEEE1516eParameterHandleValueMap.decode(buffer);
-    tag = Protocol.decodeBytes(buffer);
-    sentOrderType = Protocol.decodeEnum(buffer, OrderType.values());
-    transportationTypeHandle = IEEE1516eTransportationTypeHandle.decode(buffer);
-    time = Protocol.decodeTime(buffer, timeFactory);
-    messageRetractionHandle = IEEE1516eMessageRetractionHandle.decode(buffer);
-    sentRegionHandles = IEEE1516eRegionHandleSet.decode(buffer);
+  public InteractionClassHandle getInteractionClassHandle()
+  {
+    return InteractionClassHandles.convert(builder.getInteractionClassHandle());
   }
 
   public ParameterHandleValueMap getParameterValues()
   {
-    return parameterValues;
-  }
-
-  public byte[] getTag()
-  {
-    return tag;
+    return ParameterValues.convert(builder.getParameterValuesList());
   }
 
   public OrderType getSentOrderType()
   {
+    if (sentOrderType == null)
+    {
+      sentOrderType = OrderType.values()[builder.getSentOrderType().ordinal()];
+    }
     return sentOrderType;
   }
 
-  public TransportationTypeHandle getTransportationTypeHandle()
+  public LogicalTime getTime(LogicalTimeFactory logicalTimeFactory)
   {
-    return transportationTypeHandle;
-  }
-
-  public LogicalTime getTime()
-  {
+    if (time == null && builder.hasTime())
+    {
+      time = LogicalTimes.convert(logicalTimeFactory, builder.getTime());
+    }
     return time;
   }
 
   public MessageRetractionHandle getMessageRetractionHandle()
   {
+    if (messageRetractionHandle == null && builder.hasMessageRetractionHandle())
+    {
+      messageRetractionHandle = MessageRetractionHandles.convert(builder.getMessageRetractionHandle());
+    }
     return messageRetractionHandle;
   }
 
   public RegionHandleSet getSentRegionHandles()
   {
+    if (sentRegionHandles == null && builder.getSentRegionHandlesCount() > 0)
+    {
+      sentRegionHandles = RegionHandles.convertFromProto(builder.getSentRegionHandlesList());
+    }
     return sentRegionHandles;
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.SEND_INTERACTION;
+    return MessageProtos.MessageType.SEND_INTERACTION;
   }
 
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.sendInteraction(federateProxy, this);

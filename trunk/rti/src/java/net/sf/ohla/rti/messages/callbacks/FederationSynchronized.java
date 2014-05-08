@@ -16,57 +16,57 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.FederateHandles;
 import net.sf.ohla.rti.federate.Callback;
 import net.sf.ohla.rti.federate.Federate;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandleSet;
+import net.sf.ohla.rti.messages.AbstractMessage;
 import net.sf.ohla.rti.messages.FederateMessage;
-import net.sf.ohla.rti.messages.MessageType;
-import net.sf.ohla.rti.messages.StringMessage;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.FederateHandleSet;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class FederationSynchronized
-  extends StringMessage
+  extends
+  AbstractMessage<FederateMessageProtos.FederationSynchronized, FederateMessageProtos.FederationSynchronized.Builder>
   implements Callback, FederateMessage
 {
-  private final FederateHandleSet failedToSynchronize;
-
   private Federate federate;
 
   public FederationSynchronized(String label, FederateHandleSet failedToSynchronize)
   {
-    super(MessageType.FEDERATION_SYNCHRONIZED, label);
+    super(FederateMessageProtos.FederationSynchronized.newBuilder());
 
-    this.failedToSynchronize = failedToSynchronize;
-
-    IEEE1516eFederateHandleSet.encode(buffer, failedToSynchronize);
-
-    encodingFinished();
+    builder.setLabel(label);
+    builder.addAllFederateHandlesThatFailedToSynchronize(FederateHandles.convertToProto(failedToSynchronize));
   }
 
-  public FederationSynchronized(ChannelBuffer buffer)
+  public FederationSynchronized(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    FederateHandleSet failedToSynchronize = IEEE1516eFederateHandleSet.decode(buffer);
-    this.failedToSynchronize = failedToSynchronize == null ? IEEE1516eFederateHandleSet.EMPTY : failedToSynchronize;
+    super(FederateMessageProtos.FederationSynchronized.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.FEDERATION_SYNCHRONIZED;
+    return MessageProtos.MessageType.FEDERATION_SYNCHRONIZED;
   }
 
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federate.federationSynchronized(s, failedToSynchronize);
+    federate.federationSynchronized(
+      builder.getLabel(), FederateHandles.convertFromProto(builder.getFederateHandlesThatFailedToSynchronizeList()));
   }
 
+  @Override
   public void execute(Federate federate)
   {
     this.federate = federate;

@@ -16,32 +16,37 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import com.google.protobuf.CodedInputStream;
 
 public class DisableTimeRegulation
-  extends AbstractMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.DisableTimeRegulation, FederationExecutionMessageProtos.DisableTimeRegulation.Builder>
   implements FederationExecutionMessage
 {
   public DisableTimeRegulation()
   {
-    super(MessageType.DISABLE_TIME_REGULATION);
-
-    encodingFinished();
+    super(FederationExecutionMessageProtos.DisableTimeRegulation.newBuilder());
   }
 
-  public DisableTimeRegulation(ChannelBuffer buffer)
+  public DisableTimeRegulation(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.DisableTimeRegulation.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.DISABLE_TIME_REGULATION;
+    return MessageProtos.MessageType.DISABLE_TIME_REGULATION;
   }
 
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.disableTimeRegulation(federateProxy, this);
