@@ -80,9 +80,9 @@ public abstract class BaseTestNG<FA extends FederateAmbassador>
     this.rtiAmbassadorCount = rtiAmbassadorCount;
     this.federationExecutionName = federationExecutionName;
 
-    rtiAmbassadors = new ArrayList<RTIambassador>(rtiAmbassadorCount);
-    federateHandles = new ArrayList<FederateHandle>(rtiAmbassadorCount);
-    federateAmbassadors = new ArrayList<FA>(rtiAmbassadorCount);
+    rtiAmbassadors = new ArrayList<>(rtiAmbassadorCount);
+    federateHandles = new ArrayList<>(rtiAmbassadorCount);
+    federateAmbassadors = new ArrayList<>(rtiAmbassadorCount);
   }
 
   @BeforeClass

@@ -25,13 +25,11 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import net.sf.ohla.rti.Protocol;
+import net.sf.ohla.rti.util.ObjectClassHandles;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
-
-import org.jboss.netty.buffer.ChannelBuffer;
+import net.sf.ohla.rti.proto.OHLAProtos;
 
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.DimensionHandleSet;
@@ -52,13 +50,14 @@ public class ObjectClass
 
   private final ObjectClass superObjectClass;
 
-  private final LinkedHashMap<ObjectClassHandle, ObjectClass> subObjectClasses = new LinkedHashMap<ObjectClassHandle, ObjectClass>();
-  private final LinkedHashMap<String, ObjectClass> subObjectClassesByName = new LinkedHashMap<String, ObjectClass>();
+  private final LinkedHashMap<ObjectClassHandle, ObjectClass> subObjectClasses = new LinkedHashMap<>();
+  private final LinkedHashMap<String, ObjectClass> subObjectClassesByName = new LinkedHashMap<>();
 
-  private final LinkedHashSet<Attribute> declaredAttributes = new LinkedHashSet<Attribute>();
+  private final LinkedHashSet<Attribute> declaredAttributes = new LinkedHashSet<>();
+  private final LinkedHashMap<String, Attribute> declaredAttributesByName = new LinkedHashMap<>();
 
-  private final LinkedHashMap<AttributeHandle, Attribute> attributes = new LinkedHashMap<AttributeHandle, Attribute>();
-  private final LinkedHashMap<String, Attribute> attributesByName = new LinkedHashMap<String, Attribute>();
+  private final LinkedHashMap<AttributeHandle, Attribute> attributes = new LinkedHashMap<>();
+  private final LinkedHashMap<String, Attribute> attributesByName = new LinkedHashMap<>();
 
   public ObjectClass(FDD fdd, ObjectClassHandle objectClassHandle, String objectClassName, ObjectClass superObjectClass)
   {
@@ -79,15 +78,16 @@ public class ObjectClass
     }
   }
 
-  public ObjectClass(ChannelBuffer buffer, FDD fdd)
+  public ObjectClass(FDD fdd, OHLAProtos.FDD.ObjectClass objectClass)
   {
     this.fdd = fdd;
-    objectClassHandle = IEEE1516eObjectClassHandle.decode(buffer);
-    objectClassName = Protocol.decodeString(buffer);
 
-    if (Protocol.decodeBoolean(buffer))
+    objectClassHandle = ObjectClassHandles.convert(objectClass.getObjectClassHandle());
+    objectClassName = objectClass.getObjectClassName();
+
+    if (objectClass.hasSuperObjectClassHandle())
     {
-      superObjectClass = fdd.getObjectClassSafely(IEEE1516eObjectClassHandle.decode(buffer));
+      superObjectClass = fdd.getObjectClassSafely(ObjectClassHandles.convert(objectClass.getSuperObjectClassHandle()));
 
       // get a reference to all the super object classes attributes
       //
@@ -102,12 +102,12 @@ public class ObjectClass
       superObjectClass = null;
     }
 
-    for (int declaredAttributeCount = Protocol.decodeVarInt(buffer); declaredAttributeCount > 0;
-         declaredAttributeCount--)
+    for (OHLAProtos.FDD.ObjectClass.Attribute attributeProto : objectClass.getAttributesList())
     {
-      Attribute attribute = Attribute.decode(buffer, this);
+      Attribute attribute = new Attribute(this, attributeProto);
 
       declaredAttributes.add(attribute);
+      declaredAttributesByName.put(attribute.getAttributeName(), attribute);
 
       attributes.put(attribute.getAttributeHandle(), attribute);
       attributesByName.put(attribute.getAttributeName(), attribute);
@@ -146,8 +146,8 @@ public class ObjectClass
 
   public boolean isAssignableFrom(ObjectClass objectClass)
   {
-    return equals(objectClass) || (objectClass.hasSuperObjectClass() &&
-                                   isAssignableFrom(objectClass.getSuperObjectClass()));
+    return equals(objectClass) ||
+           (objectClass.hasSuperObjectClass() && isAssignableFrom(objectClass.getSuperObjectClass()));
   }
 
   public Attribute addAttribute(
@@ -167,6 +167,7 @@ public class ObjectClass
       this, attributeHandle, attributeName, dimensionHandles, transportationTypeHandle, orderType);
 
     declaredAttributes.add(attribute);
+    declaredAttributesByName.put(attribute.getAttributeName(), attribute);
 
     attributes.put(attributeHandle, attribute);
     attributesByName.put(attributeName, attribute);
@@ -186,6 +187,7 @@ public class ObjectClass
       this, attributeHandle, attributeName, dimensionHandles, transportationTypeHandle, orderType);
 
     declaredAttributes.add(attribute);
+    declaredAttributesByName.put(attribute.getAttributeName(), attribute);
 
     attributes.put(attributeHandle, attribute);
     attributesByName.put(attributeName, attribute);
@@ -251,9 +253,19 @@ public class ObjectClass
     return attribute;
   }
 
+  public Collection<Attribute> getAttributesSafely(Collection<AttributeHandle> attributeHandles)
+  {
+    Collection<Attribute> attributes = new LinkedList<>();
+    for (AttributeHandle attributeHandle : attributeHandles)
+    {
+      attributes.add(getAttributeSafely(attributeHandle));
+    }
+    return attributes;
+  }
+
   public Collection<Attribute> getAttributesSafely(Collection<AttributeHandle>... attributeHandles)
   {
-    Collection<Attribute> attributes = new LinkedList<Attribute>();
+    Collection<Attribute> attributes = new LinkedList<>();
     for (Collection<AttributeHandle> c : attributeHandles)
     {
       for (AttributeHandle attributeHandle : c)
@@ -272,7 +284,7 @@ public class ObjectClass
 
   public SortedSet<String> getAttributeNamesSafely(Collection<AttributeHandle>... attributeHandles)
   {
-    SortedSet<String> attributeNames = new TreeSet<String>();
+    SortedSet<String> attributeNames = new TreeSet<>();
     for (Collection<AttributeHandle> c : attributeHandles)
     {
       for (AttributeHandle attributeHandle : c)
@@ -307,11 +319,23 @@ public class ObjectClass
   public void merge(ObjectClass rhsObjectClass, FDD fdd)
     throws InconsistentFDD
   {
-    if (rhsObjectClass.declaredAttributes.size() > 0 && !declaredAttributes.equals(rhsObjectClass.declaredAttributes))
+    for (Attribute rhsDeclaredAttribute : rhsObjectClass.declaredAttributes)
     {
-      throw new InconsistentFDD(I18n.getMessage(
-        ExceptionMessages.INCONSISTENT_FDD_ATTRIBUTE_MISMATCH, this, declaredAttributes,
-        rhsObjectClass.declaredAttributes));
+      Attribute lhsDeclaredAttribute = declaredAttributesByName.get(rhsDeclaredAttribute.getAttributeName());
+      if (lhsDeclaredAttribute == null)
+      {
+        rhsDeclaredAttribute.copyTo(fdd, this);
+      }
+      else if (attributesByName.containsKey(rhsDeclaredAttribute.getAttributeName()))
+      {
+        throw new InconsistentFDD(I18n.getMessage(
+          ExceptionMessages.INCONSISTENT_FDD_ATTRIBUTE_DECLARED_AT_DIFFERENT_LEVELS, lhsDeclaredAttribute, this,
+          attributesByName.get(rhsDeclaredAttribute.getAttributeName())));
+      }
+      else
+      {
+        lhsDeclaredAttribute.checkForInconsistentFDD(rhsDeclaredAttribute);
+      }
     }
 
     for (ObjectClass rhsSubObjectClass : rhsObjectClass.subObjectClasses.values())
@@ -326,6 +350,25 @@ public class ObjectClass
         lhsSubObjectClass.merge(rhsSubObjectClass, fdd);
       }
     }
+  }
+
+  public OHLAProtos.FDD.ObjectClass.Builder toProto()
+  {
+    OHLAProtos.FDD.ObjectClass.Builder objectClass = OHLAProtos.FDD.ObjectClass.newBuilder().setObjectClassHandle(
+      ObjectClassHandles.convert(objectClassHandle)).setObjectClassName(
+      objectClassName);
+
+    if (superObjectClass != null)
+    {
+      objectClass.setSuperObjectClassHandle(ObjectClassHandles.convert(superObjectClass.objectClassHandle));
+    }
+
+    for (Attribute attribute : declaredAttributes)
+    {
+      objectClass.addAttributes(attribute.toProto());
+    }
+
+    return objectClass;
   }
 
   @Override
@@ -353,32 +396,5 @@ public class ObjectClass
     {
       subObjectClass.copyTo(fdd, objectClass);
     }
-  }
-
-  public static void encode(ChannelBuffer buffer, ObjectClass objectClass)
-  {
-    IEEE1516eObjectClassHandle.encode(buffer, objectClass.objectClassHandle);
-    Protocol.encodeString(buffer, objectClass.objectClassName);
-
-    if (objectClass.superObjectClass == null)
-    {
-      Protocol.encodeBoolean(buffer, false);
-    }
-    else
-    {
-      Protocol.encodeBoolean(buffer, true);
-      IEEE1516eObjectClassHandle.encode(buffer, objectClass.superObjectClass.objectClassHandle);
-    }
-
-    Protocol.encodeVarInt(buffer, objectClass.declaredAttributes.size());
-    for (Attribute attribute : objectClass.declaredAttributes)
-    {
-      Attribute.encode(buffer, attribute);
-    }
-  }
-
-  public static ObjectClass decode(ChannelBuffer buffer, FDD fdd)
-  {
-    return new ObjectClass(buffer, fdd);
   }
 }

@@ -110,4 +110,5 @@ public interface TestConstants
   static final String HLA_BEST_EFFORT = "HLAbestEffort";
 
   static final String SYNCHRONIZATION_POINT_SETUP_COMPLETE = "SetupComplete";
+  static final String SYNCHRONIZATION_POINT_SETUP_COMPLETE2 = "SetupComplete2";
 }

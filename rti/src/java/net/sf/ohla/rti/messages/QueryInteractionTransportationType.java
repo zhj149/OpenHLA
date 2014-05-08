@@ -16,48 +16,51 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.FederateHandles;
+import net.sf.ohla.rti.util.InteractionClassHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.InteractionClassHandle;
 
 public class QueryInteractionTransportationType
-  extends InteractionClassMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.QueryInteractionTransportationType, FederationExecutionMessageProtos.QueryInteractionTransportationType.Builder>
   implements FederationExecutionMessage
 {
-  private final FederateHandle federateHandle;
-
   public QueryInteractionTransportationType(
     InteractionClassHandle interactionClassHandle, FederateHandle federateHandle)
   {
-    super(MessageType.QUERY_INTERACTION_TRANSPORTATION_TYPE, interactionClassHandle);
+    super(FederationExecutionMessageProtos.QueryInteractionTransportationType.newBuilder());
 
-    this.federateHandle = federateHandle;
-
-    IEEE1516eFederateHandle.encode(buffer, federateHandle);
-
-    encodingFinished();
+    builder.setInteractionClassHandle(InteractionClassHandles.convert(interactionClassHandle));
+    builder.setFederateHandle(FederateHandles.convert(federateHandle));
   }
 
-  public QueryInteractionTransportationType(ChannelBuffer buffer)
+  public QueryInteractionTransportationType(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.QueryInteractionTransportationType.newBuilder(), in);
+  }
 
-    federateHandle = IEEE1516eFederateHandle.decode(buffer);
+  public InteractionClassHandle getInteractionClassHandle()
+  {
+    return InteractionClassHandles.convert(builder.getInteractionClassHandle());
   }
 
   public FederateHandle getFederateHandle()
   {
-    return federateHandle;
+    return FederateHandles.convert(builder.getFederateHandle());
   }
 
-  public MessageType getType()
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.QUERY_INTERACTION_TRANSPORTATION_TYPE;
+    return MessageProtos.MessageType.QUERY_INTERACTION_TRANSPORTATION_TYPE;
   }
 
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)

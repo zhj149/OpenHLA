@@ -16,51 +16,62 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.LogicalTimes;
 import net.sf.ohla.rti.federate.Callback;
 import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.AbstractMessage;
 import net.sf.ohla.rti.messages.FederateMessage;
-import net.sf.ohla.rti.messages.LogicalTimeMessage;
-import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.LogicalTime;
-import hla.rti1516e.LogicalTimeFactory;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class TimeAdvanceGrant
-  extends LogicalTimeMessage
-  implements Callback, FederateMessage
+  extends AbstractMessage<FederateMessageProtos.TimeAdvanceGrant, FederateMessageProtos.TimeAdvanceGrant.Builder>
+implements Callback, FederateMessage
 {
   private Federate federate;
+  private LogicalTime time;
 
   public TimeAdvanceGrant(LogicalTime time)
   {
-    super(MessageType.TIME_ADVANCE_GRANT, time);
+    super(FederateMessageProtos.TimeAdvanceGrant.newBuilder());
 
-    encodingFinished();
+    this.time = time;
+
+    builder.setTime(LogicalTimes.convert(time));
   }
 
-  public TimeAdvanceGrant(ChannelBuffer buffer, LogicalTimeFactory logicalTimeFactory)
+  public TimeAdvanceGrant(CodedInputStream in)
+    throws IOException
   {
-    super(buffer, logicalTimeFactory);
+    super(FederateMessageProtos.TimeAdvanceGrant.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.TIME_ADVANCE_GRANT;
+    return MessageProtos.MessageType.TIME_ADVANCE_GRANT;
   }
 
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
     federate.timeAdvanceGrant(time);
   }
 
+  @Override
   public void execute(Federate federate)
   {
     this.federate = federate;
+
+    time = LogicalTimes.convert(federate.getLogicalTimeFactory(), builder.getTime());
 
     federate.getCallbackManager().add(this, false);
   }

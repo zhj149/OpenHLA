@@ -16,54 +16,60 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.ObjectClassHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSet;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.ObjectClassHandle;
 
 public class UnsubscribeObjectClassAttributes
-  extends ObjectClassMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.UnsubscribeObjectClassAttributes, FederationExecutionMessageProtos.UnsubscribeObjectClassAttributes.Builder>
   implements FederationExecutionMessage
 {
-  private final AttributeHandleSet attributeHandles;
-
   public UnsubscribeObjectClassAttributes(ObjectClassHandle objectClassHandle)
   {
-    this(objectClassHandle, null);
+    super(FederationExecutionMessageProtos.UnsubscribeObjectClassAttributes.newBuilder());
+
+    builder.setObjectClassHandle(ObjectClassHandles.convert(objectClassHandle));
   }
 
   public UnsubscribeObjectClassAttributes(ObjectClassHandle objectClassHandle, AttributeHandleSet attributeHandles)
   {
-    super(MessageType.UNSUBSCRIBE_OBJECT_CLASS_ATTRIBUTES, objectClassHandle);
+    this(objectClassHandle);
 
-    this.attributeHandles = attributeHandles;
-
-    IEEE1516eAttributeHandleSet.encode(buffer, attributeHandles);
-
-    encodingFinished();
+    builder.addAllAttributeHandles(AttributeHandles.convert(attributeHandles));
   }
 
-  public UnsubscribeObjectClassAttributes(ChannelBuffer buffer)
+  public UnsubscribeObjectClassAttributes(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.UnsubscribeObjectClassAttributes.newBuilder(), in);
+  }
 
-    attributeHandles = IEEE1516eAttributeHandleSet.decode(buffer);
+  public ObjectClassHandle getObjectClassHandle()
+  {
+    return ObjectClassHandles.convert(builder.getObjectClassHandle());
   }
 
   public AttributeHandleSet getAttributeHandles()
   {
-    return attributeHandles;
+    return AttributeHandles.convertAttributeHandles(builder.getAttributeHandlesList());
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.UNSUBSCRIBE_OBJECT_CLASS_ATTRIBUTES;
+    return MessageProtos.MessageType.UNSUBSCRIBE_OBJECT_CLASS_ATTRIBUTES;
   }
 
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.unsubscribeObjectClassAttributes(federateProxy, this);

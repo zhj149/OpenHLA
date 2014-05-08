@@ -16,18 +16,15 @@
 
 package net.sf.ohla.rti.hla.rti;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import net.sf.ohla.rti.util.RegionHandles;
 import net.sf.ohla.rti.fdd.Dimension;
 import net.sf.ohla.rti.federate.FederateRegion;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandleSet;
+import net.sf.ohla.rti.proto.FederationExecutionSaveProtos.HLA13RTIAmbassadorState;
 
 import hla.rti.ArrayIndexOutOfBounds;
 import hla.rti.Region;
@@ -52,7 +49,7 @@ public class HLA13Region
     this.routingSpaceHandle = routingSpaceHandle;
     this.regionHandles = regionHandles;
 
-    extents = new ArrayList<Extent>(regionHandles.size());
+    extents = new ArrayList<>(regionHandles.size());
     for (RegionHandle regionHandle : regionHandles)
     {
       extents.add(new Extent(regionHandle, dimensions));
@@ -63,7 +60,7 @@ public class HLA13Region
   {
     token = region.token;
     routingSpaceHandle = region.routingSpaceHandle;
-    extents = new ArrayList<Extent>(region.extents.size());
+    extents = new ArrayList<>(region.extents.size());
     for (Extent extent : region.extents)
     {
       extents.add(new Extent(extent));
@@ -75,27 +72,26 @@ public class HLA13Region
     this.token = token;
     this.routingSpaceHandle = routingSpaceHandle;
 
-    extents = new ArrayList<Extent>(regions.size());
+    extents = new ArrayList<>(regions.size());
     for (FederateRegion region : regions)
     {
       extents.add(new Extent(region));
     }
   }
 
-  public HLA13Region(DataInput in)
-    throws IOException
+  public HLA13Region(HLA13RTIAmbassadorState.HLA13RegionState regionState)
   {
-    token = in.readInt();
-    routingSpaceHandle = in.readInt();
+    token = regionState.getToken();
+    routingSpaceHandle = regionState.getRoutingSpaceHandle();
 
-    int extentsCount = in.readInt();
-    extents = new ArrayList<Extent>(extentsCount);
-    for (; extentsCount > 0; extentsCount--)
+    regionHandles = new IEEE1516eRegionHandleSet(regionState.getExtentStatesCount());
+    extents = new ArrayList<>(regionState.getExtentStatesCount());
+    for (HLA13RTIAmbassadorState.HLA13RegionState.ExtentState extentState : regionState.getExtentStatesList())
     {
-      extents.add(new Extent(in));
+      Extent extent = new Extent(extentState);
+      extents.add(extent);
+      regionHandles.add(extent.getRegionHandle());
     }
-
-    regionHandles = new IEEE1516eRegionHandleSet(in);
   }
 
   public int getToken()
@@ -132,19 +128,19 @@ public class HLA13Region
     return extents.get(extentIndex);
   }
 
-  public void writeTo(DataOutput out)
-    throws IOException
+  public HLA13RTIAmbassadorState.HLA13RegionState.Builder saveState()
   {
-    out.writeInt(token);
-    out.writeInt(routingSpaceHandle);
+    HLA13RTIAmbassadorState.HLA13RegionState.Builder region = HLA13RTIAmbassadorState.HLA13RegionState.newBuilder();
 
-    out.writeInt(extents.size());
+    region.setToken(token);
+    region.setRoutingSpaceHandle(routingSpaceHandle);
+
     for (Extent extent : extents)
     {
-      extent.writeTo(out);
+      region.addExtentStates(extent.saveState());
     }
 
-    ((IEEE1516eRegionHandleSet) regionHandles).writeTo(out);
+    return region;
   }
 
   public int getSpaceHandle()
@@ -194,7 +190,7 @@ public class HLA13Region
     private Extent(Extent extent)
     {
       regionHandle = extent.regionHandle;
-      rangeBounds = new ArrayList<RangeBounds>(extent.rangeBounds.size());
+      rangeBounds = new ArrayList<>(extent.rangeBounds.size());
       for (RangeBounds rangeBounds : extent.rangeBounds)
       {
         this.rangeBounds.add(new RangeBounds(rangeBounds.lower, rangeBounds.upper));
@@ -205,7 +201,7 @@ public class HLA13Region
     {
       this.regionHandle = regionHandle;
 
-      rangeBounds = new ArrayList<RangeBounds>(dimensions.size());
+      rangeBounds = new ArrayList<>(dimensions.size());
 
       // initialize all dimensions to default range bounds
       //
@@ -219,25 +215,21 @@ public class HLA13Region
     {
       regionHandle = region.getRegionHandle();
 
-      rangeBounds = new ArrayList<RangeBounds>(region.getDimensionHandles().size());
+      rangeBounds = new ArrayList<>(region.getDimensionHandles().size());
       for (DimensionHandle dimensionHandle : region.getDimensionHandles())
       {
         rangeBounds.add(region.getRangeBoundsSafely(dimensionHandle));
       }
     }
 
-    private Extent(DataInput in)
-      throws IOException
+    private Extent(HLA13RTIAmbassadorState.HLA13RegionState.ExtentState extentState)
     {
-      regionHandle = IEEE1516eRegionHandle.decode(in);
+      regionHandle = RegionHandles.convert(extentState.getRegionHandle());
 
-      int rangeBoundsCount = in.readInt();
-      rangeBounds = new ArrayList<RangeBounds>(rangeBoundsCount);
-      for (; rangeBoundsCount > 0; rangeBoundsCount--)
+      rangeBounds = new ArrayList<>(extentState.getRangeBoundsCount());
+      for (HLA13RTIAmbassadorState.HLA13RegionState.ExtentState.RangeBounds rangeBounds : extentState.getRangeBoundsList())
       {
-        long lower = in.readLong();
-        long upper = in.readLong();
-        rangeBounds.add(new RangeBounds(lower, upper));
+        this.rangeBounds.add(new RangeBounds(rangeBounds.getLower(), rangeBounds.getUpper()));
       }
     }
 
@@ -286,17 +278,22 @@ public class HLA13Region
       rangeBounds.set(dimensionHandle, new RangeBounds(getRangeBounds(dimensionHandle).lower, upperBound));
     }
 
-    public void writeTo(DataOutput out)
-      throws IOException
+    public HLA13RTIAmbassadorState.HLA13RegionState.ExtentState.Builder saveState()
     {
-      ((IEEE1516eRegionHandle) regionHandle).writeTo(out);
+      HLA13RTIAmbassadorState.HLA13RegionState.ExtentState.Builder extent =
+        HLA13RTIAmbassadorState.HLA13RegionState.ExtentState.newBuilder();
 
-      out.writeInt(rangeBounds.size());
+      extent.setRegionHandle(RegionHandles.convert(regionHandle));
+
       for (RangeBounds rangeBounds : this.rangeBounds)
       {
-        out.writeLong(rangeBounds.lower);
-        out.writeLong(rangeBounds.upper);
+        extent.addRangeBounds(
+          HLA13RTIAmbassadorState.HLA13RegionState.ExtentState.RangeBounds.newBuilder().setLower(
+            rangeBounds.lower).setUpper(
+            rangeBounds.upper));
       }
+
+      return extent;
     }
   }
 }

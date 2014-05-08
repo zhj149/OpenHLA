@@ -16,41 +16,52 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.ObjectInstanceHandles;
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.messages.MessageType;
-import net.sf.ohla.rti.messages.ObjectInstanceAttributesMessage;
+import net.sf.ohla.rti.messages.AbstractMessage;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class AttributesOutOfScope
-  extends ObjectInstanceAttributesMessage
+  extends
+  AbstractMessage<FederateMessageProtos.AttributesOutOfScope, FederateMessageProtos.AttributesOutOfScope.Builder>
   implements Callback
 {
   public AttributesOutOfScope(ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
   {
-    super(MessageType.ATTRIBUTES_OUT_OF_SCOPE, objectInstanceHandle, attributeHandles);
+    super(FederateMessageProtos.AttributesOutOfScope.newBuilder());
 
-    encodingFinished();
+    builder.setObjectInstanceHandle(ObjectInstanceHandles.convert(objectInstanceHandle));
+    builder.addAllAttributeHandles(AttributeHandles.convert(attributeHandles));
   }
 
-  public AttributesOutOfScope(ChannelBuffer buffer)
+  public AttributesOutOfScope(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederateMessageProtos.AttributesOutOfScope.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.ATTRIBUTES_OUT_OF_SCOPE;
+    return MessageProtos.MessageType.ATTRIBUTES_OUT_OF_SCOPE;
   }
 
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.attributesOutOfScope(objectInstanceHandle, attributeHandles);
+    federateAmbassador.attributesOutOfScope(ObjectInstanceHandles.convert(builder.getObjectInstanceHandle()),
+                                            AttributeHandles.convertAttributeHandles(
+                                              builder.getAttributeHandlesList()));
   }
 }

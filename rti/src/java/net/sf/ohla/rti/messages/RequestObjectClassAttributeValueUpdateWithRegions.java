@@ -16,60 +16,67 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.ObjectClassHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeSetRegionSetPairList;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.ByteString;
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.AttributeSetRegionSetPairList;
 import hla.rti1516e.ObjectClassHandle;
 
 public class RequestObjectClassAttributeValueUpdateWithRegions
-  extends ObjectClassMessage
-  implements FederationExecutionMessage
+  extends
+  AbstractMessage<FederationExecutionMessageProtos.RequestObjectClassAttributeValueUpdateWithRegions, FederationExecutionMessageProtos.RequestObjectClassAttributeValueUpdateWithRegions.Builder>
+implements FederationExecutionMessage
 {
-  private final AttributeSetRegionSetPairList attributesAndRegions;
-  private final byte[] tag;
-
   public RequestObjectClassAttributeValueUpdateWithRegions(
     ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions, byte[] tag)
   {
-    super(MessageType.REQUEST_OBJECT_CLASS_ATTRIBUTE_VALUE_UPDATE_WITH_REGIONS, objectClassHandle);
+    super(FederationExecutionMessageProtos.RequestObjectClassAttributeValueUpdateWithRegions.newBuilder());
 
-    this.attributesAndRegions = attributesAndRegions;
-    this.tag = tag;
+    builder.setObjectClassHandle(ObjectClassHandles.convert(objectClassHandle));
+    builder.addAllAttributeRegionAssociations(AttributeHandles.convert(attributesAndRegions));
 
-    IEEE1516eAttributeSetRegionSetPairList.encode(buffer, attributesAndRegions);
-    Protocol.encodeBytes(buffer, tag);
-
-    encodingFinished();
+    if (tag != null)
+    {
+      builder.setTag(ByteString.copyFrom(tag));
+    }
   }
 
-  public RequestObjectClassAttributeValueUpdateWithRegions(ChannelBuffer buffer)
+  public RequestObjectClassAttributeValueUpdateWithRegions(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.RequestObjectClassAttributeValueUpdateWithRegions.newBuilder(), in);
+  }
 
-    attributesAndRegions = IEEE1516eAttributeSetRegionSetPairList.decode(buffer);
-    tag = Protocol.decodeBytes(buffer);
+  public ObjectClassHandle getObjectClassHandle()
+  {
+    return ObjectClassHandles.convert(builder.getObjectClassHandle());
   }
 
   public AttributeSetRegionSetPairList getAttributesAndRegions()
   {
-    return attributesAndRegions;
+    return AttributeHandles.convert(builder.getAttributeRegionAssociationsList());
   }
 
   public byte[] getTag()
   {
-    return tag;
+    return builder.hasTag() ? builder.getTag().toByteArray() : null;
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.REQUEST_OBJECT_CLASS_ATTRIBUTE_VALUE_UPDATE_WITH_REGIONS;
+    return MessageProtos.MessageType.REQUEST_OBJECT_CLASS_ATTRIBUTE_VALUE_UPDATE_WITH_REGIONS;
   }
 
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.requestObjectClassAttributeValueUpdateWithRegions(federateProxy, this);

@@ -16,32 +16,37 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import com.google.protobuf.CodedInputStream;
 
 public class EnableTimeConstrained
-  extends AbstractMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.EnableTimeConstrained, FederationExecutionMessageProtos.EnableTimeConstrained.Builder>
   implements FederationExecutionMessage
 {
   public EnableTimeConstrained()
   {
-    super(MessageType.ENABLE_TIME_CONSTRAINED);
-
-    encodingFinished();
+    super(FederationExecutionMessageProtos.EnableTimeConstrained.newBuilder());
   }
 
-  public EnableTimeConstrained(ChannelBuffer buffer)
+  public EnableTimeConstrained(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.EnableTimeConstrained.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.ENABLE_TIME_CONSTRAINED;
+    return MessageProtos.MessageType.ENABLE_TIME_CONSTRAINED;
   }
 
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.enableTimeConstrained(federateProxy, this);

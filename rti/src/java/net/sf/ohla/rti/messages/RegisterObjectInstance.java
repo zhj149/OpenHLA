@@ -16,107 +16,86 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.ObjectClassHandles;
+import net.sf.ohla.rti.util.ObjectInstanceHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSet;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeSetRegionSetPairList;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.AttributeSetRegionSetPairList;
 import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.ObjectInstanceHandle;
 
 public class RegisterObjectInstance
-  extends ObjectInstanceMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.RegisterObjectInstance, FederationExecutionMessageProtos.RegisterObjectInstance.Builder>
   implements FederationExecutionMessage
 {
-  private final ObjectClassHandle objectClassHandle;
-  private final String objectInstanceName;
-  private final AttributeHandleSet publishedAttributeHandles;
-  private final AttributeSetRegionSetPairList attributesAndRegions;
-
-  public RegisterObjectInstance(
-    ObjectInstanceHandle objectInstanceHandle, ObjectClassHandle objectClassHandle,
-    AttributeHandleSet publishedAttributeHandles)
-  {
-    this(objectInstanceHandle, objectClassHandle, null, publishedAttributeHandles, null);
-  }
-
   public RegisterObjectInstance(
     ObjectInstanceHandle objectInstanceHandle, ObjectClassHandle objectClassHandle, String objectInstanceName,
     AttributeHandleSet publishedAttributeHandles)
   {
-    this(objectInstanceHandle, objectClassHandle, objectInstanceName, publishedAttributeHandles, null);
+    super(FederationExecutionMessageProtos.RegisterObjectInstance.newBuilder());
+
+    builder.setObjectInstanceHandle(ObjectInstanceHandles.convert(objectInstanceHandle));
+    builder.setObjectClassHandle(ObjectClassHandles.convert(objectClassHandle));
+    builder.setObjectInstanceName(objectInstanceName);
+    builder.addAllPublishedAttributeHandles(AttributeHandles.convert(publishedAttributeHandles));
   }
 
   public RegisterObjectInstance(
     ObjectInstanceHandle objectInstanceHandle, ObjectClassHandle objectClassHandle,
-    AttributeHandleSet publishedAttributeHandles, AttributeSetRegionSetPairList attributesAndRegions)
+    String objectInstanceName, AttributeHandleSet publishedAttributeHandles,
+    AttributeSetRegionSetPairList attributesAndRegions)
   {
-    this(objectInstanceHandle, objectClassHandle, null, publishedAttributeHandles, attributesAndRegions);
+    this(objectInstanceHandle, objectClassHandle, objectInstanceName, publishedAttributeHandles);
+
+    builder.addAllAttributeRegionAssociations(AttributeHandles.convert(attributesAndRegions));
   }
 
-  public RegisterObjectInstance(
-    ObjectInstanceHandle objectInstanceHandle, ObjectClassHandle objectClassHandle, String objectInstanceName,
-    AttributeHandleSet publishedAttributeHandles, AttributeSetRegionSetPairList attributesAndRegions)
+  public RegisterObjectInstance(CodedInputStream in)
+    throws IOException
   {
-    super(MessageType.REGISTER_OBJECT_INSTANCE, objectInstanceHandle);
-
-    this.objectClassHandle = objectClassHandle;
-    this.objectInstanceName = objectInstanceName;
-    this.publishedAttributeHandles = publishedAttributeHandles;
-    this.attributesAndRegions = attributesAndRegions;
-
-    IEEE1516eObjectClassHandle.encode(buffer, objectClassHandle);
-    Protocol.encodeOptionalString(buffer, objectInstanceName);
-    IEEE1516eAttributeHandleSet.encode(buffer, publishedAttributeHandles);
-    IEEE1516eAttributeSetRegionSetPairList.encode(buffer, attributesAndRegions);
-
-    encodingFinished();
+    super(FederationExecutionMessageProtos.RegisterObjectInstance.newBuilder(), in);
   }
 
-  public RegisterObjectInstance(ChannelBuffer buffer)
+  public ObjectInstanceHandle getObjectInstanceHandle()
   {
-    super(buffer);
-
-    objectClassHandle = IEEE1516eObjectClassHandle.decode(buffer);
-
-    String s = Protocol.decodeOptionalString(buffer);
-    objectInstanceName = s == null ? ("HLA-" + objectInstanceHandle.toString()) : s;
-
-    publishedAttributeHandles = IEEE1516eAttributeHandleSet.decode(buffer);
-    attributesAndRegions = IEEE1516eAttributeSetRegionSetPairList.decode(buffer);
-  }
-
-  public String getObjectInstanceName()
-  {
-    return objectInstanceName;
+    return ObjectInstanceHandles.convert(builder.getObjectInstanceHandle());
   }
 
   public ObjectClassHandle getObjectClassHandle()
   {
-    return objectClassHandle;
+    return ObjectClassHandles.convert(builder.getObjectClassHandle());
   }
 
   public AttributeHandleSet getPublishedAttributeHandles()
   {
-    return publishedAttributeHandles;
+    return AttributeHandles.convertAttributeHandles(builder.getPublishedAttributeHandlesList());
   }
 
   public AttributeSetRegionSetPairList getAttributesAndRegions()
   {
-    return attributesAndRegions;
+    return AttributeHandles.convert(builder.getAttributeRegionAssociationsList());
   }
 
-  public MessageType getType()
+  public String getObjectInstanceName()
   {
-    return MessageType.REGISTER_OBJECT_INSTANCE;
+    return builder.getObjectInstanceName();
   }
 
+  @Override
+  public MessageProtos.MessageType getMessageType()
+  {
+    return MessageProtos.MessageType.REGISTER_OBJECT_INSTANCE;
+  }
+
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.registerObjectInstance(federateProxy, this);

@@ -16,59 +16,68 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.DimensionHandles;
+import net.sf.ohla.rti.util.RegionHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSet;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandle;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.DimensionHandleSet;
 import hla.rti1516e.RegionHandle;
 
 public class CreateRegion
-  extends AbstractMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.CreateRegion, FederationExecutionMessageProtos.CreateRegion.Builder>
   implements FederationExecutionMessage
 {
-  private final RegionHandle regionHandle;
-  private final DimensionHandleSet dimensionHandles;
+  private volatile RegionHandle regionHandle;
+  private volatile DimensionHandleSet dimensionHandles;
 
   public CreateRegion(RegionHandle regionHandle, DimensionHandleSet dimensionHandles)
   {
-    super(MessageType.CREATE_REGION);
+    super(FederationExecutionMessageProtos.CreateRegion.newBuilder());
 
     this.regionHandle = regionHandle;
     this.dimensionHandles = dimensionHandles;
 
-    IEEE1516eRegionHandle.encode(buffer, regionHandle);
-    IEEE1516eDimensionHandleSet.encode(buffer, dimensionHandles);
-
-    encodingFinished();
+    builder.setRegionHandle(RegionHandles.convert(regionHandle));
+    builder.addAllDimensionHandles(DimensionHandles.convert(dimensionHandles));
   }
 
-  public CreateRegion(ChannelBuffer buffer)
+  public CreateRegion(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    regionHandle = IEEE1516eRegionHandle.decode(buffer);
-    dimensionHandles = IEEE1516eDimensionHandleSet.decode(buffer);
+    super(FederationExecutionMessageProtos.CreateRegion.newBuilder(), in);
   }
 
   public RegionHandle getRegionHandle()
   {
+    if (regionHandle == null)
+    {
+      regionHandle = RegionHandles.convert(builder.getRegionHandle());
+    }
     return regionHandle;
   }
 
   public DimensionHandleSet getDimensionHandles()
   {
+    if (dimensionHandles == null)
+    {
+      dimensionHandles = DimensionHandles.convert(builder.getDimensionHandlesList());
+    }
     return dimensionHandles;
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.CREATE_REGION;
+    return MessageProtos.MessageType.CREATE_REGION;
   }
 
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.createRegion(federateProxy, this);

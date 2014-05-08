@@ -16,8 +16,9 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
-import net.sf.ohla.rti.Protocol;
+import java.nio.ByteBuffer;
 
+import hla.rti1516e.FederateHandle;
 import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.ObjectInstanceHandleFactory;
 import hla.rti1516e.exceptions.CouldNotDecode;
@@ -36,7 +37,9 @@ public class IEEE1516eObjectInstanceHandleFactory
   {
     try
     {
-      return IEEE1516eObjectInstanceHandle.decode(buffer, offset);
+      long objectInstanceHandle = ByteBuffer.wrap(buffer, offset, 8).getLong();
+      FederateHandle federateHandle = IEEE1516eFederateHandleFactory.INSTANCE.decode(buffer, offset + 8);
+      return new IEEE1516eObjectInstanceHandle(federateHandle, objectInstanceHandle);
     }
     catch (Throwable t)
     {

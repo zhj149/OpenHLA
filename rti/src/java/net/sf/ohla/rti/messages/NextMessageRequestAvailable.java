@@ -16,37 +16,54 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.LogicalTimes;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.LogicalTime;
-import hla.rti1516e.LogicalTimeFactory;
 
 public class NextMessageRequestAvailable
-  extends LogicalTimeMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.NextMessageRequestAvailable, FederationExecutionMessageProtos.NextMessageRequestAvailable.Builder>
   implements FederationExecutionMessage
 {
+  private LogicalTime time;
+
   public NextMessageRequestAvailable(LogicalTime time)
   {
-    super(MessageType.NEXT_MESSAGE_REQUEST_AVAILABLE, time);
+    super(FederationExecutionMessageProtos.NextMessageRequestAvailable.newBuilder());
 
-    encodingFinished();
+    this.time = time;
+
+    builder.setTime(LogicalTimes.convert(time));
   }
 
-  public NextMessageRequestAvailable(ChannelBuffer buffer, LogicalTimeFactory factory)
+  public NextMessageRequestAvailable(CodedInputStream in)
+    throws IOException
   {
-    super(buffer, factory);
+    super(FederationExecutionMessageProtos.NextMessageRequestAvailable.newBuilder(), in);
   }
 
-  public MessageType getType()
+  public LogicalTime getTime()
   {
-    return MessageType.NEXT_MESSAGE_REQUEST_AVAILABLE;
+    return time;
   }
 
+  @Override
+  public MessageProtos.MessageType getMessageType()
+  {
+    return MessageProtos.MessageType.NEXT_MESSAGE_REQUEST_AVAILABLE;
+  }
+
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
+    time = LogicalTimes.convert(federationExecution.getTimeManager().getLogicalTimeFactory(), builder.getTime());
+
     federationExecution.nextMessageRequestAvailable(federateProxy, this);
   }
 }

@@ -16,92 +16,48 @@
 
 package net.sf.ohla.rti.messages;
 
-import java.util.concurrent.CountDownLatch;
+import java.io.IOException;
 
-import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.ChannelFuture;
+import org.jboss.netty.channel.ChannelFutureListener;
 
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.SettableFuture;
+import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.MessageLite;
 import hla.rti1516e.exceptions.RTIinternalError;
 
-public abstract class AbstractRequest<R>
-  extends AbstractMessage
-  implements Request<R>
+public abstract class AbstractRequest<ML extends MessageLite, B extends MessageLite.Builder, R>
+  extends AbstractMessage<ML, B>
+  implements Request<R>, ChannelFutureListener
 {
-  protected long id;
+  private final SettableFuture<R> future;
 
-  protected R response;
-  protected Throwable cause;
-
-  protected final CountDownLatch responseLatch = new CountDownLatch(1);
-
-  protected AbstractRequest(MessageType messageType)
+  protected AbstractRequest(B builder)
   {
-    super(messageType);
+    super(builder);
 
-    buffer.writerIndex(buffer.writerIndex() + 8);
+    future = SettableFuture.create();
   }
 
-  protected AbstractRequest(MessageType messageType, int capacity, boolean dynamic)
+  protected AbstractRequest(B builder, CodedInputStream in)
+    throws IOException
   {
-    super(messageType, capacity, dynamic);
+    super(builder, in);
 
-    buffer.writerIndex(buffer.writerIndex() + 8);
-  }
-
-  protected AbstractRequest(MessageType messageType, ChannelBuffer buffer)
-  {
-    super(messageType, buffer);
-
-    buffer.writerIndex(buffer.writerIndex() + 8);
-  }
-
-  protected AbstractRequest(ChannelBuffer buffer)
-  {
-    super(buffer);
-
-    id = buffer.readLong();
-  }
-
-  public long getId()
-  {
-    return id;
-  }
-
-  public void setId(long id)
-  {
-    buffer.setLong(6, id);
+    future = null;
   }
 
   public R getResponse()
     throws RTIinternalError
   {
-    boolean done = false;
-    do
-    {
-      try
-      {
-        responseLatch.await();
-        done = true;
-      }
-      catch (InterruptedException ie)
-      {
-      }
-    }
-    while (!done);
-
-    if (response == null)
-    {
-      throw new RTIinternalError(cause.getMessage(), cause);
-    }
-    return response;
+    return Futures.get(future, RTIinternalError.class);
   }
 
   @SuppressWarnings("unchecked")
   public void setResponse(Object response)
   {
-    this.response = (R) response;
-
-    responseLatch.countDown();
+    future.set((R) response);
   }
 
   public void operationComplete(ChannelFuture future)
@@ -109,9 +65,7 @@ public abstract class AbstractRequest<R>
   {
     if (!future.isSuccess())
     {
-      cause = future.getCause();
-
-      responseLatch.countDown();
+      this.future.setException(future.getCause());
     }
   }
 }

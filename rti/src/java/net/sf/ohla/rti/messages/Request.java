@@ -16,19 +16,15 @@
 
 package net.sf.ohla.rti.messages;
 
-import org.jboss.netty.channel.ChannelFutureListener;
-
 import hla.rti1516e.exceptions.RTIinternalError;
 
 public interface Request<R>
-  extends Message, ChannelFutureListener
 {
-  long getId();
-
-  void setId(long id);
+  long getRequestId();
+  void setRequestId(long requestId);
 
   R getResponse()
-    throws InterruptedException, RTIinternalError;
+    throws RTIinternalError;
 
   void setResponse(Object response);
 }

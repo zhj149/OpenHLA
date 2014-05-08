@@ -16,82 +16,75 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.FederateHandles;
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
 import net.sf.ohla.rti.messages.AbstractMessage;
-import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateAmbassador;
-import hla.rti1516e.FederateHandle;
 import hla.rti1516e.FederateRestoreStatus;
 import hla.rti1516e.RestoreStatus;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class FederationRestoreStatusResponse
-  extends AbstractMessage
+  extends AbstractMessage<FederateMessageProtos.FederationRestoreStatusResponse, FederateMessageProtos.FederationRestoreStatusResponse.Builder>
   implements Callback
 {
-  private final FederateRestoreStatus[] response;
-
-  public FederationRestoreStatusResponse(FederateRestoreStatus[] response)
+  public FederationRestoreStatusResponse(FederateRestoreStatus[] federationRestoreStatus)
   {
-    super(MessageType.FEDERATION_RESTORE_STATUS_RESPONSE);
+    super(FederateMessageProtos.FederationRestoreStatusResponse.newBuilder());
 
-    this.response = response;
-
-    Protocol.encodeVarInt(buffer, response.length);
-    for (FederateRestoreStatus status : response)
+    for (FederateRestoreStatus federateRestoreStatus : federationRestoreStatus)
     {
-      Protocol.encodeEnum(buffer, status.status);
-      IEEE1516eFederateHandle.encode(buffer, status.preRestoreHandle);
+      FederateMessageProtos.FederateRestoreStatus.Builder federateRestoreStatusProto =
+        FederateMessageProtos.FederateRestoreStatus.newBuilder();
 
-      if (status.status != RestoreStatus.NO_RESTORE_IN_PROGRESS)
+      federateRestoreStatusProto.setPreRestoreFederateHandle(
+          FederateHandles.convert(federateRestoreStatus.preRestoreHandle));
+
+      if (federateRestoreStatus.postRestoreHandle != null)
       {
-        assert status.postRestoreHandle != null;
-
-        IEEE1516eFederateHandle.encode(buffer, status.postRestoreHandle);
-      }
-    }
-
-    encodingFinished();
-  }
-
-  public FederationRestoreStatusResponse(ChannelBuffer buffer)
-  {
-    super(buffer);
-
-    int length = Protocol.decodeVarInt(buffer);
-    response = new FederateRestoreStatus[length];
-    for (int i = 0; i < length; i++)
-    {
-      RestoreStatus status = Protocol.decodeEnum(buffer, RestoreStatus.values());
-      FederateHandle preRestoreHandle = IEEE1516eFederateHandle.decode(buffer);
-
-      FederateHandle postRestoreHandle;
-      if (status == RestoreStatus.NO_RESTORE_IN_PROGRESS)
-      {
-        postRestoreHandle = null;
-      }
-      else
-      {
-        postRestoreHandle = IEEE1516eFederateHandle.decode(buffer);
+        federateRestoreStatusProto.setPostRestoreFederateHandle(
+          FederateHandles.convert(federateRestoreStatus.postRestoreHandle));
       }
 
-      response[i] = new FederateRestoreStatus(preRestoreHandle, postRestoreHandle, status);
+      federateRestoreStatusProto.setRestoreStatus(
+          FederateMessageProtos.RestoreStatus.values()[federateRestoreStatus.status.ordinal()]);
+
+      builder.addFederationRestoreStatus(federateRestoreStatusProto);
     }
   }
 
-  public MessageType getType()
+  public FederationRestoreStatusResponse(CodedInputStream in)
+    throws IOException
   {
-    return MessageType.FEDERATION_RESTORE_STATUS_RESPONSE;
+    super(FederateMessageProtos.FederationRestoreStatusResponse.newBuilder(), in);
   }
 
+  @Override
+  public MessageProtos.MessageType getMessageType()
+  {
+    return MessageProtos.MessageType.FEDERATION_RESTORE_STATUS_RESPONSE;
+  }
+
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.federationRestoreStatusResponse(response);
+    FederateRestoreStatus[] federationRestoreStatus =
+      new FederateRestoreStatus[builder.getFederationRestoreStatusCount()];
+    int i = 0;
+    for (FederateMessageProtos.FederateRestoreStatus federateRestoreStatus : builder.getFederationRestoreStatusList())
+    {
+      federationRestoreStatus[i++] = new FederateRestoreStatus(
+        FederateHandles.convert(federateRestoreStatus.getPreRestoreFederateHandle()),
+        FederateHandles.convert(federateRestoreStatus.getPostRestoreFederateHandle()),
+        RestoreStatus.values()[federateRestoreStatus.getRestoreStatus().ordinal()]);
+    }
+    federateAmbassador.federationRestoreStatusResponse(federationRestoreStatus);
   }
 }

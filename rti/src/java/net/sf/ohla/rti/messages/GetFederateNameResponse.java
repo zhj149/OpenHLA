@@ -16,58 +16,72 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
+
+import com.google.protobuf.CodedInputStream;
 
 public class GetFederateNameResponse
-  extends EnumResponse<GetFederateNameResponse.Response>
+  extends
+  AbstractMessage<FederateMessageProtos.GetFederateNameResponse, FederateMessageProtos.GetFederateNameResponse.Builder>
+  implements Response
 {
-  public enum Response
+  public GetFederateNameResponse(long requestId, String federateName)
   {
-    SUCCESS, FEDERATE_HANDLE_NOT_KNOWN
+    super(FederateMessageProtos.GetFederateNameResponse.newBuilder());
+
+    builder.setRequestId(requestId);
+    builder.setSuccess(
+      FederateMessageProtos.GetFederateNameResponse.Success.newBuilder().setFederateName(federateName));
   }
 
-  private final String federateName;
-
-  public GetFederateNameResponse(long id, Response response)
+  public GetFederateNameResponse(long requestId, FederateMessageProtos.GetFederateNameResponse.Failure.Cause cause)
   {
-    super(MessageType.GET_FEDERATE_NAME_RESPONSE, id, response);
+    super(FederateMessageProtos.GetFederateNameResponse.newBuilder());
 
-    assert response != Response.SUCCESS;
-
-    federateName = null;
-
-    encodingFinished();
+    builder.setRequestId(requestId);
+    builder.setFailure(FederateMessageProtos.GetFederateNameResponse.Failure.newBuilder().setCause(cause));
   }
 
-  public GetFederateNameResponse(long id, String federateName)
+  public GetFederateNameResponse(CodedInputStream in)
+    throws IOException
   {
-    super(MessageType.GET_FEDERATE_NAME_RESPONSE, id, Response.SUCCESS);
-
-    assert federateName != null;
-
-    this.federateName = federateName;
-
-    Protocol.encodeString(buffer, federateName);
-
-    encodingFinished();
-  }
-
-  public GetFederateNameResponse(ChannelBuffer buffer)
-  {
-    super(buffer, Response.values());
-
-    federateName = response == Response.SUCCESS ? Protocol.decodeString(buffer) : null;
+    super(FederateMessageProtos.GetFederateNameResponse.newBuilder(), in);
   }
 
   public String getFederateName()
   {
-    return federateName;
+    return builder.getSuccess().getFederateName();
   }
 
-  public MessageType getType()
+  public FederateMessageProtos.GetFederateNameResponse.Failure.Cause getCause()
   {
-    return MessageType.GET_FEDERATE_NAME_RESPONSE;
+    return builder.getFailure().getCause();
+  }
+
+  @Override
+  public MessageProtos.MessageType getMessageType()
+  {
+    return MessageProtos.MessageType.GET_FEDERATE_NAME_RESPONSE;
+  }
+
+  @Override
+  public long getRequestId()
+  {
+    return builder.getRequestId();
+  }
+
+  @Override
+  public boolean isSuccess()
+  {
+    return builder.hasSuccess();
+  }
+
+  @Override
+  public boolean isFailure()
+  {
+    return builder.hasFailure();
   }
 }

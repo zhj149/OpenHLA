@@ -16,55 +16,59 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
+
 import net.sf.ohla.rti.federate.Callback;
 import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.AbstractMessage;
 import net.sf.ohla.rti.messages.FederateMessage;
-import net.sf.ohla.rti.messages.MessageType;
-import net.sf.ohla.rti.messages.StringMessage;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.ByteString;
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class AnnounceSynchronizationPoint
-  extends StringMessage
+  extends
+  AbstractMessage<FederateMessageProtos.AnnounceSynchronizationPoint, FederateMessageProtos.AnnounceSynchronizationPoint.Builder>
   implements Callback, FederateMessage
 {
-  private final byte[] tag;
-
   private Federate federate;
 
   public AnnounceSynchronizationPoint(String label, byte[] tag)
   {
-    super(MessageType.ANNOUNCE_SYNCHRONIZATION_POINT, label);
+    super(FederateMessageProtos.AnnounceSynchronizationPoint.newBuilder());
 
-    this.tag = tag;
+    builder.setLabel(label);
 
-    Protocol.encodeBytes(buffer, tag);
-
-    encodingFinished();
+    if (tag != null)
+    {
+      builder.setTag(ByteString.copyFrom(tag));
+    }
   }
 
-  public AnnounceSynchronizationPoint(ChannelBuffer buffer)
+  public AnnounceSynchronizationPoint(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    tag = Protocol.decodeBytes(buffer);
+    super(FederateMessageProtos.AnnounceSynchronizationPoint.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.ANNOUNCE_SYNCHRONIZATION_POINT;
+    return MessageProtos.MessageType.ANNOUNCE_SYNCHRONIZATION_POINT;
   }
 
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federate.announceSynchronizationPoint(s, tag);
+    federate.announceSynchronizationPoint(builder.getLabel(), builder.hasTag() ? builder.getTag().toByteArray() : null);
   }
 
+  @Override
   public void execute(Federate federate)
   {
     this.federate = federate;

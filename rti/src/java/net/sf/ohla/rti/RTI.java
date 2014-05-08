@@ -16,8 +16,10 @@
 
 package net.sf.ohla.rti;
 
-import java.io.File;
 import java.net.InetSocketAddress;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -40,14 +42,20 @@ import net.sf.ohla.rti.messages.JoinFederationExecution;
 import net.sf.ohla.rti.messages.JoinFederationExecutionResponse;
 import net.sf.ohla.rti.messages.ListFederationExecutions;
 import net.sf.ohla.rti.messages.callbacks.ReportFederationExecutions;
+import net.sf.ohla.rti.messages.proto.ConnectedMessageProtos;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
 
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 
 import hla.rti1516e.FederationExecutionInformationSet;
+import hla.rti1516e.LogicalTime;
 import hla.rti1516e.LogicalTimeFactory;
 import hla.rti1516e.LogicalTimeFactoryFactory;
+import hla.rti1516e.LogicalTimeInterval;
+import hla.rti1516e.exceptions.CouldNotDecode;
+import hla.rti1516e.exceptions.CouldNotEncode;
 
 public class RTI
 {
@@ -58,21 +66,20 @@ public class RTI
 
   public static final int DEFAULT_PORT = 15000;
 
-  private static final I18nLogger log = I18nLogger.getLogger(RTI.class);
+  private static final I18nLogger logger = I18nLogger.getLogger(RTI.class);
 
-  private final Map<String, ServerBootstrap> serverBootstraps = new HashMap<String, ServerBootstrap>();
+  private final Map<String, ServerBootstrap> serverBootstraps = new HashMap<>();
 
   private final Lock federationsLock = new ReentrantLock(true);
-  private final SortedMap<String, FederationExecution> federationExecutions =
-    new TreeMap<String, FederationExecution>();
+  private final SortedMap<String, FederationExecution> federationExecutions = new TreeMap<>();
 
-  private final File savesDirectory;
+  private final Path savesDirectory;
 
   public RTI()
   {
     // TODO: read from configuration file
 
-    savesDirectory = new File(".");
+    savesDirectory = Paths.get("c:\\Temp");
 
     Executor executor = Executors.newCachedThreadPool();
 
@@ -97,21 +104,23 @@ public class RTI
   public void createFederationExecution(
     ChannelHandlerContext context, CreateFederationExecution createFederationExecution)
   {
-    CreateFederationExecutionResponse.Response response;
+    CreateFederationExecutionResponse response;
 
     String federationExecutionName = createFederationExecution.getFederationExecutionName();
-    log.debug(LogMessages.CREATE_FEDERATION_EXECUTION, federationExecutionName);
+    logger.debug(LogMessages.CREATE_FEDERATION_EXECUTION, federationExecutionName);
 
     String logicalTimeImplementationName = createFederationExecution.getLogicalTimeImplementationName();
 
     LogicalTimeFactory logicalTimeFactory =
       LogicalTimeFactoryFactory.getLogicalTimeFactory(logicalTimeImplementationName);
-    if (logicalTimeFactory == null || !Protocol.testLogicalTimeFactory(logicalTimeFactory))
+    if (logicalTimeFactory == null || !testLogicalTimeFactory(logicalTimeFactory))
     {
-      log.debug(LogMessages.CREATE_FEDERATION_EXECUTION_FAILED_COULD_NOT_CREATE_LOGICAL_TIME_FACTORY,
+      logger.debug(LogMessages.CREATE_FEDERATION_EXECUTION_FAILED_COULD_NOT_CREATE_LOGICAL_TIME_FACTORY,
                 federationExecutionName, logicalTimeImplementationName);
 
-      response = CreateFederationExecutionResponse.Response.COULD_NOT_CREATE_LOGICAL_TIME_FACTORY;
+      response = new CreateFederationExecutionResponse(
+        createFederationExecution.getRequestId(),
+        ConnectedMessageProtos.CreateFederationExecutionResponse.Failure.Cause.COULD_NOT_CREATE_LOGICAL_TIME_FACTORY);
     }
     else
     {
@@ -120,10 +129,12 @@ public class RTI
       {
         if (federationExecutions.containsKey(federationExecutionName))
         {
-          log.debug(LogMessages.CREATE_FEDERATION_EXECUTION_FAILED_FEDERATION_EXECUTION_ALREADY_EXISTS,
+          logger.debug(LogMessages.CREATE_FEDERATION_EXECUTION_FAILED_FEDERATION_EXECUTION_ALREADY_EXISTS,
                     federationExecutionName);
 
-          response = CreateFederationExecutionResponse.Response.FEDERATION_EXECUTION_ALREADY_EXISTS;
+          response = new CreateFederationExecutionResponse(
+            createFederationExecution.getRequestId(),
+            ConnectedMessageProtos.CreateFederationExecutionResponse.Failure.Cause.FEDERATION_EXECUTION_ALREADY_EXISTS);
         }
         else
         {
@@ -131,7 +142,7 @@ public class RTI
             federationExecutionName, new FederationExecution(
             federationExecutionName, createFederationExecution.getFDD(), logicalTimeFactory, savesDirectory));
 
-          response = CreateFederationExecutionResponse.Response.SUCCESS;
+          response = new CreateFederationExecutionResponse(createFederationExecution.getRequestId());
         }
       }
       finally
@@ -140,14 +151,14 @@ public class RTI
       }
     }
 
-    context.getChannel().write(new CreateFederationExecutionResponse(createFederationExecution.getId(), response));
+    context.getChannel().write(response);
   }
 
   public void destroyFederationExecution(
     ChannelHandlerContext context, DestroyFederationExecution destroyFederationExecution)
   {
     String federationExecutionName = destroyFederationExecution.getFederationExecutionName();
-    log.debug(LogMessages.DESTROY_FEDERATION_EXECUTION, federationExecutionName);
+    logger.debug(LogMessages.DESTROY_FEDERATION_EXECUTION, federationExecutionName);
 
     DestroyFederationExecutionResponse response;
 
@@ -157,18 +168,18 @@ public class RTI
       FederationExecution federationExecution = federationExecutions.get(federationExecutionName);
       if (federationExecution == null)
       {
-        log.debug(LogMessages.DESTROY_FEDERATION_EXECUTION_FAILED_FEDERATION_EXECUTION_DOES_NOT_EXIST,
+        logger.debug(LogMessages.DESTROY_FEDERATION_EXECUTION_FAILED_FEDERATION_EXECUTION_DOES_NOT_EXIST,
                   federationExecutionName);
 
         response = new DestroyFederationExecutionResponse(
-          destroyFederationExecution.getId(),
-          DestroyFederationExecutionResponse.Response.FEDERATION_EXECUTION_DOES_NOT_EXIST);
+          destroyFederationExecution.getRequestId(),
+          ConnectedMessageProtos.DestroyFederationExecutionResponse.Failure.Cause.FEDERATION_EXECUTION_DOES_NOT_EXIST);
       }
       else
       {
         response = federationExecution.destroy(destroyFederationExecution);
 
-        if (response.getResponse() == DestroyFederationExecutionResponse.Response.SUCCESS)
+        if (response.isSuccess())
         {
           federationExecutions.remove(federationExecutionName);
         }
@@ -192,11 +203,11 @@ public class RTI
       FederationExecution federationExecution = federationExecutions.get(federationExecutionName);
       if (federationExecution == null)
       {
-        log.info(LogMessages.JOIN_FEDERATION_EXECUTION_FAILED_FEDERATION_EXECUTION_DOES_NOT_EXIST,
+        logger.info(LogMessages.JOIN_FEDERATION_EXECUTION_FAILED_FEDERATION_EXECUTION_DOES_NOT_EXIST,
                  federationExecutionName);
 
         context.getChannel().write(new JoinFederationExecutionResponse(
-          JoinFederationExecutionResponse.Response.FEDERATION_EXECUTION_DOES_NOT_EXIST));
+          FederateMessageProtos.JoinFederationExecutionResponse.Failure.Cause.FEDERATION_EXECUTION_DOES_NOT_EXIST));
       }
       else
       {
@@ -228,6 +239,36 @@ public class RTI
     {
       federationsLock.unlock();
     }
+  }
+
+  private boolean testLogicalTimeFactory(LogicalTimeFactory logicalTimeFactory)
+  {
+    boolean validated;
+
+    try
+    {
+      LogicalTime initialTime = logicalTimeFactory.makeInitial();
+      byte[] buffer = new byte[initialTime.encodedLength()];
+      initialTime.encode(buffer, 0);
+
+      if (validated = initialTime.equals(logicalTimeFactory.decodeTime(buffer, 0)))
+      {
+        LogicalTimeInterval zero = logicalTimeFactory.makeZero();
+        buffer = new byte[zero.encodedLength()];
+        zero.encode(buffer, 0);
+
+        validated = zero.equals(logicalTimeFactory.decodeInterval(buffer, 0));
+      }
+    }
+    catch (CouldNotDecode | CouldNotEncode e)
+    {
+      logger.error("{} failed tests: {}", LogicalTimeFactory.class.getSimpleName(), logicalTimeFactory.getName());
+      logger.error("", e);
+
+      validated = false;
+    }
+
+    return validated;
   }
 
   public static void main(String... args)

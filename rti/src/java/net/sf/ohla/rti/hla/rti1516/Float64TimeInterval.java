@@ -118,6 +118,6 @@ public class Float64TimeInterval
 
   private int compareTo(Float64TimeInterval rhs)
   {
-    return (int) Math.round(interval - rhs.interval);
+    return Double.compare(interval, rhs.interval);
   }
 }

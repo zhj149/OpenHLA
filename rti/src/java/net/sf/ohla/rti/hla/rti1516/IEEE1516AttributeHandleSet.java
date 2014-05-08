@@ -18,7 +18,6 @@ package net.sf.ohla.rti.hla.rti1516;
 
 import java.util.HashSet;
 
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSetFactory;
 
 import hla.rti1516.AttributeHandle;
@@ -45,8 +44,7 @@ public class IEEE1516AttributeHandleSet
     hla.rti1516e.AttributeHandleSet ieee1516eAttributeHandles = IEEE1516eAttributeHandleSetFactory.INSTANCE.create();
     for (AttributeHandle attributeHandle : attributeHandles)
     {
-      ieee1516eAttributeHandles.add(
-        new IEEE1516eAttributeHandle(((IEEE1516AttributeHandle) attributeHandle).getHandle()));
+      ieee1516eAttributeHandles.add(((IEEE1516AttributeHandle) attributeHandle).getAttributeHandle());
     }
     return ieee1516eAttributeHandles;
   }

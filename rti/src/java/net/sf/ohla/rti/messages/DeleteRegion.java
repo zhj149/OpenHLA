@@ -16,48 +16,46 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.RegionHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandle;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.RegionHandle;
 
 public class DeleteRegion
-  extends AbstractMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.DeleteRegion, FederationExecutionMessageProtos.DeleteRegion.Builder>
   implements FederationExecutionMessage
 {
-  private final RegionHandle regionHandle;
-
   public DeleteRegion(RegionHandle regionHandle)
   {
-    super(MessageType.DELETE_REGION);
+    super(FederationExecutionMessageProtos.DeleteRegion.newBuilder());
 
-    this.regionHandle = regionHandle;
-
-    IEEE1516eRegionHandle.encode(buffer, regionHandle);
-
-    encodingFinished();
+    builder.setRegionHandle(RegionHandles.convert(regionHandle));
   }
 
-  public DeleteRegion(ChannelBuffer buffer)
+  public DeleteRegion(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    regionHandle = IEEE1516eRegionHandle.decode(buffer);
+    super(FederationExecutionMessageProtos.DeleteRegion.newBuilder(), in);
   }
 
   public RegionHandle getRegionHandle()
   {
-    return regionHandle;
+    return RegionHandles.convert(builder.getRegionHandle());
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.DELETE_REGION;
+    return MessageProtos.MessageType.DELETE_REGION;
   }
 
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.deleteRegion(federateProxy, this);

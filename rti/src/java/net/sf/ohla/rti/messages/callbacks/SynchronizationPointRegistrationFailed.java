@@ -16,59 +16,51 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
+
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.messages.MessageType;
-import net.sf.ohla.rti.messages.StringMessage;
+import net.sf.ohla.rti.messages.AbstractMessage;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.SynchronizationPointFailureReason;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class SynchronizationPointRegistrationFailed
-  extends StringMessage
-  implements Callback
+  extends
+  AbstractMessage<FederateMessageProtos.SynchronizationPointRegistrationFailed, FederateMessageProtos.SynchronizationPointRegistrationFailed.Builder>
+implements Callback
 {
-  private final SynchronizationPointFailureReason reason;
-
-  public SynchronizationPointRegistrationFailed(String s, SynchronizationPointFailureReason reason)
+  public SynchronizationPointRegistrationFailed(
+    String label, SynchronizationPointFailureReason synchronizationPointFailureReason)
   {
-    super(MessageType.SYNCHRONIZATION_POINT_REGISTRATION_FAILED, s);
+    super(FederateMessageProtos.SynchronizationPointRegistrationFailed.newBuilder());
 
-    this.reason = reason;
-
-    Protocol.encodeEnum(buffer, reason);
-
-    encodingFinished();
+    builder.setLabel(label);
+    builder.setSynchronizationPointFailureReason(
+      FederateMessageProtos.SynchronizationPointFailureReason.values()[synchronizationPointFailureReason.ordinal()]);
   }
 
-  public SynchronizationPointRegistrationFailed(ChannelBuffer buffer)
+  public SynchronizationPointRegistrationFailed(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    reason = Protocol.decodeEnum(buffer, SynchronizationPointFailureReason.values());
+    super(FederateMessageProtos.SynchronizationPointRegistrationFailed.newBuilder(), in);
   }
 
-  public String getLabel()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return s;
+    return MessageProtos.MessageType.SYNCHRONIZATION_POINT_REGISTRATION_FAILED;
   }
 
-  public SynchronizationPointFailureReason getReason()
-  {
-    return reason;
-  }
-
-  public MessageType getType()
-  {
-    return MessageType.SYNCHRONIZATION_POINT_REGISTRATION_FAILED;
-  }
-
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.synchronizationPointRegistrationFailed(s, reason);
+    federateAmbassador.synchronizationPointRegistrationFailed(
+      builder.getLabel(),
+      SynchronizationPointFailureReason.values()[builder.getSynchronizationPointFailureReason().ordinal()]);
   }
 }

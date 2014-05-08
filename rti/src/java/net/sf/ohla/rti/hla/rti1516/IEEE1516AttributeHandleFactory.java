@@ -16,10 +16,11 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleFactory;
+
 import hla.rti1516.AttributeHandle;
 import hla.rti1516.AttributeHandleFactory;
 import hla.rti1516.CouldNotDecode;
-import hla.rti1516.FederateNotExecutionMember;
 
 public class IEEE1516AttributeHandleFactory
   implements AttributeHandleFactory
@@ -33,7 +34,14 @@ public class IEEE1516AttributeHandleFactory
   public AttributeHandle decode(byte[] buffer, int offset)
     throws CouldNotDecode
   {
-    return new IEEE1516AttributeHandle(buffer, offset);
+    try
+    {
+      return new IEEE1516AttributeHandle(IEEE1516eAttributeHandleFactory.INSTANCE.decode(buffer, offset));
+    }
+    catch (hla.rti1516e.exceptions.CouldNotDecode cnd)
+    {
+      throw new CouldNotDecode(cnd);
+    }
   }
 
   private Object readResolve()

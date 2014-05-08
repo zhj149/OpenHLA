@@ -21,16 +21,16 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSet;
+import net.sf.ohla.rti.util.DimensionHandles;
+import net.sf.ohla.rti.util.InteractionClassHandles;
+import net.sf.ohla.rti.util.OrderTypes;
+import net.sf.ohla.rti.util.TransportationTypeHandles;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSetFactory;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eInteractionClassHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandle;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandle;
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
-
-import org.jboss.netty.buffer.ChannelBuffer;
+import net.sf.ohla.rti.proto.OHLAProtos;
 
 import hla.rti1516e.DimensionHandle;
 import hla.rti1516e.DimensionHandleSet;
@@ -40,7 +40,6 @@ import hla.rti1516e.ParameterHandle;
 import hla.rti1516e.TransportationTypeHandle;
 import hla.rti1516e.exceptions.InconsistentFDD;
 import hla.rti1516e.exceptions.InteractionParameterNotDefined;
-import hla.rti1516e.exceptions.InvalidInteractionClassHandle;
 import hla.rti1516e.exceptions.InvalidParameterHandle;
 import hla.rti1516e.exceptions.NameNotFound;
 
@@ -53,20 +52,19 @@ public class InteractionClass
 
   private final InteractionClass superInteractionClass;
 
-  private final LinkedHashMap<InteractionClassHandle, InteractionClass> subInteractionClasses =
-    new LinkedHashMap<InteractionClassHandle, InteractionClass>();
-  private final LinkedHashMap<String, InteractionClass> subInteractionClassesByName =
-    new LinkedHashMap<String, InteractionClass>();
+  private final LinkedHashMap<InteractionClassHandle, InteractionClass> subInteractionClasses = new LinkedHashMap<>();
+  private final LinkedHashMap<String, InteractionClass> subInteractionClassesByName = new LinkedHashMap<>();
 
   private final DimensionHandleSet dimensionHandles;
 
   private TransportationTypeHandle transportationTypeHandle;
   private OrderType orderType;
 
-  private final LinkedHashSet<Parameter> declaredParameters = new LinkedHashSet<Parameter>();
+  private final LinkedHashSet<Parameter> declaredParameters = new LinkedHashSet<>();
+  private final LinkedHashMap<String, Parameter> declaredParametersByName = new LinkedHashMap<>();
 
-  private final LinkedHashMap<ParameterHandle, Parameter> parameters = new LinkedHashMap<ParameterHandle, Parameter>();
-  private final LinkedHashMap<String, Parameter> parametersByName = new LinkedHashMap<String, Parameter>();
+  private final LinkedHashMap<ParameterHandle, Parameter> parameters = new LinkedHashMap<>();
+  private final LinkedHashMap<String, Parameter> parametersByName = new LinkedHashMap<>();
 
   public InteractionClass(
     FDD fdd, InteractionClassHandle interactionClassHandle, String interactionClassName,
@@ -93,15 +91,17 @@ public class InteractionClass
     }
   }
 
-  public InteractionClass(ChannelBuffer buffer, FDD fdd)
+  public InteractionClass(FDD fdd, OHLAProtos.FDD.InteractionClass interactionClass)
   {
     this.fdd = fdd;
-    interactionClassHandle = IEEE1516eInteractionClassHandle.decode(buffer);
-    interactionClassName = Protocol.decodeString(buffer);
 
-    if (Protocol.decodeBoolean(buffer))
+    interactionClassHandle = InteractionClassHandles.convert(interactionClass.getInteractionClassHandle());
+    interactionClassName = interactionClass.getInteractionClassName();
+
+    if (interactionClass.hasSuperInteractionClassHandle())
     {
-      superInteractionClass = fdd.getInteractionClassSafely(IEEE1516eInteractionClassHandle.decode(buffer));
+      superInteractionClass = fdd.getInteractionClassSafely(
+        InteractionClassHandles.convert(interactionClass.getSuperInteractionClassHandle()));
 
       // get a reference to all the super interaction classes parameters
       //
@@ -116,16 +116,16 @@ public class InteractionClass
       superInteractionClass = null;
     }
 
-    dimensionHandles = IEEE1516eDimensionHandleSet.decode(buffer);
-    transportationTypeHandle = IEEE1516eTransportationTypeHandle.decode(buffer);
-    orderType = Protocol.decodeEnum(buffer, OrderType.values());
+    dimensionHandles = DimensionHandles.convert(interactionClass.getDimensionHandlesList());
+    transportationTypeHandle = TransportationTypeHandles.convert(interactionClass.getTransportationTypeHandle());
+    orderType = OrderTypes.convert(interactionClass.getOrderType());
 
-    for (int declaredParameterCount = Protocol.decodeVarInt(buffer); declaredParameterCount > 0;
-         declaredParameterCount--)
+    for (OHLAProtos.FDD.InteractionClass.Parameter parameterProto : interactionClass.getParametersList())
     {
-      Parameter parameter = Parameter.decode(buffer);
+      Parameter parameter = new Parameter(parameterProto);
 
       declaredParameters.add(parameter);
+      declaredParametersByName.put(parameter.getParameterName(), parameter);
 
       parameters.put(parameter.getParameterHandle(), parameter);
       parametersByName.put(parameter.getParameterName(), parameter);
@@ -198,6 +198,7 @@ public class InteractionClass
     Parameter parameter = new Parameter(parameterHandle, parameterName);
 
     declaredParameters.add(parameter);
+    declaredParametersByName.put(parameter.getParameterName(), parameter);
 
     parameters.put(parameterHandle, parameter);
     parametersByName.put(parameterName, parameter);
@@ -214,6 +215,7 @@ public class InteractionClass
     Parameter parameter = new Parameter(parameterHandle, parameterName);
 
     declaredParameters.add(parameter);
+    declaredParametersByName.put(parameter.getParameterName(), parameter);
 
     parameters.put(parameterHandle, parameter);
     parametersByName.put(parameterName, parameter);
@@ -279,12 +281,19 @@ public class InteractionClass
   public void merge(InteractionClass rhsInteractionClass, FDD fdd)
     throws InconsistentFDD
   {
-    if (rhsInteractionClass.declaredParameters.size() > 0 &&
-        !declaredParameters.equals(rhsInteractionClass.declaredParameters))
+    for (Parameter rhsDeclaredParameter : rhsInteractionClass.declaredParameters)
     {
-      throw new InconsistentFDD(I18n.getMessage(
-        ExceptionMessages.INCONSISTENT_FDD_PARAMETER_MISMATCH, this, declaredParameters,
-        rhsInteractionClass.declaredParameters));
+      Parameter lhsDeclaredParameter = declaredParametersByName.get(rhsDeclaredParameter.getParameterName());
+      if (lhsDeclaredParameter == null)
+      {
+        rhsDeclaredParameter.copyTo(this);
+      }
+      else if (parametersByName.containsKey(rhsDeclaredParameter.getParameterName()))
+      {
+        throw new InconsistentFDD(I18n.getMessage(
+          ExceptionMessages.INCONSISTENT_FDD_PARAMETER_DECLARED_AT_DIFFERENT_LEVELS, lhsDeclaredParameter, this,
+          parametersByName.get(rhsDeclaredParameter.getParameterName())));
+      }
     }
 
     for (InteractionClass rhsSubInteractionClass : rhsInteractionClass.subInteractionClasses.values())
@@ -311,6 +320,34 @@ public class InteractionClass
     }
   }
 
+  public OHLAProtos.FDD.InteractionClass.Builder toProto()
+  {
+    OHLAProtos.FDD.InteractionClass.Builder interactionClass =
+      OHLAProtos.FDD.InteractionClass.newBuilder().setInteractionClassHandle(
+        InteractionClassHandles.convert(interactionClassHandle)).setInteractionClassName(
+        interactionClassName).setTransportationTypeHandle(
+        TransportationTypeHandles.convert(transportationTypeHandle)).setOrderType(
+        OrderTypes.convert(orderType));
+
+    if (superInteractionClass != null)
+    {
+      interactionClass.setSuperInteractionClassHandle(
+        InteractionClassHandles.convert(superInteractionClass.interactionClassHandle));
+    }
+
+    for (DimensionHandle dimensionHandle : dimensionHandles)
+    {
+      interactionClass.addDimensionHandles(DimensionHandles.convert(dimensionHandle));
+    }
+
+    for (Parameter parameter : declaredParameters)
+    {
+      interactionClass.addParameters(parameter.toProto());
+    }
+
+    return interactionClass;
+  }
+
   @Override
   public int hashCode()
   {
@@ -326,9 +363,9 @@ public class InteractionClass
   private void copyTo(FDD fdd, InteractionClass superInteractionClass)
   {
     DimensionHandleSet dimensionHandles;
-    if (this.dimensionHandles == null || this.dimensionHandles.isEmpty())
+    if (this.dimensionHandles.isEmpty())
     {
-      dimensionHandles = null;
+      dimensionHandles = IEEE1516eDimensionHandleSet.EMPTY;
     }
     else
     {
@@ -354,36 +391,5 @@ public class InteractionClass
     {
       subInteractionClass.copyTo(fdd, interactionClass);
     }
-  }
-
-  public static void encode(ChannelBuffer buffer, InteractionClass interactionClass)
-  {
-    IEEE1516eInteractionClassHandle.encode(buffer, interactionClass.interactionClassHandle);
-    Protocol.encodeString(buffer, interactionClass.interactionClassName);
-
-    if (interactionClass.superInteractionClass == null)
-    {
-      Protocol.encodeBoolean(buffer, false);
-    }
-    else
-    {
-      Protocol.encodeBoolean(buffer, true);
-      IEEE1516eInteractionClassHandle.encode(buffer, interactionClass.superInteractionClass.interactionClassHandle);
-    }
-
-    IEEE1516eDimensionHandleSet.encode(buffer, interactionClass.dimensionHandles);
-    IEEE1516eTransportationTypeHandle.encode(buffer, interactionClass.transportationTypeHandle);
-    Protocol.encodeEnum(buffer, interactionClass.orderType);
-
-    Protocol.encodeVarInt(buffer, interactionClass.declaredParameters.size());
-    for (Parameter parameter : interactionClass.declaredParameters)
-    {
-      Parameter.encode(buffer, parameter);
-    }
-  }
-
-  public static InteractionClass decode(ChannelBuffer buffer, FDD fdd)
-  {
-    return new InteractionClass(buffer, fdd);
   }
 }

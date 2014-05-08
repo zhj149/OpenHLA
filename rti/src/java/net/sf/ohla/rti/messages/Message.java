@@ -16,11 +16,14 @@
 
 package net.sf.ohla.rti.messages;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-public interface Message
+import com.google.protobuf.MessageLite;
+
+public interface Message<ML extends MessageLite, B extends MessageLite.Builder>
 {
-  MessageType getType();
+  MessageProtos.MessageType getMessageType();
 
-  ChannelBuffer getBuffer();
+  ML getMessageLite();
+  B getBuilder();
 }

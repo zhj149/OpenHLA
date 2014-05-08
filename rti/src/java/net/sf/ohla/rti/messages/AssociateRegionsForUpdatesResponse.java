@@ -16,30 +16,67 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
+
 import org.jboss.netty.buffer.ChannelBuffer;
 
+import com.google.protobuf.CodedInputStream;
+
 public class AssociateRegionsForUpdatesResponse
-  extends EnumResponse<AssociateRegionsForUpdatesResponse.Response>
+  extends
+  AbstractMessage<FederateMessageProtos.AssociateRegionsForUpdatesResponse, FederateMessageProtos.AssociateRegionsForUpdatesResponse.Builder>
+  implements Response
 {
-  public enum Response
+  public AssociateRegionsForUpdatesResponse(long requestId)
   {
-    SUCCESS, OBJECT_INSTANCE_NOT_KNOWN
+    super(FederateMessageProtos.AssociateRegionsForUpdatesResponse.newBuilder());
+
+    builder.setRequestId(requestId);
   }
 
-  public AssociateRegionsForUpdatesResponse(long id, Response response)
+  public AssociateRegionsForUpdatesResponse(
+    long requestId, FederateMessageProtos.AssociateRegionsForUpdatesResponse.Failure.Cause cause)
   {
-    super(MessageType.ASSOCIATE_REGIONS_FOR_UPDATES_RESPONSE, id, response);
+    this(requestId);
 
-    encodingFinished();
+    builder.setFailure(FederateMessageProtos.AssociateRegionsForUpdatesResponse.Failure.newBuilder().setCause(cause));
   }
 
-  public AssociateRegionsForUpdatesResponse(ChannelBuffer buffer)
+  public AssociateRegionsForUpdatesResponse(CodedInputStream in)
+    throws IOException
   {
-    super(buffer, Response.values());
+    super(FederateMessageProtos.AssociateRegionsForUpdatesResponse.newBuilder(), in);
   }
 
-  public MessageType getType()
+  public FederateMessageProtos.AssociateRegionsForUpdatesResponse.Failure.Cause getCause()
   {
-    return MessageType.ASSOCIATE_REGIONS_FOR_UPDATES_RESPONSE;
+    return builder.getFailure().getCause();
+  }
+
+  @Override
+  public MessageProtos.MessageType getMessageType()
+  {
+    return MessageProtos.MessageType.ASSOCIATE_REGIONS_FOR_UPDATES_RESPONSE;
+  }
+
+  @Override
+  public long getRequestId()
+  {
+    return builder.getRequestId();
+  }
+
+  @Override
+  public boolean isSuccess()
+  {
+    return !builder.hasFailure();
+  }
+
+  @Override
+  public boolean isFailure()
+  {
+    return builder.hasFailure();
   }
 }

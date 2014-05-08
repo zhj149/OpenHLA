@@ -16,49 +16,46 @@
 
 package net.sf.ohla.rti.federate;
 
-import java.util.concurrent.Executor;
-
 import net.sf.ohla.rti.messages.FederateMessage;
 import net.sf.ohla.rti.messages.Message;
-import net.sf.ohla.rti.messages.MessageChannelHandler;
 
+import org.jboss.netty.channel.ChannelEvent;
 import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.ChannelUpstreamHandler;
+import org.jboss.netty.channel.MessageEvent;
 
 public class FederateChannelHandler
-  extends MessageChannelHandler
+  implements ChannelUpstreamHandler
 {
-  public static final String NAME = "FederateChannelHandler";
+  public static final String NAME = FederateChannelHandler.class.getSimpleName();
 
-  private final CallbackManager callbackManager;
+  private final Federate federate;
 
-  private Federate federate;
-
-  public FederateChannelHandler(Executor executor, CallbackManager callbackManager)
-  {
-    super(executor);
-
-    this.callbackManager = callbackManager;
-  }
-
-  public void setFederate(Federate federate)
+  public FederateChannelHandler(Federate federate)
   {
     this.federate = federate;
   }
 
   @Override
-  protected void messageReceived(ChannelHandlerContext context, Message message)
+  public void handleUpstream(ChannelHandlerContext context, ChannelEvent event)
+    throws Exception
   {
-    if (message instanceof FederateMessage)
+    if (event instanceof MessageEvent)
     {
-      assert federate != null;
+      Message message = (Message) ((MessageEvent) event).getMessage();
 
-      ((FederateMessage) message).execute(federate);
+      if (message instanceof FederateMessage)
+      {
+        ((FederateMessage) message).execute(federate);
+      }
+      else
+      {
+        context.sendUpstream(event);
+      }
     }
     else
     {
-      assert message instanceof Callback;
-
-      callbackManager.add((Callback) message, false);
+      context.sendUpstream(event);
     }
   }
 }

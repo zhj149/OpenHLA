@@ -18,6 +18,7 @@ package net.sf.ohla.rti;
 
 import java.util.concurrent.Executor;
 
+import net.sf.ohla.rti.messages.MessageChannelHandler;
 import net.sf.ohla.rti.messages.MessageDecoder;
 import net.sf.ohla.rti.messages.MessageEncoder;
 
@@ -45,7 +46,8 @@ public class RTIChannelPipelineFactory
 
     pipeline.addLast(MessageEncoder.NAME, new MessageEncoder());
     pipeline.addLast(MessageDecoder.NAME, new MessageDecoder());
-    pipeline.addLast(RTIChannelHandler.NAME, new RTIChannelHandler(executor, rti));
+    pipeline.addLast(MessageChannelHandler.NAME, new MessageChannelHandler(executor));
+    pipeline.addLast(RTIChannelHandler.NAME, new RTIChannelHandler(rti));
 
     return pipeline;
   }

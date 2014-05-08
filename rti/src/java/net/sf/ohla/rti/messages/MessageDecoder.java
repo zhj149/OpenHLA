@@ -24,23 +24,14 @@ import org.jboss.netty.channel.ChannelUpstreamHandler;
 import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.MessageEvent;
 
-import hla.rti1516e.LogicalTimeFactory;
-
 public class MessageDecoder
   implements ChannelUpstreamHandler
 {
-  public static final String NAME = "MessageDecoder";
+  public static final String NAME = MessageDecoder.class.getSimpleName();
 
   private final ChannelBuffer lengthBuffer = ChannelBuffers.buffer(4);
 
-  private LogicalTimeFactory logicalTimeFactory;
-
   private ChannelBuffer message;
-
-  public void setLogicalTimeFactory(LogicalTimeFactory logicalTimeFactory)
-  {
-    this.logicalTimeFactory = logicalTimeFactory;
-  }
 
   public void handleUpstream(ChannelHandlerContext context, ChannelEvent event)
     throws Exception
@@ -103,7 +94,7 @@ public class MessageDecoder
 
       try
       {
-        Channels.fireMessageReceived(context, MessageFactory.createMessage(message, logicalTimeFactory));
+        Channels.fireMessageReceived(context, Messages.parseFrom(message));
       }
       finally
       {

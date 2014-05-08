@@ -16,32 +16,52 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 
+import com.google.protobuf.CodedInputStream;
+
 public class AbortFederationSave
-  extends AbstractRequest<AbortFederationSaveResponse>
-  implements FederationExecutionMessage
+  extends
+  AbstractRequest<FederationExecutionMessageProtos.AbortFederationSave, FederationExecutionMessageProtos.AbortFederationSave.Builder, AbortFederationSaveResponse>
+implements FederationExecutionMessage
 {
   public AbortFederationSave()
   {
-    super(MessageType.ABORT_FEDERATION_SAVE);
-
-    encodingFinished();
+    super(FederationExecutionMessageProtos.AbortFederationSave.newBuilder());
   }
 
-  public AbortFederationSave(ChannelBuffer buffer)
+  public AbortFederationSave(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.AbortFederationSave.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.ABORT_FEDERATION_SAVE;
+    return MessageProtos.MessageType.ABORT_FEDERATION_SAVE;
   }
 
+  @Override
+  public long getRequestId()
+  {
+    return builder.getRequestId();
+  }
+
+  @Override
+  public void setRequestId(long requestId)
+  {
+    builder.setRequestId(requestId);
+  }
+
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.abortFederationSave(federateProxy, this);

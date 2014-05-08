@@ -16,9 +16,6 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectInstanceHandleFactory;
-
-import hla.rti1516.CouldNotDecode;
 import hla.rti1516.ObjectInstanceHandle;
 
 public class IEEE1516ObjectInstanceHandle
@@ -29,19 +26,6 @@ public class IEEE1516ObjectInstanceHandle
   public IEEE1516ObjectInstanceHandle(hla.rti1516e.ObjectInstanceHandle objectInstanceHandle)
   {
     this.objectInstanceHandle = objectInstanceHandle;
-  }
-
-  public IEEE1516ObjectInstanceHandle(byte[] buffer, int offset)
-    throws CouldNotDecode
-  {
-    try
-    {
-      objectInstanceHandle = IEEE1516eObjectInstanceHandleFactory.INSTANCE.decode(buffer, offset);
-    }
-    catch (hla.rti1516e.exceptions.CouldNotDecode cnd)
-    {
-      throw new CouldNotDecode(cnd);
-    }
   }
 
   public hla.rti1516e.ObjectInstanceHandle getIEEE1516eObjectInstanceHandle()

@@ -16,51 +16,60 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.ObjectInstanceHandles;
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.messages.MessageType;
-import net.sf.ohla.rti.messages.ObjectInstanceAttributesMessage;
+import net.sf.ohla.rti.messages.AbstractMessage;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.ByteString;
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class ProvideAttributeValueUpdate
-  extends ObjectInstanceAttributesMessage
+  extends
+  AbstractMessage<FederateMessageProtos.ProvideAttributeValueUpdate, FederateMessageProtos.ProvideAttributeValueUpdate.Builder>
   implements Callback
 {
-  private final byte[] tag;
-
   public ProvideAttributeValueUpdate(
     ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles, byte[] tag)
   {
-    super(MessageType.PROVIDE_ATTRIBUTE_VALUE_UPDATE, objectInstanceHandle, attributeHandles);
+    super(FederateMessageProtos.ProvideAttributeValueUpdate.newBuilder());
 
-    this.tag = tag;
+    builder.setObjectInstanceHandle(ObjectInstanceHandles.convert(objectInstanceHandle));
+    builder.addAllAttributeHandles(AttributeHandles.convert(attributeHandles));
 
-    Protocol.encodeBytes(buffer, tag);
-
-    encodingFinished();
+    if (tag != null)
+    {
+      builder.setTag(ByteString.copyFrom(tag));
+    }
   }
 
-  public ProvideAttributeValueUpdate(ChannelBuffer buffer)
+  public ProvideAttributeValueUpdate(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    tag = Protocol.decodeBytes(buffer);
+    super(FederateMessageProtos.ProvideAttributeValueUpdate.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.PROVIDE_ATTRIBUTE_VALUE_UPDATE;
+    return MessageProtos.MessageType.PROVIDE_ATTRIBUTE_VALUE_UPDATE;
   }
 
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.provideAttributeValueUpdate(objectInstanceHandle, attributeHandles, tag);
+    federateAmbassador.provideAttributeValueUpdate(
+      ObjectInstanceHandles.convert(builder.getObjectInstanceHandle()),
+      AttributeHandles.convertAttributeHandles(builder.getAttributeHandlesList()),
+      builder.hasTag() ? builder.getTag().toByteArray() : null);
   }
 }

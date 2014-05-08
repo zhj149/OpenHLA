@@ -16,71 +16,94 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import java.util.ArrayList;
 import java.util.List;
 
-import net.sf.ohla.rti.Protocol;
+import net.sf.ohla.rti.RTI;
 import net.sf.ohla.rti.fdd.FDD;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
+import net.sf.ohla.rti.messages.proto.RTIMessageProtos;
+import net.sf.ohla.rti.proto.OHLAProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.channel.ChannelHandlerContext;
+
+import com.google.protobuf.CodedInputStream;
 
 public class JoinFederationExecution
-  extends AbstractMessage
+  extends AbstractMessage<RTIMessageProtos.JoinFederationExecution, RTIMessageProtos.JoinFederationExecution.Builder>
+  implements RTIMessage
 {
-  private final String federateName;
-  private final String federateType;
-  private final String federationExecutionName;
-  private final List<FDD> additionalFDDs;
+  private volatile List<FDD> additionalFDDs;
 
   public JoinFederationExecution(
     String federateName, String federateType, String federationExecutionName, List<FDD> additionalFDDs)
   {
-    super(MessageType.JOIN_FEDERATION_EXECUTION);
+    super(RTIMessageProtos.JoinFederationExecution.newBuilder());
 
-    this.federateName = federateName;
-    this.federateType = federateType;
-    this.federationExecutionName = federationExecutionName;
     this.additionalFDDs = additionalFDDs;
 
-    Protocol.encodeOptionalString(buffer, federateName);
-    Protocol.encodeString(buffer, federateType);
-    Protocol.encodeString(buffer, federationExecutionName);
-    FDD.encodeList(buffer, additionalFDDs);
+    if (federateName != null)
+    {
+      builder.setFederateName(federateName);
+    }
 
-    encodingFinished();
+    builder.setFederateType(federateType);
+    builder.setFederationExecutionName(federationExecutionName);
+
+    if (additionalFDDs != null)
+    {
+      for (FDD fdd : additionalFDDs)
+      {
+        builder.addAdditionalFDDs(fdd.toProto());
+      }
+    }
   }
 
-  public JoinFederationExecution(ChannelBuffer buffer)
+  public JoinFederationExecution(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    federateName = Protocol.decodeOptionalString(buffer);
-    federateType = Protocol.decodeString(buffer);
-    federationExecutionName = Protocol.decodeString(buffer);
-    additionalFDDs = FDD.decodeList(buffer);
-  }
-
-  public String getFederationExecutionName()
-  {
-    return federationExecutionName;
+    super(RTIMessageProtos.JoinFederationExecution.newBuilder(), in);
   }
 
   public String getFederateName()
   {
-    return federateName;
+    return builder.getFederateName();
   }
 
   public String getFederateType()
   {
-    return federateType;
+    return builder.getFederateType();
+  }
+
+  public String getFederationExecutionName()
+  {
+    return builder.getFederationExecutionName();
   }
 
   public List<FDD> getAdditionalFDDs()
   {
+    if (additionalFDDs == null)
+    {
+      List<FDD> additionalFDDs = new ArrayList<>(builder.getAdditionalFDDsCount());
+      for (OHLAProtos.FDD fdd : builder.getAdditionalFDDsList())
+      {
+        additionalFDDs.add(new FDD(fdd));
+      }
+      this.additionalFDDs = additionalFDDs;
+    }
     return additionalFDDs;
   }
 
-  public MessageType getType()
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.JOIN_FEDERATION_EXECUTION;
+    return MessageProtos.MessageType.JOIN_FEDERATION_EXECUTION;
+  }
+
+  @Override
+  public void execute(RTI rti, ChannelHandlerContext context)
+  {
+    rti.joinFederationExecution(context, this);
   }
 }

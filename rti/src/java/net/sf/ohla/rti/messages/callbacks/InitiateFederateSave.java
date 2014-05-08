@@ -16,81 +16,75 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.LogicalTimes;
 import net.sf.ohla.rti.federate.Callback;
 import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.AbstractMessage;
 import net.sf.ohla.rti.messages.FederateMessage;
-import net.sf.ohla.rti.messages.MessageType;
-import net.sf.ohla.rti.messages.StringMessage;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.LogicalTime;
-import hla.rti1516e.LogicalTimeFactory;
+import hla.rti1516e.exceptions.CouldNotEncode;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class InitiateFederateSave
-  extends StringMessage
+  extends
+  AbstractMessage<FederateMessageProtos.InitiateFederateSave, FederateMessageProtos.InitiateFederateSave.Builder>
   implements Callback, FederateMessage
 {
-  private final LogicalTime time;
-
   private Federate federate;
+  private LogicalTime time;
 
   public InitiateFederateSave(String label)
   {
-    super(MessageType.INITIATE_FEDERATE_SAVE, label);
+    super(FederateMessageProtos.InitiateFederateSave.newBuilder());
 
-    time = null;
-
-    Protocol.encodeNullTime(buffer);
-
-    encodingFinished();
+    builder.setLabel(label);
   }
 
   public InitiateFederateSave(String label, LogicalTime time)
+    throws CouldNotEncode
   {
-    super(MessageType.INITIATE_FEDERATE_SAVE, label);
+    this(label);
 
     this.time = time;
 
-    Protocol.encodeTime(buffer, time);
-
-    encodingFinished();
+    builder.setTime(LogicalTimes.convert(time));
   }
 
-  public InitiateFederateSave(ChannelBuffer buffer, LogicalTimeFactory logicalTimeFactory)
+  public InitiateFederateSave(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    time = Protocol.decodeTime(buffer, logicalTimeFactory);
+    super(FederateMessageProtos.InitiateFederateSave.newBuilder(), in);
   }
 
-  public String getLabel()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return s;
+    return MessageProtos.MessageType.INITIATE_FEDERATE_SAVE;
   }
 
-  public LogicalTime getTime()
-  {
-    return time;
-  }
-
-  public MessageType getType()
-  {
-    return MessageType.INITIATE_FEDERATE_SAVE;
-  }
-
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federate.fireInitiateFederateSave(s, time);
+    federate.fireInitiateFederateSave(builder.getLabel(), time);
   }
 
+  @Override
   public void execute(Federate federate)
   {
     this.federate = federate;
+
+    if (builder.hasTime())
+    {
+      time = LogicalTimes.convert(federate.getLogicalTimeFactory(), builder.getTime());
+    }
 
     federate.getCallbackManager().add(this, false);
   }

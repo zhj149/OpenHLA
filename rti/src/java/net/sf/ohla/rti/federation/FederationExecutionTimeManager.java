@@ -16,31 +16,37 @@
 
 package net.sf.ohla.rti.federation;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
+import net.sf.ohla.rti.util.FederateHandles;
+import net.sf.ohla.rti.util.LogicalTimes;
 import net.sf.ohla.rti.i18n.I18nLogger;
 import net.sf.ohla.rti.i18n.LogMessages;
+import net.sf.ohla.rti.messages.EnableTimeRegulation;
+import net.sf.ohla.rti.messages.FlushQueueRequest;
+import net.sf.ohla.rti.messages.ModifyLookahead;
+import net.sf.ohla.rti.messages.NextMessageRequest;
+import net.sf.ohla.rti.messages.NextMessageRequestAvailable;
 import net.sf.ohla.rti.messages.QueryGALT;
 import net.sf.ohla.rti.messages.QueryGALTResponse;
 import net.sf.ohla.rti.messages.QueryLITS;
 import net.sf.ohla.rti.messages.QueryLITSResponse;
+import net.sf.ohla.rti.messages.TimeAdvanceRequest;
+import net.sf.ohla.rti.messages.TimeAdvanceRequestAvailable;
+import net.sf.ohla.rti.proto.FederationExecutionSaveProtos.FederationExecutionState.FederationExecutionTimeManagerState;
 
+import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.CodedOutputStream;
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.LogicalTime;
 import hla.rti1516e.LogicalTimeFactory;
 import hla.rti1516e.LogicalTimeInterval;
-import hla.rti1516e.exceptions.CouldNotDecode;
-import hla.rti1516e.exceptions.CouldNotEncode;
 import hla.rti1516e.exceptions.IllegalTimeArithmetic;
 import hla.rti1516e.exceptions.InvalidLogicalTimeInterval;
 
@@ -52,12 +58,12 @@ public class FederationExecutionTimeManager
   private final LogicalTime finalTime;
   private final LogicalTimeInterval epsilon;
 
-  private final ReadWriteLock timeLock = new ReentrantReadWriteLock(true);
+  private final ReentrantReadWriteLock timeLock = new ReentrantReadWriteLock(true);
 
-  private final Set<FederateHandle> timeRegulatingFederates = new HashSet<FederateHandle>();
-  private final Set<FederateHandle> timeConstrainedFederates = new HashSet<FederateHandle>();
+  private final Set<FederateHandle> timeRegulatingFederates = new HashSet<>();
+  private final Set<FederateHandle> timeConstrainedFederates = new HashSet<>();
 
-  private final I18nLogger log;
+  private final I18nLogger logger;
 
   /**
    * The federation-wide GALT. Used for all non-regulating federates.
@@ -73,7 +79,7 @@ public class FederationExecutionTimeManager
     finalTime = logicalTimeFactory.makeFinal();
     epsilon = logicalTimeFactory.makeEpsilon();
 
-    log = I18nLogger.getLogger(federationExecution.getMarker(), FederationExecutionTimeManager.class);
+    logger = I18nLogger.getLogger(federationExecution.getMarker(), FederationExecutionTimeManager.class);
   }
 
   public LogicalTimeFactory getLogicalTimeFactory()
@@ -81,7 +87,7 @@ public class FederationExecutionTimeManager
     return logicalTimeFactory;
   }
 
-  public ReadWriteLock getTimeLock()
+  public ReentrantReadWriteLock getTimeLock()
   {
     return timeLock;
   }
@@ -92,11 +98,13 @@ public class FederationExecutionTimeManager
   }
 
   @SuppressWarnings("unchecked")
-  public void enableTimeRegulation(FederateProxy federateProxy, LogicalTimeInterval lookahead)
+  public void enableTimeRegulation(FederateProxy federateProxy, EnableTimeRegulation enableTimeRegulation)
   {
     timeLock.writeLock().lock();
     try
     {
+      LogicalTimeInterval lookahead = enableTimeRegulation.getLookahead();
+
       LogicalTime federateTime;
 
       if (timeConstrainedFederates.isEmpty())
@@ -160,13 +168,9 @@ public class FederationExecutionTimeManager
 
       recalculateGALT(federateProxy);
     }
-    catch (IllegalTimeArithmetic ita)
+    catch (IllegalTimeArithmetic | InvalidLogicalTimeInterval e)
     {
-      log.error(LogMessages.UNABLE_TO_ENABLE_TIME_REGULATION, ita);
-    }
-    catch (InvalidLogicalTimeInterval ilti)
-    {
-      log.error(LogMessages.UNABLE_TO_ENABLE_TIME_REGULATION, ilti);
+      logger.error(LogMessages.UNABLE_TO_ENABLE_TIME_REGULATION, e);
     }
     finally
     {
@@ -180,13 +184,17 @@ public class FederationExecutionTimeManager
     timeLock.writeLock().lock();
     try
     {
-      timeRegulatingFederates.remove(federateProxy);
+      timeRegulatingFederates.remove(federateProxy.getFederateHandle());
 
       if (timeRegulatingFederates.isEmpty())
       {
         // no more time regulating federates
 
         galt = null;
+
+        logger.debug(LogMessages.GALT_UNDEFINED);
+
+        federationExecution.galtUndefined();
 
         for (FederateProxy f : federationExecution.getFederates().values())
         {
@@ -198,11 +206,12 @@ public class FederationExecutionTimeManager
         FederateProxy lastTimeRegulatingFederate = federationExecution.getFederate(
           timeRegulatingFederates.iterator().next());
 
-        lastTimeRegulatingFederate.galtUndefined();
-
         if (lastTimeRegulatingFederate.getLOTS().compareTo(galt) > 0)
         {
+          LogicalTime oldGALT = galt;
           galt = lastTimeRegulatingFederate.getLOTS();
+
+          logger.debug(LogMessages.GALT_UPDATED, oldGALT, galt);
 
           for (FederateProxy f : federationExecution.getFederates().values())
           {
@@ -256,7 +265,10 @@ public class FederationExecutionTimeManager
         {
           // federation-wide GALT advanced
 
+          LogicalTime oldGALT = galt;
           galt = leastTimeRegulatingLOTS;
+
+          logger.debug(LogMessages.GALT_UPDATED, oldGALT, galt);
 
           // recalculate the GALT for each time regulating federate
           //
@@ -318,7 +330,7 @@ public class FederationExecutionTimeManager
     timeLock.writeLock().lock();
     try
     {
-      timeConstrainedFederates.remove(federateProxy);
+      timeConstrainedFederates.remove(federateProxy.getFederateHandle());
 
       federateProxy.disableTimeConstrained();
     }
@@ -333,7 +345,8 @@ public class FederationExecutionTimeManager
     timeLock.readLock().lock();
     try
     {
-      federateProxy.getFederateChannel().write(new QueryGALTResponse(queryGALT.getId(), federateProxy.getGALT()));
+      federateProxy.getFederateChannel().write(
+        new QueryGALTResponse(queryGALT.getRequestId(), federateProxy.getGALT()));
     }
     finally
     {
@@ -346,7 +359,8 @@ public class FederationExecutionTimeManager
     timeLock.readLock().lock();
     try
     {
-      federateProxy.getFederateChannel().write(new QueryLITSResponse(queryLITS.getId(), federateProxy.getLITSOrGALT()));
+      federateProxy.getFederateChannel().write(
+        new QueryLITSResponse(queryLITS.getRequestId(), federateProxy.getLITSOrGALT()));
     }
     finally
     {
@@ -354,11 +368,13 @@ public class FederationExecutionTimeManager
     }
   }
 
-  public void modifyLookahead(FederateProxy federateProxy, LogicalTimeInterval lookahead)
+  public void modifyLookahead(FederateProxy federateProxy, ModifyLookahead modifyLookahead)
   {
     timeLock.writeLock().lock();
     try
     {
+      LogicalTimeInterval lookahead = modifyLookahead.getLookahead();
+
       federateProxy.modifyLookahead(lookahead);
     }
     finally
@@ -367,11 +383,13 @@ public class FederationExecutionTimeManager
     }
   }
 
-  public void timeAdvanceRequest(FederateProxy federateProxy, LogicalTime time)
+  public void timeAdvanceRequest(FederateProxy federateProxy, TimeAdvanceRequest timeAdvanceRequest)
   {
     timeLock.writeLock().lock();
     try
     {
+      LogicalTime time = timeAdvanceRequest.getTime();
+
       federateProxy.timeAdvanceRequest(time);
 
       if (federateProxy.isTimeRegulationEnabled())
@@ -379,13 +397,9 @@ public class FederationExecutionTimeManager
         recalculateGALT(federateProxy);
       }
     }
-    catch (IllegalTimeArithmetic ita)
+    catch (IllegalTimeArithmetic | InvalidLogicalTimeInterval e)
     {
-      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ita);
-    }
-    catch (InvalidLogicalTimeInterval ilti)
-    {
-      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ilti);
+      logger.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, e);
     }
     finally
     {
@@ -393,11 +407,14 @@ public class FederationExecutionTimeManager
     }
   }
 
-  public void timeAdvanceRequestAvailable(FederateProxy federateProxy, LogicalTime time)
+  public void timeAdvanceRequestAvailable(
+    FederateProxy federateProxy, TimeAdvanceRequestAvailable timeAdvanceRequestAvailable)
   {
     timeLock.writeLock().lock();
     try
     {
+      LogicalTime time = timeAdvanceRequestAvailable.getTime();
+
       federateProxy.timeAdvanceRequestAvailable(time);
 
       if (federateProxy.isTimeRegulationEnabled())
@@ -405,13 +422,9 @@ public class FederationExecutionTimeManager
         recalculateGALT(federateProxy);
       }
     }
-    catch (IllegalTimeArithmetic ita)
+    catch (IllegalTimeArithmetic | InvalidLogicalTimeInterval e)
     {
-      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ita);
-    }
-    catch (InvalidLogicalTimeInterval ilti)
-    {
-      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ilti);
+      logger.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, e);
     }
     finally
     {
@@ -419,11 +432,13 @@ public class FederationExecutionTimeManager
     }
   }
 
-  public void nextMessageRequest(FederateProxy federateProxy, LogicalTime time)
+  public void nextMessageRequest(FederateProxy federateProxy, NextMessageRequest nextMessageRequest)
   {
     timeLock.writeLock().lock();
     try
     {
+      LogicalTime time = nextMessageRequest.getTime();
+
       federateProxy.nextMessageRequest(time);
 
       if (federateProxy.isTimeRegulationEnabled())
@@ -431,13 +446,9 @@ public class FederationExecutionTimeManager
         recalculateGALT(federateProxy);
       }
     }
-    catch (IllegalTimeArithmetic ita)
+    catch (IllegalTimeArithmetic | InvalidLogicalTimeInterval e)
     {
-      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ita);
-    }
-    catch (InvalidLogicalTimeInterval ilti)
-    {
-      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ilti);
+      logger.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, e);
     }
     finally
     {
@@ -445,11 +456,14 @@ public class FederationExecutionTimeManager
     }
   }
 
-  public void nextMessageRequestAvailable(FederateProxy federateProxy, LogicalTime time)
+  public void nextMessageRequestAvailable(
+    FederateProxy federateProxy, NextMessageRequestAvailable nextMessageRequestAvailable)
   {
     timeLock.writeLock().lock();
     try
     {
+      LogicalTime time = nextMessageRequestAvailable.getTime();
+
       federateProxy.nextMessageRequestAvailable(time);
 
       if (federateProxy.isTimeRegulationEnabled())
@@ -457,13 +471,9 @@ public class FederationExecutionTimeManager
         recalculateGALT(federateProxy);
       }
     }
-    catch (IllegalTimeArithmetic ita)
+    catch (IllegalTimeArithmetic | InvalidLogicalTimeInterval e)
     {
-      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ita);
-    }
-    catch (InvalidLogicalTimeInterval ilti)
-    {
-      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ilti);
+      logger.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, e);
     }
     finally
     {
@@ -471,11 +481,13 @@ public class FederationExecutionTimeManager
     }
   }
 
-  public void flushQueueRequest(FederateProxy federateProxy, LogicalTime time)
+  public void flushQueueRequest(FederateProxy federateProxy, FlushQueueRequest flushQueueRequest)
   {
     timeLock.writeLock().lock();
     try
     {
+      LogicalTime time = flushQueueRequest.getTime();
+
       federateProxy.flushQueueRequest(time);
 
       if (federateProxy.isTimeRegulationEnabled())
@@ -483,13 +495,9 @@ public class FederationExecutionTimeManager
         recalculateGALT(federateProxy);
       }
     }
-    catch (IllegalTimeArithmetic ita)
+    catch (IllegalTimeArithmetic | InvalidLogicalTimeInterval e)
     {
-      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ita);
-    }
-    catch (InvalidLogicalTimeInterval ilti)
-    {
-      log.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, ilti);
+      logger.error(LogMessages.UNABLE_TO_REQUEST_TIME_ADVANCE, e);
     }
     finally
     {
@@ -497,59 +505,39 @@ public class FederationExecutionTimeManager
     }
   }
 
-  public void saveState(DataOutput out)
-    throws IOException, CouldNotEncode
+  public void saveState(CodedOutputStream out)
+    throws IOException
   {
-    out.writeInt(timeRegulatingFederates.size());
-    for (FederateHandle federateHandle : timeRegulatingFederates)
+    FederationExecutionTimeManagerState.Builder timeManagerState = FederationExecutionTimeManagerState.newBuilder();
+
+    timeManagerState.addAllTimeRegulatingFederateHandles(FederateHandles.convertToProto(timeRegulatingFederates));
+    timeManagerState.addAllTimeConstrainedFederateHandles(FederateHandles.convertToProto(timeConstrainedFederates));
+
+    if (galt != null)
     {
-      ((IEEE1516eFederateHandle) federateHandle).writeTo(out);
+      timeManagerState.setGalt(LogicalTimes.convert(galt));
     }
 
-    out.writeInt(timeConstrainedFederates.size());
-    for (FederateHandle federateHandle : timeConstrainedFederates)
-    {
-      ((IEEE1516eFederateHandle) federateHandle).writeTo(out);
-    }
-
-    if (galt == null)
-    {
-      // TODO: null should be -1?
-      //
-      out.writeInt(0);
-    }
-    else
-    {
-      byte[] encodedGalt = new byte[galt.encodedLength()];
-      out.writeInt(encodedGalt.length);
-      galt.encode(encodedGalt, 0);
-      out.write(encodedGalt);
-    }
+    out.writeMessageNoTag(timeManagerState.build());
   }
 
-  public void restoreState(DataInput in)
-    throws IOException, CouldNotDecode
+  public void restoreState(CodedInputStream in)
+    throws IOException
   {
-    for (int i = in.readInt(); i > 0; i--)
-    {
-      timeRegulatingFederates.add(IEEE1516eFederateHandle.decode(in));
-    }
+    FederationExecutionTimeManagerState timeManagerState =
+      in.readMessage(FederationExecutionTimeManagerState.PARSER, null);
 
-    for (int i = in.readInt(); i > 0; i--)
-    {
-      timeConstrainedFederates.add(IEEE1516eFederateHandle.decode(in));
-    }
+    timeRegulatingFederates.clear();
+    timeConstrainedFederates.clear();
 
-    int encodedGALTLength = in.readInt();
-    if (encodedGALTLength == 0)
+    timeRegulatingFederates.addAll(
+      FederateHandles.convertFromProto(timeManagerState.getTimeRegulatingFederateHandlesList()));
+    timeConstrainedFederates.addAll(
+      FederateHandles.convertFromProto(timeManagerState.getTimeConstrainedFederateHandlesList()));
+
+    if (timeManagerState.hasGalt())
     {
-      galt = null;
-    }
-    else
-    {
-      byte[] encodedGALT = new byte[encodedGALTLength];
-      in.readFully(encodedGALT);
-      galt = logicalTimeFactory.decodeTime(encodedGALT, 0);
+      galt = LogicalTimes.convert(logicalTimeFactory, timeManagerState.getGalt());
     }
   }
 
@@ -564,7 +552,9 @@ public class FederationExecutionTimeManager
       LogicalTime oldGALT = galt;
       galt = federateProxy.getLOTS();
 
-      log.debug(LogMessages.POTENTIAL_GALT, oldGALT, galt);
+      logger.debug(LogMessages.GALT_UPDATED, oldGALT, galt);
+
+      federationExecution.galtUpdated(galt);
 
       for (FederateProxy f : federationExecution.getFederates().values())
       {
@@ -606,11 +596,10 @@ public class FederationExecutionTimeManager
             case NEXT_MESSAGE_REQUEST_AVAILABLE:
               if (timeRegulatingAndConstrainedFederatesAwaitingNextMessageRequestTimeAdvanceGrant == null)
               {
-                timeRegulatingAndConstrainedFederatesAwaitingNextMessageRequestTimeAdvanceGrant =
-                  new HashMap<FederateProxy, LogicalTime>();
+                timeRegulatingAndConstrainedFederatesAwaitingNextMessageRequestTimeAdvanceGrant = new HashMap<>();
               }
 
-              LogicalTime lits = timeRegulatingFederate.getLITS();
+              LogicalTime lits = timeRegulatingFederate.getLITS(potentialGALT);
               timeRegulatingAndConstrainedFederatesAwaitingNextMessageRequestTimeAdvanceGrant.put(
                 timeRegulatingFederate, lits);
 
@@ -627,7 +616,7 @@ public class FederationExecutionTimeManager
         }
       }
 
-      log.debug(LogMessages.POTENTIAL_GALT, galt, potentialGALT);
+      logger.debug(LogMessages.POTENTIAL_GALT, galt, potentialGALT);
 
       LogicalTime newGALT;
       if (timeRegulatingAndConstrainedFederatesAwaitingNextMessageRequestTimeAdvanceGrant == null ||
@@ -668,9 +657,11 @@ public class FederationExecutionTimeManager
         }
       }
 
-      log.debug(LogMessages.GALT_UPDATED, galt, newGALT);
+      logger.debug(LogMessages.GALT_UPDATED, galt, newGALT);
 
       galt = newGALT;
+
+      federationExecution.galtUpdated(galt);
 
       for (FederateHandle timeRegulatingFederateHandle : timeRegulatingFederates)
       {

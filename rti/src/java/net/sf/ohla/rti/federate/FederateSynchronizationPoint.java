@@ -16,12 +16,17 @@
 
 package net.sf.ohla.rti.federate;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
+import net.sf.ohla.rti.proto.FederationExecutionSaveProtos.FederateState.FederateSynchonizationPointState;
+
+import com.google.protobuf.ByteString;
 
 public class FederateSynchronizationPoint
 {
+  private enum State
+  {
+    MOVING_TO_SYNCH_POINT, WAITING_FOR_REST_OF_FEDERATION_TO_SYNCHRONIZE
+  }
+
   private final String label;
   private final byte[] tag;
 
@@ -33,15 +38,11 @@ public class FederateSynchronizationPoint
     this.tag = tag;
   }
 
-  public FederateSynchronizationPoint(DataInput in)
-    throws IOException
+  public FederateSynchronizationPoint(FederateSynchonizationPointState synchonizationPointState)
   {
-    label = in.readUTF();
-
-    tag = new byte[in.readInt()];
-    in.readFully(tag);
-
-    state = State.values()[in.readInt()];
+    label = synchonizationPointState.getLabel();
+    tag = synchonizationPointState.hasTag() ? synchonizationPointState.getTag().toByteArray() : null;
+    state = State.values()[synchonizationPointState.getState().ordinal()];
   }
 
   public String getLabel()
@@ -64,26 +65,19 @@ public class FederateSynchronizationPoint
     return synchronizationPointAchieved;
   }
 
-  public void writeTo(DataOutput out)
-    throws IOException
+  public FederateSynchonizationPointState.Builder saveState()
   {
-    out.writeUTF(label);
+    FederateSynchonizationPointState.Builder synchonizationPointState = FederateSynchonizationPointState.newBuilder();
 
-    if (tag == null)
+    synchonizationPointState.setLabel(label);
+
+    if (tag != null)
     {
-      out.writeInt(0);
-    }
-    else
-    {
-      out.writeInt(tag.length);
-      out.write(tag);
+      synchonizationPointState.setTag(ByteString.copyFrom(tag));
     }
 
-    out.writeInt(state.ordinal());
-  }
+    synchonizationPointState.setState(FederateSynchonizationPointState.State.values()[state.ordinal()]);
 
-  protected enum State
-  {
-    MOVING_TO_SYNCH_POINT, WAITING_FOR_REST_OF_FEDERATION_TO_SYNCHRONIZE
+    return synchonizationPointState;
   }
 }

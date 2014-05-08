@@ -183,6 +183,6 @@ public class Integer64Time
 
   private int compareTo(Integer64Time rhs)
   {
-    return Math.round(time - rhs.time);
+    return Long.compare(time, rhs.time);
   }
 }

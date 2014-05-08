@@ -16,44 +16,45 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import java.io.IOException;
+
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.messages.MessageType;
-import net.sf.ohla.rti.messages.StringMessage;
+import net.sf.ohla.rti.messages.AbstractMessage;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class RequestFederationRestoreFailed
-  extends StringMessage
+  extends
+  AbstractMessage<FederateMessageProtos.RequestFederationRestoreFailed, FederateMessageProtos.RequestFederationRestoreFailed.Builder>
   implements Callback
 {
-  public RequestFederationRestoreFailed(String s)
+  public RequestFederationRestoreFailed(String label)
   {
-    super(MessageType.REQUEST_FEDERATION_RESTORE_FAILED, s);
+    super(FederateMessageProtos.RequestFederationRestoreFailed.newBuilder());
 
-    encodingFinished();
+    builder.setLabel(label);
   }
 
-  public RequestFederationRestoreFailed(ChannelBuffer buffer)
+  public RequestFederationRestoreFailed(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederateMessageProtos.RequestFederationRestoreFailed.newBuilder(), in);
   }
 
-  public String getLabel()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return s;
+    return MessageProtos.MessageType.REQUEST_FEDERATION_RESTORE_FAILED;
   }
 
-  public MessageType getType()
-  {
-    return MessageType.REQUEST_FEDERATION_RESTORE_FAILED;
-  }
-
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.requestFederationRestoreFailed(s);
+    federateAmbassador.requestFederationRestoreFailed(builder.getLabel());
   }
 }

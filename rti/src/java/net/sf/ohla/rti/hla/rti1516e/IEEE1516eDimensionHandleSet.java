@@ -16,16 +16,14 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
+import java.lang.reflect.Array;
 
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
-import net.sf.ohla.rti.Protocol;
-
-import org.jboss.netty.buffer.ChannelBuffer;
+import net.sf.ohla.rti.util.EmptyIterator;
 
 import hla.rti1516e.DimensionHandle;
 import hla.rti1516e.DimensionHandleSet;
@@ -34,6 +32,8 @@ public class IEEE1516eDimensionHandleSet
   extends HashSet<DimensionHandle>
   implements DimensionHandleSet
 {
+  public static final DimensionHandleSet EMPTY = new EmptyDimensionHandleSet();
+
   public IEEE1516eDimensionHandleSet()
   {
   }
@@ -53,67 +53,92 @@ public class IEEE1516eDimensionHandleSet
     super(dimensionHandles);
   }
 
-  public IEEE1516eDimensionHandleSet(DataInput in)
-    throws IOException
-  {
-    for (int count = in.readInt(); count > 0; count--)
-    {
-      add(IEEE1516eDimensionHandle.decode(in));
-    }
-  }
-
-  public void writeTo(DataOutput out)
-    throws IOException
-  {
-    out.writeInt(size());
-    for (DimensionHandle dimensionHandle : this)
-    {
-      ((IEEE1516eDimensionHandle) dimensionHandle).writeTo(out);
-    }
-  }
-
   @Override
   public IEEE1516eDimensionHandleSet clone()
   {
     return new IEEE1516eDimensionHandleSet(this);
   }
 
-  public static void encode(ChannelBuffer buffer, DimensionHandleSet dimensionHandles)
+  public static class EmptyDimensionHandleSet
+    implements DimensionHandleSet
   {
-    if (dimensionHandles == null)
+    @Override
+    public int size()
     {
-      Protocol.encodeVarInt(buffer, 0);
-    }
-    else
-    {
-      Protocol.encodeVarInt(buffer, dimensionHandles.size());
-
-      for (DimensionHandle dimensionHandle : dimensionHandles)
-      {
-        IEEE1516eDimensionHandle.encode(buffer, dimensionHandle);
-      }
-    }
-  }
-
-  public static IEEE1516eDimensionHandleSet decode(ChannelBuffer buffer)
-  {
-    IEEE1516eDimensionHandleSet dimensionHandles;
-
-    int size = Protocol.decodeVarInt(buffer);
-    if (size == 0)
-    {
-      dimensionHandles = null;
-    }
-    else
-    {
-      dimensionHandles = new IEEE1516eDimensionHandleSet();
-
-      for (; size > 0; size--)
-      {
-        dimensionHandles.add(IEEE1516eDimensionHandle.decode(buffer));
-      }
+      return 0;
     }
 
-    return dimensionHandles;
+    @Override
+    public boolean isEmpty()
+    {
+      return true;
+    }
+
+    @Override
+    public boolean contains(Object o)
+    {
+      return false;
+    }
+
+    @Override
+    public Iterator<DimensionHandle> iterator()
+    {
+      return EmptyIterator.instance();
+    }
+
+    @Override
+    public Object[] toArray()
+    {
+      return new Object[0];
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> T[] toArray(T[] a)
+    {
+      return (T[]) Array.newInstance(a.getClass().getComponentType(), 0);
+    }
+
+    @Override
+    public boolean add(DimensionHandle dimensionHandle)
+    {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean remove(Object o)
+    {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean containsAll(Collection<?> c)
+    {
+      return false;
+    }
+
+    @Override
+    public boolean addAll(Collection<? extends DimensionHandle> c)
+    {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean retainAll(Collection<?> c)
+    {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean removeAll(Collection<?> c)
+    {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void clear()
+    {
+      throw new UnsupportedOperationException();
+    }
   }
 }

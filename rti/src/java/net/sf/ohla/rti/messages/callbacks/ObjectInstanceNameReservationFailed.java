@@ -16,51 +16,58 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import java.io.IOException;
+
 import net.sf.ohla.rti.federate.Callback;
 import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.AbstractMessage;
 import net.sf.ohla.rti.messages.FederateMessage;
-import net.sf.ohla.rti.messages.MessageType;
-import net.sf.ohla.rti.messages.StringMessage;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class ObjectInstanceNameReservationFailed
-  extends StringMessage
+  extends
+  AbstractMessage<FederateMessageProtos.ObjectInstanceNameReservationFailed, FederateMessageProtos.ObjectInstanceNameReservationFailed.Builder>
   implements Callback, FederateMessage
 {
   private Federate federate;
 
-  public ObjectInstanceNameReservationFailed(String name)
+  public ObjectInstanceNameReservationFailed(String objectInstanceName)
   {
-    super(MessageType.OBJECT_INSTANCE_NAME_RESERVATION_FAILED, name);
+    super(FederateMessageProtos.ObjectInstanceNameReservationFailed.newBuilder());
 
-    encodingFinished();
+    builder.setObjectInstanceName(objectInstanceName);
   }
 
-  public ObjectInstanceNameReservationFailed(ChannelBuffer buffer)
+  public ObjectInstanceNameReservationFailed(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederateMessageProtos.ObjectInstanceNameReservationFailed.newBuilder(), in);
   }
 
   public String getObjectInstanceName()
   {
-    return s;
+    return builder.getObjectInstanceName();
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.OBJECT_INSTANCE_NAME_RESERVATION_FAILED;
+    return MessageProtos.MessageType.OBJECT_INSTANCE_NAME_RESERVATION_FAILED;
   }
 
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federate.objectInstanceNameReservationFailed(s);
+    federate.objectInstanceNameReservationFailed(builder.getObjectInstanceName());
   }
 
+  @Override
   public void execute(Federate federate)
   {
     this.federate = federate;

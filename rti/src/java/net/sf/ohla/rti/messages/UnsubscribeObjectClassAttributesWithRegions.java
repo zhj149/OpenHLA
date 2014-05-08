@@ -16,50 +16,55 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.ObjectClassHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeSetRegionSetPairList;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.AttributeSetRegionSetPairList;
 import hla.rti1516e.ObjectClassHandle;
 
 public class UnsubscribeObjectClassAttributesWithRegions
-  extends ObjectClassMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.UnsubscribeObjectClassAttributesWithRegions, FederationExecutionMessageProtos.UnsubscribeObjectClassAttributesWithRegions.Builder>
   implements FederationExecutionMessage
 {
-  private final AttributeSetRegionSetPairList attributesAndRegions;
-
   public UnsubscribeObjectClassAttributesWithRegions(
     ObjectClassHandle objectClassHandle, AttributeSetRegionSetPairList attributesAndRegions)
   {
-    super(MessageType.UNSUBSCRIBE_OBJECT_CLASS_ATTRIBUTES_WITH_REGIONS, objectClassHandle);
+    super(FederationExecutionMessageProtos.UnsubscribeObjectClassAttributesWithRegions.newBuilder());
 
-    this.attributesAndRegions = attributesAndRegions;
-
-    IEEE1516eAttributeSetRegionSetPairList.encode(buffer, attributesAndRegions);
-
-    encodingFinished();
+    builder.setObjectClassHandle(ObjectClassHandles.convert(objectClassHandle));
+    builder.addAllAttributeRegionAssociations(AttributeHandles.convert(attributesAndRegions));
   }
 
-  public UnsubscribeObjectClassAttributesWithRegions(ChannelBuffer buffer)
+  public UnsubscribeObjectClassAttributesWithRegions(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.UnsubscribeObjectClassAttributesWithRegions.newBuilder(), in);
+  }
 
-    attributesAndRegions = IEEE1516eAttributeSetRegionSetPairList.decode(buffer);
+  public ObjectClassHandle getObjectClassHandle()
+  {
+    return ObjectClassHandles.convert(builder.getObjectClassHandle());
   }
 
   public AttributeSetRegionSetPairList getAttributesAndRegions()
   {
-    return attributesAndRegions;
+    return AttributeHandles.convert(builder.getAttributeRegionAssociationsList());
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.UNSUBSCRIBE_OBJECT_CLASS_ATTRIBUTES_WITH_REGIONS;
+    return MessageProtos.MessageType.UNSUBSCRIBE_OBJECT_CLASS_ATTRIBUTES_WITH_REGIONS;
   }
 
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.unsubscribeObjectClassAttributesWithRegions(federateProxy, this);

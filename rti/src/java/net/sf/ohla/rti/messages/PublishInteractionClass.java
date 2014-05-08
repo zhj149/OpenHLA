@@ -16,32 +16,52 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.InteractionClassHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.InteractionClassHandle;
 
 public class PublishInteractionClass
-  extends InteractionClassMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.PublishInteractionClass, FederationExecutionMessageProtos.PublishInteractionClass.Builder>
   implements FederationExecutionMessage
 {
+  private volatile InteractionClassHandle interactionClassHandle;
+
   public PublishInteractionClass(InteractionClassHandle interactionClassHandle)
   {
-    super(MessageType.PUBLISH_INTERACTION_CLASS, interactionClassHandle);
+    super(FederationExecutionMessageProtos.PublishInteractionClass.newBuilder());
+
+    builder.setInteractionClassHandle(InteractionClassHandles.convert(interactionClassHandle));
   }
 
-  public PublishInteractionClass(ChannelBuffer buffer)
+  public PublishInteractionClass(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.PublishInteractionClass.newBuilder(), in);
   }
 
-  public MessageType getType()
+  public InteractionClassHandle getInteractionClassHandle()
   {
-    return MessageType.PUBLISH_INTERACTION_CLASS;
+    if (interactionClassHandle == null)
+    {
+      interactionClassHandle = InteractionClassHandles.convert(builder.getInteractionClassHandle());
+    }
+    return interactionClassHandle;
   }
 
+  @Override
+  public MessageProtos.MessageType getMessageType()
+  {
+    return MessageProtos.MessageType.PUBLISH_INTERACTION_CLASS;
+  }
+
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.publishInteractionClass(federateProxy, this);

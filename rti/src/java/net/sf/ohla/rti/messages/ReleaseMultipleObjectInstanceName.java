@@ -16,39 +16,47 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import java.util.Collection;
 import java.util.Set;
 
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import com.google.protobuf.CodedInputStream;
 
 public class ReleaseMultipleObjectInstanceName
-  extends StringsMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.ReleaseMultipleObjectInstanceName, FederationExecutionMessageProtos.ReleaseMultipleObjectInstanceName.Builder>
   implements FederationExecutionMessage
 {
   public ReleaseMultipleObjectInstanceName(Set<String> objectInstanceNames)
   {
-    super(MessageType.RELEASE_MULTIPLE_OBJECT_INSTANCE_NAME, objectInstanceNames);
+    super(FederationExecutionMessageProtos.ReleaseMultipleObjectInstanceName.newBuilder());
 
-    encodingFinished();
+    builder.addAllObjectInstanceNames(objectInstanceNames);
   }
 
-  public ReleaseMultipleObjectInstanceName(ChannelBuffer buffer)
+  public ReleaseMultipleObjectInstanceName(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.ReleaseMultipleObjectInstanceName.newBuilder(), in);
   }
 
-  public Set<String> getObjectInstanceNames()
+  public Collection<String> getObjectInstanceNames()
   {
-    return strings;
+    return builder.getObjectInstanceNamesList();
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.RELEASE_MULTIPLE_OBJECT_INSTANCE_NAME;
+    return MessageProtos.MessageType.RELEASE_MULTIPLE_OBJECT_INSTANCE_NAME;
   }
 
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.releaseMultipleObjectInstanceName(federateProxy, this);

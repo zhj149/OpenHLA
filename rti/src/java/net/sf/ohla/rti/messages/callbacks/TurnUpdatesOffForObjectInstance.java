@@ -16,41 +16,52 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.ObjectInstanceHandles;
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.messages.MessageType;
-import net.sf.ohla.rti.messages.ObjectInstanceAttributesMessage;
+import net.sf.ohla.rti.messages.AbstractMessage;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class TurnUpdatesOffForObjectInstance
-  extends ObjectInstanceAttributesMessage
-  implements Callback
+  extends
+  AbstractMessage<FederateMessageProtos.TurnUpdatesOffForObjectInstance, FederateMessageProtos.TurnUpdatesOffForObjectInstance.Builder>
+implements Callback
 {
   public TurnUpdatesOffForObjectInstance(ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
   {
-    super(MessageType.TURN_UPDATES_OFF_FOR_OBJECT_INSTANCE, objectInstanceHandle, attributeHandles);
+    super(FederateMessageProtos.TurnUpdatesOffForObjectInstance.newBuilder());
 
-    encodingFinished();
+    builder.setObjectInstanceHandle(ObjectInstanceHandles.convert(objectInstanceHandle));
+    builder.addAllAttributeHandles(AttributeHandles.convert(attributeHandles));
   }
 
-  public TurnUpdatesOffForObjectInstance(ChannelBuffer buffer)
+  public TurnUpdatesOffForObjectInstance(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederateMessageProtos.TurnUpdatesOffForObjectInstance.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.TURN_UPDATES_OFF_FOR_OBJECT_INSTANCE;
+    return MessageProtos.MessageType.TURN_UPDATES_OFF_FOR_OBJECT_INSTANCE;
   }
 
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.turnUpdatesOffForObjectInstance(objectInstanceHandle, attributeHandles);
+    federateAmbassador.turnUpdatesOffForObjectInstance(
+      ObjectInstanceHandles.convert(builder.getObjectInstanceHandle()),
+      AttributeHandles.convertAttributeHandles(builder.getAttributeHandlesList()));
   }
 }

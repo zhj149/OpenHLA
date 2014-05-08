@@ -20,14 +20,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.ohla.rti.Protocol;
+import net.sf.ohla.rti.util.DimensionHandles;
 import net.sf.ohla.rti.fdd.Dimension;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSetFactory;
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
-
-import org.jboss.netty.buffer.ChannelBuffer;
+import net.sf.ohla.rti.proto.OHLAProtos;
 
 import hla.rti.DimensionNotDefined;
 import hla.rti.NameNotFound;
@@ -52,31 +51,25 @@ public class RoutingSpace
     this.routingSpaceHandle = routingSpaceHandle;
     this.routingSpaceName = routingSpaceName;
 
-    dimensions = new ArrayList<Dimension>();
-    aliases = new ArrayList<String>();
+    dimensions = new ArrayList<>();
+    aliases = new ArrayList<>();
   }
 
-  public RoutingSpace(ChannelBuffer buffer, Map<DimensionHandle, Dimension> dimensions)
+  public RoutingSpace(OHLAProtos.FDD.FED.RoutingSpace routingSpace, Map<DimensionHandle, Dimension> dimensions)
   {
-    routingSpaceHandle = Protocol.decodeVarInt(buffer);
-    routingSpaceName = Protocol.decodeString(buffer);
+    routingSpaceHandle = routingSpace.getRoutingSpaceHandle();
+    routingSpaceName = routingSpace.getRoutingSpaceName();
 
-    int dimensionHandleCount = Protocol.decodeVarInt(buffer);
-    this.dimensions = new ArrayList<Dimension>(dimensionHandleCount);
-    aliases = new ArrayList<String>(dimensionHandleCount);
-
-    for (int i = dimensionHandleCount; i > 0; i--)
+    this.dimensions = new ArrayList<>(routingSpace.getDimensionHandlesCount());
+    for (int dimensionHandle : routingSpace.getDimensionHandlesList())
     {
-      DimensionHandle dimensionHandle = IEEE1516eDimensionHandle.decode(buffer);
-      dimensionHandles.add(dimensionHandle);
+      Dimension dimension = dimensions.get(DimensionHandles.convert(dimensionHandle));
 
-      this.dimensions.add(dimensions.get(dimensionHandle));
+      this.dimensions.add(dimension);
+      dimensionHandles.add(dimension.getDimensionHandle());
     }
 
-    for (int i = dimensionHandleCount; i > 0; i--)
-    {
-      aliases.add(Protocol.decodeString(buffer));
-    }
+    aliases = new ArrayList<>(routingSpace.getAliasesList());
   }
 
   public boolean isDefault()
@@ -149,26 +142,19 @@ public class RoutingSpace
     return aliases.get(dimensionHandle);
   }
 
-  public static void encode(ChannelBuffer buffer, RoutingSpace routingSpace)
+  public OHLAProtos.FDD.FED.RoutingSpace.Builder toProto()
   {
-    Protocol.encodeVarInt(buffer, routingSpace.routingSpaceHandle);
-    Protocol.encodeString(buffer, routingSpace.routingSpaceName);
+    OHLAProtos.FDD.FED.RoutingSpace.Builder routingSpace =
+      OHLAProtos.FDD.FED.RoutingSpace.newBuilder().setRoutingSpaceHandle(
+        routingSpaceHandle).setRoutingSpaceName(
+        routingSpaceName).addAllAliases(
+        aliases);
 
-    Protocol.encodeVarInt(buffer, routingSpace.dimensions.size());
-
-    for (Dimension dimension : routingSpace.dimensions)
+    for (Dimension dimension : dimensions)
     {
-      IEEE1516eDimensionHandle.encode(buffer, dimension.getDimensionHandle());
+      routingSpace.addDimensionHandles(((IEEE1516eDimensionHandle) dimension.getDimensionHandle()).getHandle());
     }
 
-    for (String alias : routingSpace.aliases)
-    {
-      Protocol.encodeString(buffer, alias);
-    }
-  }
-
-  public static RoutingSpace decode(ChannelBuffer buffer, Map<DimensionHandle, Dimension> dimensions)
-  {
-    return new RoutingSpace(buffer, dimensions);
+    return routingSpace;
   }
 }

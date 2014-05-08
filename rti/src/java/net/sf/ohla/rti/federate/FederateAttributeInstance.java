@@ -16,16 +16,14 @@
 
 package net.sf.ohla.rti.federate;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.OrderTypes;
+import net.sf.ohla.rti.util.TransportationTypeHandles;
 import net.sf.ohla.rti.fdd.Attribute;
 import net.sf.ohla.rti.fdd.ObjectClass;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandle;
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
+import net.sf.ohla.rti.proto.FederationExecutionSaveProtos.FederateState.FederateObjectManagerState.FederateObjectInstanceState.FederateAttributeInstanceState;
 
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.OrderType;
@@ -51,15 +49,12 @@ public class FederateAttributeInstance
     orderType = attribute.getOrderType();
   }
 
-  public FederateAttributeInstance(DataInput in, ObjectClass objectClass)
-    throws IOException
+  public FederateAttributeInstance(FederateAttributeInstanceState attributeInstanceState, ObjectClass objectClass)
   {
-    attribute = objectClass.getAttributeSafely(IEEE1516eAttributeHandle.decode(in));
-
-    transportationTypeHandle = IEEE1516eTransportationTypeHandle.decode(in);
-    orderType = OrderType.values()[in.readInt()];
-
-    divesting = in.readBoolean();
+    attribute = objectClass.getAttributeSafely(AttributeHandles.convert(attributeInstanceState.getAttributeHandle()));
+    transportationTypeHandle = TransportationTypeHandles.convert(attributeInstanceState.getTransportationTypeHandle());
+    orderType = OrderTypes.convert(attributeInstanceState.getOrderType());
+    divesting = attributeInstanceState.getDivesting();
   }
 
   public Attribute getAttribute()
@@ -133,15 +128,16 @@ public class FederateAttributeInstance
     // TODO: check status
   }
 
-  public void writeTo(DataOutput out)
-    throws IOException
+  public FederateAttributeInstanceState.Builder saveState()
   {
-    ((IEEE1516eAttributeHandle) attribute.getAttributeHandle()).writeTo(out);
+    FederateAttributeInstanceState.Builder attributeInstanceState = FederateAttributeInstanceState.newBuilder();
 
-    ((IEEE1516eTransportationTypeHandle) transportationTypeHandle).writeTo(out);
-    out.writeInt(orderType.ordinal());
+    attributeInstanceState.setAttributeHandle(AttributeHandles.convert(attribute.getAttributeHandle()));
+    attributeInstanceState.setTransportationTypeHandle(TransportationTypeHandles.convert(transportationTypeHandle));
+    attributeInstanceState.setOrderType(OrderTypes.convert(orderType));
+    attributeInstanceState.setDivesting(divesting);
 
-    out.writeBoolean(divesting);
+    return attributeInstanceState;
   }
 
   @Override

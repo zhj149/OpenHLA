@@ -16,20 +16,19 @@
 
 package net.sf.ohla.rti.federation;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import net.sf.ohla.rti.util.DimensionHandles;
+import net.sf.ohla.rti.util.RegionHandles;
 import net.sf.ohla.rti.fdd.Dimension;
 import net.sf.ohla.rti.fdd.FDD;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandle;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSet;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eRegionHandle;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSetFactory;
+import net.sf.ohla.rti.proto.FederationExecutionSaveProtos;
+import net.sf.ohla.rti.proto.FederationExecutionSaveProtos.FederationExecutionState.FederationExecutionRegionManagerState.FederationExecutionRegionState;
+import net.sf.ohla.rti.proto.OHLAProtos;
 
 import hla.rti1516e.DimensionHandle;
 import hla.rti1516e.DimensionHandleSet;
@@ -41,7 +40,7 @@ public class FederationExecutionRegion
   private final RegionHandle regionHandle;
   private final DimensionHandleSet dimensionHandles;
 
-  private final Map<DimensionHandle, RangeBounds> rangeBounds = new HashMap<DimensionHandle, RangeBounds>();
+  private final Map<DimensionHandle, RangeBounds> rangeBounds = new HashMap<>();
 
   public FederationExecutionRegion(RegionHandle regionHandle, DimensionHandleSet dimensionHandles, FDD fdd)
   {
@@ -58,19 +57,18 @@ public class FederationExecutionRegion
     }
   }
 
-  public FederationExecutionRegion(DataInput in)
-    throws IOException
+  public FederationExecutionRegion(FederationExecutionSaveProtos.FederationExecutionState.FederationExecutionRegionManagerState.FederationExecutionRegionState regionState)
   {
-    regionHandle = IEEE1516eRegionHandle.decode(in);
+    regionHandle = RegionHandles.convert(regionState.getRegionHandle());
 
-    dimensionHandles = new IEEE1516eDimensionHandleSet();
-    for (int count = in.readInt(); count > 0; count--)
+    dimensionHandles = IEEE1516eDimensionHandleSetFactory.INSTANCE.create();
+    for (OHLAProtos.DimensionRangeBound dimensionRangeBound : regionState.getRangeBoundsList())
     {
-      DimensionHandle dimensionHandle = IEEE1516eDimensionHandle.decode(in);
+      DimensionHandle dimensionHandle = DimensionHandles.convert(dimensionRangeBound.getDimensionHandle());
       dimensionHandles.add(dimensionHandle);
 
-      long lower = in.readLong();
-      long upper = in.readLong();
+      long lower = dimensionRangeBound.getLowerBound();
+      long upper = dimensionRangeBound.getUpperBound();
       rangeBounds.put(dimensionHandle, new RangeBounds(lower, upper));
     }
   }
@@ -92,7 +90,7 @@ public class FederationExecutionRegion
 
   public Map<DimensionHandle, RangeBounds> copyRangeBounds()
   {
-    Map<DimensionHandle, RangeBounds> rangeBounds = new HashMap<DimensionHandle, RangeBounds>();
+    Map<DimensionHandle, RangeBounds> rangeBounds = new HashMap<>();
     for (Map.Entry<DimensionHandle, RangeBounds> entry : this.rangeBounds.entrySet())
     {
       rangeBounds.put(entry.getKey(), entry.getValue());
@@ -130,22 +128,26 @@ public class FederationExecutionRegion
     return intersects;
   }
 
-  public void writeTo(DataOutput out)
-    throws IOException
+  public FederationExecutionRegionState.Builder saveState()
   {
-    ((IEEE1516eRegionHandle) regionHandle).writeTo(out);
+    FederationExecutionRegionState.Builder regionState = FederationExecutionRegionState.newBuilder();
 
-    out.writeInt(dimensionHandles.size());
+    regionState.setRegionHandle(RegionHandles.convert(regionHandle));
+
     for (DimensionHandle dimensionHandle : dimensionHandles)
     {
-      ((IEEE1516eDimensionHandle) dimensionHandle).writeTo(out);
+      OHLAProtos.DimensionRangeBound.Builder dimensionRangeBound = OHLAProtos.DimensionRangeBound.newBuilder();
+
+      dimensionRangeBound.setDimensionHandle(DimensionHandles.convert(dimensionHandle));
 
       RangeBounds rangeBounds = this.rangeBounds.get(dimensionHandle);
       assert rangeBounds != null;
 
-      out.writeLong(rangeBounds.lower);
-      out.writeLong(rangeBounds.upper);
+      dimensionRangeBound.setLowerBound(rangeBounds.lower);
+      dimensionRangeBound.setUpperBound(rangeBounds.upper);
     }
+
+    return regionState;
   }
 
   protected boolean intersects(RangeBounds lhs, RangeBounds rhs)

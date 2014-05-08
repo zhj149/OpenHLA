@@ -94,8 +94,7 @@ public class IEEE1516eHLAinteger64Time
 
   public int compareTo(HLAinteger64Time rhs)
   {
-    long result = time - rhs.getValue();
-    return result < Integer.MIN_VALUE ? -1 : result > Integer.MAX_VALUE ? 1 : (int) result;
+    return Long.compare(time, rhs.getValue());
   }
 
   public int encodedLength()

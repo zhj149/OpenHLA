@@ -16,6 +16,9 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
+import java.nio.ByteBuffer;
+
+import net.sf.ohla.rti.util.TransportationTypeHandles;
 import net.sf.ohla.rti.fdd.TransportationType;
 
 import hla.rti1516e.TransportationTypeHandle;
@@ -37,7 +40,7 @@ public class IEEE1516eTransportationTypeHandleFactory
   {
     try
     {
-      return IEEE1516eTransportationTypeHandle.decode(buffer, offset);
+      return TransportationTypeHandles.convert(ByteBuffer.wrap(buffer, offset, 4).getInt());
     }
     catch (Throwable t)
     {
@@ -53,5 +56,10 @@ public class IEEE1516eTransportationTypeHandleFactory
   public TransportationTypeHandle getHLAdefaultBestEffort()
   {
     return TransportationType.HLA_BEST_EFFORT.getTransportationTypeHandle();
+  }
+
+  private Object readResolve()
+  {
+    return INSTANCE;
   }
 }

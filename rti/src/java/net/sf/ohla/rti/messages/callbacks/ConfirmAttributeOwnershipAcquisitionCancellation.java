@@ -16,42 +16,53 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.ObjectInstanceHandles;
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.messages.MessageType;
-import net.sf.ohla.rti.messages.ObjectInstanceAttributesMessage;
+import net.sf.ohla.rti.messages.AbstractMessage;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class ConfirmAttributeOwnershipAcquisitionCancellation
-  extends ObjectInstanceAttributesMessage
+  extends
+  AbstractMessage<FederateMessageProtos.ConfirmAttributeOwnershipAcquisitionCancellation, FederateMessageProtos.ConfirmAttributeOwnershipAcquisitionCancellation.Builder>
   implements Callback
 {
   public ConfirmAttributeOwnershipAcquisitionCancellation(
     ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
   {
-    super(MessageType.CONFIRM_ATTRIBUTE_OWNERSHIP_ACQUISITION_CANCELLATION, objectInstanceHandle, attributeHandles);
+    super(FederateMessageProtos.ConfirmAttributeOwnershipAcquisitionCancellation.newBuilder());
 
-    encodingFinished();
+    builder.setObjectInstanceHandle(ObjectInstanceHandles.convert(objectInstanceHandle));
+    builder.addAllAttributeHandles(AttributeHandles.convert(attributeHandles));
   }
 
-  public ConfirmAttributeOwnershipAcquisitionCancellation(ChannelBuffer buffer)
+  public ConfirmAttributeOwnershipAcquisitionCancellation(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederateMessageProtos.ConfirmAttributeOwnershipAcquisitionCancellation.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.CONFIRM_ATTRIBUTE_OWNERSHIP_ACQUISITION_CANCELLATION;
+    return MessageProtos.MessageType.CONFIRM_ATTRIBUTE_OWNERSHIP_ACQUISITION_CANCELLATION;
   }
 
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.confirmAttributeOwnershipAcquisitionCancellation(objectInstanceHandle, attributeHandles);
+    federateAmbassador.confirmAttributeOwnershipAcquisitionCancellation(
+      ObjectInstanceHandles.convert(builder.getObjectInstanceHandle()),
+      AttributeHandles.convertAttributeHandles(builder.getAttributeHandlesList()));
   }
 }

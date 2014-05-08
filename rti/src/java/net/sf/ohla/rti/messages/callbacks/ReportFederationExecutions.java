@@ -16,49 +16,62 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import java.io.IOException;
+
 import net.sf.ohla.rti.federate.Callback;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederationExecutionInformationSet;
 import net.sf.ohla.rti.messages.AbstractMessage;
-import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.proto.ConnectedMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateAmbassador;
+import hla.rti1516e.FederationExecutionInformation;
 import hla.rti1516e.FederationExecutionInformationSet;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class ReportFederationExecutions
-  extends AbstractMessage
+  extends
+  AbstractMessage<ConnectedMessageProtos.ReportFederationExecutions, ConnectedMessageProtos.ReportFederationExecutions.Builder>
   implements Callback
 {
-  private final FederationExecutionInformationSet federationExecutionInformations;
-
   public ReportFederationExecutions(FederationExecutionInformationSet federationExecutionInformations)
   {
-    super(MessageType.REPORT_FEDERATION_EXECUTIONS);
+    super(ConnectedMessageProtos.ReportFederationExecutions.newBuilder());
 
-    this.federationExecutionInformations = federationExecutionInformations;
-
-    IEEE1516eFederationExecutionInformationSet.encode(buffer, federationExecutionInformations);
-
-    encodingFinished();
+    for (FederationExecutionInformation federationExecutionInformation : federationExecutionInformations)
+    {
+      builder.addFederationExecutionInformations(
+        ConnectedMessageProtos.ReportFederationExecutions.FederationExecutionInformation.newBuilder().setFederationExecutionName(
+          federationExecutionInformation.federationExecutionName).setLogicalTimeImplementationName(
+          federationExecutionInformation.logicalTimeImplementationName));
+    }
   }
 
-  public ReportFederationExecutions(ChannelBuffer buffer)
+  public ReportFederationExecutions(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    federationExecutionInformations = IEEE1516eFederationExecutionInformationSet.decode(buffer);
+    super(ConnectedMessageProtos.ReportFederationExecutions.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.REPORT_FEDERATION_EXECUTIONS;
+    return MessageProtos.MessageType.REPORT_FEDERATION_EXECUTIONS;
   }
 
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
+    FederationExecutionInformationSet federationExecutionInformations =
+      new IEEE1516eFederationExecutionInformationSet(builder.getFederationExecutionInformationsCount());
+    for (ConnectedMessageProtos.ReportFederationExecutions.FederationExecutionInformation federationExecutionInformation : builder.getFederationExecutionInformationsList())
+    {
+      federationExecutionInformations.add(new FederationExecutionInformation(
+        federationExecutionInformation.getFederationExecutionName(),
+        federationExecutionInformation.getLogicalTimeImplementationName()));
+    }
     federateAmbassador.reportFederationExecutions(federationExecutionInformations);
   }
 }

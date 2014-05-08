@@ -16,19 +16,23 @@
 
 package net.sf.ohla.rti.fdd;
 
-import net.sf.ohla.rti.Protocol;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSet;
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.DimensionHandles;
+import net.sf.ohla.rti.util.OrderTypes;
+import net.sf.ohla.rti.util.TransportationTypeHandles;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSetFactory;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandle;
-
-import org.jboss.netty.buffer.ChannelBuffer;
+import net.sf.ohla.rti.proto.OHLAProtos;
 
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.DimensionHandle;
 import hla.rti1516e.DimensionHandleSet;
 import hla.rti1516e.OrderType;
 import hla.rti1516e.TransportationTypeHandle;
+import hla.rti1516e.exceptions.InconsistentFDD;
 
 public class Attribute
 {
@@ -54,15 +58,15 @@ public class Attribute
     this.orderType = orderType;
   }
 
-  public Attribute(ChannelBuffer buffer, ObjectClass objectClass)
+  public Attribute(ObjectClass objectClass, OHLAProtos.FDD.ObjectClass.Attribute attribute)
   {
     this.objectClass = objectClass;
 
-    attributeHandle = IEEE1516eAttributeHandle.decode(buffer);
-    attributeName = Protocol.decodeString(buffer);
-    dimensionHandles = IEEE1516eDimensionHandleSet.decode(buffer);
-    transportationTypeHandle = IEEE1516eTransportationTypeHandle.decode(buffer);
-    orderType = Protocol.decodeEnum(buffer, OrderType.values());
+    attributeHandle = AttributeHandles.convert(attribute.getAttributeHandle());
+    attributeName = attribute.getAttributeName();
+    dimensionHandles = DimensionHandles.convert(attribute.getDimensionHandlesList());
+    transportationTypeHandle = TransportationTypeHandles.convert(attribute.getTransportationTypeHandle());
+    orderType = OrderTypes.convert(attribute.getOrderType());
   }
 
   public ObjectClass getObjectClass()
@@ -108,9 +112,9 @@ public class Attribute
   public void copyTo(FDD fdd, ObjectClass objectClass)
   {
     DimensionHandleSet dimensionHandles;
-    if (this.dimensionHandles == null || this.dimensionHandles.isEmpty())
+    if (this.dimensionHandles.isEmpty())
     {
-      dimensionHandles = null;
+      dimensionHandles = IEEE1516eDimensionHandleSet.EMPTY;
     }
     else
     {
@@ -127,6 +131,45 @@ public class Attribute
     objectClass.addAttributeSafely(attributeName, dimensionHandles, transportationTypeHandle, orderType);
   }
 
+  public void checkForInconsistentFDD(Attribute attribute)
+    throws InconsistentFDD
+  {
+    if (transportationTypeHandle != attribute.transportationTypeHandle)
+    {
+      throw new InconsistentFDD(I18n.getMessage(
+        ExceptionMessages.INCONSISTENT_FDD_ATTRIBUTE_MISMATCH, objectClass, this, transportationTypeHandle,
+        attribute.transportationTypeHandle));
+    }
+    else if (orderType != attribute.orderType)
+    {
+      throw new InconsistentFDD(I18n.getMessage(
+        ExceptionMessages.INCONSISTENT_FDD_ATTRIBUTE_MISMATCH, objectClass, this, orderType, attribute.orderType));
+    }
+    else if (!dimensionHandles.equals(attribute.dimensionHandles))
+    {
+      throw new InconsistentFDD(I18n.getMessage(
+        ExceptionMessages.INCONSISTENT_FDD_ATTRIBUTE_MISMATCH, objectClass, this, dimensionHandles,
+        attribute.dimensionHandles));
+    }
+  }
+
+  public OHLAProtos.FDD.ObjectClass.Attribute.Builder toProto()
+  {
+    OHLAProtos.FDD.ObjectClass.Attribute.Builder attribute =
+      OHLAProtos.FDD.ObjectClass.Attribute.newBuilder().setAttributeHandle(
+        AttributeHandles.convert(attributeHandle)).setAttributeName(
+        attributeName).setTransportationTypeHandle(
+        TransportationTypeHandles.convert(transportationTypeHandle)).setOrderType(
+        OrderTypes.convert(orderType));
+
+    for (DimensionHandle dimensionHandle : dimensionHandles)
+    {
+      attribute.addDimensionHandles(((IEEE1516eDimensionHandle) dimensionHandle).getHandle());
+    }
+
+    return attribute;
+  }
+
   @Override
   public int hashCode()
   {
@@ -137,19 +180,5 @@ public class Attribute
   public String toString()
   {
     return attributeName;
-  }
-
-  public static void encode(ChannelBuffer buffer, Attribute attribute)
-  {
-    IEEE1516eAttributeHandle.encode(buffer, attribute.attributeHandle);
-    Protocol.encodeString(buffer, attribute.attributeName);
-    IEEE1516eDimensionHandleSet.encode(buffer, attribute.dimensionHandles);
-    IEEE1516eTransportationTypeHandle.encode(buffer, attribute.transportationTypeHandle);
-    Protocol.encodeEnum(buffer, attribute.orderType);
-  }
-
-  public static Attribute decode(ChannelBuffer buffer, ObjectClass objectClass)
-  {
-    return new Attribute(buffer, objectClass);
   }
 }

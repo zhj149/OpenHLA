@@ -16,25 +16,40 @@
 
 package net.sf.ohla.rti.messages;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import java.io.IOException;
+
+import net.sf.ohla.rti.RTI;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
+import net.sf.ohla.rti.messages.proto.RTIMessageProtos;
+
+import org.jboss.netty.channel.ChannelHandlerContext;
+
+import com.google.protobuf.CodedInputStream;
 
 public class ListFederationExecutions
-  extends AbstractMessage
+  extends AbstractMessage<RTIMessageProtos.ListFederationExecutions, RTIMessageProtos.ListFederationExecutions.Builder>
+  implements RTIMessage
 {
   public ListFederationExecutions()
   {
-    super(MessageType.LIST_FEDERATION_EXECUTIONS);
-
-    encodingFinished();
+    super(RTIMessageProtos.ListFederationExecutions.newBuilder());
   }
 
-  public ListFederationExecutions(ChannelBuffer buffer)
+  public ListFederationExecutions(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(RTIMessageProtos.ListFederationExecutions.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.LIST_FEDERATION_EXECUTIONS;
+    return MessageProtos.MessageType.LIST_FEDERATION_EXECUTIONS;
+  }
+
+  @Override
+  public void execute(RTI rti, ChannelHandlerContext context)
+  {
+    rti.listFederationExecutions(context, this);
   }
 }

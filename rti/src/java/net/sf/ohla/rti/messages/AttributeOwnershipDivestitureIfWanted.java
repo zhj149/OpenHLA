@@ -16,60 +16,68 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.ObjectInstanceHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleSet;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectInstanceHandle;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.ObjectInstanceHandle;
 
 public class AttributeOwnershipDivestitureIfWanted
-  extends AbstractRequest<AttributeOwnershipDivestitureIfWantedResponse>
-  implements FederationExecutionMessage
+  extends
+  AbstractRequest<FederationExecutionMessageProtos.AttributeOwnershipDivestitureIfWanted, FederationExecutionMessageProtos.AttributeOwnershipDivestitureIfWanted.Builder, AttributeOwnershipDivestitureIfWantedResponse>
+implements FederationExecutionMessage
 {
-  private final ObjectInstanceHandle objectInstanceHandle;
-  private final AttributeHandleSet attributeHandles;
-
   public AttributeOwnershipDivestitureIfWanted(
     ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
   {
-    super(MessageType.ATTRIBUTE_OWNERSHIP_DIVESTITURE_IF_WANTED);
+    super(FederationExecutionMessageProtos.AttributeOwnershipDivestitureIfWanted.newBuilder());
 
-    this.objectInstanceHandle = objectInstanceHandle;
-    this.attributeHandles = attributeHandles;
-
-    IEEE1516eObjectInstanceHandle.encode(buffer, objectInstanceHandle);
-    IEEE1516eAttributeHandleSet.encode(buffer, attributeHandles);
-
-    encodingFinished();
+    builder.setObjectInstanceHandle(ObjectInstanceHandles.convert(objectInstanceHandle));
+    builder.addAllAttributeHandles(AttributeHandles.convert(attributeHandles));
   }
 
-  public AttributeOwnershipDivestitureIfWanted(ChannelBuffer buffer)
+  public AttributeOwnershipDivestitureIfWanted(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    objectInstanceHandle = IEEE1516eObjectInstanceHandle.decode(buffer);
-    attributeHandles = IEEE1516eAttributeHandleSet.decode(buffer);
+    super(FederationExecutionMessageProtos.AttributeOwnershipDivestitureIfWanted.newBuilder(), in);
   }
 
   public ObjectInstanceHandle getObjectInstanceHandle()
   {
-    return objectInstanceHandle;
+    return ObjectInstanceHandles.convert(builder.getObjectInstanceHandle());
   }
 
   public AttributeHandleSet getAttributeHandles()
   {
-    return attributeHandles;
+    return AttributeHandles.convertAttributeHandles(builder.getAttributeHandlesList());
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.ATTRIBUTE_OWNERSHIP_DIVESTITURE_IF_WANTED;
+    return MessageProtos.MessageType.ATTRIBUTE_OWNERSHIP_DIVESTITURE_IF_WANTED;
   }
 
+  @Override
+  public long getRequestId()
+  {
+    return builder.getRequestId();
+  }
+
+  @Override
+  public void setRequestId(long requestId)
+  {
+    builder.setRequestId(requestId);
+  }
+
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.attributeOwnershipDivestitureIfWanted(federateProxy, this);

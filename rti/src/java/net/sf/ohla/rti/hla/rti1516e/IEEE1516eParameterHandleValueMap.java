@@ -21,10 +21,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import net.sf.ohla.rti.Protocol;
-
-import org.jboss.netty.buffer.ChannelBuffer;
-
 import hla.rti1516e.ParameterHandle;
 import hla.rti1516e.ParameterHandleValueMap;
 import hla.rti1516e.encoding.ByteWrapper;
@@ -85,45 +81,5 @@ public class IEEE1516eParameterHandleValueMap
       }
     }
     return equals;
-  }
-
-  public static void encode(ChannelBuffer buffer, ParameterHandleValueMap parameterHandles)
-  {
-    if (parameterHandles == null)
-    {
-      Protocol.encodeVarInt(buffer, 0);
-    }
-    else
-    {
-      Protocol.encodeVarInt(buffer, parameterHandles.size());
-
-      for (Map.Entry<ParameterHandle, byte[]> entry : parameterHandles.entrySet())
-      {
-        IEEE1516eParameterHandle.encode(buffer, entry.getKey());
-        Protocol.encodeBytes(buffer, entry.getValue());
-      }
-    }
-  }
-
-  public static IEEE1516eParameterHandleValueMap decode(ChannelBuffer buffer)
-  {
-    IEEE1516eParameterHandleValueMap parameterHandles;
-
-    int size = Protocol.decodeVarInt(buffer);
-    if (size == 0)
-    {
-      parameterHandles = null;
-    }
-    else
-    {
-      parameterHandles = new IEEE1516eParameterHandleValueMap(size);
-
-      for (; size > 0; size--)
-      {
-        parameterHandles.put(IEEE1516eParameterHandle.decode(buffer), Protocol.decodeBytes(buffer));
-      }
-    }
-
-    return parameterHandles;
   }
 }

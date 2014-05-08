@@ -16,40 +16,46 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.InteractionClassHandles;
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.messages.InteractionClassMessage;
-import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.AbstractMessage;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.InteractionClassHandle;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class TurnInteractionsOn
-  extends InteractionClassMessage
-  implements Callback
+  extends AbstractMessage<FederateMessageProtos.TurnInteractionsOn, FederateMessageProtos.TurnInteractionsOn.Builder>
+implements Callback
 {
   public TurnInteractionsOn(InteractionClassHandle interactionClassHandle)
   {
-    super(MessageType.TURN_INTERACTIONS_ON, interactionClassHandle);
+    super(FederateMessageProtos.TurnInteractionsOn.newBuilder());
 
-    encodingFinished();
+    builder.setInteractionClassHandle(InteractionClassHandles.convert(interactionClassHandle));
   }
 
-  public TurnInteractionsOn(ChannelBuffer buffer)
+  public TurnInteractionsOn(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederateMessageProtos.TurnInteractionsOn.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.TURN_INTERACTIONS_ON;
+    return MessageProtos.MessageType.TURN_INTERACTIONS_ON;
   }
 
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.turnInteractionsOn(interactionClassHandle);
+    federateAmbassador.turnInteractionsOn(InteractionClassHandles.convert(builder.getInteractionClassHandle()));
   }
 }

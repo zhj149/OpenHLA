@@ -59,8 +59,7 @@ public class IEEE1516eHLAinteger64Interval
 
   public int compareTo(HLAinteger64Interval rhs)
   {
-    long result = interval - rhs.getValue();
-    return result < Integer.MIN_VALUE ? -1 : result > Integer.MAX_VALUE ? 1 : (int) result;
+    return Long.compare(interval, rhs.getValue());
   }
 
   public int encodedLength()

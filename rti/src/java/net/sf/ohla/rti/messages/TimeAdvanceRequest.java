@@ -16,37 +16,56 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.LogicalTimes;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.LogicalTime;
-import hla.rti1516e.LogicalTimeFactory;
+import hla.rti1516e.exceptions.CouldNotEncode;
 
 public class TimeAdvanceRequest
-  extends LogicalTimeMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.TimeAdvanceRequest, FederationExecutionMessageProtos.TimeAdvanceRequest.Builder>
   implements FederationExecutionMessage
 {
+  private LogicalTime time;
+
   public TimeAdvanceRequest(LogicalTime time)
+    throws CouldNotEncode
   {
-    super(MessageType.TIME_ADVANCE_REQUEST, time);
+    super(FederationExecutionMessageProtos.TimeAdvanceRequest.newBuilder());
 
-    encodingFinished();
+    this.time = time;
+
+    builder.setTime(LogicalTimes.convert(time));
   }
 
-  public TimeAdvanceRequest(ChannelBuffer buffer, LogicalTimeFactory factory)
+  public TimeAdvanceRequest(CodedInputStream in)
+    throws IOException
   {
-    super(buffer, factory);
+    super(FederationExecutionMessageProtos.TimeAdvanceRequest.newBuilder(), in);
   }
 
-  public MessageType getType()
+  public LogicalTime getTime()
   {
-    return MessageType.TIME_ADVANCE_REQUEST;
+    return time;
   }
 
+  @Override
+  public MessageProtos.MessageType getMessageType()
+  {
+    return MessageProtos.MessageType.TIME_ADVANCE_REQUEST;
+  }
+
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
+    time = LogicalTimes.convert(federationExecution.getTimeManager().getLogicalTimeFactory(), builder.getTime());
+
     federationExecution.timeAdvanceRequest(federateProxy, this);
   }
 }

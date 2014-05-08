@@ -16,110 +16,93 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.FederateHandles;
 import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.federate.Federate;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateHandle;
 
 public class JoinFederationExecutionResponse
-  extends EnumMessage<JoinFederationExecutionResponse.Response>
-  implements FederateMessage
+  extends
+  AbstractMessage<FederateMessageProtos.JoinFederationExecutionResponse, FederateMessageProtos.JoinFederationExecutionResponse.Builder>
+implements FederateMessage
 {
-  public enum Response
+  private volatile FDD fdd;
+
+  public JoinFederationExecutionResponse(
+    String federateName, FederateHandle federateHandle, FDD fdd, String logicalTimeImplementationName)
   {
-    SUCCESS, FEDERATE_NAME_ALREADY_IN_USE, FEDERATION_EXECUTION_DOES_NOT_EXIST, SAVE_IN_PROGRESS, RESTORE_IN_PROGRESS,
-    INCONSISTENT_FDD
-  }
+    super(FederateMessageProtos.JoinFederationExecutionResponse.newBuilder());
 
-  private final FederateHandle federateHandle;
-  private final String federateName;
-  private final FDD fdd;
-  private final String logicalTimeImplementationName;
-
-  public JoinFederationExecutionResponse(Response response)
-  {
-    super(MessageType.JOIN_FEDERATION_EXECUTION_RESPONSE, response);
-
-    assert response != Response.SUCCESS;
-
-    federateName = null;
-    federateHandle = null;
-    fdd = null;
-    logicalTimeImplementationName = null;
-
-    encodingFinished();
-  }
-
-  public JoinFederationExecutionResponse(String federateName, FederateHandle federateHandle, FDD fdd,
-                                         String logicalTimeImplementationName)
-  {
-    super(MessageType.JOIN_FEDERATION_EXECUTION_RESPONSE, Response.SUCCESS);
-
-    this.federateName = federateName;
-    this.federateHandle = federateHandle;
     this.fdd = fdd;
-    this.logicalTimeImplementationName = logicalTimeImplementationName;
 
-    Protocol.encodeString(buffer, federateName);
-    IEEE1516eFederateHandle.encode(buffer, federateHandle);
-    FDD.encode(buffer, fdd);
-    Protocol.encodeString(buffer, logicalTimeImplementationName);
-
-    encodingFinished();
+    builder.setSuccess(FederateMessageProtos.JoinFederationExecutionResponse.Success.newBuilder().setFederateName(
+      federateName).setFederateHandle(
+      FederateHandles.convert(federateHandle)).setFdd(
+      fdd.toProto()).setLogicalTimeImplementationName(
+      logicalTimeImplementationName));
   }
 
-  public JoinFederationExecutionResponse(ChannelBuffer buffer)
+  public JoinFederationExecutionResponse(FederateMessageProtos.JoinFederationExecutionResponse.Failure.Cause cause)
   {
-    super(buffer, Response.values());
+    super(FederateMessageProtos.JoinFederationExecutionResponse.newBuilder());
 
-    if (e == Response.SUCCESS)
-    {
-      federateName = Protocol.decodeString(buffer);
-      federateHandle = IEEE1516eFederateHandle.decode(buffer);
-      fdd = FDD.decode(buffer);
-      logicalTimeImplementationName = Protocol.decodeString(buffer);
-    }
-    else
-    {
-      federateName = null;
-      federateHandle = null;
-      fdd = null;
-      logicalTimeImplementationName = null;
-    }
+    builder.setFailure(FederateMessageProtos.JoinFederationExecutionResponse.Failure.newBuilder().setCause(cause));
+  }
+
+  public JoinFederationExecutionResponse(CodedInputStream in)
+    throws IOException
+  {
+    super(FederateMessageProtos.JoinFederationExecutionResponse.newBuilder(), in);
   }
 
   public String getFederateName()
   {
-    return federateName;
+    return builder.getSuccess().getFederateName();
   }
 
   public FederateHandle getFederateHandle()
   {
-    return federateHandle;
+    return FederateHandles.convert(builder.getSuccess().getFederateHandle());
   }
 
   public FDD getFDD()
   {
+    if (fdd == null)
+    {
+      fdd = new FDD(builder.getSuccess().getFdd());
+    }
     return fdd;
   }
 
   public String getLogicalTimeImplementationName()
   {
-    return logicalTimeImplementationName;
+    return builder.getSuccess().getLogicalTimeImplementationName();
   }
 
-  public Response getResponse()
+  public FederateMessageProtos.JoinFederationExecutionResponse.Failure.Cause getCause()
   {
-    return e;
+    return builder.getFailure().getCause();
   }
 
-  public MessageType getType()
+  public boolean isSuccess()
   {
-    return MessageType.JOIN_FEDERATION_EXECUTION_RESPONSE;
+    return builder.hasSuccess();
+  }
+
+  public boolean isFailure()
+  {
+    return builder.hasFailure();
+  }
+
+  public MessageProtos.MessageType getMessageType()
+  {
+    return MessageProtos.MessageType.JOIN_FEDERATION_EXECUTION_RESPONSE;
   }
 
   public void execute(Federate federate)

@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleValueMapFactory;
 
 import hla.rti1516.AttributeHandle;
@@ -43,6 +42,7 @@ public class IEEE1516AttributeHandleValueMap
       put(new IEEE1516AttributeHandle(entry.getKey()), entry.getValue());
     }
   }
+
   @Override
   public boolean equals(Object rhs)
   {
@@ -70,8 +70,7 @@ public class IEEE1516AttributeHandleValueMap
       IEEE1516eAttributeHandleValueMapFactory.INSTANCE.create(attributeValues.size());
     for (Map.Entry<AttributeHandle, byte[]> entry : attributeValues.entrySet())
     {
-      ieee1516eAttributeValues.put(
-        new IEEE1516eAttributeHandle(((IEEE1516AttributeHandle) entry.getKey()).getHandle()), entry.getValue());
+      ieee1516eAttributeValues.put(((IEEE1516AttributeHandle) entry.getKey()).getAttributeHandle(), entry.getValue());
     }
     return ieee1516eAttributeValues;
   }

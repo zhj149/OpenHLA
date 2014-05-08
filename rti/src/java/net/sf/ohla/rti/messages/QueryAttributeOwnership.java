@@ -16,35 +16,54 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.ObjectInstanceHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.AttributeHandle;
 import hla.rti1516e.ObjectInstanceHandle;
 
 public class QueryAttributeOwnership
-  extends ObjectInstanceAttributeMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.QueryAttributeOwnership, FederationExecutionMessageProtos.QueryAttributeOwnership.Builder>
   implements FederationExecutionMessage
 {
   public QueryAttributeOwnership(ObjectInstanceHandle objectInstanceHandle, AttributeHandle attributeHandle)
   {
-    super(MessageType.QUERY_ATTRIBUTE_OWNERSHIP, objectInstanceHandle, attributeHandle);
+    super(FederationExecutionMessageProtos.QueryAttributeOwnership.newBuilder());
 
-    encodingFinished();
+    builder.setObjectInstanceHandle(ObjectInstanceHandles.convert(objectInstanceHandle));
+    builder.setAttributeHandle(AttributeHandles.convert(attributeHandle));
   }
 
-  public QueryAttributeOwnership(ChannelBuffer buffer)
+  public QueryAttributeOwnership(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.QueryAttributeOwnership.newBuilder(), in);
   }
 
-  public MessageType getType()
+  public ObjectInstanceHandle getObjectInstanceHandle()
   {
-    return MessageType.QUERY_ATTRIBUTE_OWNERSHIP;
+    return ObjectInstanceHandles.convert(builder.getObjectInstanceHandle());
   }
 
+  public AttributeHandle getAttributeHandle()
+  {
+    return AttributeHandles.convert(builder.getAttributeHandle());
+  }
+
+  @Override
+  public MessageProtos.MessageType getMessageType()
+  {
+    return MessageProtos.MessageType.QUERY_ATTRIBUTE_OWNERSHIP;
+  }
+
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.queryAttributeOwnership(federateProxy, this);

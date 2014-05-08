@@ -16,24 +16,50 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
-import net.sf.ohla.rti.IntegerHandle;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eInteractionClassHandle;
-
-import hla.rti1516.CouldNotDecode;
 import hla.rti1516.InteractionClassHandle;
 
 public class IEEE1516InteractionClassHandle
-  extends IntegerHandle
   implements InteractionClassHandle
 {
-  public IEEE1516InteractionClassHandle(byte[] buffer, int offset)
-    throws CouldNotDecode
-  {
-    super(buffer, offset);
-  }
+  public final hla.rti1516e.InteractionClassHandle interactionClassHandle;
 
   public IEEE1516InteractionClassHandle(hla.rti1516e.InteractionClassHandle interactionClassHandle)
   {
-    super((IEEE1516eInteractionClassHandle) interactionClassHandle);
+    this.interactionClassHandle = interactionClassHandle;
+  }
+
+  public hla.rti1516e.InteractionClassHandle getInteractionClassHandle()
+  {
+    return interactionClassHandle;
+  }
+
+  public int encodedLength()
+  {
+    return interactionClassHandle.encodedLength();
+  }
+
+  public void encode(byte[] buffer, int offset)
+  {
+    interactionClassHandle.encode(buffer, offset);
+  }
+
+  @Override
+  public boolean equals(Object rhs)
+  {
+    return this == rhs ||
+           (rhs instanceof IEEE1516InteractionClassHandle &&
+            interactionClassHandle.equals(((IEEE1516InteractionClassHandle) rhs).interactionClassHandle));
+  }
+
+  @Override
+  public int hashCode()
+  {
+    return interactionClassHandle.hashCode();
+  }
+
+  @Override
+  public String toString()
+  {
+    return interactionClassHandle.toString();
   }
 }

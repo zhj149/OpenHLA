@@ -3,6 +3,9 @@
   <component name="NewModuleRootManager" inherit-compiler-output="false">
     <output url="file://$MODULE_DIR$/../output/rti/classes" />
     <exclude-output />
+    <content url="file://$MODULE_DIR$/../output/rti">
+      <sourceFolder url="file://$MODULE_DIR$/../output/rti/source/java" isTestSource="false" />
+    </content>
     <content url="file://$MODULE_DIR$/../../rti">
       <sourceFolder url="file://$MODULE_DIR$/../../rti/src/java" isTestSource="false" />
     </content>
@@ -24,6 +27,8 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="protobuf" level="project" />
+    <orderEntry type="library" name="guava" level="project" />
   </component>
   <component name="copyright">
     <Base>

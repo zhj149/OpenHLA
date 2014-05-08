@@ -16,53 +16,56 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import java.util.Set;
+import java.io.IOException;
+
+import java.util.Collection;
+import java.util.HashSet;
 
 import net.sf.ohla.rti.federate.Callback;
 import net.sf.ohla.rti.federate.Federate;
+import net.sf.ohla.rti.messages.AbstractMessage;
 import net.sf.ohla.rti.messages.FederateMessage;
-import net.sf.ohla.rti.messages.MessageType;
-import net.sf.ohla.rti.messages.StringsMessage;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class MultipleObjectInstanceNameReservationFailed
-  extends StringsMessage
+  extends
+  AbstractMessage<FederateMessageProtos.MultipleObjectInstanceNameReservationFailed, FederateMessageProtos.MultipleObjectInstanceNameReservationFailed.Builder>
   implements Callback, FederateMessage
 {
   private Federate federate;
 
-  public MultipleObjectInstanceNameReservationFailed(Set<String> objectInstanceNames)
+  public MultipleObjectInstanceNameReservationFailed(Collection<String> objectInstanceNames)
   {
-    super(MessageType.MULTIPLE_OBJECT_INSTANCE_NAME_RESERVATION_FAILED, objectInstanceNames);
+    super(FederateMessageProtos.MultipleObjectInstanceNameReservationFailed.newBuilder());
 
-    encodingFinished();
+    builder.addAllObjectInstanceNames(objectInstanceNames);
   }
 
-  public MultipleObjectInstanceNameReservationFailed(ChannelBuffer buffer)
+  public MultipleObjectInstanceNameReservationFailed(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederateMessageProtos.MultipleObjectInstanceNameReservationFailed.newBuilder(), in);
   }
 
-  public Set<String> getObjectInstanceNames()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return strings;
+    return MessageProtos.MessageType.MULTIPLE_OBJECT_INSTANCE_NAME_RESERVATION_FAILED;
   }
 
-  public MessageType getType()
-  {
-    return MessageType.MULTIPLE_OBJECT_INSTANCE_NAME_RESERVATION_FAILED;
-  }
-
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federate.multipleObjectInstanceNameReservationFailed(strings);
+    federate.multipleObjectInstanceNameReservationFailed(new HashSet<>(builder.getObjectInstanceNamesList()));
   }
 
+  @Override
   public void execute(Federate federate)
   {
     this.federate = federate;

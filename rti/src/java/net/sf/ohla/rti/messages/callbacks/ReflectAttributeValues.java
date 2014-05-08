@@ -16,159 +16,118 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import java.io.IOException;
+
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
-import net.sf.ohla.rti.Protocol;
+import net.sf.ohla.rti.util.AttributeValues;
+import net.sf.ohla.rti.util.FederateHandles;
+import net.sf.ohla.rti.util.LogicalTimes;
+import net.sf.ohla.rti.util.MessageRetractionHandles;
+import net.sf.ohla.rti.util.ObjectInstanceHandles;
+import net.sf.ohla.rti.util.OrderTypes;
+import net.sf.ohla.rti.util.Regions;
+import net.sf.ohla.rti.util.TransportationTypeHandles;
 import net.sf.ohla.rti.federate.Callback;
 import net.sf.ohla.rti.federate.Federate;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eAttributeHandleValueMap;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eMessageRetractionHandle;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eTransportationTypeHandle;
+import net.sf.ohla.rti.messages.AbstractMessage;
 import net.sf.ohla.rti.messages.FederateMessage;
-import net.sf.ohla.rti.messages.MessageType;
-import net.sf.ohla.rti.messages.ObjectInstanceMessage;
-import net.sf.ohla.rti.messages.TimeStampOrderedMessage;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.AttributeHandleValueMap;
 import hla.rti1516e.DimensionHandle;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.LogicalTime;
-import hla.rti1516e.LogicalTimeFactory;
 import hla.rti1516e.MessageRetractionHandle;
 import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.OrderType;
 import hla.rti1516e.RangeBounds;
 import hla.rti1516e.RegionHandle;
-import hla.rti1516e.RegionHandleSet;
 import hla.rti1516e.TransportationTypeHandle;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class ReflectAttributeValues
-  extends ObjectInstanceMessage
-  implements Callback, FederateMessage, TimeStampOrderedMessage, FederateAmbassador.SupplementalReflectInfo
+  extends AbstractMessage<FederateMessageProtos.ReflectAttributeValues, FederateMessageProtos.ReflectAttributeValues.Builder>
+  implements Callback, FederateMessage
 {
-  private final AttributeHandleValueMap attributeValues;
-  private final byte[] tag;
-  private final OrderType sentOrderType;
-  private final TransportationTypeHandle transportationTypeHandle;
-  private final LogicalTime time;
-  private final MessageRetractionHandle messageRetractionHandle;
-  private final FederateHandle producingFederateHandle;
-  private final Collection<Map<DimensionHandle, RangeBounds>> regions;
-
-  private RegionHandleSet sentRegions;
-
   private Federate federate;
+  private LogicalTime time;
+  private MessageRetractionHandle messageRetractionHandle;
 
   public ReflectAttributeValues(
-    ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues, byte[] tag,
-    OrderType sentOrderType, TransportationTypeHandle transportationTypeHandle, LogicalTime time,
-    MessageRetractionHandle messageRetractionHandle, FederateHandle producingFederateHandle,
+    FederationExecutionMessageProtos.UpdateAttributeValues.Builder updateAttributeValues,
+    AttributeHandleValueMap attributeValues, OrderType receivedOrderType, FederateHandle producingFederateHandle,
     Map<RegionHandle, Map<DimensionHandle, RangeBounds>> regions)
   {
-    this(objectInstanceHandle, attributeValues, tag, sentOrderType, transportationTypeHandle, time,
-         messageRetractionHandle, producingFederateHandle, regions == null ? null : regions.values());
+    super(FederateMessageProtos.ReflectAttributeValues.newBuilder());
+
+    builder.setObjectInstanceHandle(updateAttributeValues.getObjectInstanceHandle());
+    builder.addAllAttributeValues(AttributeValues.convert(attributeValues));
+
+    if (updateAttributeValues.hasTag())
+    {
+      builder.setTag(updateAttributeValues.getTag());
+    }
+
+    builder.setSentOrderType(updateAttributeValues.getSentOrderType());
+    builder.setReceivedOrderType(OrderTypes.convert(receivedOrderType));
+    builder.setTransportationTypeHandle(updateAttributeValues.getTransportationTypeHandle());
+
+    if (updateAttributeValues.hasTime())
+    {
+      builder.setTime(updateAttributeValues.getTime());
+    }
+
+    if (receivedOrderType == OrderType.TIMESTAMP)
+    {
+      assert updateAttributeValues.hasMessageRetractionHandle();
+
+      builder.setMessageRetractionHandle(updateAttributeValues.getMessageRetractionHandle());
+    }
+
+    builder.setProducingFederateHandle(FederateHandles.convert(producingFederateHandle));
+
+    if (regions != null && regions.size() > 0)
+    {
+      builder.addAllRegions(Regions.convertToProtos(regions.values()));
+    }
   }
 
-  public ReflectAttributeValues(
-    ObjectInstanceHandle objectInstanceHandle, AttributeHandleValueMap attributeValues, byte[] tag,
-    OrderType sentOrderType, TransportationTypeHandle transportationTypeHandle, LogicalTime time,
-    MessageRetractionHandle messageRetractionHandle, FederateHandle producingFederateHandle,
-    Collection<Map<DimensionHandle, RangeBounds>> regions)
+  public ReflectAttributeValues(CodedInputStream in)
+    throws IOException
   {
-    super(MessageType.REFLECT_ATTRIBUTE_VALUES, objectInstanceHandle);
-
-    this.attributeValues = attributeValues;
-    this.tag = tag;
-    this.sentOrderType = sentOrderType;
-    this.transportationTypeHandle = transportationTypeHandle;
-    this.time = time;
-    this.messageRetractionHandle = messageRetractionHandle;
-    this.producingFederateHandle = producingFederateHandle;
-    this.regions = regions;
-
-    IEEE1516eAttributeHandleValueMap.encode(buffer, attributeValues);
-    Protocol.encodeBytes(buffer, tag);
-    Protocol.encodeEnum(buffer, sentOrderType);
-    IEEE1516eTransportationTypeHandle.encode(buffer, transportationTypeHandle);
-    Protocol.encodeTime(buffer, time);
-    IEEE1516eMessageRetractionHandle.encode(buffer, messageRetractionHandle);
-    IEEE1516eFederateHandle.encode(buffer, producingFederateHandle);
-    Protocol.encodeRegions(buffer, this.regions);
-
-    encodingFinished();
+    super(FederateMessageProtos.ReflectAttributeValues.newBuilder(), in);
   }
 
-  public ReflectAttributeValues(ChannelBuffer buffer, LogicalTimeFactory logicalTimeFactory)
+  public ObjectInstanceHandle getObjectInstanceHandle()
   {
-    super(buffer);
-
-    attributeValues = IEEE1516eAttributeHandleValueMap.decode(buffer);
-    tag = Protocol.decodeBytes(buffer);
-    sentOrderType = Protocol.decodeEnum(buffer, OrderType.values());
-    transportationTypeHandle = IEEE1516eTransportationTypeHandle.decode(buffer);
-    time = Protocol.decodeTime(buffer, logicalTimeFactory);
-    messageRetractionHandle = IEEE1516eMessageRetractionHandle.decode(buffer);
-    producingFederateHandle = IEEE1516eFederateHandle.decode(buffer);
-    regions = Protocol.decodeRegions(buffer);
+    return ObjectInstanceHandles.convert(builder.getObjectInstanceHandle());
   }
 
   public AttributeHandleValueMap getAttributeValues()
   {
-    return attributeValues;
+    return AttributeValues.convert(builder.getAttributeValuesList());
   }
 
   public byte[] getTag()
   {
-    return tag;
+    return builder.hasTag() ? builder.getTag().toByteArray() : null;
   }
 
   public OrderType getSentOrderType()
   {
-    return sentOrderType;
+    return OrderType.values()[builder.getSentOrderType().ordinal()];
   }
 
   public TransportationTypeHandle getTransportationTypeHandle()
   {
-    return transportationTypeHandle;
-  }
-
-  public MessageRetractionHandle getMessageRetractionHandle()
-  {
-    return messageRetractionHandle;
-  }
-
-  public Collection<Map<DimensionHandle, RangeBounds>> getRegions()
-  {
-    return regions;
-  }
-
-  public void setSentRegions(RegionHandleSet sentRegions)
-  {
-    this.sentRegions = sentRegions;
-  }
-
-  public MessageType getType()
-  {
-    return MessageType.REFLECT_ATTRIBUTE_VALUES;
-  }
-
-  public void execute(FederateAmbassador federateAmbassador)
-    throws FederateInternalError
-  {
-    federate.fireReflectAttributeValues(this);
-  }
-
-  public void execute(Federate federate)
-  {
-    this.federate = federate;
-
-    federate.reflectAttributeValues(this);
+    return TransportationTypeHandles.convert(builder.getTransportationTypeHandle());
   }
 
   public LogicalTime getTime()
@@ -176,36 +135,63 @@ public class ReflectAttributeValues
     return time;
   }
 
-  public TimeStampOrderedMessage makeReceiveOrdered()
+  public MessageRetractionHandle getMessageRetractionHandle()
   {
-    return new ReflectAttributeValues(
-      objectInstanceHandle, attributeValues, tag, OrderType.RECEIVE, transportationTypeHandle, time, null,
-      producingFederateHandle, regions);
+    return messageRetractionHandle;
   }
 
-  @SuppressWarnings("unchecked")
-  public int compareTo(TimeStampOrderedMessage rhs)
+  public FederateHandle getProducingFederateHandle()
   {
-    return time.compareTo(rhs.getTime());
-  }
-
-  public boolean hasProducingFederate()
-  {
-    return producingFederateHandle != null;
+    return FederateHandles.convert(builder.getProducingFederateHandle());
   }
 
   public boolean hasSentRegions()
   {
-    return regions != null;
+    return builder.getRegionsCount() > 0;
   }
 
-  public FederateHandle getProducingFederate()
+  public Collection<Map<DimensionHandle, RangeBounds>> getSentRegions()
   {
-    return producingFederateHandle;
+    Collection<Map<DimensionHandle, RangeBounds>> regions;
+    if (builder.getRegionsCount() == 0)
+    {
+      regions = Collections.emptyList();
+    }
+    else
+    {
+      regions = Regions.convertFromProtos(builder.getRegionsList());
+    }
+    return regions;
   }
 
-  public RegionHandleSet getSentRegions()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return sentRegions;
+    return MessageProtos.MessageType.REFLECT_ATTRIBUTE_VALUES;
+  }
+
+  @Override
+  public void execute(FederateAmbassador federateAmbassador)
+    throws FederateInternalError
+  {
+    federate.fireReflectAttributeValues(this);
+  }
+
+  @Override
+  public void execute(Federate federate)
+  {
+    this.federate = federate;
+
+    if (builder.hasTime())
+    {
+      time = LogicalTimes.convert(federate.getLogicalTimeFactory(), builder.getTime());
+    }
+
+    if (builder.hasMessageRetractionHandle())
+    {
+      messageRetractionHandle = MessageRetractionHandles.convert(builder.getMessageRetractionHandle());
+    }
+
+    federate.reflectAttributeValues(this);
   }
 }

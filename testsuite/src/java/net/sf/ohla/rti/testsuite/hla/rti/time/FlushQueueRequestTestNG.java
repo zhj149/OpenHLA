@@ -78,6 +78,8 @@ public class FlushQueueRequestTestNG
     testInteractionEventRetractionHandle2 =
       rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle, testSuppliedParameters, TAG, ten);
     assert testInteractionEventRetractionHandle2 != null;
+
+    synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE2, federateAmbassadors);
   }
 
   @Test

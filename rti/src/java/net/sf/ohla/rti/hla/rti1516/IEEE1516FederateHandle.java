@@ -16,24 +16,49 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
-import net.sf.ohla.rti.IntegerHandle;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
-
-import hla.rti1516.CouldNotDecode;
 import hla.rti1516.FederateHandle;
 
 public class IEEE1516FederateHandle
-  extends IntegerHandle
   implements FederateHandle
 {
-  public IEEE1516FederateHandle(byte[] buffer, int offset)
-    throws CouldNotDecode
-  {
-    super(buffer, offset);
-  }
+  public final hla.rti1516e.FederateHandle federateHandle;
 
   public IEEE1516FederateHandle(hla.rti1516e.FederateHandle federateHandle)
   {
-    super((IEEE1516eFederateHandle) federateHandle);
+    this.federateHandle = federateHandle;
+  }
+
+  public hla.rti1516e.FederateHandle getFederateHandle()
+  {
+    return federateHandle;
+  }
+
+  public int encodedLength()
+  {
+    return federateHandle.encodedLength();
+  }
+
+  public void encode(byte[] buffer, int offset)
+  {
+    federateHandle.encode(buffer, offset);
+  }
+
+  @Override
+  public boolean equals(Object rhs)
+  {
+    return this == rhs || (rhs instanceof IEEE1516FederateHandle &&
+                           federateHandle.equals(((IEEE1516FederateHandle) rhs).federateHandle));
+  }
+
+  @Override
+  public int hashCode()
+  {
+    return federateHandle.hashCode();
+  }
+
+  @Override
+  public String toString()
+  {
+    return federateHandle.toString();
   }
 }

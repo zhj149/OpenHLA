@@ -16,37 +16,54 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.LogicalTimes;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.LogicalTime;
-import hla.rti1516e.LogicalTimeFactory;
 
 public class NextMessageRequest
-  extends LogicalTimeMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.NextMessageRequest, FederationExecutionMessageProtos.NextMessageRequest.Builder>
   implements FederationExecutionMessage
 {
+  private LogicalTime time;
+
   public NextMessageRequest(LogicalTime time)
   {
-    super(MessageType.NEXT_MESSAGE_REQUEST, time);
+    super(FederationExecutionMessageProtos.NextMessageRequest.newBuilder());
 
-    encodingFinished();
+    this.time = time;
+
+    builder.setTime(LogicalTimes.convert(time));
   }
 
-  public NextMessageRequest(ChannelBuffer buffer, LogicalTimeFactory factory)
+  public NextMessageRequest(CodedInputStream in)
+    throws IOException
   {
-    super(buffer, factory);
+    super(FederationExecutionMessageProtos.NextMessageRequest.newBuilder(), in);
   }
 
-  public MessageType getType()
+  public LogicalTime getTime()
   {
-    return MessageType.NEXT_MESSAGE_REQUEST;
+    return time;
   }
 
+  @Override
+  public MessageProtos.MessageType getMessageType()
+  {
+    return MessageProtos.MessageType.NEXT_MESSAGE_REQUEST;
+  }
+
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
+    time = LogicalTimes.convert(federationExecution.getTimeManager().getLogicalTimeFactory(), builder.getTime());
+
     federationExecution.nextMessageRequest(federateProxy, this);
   }
 }

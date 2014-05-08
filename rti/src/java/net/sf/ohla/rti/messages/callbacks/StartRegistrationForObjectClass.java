@@ -16,41 +16,47 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.ObjectClassHandles;
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.messages.MessageType;
-import net.sf.ohla.rti.messages.ObjectClassMessage;
+import net.sf.ohla.rti.messages.AbstractMessage;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.ObjectClassHandle;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class StartRegistrationForObjectClass
-  extends ObjectClassMessage
+  extends
+  AbstractMessage<FederateMessageProtos.StartRegistrationForObjectClass, FederateMessageProtos.StartRegistrationForObjectClass.Builder>
   implements Callback
 {
-
   public StartRegistrationForObjectClass(ObjectClassHandle objectClassHandle)
   {
-    super(MessageType.START_REGISTRATION_FOR_OBJECT_CLASS, objectClassHandle);
+    super(FederateMessageProtos.StartRegistrationForObjectClass.newBuilder());
 
-    encodingFinished();
+    builder.setObjectClassHandle(ObjectClassHandles.convert(objectClassHandle));
   }
 
-  public StartRegistrationForObjectClass(ChannelBuffer buffer)
+  public StartRegistrationForObjectClass(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederateMessageProtos.StartRegistrationForObjectClass.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.START_REGISTRATION_FOR_OBJECT_CLASS;
+    return MessageProtos.MessageType.START_REGISTRATION_FOR_OBJECT_CLASS;
   }
 
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.startRegistrationForObjectClass(objectClassHandle);
+    federateAmbassador.startRegistrationForObjectClass(ObjectClassHandles.convert(builder.getObjectClassHandle()));
   }
 }

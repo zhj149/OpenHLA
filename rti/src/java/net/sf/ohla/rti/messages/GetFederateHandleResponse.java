@@ -16,60 +16,74 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
+import java.io.IOException;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import net.sf.ohla.rti.util.FederateHandles;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateHandle;
 
 public class GetFederateHandleResponse
-  extends EnumResponse<GetFederateHandleResponse.Response>
+  extends
+  AbstractMessage<FederateMessageProtos.GetFederateHandleResponse, FederateMessageProtos.GetFederateHandleResponse.Builder>
+  implements Response
 {
-  public enum Response
+  public GetFederateHandleResponse(long requestId, FederateHandle federateHandle)
   {
-    SUCCESS, NAME_NOT_FOUND
+    super(FederateMessageProtos.GetFederateHandleResponse.newBuilder());
+
+    builder.setRequestId(requestId);
+    builder.setSuccess(FederateMessageProtos.GetFederateHandleResponse.Success.newBuilder().setFederateHandle(
+      FederateHandles.convert(federateHandle)));
   }
 
-  private final FederateHandle federateHandle;
-
-  public GetFederateHandleResponse(long id, Response response)
+  public GetFederateHandleResponse(long requestId, FederateMessageProtos.GetFederateHandleResponse.Failure.Cause cause)
   {
-    super(MessageType.GET_FEDERATE_HANDLE_RESPONSE, id, response);
+    super(FederateMessageProtos.GetFederateHandleResponse.newBuilder());
 
-    assert response != Response.SUCCESS;
-
-    federateHandle = null;
-
-    encodingFinished();
+    builder.setRequestId(requestId);
+    builder.setFailure(FederateMessageProtos.GetFederateHandleResponse.Failure.newBuilder().setCause(cause));
   }
 
-  public GetFederateHandleResponse(long id, FederateHandle federateHandle)
+  public GetFederateHandleResponse(CodedInputStream in)
+    throws IOException
   {
-    super(MessageType.GET_FEDERATE_HANDLE_RESPONSE, id, Response.SUCCESS);
-
-    assert federateHandle != null;
-
-    this.federateHandle = federateHandle;
-
-    IEEE1516eFederateHandle.encode(buffer, federateHandle);
-
-    encodingFinished();
-  }
-
-  public GetFederateHandleResponse(ChannelBuffer buffer)
-  {
-    super(buffer, Response.values());
-
-    federateHandle = response == Response.SUCCESS ? IEEE1516eFederateHandle.decode(buffer) : null;
+    super(FederateMessageProtos.GetFederateHandleResponse.newBuilder(), in);
   }
 
   public FederateHandle getFederateHandle()
   {
-    return federateHandle;
+    return FederateHandles.convert(builder.getSuccess().getFederateHandle());
   }
 
-  public MessageType getType()
+  public FederateMessageProtos.GetFederateHandleResponse.Failure.Cause getCause()
   {
-    return MessageType.GET_FEDERATE_HANDLE_RESPONSE;
+    return builder.getFailure().getCause();
+  }
+
+  @Override
+  public MessageProtos.MessageType getMessageType()
+  {
+    return MessageProtos.MessageType.GET_FEDERATE_HANDLE_RESPONSE;
+  }
+
+  @Override
+  public long getRequestId()
+  {
+    return builder.getRequestId();
+  }
+
+  @Override
+  public boolean isSuccess()
+  {
+    return builder.hasSuccess();
+  }
+
+  @Override
+  public boolean isFailure()
+  {
+    return builder.hasFailure();
   }
 }

@@ -16,55 +16,48 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
+
 import net.sf.ohla.rti.federate.Federate;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.CodedInputStream;
 
 public class FederateStateFrame
-  implements Message, FederationExecutionMessage, FederateMessage
+  extends AbstractMessage<MessageProtos.FederateStateFrame, MessageProtos.FederateStateFrame.Builder>
+  implements FederationExecutionMessage, FederateMessage
 {
-  public static final int HEADER_SIZE = 7;
-
-  private final ChannelBuffer buffer;
-
-  private final boolean last;
-
-  public FederateStateFrame(ChannelBuffer buffer)
+  public FederateStateFrame(byte[] buffer, int offset, int length, boolean last)
   {
-    this.buffer = buffer;
+    super(MessageProtos.FederateStateFrame.newBuilder());
 
-    last = Protocol.decodeBoolean(buffer);
+    builder.setPayload(ByteString.copyFrom(buffer, offset, length));
+    builder.setLast(last);
   }
 
-  public FederateStateFrame(ChannelBuffer buffer, boolean last)
+  public FederateStateFrame(CodedInputStream in)
+    throws IOException
   {
-    this.buffer = buffer;
+    super(MessageProtos.FederateStateFrame.newBuilder(), in);
+  }
 
-    this.last = last;
-
-    buffer.setInt(0, buffer.readableBytes() - 4);
-    buffer.setShort(4, MessageType.FEDERATE_STATE_FRAME.ordinal());
-    buffer.setByte(6, last ? 0 : 1);
+  public ByteString getPayload()
+  {
+    return builder.getPayload();
   }
 
   public boolean isLast()
   {
-    return last;
+    return builder.getLast();
   }
 
   @Override
-  public MessageType getType()
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.FEDERATE_STATE_FRAME;
-  }
-
-  @Override
-  public ChannelBuffer getBuffer()
-  {
-    return buffer;
+    return MessageProtos.MessageType.FEDERATE_STATE_FRAME;
   }
 
   @Override

@@ -16,37 +16,44 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import com.google.protobuf.CodedInputStream;
 
 public class ReleaseObjectInstanceName
-  extends StringMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.ReleaseObjectInstanceName, FederationExecutionMessageProtos.ReleaseObjectInstanceName.Builder>
   implements FederationExecutionMessage
 {
   public ReleaseObjectInstanceName(String objectInstanceName)
   {
-    super(MessageType.RELEASE_OBJECT_INSTANCE_NAME, objectInstanceName);
+    super(FederationExecutionMessageProtos.ReleaseObjectInstanceName.newBuilder());
 
-    encodingFinished();
+    builder.setObjectInstanceName(objectInstanceName);
   }
 
-  public ReleaseObjectInstanceName(ChannelBuffer buffer)
+  public ReleaseObjectInstanceName(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.ReleaseObjectInstanceName.newBuilder(), in);
   }
 
   public String getObjectInstanceName()
   {
-    return s;
+    return builder.getObjectInstanceName();
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.RELEASE_OBJECT_INSTANCE_NAME;
+    return MessageProtos.MessageType.RELEASE_OBJECT_INSTANCE_NAME;
   }
 
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.releaseObjectInstanceName(federateProxy, this);

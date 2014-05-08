@@ -16,10 +16,11 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleFactory;
+
 import hla.rti1516.CouldNotDecode;
 import hla.rti1516.DimensionHandle;
 import hla.rti1516.DimensionHandleFactory;
-import hla.rti1516.FederateNotExecutionMember;
 
 public class IEEE1516DimensionHandleFactory
   implements DimensionHandleFactory
@@ -33,7 +34,14 @@ public class IEEE1516DimensionHandleFactory
   public DimensionHandle decode(byte[] buffer, int offset)
     throws CouldNotDecode
   {
-    return new IEEE1516DimensionHandle(buffer, offset);
+    try
+    {
+      return new IEEE1516DimensionHandle(IEEE1516eDimensionHandleFactory.INSTANCE.decode(buffer, offset));
+    }
+    catch (hla.rti1516e.exceptions.CouldNotDecode cnd)
+    {
+      throw new CouldNotDecode(cnd);
+    }
   }
 
   private Object readResolve()

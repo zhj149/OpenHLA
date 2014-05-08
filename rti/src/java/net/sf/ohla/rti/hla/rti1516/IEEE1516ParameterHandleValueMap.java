@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandle;
 import net.sf.ohla.rti.hla.rti1516e.IEEE1516eParameterHandleValueMapFactory;
 
 import hla.rti1516.ParameterHandle;
@@ -71,8 +70,7 @@ public class IEEE1516ParameterHandleValueMap
       IEEE1516eParameterHandleValueMapFactory.INSTANCE.create(parameterValues.size());
     for (Map.Entry<ParameterHandle, byte[]> entry : parameterValues.entrySet())
     {
-      ieee1516eParameterValues.put(
-        new IEEE1516eParameterHandle(((IEEE1516ParameterHandle) entry.getKey()).getHandle()), entry.getValue());
+      ieee1516eParameterValues.put(((IEEE1516ParameterHandle) entry.getKey()).getParameterHandle(), entry.getValue());
     }
     return ieee1516eParameterValues;
   }

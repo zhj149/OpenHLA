@@ -16,17 +16,19 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
-import net.sf.ohla.rti.Protocol;
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.FederateHandles;
+import net.sf.ohla.rti.util.ObjectClassHandles;
+import net.sf.ohla.rti.util.ObjectInstanceHandles;
 import net.sf.ohla.rti.federate.Callback;
 import net.sf.ohla.rti.federate.Federate;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandle;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eObjectClassHandle;
+import net.sf.ohla.rti.messages.AbstractMessage;
 import net.sf.ohla.rti.messages.FederateMessage;
-import net.sf.ohla.rti.messages.MessageType;
-import net.sf.ohla.rti.messages.ObjectInstanceMessage;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.FederateHandle;
 import hla.rti1516e.ObjectClassHandle;
@@ -34,58 +36,52 @@ import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class DiscoverObjectInstance
-  extends ObjectInstanceMessage
+  extends
+  AbstractMessage<FederateMessageProtos.DiscoverObjectInstance, FederateMessageProtos.DiscoverObjectInstance.Builder>
   implements Callback, FederateMessage
 {
-  private final ObjectClassHandle objectClassHandle;
-  private final String objectInstanceName;
-  private final FederateHandle producingFederateHandle;
-
   private Federate federate;
 
   public DiscoverObjectInstance(
     ObjectInstanceHandle objectInstanceHandle, ObjectClassHandle objectClassHandle,
     String objectInstanceName, FederateHandle producingFederateHandle)
   {
-    super(MessageType.DISCOVER_OBJECT_INSTANCE, objectInstanceHandle);
+    super(FederateMessageProtos.DiscoverObjectInstance.newBuilder());
 
-    this.objectClassHandle = objectClassHandle;
-    this.objectInstanceName = objectInstanceName;
-    this.producingFederateHandle = producingFederateHandle;
-
-    IEEE1516eObjectClassHandle.encode(buffer, objectClassHandle);
-    Protocol.encodeString(buffer, objectInstanceName);
-    IEEE1516eFederateHandle.encode(buffer, producingFederateHandle);
-
-    encodingFinished();
+    builder.setObjectInstanceHandle(ObjectInstanceHandles.convert(objectInstanceHandle));
+    builder.setObjectClassHandle(ObjectClassHandles.convert(objectClassHandle));
+    builder.setObjectInstanceName(objectInstanceName);
+    builder.setProducingFederateHandle(FederateHandles.convert(producingFederateHandle));
   }
 
-  public DiscoverObjectInstance(ChannelBuffer buffer)
+  public DiscoverObjectInstance(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    objectClassHandle = IEEE1516eObjectClassHandle.decode(buffer);
-    objectInstanceName = Protocol.decodeString(buffer);
-    producingFederateHandle = IEEE1516eFederateHandle.decode(buffer);
+    super(FederateMessageProtos.DiscoverObjectInstance.newBuilder(), in);
   }
 
-  public String getObjectInstanceName()
+  public ObjectInstanceHandle getObjectInstanceHandle()
   {
-    return objectInstanceName;
+    return ObjectInstanceHandles.convert(builder.getObjectInstanceHandle());
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.DISCOVER_OBJECT_INSTANCE;
+    return MessageProtos.MessageType.DISCOVER_OBJECT_INSTANCE;
   }
 
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
     federate.discoverObjectInstance(
-      objectInstanceHandle, objectClassHandle, objectInstanceName, producingFederateHandle);
+      ObjectInstanceHandles.convert(builder.getObjectInstanceHandle()),
+      ObjectClassHandles.convert(builder.getObjectClassHandle()), builder.getObjectInstanceName(),
+      FederateHandles.convert(builder.getProducingFederateHandle()));
   }
 
+  @Override
   public void execute(Federate federate)
   {
     this.federate = federate;

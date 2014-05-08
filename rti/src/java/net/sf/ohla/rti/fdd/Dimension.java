@@ -16,12 +16,10 @@
 
 package net.sf.ohla.rti.fdd;
 
-import net.sf.ohla.rti.Protocol;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandle;
+import net.sf.ohla.rti.util.DimensionHandles;
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
-
-import org.jboss.netty.buffer.ChannelBuffer;
+import net.sf.ohla.rti.proto.OHLAProtos;
 
 import hla.rti1516e.DimensionHandle;
 import hla.rti1516e.RangeBounds;
@@ -44,13 +42,13 @@ public class Dimension
     this.dimensionName = dimensionName;
   }
 
-  public Dimension(ChannelBuffer buffer, FDD fdd)
+  public Dimension(FDD fdd, OHLAProtos.FDD.Dimension dimension)
   {
     this.fdd = fdd;
 
-    dimensionHandle = IEEE1516eDimensionHandle.decode(buffer);
-    dimensionName = Protocol.decodeString(buffer);
-    upperBound = Protocol.decodeVarLong(buffer);
+    dimensionHandle = DimensionHandles.convert(dimension.getDimensionHandle());
+    dimensionName = dimension.getDimensionName();
+    upperBound = dimension.getUpperBound();
   }
 
   public FDD getFDD()
@@ -98,21 +96,17 @@ public class Dimension
     }
   }
 
+  public OHLAProtos.FDD.Dimension.Builder toProto()
+  {
+    return OHLAProtos.FDD.Dimension.newBuilder().setDimensionHandle(
+      DimensionHandles.convert(dimensionHandle)).setDimensionName(
+      dimensionName).setUpperBound(
+      upperBound);
+  }
+
   @Override
   public String toString()
   {
     return dimensionName;
-  }
-
-  public static void encode(ChannelBuffer buffer, Dimension dimension)
-  {
-    IEEE1516eDimensionHandle.encode(buffer, dimension.dimensionHandle);
-    Protocol.encodeString(buffer, dimension.dimensionName);
-    Protocol.encodeVarLong(buffer, dimension.upperBound);
-  }
-
-  public static Dimension decode(ChannelBuffer buffer, FDD fdd)
-  {
-    return new Dimension(buffer, fdd);
   }
 }

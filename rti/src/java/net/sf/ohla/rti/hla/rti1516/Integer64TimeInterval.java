@@ -105,6 +105,6 @@ public class Integer64TimeInterval
 
   private int compareTo(Integer64TimeInterval rhs)
   {
-    return Math.round(interval - rhs.interval);
+    return Long.compare(interval, rhs.interval);
   }
 }

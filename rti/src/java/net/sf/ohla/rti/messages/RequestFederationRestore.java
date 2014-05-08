@@ -16,37 +16,57 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import com.google.protobuf.CodedInputStream;
 
 public class RequestFederationRestore
-  extends StringRequest<RequestFederationRestoreResponse>
-  implements FederationExecutionMessage
+  extends
+  AbstractRequest<FederationExecutionMessageProtos.RequestFederationRestore, FederationExecutionMessageProtos.RequestFederationRestore.Builder, RequestFederationRestoreResponse>
+implements FederationExecutionMessage
 {
   public RequestFederationRestore(String label)
   {
-    super(MessageType.REQUEST_FEDERATION_RESTORE, label);
+    super(FederationExecutionMessageProtos.RequestFederationRestore.newBuilder());
 
-    encodingFinished();
+    builder.setLabel(label);
   }
 
-  public RequestFederationRestore(ChannelBuffer buffer)
+  public RequestFederationRestore(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.RequestFederationRestore.newBuilder(), in);
   }
 
   public String getLabel()
   {
-    return s;
+    return builder.getLabel();
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.REQUEST_FEDERATION_RESTORE;
+    return MessageProtos.MessageType.REQUEST_FEDERATION_RESTORE;
   }
 
+  @Override
+  public long getRequestId()
+  {
+    return builder.getRequestId();
+  }
+
+  @Override
+  public void setRequestId(long requestId)
+  {
+    builder.setRequestId(requestId);
+  }
+
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.requestFederationRestore(federateProxy, this);

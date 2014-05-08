@@ -16,32 +16,38 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import com.google.protobuf.CodedInputStream;
 
 public class FederateSaveBegun
-  extends AbstractMessage
-  implements FederationExecutionMessage
+  extends
+  AbstractMessage<FederationExecutionMessageProtos.FederateSaveBegun, FederationExecutionMessageProtos.FederateSaveBegun.Builder>
+implements FederationExecutionMessage
 {
   public FederateSaveBegun()
   {
-    super(MessageType.FEDERATE_SAVE_BEGUN);
-
-    encodingFinished();
+    super(FederationExecutionMessageProtos.FederateSaveBegun.newBuilder());
   }
 
-  public FederateSaveBegun(ChannelBuffer buffer)
+  public FederateSaveBegun(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.FederateSaveBegun.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.FEDERATE_SAVE_BEGUN;
+    return MessageProtos.MessageType.FEDERATE_SAVE_BEGUN;
   }
 
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.federateSaveBegun(federateProxy, this);

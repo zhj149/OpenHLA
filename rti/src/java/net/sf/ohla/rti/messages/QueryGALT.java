@@ -16,32 +16,50 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import com.google.protobuf.CodedInputStream;
 
 public class QueryGALT
-  extends AbstractRequest<QueryGALTResponse>
-  implements FederationExecutionMessage
+  extends
+  AbstractRequest<FederationExecutionMessageProtos.QueryGALT, FederationExecutionMessageProtos.QueryGALT.Builder, QueryGALTResponse>
+implements FederationExecutionMessage
 {
   public QueryGALT()
   {
-    super(MessageType.QUERY_GALT);
-
-    encodingFinished();
+    super(FederationExecutionMessageProtos.QueryGALT.newBuilder());
   }
 
-  public QueryGALT(ChannelBuffer buffer)
+  public QueryGALT(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.QueryGALT.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.QUERY_GALT;
+    return MessageProtos.MessageType.QUERY_GALT;
   }
 
+  @Override
+  public long getRequestId()
+  {
+    return builder.getRequestId();
+  }
+
+  @Override
+  public void setRequestId(long requestId)
+  {
+    builder.setRequestId(requestId);
+  }
+
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.queryGALT(federateProxy, this);

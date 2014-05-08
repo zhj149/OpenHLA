@@ -16,32 +16,46 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.InteractionClassHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.InteractionClassHandle;
 
 public class UnpublishInteractionClass
-  extends InteractionClassMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.UnpublishInteractionClass, FederationExecutionMessageProtos.UnpublishInteractionClass.Builder>
   implements FederationExecutionMessage
 {
   public UnpublishInteractionClass(InteractionClassHandle interactionClassHandle)
   {
-    super(MessageType.UNPUBLISH_INTERACTION_CLASS, interactionClassHandle);
+    super(FederationExecutionMessageProtos.UnpublishInteractionClass.newBuilder());
+
+    builder.setInteractionClassHandle(InteractionClassHandles.convert(interactionClassHandle));
   }
 
-  protected UnpublishInteractionClass(ChannelBuffer buffer)
+  public UnpublishInteractionClass(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.UnpublishInteractionClass.newBuilder(), in);
   }
 
-  public MessageType getType()
+  public InteractionClassHandle getInteractionClassHandle()
   {
-    return MessageType.UNPUBLISH_INTERACTION_CLASS;
+    return InteractionClassHandles.convert(builder.getInteractionClassHandle());
   }
 
+  @Override
+  public MessageProtos.MessageType getMessageType()
+  {
+    return MessageProtos.MessageType.UNPUBLISH_INTERACTION_CLASS;
+  }
+
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.unpublishInteractionClass(federateProxy, this);

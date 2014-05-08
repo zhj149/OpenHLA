@@ -16,59 +16,80 @@
 
 package net.sf.ohla.rti.messages;
 
-import net.sf.ohla.rti.Protocol;
-import net.sf.ohla.rti.fdd.FDD;
+import java.io.IOException;
 
-import org.jboss.netty.buffer.ChannelBuffer;
+import net.sf.ohla.rti.RTI;
+import net.sf.ohla.rti.fdd.FDD;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
+import net.sf.ohla.rti.messages.proto.RTIMessageProtos;
+
+import org.jboss.netty.channel.ChannelHandlerContext;
+
+import com.google.protobuf.CodedInputStream;
 
 public class CreateFederationExecution
-  extends AbstractRequest<CreateFederationExecutionResponse>
+  extends
+  AbstractRequest<RTIMessageProtos.CreateFederationExecution, RTIMessageProtos.CreateFederationExecution.Builder, CreateFederationExecutionResponse>
+  implements RTIMessage
 {
-  private final String federationExecutionName;
-  private final FDD fdd;
-  private final String logicalTimeImplementationName;
+  private volatile FDD fdd;
 
   public CreateFederationExecution(String federationExecutionName, FDD fdd, String logicalTimeImplementationName)
   {
-    super(MessageType.CREATE_FEDERATION_EXECUTION);
+    super(RTIMessageProtos.CreateFederationExecution.newBuilder());
 
-    this.federationExecutionName = federationExecutionName;
     this.fdd = fdd;
-    this.logicalTimeImplementationName = logicalTimeImplementationName;
 
-    Protocol.encodeString(buffer, federationExecutionName);
-    FDD.encode(buffer, fdd);
-    Protocol.encodeString(buffer, logicalTimeImplementationName);
-
-    encodingFinished();
+    builder.setFederationExecutionName(federationExecutionName);
+    builder.setFdd(fdd.toProto());
+    builder.setLogicalTimeImplementationName(logicalTimeImplementationName);
   }
 
-  public CreateFederationExecution(ChannelBuffer buffer)
+  public CreateFederationExecution(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    federationExecutionName = Protocol.decodeString(buffer);
-    fdd = FDD.decode(buffer);
-    logicalTimeImplementationName = Protocol.decodeString(buffer);
+    super(RTIMessageProtos.CreateFederationExecution.newBuilder(), in);
   }
 
   public String getFederationExecutionName()
   {
-    return federationExecutionName;
+    return builder.getFederationExecutionName();
   }
 
   public FDD getFDD()
   {
+    if (fdd == null)
+    {
+      fdd = new FDD(builder.getFdd());
+    }
     return fdd;
   }
 
   public String getLogicalTimeImplementationName()
   {
-    return logicalTimeImplementationName;
+    return builder.getLogicalTimeImplementationName();
   }
 
-  public MessageType getType()
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.CREATE_FEDERATION_EXECUTION;
+    return MessageProtos.MessageType.CREATE_FEDERATION_EXECUTION;
+  }
+
+  @Override
+  public long getRequestId()
+  {
+    return builder.getRequestId();
+  }
+
+  @Override
+  public void setRequestId(long requestId)
+  {
+    builder.setRequestId(requestId);
+  }
+
+  @Override
+  public void execute(RTI rti, ChannelHandlerContext context)
+  {
+    rti.createFederationExecution(context, this);
   }
 }

@@ -16,13 +16,13 @@
 
 package net.sf.ohla.rti.federate;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import net.sf.ohla.rti.util.LogicalTimeIntervals;
+import net.sf.ohla.rti.util.LogicalTimes;
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
 import net.sf.ohla.rti.i18n.I18nLogger;
@@ -38,13 +38,16 @@ import net.sf.ohla.rti.messages.QueryGALT;
 import net.sf.ohla.rti.messages.QueryLITS;
 import net.sf.ohla.rti.messages.TimeAdvanceRequest;
 import net.sf.ohla.rti.messages.TimeAdvanceRequestAvailable;
+import net.sf.ohla.rti.proto.FederationExecutionSaveProtos.FederateState.FederateTimeManagerState;
+import net.sf.ohla.rti.proto.OHLAProtos;
 
+import com.google.protobuf.CodedInputStream;
+import com.google.protobuf.CodedOutputStream;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.LogicalTime;
 import hla.rti1516e.LogicalTimeFactory;
 import hla.rti1516e.LogicalTimeInterval;
 import hla.rti1516e.TimeQueryReturn;
-import hla.rti1516e.exceptions.CouldNotDecode;
 import hla.rti1516e.exceptions.CouldNotEncode;
 import hla.rti1516e.exceptions.FederateInternalError;
 import hla.rti1516e.exceptions.IllegalTimeArithmetic;
@@ -185,6 +188,10 @@ public class FederateTimeManager
 
       timeRegulatingState = TimeRegulatingState.BECOMING_TIME_REGULATING;
     }
+    catch (CouldNotEncode cne)
+    {
+      throw new RTIinternalError(cne.getMessage(), cne);
+    }
     finally
     {
       timeLock.writeLock().unlock();
@@ -276,13 +283,9 @@ public class FederateTimeManager
         {
           lots = time.add(lookahead.isZero() ? epsilon : lookahead);
         }
-        catch (IllegalTimeArithmetic ita)
+        catch (IllegalTimeArithmetic | InvalidLogicalTimeInterval e)
         {
-          throw new InvalidLogicalTime(ita.getMessage(), ita);
-        }
-        catch (InvalidLogicalTimeInterval ilti)
-        {
-          throw new InvalidLogicalTime(ilti.getMessage(), ilti);
+          throw new InvalidLogicalTime(e.getMessage(), e);
         }
       }
 
@@ -294,6 +297,10 @@ public class FederateTimeManager
       // release any callbacks held until we are time advancing
       //
       federate.getCallbackManager().releaseHeld();
+    }
+    catch (CouldNotEncode cne)
+    {
+      throw new RTIinternalError(cne.getMessage(), cne);
     }
     finally
     {
@@ -323,13 +330,9 @@ public class FederateTimeManager
         {
           lots = time.add(lookahead);
         }
-        catch (IllegalTimeArithmetic ita)
+        catch (IllegalTimeArithmetic | InvalidLogicalTimeInterval e)
         {
-          throw new InvalidLogicalTime(ita.getMessage(), ita);
-        }
-        catch (InvalidLogicalTimeInterval ilti)
-        {
-          throw new InvalidLogicalTime(ilti.getMessage(), ilti);
+          throw new InvalidLogicalTime(e.getMessage(), e);
         }
       }
 
@@ -341,6 +344,10 @@ public class FederateTimeManager
       // release any callbacks held until we are time advancing
       //
       federate.getCallbackManager().releaseHeld();
+    }
+    catch (CouldNotEncode cne)
+    {
+      throw new RTIinternalError(cne.getMessage(), cne);
     }
     finally
     {
@@ -370,13 +377,9 @@ public class FederateTimeManager
         {
           lots = time.add(lookahead.isZero() ? epsilon : lookahead);
         }
-        catch (IllegalTimeArithmetic ita)
+        catch (IllegalTimeArithmetic | InvalidLogicalTimeInterval e)
         {
-          throw new InvalidLogicalTime(ita.getMessage(), ita);
-        }
-        catch (InvalidLogicalTimeInterval ilti)
-        {
-          throw new InvalidLogicalTime(ilti.getMessage(), ilti);
+          throw new InvalidLogicalTime(e.getMessage(), e);
         }
       }
 
@@ -417,13 +420,9 @@ public class FederateTimeManager
         {
           lots = time.add(lookahead);
         }
-        catch (IllegalTimeArithmetic ita)
+        catch (IllegalTimeArithmetic | InvalidLogicalTimeInterval e)
         {
-          throw new InvalidLogicalTime(ita.getMessage(), ita);
-        }
-        catch (InvalidLogicalTimeInterval ilti)
-        {
-          throw new InvalidLogicalTime(ilti.getMessage(), ilti);
+          throw new InvalidLogicalTime(e.getMessage(), e);
         }
       }
 
@@ -464,13 +463,9 @@ public class FederateTimeManager
         {
           lots = time.add(lookahead);
         }
-        catch (IllegalTimeArithmetic ita)
+        catch (IllegalTimeArithmetic | InvalidLogicalTimeInterval e)
         {
-          throw new InvalidLogicalTime(ita.getMessage(), ita);
-        }
-        catch (InvalidLogicalTimeInterval ilti)
-        {
-          throw new InvalidLogicalTime(ilti.getMessage(), ilti);
+          throw new InvalidLogicalTime(e.getMessage(), e);
         }
       }
 
@@ -482,6 +477,10 @@ public class FederateTimeManager
       // release any callbacks held until we are time advancing
       //
       federate.getCallbackManager().releaseHeld();
+    }
+    catch (CouldNotEncode cne)
+    {
+      throw new RTIinternalError(cne.getMessage(), cne);
     }
     finally
     {
@@ -498,7 +497,7 @@ public class FederateTimeManager
       QueryGALT queryGALT = new QueryGALT();
       federate.getRTIChannel().write(queryGALT);
 
-      LogicalTime galt = queryGALT.getResponse().getGALT();
+      LogicalTime galt = queryGALT.getResponse().getGALT(federate.getLogicalTimeFactory());
       return new TimeQueryReturn(galt != null, galt);
     }
     finally
@@ -531,7 +530,7 @@ public class FederateTimeManager
       QueryLITS queryLITS = new QueryLITS();
       federate.getRTIChannel().write(queryLITS);
 
-      LogicalTime lits = queryLITS.getResponse().getLITS();
+      LogicalTime lits = queryLITS.getResponse().getLITS(federate.getLogicalTimeFactory());
       return new TimeQueryReturn(lits != null, lits);
     }
     finally
@@ -590,13 +589,9 @@ public class FederateTimeManager
 
       federateAmbassador.timeRegulationEnabled(time);
     }
-    catch (IllegalTimeArithmetic ilta)
+    catch (IllegalTimeArithmetic | InvalidLogicalTimeInterval e)
     {
-      throw new RuntimeException(ilta);
-    }
-    catch (InvalidLogicalTimeInterval ilti)
-    {
-      throw new RuntimeException(ilti);
+      throw new RuntimeException(e);
     }
     finally
     {
@@ -738,164 +733,68 @@ public class FederateTimeManager
     checkIfInvalidTimestamp(deleteTime);
   }
 
-  public void saveState(DataOutput out)
+  public void saveState(CodedOutputStream out)
     throws IOException
   {
-    out.writeInt(temporalState.ordinal());
-    out.writeInt(timeRegulatingState.ordinal());
-    out.writeInt(timeConstrainedState.ordinal());
+    FederateTimeManagerState.Builder timeManagerState = FederateTimeManagerState.newBuilder();
 
-    byte[] buffer = new byte[federateTime.encodedLength()];
-    try
-    {
-      federateTime.encode(buffer, 0);
-    }
-    catch (CouldNotEncode cne)
-    {
-      throw new IOException(cne);
-    }
-    out.writeInt(buffer.length);
-    out.write(buffer);
+    timeManagerState.setTemporalState(
+      FederateTimeManagerState.TemporalState.values()[temporalState.ordinal()]);
+    timeManagerState.setTimeRegulatingState(
+      FederateTimeManagerState.TimeRegulatingState.values()[timeRegulatingState.ordinal()]);
+    timeManagerState.setTimeConstrainedState(
+      FederateTimeManagerState.TimeConstrainedState.values()[timeConstrainedState.ordinal()]);
 
-    if (lookahead == null)
+    timeManagerState.setFederateTime(LogicalTimes.convert(federateTime));
+
+    if (lookahead != null)
     {
-      out.writeInt(0);
-    }
-    else
-    {
-      buffer = new byte[lookahead.encodedLength()];
-      try
-      {
-        lookahead.encode(buffer, 0);
-      }
-      catch (CouldNotEncode cne)
-      {
-        throw new IOException(cne);
-      }
-      out.writeInt(buffer.length);
-      out.write(buffer);
+      timeManagerState.setLookahead(LogicalTimeIntervals.convert(lookahead));
     }
 
-    if (lots == null)
+    if (lots != null)
     {
-      out.writeInt(0);
-    }
-    else
-    {
-      buffer = new byte[lots.encodedLength()];
-      try
-      {
-        lots.encode(buffer, 0);
-      }
-      catch (CouldNotEncode cne)
-      {
-        throw new IOException(cne);
-      }
-      out.writeInt(buffer.length);
-      out.write(buffer);
+      timeManagerState.setLots(LogicalTimes.convert(lots));
     }
 
-    if (advanceRequestTime == null)
+    if (advanceRequestTime != null)
     {
-      out.writeInt(0);
-    }
-    else
-    {
-      buffer = new byte[advanceRequestTime.encodedLength()];
-      try
-      {
-        advanceRequestTime.encode(buffer, 0);
-      }
-      catch (CouldNotEncode cne)
-      {
-        throw new IOException(cne);
-      }
-      out.writeInt(buffer.length);
-      out.write(buffer);
+      timeManagerState.setAdvanceRequestTime(LogicalTimes.convert(advanceRequestTime));
     }
 
-    out.writeInt(advanceRequestType.ordinal());
+    timeManagerState.setAdvanceRequestType(OHLAProtos.AdvanceRequestType.values()[advanceRequestType.ordinal()]);
+
+    out.writeMessageNoTag(timeManagerState.build());
   }
 
-  public void restoreState(DataInput in, LogicalTimeFactory logicalTimeFactory)
+  public void restoreState(CodedInputStream in)
     throws IOException
   {
-    temporalState = TemporalState.values()[in.readInt()];
-    timeRegulatingState = TimeRegulatingState.values()[in.readInt()];
-    timeConstrainedState = TimeConstrainedState.values()[in.readInt()];
+    FederateTimeManagerState timeManagerState = in.readMessage(FederateTimeManagerState.PARSER, null);
 
-    byte[] buffer = new byte[in.readInt()];
-    in.readFully(buffer);
-    try
+    temporalState = TemporalState.values()[timeManagerState.getTemporalState().ordinal()];
+    timeRegulatingState = TimeRegulatingState.values()[timeManagerState.getTimeRegulatingState().ordinal()];
+    timeConstrainedState = TimeConstrainedState.values()[timeManagerState.getTimeConstrainedState().ordinal()];
+
+    federateTime = LogicalTimes.convert(federate.getLogicalTimeFactory(), timeManagerState.getFederateTime());
+
+    if (timeManagerState.hasLookahead())
     {
-      federateTime = logicalTimeFactory.decodeTime(buffer, 0);
-    }
-    catch (CouldNotDecode cnd)
-    {
-      throw new IOException(cnd);
+      lookahead = LogicalTimeIntervals.convert(federate.getLogicalTimeFactory(), timeManagerState.getLookahead());
     }
 
-    int length = in.readInt();
-    if (length == 0)
+    if (timeManagerState.hasLots())
     {
-      lookahead = null;
-    }
-    else
-    {
-      buffer = new byte[length];
-      in.readFully(buffer);
-
-      try
-      {
-        lookahead = logicalTimeFactory.decodeInterval(buffer, 0);
-      }
-      catch (CouldNotDecode cnd)
-      {
-        throw new IOException(cnd);
-      }
+      lots = LogicalTimes.convert(federate.getLogicalTimeFactory(), timeManagerState.getLots());
     }
 
-    length = in.readInt();
-    if (length == 0)
+    if (timeManagerState.hasAdvanceRequestTime())
     {
-      lots = null;
-    }
-    else
-    {
-      buffer = new byte[length];
-      in.readFully(buffer);
-
-      try
-      {
-        lots = logicalTimeFactory.decodeTime(buffer, 0);
-      }
-      catch (CouldNotDecode cnd)
-      {
-        throw new IOException(cnd);
-      }
+      advanceRequestTime = LogicalTimes.convert(
+        federate.getLogicalTimeFactory(), timeManagerState.getAdvanceRequestTime());
     }
 
-    length = in.readInt();
-    if (length == 0)
-    {
-      advanceRequestTime = null;
-    }
-    else
-    {
-      buffer = new byte[length];
-      in.readFully(buffer);
-
-      try
-      {
-        advanceRequestTime = logicalTimeFactory.decodeTime(buffer, 0);
-      }
-      catch (CouldNotDecode cnd)
-      {
-        throw new IOException(cnd);
-      }
-    }
-
-    advanceRequestType = TimeAdvanceType.values()[in.readInt()];
+    advanceRequestType = TimeAdvanceType.values()[timeManagerState.getAdvanceRequestType().ordinal()];
   }
 
   @SuppressWarnings("unchecked")

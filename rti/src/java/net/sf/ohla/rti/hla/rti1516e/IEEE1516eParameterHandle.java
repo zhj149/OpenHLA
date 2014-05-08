@@ -16,58 +16,51 @@
 
 package net.sf.ohla.rti.hla.rti1516e;
 
-import java.io.DataInput;
-import java.io.IOException;
-
-import net.sf.ohla.rti.IntegerHandle;
-
-import org.jboss.netty.buffer.ChannelBuffer;
+import java.nio.ByteBuffer;
 
 import hla.rti1516e.ParameterHandle;
 
 public class IEEE1516eParameterHandle
-  extends IntegerHandle
   implements ParameterHandle
 {
-  private static final IEEE1516eParameterHandle[] cache;
-  static
-  {
-    // TODO: get cache size from properties
-
-    cache = new IEEE1516eParameterHandle[256];
-
-    for (int i = 1; i < cache.length; i++)
-    {
-      cache[i] = new IEEE1516eParameterHandle(i);
-    }
-  }
+  public final int handle;
 
   public IEEE1516eParameterHandle(int handle)
   {
-    super(handle);
+    this.handle = handle;
   }
 
-  public static void encode(ChannelBuffer buffer, ParameterHandle parameterHandle)
+  public int getHandle()
   {
-    ((IEEE1516eParameterHandle) parameterHandle).encode(buffer);
+    return handle;
   }
 
-  public static IEEE1516eParameterHandle decode(DataInput in)
-    throws IOException
+  public int encodedLength()
   {
-    int handle = decodeHandle(in);
-    return handle < cache.length ? cache[handle] : new IEEE1516eParameterHandle(handle);
+    return 4;
   }
 
-  public static IEEE1516eParameterHandle decode(ChannelBuffer buffer)
+  public void encode(byte[] buffer, int offset)
   {
-    int handle = decodeHandle(buffer);
-    return handle < cache.length ? cache[handle] : new IEEE1516eParameterHandle(handle);
+    ByteBuffer.wrap(buffer, offset, 4).putInt(handle);
   }
 
-  public static IEEE1516eParameterHandle decode(byte[] buffer, int offset)
+  @Override
+  public boolean equals(Object rhs)
   {
-    int handle = decodeHandle(buffer, offset);
-    return handle < cache.length ? cache[handle] : new IEEE1516eParameterHandle(handle);
+    return this == rhs ||
+           (rhs instanceof IEEE1516eParameterHandle && handle == ((IEEE1516eParameterHandle) rhs).handle);
+  }
+
+  @Override
+  public int hashCode()
+  {
+    return handle;
+  }
+
+  @Override
+  public String toString()
+  {
+    return Integer.toString(handle);
   }
 }

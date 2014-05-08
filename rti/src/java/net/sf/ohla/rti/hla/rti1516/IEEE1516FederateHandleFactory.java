@@ -16,10 +16,11 @@
 
 package net.sf.ohla.rti.hla.rti1516;
 
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eFederateHandleFactory;
+
 import hla.rti1516.CouldNotDecode;
 import hla.rti1516.FederateHandle;
 import hla.rti1516.FederateHandleFactory;
-import hla.rti1516.FederateNotExecutionMember;
 
 public class IEEE1516FederateHandleFactory
   implements FederateHandleFactory
@@ -31,9 +32,16 @@ public class IEEE1516FederateHandleFactory
   }
 
   public FederateHandle decode(byte[] buffer, int offset)
-    throws CouldNotDecode, FederateNotExecutionMember
+    throws CouldNotDecode
   {
-    return new IEEE1516FederateHandle(buffer, offset);
+    try
+    {
+      return new IEEE1516FederateHandle(IEEE1516eFederateHandleFactory.INSTANCE.decode(buffer, offset));
+    }
+    catch (hla.rti1516e.exceptions.CouldNotDecode cnd)
+    {
+      throw new CouldNotDecode(cnd);
+    }
   }
 
   private Object readResolve()

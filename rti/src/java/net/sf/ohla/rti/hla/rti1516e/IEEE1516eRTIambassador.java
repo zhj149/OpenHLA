@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.URL;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -32,16 +33,17 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import net.sf.ohla.rti.RTI;
 import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.federate.CallbackManager;
-import net.sf.ohla.rti.federate.DefaultFederateChannelHandlerFactory;
 import net.sf.ohla.rti.federate.Federate;
-import net.sf.ohla.rti.federate.FederateChannelHandlerFactory;
 import net.sf.ohla.rti.federate.FederateChannelPipelineFactory;
+import net.sf.ohla.rti.hla.rti.HLA13RTIambassador;
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
 import net.sf.ohla.rti.i18n.I18nLogger;
 import net.sf.ohla.rti.i18n.LogMessages;
 import net.sf.ohla.rti.messages.CreateFederationExecution;
+import net.sf.ohla.rti.messages.CreateFederationExecutionResponse;
 import net.sf.ohla.rti.messages.DestroyFederationExecution;
+import net.sf.ohla.rti.messages.DestroyFederationExecutionResponse;
 import net.sf.ohla.rti.messages.ListFederationExecutions;
 
 import org.jboss.netty.bootstrap.ClientBootstrap;
@@ -204,9 +206,7 @@ public class IEEE1516eRTIambassador
    */
   private final ReadWriteLock connectLock = new ReentrantReadWriteLock(true);
 
-  private final FederateChannelHandlerFactory federateChannelHandlerFactory;
-
-  private final Federate.SaveStateProcessor saveStateProcessor;
+  private final HLA13RTIambassador hla13RTIambassador;
 
   private Channel rtiChannel;
 
@@ -234,24 +234,17 @@ public class IEEE1516eRTIambassador
 
   public IEEE1516eRTIambassador()
   {
-    this(new DefaultFederateChannelHandlerFactory(), null);
+    this(null);
   }
 
-  public IEEE1516eRTIambassador(FederateChannelHandlerFactory federateChannelHandlerFactory)
+  public IEEE1516eRTIambassador(HLA13RTIambassador hla13RTIambassador)
   {
-    this(federateChannelHandlerFactory, null);
+    this.hla13RTIambassador = hla13RTIambassador;
   }
 
-  public IEEE1516eRTIambassador(Federate.SaveStateProcessor saveStateProcessor)
+  public Channel getRTIChannel()
   {
-    this(new DefaultFederateChannelHandlerFactory(), saveStateProcessor);
-  }
-
-  public IEEE1516eRTIambassador(
-    FederateChannelHandlerFactory federateChannelHandlerFactory, Federate.SaveStateProcessor saveStateProcessor)
-  {
-    this.federateChannelHandlerFactory = federateChannelHandlerFactory;
-    this.saveStateProcessor = saveStateProcessor;
+    return rtiChannel;
   }
 
   public Federate getFederate()
@@ -297,16 +290,18 @@ public class IEEE1516eRTIambassador
 
       rtiChannel.write(createFederationExecution);
 
-      switch (createFederationExecution.getResponse().getResponse())
+      CreateFederationExecutionResponse response = createFederationExecution.getResponse();
+      if (response.isFailure())
       {
-        case FEDERATION_EXECUTION_ALREADY_EXISTS:
-          throw new FederationExecutionAlreadyExists(
-            I18n.getMessage(ExceptionMessages.FEDERATION_EXECUTION_ALREADY_EXISTS, federationExecutionName));
-        case COULD_NOT_CREATE_LOGICAL_TIME_FACTORY:
-          throw new CouldNotCreateLogicalTimeFactory(
-            I18n.getMessage(ExceptionMessages.COULD_NOT_CREATE_LOGICAL_TIME_FACTORY, logicalTimeImplementationName));
-        case SUCCESS:
-          break;
+        switch (response.getFailure().getCause())
+        {
+          case FEDERATION_EXECUTION_ALREADY_EXISTS:
+            throw new FederationExecutionAlreadyExists(
+              I18n.getMessage(ExceptionMessages.FEDERATION_EXECUTION_ALREADY_EXISTS, federationExecutionName));
+          case COULD_NOT_CREATE_LOGICAL_TIME_FACTORY:
+            throw new CouldNotCreateLogicalTimeFactory(
+              I18n.getMessage(ExceptionMessages.COULD_NOT_CREATE_LOGICAL_TIME_FACTORY, logicalTimeImplementationName));
+        }
       }
     }
     finally
@@ -350,7 +345,7 @@ public class IEEE1516eRTIambassador
     }
     catch (Throwable t)
     {
-      log.warn(LogMessages.UNEXPECTED_EXCEPTION, t);
+      log.warn(LogMessages.UNEXPECTED_EXCEPTION, t, t);
     }
   }
 
@@ -434,8 +429,7 @@ public class IEEE1516eRTIambassador
         clientBootstrap.setOption("connectTimeoutMillis", connectTimeoutMillis);
 
         CallbackManager callbackManager = new CallbackManager(federateAmbassador);
-        clientBootstrap.setPipelineFactory(
-          new FederateChannelPipelineFactory(executor, callbackManager, federateChannelHandlerFactory));
+        clientBootstrap.setPipelineFactory(new FederateChannelPipelineFactory(executor, callbackManager));
 
         ChannelFuture future = clientBootstrap.connect(new InetSocketAddress(host, port)).awaitUninterruptibly();
         if (future.isSuccess())
@@ -656,17 +650,19 @@ public class IEEE1516eRTIambassador
 
       rtiChannel.write(destroyFederationExecution);
 
-      switch (destroyFederationExecution.getResponse().getResponse())
+      DestroyFederationExecutionResponse response = destroyFederationExecution.getResponse();
+      if (response.isFailure())
       {
-        case FEDERATES_CURRENTLY_JOINED:
-          throw new FederatesCurrentlyJoined(I18n.getMessage(
-            ExceptionMessages.FEDERATES_CURRENTLY_JOINED,
-            destroyFederationExecution.getResponse().getCurrentlyJoinedFederates()));
-        case FEDERATION_EXECUTION_DOES_NOT_EXIST:
-          throw new FederationExecutionDoesNotExist(I18n.getMessage(
-            ExceptionMessages.FEDERATION_EXECUTION_DOES_NOT_EXIST, federationExecutionName));
-        case SUCCESS:
-          break;
+        switch (response.getFailure().getCause())
+        {
+          case FEDERATES_CURRENTLY_JOINED:
+            throw new FederatesCurrentlyJoined(I18n.getMessage(
+              ExceptionMessages.FEDERATES_CURRENTLY_JOINED,
+              response.getFailure().getCurrentlyJoinedFederatesList()));
+          case FEDERATION_EXECUTION_DOES_NOT_EXIST:
+            throw new FederationExecutionDoesNotExist(I18n.getMessage(
+              ExceptionMessages.FEDERATION_EXECUTION_DOES_NOT_EXIST, federationExecutionName));
+        }
       }
     }
     finally
@@ -717,7 +713,7 @@ public class IEEE1516eRTIambassador
 
         federate = new Federate(
           federateName, federateType, federationExecutionName, additionalFDDs, federateAmbassador,
-          callbackManager, rtiChannel, saveStateProcessor);
+          callbackManager, rtiChannel, hla13RTIambassador);
       }
       finally
       {

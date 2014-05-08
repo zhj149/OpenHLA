@@ -16,34 +16,46 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.ObjectInstanceHandles;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.ObjectInstanceHandle;
 
 public class LocalDeleteObjectInstance
-  extends ObjectInstanceMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.LocalDeleteObjectInstance, FederationExecutionMessageProtos.LocalDeleteObjectInstance.Builder>
   implements FederationExecutionMessage
 {
   public LocalDeleteObjectInstance(ObjectInstanceHandle objectInstanceHandle)
   {
-    super(MessageType.LOCAL_DELETE_OBJECT_INSTANCE, objectInstanceHandle);
+    super(FederationExecutionMessageProtos.LocalDeleteObjectInstance.newBuilder());
 
-    encodingFinished();
+    builder.setObjectInstanceHandle(ObjectInstanceHandles.convert(objectInstanceHandle));
   }
 
-  public LocalDeleteObjectInstance(ChannelBuffer buffer)
+  public LocalDeleteObjectInstance(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederationExecutionMessageProtos.LocalDeleteObjectInstance.newBuilder(), in);
   }
 
-  public MessageType getType()
+  public ObjectInstanceHandle getObjectInstanceHandle()
   {
-    return MessageType.LOCAL_DELETE_OBJECT_INSTANCE;
+    return ObjectInstanceHandles.convert(builder.getObjectInstanceHandle());
   }
 
+  @Override
+  public MessageProtos.MessageType getMessageType()
+  {
+    return MessageProtos.MessageType.LOCAL_DELETE_OBJECT_INSTANCE;
+  }
+
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
     federationExecution.localDeleteObjectInstance(federateProxy, this);

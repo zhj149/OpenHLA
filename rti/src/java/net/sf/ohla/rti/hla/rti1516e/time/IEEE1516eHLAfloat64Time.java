@@ -114,7 +114,7 @@ public class IEEE1516eHLAfloat64Time
 
   public int compareTo(HLAfloat64Time rhs)
   {
-    return (int) Math.round(time - rhs.getValue());
+    return Double.compare(time, rhs.getValue());
   }
 
   public int encodedLength()

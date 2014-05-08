@@ -16,54 +16,46 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.MessageRetractionHandles;
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.hla.rti1516e.IEEE1516eMessageRetractionHandle;
 import net.sf.ohla.rti.messages.AbstractMessage;
-import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.MessageRetractionHandle;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class RequestRetraction
-  extends AbstractMessage
+  extends AbstractMessage<FederateMessageProtos.RequestRetraction, FederateMessageProtos.RequestRetraction.Builder>
   implements Callback
 {
-  private final MessageRetractionHandle messageRetractionHandle;
-
   public RequestRetraction(MessageRetractionHandle messageRetractionHandle)
   {
-    super(MessageType.REQUEST_RETRACTION);
+    super(FederateMessageProtos.RequestRetraction.newBuilder());
 
-    this.messageRetractionHandle = messageRetractionHandle;
-
-    IEEE1516eMessageRetractionHandle.encode(buffer, messageRetractionHandle);
-
-    encodingFinished();
+    builder.setMessageRetractionHandle(MessageRetractionHandles.convert(messageRetractionHandle));
   }
 
-  public RequestRetraction(ChannelBuffer buffer)
+  public RequestRetraction(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
-
-    messageRetractionHandle = IEEE1516eMessageRetractionHandle.decode(buffer);
+    super(FederateMessageProtos.RequestRetraction.newBuilder(), in);
   }
 
-  public MessageRetractionHandle getMessageRetractionHandle()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return messageRetractionHandle;
+    return MessageProtos.MessageType.REQUEST_RETRACTION;
   }
 
-  public MessageType getType()
-  {
-    return MessageType.REQUEST_RETRACTION;
-  }
-
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.requestRetraction(messageRetractionHandle);
+    federateAmbassador.requestRetraction(MessageRetractionHandles.convert(builder.getMessageRetractionHandle()));
   }
 }

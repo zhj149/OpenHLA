@@ -16,42 +16,63 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.AttributeHandles;
+import net.sf.ohla.rti.util.ObjectInstanceHandles;
 import net.sf.ohla.rti.federate.Callback;
-import net.sf.ohla.rti.messages.MessageType;
-import net.sf.ohla.rti.messages.ObjectInstanceAttributesMessage;
+import net.sf.ohla.rti.messages.AbstractMessage;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.AttributeHandleSet;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.ObjectInstanceHandle;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class RequestDivestitureConfirmation
-  extends ObjectInstanceAttributesMessage
+  extends
+  AbstractMessage<FederateMessageProtos.RequestDivestitureConfirmation, FederateMessageProtos.RequestDivestitureConfirmation.Builder>
   implements Callback
 {
   public RequestDivestitureConfirmation(
     ObjectInstanceHandle objectInstanceHandle, AttributeHandleSet attributeHandles)
   {
-    super(MessageType.REQUEST_DIVESTITURE_CONFIRMATION, objectInstanceHandle, attributeHandles);
+    super(FederateMessageProtos.RequestDivestitureConfirmation.newBuilder());
 
-    encodingFinished();
+    builder.setObjectInstanceHandle(ObjectInstanceHandles.convert(objectInstanceHandle));
+    builder.addAllAttributeHandles(AttributeHandles.convert(attributeHandles));
   }
 
-  public RequestDivestitureConfirmation(ChannelBuffer buffer)
+  public RequestDivestitureConfirmation(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederateMessageProtos.RequestDivestitureConfirmation.newBuilder(), in);
   }
 
-  public MessageType getType()
+  public ObjectInstanceHandle getObjectInstanceHandle()
   {
-    return MessageType.REQUEST_DIVESTITURE_CONFIRMATION;
+    return ObjectInstanceHandles.convert(builder.getObjectInstanceHandle());
   }
 
+  public AttributeHandleSet getAttributeHandles()
+  {
+    return AttributeHandles.convertAttributeHandles(builder.getAttributeHandlesList());
+  }
+
+  @Override
+  public MessageProtos.MessageType getMessageType()
+  {
+    return MessageProtos.MessageType.REQUEST_DIVESTITURE_CONFIRMATION;
+  }
+
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
-    federateAmbassador.requestDivestitureConfirmation(objectInstanceHandle, attributeHandles);
+    federateAmbassador.requestDivestitureConfirmation(
+      ObjectInstanceHandles.convert(builder.getObjectInstanceHandle()),
+      AttributeHandles.convertAttributeHandles(builder.getAttributeHandlesList()));
   }
 }

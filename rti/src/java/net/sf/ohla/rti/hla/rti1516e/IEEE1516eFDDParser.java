@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.net.URL;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -55,11 +56,11 @@ public class IEEE1516eFDDParser
     List<FDD> additionalFDDs;
     if (urls == null || urls.length == 0)
     {
-      additionalFDDs = null;
+      additionalFDDs = Collections.emptyList();
     }
     else
     {
-      additionalFDDs = new ArrayList<FDD>(urls.length);
+      additionalFDDs = new ArrayList<>(urls.length);
       for (URL additionalFomModule : urls)
       {
         additionalFDDs.add(parseFDD(additionalFomModule));
@@ -145,7 +146,7 @@ public class IEEE1516eFDDParser
 
     private boolean saveContent;
 
-    private Stack<ContentHandler> contentHandlerStack = new Stack<ContentHandler>();
+    private Stack<ContentHandler> contentHandlerStack = new Stack<>();
 
     public Handler(FDD fdd)
     {

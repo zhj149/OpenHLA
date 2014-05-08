@@ -1,12 +1,11 @@
 package net.sf.ohla.rti.federate;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
 
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
 import net.sf.ohla.rti.i18n.I18nLogger;
 import net.sf.ohla.rti.i18n.LogMessages;
-import net.sf.ohla.rti.i18n.I18n;
-import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.messages.FederateSaveBegun;
 import net.sf.ohla.rti.messages.FederateSaveComplete;
 import net.sf.ohla.rti.messages.FederateSaveNotComplete;
@@ -15,6 +14,7 @@ import net.sf.ohla.rti.messages.FederateStateOutputStream;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
+import com.google.protobuf.CodedOutputStream;
 import hla.rti1516e.SaveStatus;
 import hla.rti1516e.exceptions.RTIinternalError;
 
@@ -127,10 +127,11 @@ public class FederateSave
 
     public void run()
     {
-      DataOutputStream out = new DataOutputStream(new FederateStateOutputStream(8192, federate.getRTIChannel()));
-      try
+      try (FederateStateOutputStream out = new FederateStateOutputStream(federate.getRTIChannel(), CodedOutputStream.DEFAULT_BUFFER_SIZE))
       {
-        federate.saveState(out);
+        CodedOutputStream codedOutputStream = CodedOutputStream.newInstance(out);
+        federate.saveState(codedOutputStream);
+        codedOutputStream.flush();
       }
       catch (IOException ioe)
       {
@@ -140,17 +141,6 @@ public class FederateSave
       }
       finally
       {
-        try
-        {
-          out.close();
-        }
-        catch (IOException ioe)
-        {
-          log.warn(LogMessages.UNABLE_TO_SAVE_FEDERATE_STATE, ioe);
-
-          exception = ioe;
-        }
-
         synchronized (this)
         {
           done = true;

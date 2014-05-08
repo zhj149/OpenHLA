@@ -16,46 +16,50 @@
 
 package net.sf.ohla.rti.messages.callbacks;
 
+import java.io.IOException;
+
 import net.sf.ohla.rti.federate.Callback;
 import net.sf.ohla.rti.federate.Federate;
 import net.sf.ohla.rti.messages.AbstractMessage;
 import net.sf.ohla.rti.messages.FederateMessage;
-import net.sf.ohla.rti.messages.MessageType;
+import net.sf.ohla.rti.messages.proto.FederateMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.FederateAmbassador;
 import hla.rti1516e.exceptions.FederateInternalError;
 
 public class FederationRestored
-  extends AbstractMessage
+  extends AbstractMessage<FederateMessageProtos.FederationRestored, FederateMessageProtos.FederationRestored.Builder>
   implements Callback, FederateMessage
 {
   private Federate federate;
 
   public FederationRestored()
   {
-    super(MessageType.FEDERATION_RESTORED);
-
-    encodingFinished();
+    super(FederateMessageProtos.FederationRestored.newBuilder());
   }
 
-  public FederationRestored(ChannelBuffer buffer)
+  public FederationRestored(CodedInputStream in)
+    throws IOException
   {
-    super(buffer);
+    super(FederateMessageProtos.FederationRestored.newBuilder(), in);
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.FEDERATION_RESTORED;
+    return MessageProtos.MessageType.FEDERATION_RESTORED;
   }
 
+  @Override
   public void execute(FederateAmbassador federateAmbassador)
     throws FederateInternalError
   {
     federate.fireFederationRestored();
   }
 
+  @Override
   public void execute(Federate federate)
   {
     this.federate = federate;

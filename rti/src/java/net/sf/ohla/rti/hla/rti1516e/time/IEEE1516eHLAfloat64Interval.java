@@ -84,7 +84,7 @@ public class IEEE1516eHLAfloat64Interval
 
   public int compareTo(HLAfloat64Interval rhs)
   {
-    return (int) Math.round(interval - rhs.getValue());
+    return Double.compare(interval, rhs.getValue());
   }
 
   public int encodedLength()

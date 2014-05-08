@@ -93,5 +93,7 @@ public abstract class BaseNextEventRequestTestNG
       rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle2, testParameterValues, TAG, three);
     testInteractionEventRetractionHandle3 =
       rtiAmbassadors.get(0).sendInteraction(testInteractionClassHandle3, testParameterValues, TAG, four);
+
+    synchronize(SYNCHRONIZATION_POINT_SETUP_COMPLETE2, federateAmbassadors);
   }
 }

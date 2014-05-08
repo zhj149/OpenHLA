@@ -43,6 +43,22 @@
     <fileset dir="${netty.lib}" includes="*.jar" excludes="*sources*"/>
   </path>
 
+  <!-- Protobuf -->
+  <property name="protobuf.root" location="${project.thirdparty}/protobuf"/>
+  <property name="protobuf.lib" location="${protobuf.root}/lib"/>
+  <path id="protobuf.classpath">
+    <fileset dir="${protobuf.lib}" includes="*.jar" excludes="*sources*"/>
+  </path>
+  <property name="protobuf.bin" location="${protobuf.root}/bin"/>
+  <property name="protoc" location="${protobuf.bin}/protoc.exe"/>
+
+  <!-- Guava -->
+  <property name="guava.root" location="${project.thirdparty}/guava"/>
+  <property name="guava.lib" location="${guava.root}/lib"/>
+  <path id="guava.classpath">
+    <fileset dir="${guava.lib}" includes="*.jar" excludes="*sources*"/>
+  </path>
+
   <!-- SLF4J -->
   <property name="slf4j.root" location="${project.thirdparty}/slf4j"/>
   <property name="slf4j.lib" location="${slf4j.root}/lib"/>
@@ -79,6 +95,8 @@
   <!-- The combined library classpath. -->
   <path id="library.classpath">
     <path refid="netty.classpath"/>
+    <path refid="protobuf.classpath"/>
+    <path refid="guava.classpath"/>
     <path refid="slf4j.classpath"/>
     <path refid="logback.classpath"/>
     <path refid="cal10n.classpath"/>
@@ -242,22 +260,52 @@
   <property name="rti.resources" location="${project.root}/rti/resources"/>
   <property name="rti.source" location="${project.root}/rti/src"/>
   <property name="rti.source.java" location="${rti.source}/java"/>
+  <property name="rti.source.proto" location="${rti.source}/proto"/>
 
   <property name="output.rti" location="${output}/rti"/>
   <property name="output.rti.classes" location="${output.rti}/classes"/>
+  <property name="output.rti.source" location="${output.rti}/source"/>
+  <property name="output.rti.source.java" location="${output.rti.source}/java"/>
+  <property name="output.rti.source.cpp" location="${output.rti.source}/cpp"/>
+  <property name="output.rti.protoc" location="${output.rti}/protoc"/>
 
-  <target name="compile-ohla" depends="compile-ohla-java"/>
+  <uptodate property="protoc.notRequired" targetfile="${output.rti.protoc}\ohla.protoc" >
+    <srcfiles dir= "${rti.source.proto}" includes="**/*.proto"/>
+  </uptodate>
+
+  <target name="generate-protos" unless="protoc.notRequired">
+    <mkdir dir="${output.rti.protoc}"/>
+    <mkdir dir="${output.rti.source.java}/net/sf/ohla/rti/proto"/>
+    <mkdir dir="${output.rti.source.cpp}/ohla/proto"/>
+
+    <fileset id="protos.fileset" dir="${rti.source.proto}">
+      <include name="*.proto" />
+    </fileset>
+    <pathconvert property="protos" refid="protos.fileset" pathsep=" " />
+
+    <exec executable="${protoc}">
+      <arg value="--proto_path=${rti.source.proto}"/>
+      <arg value="--descriptor_set_out=${output.rti.protoc}\ohla.protoc"/>
+      <arg value="--cpp_out=${output.rti.source.cpp}/ohla/proto"/>
+      <arg value="--java_out=${output.rti.source.java}"/>
+      <arg line="${protos}"/>
+    </exec>
+  </target>
+
+  <target name="compile-ohla" depends="generate-protos,compile-ohla-java"/>
 
   <target name="generate-hla-1.3-fed">
+    <mkdir dir="${output.rti.source.java}/net/sf/ohla/rti/fed/javacc"/>
+
     <javacc target="${rti.source.java}/net/sf/ohla/rti/fed/javacc/FEDParser.jj"
-            outputdirectory="${rti.source.java}/net/sf/ohla/rti/fed/javacc"
+            outputdirectory="${output.rti.source.java}/net/sf/ohla/rti/fed/javacc"
             javacchome="${javacc.root}"/>
   </target>
 
   <target name="compile-ohla-java" depends="jar-ieee-1516e, jar-ieee-1516, jar-hla-1.3, generate-hla-1.3-fed">
     <mkdir dir="${output.rti.classes}"/>
 
-    <javac destdir="${output}/rti/classes"
+    <javac destdir="${output.rti.classes}"
            fork="${javac.fork}"
            optimize="${javac.optimize}"
            includeantruntime="false"
@@ -270,6 +318,7 @@
       <compilerarg value="-proc:none"/>
 
       <src path="${rti.source.java}"/>
+      <src path="${output.rti.source.java}"/>
       <src path="${rti.resources}"/>
 
       <classpath>

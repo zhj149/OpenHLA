@@ -16,42 +16,53 @@
 
 package net.sf.ohla.rti.messages;
 
+import java.io.IOException;
+
+import net.sf.ohla.rti.util.LogicalTimeIntervals;
 import net.sf.ohla.rti.federation.FederateProxy;
 import net.sf.ohla.rti.federation.FederationExecution;
+import net.sf.ohla.rti.messages.proto.FederationExecutionMessageProtos;
+import net.sf.ohla.rti.messages.proto.MessageProtos;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-
-import hla.rti1516e.LogicalTimeFactory;
+import com.google.protobuf.CodedInputStream;
 import hla.rti1516e.LogicalTimeInterval;
 
 public class ModifyLookahead
-  extends LogicalTimeIntervalMessage
+  extends AbstractMessage<FederationExecutionMessageProtos.ModifyLookahead, FederationExecutionMessageProtos.ModifyLookahead.Builder>
   implements FederationExecutionMessage
 {
+  private LogicalTimeInterval lookahead;
+
   public ModifyLookahead(LogicalTimeInterval lookahead)
   {
-    super(MessageType.MODIFY_LOOKAHEAD, lookahead);
+    super(FederationExecutionMessageProtos.ModifyLookahead.newBuilder());
 
-    encodingFinished();
+    builder.setLookahead(LogicalTimeIntervals.convert(lookahead));
   }
 
-  public ModifyLookahead(ChannelBuffer buffer, LogicalTimeFactory factory)
+  public ModifyLookahead(CodedInputStream in)
+    throws IOException
   {
-    super(buffer, factory);
+    super(FederationExecutionMessageProtos.ModifyLookahead.newBuilder(), in);
   }
 
   public LogicalTimeInterval getLookahead()
   {
-    return interval;
+    return lookahead;
   }
 
-  public MessageType getType()
+  @Override
+  public MessageProtos.MessageType getMessageType()
   {
-    return MessageType.MODIFY_LOOKAHEAD;
+    return MessageProtos.MessageType.MODIFY_LOOKAHEAD;
   }
 
+  @Override
   public void execute(FederationExecution federationExecution, FederateProxy federateProxy)
   {
+    lookahead = LogicalTimeIntervals.convert(
+      federationExecution.getTimeManager().getLogicalTimeFactory(), builder.getLookahead());
+
     federationExecution.modifyLookahead(federateProxy, this);
   }
 }

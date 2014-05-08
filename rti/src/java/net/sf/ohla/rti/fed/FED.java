@@ -19,20 +19,18 @@ package net.sf.ohla.rti.fed;
 import java.net.URL;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
-import net.sf.ohla.rti.Protocol;
 import net.sf.ohla.rti.fdd.Attribute;
 import net.sf.ohla.rti.fdd.Dimension;
 import net.sf.ohla.rti.fdd.FDD;
 import net.sf.ohla.rti.fdd.InteractionClass;
 import net.sf.ohla.rti.fdd.ObjectClass;
 import net.sf.ohla.rti.fdd.Parameter;
+import net.sf.ohla.rti.hla.rti1516e.IEEE1516eDimensionHandleSet;
 import net.sf.ohla.rti.i18n.ExceptionMessages;
 import net.sf.ohla.rti.i18n.I18n;
-
-import org.jboss.netty.buffer.ChannelBuffer;
+import net.sf.ohla.rti.proto.OHLAProtos;
 
 import hla.rti.AttributeNotDefined;
 import hla.rti.DimensionNotDefined;
@@ -65,10 +63,9 @@ public class FED
 
   private final FDD fdd;
 
-  private final Map<Integer, RoutingSpace> routingSpaces = new HashMap<Integer, RoutingSpace>();
-  private final Map<String, RoutingSpace> routingSpacesByName = new HashMap<String, RoutingSpace>();
-  private final Map<DimensionHandle, RoutingSpace> routingSpacesByDimensionHandle =
-    new HashMap<DimensionHandle, RoutingSpace>();
+  private final Map<Integer, RoutingSpace> routingSpaces = new HashMap<>();
+  private final Map<String, RoutingSpace> routingSpacesByName = new HashMap<>();
+  private final Map<DimensionHandle, RoutingSpace> routingSpacesByDimensionHandle = new HashMap<>();
 
   private String fedName;
 
@@ -82,15 +79,18 @@ public class FED
     this.fdd = fdd;
   }
 
-  public FED(ChannelBuffer buffer, FDD fdd)
+  public FED(FDD fdd, OHLAProtos.FDD.FED fed)
   {
     this(fdd);
 
-    fedName = Protocol.decodeOptionalString(buffer);
-
-    for (int routingSpaceCount = Protocol.decodeVarInt(buffer); routingSpaceCount > 0; routingSpaceCount--)
+    if (fed.hasFedName())
     {
-      RoutingSpace routingSpace = RoutingSpace.decode(buffer, fdd.getDimensions());
+      fedName = fed.getFedName();
+    }
+
+    for (OHLAProtos.FDD.FED.RoutingSpace routingSpaceProto : fed.getRoutingSpaceList())
+    {
+      RoutingSpace routingSpace = new RoutingSpace(routingSpaceProto, fdd.getDimensions());
 
       routingSpaces.put(routingSpace.getRoutingSpaceHandle(), routingSpace);
       routingSpacesByName.put(routingSpace.getRoutingSpaceName(), routingSpace);
@@ -136,10 +136,9 @@ public class FED
     throws ErrorReadingFED
   {
     DimensionHandleSet dimensionHandles;
-
     if (routingSpaceName == null)
     {
-      dimensionHandles = null;
+      dimensionHandles = IEEE1516eDimensionHandleSet.EMPTY;
     }
     else
     {
@@ -169,10 +168,9 @@ public class FED
     throws ErrorReadingFED
   {
     DimensionHandleSet dimensionHandles;
-
     if (routingSpaceName == null)
     {
-      dimensionHandles = null;
+      dimensionHandles = IEEE1516eDimensionHandleSet.EMPTY;
     }
     else
     {
@@ -396,19 +394,19 @@ public class FED
     }
   }
 
-  public static void encode(ChannelBuffer buffer, FED fed)
+  public OHLAProtos.FDD.FED.Builder toProto()
   {
-    Protocol.encodeOptionalString(buffer, fed.fedName);
-
-    Protocol.encodeVarInt(buffer, fed.routingSpaces.size());
-    for (RoutingSpace routingSpace : fed.routingSpaces.values())
+    OHLAProtos.FDD.FED.Builder fed = OHLAProtos.FDD.FED.newBuilder();
+    if (fedName != null)
     {
-      RoutingSpace.encode(buffer, routingSpace);
+      fed.setFedName(fedName);
     }
-  }
 
-  public static FED decode(ChannelBuffer buffer, FDD fdd)
-  {
-    return new FED(buffer, fdd);
+    for (RoutingSpace routingSpace : routingSpaces.values())
+    {
+      fed.addRoutingSpace(routingSpace.toProto());
+    }
+
+    return fed;
   }
 }
