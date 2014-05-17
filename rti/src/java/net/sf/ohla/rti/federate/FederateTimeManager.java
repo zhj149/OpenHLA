@@ -625,6 +625,18 @@ public class FederateTimeManager
     {
       federateTime = time;
 
+      if (isTimeRegulating())
+      {
+        try
+        {
+          lots = time.add(lookahead.isZero() ? epsilon : lookahead);
+        }
+        catch (IllegalTimeArithmetic | InvalidLogicalTimeInterval e)
+        {
+          throw new FederateInternalError(e.getMessage(), e);
+        }
+      }
+
       temporalState = TemporalState.TIME_GRANTED;
       advanceRequestType = TimeAdvanceType.NONE;
 
