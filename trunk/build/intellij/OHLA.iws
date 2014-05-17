@@ -30,360 +30,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" readonly="true" id="c306879c-2744-4d82-a20f-7284eb5ea0e6" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../thirdparty/protobuf/bin" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../thirdparty/guava/lib/guava-16.0-sources.jar" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../thirdparty/guava/lib/guava-16.0.jar" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../thirdparty/guava" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../thirdparty/guava/lib" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../thirdparty/protobuf/lib" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/proto" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../thirdparty/protobuf/lib/protobuf-2.5.0-sources.jar" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../thirdparty/protobuf/lib/protobuf-2.5.0.jar" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../thirdparty/protobuf" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../thirdparty/protobuf/bin/protoc.exe" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/util" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/util/AttributeHandles.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/util/AttributeValues.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../thirdparty/protobuf/COPYING.txt" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/CallbackChannelHandler.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/proto/ConnectedMessageProtos.proto" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/docs/Delete.txt" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/util/DimensionHandles.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/util/EmptyIterator.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/util/FederateHandles.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/proto/FederateMessageProtos.proto" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederateProxyChannelHandler.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederateProxyTimeStampOrderedMessageQueue.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/proto/FederationExecutionMessageProtos.proto" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/proto/FederationExecutionSaveProtos.proto" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13ChannelHandler.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eSupplementalReceiveInfo.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eSupplementalReflectInfo.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eSupplementalRemoveInfo.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/util/InteractionClassHandles.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../thirdparty/guava/LICENSE-2.0.txt" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/util/LogicalTimeIntervals.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/util/LogicalTimes.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/proto/MessageProtos.proto" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/docs/MessageRetraction.txt" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/util/MessageRetractionHandles.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/Messages.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/util/MoreChannels.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/proto/OHLAProtos.proto" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/util/ObjectClassHandles.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/util/ObjectInstanceHandles.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/util/OrderTypes.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/util/ParameterHandles.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/util/ParameterValues.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RTIMessage.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/proto/RTIMessageProtos.proto" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/util/RegionHandles.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/util/Regions.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RequestResponseChannelHandler.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/util/Retractable.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/util/RetractableManager.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/TimeStampOrderedMessageQueue.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/util/TransportationTypeHandles.java" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.7\rti\src\java\net\sf\ohla\rti\IntegerHandle.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.7\rti\src\java\net\sf\ohla\rti\MessageRetractionManager.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.7\rti\src\java\net\sf\ohla\rti\Protocol.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.7\rti\src\java\net\sf\ohla\rti\federate\DefaultFederateChannelHandlerFactory.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.7\rti\src\java\net\sf\ohla\rti\federate\FederateChannelHandlerFactory.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.7\rti\src\java\net\sf\ohla\rti\federation\FederateProxyMessageRetractionManager.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.7\rti\src\java\net\sf\ohla\rti\federation\QueuedTimeStampOrderedMessage.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.7\rti\src\java\net\sf\ohla\rti\messages\AbstractResponse.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.7\rti\src\java\net\sf\ohla\rti\messages\EnumMessage.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.7\rti\src\java\net\sf\ohla\rti\messages\EnumResponse.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.7\rti\src\java\net\sf\ohla\rti\messages\FederateStateInputStream.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.7\rti\src\java\net\sf\ohla\rti\messages\InteractionClassMessage.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.7\rti\src\java\net\sf\ohla\rti\messages\LogicalTimeIntervalMessage.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.7\rti\src\java\net\sf\ohla\rti\messages\LogicalTimeMessage.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.7\rti\src\java\net\sf\ohla\rti\messages\MessageFactory.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.7\rti\src\java\net\sf\ohla\rti\messages\MessageType.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.7\rti\src\java\net\sf\ohla\rti\messages\ObjectClassMessage.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.7\rti\src\java\net\sf\ohla\rti\messages\ObjectInstanceAttributeMessage.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.7\rti\src\java\net\sf\ohla\rti\messages\ObjectInstanceAttributesMessage.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.7\rti\src\java\net\sf\ohla\rti\messages\ObjectInstanceMessage.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.7\rti\src\java\net\sf\ohla\rti\messages\ObjectInstancesMessage.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.7\rti\src\java\net\sf\ohla\rti\messages\StringMessage.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.7\rti\src\java\net\sf\ohla\rti\messages\StringRequest.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.7\rti\src\java\net\sf\ohla\rti\messages\StringsMessage.java" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.7\testsuite\resources\ohla-testng.xml" afterPath="" />
-      <change type="DELETED" beforePath="C:\projects\ohla-0.7\testsuite\src\java\net\sf\ohla\rti\testsuite\ProtocolTestNG.java" afterPath="" />
-      <change type="MOVED" beforePath="C:\projects\ohla-0.7\rti\src\java\net\sf\ohla\rti\SubscriptionManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/util/SubscriptionManager.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AbortFederationRestore.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AbortFederationRestore.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AbortFederationRestoreResponse.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AbortFederationRestoreResponse.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AbortFederationSave.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AbortFederationSave.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AbortFederationSaveResponse.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AbortFederationSaveResponse.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AbstractMessage.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AbstractMessage.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AbstractRequest.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AbstractRequest.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AnnounceSynchronizationPoint.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AnnounceSynchronizationPoint.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AssociateRegionsForUpdates.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AssociateRegionsForUpdates.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AssociateRegionsForUpdatesResponse.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AssociateRegionsForUpdatesResponse.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/Attribute.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/Attribute.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AttributeIsNotOwned.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AttributeIsNotOwned.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AttributeIsOwnedByRTI.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AttributeIsOwnedByRTI.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AttributeOwnershipAcquisition.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AttributeOwnershipAcquisition.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AttributeOwnershipAcquisitionIfAvailable.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AttributeOwnershipAcquisitionIfAvailable.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AttributeOwnershipAcquisitionNotification.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AttributeOwnershipAcquisitionNotification.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AttributeOwnershipDivestitureIfWanted.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AttributeOwnershipDivestitureIfWanted.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AttributeOwnershipDivestitureIfWantedResponse.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/AttributeOwnershipDivestitureIfWantedResponse.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AttributeOwnershipUnavailable.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AttributeOwnershipUnavailable.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AttributesInScope.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AttributesInScope.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AttributesOutOfScope.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/AttributesOutOfScope.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/time/BaseNextEventRequestTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/time/BaseNextEventRequestTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/BaseNextMessageRequestTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/BaseNextMessageRequestTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/time/BaseNextMessageRequestTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/time/BaseNextMessageRequestTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/BaseTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/BaseTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/BaseTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/BaseTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/BaseTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/BaseTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../CHANGELOG.txt" afterPath="$PROJECT_DIR$/../../CHANGELOG.txt" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/CancelAttributeOwnershipAcquisition.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/CancelAttributeOwnershipAcquisition.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/CancelNegotiatedAttributeOwnershipDivestiture.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/CancelNegotiatedAttributeOwnershipDivestiture.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/CommitRegionModifications.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/CommitRegionModifications.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ConfirmAttributeOwnershipAcquisitionCancellation.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ConfirmAttributeOwnershipAcquisitionCancellation.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ConfirmDivestiture.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ConfirmDivestiture.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/CreateFederationExecution.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/CreateFederationExecution.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/CreateFederationExecutionResponse.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/CreateFederationExecutionResponse.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/CreateRegion.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/CreateRegion.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/DeleteObjectInstance.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/DeleteObjectInstance.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/DeleteRegion.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/DeleteRegion.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/DestroyFederationExecution.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/DestroyFederationExecution.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/DestroyFederationExecutionResponse.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/DestroyFederationExecutionResponse.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/Dimension.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/Dimension.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/DisableTimeConstrained.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/DisableTimeConstrained.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/DisableTimeRegulation.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/DisableTimeRegulation.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/DiscoverObjectInstance.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/DiscoverObjectInstance.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/EnableTimeConstrained.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/EnableTimeConstrained.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/EnableTimeRegulation.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/EnableTimeRegulation.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/i18n/ExceptionMessages.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/i18n/ExceptionMessages.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/FDD.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/FDD.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FDDUpdated.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FDDUpdated.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/FED.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/FED.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/Federate.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/Federate.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateAttributeInstance.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateAttributeInstance.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateChannelHandler.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateChannelHandler.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateChannelPipelineFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateChannelPipelineFactory.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederateMessage.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederateMessage.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateMessageRetractionManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateMessageRetractionManager.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateObjectInstance.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateObjectInstance.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateObjectManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateObjectManager.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederateProxy.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederateProxy.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederateProxyRestore.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederateProxyRestore.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederateProxySave.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederateProxySave.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederateProxySubscriptionManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederateProxySubscriptionManager.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateRegion.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateRegion.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateRegionManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateRegionManager.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateRestore.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateRestore.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederateRestoreComplete.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederateRestoreComplete.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederateRestoreNotComplete.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederateRestoreNotComplete.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateSave.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateSave.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederateSaveBegun.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederateSaveBegun.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederateSaveComplete.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederateSaveComplete.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederateSaveNotComplete.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederateSaveNotComplete.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederateStateFrame.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederateStateFrame.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederateStateOutputStream.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederateStateOutputStream.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateSynchronizationPoint.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateSynchronizationPoint.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateTimeManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateTimeManager.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecution.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecution.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionAttributeInstance.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionAttributeInstance.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederationExecutionMessage.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FederationExecutionMessage.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionObjectInstance.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionObjectInstance.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionObjectManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionObjectManager.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionRegion.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionRegion.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionRegionManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionRegionManager.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionRestore.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionRestore.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionSave.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionSave.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionSynchronizationPoint.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionSynchronizationPoint.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionTimeManager.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionTimeManager.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationNotRestored.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationNotRestored.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationNotSaved.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationNotSaved.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationRestoreBegun.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationRestoreBegun.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationRestoreStatusResponse.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationRestoreStatusResponse.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationRestored.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationRestored.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationSaveStatusResponse.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationSaveStatusResponse.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationSaved.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationSaved.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationSynchronized.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/FederationSynchronized.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/Float64Time.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/Float64Time.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/Float64Time.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/Float64Time.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/Float64TimeInterval.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/Float64TimeInterval.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/Float64TimeInterval.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/Float64TimeInterval.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FlushQueueRequest.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/FlushQueueRequest.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/FlushQueueRequestTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/time/FlushQueueRequestTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/time/FlushQueueRequestTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/time/FlushQueueRequestTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/time/FlushQueueRequestTestNG.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/time/FlushQueueRequestTestNG.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/GetFederateHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/GetFederateHandle.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/GetFederateHandleResponse.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/GetFederateHandleResponse.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/GetFederateName.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/GetFederateName.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/GetFederateNameResponse.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/GetFederateNameResponse.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/GetUpdateRateValueForAttribute.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/GetUpdateRateValueForAttribute.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/GetUpdateRateValueForAttributeResponse.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/GetUpdateRateValueForAttributeResponse.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13RTIambassador.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13RTIambassador.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13Region.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13Region.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeHandle.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeHandleFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeHandleFactory.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeHandleSet.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeHandleSet.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeHandleValueMap.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516AttributeHandleValueMap.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516DimensionHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516DimensionHandle.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516DimensionHandleFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516DimensionHandleFactory.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516DimensionHandleSet.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516DimensionHandleSet.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FederateHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FederateHandle.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FederateHandleFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FederateHandleFactory.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FederateHandleSet.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516FederateHandleSet.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516InteractionClassHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516InteractionClassHandle.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516InteractionClassHandleFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516InteractionClassHandleFactory.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ObjectClassHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ObjectClassHandle.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ObjectClassHandleFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ObjectClassHandleFactory.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ObjectInstanceHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ObjectInstanceHandle.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ObjectInstanceHandleFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ObjectInstanceHandleFactory.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ParameterHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ParameterHandle.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ParameterHandleFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ParameterHandleFactory.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ParameterHandleValueMap.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516ParameterHandleValueMap.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516RTIambassador.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/IEEE1516RTIambassador.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eAttributeHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eAttributeHandle.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eAttributeHandleFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eAttributeHandleFactory.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eAttributeHandleSet.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eAttributeHandleSet.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eAttributeHandleValueMap.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eAttributeHandleValueMap.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eAttributeSetRegionSetPairList.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eAttributeSetRegionSetPairList.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eDimensionHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eDimensionHandle.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eDimensionHandleFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eDimensionHandleFactory.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eDimensionHandleSet.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eDimensionHandleSet.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eFDDParser.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eFDDParser.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eFederateHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eFederateHandle.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eFederateHandleFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eFederateHandleFactory.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eFederateHandleSet.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eFederateHandleSet.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eFederationExecutionInformationSet.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eFederationExecutionInformationSet.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAfloat64Interval.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAfloat64Interval.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAfloat64Time.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAfloat64Time.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAinteger64Interval.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAinteger64Interval.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAinteger64Time.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAinteger64Time.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eInteractionClassHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eInteractionClassHandle.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eInteractionClassHandleFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eInteractionClassHandleFactory.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eMessageRetractionHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eMessageRetractionHandle.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eObjectClassHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eObjectClassHandle.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eObjectClassHandleFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eObjectClassHandleFactory.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eObjectInstanceHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eObjectInstanceHandle.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eObjectInstanceHandleFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eObjectInstanceHandleFactory.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eParameterHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eParameterHandle.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eParameterHandleFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eParameterHandleFactory.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eParameterHandleValueMap.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eParameterHandleValueMap.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eRTIambassador.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eRTIambassador.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eRegionHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eRegionHandle.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eRegionHandleSet.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eRegionHandleSet.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eTransportationTypeHandle.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eTransportationTypeHandle.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eTransportationTypeHandleFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/IEEE1516eTransportationTypeHandleFactory.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/InformAttributeOwnership.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/InformAttributeOwnership.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/InitiateFederateRestore.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/InitiateFederateRestore.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/InitiateFederateSave.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/InitiateFederateSave.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/Integer64Time.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/Integer64Time.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/Integer64Time.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/Integer64Time.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/Integer64TimeInterval.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/Integer64TimeInterval.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/Integer64TimeInterval.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/Integer64TimeInterval.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/InteractionClass.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/InteractionClass.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/JoinFederationExecution.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/JoinFederationExecution.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/JoinFederationExecutionResponse.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/JoinFederationExecutionResponse.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ListFederationExecutions.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ListFederationExecutions.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/LocalDeleteObjectInstance.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/LocalDeleteObjectInstance.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/Message.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/Message.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/MessageChannelHandler.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/MessageChannelHandler.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/MessageDecoder.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/MessageDecoder.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/MessageEncoder.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/MessageEncoder.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ModifyLookahead.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ModifyLookahead.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/MultipleObjectInstanceNameReservationFailed.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/MultipleObjectInstanceNameReservationFailed.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/MultipleObjectInstanceNameReservationSucceeded.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/MultipleObjectInstanceNameReservationSucceeded.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/NegotiatedAttributeOwnershipDivestiture.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/NegotiatedAttributeOwnershipDivestiture.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/NextMessageRequest.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/NextMessageRequest.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/NextMessageRequestAvailable.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/NextMessageRequestAvailable.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/OHLA.ipr" afterPath="$PROJECT_DIR$/OHLA.ipr" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/OHLA.iws" afterPath="$PROJECT_DIR$/OHLA.iws" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/ObjectClass.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/ObjectClass.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ObjectInstanceNameReservationFailed.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ObjectInstanceNameReservationFailed.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ObjectInstanceNameReservationSucceeded.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ObjectInstanceNameReservationSucceeded.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/Parameter.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/Parameter.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ProvideAttributeValueUpdate.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ProvideAttributeValueUpdate.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/PublishInteractionClass.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/PublishInteractionClass.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/PublishObjectClassAttributes.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/PublishObjectClassAttributes.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/QueryAttributeOwnership.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/QueryAttributeOwnership.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/QueryFederationRestoreStatus.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/QueryFederationRestoreStatus.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/QueryFederationSaveStatus.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/QueryFederationSaveStatus.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/QueryGALT.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/QueryGALT.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/QueryGALTResponse.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/QueryGALTResponse.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/QueryInteractionTransportationType.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/QueryInteractionTransportationType.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/QueryLITS.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/QueryLITS.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/QueryLITSResponse.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/QueryLITSResponse.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/RTI.iml" afterPath="$PROJECT_DIR$/RTI.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/RTI.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/RTI.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/RTIChannelHandler.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/RTIChannelHandler.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/RTIChannelPipelineFactory.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/RTIChannelPipelineFactory.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ReceiveInteraction.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ReceiveInteraction.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ReflectAttributeValues.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ReflectAttributeValues.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RegisterFederationSynchronizationPoint.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RegisterFederationSynchronizationPoint.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RegisterObjectInstance.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RegisterObjectInstance.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ReleaseMultipleObjectInstanceName.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ReleaseMultipleObjectInstanceName.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ReleaseObjectInstanceName.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ReleaseObjectInstanceName.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RemoveObjectInstance.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RemoveObjectInstance.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ReportFederationExecutions.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ReportFederationExecutions.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ReportInteractionTransportationType.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/ReportInteractionTransportationType.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/Request.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/Request.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RequestAttributeOwnershipAssumption.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RequestAttributeOwnershipAssumption.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RequestAttributeOwnershipRelease.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RequestAttributeOwnershipRelease.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RequestDivestitureConfirmation.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RequestDivestitureConfirmation.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RequestFederationRestore.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RequestFederationRestore.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RequestFederationRestoreFailed.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RequestFederationRestoreFailed.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RequestFederationRestoreResponse.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RequestFederationRestoreResponse.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RequestFederationRestoreSucceeded.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RequestFederationRestoreSucceeded.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RequestFederationSave.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RequestFederationSave.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RequestFederationSaveResponse.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RequestFederationSaveResponse.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RequestObjectClassAttributeValueUpdate.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RequestObjectClassAttributeValueUpdate.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RequestObjectClassAttributeValueUpdateWithRegions.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RequestObjectClassAttributeValueUpdateWithRegions.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RequestObjectInstanceAttributeValueUpdate.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RequestObjectInstanceAttributeValueUpdate.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RequestRetraction.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/RequestRetraction.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ReserveMultipleObjectInstanceName.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ReserveMultipleObjectInstanceName.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ReserveObjectInstanceName.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ReserveObjectInstanceName.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ResignFederationExecution.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ResignFederationExecution.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ResignedFederationExecution.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/ResignedFederationExecution.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/Response.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/Response.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/Retract.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/Retract.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RetractResponse.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/RetractResponse.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/RoutingSpace.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fed/RoutingSpace.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/docs/SaveRestore.txt" afterPath="$PROJECT_DIR$/../../rti/docs/SaveRestore.txt" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/SendInteraction.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/SendInteraction.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/SetAutomaticResignDirective.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/SetAutomaticResignDirective.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/StartRegistrationForObjectClass.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/StartRegistrationForObjectClass.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/StopRegistrationForObjectClass.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/StopRegistrationForObjectClass.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/SubscribeInteractionClass.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/SubscribeInteractionClass.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/SubscribeInteractionClassWithRegions.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/SubscribeInteractionClassWithRegions.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/SubscribeObjectClassAttributes.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/SubscribeObjectClassAttributes.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/SubscribeObjectClassAttributesWithRegions.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/SubscribeObjectClassAttributesWithRegions.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/SynchronizationPointAchieved.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/SynchronizationPointAchieved.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/SynchronizationPointRegistrationFailed.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/SynchronizationPointRegistrationFailed.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/SynchronizationPointRegistrationSucceeded.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/SynchronizationPointRegistrationSucceeded.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/TestConstants.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti/TestConstants.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/TestConstants.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/TestConstants.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/TestConstants.java" afterPath="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516e/TestConstants.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TimeAdvanceGrant.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TimeAdvanceGrant.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/TimeAdvanceRequest.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/TimeAdvanceRequest.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/TimeAdvanceRequestAvailable.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/TimeAdvanceRequestAvailable.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TimeConstrainedEnabled.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TimeConstrainedEnabled.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TimeRegulationEnabled.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TimeRegulationEnabled.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/TimeStampOrderedMessage.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/TimeStampOrderedMessage.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TurnInteractionsOff.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TurnInteractionsOff.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TurnInteractionsOn.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TurnInteractionsOn.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TurnUpdatesOffForObjectInstance.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TurnUpdatesOffForObjectInstance.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TurnUpdatesOnForObjectInstance.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/callbacks/TurnUpdatesOnForObjectInstance.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnassociateRegionsForUpdates.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnassociateRegionsForUpdates.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnassociateRegionsForUpdatesResponse.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnassociateRegionsForUpdatesResponse.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnconditionalAttributeOwnershipDivestiture.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnconditionalAttributeOwnershipDivestiture.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnpublishInteractionClass.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnpublishInteractionClass.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnpublishObjectClass.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnpublishObjectClass.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnpublishObjectClassAttributes.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnpublishObjectClassAttributes.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnsubscribeInteractionClass.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnsubscribeInteractionClass.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnsubscribeInteractionClassWithRegions.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnsubscribeInteractionClassWithRegions.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnsubscribeObjectClassAttributes.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnsubscribeObjectClassAttributes.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnsubscribeObjectClassAttributesWithRegions.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UnsubscribeObjectClassAttributesWithRegions.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UpdateAttributeValues.java" afterPath="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/messages/UpdateAttributeValues.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../build.xml" afterPath="$PROJECT_DIR$/../build.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../rti/resources/ohla_rti_exception_messages_en_US.properties" afterPath="$PROJECT_DIR$/../../rti/resources/ohla_rti_exception_messages_en_US.properties" />
     </list>
     <list id="b279f3ba-c417-49c1-bcc1-a24f5fc97d41" name="Failed commit: Default" comment="- removed log4j" />
     <list id="261d7dd6-cad7-41bb-912f-d59a03f7b57d" name="Failed commit: Default (2)" comment="- refactoring" />
@@ -493,40 +141,10 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="BaseFederateAmbassador.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/BaseFederateAmbassador.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="6094" max-vertical-offset="7882">
-              <caret line="481" column="17" selection-start-line="481" selection-start-column="17" selection-end-line="481" selection-end-column="17" />
-              <folding>
-                <element signature="e#5317#5455#0" expanded="true" />
-                <element signature="e#5448#5449#0" expanded="true" />
-                <element signature="e#13568#13569#0" expanded="true" />
-                <element signature="e#13605#13606#0" expanded="true" />
-                <element signature="e#13858#13859#0" expanded="true" />
-                <element signature="e#13904#13905#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="FederationExecution.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecution.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="10151" max-vertical-offset="41679">
-              <caret line="634" column="42" selection-start-line="634" selection-start-column="42" selection-end-line="634" selection-end-column="42" />
-              <folding>
-                <element signature="e#0#79749#0" expanded="true" />
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="FederationExecutionSave.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionSave.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="4320" max-vertical-offset="5468">
+            <state vertical-scroll-proportion="0.0" vertical-offset="5474" max-vertical-offset="5831">
               <caret line="322" column="41" selection-start-line="322" selection-start-column="41" selection-end-line="322" selection-end-column="41" />
               <folding />
             </state>
@@ -536,7 +154,7 @@
       <file leaf-file-name="FederationExecutionRestore.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionRestore.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="2754" max-vertical-offset="5332">
+            <state vertical-scroll-proportion="0.0" vertical-offset="867" max-vertical-offset="6273">
               <caret line="51" column="13" selection-start-line="51" selection-start-column="13" selection-end-line="51" selection-end-column="13" />
               <folding />
             </state>
@@ -546,7 +164,7 @@
       <file leaf-file-name="TestObjectModel.fed" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/../../testsuite/resources/TestObjectModel.fed">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1269">
+            <state vertical-scroll-proportion="0.0" vertical-offset="119" max-vertical-offset="986">
               <caret line="7" column="25" selection-start-line="7" selection-start-column="25" selection-end-line="7" selection-end-column="25" />
               <folding />
             </state>
@@ -556,7 +174,7 @@
       <file leaf-file-name="build.xml" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/../build.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="6925" max-vertical-offset="9395">
+            <state vertical-scroll-proportion="0.0" vertical-offset="6188" max-vertical-offset="9112">
               <caret line="364" column="7" selection-start-line="364" selection-start-column="7" selection-end-line="364" selection-end-column="7" />
               <folding />
             </state>
@@ -566,7 +184,7 @@
       <file leaf-file-name="CHANGELOG.txt" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/../../CHANGELOG.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1252">
+            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="969">
               <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
               <folding />
             </state>
@@ -576,7 +194,7 @@
       <file leaf-file-name="Delete.txt" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/../../rti/docs/Delete.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="402">
+            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="119">
               <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
               <folding />
             </state>
@@ -586,19 +204,49 @@
       <file leaf-file-name="MessageRetraction.txt" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/../../rti/docs/MessageRetraction.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="317">
+            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="34">
               <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="SaveRestore.txt" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="SaveRestore.txt" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/../../rti/docs/SaveRestore.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="776">
-              <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="459" max-vertical-offset="493">
+              <caret line="27" column="0" selection-start-line="27" selection-start-column="0" selection-end-line="27" selection-end-column="0" />
               <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="HLAstandardMIM.xml" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../../ieee-1516e/resources/HLAstandardMIM.xml">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0" vertical-offset="4743" max-vertical-offset="27776">
+              <caret line="1051" column="22" selection-start-line="1051" selection-start-column="22" selection-end-line="1051" selection-end-column="22" />
+              <folding>
+                <element signature="tag#objects#0;tag#objectModel#0" expanded="false" />
+                <element signature="tag#objectClass#0;tag#objectClass#0;tag#objectClass#0;tag#objects#0;tag#objectModel#0" expanded="false" />
+                <element signature="tag#objectClass#1;tag#objectClass#0;tag#objectClass#0;tag#objects#0;tag#objectModel#0" expanded="false" />
+                <element signature="tag#dimensions#0;tag#objectModel#0" expanded="false" />
+                <element signature="tag#transportations#0;tag#objectModel#0" expanded="false" />
+                <element signature="tag#dataTypes#0;tag#objectModel#0" expanded="false" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="FederateTimeManager.java" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateTimeManager.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.25904486" vertical-offset="1266" max-vertical-offset="14189">
+              <caret line="85" column="29" selection-start-line="85" selection-start-column="29" selection-end-line="85" selection-end-column="29" />
+              <folding>
+                <element signature="e#0#23580#0" expanded="true" />
+                <element signature="imports" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -613,7 +261,6 @@
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
       <list>
-        <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/Integer64TimeInterval.java" />
         <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/Integer64Time.java" />
         <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516/Integer64TimeInterval.java" />
         <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti1516e/time/IEEE1516eHLAinteger64Time.java" />
@@ -664,6 +311,7 @@
         <option value="$PROJECT_DIR$/../../testsuite/src/java/net/sf/ohla/rti/testsuite/hla/rti1516/TestConstants.java" />
         <option value="$PROJECT_DIR$/../../testsuite/resources/ieee-1516-testng.xml" />
         <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federation/FederationExecutionSave.java" />
+        <option value="$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateTimeManager.java" />
       </list>
     </option>
   </component>
@@ -786,50 +434,6 @@
       <sortByType />
     </navigator>
     <panes>
-      <pane id="ProjectPane">
-        <subPane>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="OHLA" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="OHLA" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="ohla-0.7" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="OHLA" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="ohla-0.7" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="rti" />
-              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-        </subPane>
-      </pane>
-      <pane id="PackagesPane">
-        <subPane>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="OHLA" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewProjectNode" />
-            </PATH_ELEMENT>
-          </PATH>
-        </subPane>
-      </pane>
       <pane id="Scope">
         <subPane subId="Project Files">
           <PATH>
@@ -912,6 +516,82 @@
             <PATH_ELEMENT USER_OBJECT="docs">
               <option name="myItemId" value="" />
               <option name="myItemType" value="" />
+            </PATH_ELEMENT>
+          </PATH>
+        </subPane>
+      </pane>
+      <pane id="ProjectPane">
+        <subPane>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="ohla-0.7" />
+              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="ohla-0.7" />
+              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="ieee-1516e" />
+              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="ohla-0.7" />
+              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="ieee-1516e" />
+              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="resources" />
+              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="ohla-0.7" />
+              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="examples" />
+              <option name="myItemType" value="com.android.tools.idea.gradle.projectView.AndroidPsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+        </subPane>
+      </pane>
+      <pane id="PackagesPane">
+        <subPane>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="OHLA" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PackageViewProjectNode" />
             </PATH_ELEMENT>
           </PATH>
         </subPane>
@@ -1617,7 +1297,11 @@
       <created>1387651821199</created>
       <updated>1387651821199</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="- converstion to Google Protocol Buffers for data serialization&#10;- initial fix for FDD merge issue&#10;- minor bug fixes&#10;">
+      <created>1399513088345</created>
+      <updated>1399513088345</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
@@ -1655,14 +1339,13 @@
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32479784" sideWeight="0.66945875" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32928804" sideWeight="0.5" order="9" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32962447" sideWeight="0.5" order="15" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.47708896" sideWeight="0.32603094" order="17" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.325419" sideWeight="0.49785176" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24903722" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32921588" sideWeight="0.5020633" order="12" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39913854" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.26863754" sideWeight="0.54242" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.4811321" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4811321" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Dataflow to this" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="IDEtalk Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="14" side_tool="false" content_ui="tabs" />
@@ -1676,6 +1359,7 @@
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="JetGradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.47708896" sideWeight="0.32603094" order="17" side_tool="false" content_ui="tabs" />
       <window_info id="Web" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Metrics" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="21" side_tool="false" content_ui="tabs" />
       <window_info id="EJB" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -1727,7 +1411,6 @@
     </option>
     <option name="PERFORM_UPDATE_IN_BACKGROUND" value="false" />
     <option name="PERFORM_COMMIT_IN_BACKGROUND" value="false" />
-    <MESSAGE value="- more IEEE 1516e Time Management tests complete" />
     <MESSAGE value="- re-implemented NextMessageRequest methods" />
     <MESSAGE value="- NextMessageRequest initial tests passing" />
     <MESSAGE value="- simplified Channel pipeline by adding a basic MessageChannelHandler&#10;- moved TSO message queue from Federate to the FederateProxy&#10;- all tests passing&#10;" />
@@ -1752,7 +1435,8 @@
     <MESSAGE value="- updating IEEE 1516 testsuite&#10;" />
     <MESSAGE value="- updating HLA 1.3 testsuite&#10;" />
     <MESSAGE value="- converstion to Google Protocol Buffers for data serialization&#10;- initial fix for FDD merge issue&#10;- minor bug fixes&#10;" />
-    <option name="LAST_COMMIT_MESSAGE" value="- converstion to Google Protocol Buffers for data serialization&#10;- initial fix for FDD merge issue&#10;- minor bug fixes&#10;" />
+    <MESSAGE value="- fixed issue where LOTS was not updated on the client when a time advance grant was issued&#10;&#10;" />
+    <option name="LAST_COMMIT_MESSAGE" value="- fixed issue where LOTS was not updated on the client when a time advance grant was issued&#10;&#10;" />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="true" />
   </component>
   <component name="VssConfiguration">
@@ -1869,26 +1553,10 @@
     <option name="myLastEditedConfigurable" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="jar://$PROJECT_DIR$/../../thirdparty/netty/lib/netty-3.6.5.Final-sources.jar!/org/jboss/netty/channel/DefaultChannelPipeline.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="1980" max-vertical-offset="13390">
-          <caret line="152" column="0" selection-start-line="152" selection-start-column="0" selection-end-line="152" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/hla/rti/HLA13ChannelHandler.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="689" max-vertical-offset="1490">
-          <caret line="66" column="43" selection-start-line="66" selection-start-column="43" selection-end-line="66" selection-end-column="43" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/fdd/TransportationType.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="25" max-vertical-offset="946">
           <caret line="25" column="64" selection-start-line="25" selection-start-column="64" selection-end-line="25" selection-end-column="64" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1896,7 +1564,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="8508" max-vertical-offset="9803">
           <caret line="507" column="9" selection-start-line="507" selection-start-column="9" selection-end-line="507" selection-end-column="9" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1904,7 +1571,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="73558" max-vertical-offset="92655">
           <caret line="4547" column="0" selection-start-line="4547" selection-start-column="0" selection-end-line="4547" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1912,7 +1578,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="43094" max-vertical-offset="52909">
           <caret line="2861" column="0" selection-start-line="2861" selection-start-column="0" selection-end-line="2861" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1920,7 +1585,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="10063" max-vertical-offset="12806">
           <caret line="687" column="0" selection-start-line="687" selection-start-column="0" selection-end-line="687" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1936,7 +1600,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="89725" max-vertical-offset="94803">
           <caret line="5507" column="34" selection-start-line="5507" selection-start-column="34" selection-end-line="5507" selection-end-column="34" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1944,7 +1607,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1235">
           <caret line="23" column="13" selection-start-line="23" selection-start-column="13" selection-end-line="23" selection-end-column="13" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1952,7 +1614,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1218">
           <caret line="22" column="13" selection-start-line="22" selection-start-column="13" selection-end-line="22" selection-end-column="13" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1960,7 +1621,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1201">
           <caret line="22" column="13" selection-start-line="22" selection-start-column="13" selection-end-line="22" selection-end-column="13" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1968,7 +1628,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1195">
           <caret line="22" column="13" selection-start-line="22" selection-start-column="13" selection-end-line="22" selection-end-column="13" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1976,7 +1635,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1450">
           <caret line="21" column="13" selection-start-line="21" selection-start-column="13" selection-end-line="21" selection-end-column="13" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1984,7 +1642,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1195">
           <caret line="22" column="13" selection-start-line="22" selection-start-column="13" selection-end-line="22" selection-end-column="13" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1992,7 +1649,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1705">
           <caret line="23" column="13" selection-start-line="23" selection-start-column="13" selection-end-line="23" selection-end-column="13" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2000,7 +1656,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1218">
           <caret line="27" column="9" selection-start-line="27" selection-start-column="9" selection-end-line="27" selection-end-column="9" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2008,7 +1663,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1382">
           <caret line="21" column="13" selection-start-line="21" selection-start-column="13" selection-end-line="21" selection-end-column="13" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2016,7 +1670,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1178">
           <caret line="46" column="0" selection-start-line="37" selection-start-column="0" selection-end-line="46" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2024,11 +1677,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="51" max-vertical-offset="1331">
           <caret line="49" column="0" selection-start-line="49" selection-start-column="0" selection-end-line="49" selection-end-column="0" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#1129#1130#0" expanded="true" />
-            <element signature="e#1159#1160#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -2036,7 +1684,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1161">
           <caret line="40" column="0" selection-start-line="40" selection-start-column="0" selection-end-line="41" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2044,7 +1691,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1212">
           <caret line="24" column="41" selection-start-line="24" selection-start-column="41" selection-end-line="24" selection-end-column="41" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2052,7 +1698,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="991">
           <caret line="34" column="3" selection-start-line="34" selection-start-column="3" selection-end-line="34" selection-end-column="3" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2060,7 +1705,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="1489" max-vertical-offset="3065">
           <caret line="110" column="14" selection-start-line="110" selection-start-column="14" selection-end-line="110" selection-end-column="14" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2068,7 +1712,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="720" max-vertical-offset="49163">
           <caret line="50" column="4" selection-start-line="50" selection-start-column="4" selection-end-line="50" selection-end-column="4" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2076,7 +1719,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="1158" max-vertical-offset="8376">
           <caret line="143" column="33" selection-start-line="143" selection-start-column="33" selection-end-line="143" selection-end-column="33" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2084,7 +1726,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="189" max-vertical-offset="878">
           <caret line="41" column="9" selection-start-line="41" selection-start-column="9" selection-end-line="41" selection-end-column="9" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2092,7 +1733,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="255" max-vertical-offset="7066">
           <caret line="51" column="7" selection-start-line="51" selection-start-column="7" selection-end-line="51" selection-end-column="7" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2100,7 +1740,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="331" max-vertical-offset="3445">
           <caret line="89" column="40" selection-start-line="89" selection-start-column="40" selection-end-line="89" selection-end-column="40" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2108,7 +1747,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="408" max-vertical-offset="3054">
           <caret line="84" column="40" selection-start-line="84" selection-start-column="40" selection-end-line="84" selection-end-column="40" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2116,7 +1754,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="459" max-vertical-offset="3394">
           <caret line="82" column="40" selection-start-line="82" selection-start-column="40" selection-end-line="82" selection-end-column="40" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2124,7 +1761,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="410" max-vertical-offset="1780">
           <caret line="59" column="9" selection-start-line="59" selection-start-column="9" selection-end-line="59" selection-end-column="9" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2132,9 +1768,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="5068" max-vertical-offset="25512">
           <caret line="382" column="53" selection-start-line="382" selection-start-column="53" selection-end-line="382" selection-end-column="53" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -2142,7 +1775,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2035">
           <caret line="18" column="17" selection-start-line="18" selection-start-column="17" selection-end-line="18" selection-end-column="17" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2150,7 +1782,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2001">
           <caret line="20" column="0" selection-start-line="20" selection-start-column="0" selection-end-line="20" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2158,7 +1789,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2408">
           <caret line="18" column="17" selection-start-line="18" selection-start-column="17" selection-end-line="18" selection-end-column="17" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2166,7 +1796,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="1173" max-vertical-offset="2221">
           <caret line="90" column="0" selection-start-line="44" selection-start-column="0" selection-end-line="90" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2174,7 +1803,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1388">
           <caret line="29" column="13" selection-start-line="29" selection-start-column="13" selection-end-line="29" selection-end-column="13" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2182,7 +1810,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1218">
           <caret line="48" column="30" selection-start-line="48" selection-start-column="30" selection-end-line="48" selection-end-column="30" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2190,7 +1817,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="3020">
           <caret line="33" column="13" selection-start-line="33" selection-start-column="13" selection-end-line="33" selection-end-column="13" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2198,7 +1824,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="1530" max-vertical-offset="6981">
           <caret line="158" column="50" selection-start-line="158" selection-start-column="50" selection-end-line="158" selection-end-column="50" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2206,14 +1831,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="6094" max-vertical-offset="7882">
           <caret line="481" column="17" selection-start-line="481" selection-start-column="17" selection-end-line="481" selection-end-column="17" />
-          <folding>
-            <element signature="e#5317#5455#0" expanded="true" />
-            <element signature="e#5448#5449#0" expanded="true" />
-            <element signature="e#13568#13569#0" expanded="true" />
-            <element signature="e#13605#13606#0" expanded="true" />
-            <element signature="e#13858#13859#0" expanded="true" />
-            <element signature="e#13904#13905#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -2221,10 +1838,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="10151" max-vertical-offset="41679">
           <caret line="634" column="42" selection-start-line="634" selection-start-column="42" selection-end-line="634" selection-end-column="42" />
-          <folding>
-            <element signature="e#0#79749#0" expanded="true" />
-            <element signature="imports" expanded="true" />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -2286,9 +1900,35 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/../../rti/docs/SaveRestore.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="776">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1133">
+          <caret line="27" column="0" selection-start-line="27" selection-start-column="0" selection-end-line="27" selection-end-column="0" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../ieee-1516e/resources/HLAstandardMIM.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="4743" max-vertical-offset="27776">
+          <caret line="1051" column="22" selection-start-line="1051" selection-start-column="22" selection-end-line="1051" selection-end-column="22" />
+          <folding>
+            <element signature="tag#objects#0;tag#objectModel#0" expanded="false" />
+            <element signature="tag#objectClass#0;tag#objectClass#0;tag#objectClass#0;tag#objects#0;tag#objectModel#0" expanded="false" />
+            <element signature="tag#objectClass#1;tag#objectClass#0;tag#objectClass#0;tag#objects#0;tag#objectModel#0" expanded="false" />
+            <element signature="tag#dimensions#0;tag#objectModel#0" expanded="false" />
+            <element signature="tag#transportations#0;tag#objectModel#0" expanded="false" />
+            <element signature="tag#dataTypes#0;tag#objectModel#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../rti/src/java/net/sf/ohla/rti/federate/FederateTimeManager.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.25904486" vertical-offset="1266" max-vertical-offset="14189">
+          <caret line="85" column="29" selection-start-line="85" selection-start-column="29" selection-end-line="85" selection-end-column="29" />
+          <folding>
+            <element signature="e#0#23580#0" expanded="true" />
+            <element signature="imports" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
