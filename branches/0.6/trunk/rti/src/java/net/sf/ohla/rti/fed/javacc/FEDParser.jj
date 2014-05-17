@@ -1,0 +1,488 @@
+/**
+ * Copyright 2005 Michael Newcomb
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+options
+{
+  /* JavaCC options */
+  LOOKAHEAD=1;
+  CHOICE_AMBIGUITY_CHECK=5;
+  DEBUG_TOKEN_MANAGER=false;
+  DEBUG_LOOKAHEAD=false;
+  STATIC=false;
+}
+
+PARSER_BEGIN(FEDParser)
+/**
+ * Copyright 2005-2011 Michael Newcomb
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package net.sf.ohla.rti.fed.javacc;
+
+import java.io.IOException;
+import java.net.URL;
+
+import net.sf.ohla.rti.fdd.FDD;
+import net.sf.ohla.rti.fdd.InteractionClass;
+import net.sf.ohla.rti.fdd.ObjectClass;
+import net.sf.ohla.rti.fed.FED;
+import net.sf.ohla.rti.fed.RoutingSpace;
+import net.sf.ohla.rti.i18n.ExceptionMessages;
+import net.sf.ohla.rti.i18n.I18n;
+
+import hla.rti.CouldNotOpenFED;
+import hla.rti.ErrorReadingFED;
+
+public class FEDParser
+{
+  private FED fed;
+
+  public FEDParser(URL source)
+    throws IOException, ParseException, ErrorReadingFED
+  {
+    this(source.openStream(), "UTF-8");
+
+    fed = new FED(source);
+
+    parse();
+  }
+
+  public static FED parseFED(URL source)
+    throws CouldNotOpenFED, ErrorReadingFED
+  {
+    try
+    {
+      return new FEDParser(source).fed;
+    }
+    catch (IOException ioe)
+    {
+      throw new CouldNotOpenFED(I18n.getMessage(ExceptionMessages.COULD_NOT_OPEN_FED, source.toString()), ioe);
+    }
+    catch (ParseException pe)
+    {
+      throw new ErrorReadingFED(I18n.getMessage(ExceptionMessages.ERROR_READING_FED, source.toString()), pe);
+    }
+  }
+}
+PARSER_END(FEDParser)
+
+SKIP :
+{
+  " "
+  | "\t"
+  | "\r"
+  | "\f"
+  | "\n"
+}
+
+TOKEN :
+{
+  < RPAREN: ")" >
+  | < INTEGER_LITERAL: (<DecimalDigit>)+ >
+  | < VERSION: "v" <INTEGER_LITERAL> ("." <INTEGER_LITERAL>)* >
+}
+
+TOKEN : /* Reserved Words preceded by '(' */
+{
+  < FED:            "(FED" >
+  | < FEDERATION:   "(Federation" >
+  | < FEDVERSION:   "(FEDversion" >
+  | < SPACES:       "(spaces" >
+  | < SPACE:        "(space" >
+  | < DIMENSION:    "(dimension" >
+  | < OBJECTS:      "(objects" >
+  | < CLASS:        "(class" >
+  | < ATTRIBUTE:    "(attribute" >
+  | < INTERACTIONS: "(interactions" >
+  | < PARAMETER:    "(parameter" >
+}
+
+void parse()
+  throws ErrorReadingFED : {}
+{
+  <FED>
+  Federation()
+  FEDversion()
+  Spaces()
+  ObjectClasses()
+  InteractionClasses()
+  <RPAREN> <EOF>
+}
+
+void Federation() : {}
+{
+  <FEDERATION> FEDname() <RPAREN>
+}
+
+void FEDname() :
+{
+  String fedName;
+}
+{
+  fedName=NameString()
+  {
+    fed.setFEDName(fedName);
+  }
+}
+
+void FEDversion() : {}
+{
+  <FEDVERSION> FEDDIFversionNumber() <RPAREN>
+}
+
+String FEDDIFversionNumber() :
+{
+  Token t;
+}
+{
+  t=<VERSION>
+  {
+    return t.image;
+  }
+}
+
+void Spaces()
+  throws ErrorReadingFED : {}
+{
+  <SPACES> ( Space() )* <RPAREN>
+}
+
+void Space()
+  throws ErrorReadingFED :
+{
+  RoutingSpace routingSpace;
+  String routingSpaceName;
+  String dimensionName;
+}
+{
+  <SPACE>
+  routingSpaceName=SpaceName()
+  {
+    if (routingSpaceName.startsWith("HLA"))
+    {
+      throw new ErrorReadingFED(I18n.getMessage(
+        ExceptionMessages.ERROR_READING_FED_ROUTING_SPACE_STARTS_WITH_HLA, routingSpaceName));
+    }
+
+    routingSpace = fed.addRoutingSpace(routingSpaceName);
+  }
+  ( Dimension(routingSpace) )*
+  <RPAREN>
+}
+
+String SpaceName() :
+{
+  String spaceName;
+}
+{
+  spaceName=NameString() { return spaceName; }
+}
+
+void Dimension(RoutingSpace routingSpace) :
+{
+  String dimensionName;
+}
+{
+  <DIMENSION> dimensionName=DimensionName() <RPAREN>
+  {
+    fed.addRoutingSpaceDimension(routingSpace, dimensionName);
+  }
+}
+
+String DimensionName() :
+{
+  String dimensionName;
+}
+{
+  dimensionName=NameString() { return dimensionName; }
+}
+
+void ObjectClasses()
+  throws ErrorReadingFED : {}
+{
+  <OBJECTS> ObjectRoot() <RPAREN>
+}
+
+void ObjectRoot()
+  throws ErrorReadingFED :
+{
+  String objectClassName;
+  ObjectClass objectRoot;
+}
+{
+  <CLASS> objectClassName=ObjectClassName()
+  {
+    if (net.sf.ohla.rti.fed.FED.OBJECT_ROOT.equals(objectClassName))
+    {
+      objectRoot = fed.addObjectClass(FDD.HLA_OBJECT_ROOT, null);
+    }
+    else
+    {
+      throw new ErrorReadingFED(I18n.getMessage(
+        ExceptionMessages.ERROR_READING_FED_INVALID_OBJECT_ROOT, net.sf.ohla.rti.fed.FED.OBJECT_ROOT, objectClassName));
+    }
+  }
+  PriviledgeToDeleteAttribute(objectRoot)
+  RTIprivateObject(objectRoot)
+  ( ObjectClass(objectRoot) )*
+  <RPAREN>
+}
+
+void PriviledgeToDeleteAttribute(ObjectClass objectRoot)
+  throws ErrorReadingFED :
+{
+  String attributeName;
+  String transport;
+  String order;
+  String spaceName = null;
+}
+{
+  <ATTRIBUTE> attributeName=AttributeName() transport=Transport() order=Order() [ spaceName=SpaceName() ] <RPAREN>
+  {
+    if (net.sf.ohla.rti.fed.FED.PRIVILEGE_TO_DELETE.equals(attributeName))
+    {
+      fed.addAttribute(objectRoot, FDD.HLA_PRIVILEGE_TO_DELETE_OBJECT, transport, order, spaceName);
+    }
+    else
+    {
+      throw new ErrorReadingFED(I18n.getMessage(
+        ExceptionMessages.ERROR_READING_FED_INVALID_PRIVILEGE_TO_DELETE, objectRoot,
+        net.sf.ohla.rti.fed.FED.PRIVILEGE_TO_DELETE, attributeName));
+    }
+  }
+}
+
+void RTIprivateObject(ObjectClass objectRoot)
+  throws ErrorReadingFED :
+{
+  String objectClassName;
+}
+{
+  <CLASS> objectClassName=ObjectClassName() <RPAREN>
+  {
+    if (net.sf.ohla.rti.fed.FED.RTI_PRIVATE.equals(objectClassName))
+    {
+      fed.addObjectClass(objectClassName, objectRoot);
+    }
+    else
+    {
+      throw new ErrorReadingFED(I18n.getMessage(
+        ExceptionMessages.ERROR_READING_FED_INVALID_RTI_PRIVATE, net.sf.ohla.rti.fed.FED.RTI_PRIVATE, objectClassName));
+    }
+  }
+}
+
+void ObjectClass(ObjectClass parent)
+  throws ErrorReadingFED :
+{
+  String objectClassName;
+
+  ObjectClass objectClass;
+}
+{
+  <CLASS> objectClassName=ObjectClassName()
+  {
+    objectClass = fed.addObjectClass(objectClassName, parent);
+  }
+  ( Attribute(objectClass) )*
+  ( ObjectClass(objectClass) )*
+  <RPAREN>
+}
+
+void Attribute(ObjectClass objectClass)
+  throws ErrorReadingFED :
+{
+  String attributeName;
+  String transport;
+  String order;
+  String spaceName = null;
+}
+{
+  <ATTRIBUTE> attributeName=AttributeName() transport=Transport() order=Order() [ spaceName=SpaceName() ] <RPAREN>
+  {
+    fed.addAttribute(objectClass, attributeName, transport, order, spaceName);
+  }
+}
+
+void InteractionClasses()
+  throws ErrorReadingFED : {}
+{
+  <INTERACTIONS> InteractionRoot() <RPAREN>
+}
+
+void InteractionRoot()
+  throws ErrorReadingFED :
+{
+  String interactionClassName;
+  String transport;
+  String order;
+  String spaceName = null;
+  InteractionClass interactionRoot;
+}
+{
+  <CLASS> interactionClassName=InteractionClassName() transport=Transport() order=Order() [ spaceName=SpaceName() ]
+  {
+    if (net.sf.ohla.rti.fed.FED.INTERACTION_ROOT.equals(interactionClassName))
+    {
+      interactionRoot = fed.addInteractionClass(null, FDD.HLA_INTERACTION_ROOT, transport, order, spaceName);
+    }
+    else
+    {
+      throw new ErrorReadingFED(I18n.getMessage(
+        ExceptionMessages.ERROR_READING_FED_INVALID_INTERACTION_ROOT, net.sf.ohla.rti.fed.FED.INTERACTION_ROOT,
+        interactionClassName));
+    }
+  }
+  RTIprivateInteraction(interactionRoot)
+  ( InteractionClass(interactionRoot) )*
+  <RPAREN>
+}
+
+void RTIprivateInteraction(InteractionClass interactionRoot)
+  throws ErrorReadingFED :
+{
+  String interactionClassName;
+  String transport;
+  String order;
+  String spaceName = null;
+}
+{
+  <CLASS> interactionClassName=InteractionClassName() transport=Transport() order=Order() [ spaceName=SpaceName() ] <RPAREN>
+  {
+    if (net.sf.ohla.rti.fed.FED.RTI_PRIVATE.equals(interactionClassName))
+    {
+      fed.addInteractionClass(interactionRoot, interactionClassName, transport, order, spaceName);
+    }
+    else
+    {
+      throw new ErrorReadingFED(I18n.getMessage(
+        ExceptionMessages.ERROR_READING_FED_INVALID_RTI_PRIVATE, net.sf.ohla.rti.fed.FED.RTI_PRIVATE,
+        interactionClassName));
+    }
+  }
+}
+
+void InteractionClass(InteractionClass parent)
+  throws ErrorReadingFED :
+{
+  String interactionClassName;
+  String transport;
+  String order;
+  String spaceName = null;
+
+  InteractionClass interactionClass;
+}
+{
+  <CLASS> interactionClassName=InteractionClassName() transport=Transport() order=Order() [ spaceName=SpaceName() ]
+  {
+    interactionClass = fed.addInteractionClass(parent, interactionClassName, transport, order, spaceName);
+  }
+  ( Parameter(interactionClass) )*
+  ( InteractionClass(interactionClass) )*
+  <RPAREN>
+}
+
+void Parameter(InteractionClass interactionClass)
+  throws ErrorReadingFED :
+{
+  String parameterName;
+}
+{
+  <PARAMETER> parameterName=ParameterName() <RPAREN>
+  {
+    fed.addParameter(interactionClass, parameterName);
+  }
+}
+
+String ObjectClassName() :
+{
+  String objectClassName;
+}
+{
+  objectClassName=NameString() { return objectClassName; }
+}
+
+String AttributeName() :
+{
+  String attributeName;
+}
+{
+  attributeName=NameString() { return attributeName; }
+}
+
+String InteractionClassName() :
+{
+  String interactionClassName;
+}
+{
+  interactionClassName=NameString() { return interactionClassName; }
+}
+
+String ParameterName() :
+{
+  String parameterName;
+}
+{
+  parameterName=NameString() { return parameterName; }
+}
+
+String Transport() :
+{
+  String transport;
+}
+{
+  transport=NameString() { return transport; }
+}
+
+String Order() :
+{
+  String order;
+}
+{
+  order=NameString() { return order; }
+}
+
+String NameString() :
+{
+  Token t;
+}
+{
+  t=<NameString> { return t.image; }
+}
+
+TOKEN : /* Strings */
+{
+  /* WARNING: this definition must come AFTER everything! */
+
+  < NameString: <Letter> (<NameCharacter>)* >
+  | < #NameCharacter: <Letter> | <DecimalDigit> |
+                      "_" | "+" | "-" | "*" | "/" | "@" | "$" | "%" | "^" |
+                      "&" | "=" | "<" | ">" | "~" | "!" | "#"
+    >
+  | < #Letter: ["a"-"z","A"-"Z"] >
+  | < #DecimalDigit: ["0"-"9"] >
+}

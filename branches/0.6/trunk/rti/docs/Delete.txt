@@ -1,0 +1,5 @@
+Objects can be scheduled for deletion only once.
+
+If the object has been scheduled for deletion:
+ - attempts to acquire ownership of the privilegeToDelete attribute will be denied
+ - ownership of the privilegeToDelete attribute will go to the RTI if the Federate owning it resigns

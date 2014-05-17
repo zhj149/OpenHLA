@@ -1,0 +1,52 @@
+package ohla.rti.messages.proto;
+
+option java_package = "net.sf.ohla.rti.messages.proto";
+
+message CreateFederationExecutionResponse
+{
+  message Failure
+  {
+    enum Cause
+    {
+      FEDERATION_EXECUTION_ALREADY_EXISTS = 1;
+      COULD_NOT_CREATE_LOGICAL_TIME_FACTORY = 2;
+    }
+
+    required Cause cause = 1;
+  }
+
+  required uint64 requestId = 1;
+
+  optional Failure failure = 2;
+}
+
+message DestroyFederationExecutionResponse
+{
+  message Failure
+  {
+    enum Cause
+    {
+      FEDERATES_CURRENTLY_JOINED = 1;
+      FEDERATION_EXECUTION_DOES_NOT_EXIST = 2;
+    }
+
+    required Cause cause = 1;
+
+    repeated string currentlyJoinedFederates = 2;
+  }
+
+  required uint64 requestId = 1;
+
+  optional Failure failure = 2;
+}
+
+message ReportFederationExecutions
+{
+  message FederationExecutionInformation
+  {
+    required string federationExecutionName = 1;
+    required string logicalTimeImplementationName = 2;
+  }
+
+  repeated FederationExecutionInformation federationExecutionInformations = 1;
+}

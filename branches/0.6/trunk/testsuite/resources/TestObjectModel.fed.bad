@@ -1,0 +1,35 @@
+FED
+  (Federation Test)
+  (FEDversion v1.3)
+  (spaces
+    (space TestRoutingSpace
+      (dimension Dimension1)
+      (dimension Dimension2)
+      (dimension Dimension3)
+    )
+  )
+  (objects
+    (class objectRoot
+      (attribute privilegeToDelete reliable timestamp)
+
+      (class TestObject
+        (attribute Attribute1 reliable timestamp TestRoutingSpace)
+        (attribute Attribute2 reliable timestamp TestRoutingSpace)
+        (attribute Attribute3 reliable timestamp TestRoutingSpace)
+        (attribute BestEffortReceiveAttribute besteffort receive TestRoutingSpace)
+        (attribute BestEffortTimeStampAttribute besteffort timestamp TestRoutingSpace)
+        (attribute ReliableReceiveAttribute reliable receive TestRoutingSpace)
+        (attribute ReliableTimeStampAttribute reliable timestamp TestRoutingSpace)
+      )
+    )
+  )
+  (interactions
+    (class interactionRoot reliable timestamp
+      (class TestInteraction reliable timestamp
+        (parameter Parameter1)
+        (parameter Parameter2)
+        (parameter Parameter3)
+      )
+    )
+  )
+)
