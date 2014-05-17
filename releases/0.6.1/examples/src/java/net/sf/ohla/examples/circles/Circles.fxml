@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.Pane?>
+
+<?import javafx.scene.Cursor?>
+<?import javafx.scene.Group?>
+<?import javafx.scene.shape.Rectangle?>
+<?import javafx.scene.paint.Color?>
+<Group xmlns:fx="http://javafx.com/javafx/2.2"
+           fx:id="group"
+           fx:controller="net.sf.ohla.examples.circles.CirclesController">
+  <Rectangle fx:id="background"
+             width="400"
+             height="400"
+             fill="0xFFFFFF"
+             onMousePressed="#handleMousePressed"
+             onMouseClicked="#handleMouseClicked"
+             onMouseDragged="#handleMouseDragged">
+  </Rectangle>
+</Group>

@@ -1,0 +1,92 @@
+<!--
+  ~ Copyright (c) 2005-2011, Michael Newcomb
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="OHLA IEEE 1516e Testsuite" parallel="false" verbose="5">
+  <test name="IEEE 1516e - Federation Management">
+    <classes>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.federation.ConnectionTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.federation.CreationTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.federation.JoiningTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.federation.SynchronizationTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.federation.SaveRestoreTestNG"/>
+    </classes>
+  </test>
+  <test name="IEEE 1516e - Declaration Management">
+    <classes>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.declaration.ObjectDeclarationTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.declaration.InteractionDeclarationTestNG"/>
+    </classes>
+  </test>
+  <test name="IEEE 1516e - Object Management">
+    <classes>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.object.ObjectNameReservationTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.object.ObjectRegistrationTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.object.ObjectUpdateTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.object.ObjectDeletionTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.object.InteractionTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.object.InteractionPersistenceTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.object.ObjectPersistenceTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.object.DeclarationPersistenceTestNG"/>
+    </classes>
+  </test>
+  <test name="IEEE 1516e - Ownership Management">
+    <classes>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.ownership.AttributeOwnershipTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.ownership.AttributeDivestitureTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.ownership.AttributeAcquisitionTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.ownership.NegotiatedAttributeDivestitureTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.ownership.IntrusiveAttributeAcquisitionTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.ownership.AttributeOwnershipPersistenceTestNG"/>
+    </classes>
+  </test>
+  <test name="IEEE 1516e - Data Distribution Management">
+    <classes>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.datadistribution.RegionTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.datadistribution.RegionPersistenceTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.datadistribution.ObjectRegionTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.datadistribution.InteractionRegionTestNG"/>
+    </classes>
+  </test>
+  <test name="IEEE 1516e - Support Services">
+    <classes>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.support.FederateSupportTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.support.OrderSupportTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.support.TransportationSupportTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.support.ObjectSupportTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.support.InteractionSupportTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.support.DimensionSupportTestNG"/>
+    </classes>
+  </test>
+  <test name="IEEE 1516e - Time Management">
+    <classes>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.InitialTimeStateTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.TimeAdvancingExceptionsTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.TimeConstrainedTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.TimeConstrainedPersistenceTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.EnableTimeConstrainedExceptionsTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.TimeRegulationTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.TimeRegulationPersistenceTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.EnableTimeRegulationExceptionsTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.TimeAdvanceRequestTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.TimeAdvanceRequestPersistenceTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.TimeAdvanceRequestAvailableTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.NextMessageRequestTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.NextMessageRequestAvailableTestNG"/>
+      <class name="net.sf.ohla.rti.testsuite.hla.rti1516e.time.FlushQueueRequestTestNG"/>
+    </classes>
+  </test>
+</suite>
