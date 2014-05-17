@@ -1,0 +1,446 @@
+package ohla.rti.messages.proto;
+
+option java_package = "net.sf.ohla.rti.messages.proto";
+
+import "OHLAProtos.proto";
+import "MessageProtos.proto";
+
+message ResignFederationExecution
+{
+  required ohla.rti.proto.ResignAction resignAction = 1;
+}
+
+message RegisterFederationSynchronizationPoint
+{
+  required string label = 1;
+  optional bytes tag = 2;
+  repeated uint32 federateHandles = 3;
+}
+
+message SynchronizationPointAchieved
+{
+  required string label = 1;
+  required bool successful = 2;
+}
+
+message RequestFederationSave
+{
+  required uint64 requestId = 1;
+  required string label = 2;
+  optional bytes time = 3;
+}
+
+message AbortFederationSave
+{
+  required uint64 requestId = 1;
+}
+
+message FederateSaveBegun
+{
+}
+
+message FederateSaveComplete
+{
+}
+
+message FederateSaveNotComplete
+{
+}
+
+message RequestFederationRestore
+{
+  required uint64 requestId = 1;
+  required string label = 2;
+}
+
+message AbortFederationRestore
+{
+  required uint64 requestId = 1;
+}
+
+message FederateRestoreComplete
+{
+}
+
+message FederateRestoreNotComplete
+{
+}
+
+message PublishObjectClassAttributes
+{
+  required uint32 objectClassHandle = 1;
+  repeated uint32 attributeHandles = 2;
+}
+
+message UnpublishObjectClass
+{
+  required uint32 objectClassHandle = 1;
+  repeated ohla.rti.proto.ObjectInstanceHandle objectInstanceHandles = 2;
+}
+
+message UnpublishObjectClassAttributes
+{
+  required uint32 objectClassHandle = 1;
+  repeated uint32 attributeHandles = 2;
+  repeated ohla.rti.proto.ObjectInstanceHandle objectInstanceHandles = 3;
+}
+
+message PublishInteractionClass
+{
+  required uint32 interactionClassHandle = 1;
+}
+
+message UnpublishInteractionClass
+{
+  required uint32 interactionClassHandle = 1;
+}
+
+message SubscribeObjectClassAttributes
+{
+  required uint32 objectClassHandle = 1;
+  repeated uint32 attributeHandles = 2;
+  required bool passive = 3;
+  optional string updateRateDesignator = 4;
+}
+
+message UnsubscribeObjectClassAttributes
+{
+  required uint32 objectClassHandle = 1;
+  repeated uint32 attributeHandles = 2;
+}
+
+message SubscribeInteractionClass
+{
+  required uint32 interactionClassHandle = 1;
+  required bool passive = 2;
+}
+
+message UnsubscribeInteractionClass
+{
+  required uint32 interactionClassHandle = 1;
+}
+
+message ReserveObjectInstanceName
+{
+  required string objectInstanceName = 1;
+}
+
+message ReleaseObjectInstanceName
+{
+  required string objectInstanceName = 1;
+}
+
+message ReserveMultipleObjectInstanceName
+{
+  repeated string objectInstanceNames = 1;
+}
+
+message ReleaseMultipleObjectInstanceName
+{
+  repeated string objectInstanceNames = 1;
+}
+
+message AttributeRegionAssociation
+{
+  repeated uint32 attributeHandles = 1;
+  repeated ohla.rti.proto.RegionHandle regionHandles = 2;
+}
+
+message RegisterObjectInstance
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  required uint32 objectClassHandle = 2;
+  required string objectInstanceName = 3;
+  repeated uint32 publishedAttributeHandles = 4;
+  repeated AttributeRegionAssociation attributeRegionAssociations = 5;
+}
+
+message RegisterObjectInstanceWithRegions
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  required uint32 objectClassHandle = 2;
+  optional string objectInstanceName = 3;
+  repeated uint32 publishedAttributeHandles = 4;
+  repeated AttributeRegionAssociation attributeRegionAssociations = 5;
+}
+
+message UpdateAttributeValues
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  repeated ohla.rti.messages.proto.AttributeValue attributeValues = 2;
+  optional bytes tag = 3;
+  optional ohla.rti.proto.OrderType sentOrderType = 4 [ default = RECEIVE ];
+  required uint32 transportationTypeHandle = 5;
+  optional bytes time = 6;
+  optional ohla.rti.proto.MessageRetractionHandle messageRetractionHandle = 7;
+}
+
+message SendInteraction
+{
+  required uint32 interactionClassHandle = 1;
+  repeated ohla.rti.messages.proto.ParameterValue parameterValues = 2;
+  optional bytes tag = 3;
+  optional ohla.rti.proto.OrderType sentOrderType = 4 [ default = RECEIVE ];
+  required uint32 transportationTypeHandle = 5;
+  optional bytes time = 6;
+  optional ohla.rti.proto.MessageRetractionHandle messageRetractionHandle = 7;
+  repeated ohla.rti.proto.RegionHandle sentRegionHandles = 8;
+}
+
+message DeleteObjectInstance
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  optional bytes tag = 2;
+  optional ohla.rti.proto.OrderType sentOrderType = 3 [ default = RECEIVE ];
+  optional bytes time = 4;
+  optional ohla.rti.proto.MessageRetractionHandle messageRetractionHandle = 5;
+}
+
+message LocalDeleteObjectInstance
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+}
+
+message RequestObjectInstanceAttributeValueUpdate
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  repeated uint32 attributeHandles = 2;
+  optional bytes tag = 3;
+}
+
+message RequestObjectClassAttributeValueUpdate
+{
+  required uint32 objectClassHandle = 1;
+  repeated uint32 attributeHandles = 2;
+  optional bytes tag = 3;
+}
+
+message RequestObjectClassAttributeValueUpdateWithRegions
+{
+  required uint32 objectClassHandle = 1;
+  repeated AttributeRegionAssociation attributeRegionAssociations = 2;
+  optional bytes tag = 3;
+}
+
+message SetAutomaticResignDirective
+{
+  required ohla.rti.proto.ResignAction resignAction = 1;
+}
+
+message GetFederateHandle
+{
+  required uint64 requestId = 1;
+  required string federateName = 2;
+}
+
+message GetFederateName
+{
+  required uint64 requestId = 1;
+  required uint32 federateHandle = 2;
+}
+
+message GetUpdateRateValueForAttribute
+{
+  required uint64 requestId = 1;
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 2;
+  required uint32 attributeHandle = 3;
+}
+
+message QueryInteractionTransportationType
+{
+  required uint32 interactionClassHandle = 1;
+  required uint32 federateHandle = 2;
+}
+
+message UnconditionalAttributeOwnershipDivestiture
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  repeated uint32 attributeHandles = 2;
+}
+
+message NegotiatedAttributeOwnershipDivestiture
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  repeated uint32 attributeHandles = 2;
+  optional bytes tag = 3;
+}
+
+message ConfirmDivestiture
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  repeated uint32 attributeHandles = 2;
+  optional bytes tag = 3;
+}
+
+message AttributeOwnershipAcquisition
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  repeated uint32 attributeHandles = 2;
+  optional bytes tag = 3;
+}
+
+message AttributeOwnershipAcquisitionIfAvailable
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  repeated uint32 attributeHandles = 2;
+}
+
+message AttributeOwnershipDivestitureIfWanted
+{
+  required uint64 requestId = 1;
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 2;
+  repeated uint32 attributeHandles = 3;
+  optional bytes tag = 4;
+}
+
+message CancelNegotiatedAttributeOwnershipDivestiture
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  repeated uint32 attributeHandles = 2;
+}
+
+message CancelAttributeOwnershipAcquisition
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  repeated uint32 attributeHandles = 2;
+}
+
+message QueryAttributeOwnership
+{
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 1;
+  required uint32 attributeHandle = 2;
+}
+
+message EnableTimeRegulation
+{
+  required bytes lookahead = 1;
+}
+
+message DisableTimeRegulation
+{
+}
+
+message EnableTimeConstrained
+{
+}
+
+message DisableTimeConstrained
+{
+}
+
+message TimeAdvanceRequest
+{
+  required bytes time = 1;
+}
+
+message TimeAdvanceRequestAvailable
+{
+  required bytes time = 1;
+}
+
+message NextMessageRequest
+{
+  required bytes time = 1;
+}
+
+message NextMessageRequestAvailable
+{
+  required bytes time = 1;
+}
+
+message FlushQueueRequest
+{
+  required bytes time = 1;
+}
+
+message QueryGALT
+{
+  required uint64 requestId = 1;
+}
+
+message QueryLITS
+{
+  required uint64 requestId = 1;
+}
+
+message ModifyLookahead
+{
+  required bytes lookahead = 1;
+}
+
+message Retract
+{
+  required uint64 requestId = 1;
+  required ohla.rti.proto.MessageRetractionHandle messageRetractionHandle = 2;
+}
+
+message CreateRegion
+{
+  required ohla.rti.proto.RegionHandle regionHandle = 1;
+  repeated uint32 dimensionHandles = 2;
+}
+
+message CommitRegionModifications
+{
+  message RegionModification
+  {
+    required ohla.rti.proto.RegionHandle regionHandle = 1;
+    repeated  ohla.rti.proto.DimensionRangeBound dimensionRangeBounds = 2;
+  }
+
+  repeated RegionModification regionModifications = 1;
+}
+
+message DeleteRegion
+{
+  required ohla.rti.proto.RegionHandle regionHandle = 1;
+}
+
+message AssociateRegionsForUpdates
+{
+  required uint64 requestId = 1;
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 2;
+  repeated AttributeRegionAssociation attributeRegionAssociations = 3;
+}
+
+message UnassociateRegionsForUpdates
+{
+  required uint64 requestId = 1;
+  required ohla.rti.proto.ObjectInstanceHandle objectInstanceHandle = 2;
+  repeated AttributeRegionAssociation attributeRegionAssociations = 3;
+}
+
+message SubscribeObjectClassAttributesWithRegions
+{
+  required uint32 objectClassHandle = 1;
+  repeated AttributeRegionAssociation attributeRegionAssociations = 2;
+  required bool passive = 3;
+  optional string updateRateDesignator = 4;
+}
+
+message UnsubscribeObjectClassAttributesWithRegions
+{
+  required uint32 objectClassHandle = 1;
+  repeated AttributeRegionAssociation attributeRegionAssociations = 2;
+}
+
+message SubscribeInteractionClassWithRegions
+{
+  required uint32 interactionClassHandle = 1;
+  required bool passive = 2;
+  repeated ohla.rti.proto.RegionHandle regionHandles = 3;
+}
+
+message UnsubscribeInteractionClassWithRegions
+{
+  required uint32 interactionClassHandle = 1;
+  repeated ohla.rti.proto.RegionHandle regionHandles = 2;
+}
+
+message QueryFederationSaveStatus
+{
+}
+
+message QueryFederationRestoreStatus
+{
+}

@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<objectModel>
+
+  <objects>
+    <objectClass name="HLAobjectRoot">
+      <attribute name="HLAprivilegeToDeleteObject"
+                 dimensions="NA"
+                 transportation="HLAreliable"
+                 order="TimeStamp"/>
+
+      <objectClass name="Circle">
+        <attribute name="Center"
+                   transportation="HLAreliable"
+                   order="Receive"/>
+        <attribute name="Radius"
+                   transportation="HLAreliable"
+                   order="Receive"/>
+        <attribute name="Color"
+                   transportation="HLAreliable"
+                   order="Receive"/>
+      </objectClass>
+    </objectClass>
+  </objects>
+
+  <interactions>
+    <interactionClass name="HLAinteractionRoot"
+                      dimensions="NA"
+                      transportation="HLAreliable"
+                      order="Receive">
+
+      <interactionClass name="Buzz"
+                        transportation="HLAreliable"
+                        order="Receive">
+        <parameter name="Name"/>
+      </interactionClass>
+
+    </interactionClass>
+  </interactions>
+
+</objectModel>

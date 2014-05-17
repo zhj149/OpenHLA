@@ -1,0 +1,33 @@
+package ohla.rti.messages.proto;
+
+option java_package = "net.sf.ohla.rti.messages.proto";
+
+import "OHLAProtos.proto";
+import "MessageProtos.proto";
+
+message CreateFederationExecution
+{
+  required uint64 requestId = 1;
+  required string federationExecutionName = 2;
+  required ohla.rti.proto.FDD fdd = 3;
+  required string logicalTimeImplementationName = 4;
+}
+
+message DestroyFederationExecution
+{
+  required uint64 requestId = 1;
+  required string federationExecutionName = 2;
+}
+
+message JoinFederationExecution
+{
+  optional string federateName = 1;
+  required string federateType = 2;
+  required string federationExecutionName = 3;
+
+  repeated ohla.rti.proto.FDD additionalFDDs = 4;
+}
+
+message ListFederationExecutions
+{
+}
